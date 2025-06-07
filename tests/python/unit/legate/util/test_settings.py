@@ -165,7 +165,7 @@ class TestPrioritizedSetting:
 
         assert s.bar() == 10
         s.bar = 20
-        assert s.bar() == 20  # type: ignore[operator]
+        assert s.bar() == 20
 
 
 class TestEnvOnlySetting:

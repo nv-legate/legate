@@ -56,8 +56,7 @@ class TestVariantOptions:
         options.elide_device_ctx_sync = elide_device_ctx_sync
         options.has_side_effect = has_side_effect
         options.may_throw_exception = may_throw_exception
-        # Fixed by https://github.com/python/mypy/pull/18510
-        options.communicators = communicators  # type: ignore[assignment]
+        options.communicators = communicators
 
         assert options.concurrent == concurrent
         assert options.has_allocations == has_allocations
@@ -75,8 +74,7 @@ class TestVariantOptions:
         options.communicators = communicators
         assert options.communicators == communicators
 
-        # Fixed by https://github.com/python/mypy/pull/18510
-        options.communicators = []  # type: ignore[assignment]
+        options.communicators = []
         # mypy is really off its rocker...
         #
         # tests/python/unit/legate/core/test_variant_options.py:80:16: error:

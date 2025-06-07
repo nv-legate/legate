@@ -45,7 +45,6 @@ class TestTaskConfig:
         )
         config.variant_options = options
 
-        assert config.variant_options is not None
         assert config.variant_options == options
 
 
