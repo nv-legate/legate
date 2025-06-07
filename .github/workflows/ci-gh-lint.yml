@@ -23,13 +23,11 @@ jobs:
     timeout-minutes: 15
     strategy:
       fail-fast: false
-      matrix:
-        version: ['3.11', '3.12', '3.13']
     if: ${{ github.repository_owner == 'nv-legate' }}
     permissions:
       contents: read  # This is required for actions/checkout
 
-    name: "pre-commit python-${{ matrix.version }}"
+    name: pre-commit
 
     steps:
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
@@ -48,7 +46,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.version }}
+          python-version: '3.13'
           cache: 'pip'
 
       - name: Install dependencies
