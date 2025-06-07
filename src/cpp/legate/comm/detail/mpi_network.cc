@@ -148,7 +148,7 @@ void MPINetwork::comm_create(legate::comm::coll::CollComm global_comm,
                              int unique_id,
                              const int* mapping_table)
 {
-  LEGATE_ASSERT(global_comm_size >= 0);
+  LEGATE_ASSERT(global_comm_size > 0);
   LEGATE_CHECK(mapping_table != nullptr);
 
   global_comm->global_comm_size = global_comm_size;
@@ -165,8 +165,10 @@ void MPINetwork::comm_create(legate::comm::coll::CollComm global_comm,
   LEGATE_CHECK_MPI(MPIInterface::mpi_comm_rank(global_comm->mpi_comm, &global_comm->mpi_rank));
   LEGATE_CHECK_MPI(MPIInterface::mpi_comm_size(global_comm->mpi_comm, &global_comm->mpi_comm_size));
 
-  auto global_ranks = std::make_unique<int[]>(global_comm_size);
-  auto mpi_ranks    = std::make_unique<int[]>(global_comm_size);
+  // We know from the above `LEGATE_ASSERT()` that global_comm_size > 0, but GCC still
+  // complains, so use std::max() to pacify it.
+  auto global_ranks = std::make_unique<int[]>(std::max(global_comm_size, 1));
+  auto mpi_ranks    = std::make_unique<int[]>(std::max(global_comm_size, 1));
   std::memcpy(mpi_ranks.get(),
               mapping_table,
               static_cast<std::size_t>(global_comm_size * sizeof(*mapping_table)));
