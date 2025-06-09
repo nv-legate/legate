@@ -549,10 +549,10 @@ different types: GPU &gt; OpenMP &gt; CPU.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.preferred_target.html#legate.core.Machine.preferred_target" title="legate.core.Machine.preferred_target"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.preferred_target</span></code></a></p></td>
-<td><p>TaskTarget Returns the preferred kind of processors for mapping tasks</p></td>
+<td><p>TaskTarget</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.Machine.valid_targets.html#legate.core.Machine.valid_targets" title="legate.core.Machine.valid_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.valid_targets</span></code></a></p></td>
-<td><p>tuple[TaskTarget, ...] Returns the kinds of processors available in this machine</p></td>
+<td><p>tuple[TaskTarget, ...]</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.get_processor_range.html#legate.core.Machine.get_processor_range" title="legate.core.Machine.get_processor_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.get_processor_range</span></code></a>(self[, target])</p></td>
 <td><p>Returns the processor range of a given task target.</p></td>
@@ -567,7 +567,7 @@ different types: GPU &gt; OpenMP &gt; CPU.</p>
 <td><p>Returns the number of processors of a given task target</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.empty.html#legate.core.Machine.empty" title="legate.core.Machine.empty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.empty</span></code></a></p></td>
-<td><p>bool Indicates if the machine is empty</p></td>
+<td><p>bool</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.Machine.__and__.html#legate.core.Machine.__and__" title="legate.core.Machine.__and__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.__and__</span></code></a>(self, Machine other)</p></td>
 <td><p>Computes an intersection with a given machine</p></td>
@@ -588,16 +588,16 @@ different types: GPU &gt; OpenMP &gt; CPU.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.low.html#legate.core.ProcessorRange.low" title="legate.core.ProcessorRange.low"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.low</span></code></a></p></td>
-<td><p>uint32_t Returns the lower bound of the processor range</p></td>
+<td><p>uint32_t</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.high.html#legate.core.ProcessorRange.high" title="legate.core.ProcessorRange.high"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.high</span></code></a></p></td>
-<td><p>uint32_t Returns the upper bound of the processor range</p></td>
+<td><p>uint32_t</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.per_node_count.html#legate.core.ProcessorRange.per_node_count" title="legate.core.ProcessorRange.per_node_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.per_node_count</span></code></a></p></td>
-<td><p>uint32_t Returns the number of processors per node</p></td>
+<td><p>uint32_t</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.empty.html#legate.core.ProcessorRange.empty" title="legate.core.ProcessorRange.empty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.empty</span></code></a></p></td>
-<td><p>bool Indicates if the processor range is empty</p></td>
+<td><p>bool</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.get_node_range.html#legate.core.ProcessorRange.get_node_range" title="legate.core.ProcessorRange.get_node_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.get_node_range</span></code></a>(self)</p></td>
 <td><p>Returns the range of node IDs for this processor range</p></td>
