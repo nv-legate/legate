@@ -86,7 +86,12 @@ verbose = true
 level = "DEBUG"
 
 [tool.scikit-build.wheel]
-exclude = ["**.pyx", "**CMakeLists.txt", "**.pxd"]
+exclude = [
+    "**.pyx",
+    "**.pxd",
+    "**/legate/core/**/CMakeLists.txt",
+    "**/legate/CMakeLists.txt",
+]
 platlib = true
 install-dir = "/data"
 
