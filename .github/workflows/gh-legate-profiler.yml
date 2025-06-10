@@ -32,7 +32,7 @@ jobs:
   Build_Profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.35
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.36
     with:
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
@@ -43,7 +43,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v1.35"
+      legate-gh-ci-tag: "v1.36"
       build-mode: ""
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -55,14 +55,14 @@ jobs:
     needs: Build_Profiler
     name: Upload Legate Profiler
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.35
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.36
     with:
       build-mode: ""
       build-type: ${{ inputs.build-type }}
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
       build-has-tests: false
-      legate-gh-ci-tag: "v1.35"
+      legate-gh-ci-tag: "v1.36"
       name: Upload package to Anaconda
       network: ${{ inputs.network }}
       pkgSubString: "legate-profiler"

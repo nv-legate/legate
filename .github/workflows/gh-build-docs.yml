@@ -24,7 +24,7 @@ jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.35
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.36
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
@@ -35,7 +35,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v1.35"
+      legate-gh-ci-tag: "v1.36"
       build-mode: ${{ inputs.build-mode }}
       network: "ucx"
       setup-python-proxy-cache: true
