@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # begin_group: Start a named section of log output, possibly with color.
 # Usage: begin_group "Group Name" [Color]
 #   Group Name: A string specifying the name of the group.
