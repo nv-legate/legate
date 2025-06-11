@@ -300,7 +300,8 @@ set(wo_runtime_SRC
     noinit/argument_parsing/logging.cc
     noinit/argument_parsing/legion_default_args.cc
     noinit/argument_parsing/argument.cc
-    noinit/argument_parsing/scaled.cc)
+    noinit/argument_parsing/scaled.cc
+    noinit/argument_parsing/cuda_driver_path.cc)
 
 set(non_reentrant_with_runtime_SRC
     non_reentrant/death_example.cc non_reentrant/oom_message.cc non_reentrant/runtime.cc

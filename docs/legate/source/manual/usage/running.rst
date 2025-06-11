@@ -38,17 +38,16 @@ or invoked directly:
 Resource Allocation
 -------------------
 
-By default Legate will query the available hardware on the current machine, and
-reserve for its use all CPU cores, all GPUs and most of the available memory.
-You can use ``LEGATE_SHOW_CONFIG=1`` to inspect the exact set of resources that
-Legate decided to reserve. You can fine-tune Legate's default resource
-reservation by passing specific flags to the ``legate`` driver script, listed
-later in this section.
+By default Legate will query the available hardware on the current machine, and reserve
+for its use all CPU cores, all GPUs and most of the available memory.  You can use
+``LEGATE_CONFIG='--show-config'`` to inspect the exact set of resources that Legate
+decided to reserve. You can fine-tune Legate's default resource reservation by passing
+specific flags to the ``legate`` driver script, listed later in this section.
 
-You can also use ``LEGATE_AUTO_CONFIG=0`` to disable Legate's automatic
-configuration. In this mode Legate will only reserve a minimal set of resources
-(only 1 CPU core for task execution, no GPUs, minimal system memory allocation),
-and any increases must be specified manually.
+You can also use ``LEGATE_CONFIG='--auto-config=0'`` to disable Legate's automatic
+configuration. In this mode Legate will only reserve a minimal set of resources (only 1
+CPU core for task execution, no GPUs, minimal system memory allocation), and any increases
+must be specified manually.
 
 The following ``legate`` flags control how many processors are used by Legate:
 

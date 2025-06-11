@@ -8,9 +8,7 @@
 
 #include <legate_defines.h>
 
-#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
-#include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
 
@@ -170,7 +168,7 @@ void CUDADriverAPI::read_symbols_()
   // above, we aren't compatible with that one.
   //
   // Load this first via dlsym()...
-  load_dlsym_function(handle_, "cuGetProcAddress", &get_proc_address_);
+  load_dlsym_function(handle_.get(), "cuGetProcAddress", &get_proc_address_);
   // ...then get the rest through it. We do this to make sure we are always loading the latest
   // version of the API with which we are compatible.
 
@@ -235,7 +233,7 @@ void CUDADriverAPI::check_initialized_() const
 
 CUDADriverAPI::CUDADriverAPI(std::string handle_path)
   : handle_path_{std::move(handle_path)},
-    handle_{::dlopen(handle_path_.c_str(), RTLD_LAZY | RTLD_LOCAL)}
+    handle_{::dlopen(handle_path_.c_str(), RTLD_LAZY | RTLD_LOCAL), &::dlclose}
 {
   if (!is_loaded()) {
     return;
@@ -529,18 +527,27 @@ CUresult CUDADriverError::error_code() const noexcept { return result_; }
 
 // ==========================================================================================
 
+namespace {
+
+std::optional<InternalSharedPtr<CUDADriverAPI>> CUDA_DRIVER_API{};
+
+}  // namespace
+
+void set_active_cuda_driver_api(std::string handle_path)
+{
+  if (CUDA_DRIVER_API.has_value() && (*CUDA_DRIVER_API)->handle_path() == handle_path) {
+    return;
+  }
+  CUDA_DRIVER_API = make_internal_shared<CUDADriverAPI>(std::move(handle_path));
+}
+
 const InternalSharedPtr<CUDADriverAPI>& get_cuda_driver_api()
 {
-  static std::optional<InternalSharedPtr<CUDADriverAPI>> api{};
-
-  if (!api.has_value()) {
-    auto path = legate::detail::LEGATE_CUDA_DRIVER.get().value_or(
-      // "libcuda.so.1" on Linux
-      LEGATE_SHARED_LIBRARY_PREFIX "cuda" LEGATE_SHARED_LIBRARY_SUFFIX ".1");
-
-    api = make_internal_shared<CUDADriverAPI>(std::move(path));
+  if (!CUDA_DRIVER_API.has_value()) {
+    throw legate::detail::TracedException<std::runtime_error>{
+      "Must initialize Legate via legate::start() before making CUDA driver calls"};
   }
-  return *api;
+  return *CUDA_DRIVER_API;
 }
 
 // ==========================================================================================

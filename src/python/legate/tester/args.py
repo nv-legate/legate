@@ -12,6 +12,24 @@ from pathlib import Path
 from typing import Literal, TypeAlias
 
 from ..util.args import ExtendAction, MultipleChoices
+from ..util.shared_args import (
+    AUTO_CONFIG,
+    CONSENSUS,
+    DISABLE_MPI,
+    FIELD_REUSE_FRACTION,
+    FIELD_REUSE_FREQUENCY,
+    INLINE_TASK_LAUNCH,
+    IO_USE_VFD_GDS,
+    MAX_EXCEPTION_SIZE,
+    MIN_CPU_CHUNK,
+    MIN_GPU_CHUNK,
+    MIN_OMP_CHUNK,
+    SHOW_CONFIG,
+    SHOW_MEMORY_USAGE,
+    SHOW_PROGRESS,
+    WARMUP_NCCL,
+    WINDOW_SIZE,
+)
 from . import defaults
 
 __all__ = ("parser",)
@@ -27,6 +45,11 @@ parser = ArgumentParser(
     ),
     epilog="Any extra arguments will be forwarded to the Legate script",
 )
+
+parser.add_argument(AUTO_CONFIG.name, **AUTO_CONFIG.kwargs)
+parser.add_argument(SHOW_CONFIG.name, **SHOW_CONFIG.kwargs)
+parser.add_argument(SHOW_MEMORY_USAGE.name, **SHOW_MEMORY_USAGE.kwargs)
+parser.add_argument(SHOW_PROGRESS.name, **SHOW_PROGRESS.kwargs)
 
 stages = parser.add_argument_group("Feature stage selection")
 
@@ -176,6 +199,14 @@ memory.add_argument(
     help="per-process NUMA memory for OpenMP processors limit (MB)",
 )
 
+memory.add_argument(MAX_EXCEPTION_SIZE.name, **MAX_EXCEPTION_SIZE.kwargs)
+memory.add_argument(MIN_CPU_CHUNK.name, **MIN_CPU_CHUNK.kwargs)
+memory.add_argument(MIN_GPU_CHUNK.name, **MIN_GPU_CHUNK.kwargs)
+memory.add_argument(MIN_OMP_CHUNK.name, **MIN_OMP_CHUNK.kwargs)
+memory.add_argument(FIELD_REUSE_FRACTION.name, **FIELD_REUSE_FRACTION.kwargs)
+memory.add_argument(FIELD_REUSE_FREQUENCY.name, **FIELD_REUSE_FREQUENCY.kwargs)
+memory.add_argument(CONSENSUS.name, **CONSENSUS.kwargs)
+
 # -- multi_node
 
 multi_node = parser.add_argument_group("Multi-node configuration")
@@ -292,6 +323,12 @@ info.add_argument(
 # -- other
 
 other = parser.add_argument_group("Other options")
+
+other.add_argument(WINDOW_SIZE.name, **WINDOW_SIZE.kwargs)
+other.add_argument(WARMUP_NCCL.name, **WARMUP_NCCL.kwargs)
+other.add_argument(DISABLE_MPI.name, **DISABLE_MPI.kwargs)
+other.add_argument(INLINE_TASK_LAUNCH.name, **INLINE_TASK_LAUNCH.kwargs)
+other.add_argument(IO_USE_VFD_GDS.name, **IO_USE_VFD_GDS.kwargs)
 
 other.add_argument(
     "--legate",

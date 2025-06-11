@@ -13,24 +13,40 @@ if TYPE_CHECKING:
     from ..util.types import RunMode
 
 from .. import __version__
+from ..util import defaults
 from ..util.args import InfoAction
 from ..util.shared_args import (
+    AUTO_CONFIG,
+    CONSENSUS,
     CPUS,
+    DISABLE_MPI,
     FBMEM,
+    FIELD_REUSE_FRACTION,
+    FIELD_REUSE_FREQUENCY,
     GPUS,
+    INLINE_TASK_LAUNCH,
+    IO_USE_VFD_GDS,
     LAUNCHER,
     LAUNCHER_EXTRA,
+    MAX_EXCEPTION_SIZE,
+    MIN_CPU_CHUNK,
+    MIN_GPU_CHUNK,
+    MIN_OMP_CHUNK,
     NODES,
     NUMAMEM,
     OMPS,
     OMPTHREADS,
     RANKS_PER_NODE,
     REGMEM,
+    SHOW_CONFIG,
+    SHOW_MEMORY_USAGE,
+    SHOW_PROGRESS,
     SYSMEM,
     UTILITY,
+    WARMUP_NCCL,
+    WINDOW_SIZE,
     ZCMEM,
 )
-from . import defaults
 
 __all__ = ("parser",)
 
@@ -226,8 +242,12 @@ parser.add_argument(
     "[legate-only, not supported with standard Python invocation]",
 )
 
-nodes_kw, ranks_per_node_kw = detect_multi_node_defaults()
+parser.add_argument(AUTO_CONFIG.name, **AUTO_CONFIG.kwargs)
+parser.add_argument(SHOW_CONFIG.name, **SHOW_CONFIG.kwargs)
+parser.add_argument(SHOW_MEMORY_USAGE.name, **SHOW_MEMORY_USAGE.kwargs)
+parser.add_argument(SHOW_PROGRESS.name, **SHOW_PROGRESS.kwargs)
 
+nodes_kw, ranks_per_node_kw = detect_multi_node_defaults()
 
 multi_node = parser.add_argument_group("Multi-node configuration")
 multi_node.add_argument(NODES.name, **nodes_kw)
@@ -290,7 +310,13 @@ memory.add_argument(NUMAMEM.name, **NUMAMEM.kwargs)
 memory.add_argument(FBMEM.name, **FBMEM.kwargs)
 memory.add_argument(ZCMEM.name, **ZCMEM.kwargs)
 memory.add_argument(REGMEM.name, **REGMEM.kwargs)
-
+memory.add_argument(MAX_EXCEPTION_SIZE.name, **MAX_EXCEPTION_SIZE.kwargs)
+memory.add_argument(MIN_CPU_CHUNK.name, **MIN_CPU_CHUNK.kwargs)
+memory.add_argument(MIN_GPU_CHUNK.name, **MIN_GPU_CHUNK.kwargs)
+memory.add_argument(MIN_OMP_CHUNK.name, **MIN_OMP_CHUNK.kwargs)
+memory.add_argument(FIELD_REUSE_FRACTION.name, **FIELD_REUSE_FRACTION.kwargs)
+memory.add_argument(FIELD_REUSE_FREQUENCY.name, **FIELD_REUSE_FREQUENCY.kwargs)
+memory.add_argument(CONSENSUS.name, **CONSENSUS.kwargs)
 
 profiling = parser.add_argument_group("Profiling")
 
@@ -464,6 +490,12 @@ info.add_argument(
 
 
 other = parser.add_argument_group("Other options")
+
+other.add_argument(WINDOW_SIZE.name, **WINDOW_SIZE.kwargs)
+other.add_argument(WARMUP_NCCL.name, **WARMUP_NCCL.kwargs)
+other.add_argument(DISABLE_MPI.name, **DISABLE_MPI.kwargs)
+other.add_argument(INLINE_TASK_LAUNCH.name, **INLINE_TASK_LAUNCH.kwargs)
+other.add_argument(IO_USE_VFD_GDS.name, **IO_USE_VFD_GDS.kwargs)
 
 other.add_argument(
     "--timing",

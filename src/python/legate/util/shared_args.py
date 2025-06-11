@@ -6,27 +6,43 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..driver import defaults
+from . import defaults
 from .args import ArgSpec, Argument
 
 if TYPE_CHECKING:
     from .types import LauncherType
 
 __all__ = (
+    "AUTO_CONFIG",
+    "CONSENSUS",
     "CPUS",
+    "DISABLE_MPI",
     "FBMEM",
+    "FIELD_REUSE_FRACTION",
+    "FIELD_REUSE_FREQUENCY",
     "GPUS",
+    "INLINE_TASK_LAUNCH",
+    "IO_USE_VFD_GDS",
     "LAUNCHER",
     "LAUNCHERS",
     "LAUNCHER_EXTRA",
+    "MAX_EXCEPTION_SIZE",
+    "MIN_CPU_CHUNK",
+    "MIN_GPU_CHUNK",
+    "MIN_OMP_CHUNK",
     "NODES",
     "NUMAMEM",
     "OMPS",
     "OMPTHREADS",
     "RANKS_PER_NODE",
     "REGMEM",
+    "SHOW_CONFIG",
+    "SHOW_MEMORY_USAGE",
+    "SHOW_PROGRESS",
     "SYSMEM",
     "UTILITY",
+    "WARMUP_NCCL",
+    "WINDOW_SIZE",
     "ZCMEM",
 )
 
@@ -36,6 +52,46 @@ LAUNCHERS: tuple[LauncherType, ...] = (
     "srun",
     "dask",
     "none",
+)
+
+AUTO_CONFIG = Argument(
+    "--auto-config",
+    ArgSpec(
+        dest="auto_config",
+        action="store_true",
+        required=False,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+SHOW_CONFIG = Argument(
+    "--show-config",
+    ArgSpec(
+        dest="show_config",
+        action="store_true",
+        required=False,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+SHOW_MEMORY_USAGE = Argument(
+    "--show-memory-usage",
+    ArgSpec(
+        dest="show_memory_usage",
+        action="store_true",
+        required=False,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+SHOW_PROGRESS = Argument(
+    "--show-progress",
+    ArgSpec(
+        dest="show_progress",
+        action="store_true",
+        required=False,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
 )
 
 NODES = Argument(
@@ -203,5 +259,119 @@ REGMEM = Argument(
         default=None,
         dest="regmem",
         help="Size (in MiB) of NIC-registered DRAM memory to reserve per rank",
+    ),
+)
+
+MAX_EXCEPTION_SIZE = Argument(
+    "--max-exception-size",
+    ArgSpec(
+        dest="max_exception_size",
+        required=False,
+        type=int,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+MIN_CPU_CHUNK = Argument(
+    "--min-cpu-chunk",
+    ArgSpec(
+        dest="min_cpu_chunk",
+        required=False,
+        type=int,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+MIN_GPU_CHUNK = Argument(
+    "--min-gpu-chunk",
+    ArgSpec(
+        dest="min_gpu_chunk",
+        required=False,
+        type=int,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+MIN_OMP_CHUNK = Argument(
+    "--min-omp-chunk",
+    ArgSpec(
+        dest="min_omp_chunk",
+        required=False,
+        type=int,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+FIELD_REUSE_FRACTION = Argument(
+    "--field-reuse-fraction",
+    ArgSpec(
+        dest="field_reuse_fraction",
+        required=False,
+        type=int,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+FIELD_REUSE_FREQUENCY = Argument(
+    "--field-reuse-frequency",
+    ArgSpec(
+        dest="field_reuse_frequency",
+        required=False,
+        type=int,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+CONSENSUS = Argument(
+    "--consensus",
+    ArgSpec(
+        dest="consensus",
+        action="store_true",
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+WINDOW_SIZE = Argument(
+    "--window-size",
+    ArgSpec(
+        dest="window_size",
+        type=int,
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+WARMUP_NCCL = Argument(
+    "--warmup-nccl",
+    ArgSpec(
+        dest="warmup_nccl",
+        action="store_true",
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+DISABLE_MPI = Argument(
+    "--disable-mpi",
+    ArgSpec(
+        dest="disable_mpi",
+        action="store_true",
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+INLINE_TASK_LAUNCH = Argument(
+    "--inline-task-launch",
+    ArgSpec(
+        dest="inline_task_launch",
+        action="store_true",
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+IO_USE_VFD_GDS = Argument(
+    "--io-use-vfd-gds",
+    ArgSpec(
+        dest="io_use_vfd_gds",
+        action="store_true",
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
     ),
 )

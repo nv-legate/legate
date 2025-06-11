@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import legate.driver.args as m
-from legate.driver import defaults
+from legate.util import defaults
 
 
 class TestParserDefaults:

@@ -6,10 +6,13 @@
 
 #include <legate/runtime/detail/argument_parsing/flags/logging.h>
 
+#include <legate/comm/detail/logger.h>
+#include <legate/mapping/detail/base_mapper.h>
 #include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/cpp_version.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/typedefs.h>
 
 #include <realm/logging.h>
 
@@ -150,6 +153,19 @@ std::string logging_help_str()
   for (auto&& [choice, _, help_str] : LOG_LEVEL_CHOICES) {
     fmt::format_to(std::back_inserter(ret), "\n{} - {}.", choice, help_str);
   }
+
+  fmt::format_to(std::back_inserter(ret),
+                 "\n"
+                 "\n"
+                 "Available legate loggers are:\n"
+                 "- {} (the core legate logger)\n"
+                 "- {} (the store partitioning logger)\n"
+                 "- {} (the mapping logger)\n"
+                 "- {} (the collective communication logger)",
+                 log_legate().get_name(),
+                 log_legate_partitioner().get_name(),
+                 mapping::detail::BaseMapper::LOGGER_NAME,
+                 comm::coll::logger().get_name());
   return ret;
 }
 

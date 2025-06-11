@@ -62,6 +62,8 @@ class ParseArgsUnit : public DefaultFixture {
     Environment::temporary_cleared_env_var("LEGATE_LOG_MAPPING");
   TemporaryEnvVar legate_log_partitioning_ =
     Environment::temporary_cleared_env_var("LEGATE_LOG_PARTITIONING");
+  TemporaryEnvVar legate_cuda_driver_ =
+    Environment::temporary_cleared_env_var("LEGATE_CUDA_DRIVER");
 };
 
 MATCHER_P(
@@ -128,6 +130,9 @@ TEST_F(ParseArgsUnit, NoArgs)
   ASSERT_THAT(parsed.log_dir, ArgumentMatches(std::filesystem::current_path()));
   ASSERT_THAT(parsed.log_to_file, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.freeze_on_error, ArgumentMatches(::testing::IsFalse()));
+  ASSERT_THAT(parsed.cuda_driver_path,
+              ArgumentMatches(std::string{LEGATE_SHARED_LIBRARY_PREFIX
+                                          "cuda" LEGATE_SHARED_LIBRARY_SUFFIX ".1"}));
 }
 
 TEST_F(ParseArgsUnitNoEnv, NoArgs)
@@ -155,6 +160,7 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   TEMP_ENV_VAR(LEGATE_IO_USE_VFD_GDS, 1);
   TEMP_ENV_VAR(LEGATE_LOG_MAPPING, 1);
   TEMP_ENV_VAR(LEGATE_LOG_PARTITIONING, 1);
+  TEMP_ENV_VAR(LEGATE_CUDA_DRIVER, libdummy_cuda_driver.so);
 
   const auto parsed = legate::detail::parse_args({"dummy"});
 
@@ -191,6 +197,7 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   ASSERT_THAT(parsed.log_dir, ArgumentMatches(std::filesystem::current_path()));
   ASSERT_THAT(parsed.log_to_file, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.freeze_on_error, ArgumentMatches(::testing::IsFalse()));
+  ASSERT_THAT(parsed.cuda_driver_path, ArgumentMatches(std::string{"libdummy_cuda_driver.so"}));
 
 #undef TEMP_ENV_VAR
 }
@@ -564,6 +571,14 @@ TEST_P(BoolArgs, FreezeOnError)
     legate::detail::parse_args({"dummy", "--freeze-on-error", std::string{arg_value}});
 
   ASSERT_THAT(parsed.freeze_on_error, ArgumentMatches(expected));
+}
+
+TEST_F(ParseArgsUnit, CUDADriverPath)
+{
+  const auto path   = std::string{"/path/to/cuda/driver.so"};
+  const auto parsed = legate::detail::parse_args({"dummy", "--cuda-driver-path", path});
+
+  ASSERT_THAT(parsed.cuda_driver_path, ArgumentMatches(path));
 }
 
 }  // namespace test_parse_args

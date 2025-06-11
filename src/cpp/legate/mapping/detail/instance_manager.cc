@@ -20,7 +20,7 @@ namespace {
 
 [[nodiscard]] Legion::Logger& log_instmgr()
 {
-  static Legion::Logger log{"instmgr"};
+  static Legion::Logger log{"legate.instmgr"};
 
   return log;
 }

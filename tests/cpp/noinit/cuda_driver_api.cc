@@ -6,15 +6,12 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 
-#include <legate/utilities/detail/env.h>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <utilities/env.h>
 #include <utilities/utilities.h>
 
 namespace test_cuda_loader {
@@ -30,19 +27,6 @@ TEST_F(CUDADriverAPITest, CreateDestroy)
   driver.reset();
   driver.emplace("bar");
   driver.reset();
-}
-
-TEST_F(CUDADriverAPITest, DefaultLoadPath)
-{
-  // Make sure that any existing modifications are not set
-  const auto _ =
-    legate::test::Environment::temporary_cleared_env_var(legate::detail::LEGATE_CUDA_DRIVER);
-  auto&& driver = legate::cuda::detail::get_cuda_driver_api();
-
-  // By default, it should be looking for libcuda.so.1, because that's what is documented.
-  ASSERT_THAT(
-    driver->handle_path(),
-    ::testing::EndsWith(LEGATE_SHARED_LIBRARY_PREFIX "cuda" LEGATE_SHARED_LIBRARY_SUFFIX ".1"));
 }
 
 TEST_F(CUDADriverAPITest, SetLoadPath)

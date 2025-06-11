@@ -98,12 +98,21 @@ class Config:
         )
         self.info = Info(verbose=self.verbose > 0, bind_detail=False)
         self.other = Other(
+            auto_config=bool(args.auto_config),
+            show_config=bool(args.show_config),
+            show_memory_usage=bool(args.show_memory_usage),
+            show_progress=bool(args.show_progress),
             timing=False,
             wrapper=[],
             wrapper_inner=[],
             module=None,
             dry_run=False,
             color=False,
+            window_size=args.window_size,
+            warmup_nccl=args.warmup_nccl,
+            disable_mpi=args.disable_mpi,
+            inline_task_launch=args.inline_task_launch,
+            io_use_vfd_gds=args.io_use_vfd_gds,
         )
 
     @cached_property

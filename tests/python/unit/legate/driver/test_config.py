@@ -13,7 +13,7 @@ from unittest.mock import call
 import pytest
 
 import legate.driver.config as m
-from legate.driver import defaults
+from legate.util import defaults
 from legate.util.types import DataclassMixin
 
 from ...util import powerset
@@ -111,6 +111,13 @@ class TestMemory:
             "fbmem",
             "zcmem",
             "regmem",
+            "max_exception_size",
+            "min_cpu_chunk",
+            "min_gpu_chunk",
+            "min_omp_chunk",
+            "field_reuse_fraction",
+            "field_reuse_frequency",
+            "consensus",
         }
 
     def test_mixin(self) -> None:
@@ -213,12 +220,21 @@ class TestInfo:
 class TestOther:
     def test_fields(self) -> None:
         assert set(m.Other.__dataclass_fields__) == {
+            "auto_config",
+            "show_config",
+            "show_memory_usage",
+            "show_progress",
             "timing",
             "wrapper",
             "wrapper_inner",
             "module",
             "dry_run",
             "color",
+            "window_size",
+            "warmup_nccl",
+            "disable_mpi",
+            "inline_task_launch",
+            "io_use_vfd_gds",
         }
 
     def test_mixin(self) -> None:
@@ -247,7 +263,18 @@ class TestConfig:
         )
 
         assert c.memory == m.Memory(
-            sysmem=None, numamem=None, fbmem=None, zcmem=None, regmem=None
+            sysmem=None,
+            numamem=None,
+            fbmem=None,
+            zcmem=None,
+            regmem=None,
+            max_exception_size=None,
+            min_cpu_chunk=None,
+            min_gpu_chunk=None,
+            min_omp_chunk=None,
+            field_reuse_fraction=None,
+            field_reuse_frequency=None,
+            consensus=False,
         )
 
         assert c.profiling == m.Profiling(
@@ -274,12 +301,21 @@ class TestConfig:
         assert c.info == m.Info(verbose=False, bind_detail=False)
 
         assert c.other == m.Other(
+            auto_config=False,
+            show_config=False,
+            show_memory_usage=False,
+            show_progress=False,
             timing=False,
             wrapper=[],
             wrapper_inner=[],
             module=None,
             dry_run=False,
             color=False,
+            window_size=None,
+            warmup_nccl=False,
+            disable_mpi=False,
+            inline_task_launch=False,
+            io_use_vfd_gds=False,
         )
 
     def test_arg_conversions(self, mocker: MockerFixture) -> None:

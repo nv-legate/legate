@@ -9,7 +9,7 @@ from argparse import SUPPRESS
 import pytest
 
 import legate.driver.args as m
-from legate.driver import defaults
+from legate.util import defaults
 
 
 class TestParserDefaults:

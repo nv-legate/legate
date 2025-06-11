@@ -438,6 +438,7 @@ target_sources(legate
                        legate/runtime/detail/argument_parsing/flags/ompthreads.cc
                        legate/runtime/detail/argument_parsing/flags/openmp.cc
                        legate/runtime/detail/argument_parsing/flags/sysmem.cc
+                       legate/runtime/detail/argument_parsing/flags/cuda_driver_path.cc
                        legate/runtime/detail/mpi_detection.cc
                        legate/task/registrar.cc
                        legate/task/task.cc

@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -106,7 +107,7 @@ class CUDADriverAPI {
 
  private:
   std::string handle_path_{};
-  void* handle_{};
+  std::unique_ptr<void, int (*)(void*)> handle_;
 
   void read_symbols_();
   void check_initialized_() const;
@@ -225,13 +226,33 @@ class CUDADriverError : public std::runtime_error {
 // ==========================================================================================
 
 /**
+ * @brief Set the current active CUDA driver API.
+ *
+ * This routine will set the current active CUDA driver returned by `get_cuda_driver_api()`. If
+ * the new active driver would be at the same path as the current, it does nothing
+ * (i.e. passing the same handle_path twice to this routine is a no-op).
+ *
+ * If the driver is replaced, the previous shared object is unloaded via a call to
+ * `dlclose()`. If this causes the underlying shared object to be unloaded, any remaining
+ * handles or function pointers originating from the shared object will become invalid.
+ *
+ * Therefore, the user is highly encouraged to store the return value of
+ * `get_cuda_driver_api()` by value if the user intends to make multiple driver calls across a
+ * "wide" gap.
+ *
+ * @param handle_path The path to, or name of, of the new driver shared object.
+ */
+void set_active_cuda_driver_api(std::string handle_path);
+
+/**
  * @brief Get the singleton CUDA driver API object.
  *
- * This loads and initializes the driver on first call. Due to the inability to track the
- * lifetimes of objects created through an open DSO, the driver API object returned by this
- * function lives until program shutdown.
+ * The CUDA driver must have been set by a call to `set_active_cuda_driver_api()` prior to this
+ * call, otherwise an exception is thrown. Usually this is done as part of `legate::start()`.
  *
  * @return The CUDA driver API.
+ *
+ * @throw std::runtime_error If the driver has not yet been set.
  */
 [[nodiscard]] const InternalSharedPtr<CUDADriverAPI>& get_cuda_driver_api();
 

@@ -8,7 +8,7 @@ from importlib import reload
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import legate.driver.defaults as m
+import legate.util.defaults as m
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture

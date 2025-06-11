@@ -17,6 +17,12 @@ parser = ArgumentParser(
     formatter_class=ArgumentDefaultsHelpFormatter,
 )
 
+parser.add_argument(sa.AUTO_CONFIG.name, **sa.AUTO_CONFIG.kwargs)
+parser.add_argument(sa.SHOW_CONFIG.name, **sa.SHOW_CONFIG.kwargs)
+parser.add_argument(sa.SHOW_MEMORY_USAGE.name, **sa.SHOW_MEMORY_USAGE.kwargs)
+parser.add_argument(sa.SHOW_PROGRESS.name, **sa.SHOW_PROGRESS.kwargs)
+
+
 kernel = parser.add_argument_group("Kernel configuration")
 
 kernel.add_argument(
@@ -70,7 +76,17 @@ memory.add_argument(sa.NUMAMEM.name, **sa.NUMAMEM.kwargs)
 memory.add_argument(sa.FBMEM.name, **sa.FBMEM.kwargs)
 memory.add_argument(sa.ZCMEM.name, **sa.ZCMEM.kwargs)
 memory.add_argument(sa.REGMEM.name, **sa.REGMEM.kwargs)
-
+memory.add_argument(sa.MAX_EXCEPTION_SIZE.name, **sa.MAX_EXCEPTION_SIZE.kwargs)
+memory.add_argument(sa.MIN_CPU_CHUNK.name, **sa.MIN_CPU_CHUNK.kwargs)
+memory.add_argument(sa.MIN_GPU_CHUNK.name, **sa.MIN_GPU_CHUNK.kwargs)
+memory.add_argument(sa.MIN_OMP_CHUNK.name, **sa.MIN_OMP_CHUNK.kwargs)
+memory.add_argument(
+    sa.FIELD_REUSE_FRACTION.name, **sa.FIELD_REUSE_FRACTION.kwargs
+)
+memory.add_argument(
+    sa.FIELD_REUSE_FREQUENCY.name, **sa.FIELD_REUSE_FREQUENCY.kwargs
+)
+memory.add_argument(sa.CONSENSUS.name, **sa.CONSENSUS.kwargs)
 
 info = parser.add_argument_group("Informational")
 
@@ -90,3 +106,11 @@ info.add_argument(
     required=False,
     help="Whether to use color terminal output (if rich is installed)",
 )
+
+other = parser.add_argument_group("Other options")
+
+other.add_argument(sa.WINDOW_SIZE.name, **sa.WINDOW_SIZE.kwargs)
+other.add_argument(sa.WARMUP_NCCL.name, **sa.WARMUP_NCCL.kwargs)
+other.add_argument(sa.DISABLE_MPI.name, **sa.DISABLE_MPI.kwargs)
+other.add_argument(sa.INLINE_TASK_LAUNCH.name, **sa.INLINE_TASK_LAUNCH.kwargs)
+other.add_argument(sa.IO_USE_VFD_GDS.name, **sa.IO_USE_VFD_GDS.kwargs)

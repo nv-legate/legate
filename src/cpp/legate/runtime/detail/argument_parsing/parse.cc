@@ -198,6 +198,7 @@ LegateArgumentParser::LegateArgumentParser()
       /* version */ fmt::format(
         "{}.{}.{}", LEGATE_VERSION_MAJOR, LEGATE_VERSION_MINOR, LEGATE_VERSION_PATCH))}
 {
+  parser()->set_usage_max_line_width(80);
 }
 
 template <typename T>
@@ -275,106 +276,39 @@ ParsedArgs parse_args(std::vector<std::string> args)
 
   auto parser = LegateArgumentParser{};
 
-  auto auto_config =
-    parser.add_argument("--auto-config",
-                        "Automatically detect a suitable configuration. This attempts to "
-                        "detect a reasonable default for most options listed hereafter "
-                        "and is recommended for most users.",
-                        LEGATE_AUTO_CONFIG.get().value_or(true));
-  auto show_config   = parser.add_argument("--show-config",
-                                         "Print the configuration to stdout.",
-                                         LEGATE_SHOW_CONFIG.get().value_or(false));
-  auto show_progress = parser.add_argument("--show-progress",
-                                           "Print a progress summary before each task is executed.",
-                                           LEGATE_SHOW_PROGRESS.get().value_or(false));
-  auto empty_task =
-    parser.add_argument("--use-empty-task",
-                        "Execute an empty dummy task in place of each task execution. This "
-                        "is primarily a developer feature for use in debugging runtime or "
-                        "scheduling inconsistencies and is not recommended for external use.",
-                        LEGATE_EMPTY_TASK.get().value_or(false));
-  auto warmup_nccl = parser.add_argument(
-    "--warmup-nccl",
-    "Perform a warmup for NCCL on startup. This is useful when doing performance benchmarks.",
-    LEGATE_WARMUP_NCCL.get().value_or(false));
+  // ------------------------------------------------------------------------------------------
+  parser.parser()->add_group("Core configuration");
 
-  warmup_nccl.action([](std::string_view, const Argument<bool>* warmup_nccl_arg) {
-    const auto val = warmup_nccl_arg->value();
-
-    if (val && !LEGATE_DEFINED(LEGATE_USE_NCCL)) {
-      throw TracedException<std::runtime_error>{
-        "Cannot warmup NCCL, Legate was not configured with NCCL support."};
-    }
-    return val;
-  });
-
-  auto inline_task_launch =
-    parser.add_argument("--inline-task-launch",
-                        "Enable inline task launch",
-                        experimental::LEGATE_INLINE_TASK_LAUNCH.get().value_or(false));
-
-  inline_task_launch.argparse_argument().hidden();
-
+  auto auto_config = parser.add_argument(
+    "--auto-config",
+    "Automatically detect a suitable configuration.\n"
+    "\n"
+    "If enabled, attempts to detect a reasonable default for most options listed hereafter and is "
+    "recommended for most users. If disabled, Legate will use a minimal set of resources.",
+    LEGATE_AUTO_CONFIG.get().value_or(true));
+  auto show_config =
+    parser.add_argument("--show-config",
+                        "Print the configuration to stdout.\n"
+                        "\n"
+                        "The configuration is shown after all auto-configuration has been done, "
+                        "and so is representative of the 'final' configuration used. This variable "
+                        "can be used to visually confirm that Legate's automatic configuration "
+                        "heuristics are picking up appropriate settings for your machine.",
+                        LEGATE_SHOW_CONFIG.get().value_or(false));
   auto show_usage =
     parser.add_argument("--show-memory-usage",
                         "Show detailed memory footprint of Legate at program shutdown.",
                         LEGATE_SHOW_USAGE.get().value_or(false));
+  auto show_progress = parser.add_argument(
+    "--show-progress",
+    "Print a progress summary before each task is executed.\n"
+    "\n"
+    "This is useful to visually ensure that a particular task is being called. The progress "
+    "reports are emitted by Legate before entering into the task body itself.",
+    LEGATE_SHOW_PROGRESS.get().value_or(false));
 
-  auto max_exception_size =
-    parser.add_argument("--max-exception-size",
-                        "Maximum size (in bytes) to allocate for exception messages.",
-                        LEGATE_MAX_EXCEPTION_SIZE.get(LEGATE_MAX_EXCEPTION_SIZE_DEFAULT,
-                                                      LEGATE_MAX_EXCEPTION_SIZE_TEST));
-  auto min_cpu_chunk = parser.add_argument(
-    "--min-cpu-chunk",
-    "Minimum CPU chunk size (in bytes).",
-    LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST));
-  auto min_gpu_chunk = parser.add_argument(
-    "--min-gpu-chunk",
-    "Minimum GPU chunk size (in bytes).",
-    LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST));
-  auto min_omp_chunk = parser.add_argument(
-    "--min-omp-chunk",
-    "Minimum OpenMP chunk size (in bytes).",
-    LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST));
-  auto window_size = parser.add_argument(
-    "--window-size",
-    "Maximum size of the submitted operation queue before forced flush.",
-    LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST));
-  auto field_reuse_frac = parser.add_argument(
-    "--field-reuse-fraction",
-    "Field reuse fraction",
-    LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST));
-  auto field_reuse_freq = parser.add_argument(
-    "--field-reuse-frequency",
-    "Field reuse frequency",
-    LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST));
-  auto consensus =
-    parser.add_argument("--consensus",
-                        "Consensus",
-                        LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST));
-  auto disable_mpi = parser.add_argument(
-    "--disable-mpi",
-    "Disable MPI initialization and use. This is useful if Legate was configured with MPI support "
-    "(which usually causes Legate to use it), but MPI is not functional on the current system. "
-    "When this flag is passed, no task should be launched that requests the MPI communicator, or "
-    "the program will fail.",
-    LEGATE_DISABLE_MPI.get(LEGATE_DISABLE_MPI_DEFAULT, LEGATE_DISABLE_MPI_TEST));
-  auto io_use_vfd_gds =
-    parser.add_argument("--io-use-vfd-gds",
-                        "Whether to enable HDF5 Virtual File Driver (VDS) GPUDirectStorage (GDS) "
-                        "which may dramatically speed up file storage and extraction",
-                        LEGATE_IO_USE_VFD_GDS.get().value_or(false));
-
-  io_use_vfd_gds.action([](std::string_view, const Argument<bool>* io_use_vfd_gds_arg) {
-    const auto val = io_use_vfd_gds_arg->value();
-
-    if (val && !LEGATE_DEFINED(LEGATE_USE_HDF5_VFD_GDS)) {
-      throw TracedException<std::runtime_error>{
-        "Cannot enable HDF5 VFD GDS, Legate was not configured with GDS support."};
-    }
-    return val;
-  });
+  // ------------------------------------------------------------------------------------------
+  parser.parser()->add_group("Resource configuration");
 
   auto cpus = parser.add_argument(
     "--cpus", "Number of standalone CPU cores to reserve, must be >=0", DEFAULT_CPUS);
@@ -398,6 +332,9 @@ ParsedArgs parse_args(std::vector<std::string> args)
     return util_arg->value();
   });
 
+  // ------------------------------------------------------------------------------------------
+  parser.parser()->add_group("Memory allocation");
+
   auto sysmem = parser.add_scaled_argument(
     "--sysmem", "Size (in MiB) of DRAM memory to reserve per rank", Scaled{DEFAULT_SYSMEM, MB});
   auto numamem = parser.add_scaled_argument(
@@ -412,9 +349,139 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "--zcmem",
     "Size (in MiB) of GPU-registered (or \"zero-copy\") DRAM memory to reserve per GPU",
     Scaled{DEFAULT_ZCMEM, MB});
-  auto regmem      = parser.add_scaled_argument("--regmem",
+  auto regmem             = parser.add_scaled_argument("--regmem",
                                            "Size (in MiB) of NIC-registered DRAM memory to reserve",
                                            Scaled{DEFAULT_REGMEM, MB});
+  auto max_exception_size = parser.add_argument(
+    "--max-exception-size",
+    "Maximum size (in bytes) to allocate for exception messages.\n"
+    "\n"
+    "Legate needs an upper bound on the size of exception that can be raised by a task.",
+    LEGATE_MAX_EXCEPTION_SIZE.get(LEGATE_MAX_EXCEPTION_SIZE_DEFAULT,
+                                  LEGATE_MAX_EXCEPTION_SIZE_TEST));
+
+  auto min_cpu_chunk = parser.add_argument(
+    "--min-cpu-chunk",
+    "Minimum CPU chunk size (in bytes).\n"
+    "\n"
+    "If using CPUs, any task operating on arrays smaller than this will not be parallelized across "
+    "more than one core.",
+    LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST));
+  auto min_gpu_chunk = parser.add_argument(
+    "--min-gpu-chunk",
+    "Minimum GPU chunk size (in bytes).\n"
+    "\n"
+    "If using GPUs, any task operating on arrays smaller than this will not be parallelized across "
+    "more than one core.",
+    LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST));
+  auto min_omp_chunk = parser.add_argument(
+    "--min-omp-chunk",
+    "Minimum OpenMP chunk size (in bytes)."
+    "\n"
+    "If using OpenMP, any task operating on arrays smaller than this will not be parallelized "
+    "across more than one OpenMP group.",
+    LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST));
+
+  // ------------------------------------------------------------------------------------------
+  parser.parser()->add_group("Execution control");
+
+  auto window_size = parser.add_argument(
+    "--window-size",
+    "Maximum size of the submitted operation queue before forced flush.",
+    LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST));
+  auto warmup_nccl = parser.add_argument(
+    "--warmup-nccl",
+    "Perform a warmup for NCCL on startup.\n"
+    "\n"
+    "NCCL usually has a relatively high startup cost the first time any collective communication "
+    "is performed. This could corrupt performance measurements if that startup is performed in the "
+    "hot-path. This is useful when doing performance benchmarks.",
+    LEGATE_WARMUP_NCCL.get().value_or(false));
+
+  warmup_nccl.action([](std::string_view, const Argument<bool>* warmup_nccl_arg) {
+    const auto val = warmup_nccl_arg->value();
+
+    if (val && !LEGATE_DEFINED(LEGATE_USE_NCCL)) {
+      throw TracedException<std::runtime_error>{
+        "Cannot warmup NCCL, Legate was not configured with NCCL support."};
+    }
+    return val;
+  });
+
+  auto disable_mpi = parser.add_argument(
+    "--disable-mpi",
+    "Disable MPI initialization and use.\n"
+    "\n"
+    "This is useful if Legate was configured with MPI support (which usually causes Legate to use "
+    "it), but MPI is not functional on the current system. When this flag is passed, no task "
+    "should be launched that requests the MPI communicator, or the program will fail.",
+    LEGATE_DISABLE_MPI.get(LEGATE_DISABLE_MPI_DEFAULT, LEGATE_DISABLE_MPI_TEST));
+
+  auto field_reuse_frac = parser.add_argument(
+    "--field-reuse-fraction",
+    "What amount (in bytes) of the \"primary\" memory type should be allocated before consensus "
+    "match is triggered.\n"
+    "\n"
+    "Which memory is \"primary\" depends on the configuration of Legate. If Legate was configured "
+    "for GPU support (and it detects GPUs), then the GPU memory is primary. If Legate is "
+    "configured for OpenMP support, then socket memory is considered primary.\n"
+    "\n"
+    "For example, on a hypothetical machine with 1,000 bytes of GPU memory, and 500 bytes of "
+    "socket memory, a value of --field-reuse-fraction=250 will result in Legate issuing a "
+    "consensus match every 250 bytes of GPU memory being allocated."
+    "\n"
+    "See help string of --consensus for more information on what a consensus match constitutes.",
+    LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST));
+  auto field_reuse_freq = parser.add_argument(
+    "--field-reuse-frequency",
+    "The size (in number of stores) of the discarded store/array field cache to retain.\n"
+    "\n"
+    "When Legate stores and arrays are destroyed, their backing storage is not immediately "
+    "deallocated. Instead, it is first sent to a cache to be potentially reused when another store "
+    "of similar properties is requested. This flag sets the maximum size of this cache.\n"
+    "\n"
+    "Higher values may result in faster execution (as more stores may be constructed out of the "
+    "cache) at the tradeoff of higher memory usage.",
+    LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST));
+  auto consensus = parser.add_argument(
+    "--consensus",
+    "Whether to perform the RegionField consensus match operation on single-node runs (for "
+    "testing).\n"
+    "\n"
+    "This is normally only necessary on multi-node runs, where all processes must collectively "
+    "agree that a RegionField has been garbage collected at the Python level before it can be "
+    "reused.",
+    LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST));
+
+  auto inline_task_launch = parser.add_argument(
+    "--inline-task-launch",
+    "Enable inline task launch.\n"
+    "\n"
+    "Normally, when a task is launched, Legate goes through the \"Legion calling convention\" "
+    "which involves serialization of all arguments, and packaging up the task such that it may be "
+    "handed off to Legion for later execution. Crucially, this later execution may happen on "
+    "another thread, possibly on another node.\n"
+    "\n"
+    "However, for single-processor runs, this process is both overly costly and largely "
+    "unnecessary. For example, there is no need to perform any partitioning analysis, as -- by "
+    "virtue of being single-processor -- the data will be used in full. In such cases it may be "
+    "profitable to launch the tasks directly on the same processor/thread which submitted them, "
+    "i.e. \"inline\".\n"
+    "\n"
+    "Note that enabling this mode will constrain execution to a single processor, even if more  "
+    "are available.\n"
+    "\n"
+    "This feature is currently marked experimental, and should not be relied upon. The current "
+    "implementation is not guaranteed to always be profitable. It may offer dramatic speedup in "
+    "some circumstances, but it may also lead to large slowdowns in others. Future improvements "
+    "will seek to improve this, at which point it will be moved to the normal Legate namespace.",
+    experimental::LEGATE_INLINE_TASK_LAUNCH.get().value_or(false));
+
+  inline_task_launch.argparse_argument().hidden();
+
+  // ------------------------------------------------------------------------------------------
+  parser.parser()->add_group("Profiling and logging");
+
   auto profile     = parser.add_argument("--profile", "Whether to collect profiling logs", false);
   auto log_levels  = parser.add_argument("--logging", logging_help_str(), std::string{});
   auto log_dir     = parser.add_argument("--logdir",
@@ -422,10 +489,57 @@ ParsedArgs parse_args(std::vector<std::string> args)
                                      std::filesystem::current_path());
   auto log_to_file = parser.add_argument(
     "--log-to-file", "Redirect logging output to a file inside --logdir", false);
+
+  // ------------------------------------------------------------------------------------------
+  parser.parser()->add_group("Debugging");
+
   auto freeze_on_error = parser.add_argument(
     "--freeze-on-error",
     "If the program crashes, freeze execution right before exit so a debugger can be attached",
     false);
+  auto empty_task =
+    parser.add_argument("--use-empty-task",
+                        "Execute an empty dummy task in place of each task execution.\n"
+                        "\n"
+                        "This is primarily a developer feature for use in debugging runtime or "
+                        "scheduling inconsistencies and is not recommended for external use.",
+                        LEGATE_EMPTY_TASK.get().value_or(false));
+
+  // ------------------------------------------------------------------------------------------
+  parser.parser()->add_group("Miscellaneous options");
+
+  auto cuda_driver_path = parser.add_argument(
+    "--cuda-driver-path",
+    "Path to the CUDA driver shared library object\n"
+    "\n"
+    "The given path can either be:\n"
+    "1. An absolute path: The path is used as-is to load the shared object at that location.\n"
+    "2. A relative path: The path is used as-is, but the directory against which the relative\n"
+    "   lookup is implementation defined. Most implementations however will look up the object\n"
+    "   relative to the current working directory.\n"
+    "3. A name: The shared object lookup is completely implementation defined. If on Linux, see\n"
+    "   dlopen(3) for a complete description on the lookup mechanism in this case.\n"
+    "\n"
+    "The user should generally not need to set this variable, but it can be useful in case the "
+    "driver needs to be interposed by a user-supplied shim.",
+    LEGATE_CUDA_DRIVER.get().value_or(
+      // "libcuda.so.1" on Linux
+      LEGATE_SHARED_LIBRARY_PREFIX "cuda" LEGATE_SHARED_LIBRARY_SUFFIX ".1"));
+  auto io_use_vfd_gds =
+    parser.add_argument("--io-use-vfd-gds",
+                        "Whether to enable HDF5 Virtual File Driver (VDS) GPUDirectStorage (GDS) "
+                        "which may dramatically speed up file storage and extraction",
+                        LEGATE_IO_USE_VFD_GDS.get().value_or(false));
+
+  io_use_vfd_gds.action([](std::string_view, const Argument<bool>* io_use_vfd_gds_arg) {
+    const auto val = io_use_vfd_gds_arg->value();
+
+    if (val && !LEGATE_DEFINED(LEGATE_USE_HDF5_VFD_GDS)) {
+      throw TracedException<std::runtime_error>{
+        "Cannot enable HDF5 VFD GDS, Legate was not configured with GDS support."};
+    }
+    return val;
+  });
 
   parser.parse_args(std::move(args));
 
@@ -452,40 +566,39 @@ ParsedArgs parse_args(std::vector<std::string> args)
     add_logger("legion_prof");
   }
 
-  return {
-    /* auto_config */ std::move(auto_config),
-    /* show_config */ std::move(show_config),
-    /* show_progress */ std::move(show_progress),
-    /* empty_task */ std::move(empty_task),
-    /* warmup_nccl */ std::move(warmup_nccl),
-    /* inline_task_launch */ std::move(inline_task_launch),
-    /* show_usage */ std::move(show_usage),
-    /* max_exception_size */ std::move(max_exception_size),
-    /* min_cpu_chunk */ std::move(min_cpu_chunk),
-    /* min_gpu_chunk */ std::move(min_gpu_chunk),
-    /* min_omp_chunk */ std::move(min_omp_chunk),
-    /* window_size */ std::move(window_size),
-    /* field_reuse_frac */ std::move(field_reuse_frac),
-    /* field_reuse_freq */ std::move(field_reuse_freq),
-    /* consensus */ std::move(consensus),
-    /* disable_mpi */ std::move(disable_mpi),
-    /* io_use_vfd_gds */ std::move(io_use_vfd_gds),
-    /* cpus */ std::move(cpus),
-    /* gpus */ std::move(gpus),
-    /* omps */ std::move(omps),
-    /* ompthreads */ std::move(ompthreads),
-    /* util */ std::move(util),
-    /* sysmem */ std::move(sysmem),
-    /* numamem */ std::move(numamem),
-    /* fbmem */ std::move(fbmem),
-    /* zcmem */ std::move(zcmem),
-    /* regmem */ std::move(regmem),
-    /* profile */ std::move(profile),
-    /* log_levels */ std::move(log_levels),
-    /* log_dir */ std::move(log_dir),
-    /* log_to_file */ std::move(log_to_file),
-    /* freeze_on_error */ std::move(freeze_on_error),
-  };
+  return {/* auto_config */ std::move(auto_config),
+          /* show_config */ std::move(show_config),
+          /* show_progress */ std::move(show_progress),
+          /* empty_task */ std::move(empty_task),
+          /* warmup_nccl */ std::move(warmup_nccl),
+          /* inline_task_launch */ std::move(inline_task_launch),
+          /* show_usage */ std::move(show_usage),
+          /* max_exception_size */ std::move(max_exception_size),
+          /* min_cpu_chunk */ std::move(min_cpu_chunk),
+          /* min_gpu_chunk */ std::move(min_gpu_chunk),
+          /* min_omp_chunk */ std::move(min_omp_chunk),
+          /* window_size */ std::move(window_size),
+          /* field_reuse_frac */ std::move(field_reuse_frac),
+          /* field_reuse_freq */ std::move(field_reuse_freq),
+          /* consensus */ std::move(consensus),
+          /* disable_mpi */ std::move(disable_mpi),
+          /* io_use_vfd_gds */ std::move(io_use_vfd_gds),
+          /* cpus */ std::move(cpus),
+          /* gpus */ std::move(gpus),
+          /* omps */ std::move(omps),
+          /* ompthreads */ std::move(ompthreads),
+          /* util */ std::move(util),
+          /* sysmem */ std::move(sysmem),
+          /* numamem */ std::move(numamem),
+          /* fbmem */ std::move(fbmem),
+          /* zcmem */ std::move(zcmem),
+          /* regmem */ std::move(regmem),
+          /* profile */ std::move(profile),
+          /* log_levels */ std::move(log_levels),
+          /* log_dir */ std::move(log_dir),
+          /* log_to_file */ std::move(log_to_file),
+          /* freeze_on_error */ std::move(freeze_on_error),
+          /* cuda_driver_path */ std::move(cuda_driver_path)};
 }
 
 }  // namespace legate::detail

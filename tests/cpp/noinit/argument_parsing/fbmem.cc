@@ -89,7 +89,14 @@ class MockCUDAModuleConfig : public Realm::ModuleConfig {
 
 class AutoDriverAPIMockBase {
  protected:
-  AutoDriverAPIMockBase() : api_{legate::cuda::detail::get_cuda_driver_api()}, prev_{*api_} {}
+  AutoDriverAPIMockBase()
+    : api_{[] {
+        legate::cuda::detail::set_active_cuda_driver_api("/nonexistent/cuda/driver.so");
+        return legate::cuda::detail::get_cuda_driver_api();
+      }()},
+      prev_{std::move(*api_)}
+  {
+  }
 
   virtual ~AutoDriverAPIMockBase() { *api_ = std::move(prev_); }
 
@@ -115,7 +122,7 @@ TEST_F(ConfigureFBMemUnit, AutoConfigCUDA)
     AutoDriverAPIMock()
     {
       // can be anything, so long as it isn't NULL (to defeat the "are we initialized" checks)
-      api_->handle_                     = this;
+      api_->handle_                     = {this, [](void*) { return 0; }};
       api_->device_primary_ctx_retain_  = mock_device_primary_ctx_retain_;
       api_->ctx_push_current_           = mock_ctx_push_current_;
       api_->ctx_pop_current_            = mock_ctx_pop_current_;
@@ -165,7 +172,7 @@ TEST_F(ConfigureFBMemUnit, AutoConfigFail)
     AutoDriverAPIMock()
     {
       // can be anything, so long as it isn't NULL (to defeat the "are we initialized" checks)
-      api_->handle_                    = this;
+      api_->handle_                    = {this, [](void*) { return 0; }};
       api_->device_primary_ctx_retain_ = [](CUcontext*, CUdevice) -> CUresult {
         throw std::exception{};
       };

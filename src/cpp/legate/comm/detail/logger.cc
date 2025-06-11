@@ -10,7 +10,7 @@ namespace legate::detail::comm::coll {
 
 Logger& logger()
 {
-  static Logger log{"coll"};
+  static Logger log{"legate.coll"};
 
   return log;
 }

@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 from unittest.mock import call
 
 import legate.jupyter.config as m
-from legate.driver import defaults
 from legate.driver.config import Core, Memory, MultiNode
+from legate.util import defaults
 from legate.util.types import DataclassMixin
 
 if TYPE_CHECKING:
@@ -48,7 +48,18 @@ class TestConfig:
             cpus=None, gpus=None, omps=None, ompthreads=None, utility=None
         )
         assert c.memory == m.Memory(
-            sysmem=None, numamem=None, fbmem=None, zcmem=None, regmem=None
+            sysmem=None,
+            numamem=None,
+            fbmem=None,
+            zcmem=None,
+            regmem=None,
+            max_exception_size=None,
+            min_cpu_chunk=None,
+            min_gpu_chunk=None,
+            min_omp_chunk=None,
+            field_reuse_fraction=None,
+            field_reuse_frequency=None,
+            consensus=False,
         )
 
         # These are all "turned off"
@@ -81,12 +92,21 @@ class TestConfig:
         assert c.info == m.Info(verbose=False, bind_detail=False)
 
         assert c.other == m.Other(
+            auto_config=False,
+            show_config=False,
+            show_memory_usage=False,
+            show_progress=False,
             timing=False,
             wrapper=[],
             wrapper_inner=[],
             module=None,
             dry_run=False,
             color=False,
+            window_size=None,
+            warmup_nccl=False,
+            disable_mpi=False,
+            inline_task_launch=False,
+            io_use_vfd_gds=False,
         )
 
     def test_arg_conversions(self, mocker: MockerFixture) -> None:

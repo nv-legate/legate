@@ -83,6 +83,13 @@ class Memory(DataclassMixin):
     fbmem: int | None
     zcmem: int | None
     regmem: int | None
+    max_exception_size: int | None
+    min_cpu_chunk: int | None
+    min_gpu_chunk: int | None
+    min_omp_chunk: int | None
+    field_reuse_fraction: int | None
+    field_reuse_frequency: int | None
+    consensus: bool
 
 
 @dataclass(frozen=True)
@@ -135,12 +142,21 @@ class Info(DataclassMixin):
 
 @dataclass(frozen=True)
 class Other(DataclassMixin):
+    auto_config: bool
+    show_config: bool
+    show_memory_usage: bool
+    show_progress: bool
     timing: bool
     wrapper: list[str]
     wrapper_inner: list[str]
     module: list[str] | None
     dry_run: bool
     color: bool
+    window_size: int | None
+    warmup_nccl: bool
+    disable_mpi: bool
+    inline_task_launch: bool
+    io_use_vfd_gds: bool
 
 
 class ConfigProtocol(Protocol):

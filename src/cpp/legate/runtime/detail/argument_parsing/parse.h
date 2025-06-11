@@ -52,6 +52,7 @@ class ParsedArgs {
   Argument<std::filesystem::path> log_dir;
   Argument<bool> log_to_file;
   Argument<bool> freeze_on_error;
+  Argument<std::string> cuda_driver_path;
 };
 
 /**

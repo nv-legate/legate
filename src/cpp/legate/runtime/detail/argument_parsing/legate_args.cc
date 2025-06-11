@@ -9,6 +9,7 @@
 #include <legate/runtime/detail/argument_parsing/config_legion.h>
 #include <legate/runtime/detail/argument_parsing/config_realm.h>
 #include <legate/runtime/detail/argument_parsing/flags/cpus.h>
+#include <legate/runtime/detail/argument_parsing/flags/cuda_driver_path.h>
 #include <legate/runtime/detail/argument_parsing/flags/fbmem.h>
 #include <legate/runtime/detail/argument_parsing/flags/gpus.h>
 #include <legate/runtime/detail/argument_parsing/flags/numamem.h>
@@ -99,6 +100,9 @@ void autoconfigure(ParsedArgs* args, Config* config)
   const auto auto_config = config->auto_config();
   const auto* cuda_mod   = rt.get_module_config("cuda");
 
+  // This must happen before --fbmem is called, as we need to have initialized the CUDA driver
+  // API before then.
+  configure_cuda_driver_path(args->cuda_driver_path);
   // auto-configure --gpus
   configure_gpus(auto_config, cuda_mod, &args->gpus, config);
   // auto-configure --fbmem
