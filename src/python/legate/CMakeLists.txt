@@ -101,6 +101,14 @@ function(legate_create_cython_modules)
     # Mark python headers as system (in case user has added warning flags, we don't want
     # the python headers to trigger them)
     target_include_directories(${target} SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
+    # Coverage.py does not yet work with newest sys.monitoring features in Python 3.12, so
+    # make Cython emit the old PyTrace calls for now. Note, this only has effect in
+    # modules compiled with the
+    #
+    # cython: linetrace
+    #
+    # Cookie at the top
+    target_compile_definitions(${target} PRIVATE CYTHON_USE_SYS_MONITORING=0)
   endforeach()
   set_property(GLOBAL APPEND PROPERTY LEGATE_CYTHON_TARGETS
                                       ${RAPIDS_CYTHON_CREATED_TARGETS})

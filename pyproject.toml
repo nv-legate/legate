@@ -101,13 +101,6 @@ experimental = true  # needed for install-dir = "/data"
 [tool.scikit-build.wheel.packages]
 "legate" = "src/python/legate"
 
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "@abstract"
-]
-
 [tool.cython-lint]
 max-line-length = 82
 
@@ -336,3 +329,28 @@ context = 1
 [tool.pyright]
 stubPath = "src/python/typings"
 reportMissingModuleSource = false
+
+[tool.coverage.run]
+plugins = ["Cython.Coverage"]
+branch = true
+parallel = true
+source_pkgs = ["legate"]
+
+[tool.coverage.report]
+precision = 2
+exclude_lines = [
+    "cython: linetrace=True",
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "@abstract"
+]
+omit = [
+  "**/legate/_version.py",
+  "**/legate/util/*",
+  "**/legate/_sphinxext/*",
+  "**/legate/tester/*",
+  "**/legate/lgpatch.py",
+  "**/legate/jupyter/*",
+  "**/legate/issue.py",
+  "**/legate/driver/*",
+]

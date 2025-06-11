@@ -14,6 +14,7 @@ from ..._lib.utilities.typedefs cimport TaskFuncPtr, VariantImpl
 from ..._lib.utilities.abort cimport LEGATE_ABORT
 
 import gc
+from sys import settrace, gettrace
 
 cdef dict[_GlobalTaskID, dict[VariantCode, object]] _gid_to_variant_callbacks = {}
 
@@ -145,6 +146,25 @@ cdef void py_variant_with_gil "py_variant_with_gil" (
         except Exception as e2:
             abort_process(e2)
 
+
+cdef extern from * nogil:
+    r"""
+    #define LEGATE_CYTHON_TRACE (LEGATE_DEFINED(CYTHON_TRACE) || \
+                                 LEGATE_DEFINED(CYTHON_TRACE_NOGIL))
+    """
+    int LEGATE_CYTHON_TRACE
+
+cdef object MAIN_THREAD_TRACE_FUNC "MAIN_THREAD_TRACE_FUNC" = gettrace()
+
+cdef void setup_trace "setup_trace" () noexcept:
+    if not LEGATE_CYTHON_TRACE:
+        return
+
+    try:
+        if gettrace() != MAIN_THREAD_TRACE_FUNC:
+            settrace(MAIN_THREAD_TRACE_FUNC)
+    except Exception as e:
+        abort_process(e)
 
 cdef extern from "Python.h":
     ctypedef struct PyInterpreterState:
@@ -284,6 +304,7 @@ cdef extern from "legate/task/task_context.h":
 
     static void py_variant_with_gil(legate::TaskContext, bool);
     static PyInterpreterState *MAIN_THREAD_INTERP_STATE();
+    static void setup_trace();
 
     namespace {
 
@@ -311,6 +332,7 @@ cdef extern from "legate/task/task_context.h":
       PyEval_AcquireThread(tstate); // Acquires GIL
 
       try {
+        setup_trace();
         py_variant_with_gil(ctx, cache_hit);
       } catch (...) {
         clear_and_destroy_threadstate(tstate);
