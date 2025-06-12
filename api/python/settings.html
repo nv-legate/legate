@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Settings &#8212; NVIDIA legate (25.07.00.dev30+g8465f7d7)</title>
+    <title>Settings &#8212; NVIDIA legate (25.07.00.dev31+gaa2abf80)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b38a22f9"></script>
+    <script src="../../_static/documentation_options.js?v=37d9e824"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev30+g8465f7d7)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev31+gaa2abf80)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev30+g8465f7d7)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev31+gaa2abf80)</p>
   
 </a>
 
@@ -514,26 +514,6 @@
 <h1>Settings<a class="headerlink" href="#settings" title="Link to this heading">#</a></h1>
 <p>Legate has a number of runtime settings that can be configured through
 environment variables.</p>
-<section id="consensus">
-<h2><code class="docutils literal notranslate"><span class="pre">consensus</span></code><a class="headerlink" href="#consensus" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool (“0” or “1”)</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_CONSENSUS</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>False (test-mode default: False)</p>
-</dd>
-</dl>
-<p>Whether to perform the RegionField consensus match operation on
-single-node runs (for testing). This is normally only necessary on
-multi-node runs, where all processes must collectively agree that a
-RegionField has been garbage collected at the Python level before it
-can be reused.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
 <section id="limit-stdout">
 <h2><code class="docutils literal notranslate"><span class="pre">limit_stdout</span></code><a class="headerlink" href="#limit-stdout" title="Link to this heading">#</a></h2>
 <dl class="field-list simple">
@@ -548,199 +528,6 @@ can be reused.</p>
 </dd>
 </dl>
 <p>Whether to limit stdout output to only the first rank.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="cycle-check">
-<h2><code class="docutils literal notranslate"><span class="pre">cycle_check</span></code><a class="headerlink" href="#cycle-check" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool (“0” or “1”)</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_CYCLE_CHECK</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>False</p>
-</dd>
-</dl>
-<p>Whether to check for reference cycles involving RegionField objects on
-exit (developer option). When such cycles arise during execution they
-inhibit used RegionFields from being collected and reused for new
-Stores, thus increasing memory pressure. By default this check will
-miss any RegionField cycles that the garbage collector collected during
-execution. Run gc.disable() at the beginning of the program to avoid
-this.</p>
-</section>
-<section id="future-leak-check">
-<h2><code class="docutils literal notranslate"><span class="pre">future_leak_check</span></code><a class="headerlink" href="#future-leak-check" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool (“0” or “1”)</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_FUTURE_LEAK_CHECK</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>False</p>
-</dd>
-</dl>
-<p>Whether to check for reference cycles keeping Future/FutureMap objects
-alive after Legate runtime exit (developer option). Such leaks can
-result in Legion runtime shutdown hangs.</p>
-</section>
-<section id="test">
-<h2><code class="docutils literal notranslate"><span class="pre">test</span></code><a class="headerlink" href="#test" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool (“0” or “1”)</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_TEST</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>False</p>
-</dd>
-</dl>
-<p>Enable test mode. This sets alternative defaults for various other
-settings.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="min-gpu-chunk">
-<h2><code class="docutils literal notranslate"><span class="pre">min_gpu_chunk</span></code><a class="headerlink" href="#min-gpu-chunk" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_MIN_GPU_CHUNK</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>1048576 (test-mode default: 2)</p>
-</dd>
-</dl>
-<p>If using GPUs, any task operating on arrays smaller than this will
-not be parallelized across more than one GPU.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="min-cpu-chunk">
-<h2><code class="docutils literal notranslate"><span class="pre">min_cpu_chunk</span></code><a class="headerlink" href="#min-cpu-chunk" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_MIN_CPU_CHUNK</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>16384 (test-mode default: 2)</p>
-</dd>
-</dl>
-<p>If using CPUs, any task operating on arrays smaller than this will
-not be parallelized across more than one core.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="min-omp-chunk">
-<h2><code class="docutils literal notranslate"><span class="pre">min_omp_chunk</span></code><a class="headerlink" href="#min-omp-chunk" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_MIN_OMP_CHUNK</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>131072 (test-mode default: 2)</p>
-</dd>
-</dl>
-<p>If using OpenMP, any task operating on arrays smaller than this will
-not be parallelized across more than one OpenMP group.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="window-size">
-<h2><code class="docutils literal notranslate"><span class="pre">window_size</span></code><a class="headerlink" href="#window-size" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_WINDOW_SIZE</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>1 (test-mode default: 1)</p>
-</dd>
-</dl>
-<p>How many Legate operations to accumulate before emitting to Legion.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="field-reuse-frac">
-<h2><code class="docutils literal notranslate"><span class="pre">field_reuse_frac</span></code><a class="headerlink" href="#field-reuse-frac" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_FIELD_REUSE_FRAC</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>256 (test-mode default: 1)</p>
-</dd>
-</dl>
-<p>Any allocation for more than 1/frac of available memory will count as
-multiple allocations, for purposes of triggering a consensus match.
-Only relevant for multi-node runs.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="field-reuse-freq">
-<h2><code class="docutils literal notranslate"><span class="pre">field_reuse_freq</span></code><a class="headerlink" href="#field-reuse-freq" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_FIELD_REUSE_FREQ</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>32 (test-mode default: 8)</p>
-</dd>
-</dl>
-<p>Every how many RegionField allocations to perform a consensus match
-operation. Only relevant for multi-node runs, where all processes must
-collectively agree that a RegionField has been garbage collected at the
-Python level before it can be reused.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="disable-mpi">
-<h2><code class="docutils literal notranslate"><span class="pre">disable_mpi</span></code><a class="headerlink" href="#disable-mpi" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool (“0” or “1”)</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_DISABLE_MPI</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>False (test-mode default: False)</p>
-</dd>
-</dl>
-<p>Disable the MPI-based communicator (used for collective operations in
-certain CPU tasks). Use this to work around MPI initialization
-failures.</p>
-<p>This is a read-only environment variable setting used by the runtime.</p>
-</section>
-<section id="max-exception-size">
-<h2><code class="docutils literal notranslate"><span class="pre">max_exception_size</span></code><a class="headerlink" href="#max-exception-size" title="Link to this heading">#</a></h2>
-<dl class="field-list simple">
-<dt class="field-odd"><strong>Type</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even"><strong>Env var</strong><span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">LEGATE_MAX_EXCEPTION_SIZE</span></code></p>
-</dd>
-<dt class="field-odd"><strong>Default</strong><span class="colon">:</span></dt>
-<dd class="field-odd"><p>4096 (test-mode default: 4096)</p>
-</dd>
-</dl>
-<p>Maximum size in bytes for exceptions that can be raised by tasks.</p>
 <p>This is a read-only environment variable setting used by the runtime.</p>
 </section>
 </section>
@@ -794,19 +581,7 @@ failures.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#consensus"><code class="docutils literal notranslate"><span class="pre">consensus</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limit-stdout"><code class="docutils literal notranslate"><span class="pre">limit_stdout</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cycle-check"><code class="docutils literal notranslate"><span class="pre">cycle_check</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#future-leak-check"><code class="docutils literal notranslate"><span class="pre">future_leak_check</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test"><code class="docutils literal notranslate"><span class="pre">test</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#min-gpu-chunk"><code class="docutils literal notranslate"><span class="pre">min_gpu_chunk</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#min-cpu-chunk"><code class="docutils literal notranslate"><span class="pre">min_cpu_chunk</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#min-omp-chunk"><code class="docutils literal notranslate"><span class="pre">min_omp_chunk</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#window-size"><code class="docutils literal notranslate"><span class="pre">window_size</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#field-reuse-frac"><code class="docutils literal notranslate"><span class="pre">field_reuse_frac</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#field-reuse-freq"><code class="docutils literal notranslate"><span class="pre">field_reuse_freq</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#disable-mpi"><code class="docutils literal notranslate"><span class="pre">disable_mpi</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#max-exception-size"><code class="docutils literal notranslate"><span class="pre">max_exception_size</span></code></a></li>
 </ul>
   </nav></div>
 

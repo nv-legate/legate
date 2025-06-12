@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running Legate Programs &#8212; NVIDIA legate (25.07.00.dev30+g8465f7d7)</title>
+    <title>Running Legate Programs &#8212; NVIDIA legate (25.07.00.dev31+gaa2abf80)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b38a22f9"></script>
+    <script src="../../_static/documentation_options.js?v=37d9e824"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev30+g8465f7d7)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev31+gaa2abf80)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev30+g8465f7d7) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev31+gaa2abf80) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev30+g8465f7d7)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev31+gaa2abf80)</p>
   
 </a>
 
@@ -538,16 +538,15 @@ driver:</p>
 </section>
 <section id="resource-allocation">
 <h1>Resource Allocation<a class="headerlink" href="#resource-allocation" title="Link to this heading">#</a></h1>
-<p>By default Legate will query the available hardware on the current machine, and
-reserve for its use all CPU cores, all GPUs and most of the available memory.
-You can use <code class="docutils literal notranslate"><span class="pre">LEGATE_SHOW_CONFIG=1</span></code> to inspect the exact set of resources that
-Legate decided to reserve. You can fine-tune Legate’s default resource
-reservation by passing specific flags to the <code class="docutils literal notranslate"><span class="pre">legate</span></code> driver script, listed
-later in this section.</p>
-<p>You can also use <code class="docutils literal notranslate"><span class="pre">LEGATE_AUTO_CONFIG=0</span></code> to disable Legate’s automatic
-configuration. In this mode Legate will only reserve a minimal set of resources
-(only 1 CPU core for task execution, no GPUs, minimal system memory allocation),
-and any increases must be specified manually.</p>
+<p>By default Legate will query the available hardware on the current machine, and reserve
+for its use all CPU cores, all GPUs and most of the available memory.  You can use
+<code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG='--show-config'</span></code> to inspect the exact set of resources that Legate
+decided to reserve. You can fine-tune Legate’s default resource reservation by passing
+specific flags to the <code class="docutils literal notranslate"><span class="pre">legate</span></code> driver script, listed later in this section.</p>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG='--auto-config=0'</span></code> to disable Legate’s automatic
+configuration. In this mode Legate will only reserve a minimal set of resources (only 1
+CPU core for task execution, no GPUs, minimal system memory allocation), and any increases
+must be specified manually.</p>
 <p>The following <code class="docutils literal notranslate"><span class="pre">legate</span></code> flags control how many processors are used by Legate:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--cpus</span></code>: how many individual CPU threads are spawned</p></li>
