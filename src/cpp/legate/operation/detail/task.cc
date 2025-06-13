@@ -175,16 +175,19 @@ void Task::legion_launch_(Strategy* strategy_ptr)
 
   launcher.set_priority(priority());
 
+  launcher.reserve_inputs(inputs_.size());
   for (auto&& [arr, mapping, projection] : inputs_) {
     launcher.add_input(arr->to_launcher_arg(
       mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, GlobalRedopID{-1}));
   }
 
+  launcher.reserve_outputs(outputs_.size());
   for (auto&& [arr, mapping, projection] : outputs_) {
     launcher.add_output(arr->to_launcher_arg(
       mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, GlobalRedopID{-1}));
   }
 
+  launcher.reserve_reductions(reductions_.size());
   for (auto&& [redop, rest] : legate::detail::zip_equal(reduction_ops_, reductions_)) {
     auto&& [arr, mapping, projection] = rest;
 
@@ -193,6 +196,7 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   }
 
   // Add by-value scalars
+  launcher.reserve_scalars(scalars_.size());
   for (auto&& scalar : scalars_) {
     launcher.add_scalar(std::move(scalar));
   }
@@ -203,6 +207,7 @@ void Task::legion_launch_(Strategy* strategy_ptr)
     const auto& processor_range = machine().processor_range();
 
     // Use explicit type here in order to get the reference_wrapper to coerce
+    launcher.reserve_communicators(communicator_factories_.size());
     for (CommunicatorFactory& factory : communicator_factories_) {
       launcher.add_communicator(factory.find_or_create(target, processor_range, launch_domain));
       if (factory.needs_barrier()) {

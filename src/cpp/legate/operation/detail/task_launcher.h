@@ -38,13 +38,47 @@ class TaskLauncher {
 
   [[nodiscard]] GlobalTaskID legion_task_id() const;
 
+  /**
+   * @brief Reserves space for a specified number of input elements.
+   *
+   * @param num The number of input elements to reserve space for.
+   */
+  void reserve_inputs(std::size_t num);
   void add_input(std::unique_ptr<Analyzable> arg);
+
+  /**
+   * @brief Reserves space for a specified number of output elements.
+   *
+   * @param num The number of output elements to reserve space for.
+   */
+  void reserve_outputs(std::size_t num);
   void add_output(std::unique_ptr<Analyzable> arg);
+
+  /**
+   * @brief Reserves space for a specified number of reduction elements.
+   *
+   * @param num The number of reduction elements to reserve space for.
+   */
+  void reserve_reductions(std::size_t num);
   void add_reduction(std::unique_ptr<Analyzable> arg);
+
+  /**
+   * @brief Reserves space for a specified number of scalar elements.
+   *
+   * @param num The number of scalar elements to reserve space for.
+   */
+  void reserve_scalars(std::size_t num);
   void add_scalar(InternalSharedPtr<Scalar> scalar);
 
   void add_future(Legion::Future future);
   void add_future_map(Legion::FutureMap future_map);
+
+  /**
+   * @brief Reserves space for a specified number of communicators..
+   *
+   * @param num The number of communicators to reserve space for.
+   */
+  void reserve_communicators(std::size_t num);
   void add_communicator(Legion::FutureMap communicator);
 
   void set_priority(std::int32_t priority);

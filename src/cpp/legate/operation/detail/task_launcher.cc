@@ -26,7 +26,11 @@ namespace legate::detail {
 
 GlobalTaskID TaskLauncher::legion_task_id() const { return library_.get().get_task_id(task_id_); }
 
+void TaskLauncher::reserve_inputs(std::size_t num) { inputs_.reserve(num); }
+
 void TaskLauncher::add_input(std::unique_ptr<Analyzable> arg) { inputs_.push_back(std::move(arg)); }
+
+void TaskLauncher::reserve_outputs(std::size_t num) { outputs_.reserve(num); }
 
 void TaskLauncher::add_output(std::unique_ptr<Analyzable> arg)
 {
@@ -34,10 +38,14 @@ void TaskLauncher::add_output(std::unique_ptr<Analyzable> arg)
   outputs_.push_back(std::move(arg));
 }
 
+void TaskLauncher::reserve_reductions(std::size_t num) { reductions_.reserve(num); }
+
 void TaskLauncher::add_reduction(std::unique_ptr<Analyzable> arg)
 {
   reductions_.push_back(std::move(arg));
 }
+
+void TaskLauncher::reserve_scalars(std::size_t num) { scalars_.reserve(num); }
 
 void TaskLauncher::add_scalar(InternalSharedPtr<Scalar> scalar)
 {
@@ -61,6 +69,8 @@ void TaskLauncher::set_concurrent(bool is_concurrent)
 
   concurrent_ = is_concurrent;
 }
+
+void TaskLauncher::reserve_communicators(std::size_t num) { communicators_.reserve(num); }
 
 void TaskLauncher::add_communicator(Legion::FutureMap communicator)
 {
