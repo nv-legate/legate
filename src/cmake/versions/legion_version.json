@@ -2,7 +2,7 @@
     "packages": {
         "Legion": {
             "git_shallow": false,
-            "git_tag": "ec2e63a4521d01725440e3eab8e5fb314fa6a752",
+            "git_tag": "16441d05a66bdf0f21e271b943a60315f113a55e",
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
             "patches": [
                 {
@@ -21,24 +21,6 @@
                     "file": "${current_json_dir}/../patches/legion_redop.diff",
                     "fixed_in": "",
                     "issue": "legion half",
-                    "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_cuhook_optional.diff",
-                    "fixed_in": "",
-                    "issue": "legion make cuhook build optional",
-                    "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_ucx_mpi_bootstrap.diff",
-                    "fixed_in": "",
-                    "issue": "legion make UCX MPI bootstrap build optional",
-                    "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_cuda_12_9.diff",
-                    "fixed_in": "",
-                    "issue": "legion fix CUDA 12.9 compilation issues",
                     "required": true
                 }
             ],
