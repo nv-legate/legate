@@ -24,5 +24,10 @@
         "preferred": true,
         "url": "https://docs.nvidia.com/legate/25.05/",
         "version": "25.05"
+    },
+    {
+        "name": "dev",
+        "url": "https://nv-legate.github.io/legate/",
+        "version": "dev"
     }
 ]
