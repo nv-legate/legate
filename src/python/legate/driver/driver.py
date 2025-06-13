@@ -80,15 +80,7 @@ class LegateDriver:
         legate_parts = (part(self.config) for part in ENV_PARTS_LEGATE)
         LEGATE_CONFIG = " ".join(sum(legate_parts, ())).strip()
 
-        if "LEGATE_CONFIG" in env:
-            # We append to the contents of LEGATE_CONFIG because the driver
-            # does not natively handle all LEGATE_CONFIG arguments. The ones
-            # that it doesn't handle, it just passes through. Let the C++
-            # argument parsing untangle them.
-            env["LEGATE_CONFIG"] += f" {LEGATE_CONFIG}"
-        else:
-            env["LEGATE_CONFIG"] = LEGATE_CONFIG
-
+        env["LEGATE_CONFIG"] = LEGATE_CONFIG
         return env
 
     @property

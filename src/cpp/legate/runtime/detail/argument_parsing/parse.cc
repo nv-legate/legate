@@ -9,6 +9,7 @@
 #include <legate/mapping/detail/base_mapper.h>
 #include <legate/runtime/detail/argument_parsing/argument.h>
 #include <legate/runtime/detail/argument_parsing/flags/logging.h>
+#include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/env_defaults.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -61,6 +62,8 @@ class LegateArgumentParser {
 
   [[nodiscard]] std::vector<std::string> argparse_bool_flag_workaround_(
     std::vector<std::string> args) const;
+  [[nodiscard]] std::vector<std::string> argparse_duplicate_flag_workaround_(
+    Span<const std::string> args) const;
 
   std::shared_ptr<argparse::ArgumentParser> parser_{};
   std::unordered_set<std::string_view> bool_flags_{};
@@ -190,6 +193,22 @@ std::vector<std::string> LegateArgumentParser::argparse_bool_flag_workaround_(
   return args;
 }
 
+std::vector<std::string> LegateArgumentParser::argparse_duplicate_flag_workaround_(
+  Span<const std::string> args) const
+{
+  // argparse does not handle duplicate flags! It complains with: "Duplicate flag --flag", so
+  // we need to convert
+  //
+  // --flag 1 --some-option value --flag 2
+  //
+  // to
+  //
+  // --some-option value --flag 2
+  //
+  // See https://github.com/p-ranav/argparse/issues/404
+  return deduplicate_command_line_flags(args);
+}
+
 // ------------------------------------------------------------------------------------------
 
 LegateArgumentParser::LegateArgumentParser()
@@ -198,7 +217,9 @@ LegateArgumentParser::LegateArgumentParser()
       /* version */ fmt::format(
         "{}.{}.{}", LEGATE_VERSION_MAJOR, LEGATE_VERSION_MINOR, LEGATE_VERSION_PATCH))}
 {
-  parser()->set_usage_max_line_width(80);
+  constexpr auto MAX_LINE_WIDTH = 80;
+
+  parser()->set_usage_max_line_width(MAX_LINE_WIDTH);
 }
 
 template <typename T>
@@ -230,6 +251,7 @@ Argument<Scaled<T>> LegateArgumentParser::add_scaled_argument(std::string flag,
 void LegateArgumentParser::parse_args(std::vector<std::string> args) const
 {
   args = argparse_bool_flag_workaround_(std::move(args));
+  args = argparse_duplicate_flag_workaround_(args);
 
   try {
     parser()->parse_args(args);

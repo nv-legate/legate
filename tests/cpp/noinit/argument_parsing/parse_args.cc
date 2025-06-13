@@ -5,6 +5,7 @@
  */
 
 #include <legate/runtime/detail/argument_parsing/parse.h>
+#include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/utilities/detail/env_defaults.h>
 
 #include <fmt/format.h>
@@ -579,6 +580,25 @@ TEST_F(ParseArgsUnit, CUDADriverPath)
   const auto parsed = legate::detail::parse_args({"dummy", "--cuda-driver-path", path});
 
   ASSERT_THAT(parsed.cuda_driver_path, ArgumentMatches(path));
+}
+
+TEST_F(ParseArgsUnit, Deduplication)
+{
+  const auto orig = std::vector<std::string>{"dummy",
+                                             "--cpus=1",
+                                             "--cpus",
+                                             "1",
+                                             "--log-to-file=f",
+                                             "--gpus=0",
+                                             "--profile",
+                                             "--cpus",
+                                             "2",
+                                             "--gpus=0"};
+  const auto expected =
+    std::vector<std::string>{"dummy", "--log-to-file=f", "--profile", "--cpus", "2", "--gpus=0"};
+  const auto dedup = legate::detail::deduplicate_command_line_flags(orig);
+
+  ASSERT_THAT(dedup, ::testing::ContainerEq(expected));
 }
 
 }  // namespace test_parse_args
