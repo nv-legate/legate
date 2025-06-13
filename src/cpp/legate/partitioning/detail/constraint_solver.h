@@ -63,7 +63,9 @@ class ConstraintSolver {
   };
 
   std::unordered_map<Variable, EquivClass*> equiv_class_map_{};
-  std::vector<std::unique_ptr<EquivClass>> equiv_classes_{};
+  // Once reserved, this class must never be resized. equiv_class_map_ holds pointers to
+  // elements within it
+  std::vector<EquivClass> equiv_classes_{};
 
   std::unordered_map<Variable, bool> is_dependent_{};
 };

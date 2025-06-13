@@ -29,7 +29,7 @@ inline ScalarArg::ScalarArg(InternalSharedPtr<Scalar> scalar) : scalar_{std::mov
 
 inline RegionFieldArg::RegionFieldArg(LogicalStore* store,
                                       Legion::PrivilegeMode privilege,
-                                      std::unique_ptr<StoreProjection> store_proj)
+                                      StoreProjection store_proj)
   : store_{store}, privilege_{privilege}, store_proj_{std::move(store_proj)}
 {
 }

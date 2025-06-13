@@ -363,7 +363,7 @@ class LogicalStorePartition {
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
   [[nodiscard]] InternalSharedPtr<LogicalStore> get_child_store(
     const tuple<std::uint64_t>& color) const;
-  [[nodiscard]] std::unique_ptr<StoreProjection> create_store_projection(
+  [[nodiscard]] StoreProjection create_store_projection(
     const Domain& launch_domain, const std::optional<SymbolicPoint>& projection = {});
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const;

@@ -23,6 +23,8 @@
 
 namespace legate::detail {
 
+class Library;
+
 class Reduce final : public Operation {
  public:
   Reduce(const Library& library,

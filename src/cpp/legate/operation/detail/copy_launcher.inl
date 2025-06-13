@@ -13,7 +13,7 @@ namespace legate::detail {
 template <bool SINGLE>
 Legion::RegionRequirement CopyArg::create_requirement()
 {
-  return store_proj_->template create_requirement<SINGLE>(region_, {field_id_}, privilege_);
+  return store_proj_.template create_requirement<SINGLE>(region_, {field_id_}, privilege_);
 }
 
 // ==========================================================================================

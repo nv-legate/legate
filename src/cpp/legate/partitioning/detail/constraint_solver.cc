@@ -200,46 +200,50 @@ void ConstraintSolver::solve_constraints()
 
   equiv_classes_.reserve(distinct_entries.size());
   for (auto* entry : distinct_entries) {
-    auto& equiv_class = equiv_classes_.emplace_back(std::make_unique<EquivClass>(entry));
-    for (auto* symb : equiv_class->partition_symbols) {
-      equiv_class_map_.insert({*symb, equiv_class.get()});
+    auto& equiv_class = equiv_classes_.emplace_back(entry);
+
+    for (auto* symb : equiv_class.partition_symbols) {
+      equiv_class_map_.insert({*symb, &equiv_class});
     }
   }
 }
 
 void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
 {
-  auto solve_image_constraint = [&strategy](const ImageConstraint* image_constraint) {
-    auto image = image_constraint->resolve(strategy);
-    strategy.insert(image_constraint->var_range(), std::move(image));
+  const auto solve_image_constraint = [&strategy](const ImageConstraint& image_constraint) {
+    auto image = image_constraint.resolve(strategy);
+
+    strategy.insert(image_constraint.var_range(), std::move(image));
   };
 
-  auto solve_scale_constraint = [&strategy](const ScaleConstraint* scale_constraint) {
-    auto scaled = scale_constraint->resolve(strategy);
-    strategy.insert(scale_constraint->var_bigger(), std::move(scaled));
+  const auto solve_scale_constraint = [&strategy](const ScaleConstraint& scale_constraint) {
+    auto scaled = scale_constraint.resolve(strategy);
+
+    strategy.insert(scale_constraint.var_bigger(), std::move(scaled));
   };
 
-  auto solve_bloat_constraint = [&strategy](const BloatConstraint* bloat_constraint) {
-    auto bloated = bloat_constraint->resolve(strategy);
-    strategy.insert(bloat_constraint->var_bloat(), std::move(bloated));
+  const auto solve_bloat_constraint = [&strategy](const BloatConstraint& bloat_constraint) {
+    auto bloated = bloat_constraint.resolve(strategy);
+
+    strategy.insert(bloat_constraint.var_bloat(), std::move(bloated));
   };
 
   for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::IMAGE: {
-        solve_image_constraint(static_cast<const ImageConstraint*>(constraint.get()));
+        solve_image_constraint(static_cast<const ImageConstraint&>(*constraint));
         break;
       }
       case Constraint::Kind::SCALE: {
-        solve_scale_constraint(static_cast<const ScaleConstraint*>(constraint.get()));
+        solve_scale_constraint(static_cast<const ScaleConstraint&>(*constraint));
         break;
       }
       case Constraint::Kind::BLOAT: {
-        solve_bloat_constraint(static_cast<const BloatConstraint*>(constraint.get()));
+        solve_bloat_constraint(static_cast<const BloatConstraint&>(*constraint));
         break;
       }
       case Constraint::Kind::ALIGNMENT: [[fallthrough]];
-      case Constraint::Kind::BROADCAST: continue;
+      case Constraint::Kind::BROADCAST: break;
     }
   }
 }

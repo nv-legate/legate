@@ -106,8 +106,9 @@ class Operation {
  protected:
   void record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store);
   // Helper methods
-  [[nodiscard]] static std::unique_ptr<StoreProjection> create_store_projection_(
-    const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
+  [[nodiscard]] static StoreProjection create_store_projection_(const Strategy& strategy,
+                                                                const Domain& launch_domain,
+                                                                const StoreArg& arg);
 
   std::uint64_t unique_id_{};
   std::int32_t next_part_id_{};

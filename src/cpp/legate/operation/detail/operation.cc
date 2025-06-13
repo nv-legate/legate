@@ -185,13 +185,14 @@ void Operation::record_partition_(
   }
 }
 
-std::unique_ptr<StoreProjection> Operation::create_store_projection_(const Strategy& strategy,
-                                                                     const Domain& launch_domain,
-                                                                     const StoreArg& arg)
+StoreProjection Operation::create_store_projection_(const Strategy& strategy,
+                                                    const Domain& launch_domain,
+                                                    const StoreArg& arg)
 {
   auto store_partition = create_store_partition(arg.store, strategy[arg.variable]);
   auto store_proj      = store_partition->create_store_projection(launch_domain);
-  store_proj->is_key   = strategy.is_key_partition(arg.variable);
+
+  store_proj.is_key = strategy.is_key_partition(arg.variable);
   return store_proj;
 }
 

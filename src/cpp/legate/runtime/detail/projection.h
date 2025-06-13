@@ -9,13 +9,10 @@
 #include <legate/operation/projection.h>
 #include <legate/utilities/tuple.h>
 
-#include <functional>
-#include <iosfwd>
-
 namespace legate::proj {
 
-using SymbolicExpr  = legate::SymbolicExpr;
-using SymbolicPoint = legate::SymbolicPoint;
+using legate::SymbolicExpr;
+using legate::SymbolicPoint;
 
 [[nodiscard]] SymbolicPoint create_symbolic_point(std::uint32_t ndim);
 
@@ -24,8 +21,6 @@ using SymbolicPoint = legate::SymbolicPoint;
 }  // namespace legate::proj
 
 namespace legate::detail {
-
-class Library;
 
 class ProjectionFunction {  // NOLINT(bugprone-forward-declaration-namespace)
  public:

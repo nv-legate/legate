@@ -79,13 +79,13 @@ void Fill::launch(Strategy* strategy)
   auto launcher        = FillLauncher{machine_, priority()};
   auto&& launch_domain = strategy->launch_domain(this);
   auto&& part          = (*strategy)[lhs_var_];
-  auto lhs_proj        = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
+  const auto lhs_proj  = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
 
   if (launch_domain.is_valid()) {
-    launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::move(fill_value));
+    launcher.launch(launch_domain, lhs_.get(), lhs_proj, std::move(fill_value));
     lhs_->set_key_partition(machine(), parallel_policy(), part);
   } else {
-    launcher.launch_single(lhs_.get(), *lhs_proj, std::move(fill_value));
+    launcher.launch_single(lhs_.get(), lhs_proj, std::move(fill_value));
   }
 }
 

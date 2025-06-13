@@ -75,7 +75,7 @@ void Gather::launch(Strategy* p_strategy)
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);
 
-    proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_kind_.value()));
+    proj.set_reduction_op(target_.store->type()->find_reduction_operator(redop_kind_.value()));
     launcher.add_reduction(target_.store, std::move(proj));
   }
 

@@ -31,7 +31,7 @@ class CopyArg final : public Serializable {
           LogicalStore* store,
           Legion::FieldID field_id,
           Legion::PrivilegeMode privilege,
-          std::unique_ptr<StoreProjection> store_proj);
+          StoreProjection store_proj);
 
   void pack(BufferBuilder& buffer) const override;
 
@@ -49,7 +49,7 @@ class CopyArg final : public Serializable {
   Legion::LogicalRegion region_{};
   Legion::FieldID field_id_{};
   Legion::PrivilegeMode privilege_{};
-  std::unique_ptr<StoreProjection> store_proj_{};
+  StoreProjection store_proj_{};
 };
 
 class CopyLauncher {
@@ -58,22 +58,18 @@ class CopyLauncher {
                std::int32_t priority,
                std::int64_t tag = 0);
 
-  void add_input(const InternalSharedPtr<LogicalStore>& store,
-                 std::unique_ptr<StoreProjection> store_proj);
-  void add_output(const InternalSharedPtr<LogicalStore>& store,
-                  std::unique_ptr<StoreProjection> store_proj);
-  void add_inout(const InternalSharedPtr<LogicalStore>& store,
-                 std::unique_ptr<StoreProjection> store_proj);
-  void add_reduction(const InternalSharedPtr<LogicalStore>& store,
-                     std::unique_ptr<StoreProjection> store_proj);
+  void add_input(const InternalSharedPtr<LogicalStore>& store, StoreProjection store_proj);
+  void add_output(const InternalSharedPtr<LogicalStore>& store, StoreProjection store_proj);
+  void add_inout(const InternalSharedPtr<LogicalStore>& store, StoreProjection store_proj);
+  void add_reduction(const InternalSharedPtr<LogicalStore>& store, StoreProjection store_proj);
   void add_source_indirect(const InternalSharedPtr<LogicalStore>& store,
-                           std::unique_ptr<StoreProjection> store_proj);
+                           StoreProjection store_proj);
   void add_target_indirect(const InternalSharedPtr<LogicalStore>& store,
-                           std::unique_ptr<StoreProjection> store_proj);
+                           StoreProjection store_proj);
 
   void add_store(std::vector<CopyArg>& args,
                  const InternalSharedPtr<LogicalStore>& store,
-                 std::unique_ptr<StoreProjection> store_proj,
+                 StoreProjection store_proj,
                  Legion::PrivilegeMode privilege);
 
   void set_source_indirect_out_of_range(bool flag) { source_indirect_out_of_range_ = flag; }

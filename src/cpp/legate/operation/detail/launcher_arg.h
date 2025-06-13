@@ -63,9 +63,7 @@ class ScalarArg final : public Serializable {
 
 class RegionFieldArg final : public Analyzable {
  public:
-  RegionFieldArg(LogicalStore* store,
-                 Legion::PrivilegeMode privilege,
-                 std::unique_ptr<StoreProjection> store_proj);
+  RegionFieldArg(LogicalStore* store, Legion::PrivilegeMode privilege, StoreProjection store_proj);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
@@ -75,7 +73,7 @@ class RegionFieldArg final : public Analyzable {
  private:
   LogicalStore* store_{};
   Legion::PrivilegeMode privilege_{};
-  std::unique_ptr<StoreProjection> store_proj_{};
+  StoreProjection store_proj_{};
 };
 
 class OutputRegionArg final : public Analyzable {
