@@ -27,12 +27,10 @@ struct FillTask : public legate::LegateTask<FillTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
-    auto rect   = output.shape<1>();
-    auto volume = static_cast<std::int64_t>(rect.volume());
-    auto out    = output.write_accessor<std::int64_t, 1>(rect);
+    auto span   = output.span_write_accessor<std::int64_t, 1>();
 
-    for (std::int64_t idx = 0; idx < volume; ++idx) {
-      out[idx] = idx / 2;
+    for (legate::coord_t i = 0; i < span.extent(0); ++i) {
+      span(i) = i / 2;
     }
   }
 };
@@ -46,12 +44,11 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
   {
     auto input  = context.input(0).data();
     auto output = context.output(0).data();
-    auto rect   = input.shape<1>();
-    auto volume = static_cast<std::int64_t>(rect.volume());
-    auto in     = input.read_accessor<std::int64_t, 1>(rect);
+    auto span   = input.span_read_accessor<std::int64_t, 1>();
     std::unordered_set<std::int64_t> dedup_set;
-    for (std::int64_t idx = 0; idx < volume; ++idx) {
-      dedup_set.insert(in[idx]);
+
+    for (legate::coord_t i = 0; i < span.extent(0); ++i) {
+      dedup_set.insert(span(i));
     }
 
     auto result = output.create_output_buffer<std::int64_t, 1>(
