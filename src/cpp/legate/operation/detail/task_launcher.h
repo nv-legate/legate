@@ -13,7 +13,8 @@
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/zstring_view.h>
 
-#include <memory>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 namespace legate::detail {
@@ -44,7 +45,7 @@ class TaskLauncher {
    * @param num The number of input elements to reserve space for.
    */
   void reserve_inputs(std::size_t num);
-  void add_input(std::unique_ptr<Analyzable> arg);
+  void add_input(Analyzable arg);
 
   /**
    * @brief Reserves space for a specified number of output elements.
@@ -52,7 +53,7 @@ class TaskLauncher {
    * @param num The number of output elements to reserve space for.
    */
   void reserve_outputs(std::size_t num);
-  void add_output(std::unique_ptr<Analyzable> arg);
+  void add_output(Analyzable arg);
 
   /**
    * @brief Reserves space for a specified number of reduction elements.
@@ -60,7 +61,7 @@ class TaskLauncher {
    * @param num The number of reduction elements to reserve space for.
    */
   void reserve_reductions(std::size_t num);
-  void add_reduction(std::unique_ptr<Analyzable> arg);
+  void add_reduction(Analyzable arg);
 
   /**
    * @brief Reserves space for a specified number of scalar elements.
@@ -135,12 +136,11 @@ class TaskLauncher {
   bool relax_interference_checks_{};
   std::size_t future_size_{};
 
-  std::vector<std::unique_ptr<Analyzable>> inputs_{};
-  std::vector<std::unique_ptr<Analyzable>> outputs_{};
-  std::vector<std::unique_ptr<Analyzable>> reductions_{};
+  std::vector<Analyzable> inputs_{};
+  std::vector<Analyzable> outputs_{};
+  std::vector<Analyzable> reductions_{};
   std::vector<ScalarArg> scalars_{};
   std::vector<Legion::Future> futures_{};
-  std::vector<const OutputRegionArg*> unbound_stores_{};
   std::vector<Legion::FutureMap> future_maps_{};
   std::vector<Legion::FutureMap> communicators_{};
 };

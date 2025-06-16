@@ -10,16 +10,17 @@
 
 namespace legate::detail {
 
-inline std::optional<Legion::ProjectionID> Analyzable::get_key_proj_id() const
+inline std::optional<Legion::ProjectionID> AnalyzableBase::get_key_proj_id() const
 {
   return std::nullopt;
 }
 
-inline void Analyzable::record_unbound_stores(std::vector<const OutputRegionArg*>& /* args */) const
+inline void AnalyzableBase::record_unbound_stores(
+  std::vector<const OutputRegionArg*>& /* args */) const
 {
 }
 
-inline void Analyzable::perform_invalidations() const {}
+inline void AnalyzableBase::perform_invalidations() const {}
 
 // ==========================================================================================
 
@@ -86,35 +87,32 @@ inline WriteOnlyScalarStoreArg::WriteOnlyScalarStoreArg(LogicalStore* store, Glo
 {
 }
 
-inline void WriteOnlyScalarStoreArg::analyze(StoreAnalyzer& /*analyzer*/) {}
+inline void WriteOnlyScalarStoreArg::analyze(StoreAnalyzer& /*analyzer*/) const {}
 
 // ==========================================================================================
 
-inline BaseArrayArg::BaseArrayArg(std::unique_ptr<Analyzable> data,
-                                  std::optional<std::unique_ptr<Analyzable>> null_mask)
+inline BaseArrayArg::BaseArrayArg(StoreAnalyzable data, std::optional<StoreAnalyzable> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
 }
 
-inline BaseArrayArg::BaseArrayArg(std::unique_ptr<Analyzable> data)
+inline BaseArrayArg::BaseArrayArg(StoreAnalyzable data)
   : BaseArrayArg{std::move(data), std::nullopt}
 {
 }
 
 // ==========================================================================================
 
-inline ListArrayArg::ListArrayArg(InternalSharedPtr<Type> type,
-                                  std::unique_ptr<Analyzable> descriptor,
-                                  std::unique_ptr<Analyzable> vardata)
-  : type_{std::move(type)}, descriptor_{std::move(descriptor)}, vardata_{std::move(vardata)}
+inline ListArrayArg::Impl::Impl(ArrayAnalyzable descr, ArrayAnalyzable var)
+  : descriptor{std::move(descr)}, vardata{std::move(var)}
 {
 }
 
 // ==========================================================================================
 
 inline StructArrayArg::StructArrayArg(InternalSharedPtr<Type> type,
-                                      std::optional<std::unique_ptr<Analyzable>> null_mask,
-                                      std::vector<std::unique_ptr<Analyzable>>&& fields)
+                                      std::optional<StoreAnalyzable> null_mask,
+                                      std::vector<ArrayAnalyzable>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
 }

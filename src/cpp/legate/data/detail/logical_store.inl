@@ -177,23 +177,21 @@ inline InternalSharedPtr<LogicalStorePartition> create_store_partition(
   return self->create_partition_(self, std::move(partition), std::move(complete));
 }
 
-inline std::unique_ptr<Analyzable> store_to_launcher_arg(
-  const InternalSharedPtr<LogicalStore>& self,
-  const Variable* variable,
-  const Strategy& strategy,
-  const Domain& launch_domain,
-  const std::optional<SymbolicPoint>& projection,
-  Legion::PrivilegeMode privilege,
-  GlobalRedopID redop)
+inline StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStore>& self,
+                                             const Variable* variable,
+                                             const Strategy& strategy,
+                                             const Domain& launch_domain,
+                                             const std::optional<SymbolicPoint>& projection,
+                                             Legion::PrivilegeMode privilege,
+                                             GlobalRedopID redop)
 {
   return self->to_launcher_arg_(
     self, variable, strategy, launch_domain, projection, privilege, redop);
 }
 
-inline std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
-  const InternalSharedPtr<LogicalStore>& self,
-  const Domain& launch_domain,
-  Legion::PrivilegeMode privilege)
+inline RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<LogicalStore>& self,
+                                                      const Domain& launch_domain,
+                                                      Legion::PrivilegeMode privilege)
 {
   return self->to_launcher_arg_for_fixup_(self, launch_domain, privilege);
 }

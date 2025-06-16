@@ -177,22 +177,22 @@ void Task::legion_launch_(Strategy* strategy_ptr)
 
   launcher.reserve_inputs(inputs_.size());
   for (auto&& [arr, mapping, projection] : inputs_) {
-    launcher.add_input(arr->to_launcher_arg(
-      mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, GlobalRedopID{-1}));
+    launcher.add_input(variant_cast(arr->to_launcher_arg(
+      mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, GlobalRedopID{-1})));
   }
 
   launcher.reserve_outputs(outputs_.size());
   for (auto&& [arr, mapping, projection] : outputs_) {
-    launcher.add_output(arr->to_launcher_arg(
-      mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, GlobalRedopID{-1}));
+    launcher.add_output(variant_cast(arr->to_launcher_arg(
+      mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, GlobalRedopID{-1})));
   }
 
   launcher.reserve_reductions(reductions_.size());
   for (auto&& [redop, rest] : legate::detail::zip_equal(reduction_ops_, reductions_)) {
     auto&& [arr, mapping, projection] = rest;
 
-    launcher.add_reduction(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_REDUCE, redop));
+    launcher.add_reduction(variant_cast(
+      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_REDUCE, redop)));
   }
 
   // Add by-value scalars
@@ -589,7 +589,8 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
   for (auto* array : arrays_to_fixup_) {
     // TODO(wonchanl): We should pass projection functors here once we start supporting
     // string/list legate arrays in ManualTasks
-    launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, LEGION_NO_ACCESS));
+    launcher.add_output(
+      variant_cast(array->to_launcher_arg_for_fixup(launch_domain, LEGION_NO_ACCESS)));
   }
 
   launcher.execute(launch_domain);

@@ -74,14 +74,14 @@ class LogicalArray {
     std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Variable* partition_symbol) const = 0;
 
-  [[nodiscard]] virtual std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] virtual ArrayAnalyzable to_launcher_arg(
     const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     GlobalRedopID redop) const = 0;
-  [[nodiscard]] virtual std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] virtual ArrayAnalyzable to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const = 0;
 
   [[nodiscard]] static InternalSharedPtr<LogicalArray> from_store(
@@ -136,14 +136,14 @@ class BaseLogicalArray final : public LogicalArray {
     std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Variable* partition_symbol) const override;
 
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] ArrayAnalyzable to_launcher_arg(
     const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     GlobalRedopID redop) const override;
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] ArrayAnalyzable to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
   void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
@@ -197,14 +197,14 @@ class ListLogicalArray final : public LogicalArray {
     std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Variable* partition_symbol) const override;
 
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] ArrayAnalyzable to_launcher_arg(
     const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     GlobalRedopID redop) const override;
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] ArrayAnalyzable to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
   void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
@@ -258,14 +258,14 @@ class StructLogicalArray final : public LogicalArray {
     std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Variable* partition_symbol) const override;
 
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] ArrayAnalyzable to_launcher_arg(
     const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     GlobalRedopID redop) const override;
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] ArrayAnalyzable to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
   void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;

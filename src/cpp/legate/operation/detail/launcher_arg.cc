@@ -32,7 +32,7 @@ void RegionFieldArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<std::uint32_t>(field_id);
 }
 
-void RegionFieldArg::analyze(StoreAnalyzer& analyzer)
+void RegionFieldArg::analyze(StoreAnalyzer& analyzer) const
 {
   analyzer.insert(store_->get_region_field(), privilege_, store_proj_);
 }
@@ -59,7 +59,7 @@ void OutputRegionArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer)
   buffer.pack<std::uint32_t>(field_id_);
 }
 
-void OutputRegionArg::analyze(StoreAnalyzer& analyzer)
+void OutputRegionArg::analyze(StoreAnalyzer& analyzer) const
 {
   analyzer.insert(store_->dim(), field_space_, field_id_);
 }
@@ -82,7 +82,7 @@ void ScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
 
-void ScalarStoreArg::analyze(StoreAnalyzer& analyzer) { analyzer.insert(future_); }
+void ScalarStoreArg::analyze(StoreAnalyzer& analyzer) const { analyzer.insert(future_); }
 
 void ReplicatedScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
@@ -97,7 +97,10 @@ void ReplicatedScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& 
   buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
 
-void ReplicatedScalarStoreArg::analyze(StoreAnalyzer& analyzer) { analyzer.insert(future_map_); }
+void ReplicatedScalarStoreArg::analyze(StoreAnalyzer& analyzer) const
+{
+  analyzer.insert(future_map_);
+}
 
 void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /*analyzer*/) const
 {
@@ -126,71 +129,79 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
 void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
   buffer.pack(to_underlying(ArrayKind::BASE));
-  data_->pack(buffer, analyzer);
+  std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, data_);
 
   const bool nullable = null_mask_.has_value();
   buffer.pack<bool>(nullable);
   if (nullable) {
-    (*null_mask_)->pack(buffer, analyzer);
+    std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, *null_mask_);
   }
 }
 
-void BaseArrayArg::analyze(StoreAnalyzer& analyzer)
+void BaseArrayArg::analyze(StoreAnalyzer& analyzer) const
 {
-  data_->analyze(analyzer);
+  std::visit([&](auto& arg) { arg.analyze(analyzer); }, data_);
   if (null_mask_.has_value()) {
-    (*null_mask_)->analyze(analyzer);
+    std::visit([&](auto& arg) { arg.analyze(analyzer); }, *null_mask_);
   }
 }
 
 std::optional<Legion::ProjectionID> BaseArrayArg::get_key_proj_id() const
 {
-  return data_->get_key_proj_id();
+  return std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, data_);
 }
 
 void BaseArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
 {
-  data_->record_unbound_stores(args);
+  std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, data_);
   if (null_mask_.has_value()) {
-    (*null_mask_)->record_unbound_stores(args);
+    std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, *null_mask_);
   }
 }
 
 void BaseArrayArg::perform_invalidations() const
 {
   // We don't need to invalidate any cached state for null masks
-  data_->perform_invalidations();
+  std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, data_);
+}
+
+ListArrayArg::ListArrayArg(InternalSharedPtr<Type> type,
+                           ArrayAnalyzable&& descriptor,
+                           ArrayAnalyzable&& vardata)
+  : type_{std::move(type)},
+    pimpl_{std::make_unique<Impl>(std::move(descriptor), std::move(vardata))}
+{
 }
 
 void ListArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
   buffer.pack(to_underlying(ArrayKind::LIST));
   type_->pack(buffer);
-  descriptor_->pack(buffer, analyzer);
-  vardata_->pack(buffer, analyzer);
+  std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, pimpl_->descriptor);
+  std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, pimpl_->vardata);
 }
 
-void ListArrayArg::analyze(StoreAnalyzer& analyzer)
+void ListArrayArg::analyze(StoreAnalyzer& analyzer) const
 {
-  descriptor_->analyze(analyzer);
-  vardata_->analyze(analyzer);
+  std::visit([&](auto& arg) { arg.analyze(analyzer); }, pimpl_->descriptor);
+  std::visit([&](auto& arg) { arg.analyze(analyzer); }, pimpl_->vardata);
 }
 
 std::optional<Legion::ProjectionID> ListArrayArg::get_key_proj_id() const
 {
-  return vardata_->get_key_proj_id();
+  return std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, pimpl_->vardata);
 }
 
 void ListArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
 {
-  descriptor_->record_unbound_stores(args);
-  vardata_->record_unbound_stores(args);
+  std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, pimpl_->descriptor);
+  std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, pimpl_->vardata);
 }
 
 void ListArrayArg::perform_invalidations() const
 {
-  descriptor_->perform_invalidations();
-  vardata_->perform_invalidations();
+  std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, pimpl_->descriptor);
+  std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, pimpl_->vardata);
 }
 
 void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
@@ -201,28 +212,28 @@ void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   const bool nullable = null_mask_.has_value();
   buffer.pack<bool>(nullable);
   if (nullable) {
-    (*null_mask_)->pack(buffer, analyzer);
+    std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, *null_mask_);
   }
 
   for (auto&& field : fields_) {
-    field->pack(buffer, analyzer);
+    std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, field);
   }
 }
 
-void StructArrayArg::analyze(StoreAnalyzer& analyzer)
+void StructArrayArg::analyze(StoreAnalyzer& analyzer) const
 {
   if (null_mask_.has_value()) {
-    (*null_mask_)->analyze(analyzer);
+    std::visit([&](auto& arg) { arg.analyze(analyzer); }, *null_mask_);
   }
   for (auto&& field : fields_) {
-    field->analyze(analyzer);
+    std::visit([&](auto& arg) { arg.analyze(analyzer); }, field);
   }
 }
 
 std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
 {
   for (auto&& field : fields_) {
-    auto proj_id = field->get_key_proj_id();
+    auto proj_id = std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, field);
     if (proj_id.has_value()) {
       return proj_id;
     }
@@ -233,20 +244,20 @@ std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
 void StructArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
 {
   if (null_mask_.has_value()) {
-    (*null_mask_)->record_unbound_stores(args);
+    std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, *null_mask_);
   }
   for (auto&& field : fields_) {
-    field->record_unbound_stores(args);
+    std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, field);
   }
 }
 
 void StructArrayArg::perform_invalidations() const
 {
   if (null_mask_.has_value()) {
-    (*null_mask_)->perform_invalidations();
+    std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, *null_mask_);
   }
   for (auto&& field : fields_) {
-    field->perform_invalidations();
+    std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, field);
   }
 }
 

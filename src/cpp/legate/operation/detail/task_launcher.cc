@@ -28,22 +28,15 @@ GlobalTaskID TaskLauncher::legion_task_id() const { return library_.get().get_ta
 
 void TaskLauncher::reserve_inputs(std::size_t num) { inputs_.reserve(num); }
 
-void TaskLauncher::add_input(std::unique_ptr<Analyzable> arg) { inputs_.push_back(std::move(arg)); }
+void TaskLauncher::add_input(Analyzable arg) { inputs_.push_back(std::move(arg)); }
 
 void TaskLauncher::reserve_outputs(std::size_t num) { outputs_.reserve(num); }
 
-void TaskLauncher::add_output(std::unique_ptr<Analyzable> arg)
-{
-  arg->record_unbound_stores(unbound_stores_);
-  outputs_.push_back(std::move(arg));
-}
+void TaskLauncher::add_output(Analyzable arg) { outputs_.push_back(std::move(arg)); }
 
 void TaskLauncher::reserve_reductions(std::size_t num) { reductions_.reserve(num); }
 
-void TaskLauncher::add_reduction(std::unique_ptr<Analyzable> arg)
-{
-  reductions_.push_back(std::move(arg));
-}
+void TaskLauncher::add_reduction(Analyzable arg) { reductions_.push_back(std::move(arg)); }
 
 void TaskLauncher::reserve_scalars(std::size_t num) { scalars_.reserve(num); }
 
@@ -128,7 +121,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   post_process_unbound_stores_(result, launch_domain, output_requirements);
   for (auto&& arg : outputs_) {
-    arg->perform_invalidations();
+    std::visit([](auto&& a) { a.perform_invalidations(); }, arg);
   }
   return result;
 }
@@ -166,31 +159,29 @@ Legion::Future TaskLauncher::execute_single()
   auto result = runtime.dispatch(single_task, output_requirements);
   post_process_unbound_stores_(output_requirements);
   for (auto&& arg : outputs_) {
-    arg->perform_invalidations();
+    std::visit([](auto&& a) { a.perform_invalidations(); }, arg);
   }
   return result;
 }
 
 namespace {
 
-void analyze(Span<const std::unique_ptr<Analyzable>> args, StoreAnalyzer& analyzer)
+void analyze(Span<const Analyzable> args, StoreAnalyzer& analyzer)
 {
   for (auto&& arg : args) {
-    arg->analyze(analyzer);
+    std::visit([&](auto&& a) { a.analyze(analyzer); }, arg);
   }
 }
 
-void pack_args(BufferBuilder& buffer,
-               StoreAnalyzer& analyzer,
-               const std::vector<std::unique_ptr<Analyzable>>& args)
+void pack_args(BufferBuilder& buffer, StoreAnalyzer& analyzer, Span<const Analyzable> args)
 {
   buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
   for (auto&& arg : args) {
-    arg->pack(buffer, analyzer);
+    std::visit([&](auto&& a) { a.pack(buffer, analyzer); }, arg);
   }
 }
 
-void pack_args(BufferBuilder& buffer, const std::vector<ScalarArg>& args)
+void pack_args(BufferBuilder& buffer, Span<const ScalarArg> args)
 {
   buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
   for (auto&& arg : args) {
@@ -265,9 +256,9 @@ void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
   machine_.pack(buffer);
 
   std::optional<Legion::ProjectionID> key_proj_id;
-  auto find_key_proj_id = [&key_proj_id](auto& args) {
+  auto find_key_proj_id = [&key_proj_id](Span<const Analyzable> args) {
     for (auto&& arg : args) {
-      key_proj_id = arg->get_key_proj_id();
+      key_proj_id = std::visit([](auto&& a) { return a.get_key_proj_id(); }, arg);
       if (key_proj_id) {
         break;
       }
@@ -302,7 +293,13 @@ void TaskLauncher::import_output_regions_(
 void TaskLauncher::post_process_unbound_stores_(
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  if (unbound_stores_.empty()) {
+  std::vector<const OutputRegionArg*> unbound_stores;
+
+  for (auto&& output : outputs_) {
+    std::visit([&](auto&& opt) { opt.record_unbound_stores(unbound_stores); }, output);
+  }
+
+  if (unbound_stores.empty()) {
     return;
   }
 
@@ -311,7 +308,7 @@ void TaskLauncher::post_process_unbound_stores_(
 
   import_output_regions_(runtime, output_requirements);
 
-  for (auto&& arg : unbound_stores_) {
+  for (auto&& arg : unbound_stores) {
     LEGATE_ASSERT(arg->requirement_index() != -1U);
     auto* store = arg->store();
     auto& shape = store->shape();
@@ -368,7 +365,13 @@ void TaskLauncher::post_process_unbound_stores_(
   const Legion::Domain& launch_domain,
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  if (unbound_stores_.empty()) {
+  std::vector<const OutputRegionArg*> unbound_stores;
+
+  for (auto&& arg : outputs_) {
+    std::visit([&](auto&& opt) { opt.record_unbound_stores(unbound_stores); }, arg);
+  }
+
+  if (unbound_stores.empty()) {
     return;
   }
 
@@ -376,13 +379,13 @@ void TaskLauncher::post_process_unbound_stores_(
 
   import_output_regions_(runtime, output_requirements);
 
-  if (unbound_stores_.size() == 1) {
-    auto* arg       = unbound_stores_.front();
+  if (unbound_stores.size() == 1) {
+    auto* arg       = unbound_stores.front();
     const auto& req = output_requirements[arg->requirement_index()];
 
     post_process_unbound_store_(launch_domain, arg, req, result, machine_, parallel_policy());
   } else {
-    for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores_)) {
+    for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores)) {
       const auto& req = output_requirements[arg->requirement_index()];
 
       if (arg->store()->dim() == 1) {

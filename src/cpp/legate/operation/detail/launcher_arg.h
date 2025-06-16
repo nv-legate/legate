@@ -13,12 +13,12 @@
 
 #include <memory>
 #include <optional>
+#include <variant>
 #include <vector>
 
 namespace legate::detail {
 
 class BufferBuilder;
-class OutputRegionArg;
 class LogicalStore;
 class StoreAnalyzer;
 
@@ -34,23 +34,6 @@ class Serializable {
   virtual void pack(BufferBuilder& buffer) const = 0;
 };
 
-class Analyzable {
- public:
-  Analyzable()                                      = default;
-  virtual ~Analyzable()                             = default;
-  Analyzable(const Analyzable&)                     = default;
-  Analyzable& operator=(const Analyzable&) noexcept = default;
-  Analyzable(Analyzable&&) noexcept                 = default;
-  Analyzable& operator=(Analyzable&&) noexcept      = default;
-
-  virtual void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const = 0;
-  virtual void analyze(StoreAnalyzer& analyzer)                                 = 0;
-
-  [[nodiscard]] virtual std::optional<Legion::ProjectionID> get_key_proj_id() const;
-  virtual void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const;
-  virtual void perform_invalidations() const;
-};
-
 class ScalarArg final : public Serializable {
  public:
   explicit ScalarArg(InternalSharedPtr<Scalar> scalar);
@@ -61,12 +44,93 @@ class ScalarArg final : public Serializable {
   InternalSharedPtr<Scalar> scalar_{};
 };
 
-class RegionFieldArg final : public Analyzable {
+class RegionFieldArg;
+class OutputRegionArg;
+class ScalarStoreArg;
+class ReplicatedScalarStoreArg;
+class WriteOnlyScalarStoreArg;
+class BaseArrayArg;
+class ListArrayArg;
+class StructArrayArg;
+
+using StoreAnalyzable = std::variant<RegionFieldArg,
+                                     OutputRegionArg,
+                                     ScalarStoreArg,
+                                     ReplicatedScalarStoreArg,
+                                     WriteOnlyScalarStoreArg>;
+
+using ArrayAnalyzable = std::variant<BaseArrayArg, ListArrayArg, StructArrayArg>;
+
+namespace variant_detail {
+
+template <typename...>
+struct variant_concat;
+
+template <typename... T1, typename... T2>
+struct variant_concat<std::variant<T1...>, std::variant<T2...>> {
+  using type = std::variant<T1..., T2...>;
+};
+
+template <typename... T>
+using variant_concat_t = typename variant_concat<T...>::type;
+
+template <typename... T>
+struct VariantProxy {
+  std::variant<T...> v;
+
+  template <typename... ToT>
+  constexpr operator std::variant<ToT...>() &&  // NOLINT(google-explicit-constructor)
+  {
+    return std::visit(
+      [](auto&& arg) -> std::variant<ToT...> {
+        using arg_type = std::decay_t<decltype(arg)>;
+
+        // This ensures we do not slice. We need to construct the most derived type (in this
+        // case, the exact type we came in with). Otherwise, if there is no match, the variant
+        // might choose to construct the base class if it is publicly accessible.
+        return std::variant<ToT...>{std::in_place_type<arg_type>, std::forward<arg_type>(arg)};
+      },
+      std::move(v));
+  }
+};
+
+}  // namespace variant_detail
+
+template <typename... T>
+constexpr variant_detail::VariantProxy<T...> variant_cast(std::variant<T...> v)
+{
+  return {std::move(v)};
+}
+
+using Analyzable = variant_detail::variant_concat_t<StoreAnalyzable, ArrayAnalyzable>;
+
+// ==========================================================================================
+
+class AnalyzableBase {
+ public:
+  AnalyzableBase()                                          = default;
+  virtual ~AnalyzableBase()                                 = default;
+  AnalyzableBase(const AnalyzableBase&)                     = default;
+  AnalyzableBase& operator=(const AnalyzableBase&) noexcept = default;
+  AnalyzableBase(AnalyzableBase&&) noexcept                 = default;
+  AnalyzableBase& operator=(AnalyzableBase&&) noexcept      = default;
+
+  virtual void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const = 0;
+  virtual void analyze(StoreAnalyzer& analyzer) const                           = 0;
+
+  [[nodiscard]] virtual std::optional<Legion::ProjectionID> get_key_proj_id() const;
+  virtual void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const;
+  virtual void perform_invalidations() const;
+};
+
+// ==========================================================================================
+
+class RegionFieldArg final : public AnalyzableBase {
  public:
   RegionFieldArg(LogicalStore* store, Legion::PrivilegeMode privilege, StoreProjection store_proj);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
   [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void perform_invalidations() const override;
 
@@ -76,12 +140,12 @@ class RegionFieldArg final : public Analyzable {
   StoreProjection store_proj_{};
 };
 
-class OutputRegionArg final : public Analyzable {
+class OutputRegionArg final : public AnalyzableBase {
  public:
   OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space, Legion::FieldID field_id);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
 
   [[nodiscard]] LogicalStore* store() const;
@@ -96,7 +160,9 @@ class OutputRegionArg final : public Analyzable {
   mutable std::uint32_t requirement_index_{-1U};
 };
 
-class ScalarStoreArg final : public Analyzable {
+// ==========================================================================================
+
+class ScalarStoreArg final : public AnalyzableBase {
  public:
   ScalarStoreArg(LogicalStore* store,
                  Legion::Future future,
@@ -105,7 +171,7 @@ class ScalarStoreArg final : public Analyzable {
                  GlobalRedopID redop);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
 
  private:
   LogicalStore* store_{};
@@ -115,7 +181,7 @@ class ScalarStoreArg final : public Analyzable {
   GlobalRedopID redop_{};
 };
 
-class ReplicatedScalarStoreArg final : public Analyzable {
+class ReplicatedScalarStoreArg final : public AnalyzableBase {
  public:
   ReplicatedScalarStoreArg(LogicalStore* store,
                            Legion::FutureMap future_map,
@@ -123,7 +189,7 @@ class ReplicatedScalarStoreArg final : public Analyzable {
                            bool read_only);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
 
  private:
   LogicalStore* store_{};
@@ -132,70 +198,91 @@ class ReplicatedScalarStoreArg final : public Analyzable {
   bool read_only_{};
 };
 
-class WriteOnlyScalarStoreArg final : public Analyzable {
+class WriteOnlyScalarStoreArg final : public AnalyzableBase {
  public:
   WriteOnlyScalarStoreArg(LogicalStore* store, GlobalRedopID redop);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
 
  private:
   LogicalStore* store_{};
   GlobalRedopID redop_{};
 };
 
-class BaseArrayArg final : public Analyzable {
- public:
-  BaseArrayArg(std::unique_ptr<Analyzable> data,
-               std::optional<std::unique_ptr<Analyzable>> null_mask);
+// ==========================================================================================
 
-  explicit BaseArrayArg(std::unique_ptr<Analyzable> data);
+class BaseArrayArg final : public AnalyzableBase {
+ public:
+  BaseArrayArg(StoreAnalyzable data, std::optional<StoreAnalyzable> null_mask);
+
+  explicit BaseArrayArg(StoreAnalyzable data);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
   [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
  private:
-  std::unique_ptr<Analyzable> data_{};
-  std::optional<std::unique_ptr<Analyzable>> null_mask_{};
+  StoreAnalyzable data_;
+  std::optional<StoreAnalyzable> null_mask_{};
 };
 
-class ListArrayArg final : public Analyzable {
+class ListArrayArg final : public AnalyzableBase {
  public:
   ListArrayArg(InternalSharedPtr<Type> type,
-               std::unique_ptr<Analyzable> descriptor,
-               std::unique_ptr<Analyzable> vardata);
+               ArrayAnalyzable&& descriptor,
+               ArrayAnalyzable&& vardata);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
   [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
  private:
   InternalSharedPtr<Type> type_{};
-  std::unique_ptr<Analyzable> descriptor_{};
-  std::unique_ptr<Analyzable> vardata_{};
+
+  // We still need to pimpl these because ListArrayArg holds ArrayAnalyzable. And since
+  // ArrayAnalyzable is a variant containing ListArrayArg, this leads to an infinite recursive
+  // definition, that is similar to:
+  //
+  // class Foo {
+  //   Foo f;
+  // };
+  //
+  // Which is not allowed. We are able to remove the allocation for all other cases (and
+  // ListArrayArg is rare anyways), so this one pimpl is a price worth paying.
+  class Impl;
+
+  std::unique_ptr<Impl> pimpl_;
 };
 
-class StructArrayArg final : public Analyzable {
+class StructArrayArg final : public AnalyzableBase {
  public:
   StructArrayArg(InternalSharedPtr<Type> type,
-                 std::optional<std::unique_ptr<Analyzable>> null_mask,
-                 std::vector<std::unique_ptr<Analyzable>>&& fields);
+                 std::optional<StoreAnalyzable> null_mask,
+                 std::vector<ArrayAnalyzable>&& fields);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) override;
+  void analyze(StoreAnalyzer& analyzer) const override;
   [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
  private:
   InternalSharedPtr<Type> type_{};
-  std::optional<std::unique_ptr<Analyzable>> null_mask_{};
-  std::vector<std::unique_ptr<Analyzable>> fields_{};
+  std::optional<StoreAnalyzable> null_mask_{};
+  std::vector<ArrayAnalyzable> fields_{};
+};
+
+class ListArrayArg::Impl {
+ public:
+  Impl(ArrayAnalyzable descr, ArrayAnalyzable var);
+
+  ArrayAnalyzable descriptor;
+  ArrayAnalyzable vardata;
 };
 
 }  // namespace legate::detail

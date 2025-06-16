@@ -1011,14 +1011,13 @@ void LogicalStore::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
   }
 }
 
-std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(
-  const InternalSharedPtr<LogicalStore>& self,
-  const Variable* variable,
-  const Strategy& strategy,
-  const Domain& launch_domain,
-  const std::optional<SymbolicPoint>& projection,
-  Legion::PrivilegeMode privilege,
-  GlobalRedopID redop)
+StoreAnalyzable LogicalStore::to_launcher_arg_(const InternalSharedPtr<LogicalStore>& self,
+                                               const Variable* variable,
+                                               const Strategy& strategy,
+                                               const Domain& launch_domain,
+                                               const std::optional<SymbolicPoint>& projection,
+                                               Legion::PrivilegeMode privilege,
+                                               GlobalRedopID redop)
 {
   LEGATE_ASSERT(self.get() == this);
 
@@ -1035,14 +1034,13 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(
     }
   }
 
-  LEGATE_UNREACHABLE();
-  return nullptr;
+  LEGATE_ABORT("Unhandled storage kind ", to_underlying(get_storage()->kind()));
 }
 
-std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future future,
-                                                                  const Domain& launch_domain,
-                                                                  Legion::PrivilegeMode privilege,
-                                                                  GlobalRedopID redop)
+StoreAnalyzable LogicalStore::future_to_launcher_arg_(Legion::Future future,
+                                                      const Domain& launch_domain,
+                                                      Legion::PrivilegeMode privilege,
+                                                      GlobalRedopID redop)
 {
   if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
     privilege = LEGION_READ_WRITE;
@@ -1053,14 +1051,14 @@ std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future
       throw TracedException<std::invalid_argument>{
         "Read access or reduction to an uninitialized scalar store is prohibited"};
     }
-    return std::make_unique<WriteOnlyScalarStoreArg>(this, redop);
+    return WriteOnlyScalarStoreArg{this, redop};
   }
 
   // Scalar reductions don't need to pass the future or future map holding the current value to the
   // task, as the physical stores will be initialized with the reduction identity. They are later
   // passed to a future map reduction as an initial value in the task launch postamble.
   if (privilege == LEGION_REDUCE) {
-    return std::make_unique<WriteOnlyScalarStoreArg>(this, redop);
+    return WriteOnlyScalarStoreArg{this, redop};
   }
 
   // TODO(wonchanl): technically, we can create a WriteOnlyScalarStoreArg when privilege is
@@ -1069,15 +1067,16 @@ std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future
   // privilege of this store alone doesn't tell us whether it's truly a write-only store or this is
   // also passed as an input store. For the time being, we just pass the future when it exists even
   // when the store is not actually read by the task.
-  return std::make_unique<ScalarStoreArg>(
-    this, std::move(future), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY, redop);
+  return ScalarStoreArg{
+    this, std::move(future), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY, redop};
 }
 
-std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
-  const Domain& launch_domain, Legion::PrivilegeMode privilege, GlobalRedopID redop)
+StoreAnalyzable LogicalStore::future_map_to_launcher_arg_(const Domain& launch_domain,
+                                                          Legion::PrivilegeMode privilege,
+                                                          GlobalRedopID redop)
 {
   if (unbound()) {
-    return std::make_unique<WriteOnlyScalarStoreArg>(this, GlobalRedopID{-1} /*redop*/);
+    return WriteOnlyScalarStoreArg{this, GlobalRedopID{-1} /*redop*/};
   }
   LEGATE_ASSERT(get_storage()->replicated());
 
@@ -1088,13 +1087,13 @@ std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
       [&](Legion::Future fut) {
         return future_to_launcher_arg_(std::move(fut), launch_domain, privilege, redop);
       },
-      [&](Legion::FutureMap map) -> std::unique_ptr<Analyzable> {
+      [&](Legion::FutureMap map) -> StoreAnalyzable {
         // Scalar reductions don't need to pass the future or future map holding the current value
         // to the task, as the physical stores will be initialized with the reduction identity. They
         // are later passed to a future map reduction as an initial value in the task launch
         // postamble.
         if (privilege == LEGION_REDUCE) {
-          return std::make_unique<WriteOnlyScalarStoreArg>(this, redop);
+          return WriteOnlyScalarStoreArg{this, redop};
         }
         // TODO(wonchanl): technically, we can create a WriteOnlyScalarStoreArg when privilege is
         // LEGION_WRITE_ONLY. Unfortunately, we don't currently track scalar stores passed as both
@@ -1102,13 +1101,13 @@ std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
         // So, the privilege of this store alone doesn't tell us whether it's truly a write-only
         // store or this is also passed as an input store. For the time being, we just pass the
         // future when it exists even when the store is not actually read by the task.
-        return std::make_unique<ReplicatedScalarStoreArg>(
-          this, std::move(map), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY);
+        return ReplicatedScalarStoreArg{
+          this, std::move(map), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY};
       }},
     future_or_future_map);
 }
 
-std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
+StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
   const InternalSharedPtr<LogicalStore>& self,
   const Variable* variable,
   const Strategy& strategy,
@@ -1119,7 +1118,7 @@ std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
 {
   if (unbound()) {
     auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(variable);
-    return std::make_unique<OutputRegionArg>(this, field_space, field_id);
+    return OutputRegionArg{this, field_space, field_id};
   }
 
   auto&& partition     = strategy[variable];
@@ -1139,13 +1138,12 @@ std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
     set_key_partition(op->machine(), op->parallel_policy(), partition);
   }
 
-  return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
+  return RegionFieldArg{this, privilege, std::move(store_proj)};
 }
 
-std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup_(
-  const InternalSharedPtr<LogicalStore>& self,
-  const Domain& launch_domain,
-  Legion::PrivilegeMode privilege)
+RegionFieldArg LogicalStore::to_launcher_arg_for_fixup_(const InternalSharedPtr<LogicalStore>& self,
+                                                        const Domain& launch_domain,
+                                                        Legion::PrivilegeMode privilege)
 {
   LEGATE_ASSERT(self.get() == this);
   LEGATE_ASSERT(self->key_partition_.has_value());
@@ -1155,7 +1153,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup_(
                       *self->key_partition_  // NOLINT(bugprone-unchecked-optional-access)
     );
   auto store_proj = store_partition->create_store_projection(launch_domain);
-  return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
+  return RegionFieldArg{this, privilege, std::move(store_proj)};
 }
 
 std::string LogicalStore::to_string() const

@@ -159,15 +159,19 @@ void BaseLogicalArray::generate_constraints(
   if (!nullable()) {
     return;
   }
-  auto part_null_mask = task->declare_partition();
-  mapping.try_emplace(null_mask(), part_null_mask);
+
+  auto [it, inserted] = mapping.try_emplace(null_mask());
+
+  if (inserted) {
+    it->second = task->declare_partition();
+  }
   // Need to bypass the signature check here because these generated constraints are not
   // technically visible to the user (you cannot declare different constraints on the "main"
   // store and the nullable store in the signature).
-  task->add_constraint(align(partition_symbol, part_null_mask), /* bypass_signature_check */ true);
+  task->add_constraint(align(partition_symbol, it->second), /* bypass_signature_check */ true);
 }
 
-std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
+ArrayAnalyzable BaseLogicalArray::to_launcher_arg(
   const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
@@ -177,7 +181,7 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
 {
   auto data_arg = store_to_launcher_arg(
     data(), mapping.at(data()), strategy, launch_domain, projection, privilege, redop);
-  std::optional<std::unique_ptr<Analyzable>> null_mask_arg{};
+  std::optional<StoreAnalyzable> null_mask_arg{};
 
   if (nullable()) {
     auto null_redop = privilege == LEGION_REDUCE
@@ -192,14 +196,13 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
                                           null_redop);
   }
 
-  return std::make_unique<BaseArrayArg>(std::move(data_arg), std::move(null_mask_arg));
+  return BaseArrayArg{std::move(data_arg), std::move(null_mask_arg)};
 }
 
-std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg_for_fixup(
-  const Domain& launch_domain, Legion::PrivilegeMode privilege) const
+ArrayAnalyzable BaseLogicalArray::to_launcher_arg_for_fixup(const Domain& launch_domain,
+                                                            Legion::PrivilegeMode privilege) const
 {
-  return std::make_unique<BaseArrayArg>(
-    store_to_launcher_arg_for_fixup(data(), launch_domain, privilege));
+  return BaseArrayArg{store_to_launcher_arg_for_fixup(data(), launch_domain, privilege)};
 }
 
 void BaseLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
@@ -326,7 +329,7 @@ void ListLogicalArray::generate_constraints(
   }
 }
 
-std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
+ArrayAnalyzable ListLogicalArray::to_launcher_arg(
   const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
@@ -341,16 +344,16 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
   auto vardata_arg =
     vardata_->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop);
 
-  return std::make_unique<ListArrayArg>(type(), std::move(descriptor_arg), std::move(vardata_arg));
+  return ListArrayArg{type(), std::move(descriptor_arg), std::move(vardata_arg)};
 }
 
-std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg_for_fixup(
-  const Domain& launch_domain, Legion::PrivilegeMode privilege) const
+ArrayAnalyzable ListLogicalArray::to_launcher_arg_for_fixup(const Domain& launch_domain,
+                                                            Legion::PrivilegeMode privilege) const
 {
   auto descriptor_arg = descriptor_->to_launcher_arg_for_fixup(launch_domain, LEGION_READ_WRITE);
   auto vardata_arg    = vardata_->to_launcher_arg_for_fixup(launch_domain, privilege);
 
-  return std::make_unique<ListArrayArg>(type(), std::move(descriptor_arg), std::move(vardata_arg));
+  return ListArrayArg{type(), std::move(descriptor_arg), std::move(vardata_arg)};
 }
 
 void ListLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
@@ -556,7 +559,7 @@ void StructLogicalArray::generate_constraints(
   task->add_constraint(align(partition_symbol, part_null_mask), /* bypass_signature_check */ true);
 }
 
-std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
+ArrayAnalyzable StructLogicalArray::to_launcher_arg(
   const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
@@ -564,7 +567,7 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   Legion::PrivilegeMode privilege,
   GlobalRedopID redop) const
 {
-  std::optional<std::unique_ptr<Analyzable>> null_mask_arg;
+  std::optional<StoreAnalyzable> null_mask_arg;
 
   if (nullable()) {
     auto null_redop = privilege == LEGION_REDUCE
@@ -579,22 +582,20 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
                                           null_redop);
   }
 
-  auto field_args = make_array_from_op<std::unique_ptr<Analyzable>>(fields_, [&](auto& field) {
+  auto field_args = make_array_from_op<ArrayAnalyzable>(fields_, [&](auto& field) {
     return field->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop);
   });
 
-  return std::make_unique<StructArrayArg>(type(), std::move(null_mask_arg), std::move(field_args));
+  return StructArrayArg{type(), std::move(null_mask_arg), std::move(field_args)};
 }
 
-std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg_for_fixup(
-  const Domain& launch_domain, Legion::PrivilegeMode privilege) const
+ArrayAnalyzable StructLogicalArray::to_launcher_arg_for_fixup(const Domain& launch_domain,
+                                                              Legion::PrivilegeMode privilege) const
 {
-  return std::make_unique<StructArrayArg>(
-    type(),
-    std::nullopt,
-    make_array_from_op<std::unique_ptr<Analyzable>>(fields_, [&](auto& field) {
+  return StructArrayArg{
+    type(), std::nullopt, make_array_from_op<ArrayAnalyzable>(fields_, [&](auto& field) {
       return field->to_launcher_arg_for_fixup(launch_domain, privilege);
-    }));
+    })};
 }
 
 void StructLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const

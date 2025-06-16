@@ -75,10 +75,6 @@ void Reduce::launch(Strategy* p_strategy)
     }
   }
 
-  auto to_array_arg = [](auto&& arg) {
-    return std::make_unique<BaseArrayArg>(std::forward<decltype(arg)>(arg));
-  };
-
   auto&& runtime = detail::Runtime::get_runtime();
 
   InternalSharedPtr<LogicalStore> new_output;
@@ -102,15 +98,15 @@ void Reduce::launch(Strategy* p_strategy)
       for (auto&& projection : projections) {
         auto store_proj = input_partition->create_store_projection(launch_domain, projection);
 
-        launcher.add_input(to_array_arg(
-          std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(store_proj))));
+        launcher.add_input(
+          BaseArrayArg{RegionFieldArg{input_.get(), LEGION_READ_ONLY, std::move(store_proj)}});
       }
     } else {
       // otherwise we just add an entire input region to the task
       auto store_proj = input_partition->create_store_projection(launch_domain);
 
-      launcher.add_input(to_array_arg(
-        std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(store_proj))));
+      launcher.add_input(
+        BaseArrayArg{RegionFieldArg{input_.get(), LEGION_READ_ONLY, std::move(store_proj)}});
     }
 
     // calculating #of sub-tasks in the reduction task
@@ -126,11 +122,9 @@ void Reduce::launch(Strategy* p_strategy)
     // a new output region
     if (n_tasks != 1) {
       new_output = runtime.create_store(input_->type(), 1);
-      launcher.add_output(
-        to_array_arg(std::make_unique<OutputRegionArg>(new_output.get(), field_space, field_id)));
+      launcher.add_output(BaseArrayArg{OutputRegionArg{new_output.get(), field_space, field_id}});
     } else {
-      launcher.add_output(
-        to_array_arg(std::make_unique<OutputRegionArg>(output_.get(), field_space, field_id)));
+      launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(), field_space, field_id}});
     }
 
     // Every reduction task returns exactly one unbound store

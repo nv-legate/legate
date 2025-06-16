@@ -294,39 +294,37 @@ class LogicalStore {
   void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const;
 
  private:
-  friend std::unique_ptr<Analyzable> store_to_launcher_arg(
-    const InternalSharedPtr<LogicalStore>& self,
-    const Variable* variable,
-    const Strategy& strategy,
-    const Domain& launch_domain,
-    const std::optional<SymbolicPoint>& projection,
-    Legion::PrivilegeMode privilege,
-    GlobalRedopID redop);
-  friend std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
+  friend StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStore>& self,
+                                               const Variable* variable,
+                                               const Strategy& strategy,
+                                               const Domain& launch_domain,
+                                               const std::optional<SymbolicPoint>& projection,
+                                               Legion::PrivilegeMode privilege,
+                                               GlobalRedopID redop);
+  friend RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<LogicalStore>& self,
+                                                        const Domain& launch_domain,
+                                                        Legion::PrivilegeMode privilege);
+
+  [[nodiscard]] StoreAnalyzable to_launcher_arg_(const InternalSharedPtr<LogicalStore>& self,
+                                                 const Variable* variable,
+                                                 const Strategy& strategy,
+                                                 const Domain& launch_domain,
+                                                 const std::optional<SymbolicPoint>& projection,
+                                                 Legion::PrivilegeMode privilege,
+                                                 GlobalRedopID redop);
+  [[nodiscard]] RegionFieldArg to_launcher_arg_for_fixup_(
     const InternalSharedPtr<LogicalStore>& self,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege);
 
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_(
-    const InternalSharedPtr<LogicalStore>& self,
-    const Variable* variable,
-    const Strategy& strategy,
-    const Domain& launch_domain,
-    const std::optional<SymbolicPoint>& projection,
-    Legion::PrivilegeMode privilege,
-    GlobalRedopID redop);
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup_(
-    const InternalSharedPtr<LogicalStore>& self,
-    const Domain& launch_domain,
-    Legion::PrivilegeMode privilege);
-
-  [[nodiscard]] std::unique_ptr<Analyzable> future_to_launcher_arg_(Legion::Future future,
-                                                                    const Domain& launch_domain,
-                                                                    Legion::PrivilegeMode privilege,
-                                                                    GlobalRedopID redop);
-  [[nodiscard]] std::unique_ptr<Analyzable> future_map_to_launcher_arg_(
-    const Domain& launch_domain, Legion::PrivilegeMode privilege, GlobalRedopID redop);
-  [[nodiscard]] std::unique_ptr<Analyzable> region_field_to_launcher_arg_(
+  [[nodiscard]] StoreAnalyzable future_to_launcher_arg_(Legion::Future future,
+                                                        const Domain& launch_domain,
+                                                        Legion::PrivilegeMode privilege,
+                                                        GlobalRedopID redop);
+  [[nodiscard]] StoreAnalyzable future_map_to_launcher_arg_(const Domain& launch_domain,
+                                                            Legion::PrivilegeMode privilege,
+                                                            GlobalRedopID redop);
+  [[nodiscard]] StoreAnalyzable region_field_to_launcher_arg_(
     const InternalSharedPtr<LogicalStore>& self,
     const Variable* variable,
     const Strategy& strategy,
@@ -394,16 +392,15 @@ class LogicalStorePartition {
   InternalSharedPtr<Partition> partition,
   std::optional<bool> complete = std::nullopt);
 
-[[nodiscard]] std::unique_ptr<Analyzable> store_to_launcher_arg(
-  const InternalSharedPtr<LogicalStore>& self,
-  const Variable* variable,
-  const Strategy& strategy,
-  const Domain& launch_domain,
-  const std::optional<SymbolicPoint>& projection,
-  Legion::PrivilegeMode privilege,
-  GlobalRedopID redop = GlobalRedopID{-1});
+[[nodiscard]] StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStore>& self,
+                                                    const Variable* variable,
+                                                    const Strategy& strategy,
+                                                    const Domain& launch_domain,
+                                                    const std::optional<SymbolicPoint>& projection,
+                                                    Legion::PrivilegeMode privilege,
+                                                    GlobalRedopID redop = GlobalRedopID{-1});
 
-[[nodiscard]] std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
+[[nodiscard]] RegionFieldArg store_to_launcher_arg_for_fixup(
   const InternalSharedPtr<LogicalStore>& self,
   const Domain& launch_domain,
   Legion::PrivilegeMode privilege);
