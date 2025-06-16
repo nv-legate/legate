@@ -329,6 +329,11 @@
                     "nargs": "*"
                 }
             },
+            "legate_generate_install_info_py": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "legate_generate_legate_defines": {
                 "pargs": {
                     "nargs": 0
