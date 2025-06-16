@@ -37,6 +37,18 @@ Legate, e.g. `cuPyNumeric <https://docs.nvidia.com/cupynumeric>`_:
   Packages are only offered for Linux (x86_64 and aarch64) supporting Python
   versions 3.11 to 3.13.
 
+Nightly top-of-tree builds of Legate are available under the "experimental" label:
+
+.. code-block:: bash
+
+   $ conda install -c conda-forge -c legate/label/experimental legate
+
+Refer to the `nightly docs <https://nv-legate.github.io/legate>`_ when using these.
+
+.. important::
+
+  These builds are only lightly validated. Use them at your own risk.
+
 Conda and GPU / CPU Variants
 ----------------------------
 
