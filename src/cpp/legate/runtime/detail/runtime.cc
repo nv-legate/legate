@@ -1740,11 +1740,12 @@ void set_env_vars()
                                                             /* overwrite */ true);
 #endif
 
-#ifdef REALM_USE_UCX
   // Make sure we do not use the CUDA_TL in UCC CUDA_TL currently only works in a single-thread
   // setting. CUDA_TL could work with Legate multi-rank where every rank has a single thread,
   // but we just blanket disable it.
   EnvironmentVariable<std::string>{"UCC_TLS"}.set("^cuda", /* overwrite */ true);
+
+#ifdef REALM_USE_UCX
   EnvironmentVariable<std::string>{"UCX_CUDA_COPY_MAX_REG_RATIO"}.set("1.0",
                                                                       /* overwrite */ true);
   EnvironmentVariable<std::string>{"UCX_RCACHE_PURGE_ON_FORK"}.set("n",
