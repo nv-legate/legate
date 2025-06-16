@@ -110,6 +110,14 @@ any ``*.py`` files on the command line):
     Type "help", "copyright", "credits" or "license" for more information.
     >>>
 
+.. note::
+
+  Currently Legate assumes that all GPUs have the same memory capacity. If this
+  is not the case, you should manually set ``--fbmem`` to a value that is
+  appropriate for all devices, or skip the lower-memory devices using
+  ``CUDA_VISIBLE_DEVICES``. E.g. if GPU 1 has low memory capacity, and you
+  only wish to use GPUs 0 and 2, you would use ``CUDA_VISIBLE_DEVICES=0,2``.
+
 Distributed Launch
 ------------------
 
