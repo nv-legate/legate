@@ -44,7 +44,9 @@ void LogicalRegionField::PhysicalState::unmap()
   // RegionField, there should be no Stores remaining that use it (or any of its sub-regions).
   // Moreover, the field will only start to get reused once all shards have agreed that it's
   // been collected.
-  Runtime::get_runtime().unmap_physical_region(physical_region());
+  if (physical_region().exists()) {
+    Runtime::get_runtime().unmap_physical_region(physical_region());
+  }
   set_physical_region(Legion::PhysicalRegion{});
 }
 
@@ -139,6 +141,7 @@ void LogicalRegionField::unmap()
   if (parent().has_value()) {
     LEGATE_ASSERT(!physical_state_->physical_region().exists());
     (*parent())->unmap();
+    return;
   }
   mapped_ = false;
   physical_state_->unmap();
