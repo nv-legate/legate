@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running Legate Programs &#8212; NVIDIA legate (25.07.00.dev38+g89f32f9c)</title>
+    <title>Running Legate Programs &#8212; NVIDIA legate (25.07.00.dev42+g686f88aa)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=80d0c90b"></script>
+    <script src="../../_static/documentation_options.js?v=1d404d3c"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev38+g89f32f9c) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev38+g89f32f9c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev42+g686f88aa) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev42+g686f88aa) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev38+g89f32f9c)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev42+g686f88aa)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev38+g89f32f9c) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev38+g89f32f9c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev42+g686f88aa) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev42+g686f88aa) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev38+g89f32f9c)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev42+g686f88aa)</p>
   
 </a>
 
@@ -538,16 +538,19 @@ driver:</p>
 </section>
 <section id="resource-allocation">
 <h1>Resource Allocation<a class="headerlink" href="#resource-allocation" title="Link to this heading">#</a></h1>
-<p>By default Legate will query the available hardware on the current machine, and reserve
-for its use all CPU cores, all GPUs and most of the available memory.  You can use
-<code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG='--show-config'</span></code> to inspect the exact set of resources that Legate
-decided to reserve. You can fine-tune Legate’s default resource reservation by passing
-specific flags to the <code class="docutils literal notranslate"><span class="pre">legate</span></code> driver script, listed later in this section.</p>
-<p>You can also use <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG='--auto-config=0'</span></code> to disable Legate’s automatic
-configuration. In this mode Legate will only reserve a minimal set of resources (only 1
-CPU core for task execution, no GPUs, minimal system memory allocation), and any increases
-must be specified manually.</p>
-<p>The following <code class="docutils literal notranslate"><span class="pre">legate</span></code> flags control how many processors are used by Legate:</p>
+<p>By default Legate will query the available hardware on the current machine, and
+reserve for its use all CPU cores, all GPUs and most of the available memory.
+You can use <code class="docutils literal notranslate"><span class="pre">--show-config</span></code> (as a flag to the <code class="docutils literal notranslate"><span class="pre">legate</span></code> driver script, or
+through <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code>) to inspect the exact set of resources that Legate
+decided to reserve. You can fine-tune Legate’s default resource reservation by
+passing specific flags to <code class="docutils literal notranslate"><span class="pre">legate</span></code> / <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code>, listed later in this
+section.</p>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">--auto-config=0</span></code> to disable Legate’s automatic
+configuration. In this mode Legate will only reserve a minimal set of resources
+(only 1 CPU core for task execution, no GPUs, minimal system memory allocation),
+and any increases must be specified manually.</p>
+<p>The following <code class="docutils literal notranslate"><span class="pre">legate</span></code> / <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> flags control how many processors
+are used by Legate:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--cpus</span></code>: how many individual CPU threads are spawned</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--omps</span></code>: how many OpenMP groups are spawned</p></li>
@@ -560,7 +563,8 @@ must be specified manually.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">--numamem</span></code>: how much NUMA-specific DRAM (in MiB) to reserve per NUMA node</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--fbmem</span></code>: how much GPU memory (in MiB) to reserve per GPU</p></li>
 </ul>
-<p>See <code class="docutils literal notranslate"><span class="pre">legate</span> <span class="pre">--help</span></code> for a full list of accepted configuration options.</p>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">--help</span></code> to <code class="docutils literal notranslate"><span class="pre">legate</span></code> / <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> for a full list of accepted
+configuration options.</p>
 <p>For example, if you wanted to use only part of the resources on a DGX station,
 you might run your application as follows:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>legate<span class="w"> </span>--gpus<span class="w"> </span><span class="m">4</span><span class="w"> </span>--sysmem<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--fbmem<span class="w"> </span><span class="m">15000</span><span class="w"> </span>myprog.py
@@ -594,6 +598,14 @@ Python<span class="w"> </span><span class="m">3</span>.12.4<span class="w"> </sp
 Type<span class="w"> </span><span class="s2">&quot;help&quot;</span>,<span class="w"> </span><span class="s2">&quot;copyright&quot;</span>,<span class="w"> </span><span class="s2">&quot;credits&quot;</span><span class="w"> </span>or<span class="w"> </span><span class="s2">&quot;license&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>information.
 &gt;&gt;&gt;
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently Legate assumes that all GPUs have the same memory capacity. If this
+is not the case, you should manually set <code class="docutils literal notranslate"><span class="pre">--fbmem</span></code> to a value that is
+appropriate for all devices, or skip the lower-memory devices using
+<code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code>. E.g. if GPU 1 has low memory capacity, and you
+only wish to use GPUs 0 and 2, you would use <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES=0,2</span></code>.</p>
 </div>
 </section>
 <section id="distributed-launch">
