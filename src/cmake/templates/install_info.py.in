@@ -75,3 +75,5 @@ legion_git_branch: str = "@Legion_GIT_BRANCH@"
 legion_git_repo: str = "@Legion_GIT_REPO@"
 
 wheel_build: bool = @LEGATE_BUILD_PIP_WHEELS@
+
+configure_options: str = "@LEGATE_CONFIGURE_OPTIONS@"

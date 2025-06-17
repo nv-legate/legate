@@ -17,6 +17,13 @@ function(legate_generate_install_info_py)
     set(LEGATE_BUILD_PIP_WHEELS OFF)
   endif()
 
+  # CMake renders spaces in substitutions as "\ " which is a python syntax error. However,
+  # converting the value to a CMake list (using semicolons) renders in substitutions as a
+  # space-delimited string, which is what is desired. It is unclear if this CMake behavior
+  # is documented/intendeed, but it it unlikely to change. Other approaches, e.g. VERBATIM
+  # for the custom target, fail for other reasons.
+  string(REPLACE " " ";" legate_configure_options_list "${LEGATE_CONFIGURE_OPTIONS}")
+
   add_custom_target(generate_install_info_py ALL
                     COMMAND ${CMAKE_COMMAND} -DLEGATE_CMAKE_DIR="${LEGATE_CMAKE_DIR}"
                             -DLEGATE_ARCH="${LEGATE_ARCH}" -DLEGATE_DIR="${LEGATE_DIR}"
@@ -33,6 +40,7 @@ function(legate_generate_install_info_py)
                             -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
                             -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}"
                             -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
+                            -DLEGATE_CONFIGURE_OPTIONS="${legate_configure_options_list}"
                             -Dlegate_LIB_NAME="$<TARGET_FILE_PREFIX:legate::legate>$<TARGET_FILE_BASE_NAME:legate::legate>"
                             -Dlegate_FULL_LIB_NAME="$<TARGET_FILE_NAME:legate::legate>" -P
                             "${LEGATE_CMAKE_DIR}/generate_install_info_py.cmake"

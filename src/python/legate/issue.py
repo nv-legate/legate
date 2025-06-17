@@ -13,6 +13,8 @@ from importlib import import_module
 from subprocess import CalledProcessError, check_output
 from textwrap import indent
 
+from .util.info import print_build_info
+
 FAILED_TO_DETECT = "(failed to detect)"
 
 
@@ -27,6 +29,8 @@ def try_version(module_name: str, attr: str) -> str:
     except ImportError as e:
         err = re.sub(r" \(.*\)", "", str(e))  # remove any local path
         return f"(ImportError: {err})"
+    except Exception as e:
+        return f"(Exception on import: {e})"
 
 
 def legion_version() -> str:
@@ -42,9 +46,9 @@ def legion_version() -> str:
     return result
 
 
-def cuda_version() -> str:
+def try_conda(package: str) -> str:
     try:
-        if out := check_output(["conda", "list", "cuda-version", "--json"]):
+        if out := check_output(["conda", "list", package, "--json"]):
             info = json.loads(out.decode("utf-8"))[0]
             return f"{info['dist_name']} ({info['channel']})"
 
@@ -56,13 +60,39 @@ def cuda_version() -> str:
         return FAILED_TO_DETECT
 
 
+def print_system_info() -> None:
+    print("System info:")
+    print(f"  Python      :  {sys.version.splitlines()[0]}")
+    print(f"  Platform    :  {platform.platform()}")
+    print(f"  GPU driver  :  {driver_version()}")
+    print(f"  GPU devices :  {devices()}")
+
+
+def print_package_versions() -> None:
+    print("Package versions:")
+    print(f"  legion      :  {legion_version()}")
+    print(f"  legate      :  {try_version('legate', '__version__')}")
+    print(f"  cupynumeric :  {try_version('cupynumeric', '__version__')}")
+    print(f"  numpy       :  {try_version('numpy', '__version__')}")
+    print(f"  scipy       :  {try_version('scipy', '__version__')}")
+    print(f"  numba       :  {try_version('numba', '__version__')}")
+
+
+def print_pacakge_details() -> None:
+    print("Package details:")
+    packages = ("cuda-version", "legate", "cupynumeric")
+    N = max(len(pkg) for pkg in packages)
+    for pkg in packages:
+        print(f"  {pkg:<{N + 1}}: {try_conda(pkg)}")
+
+
 def driver_version() -> str:
-    cmd = [
+    cmd = (
         "nvidia-smi",
         "--query-gpu=driver_version",
         "--format=csv,noheader",
         "--id=0",
-    ]
+    )
     try:
         out = check_output(cmd)
         return out.decode("utf-8").strip()
@@ -77,7 +107,7 @@ def devices() -> str:
     try:
         out = check_output(cmd)
         gpus = re.sub(r" \(UUID: .*\)", "", out.decode("utf-8").strip())
-        return f"\n{indent(gpus, '  ')}"
+        return f"\n{indent(gpus, '    ')}"
     except (CalledProcessError, IndexError, KeyError):
         return FAILED_TO_DETECT
     except FileNotFoundError:
@@ -89,14 +119,10 @@ def main() -> None:
     # too aggressive and will cause legate-issue itself to crash
     os.environ["LEGATE_AUTO_CONFIG"] = "0"
 
-    print(f"Python      :  {sys.version.splitlines()[0]}")
-    print(f"Platform    :  {platform.platform()}")
-    print(f"Legion      :  {legion_version()}")
-    print(f"Legate      :  {try_version('legate', '__version__')}")
-    print(f"cuPynumeric :  {try_version('cupynumeric', '__version__')}")
-    print(f"Numpy       :  {try_version('numpy', '__version__')}")
-    print(f"Scipy       :  {try_version('scipy', '__version__')}")
-    print(f"Numba       :  {try_version('numba', '__version__')}")
-    print(f"CTK package :  {cuda_version()}")
-    print(f"GPU driver  :  {driver_version()}")
-    print(f"GPU devices :  {devices()}")
+    print_system_info()
+    print()
+    print_package_versions()
+    print()
+    print_pacakge_details()
+    print()
+    print_build_info()
