@@ -1,0 +1,4 @@
+legate::ExternalAllocation
+==========================
+
+.. doxygenclass:: legate::ExternalAllocation

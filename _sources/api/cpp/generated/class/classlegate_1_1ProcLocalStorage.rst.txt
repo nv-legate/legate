@@ -1,0 +1,4 @@
+legate::ProcLocalStorage
+========================
+
+.. doxygenclass:: legate::ProcLocalStorage

@@ -1,0 +1,4 @@
+reduction
+=========
+
+.. doxygengroup:: reduction

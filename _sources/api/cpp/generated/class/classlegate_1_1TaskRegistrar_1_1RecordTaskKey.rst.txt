@@ -1,0 +1,4 @@
+legate::TaskRegistrar::RecordTaskKey
+====================================
+
+.. doxygenclass:: legate::TaskRegistrar::RecordTaskKey

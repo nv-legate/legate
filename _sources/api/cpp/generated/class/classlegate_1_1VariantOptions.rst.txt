@@ -1,0 +1,4 @@
+legate::VariantOptions
+======================
+
+.. doxygenclass:: legate::VariantOptions

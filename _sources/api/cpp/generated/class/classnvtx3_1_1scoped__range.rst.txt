@@ -1,0 +1,4 @@
+nvtx3::scoped_range
+===================
+
+.. doxygenclass:: nvtx3::scoped_range

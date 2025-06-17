@@ -1,0 +1,4 @@
+legate::mapping::ProcessorRange
+===============================
+
+.. doxygenclass:: legate::mapping::ProcessorRange

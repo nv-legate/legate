@@ -1,0 +1,4 @@
+legate::ProxyOutputArguments
+============================
+
+.. doxygenclass:: legate::ProxyOutputArguments

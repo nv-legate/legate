@@ -1,0 +1,8 @@
+Struct list
+===========
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+
+   struct/*

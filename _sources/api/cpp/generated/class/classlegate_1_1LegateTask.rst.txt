@@ -1,0 +1,4 @@
+legate::LegateTask
+==================
+
+.. doxygenclass:: legate::LegateTask

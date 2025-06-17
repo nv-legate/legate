@@ -1,0 +1,4 @@
+legate::is_complex< Type::Code::COMPLEX64 >
+===========================================
+
+.. doxygenstruct:: legate::is_complex< Type::Code::COMPLEX64 >

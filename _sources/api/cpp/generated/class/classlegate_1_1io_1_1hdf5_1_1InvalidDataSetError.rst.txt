@@ -1,0 +1,4 @@
+legate::io::hdf5::InvalidDataSetError
+=====================================
+
+.. doxygenclass:: legate::io::hdf5::InvalidDataSetError

@@ -1,0 +1,4 @@
+legate::experimental::stl::iterator
+===================================
+
+.. doxygenclass:: legate::experimental::stl::iterator

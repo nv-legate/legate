@@ -1,0 +1,4 @@
+legate::BadInternalWeakPtr
+==========================
+
+.. doxygenclass:: legate::BadInternalWeakPtr

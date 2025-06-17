@@ -1,0 +1,4 @@
+legate::LogicalStorePartition
+=============================
+
+.. doxygenclass:: legate::LogicalStorePartition

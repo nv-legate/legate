@@ -1,0 +1,4 @@
+launch_task
+===========
+
+.. doxygenclass:: launch_task

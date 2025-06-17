@@ -1,0 +1,4 @@
+legate::experimental::stl::affine_map::mixin
+============================================
+
+.. doxygenclass:: legate::experimental::stl::affine_map::mixin

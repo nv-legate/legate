@@ -1,0 +1,4 @@
+legate::Scope::Impl
+===================
+
+.. doxygenclass:: legate::Scope::Impl

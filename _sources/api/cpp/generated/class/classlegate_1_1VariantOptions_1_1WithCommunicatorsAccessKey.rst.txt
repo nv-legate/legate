@@ -1,0 +1,4 @@
+legate::VariantOptions::WithCommunicatorsAccessKey
+==================================================
+
+.. doxygenclass:: legate::VariantOptions::WithCommunicatorsAccessKey

@@ -1,0 +1,4 @@
+legate::mapping::NodeRange
+==========================
+
+.. doxygenclass:: legate::mapping::NodeRange

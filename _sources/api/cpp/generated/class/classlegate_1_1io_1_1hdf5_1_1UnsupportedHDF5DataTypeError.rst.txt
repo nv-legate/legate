@@ -1,0 +1,4 @@
+legate::io::hdf5::UnsupportedHDF5DataTypeError
+==============================================
+
+.. doxygenclass:: legate::io::hdf5::UnsupportedHDF5DataTypeError

@@ -1,0 +1,1119 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Group list &#8212; NVIDIA legate (25.07.00.dev47+gb70bb885)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/nvidia-sphinx-theme.css?v=df3ac72c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=a66462d3"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/generated/grouplist';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.07';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="accessor" href="group/group__accessor.html" />
+    <link rel="prev" title="C++ API Reference" href="../index.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev47+gb70bb885)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev47+gb70bb885)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../installation.html">Installing pre-built packages</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../networking-wheels.html">Networking with Legate Wheels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mpi-wrapper.html">Installation of the Legate MPI wrapper</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../BUILD.html">Building from source</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../manual/index.html">User Manual</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../manual/overview/index.html">Overview</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../manual/overview/nutshell.html">Legate In a Nutshell</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/introduction/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/runtime/index.html">The Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/tasks/index.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/data/index.html">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../manual/mappers/index.html">Mappers</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../manual/usage/index.html">Running Legate Programs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../manual/usage/running.html">Running Legate Programs</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../../../manual/usage/hdf5_gds.html">HDF5 GPU-Direct Storage I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../manual/usage/jupyter.html">Using with Jupyter</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../../python/logical_array.html">Arrays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/physical_store.html">Physical Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/physical_array.html">Physical Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/scalar.html">Scalar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/variant_options.html">Variant Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/resource_config.html">ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/task_context.html">Task Context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/domain.html">Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/task_config.html">Task Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/task_local_buffer.html">Task-Local Buffers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/inline_allocation.html">Inline Allocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/symbolic_expr.html">Symbolic Expressions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/auto_task.html">Auto Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/manual_task.html">Manual Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/constraint.html">Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/variable.html">Variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/library.html">Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/parallel_policy.html">ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/types.html">Types</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../index.html">C++ API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active has-children"><a class="current reference internal" href="#">Groups</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="group/group__accessor.html">accessor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__data.html">data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__env.html">env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__geometry.html">geometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__io.html">io</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__io-hdf5.html">io-hdf5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__io-kvikio.html">io-kvikio</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__iterator.html">iterator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__machine.html">machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__mapping.html">mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__partitioning.html">partitioning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__reduction.html">reduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__runtime.html">runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__stl.html">stl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__stl-algorithms.html">stl-algorithms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__stl-concepts.html">stl-concepts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__stl-containers.html">stl-containers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__stl-utilities.html">stl-utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__stl-views.html">stl-views</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__task.html">task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__tuning.html">tuning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__type.html">type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__types.html">types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="group/group__util.html">util</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="classlist.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="class/classlaunch__task.html">launch_task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1AutoTask.html">legate::AutoTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1AutoTask_1_1Impl.html">legate::AutoTask::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1BadInternalWeakPtr.html">legate::BadInternalWeakPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Constraint.html">legate::Constraint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1DefaultDelete.html">legate::DefaultDelete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1EnableSharedFromThis.html">legate::EnableSharedFromThis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ExternalAllocation.html">legate::ExternalAllocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1FixedArrayType.html">legate::FixedArrayType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1InlineAllocation.html">legate::InlineAllocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1InternalSharedPtr.html">legate::InternalSharedPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1InternalWeakPtr.html">legate::InternalWeakPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1LegateTask.html">legate::LegateTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Library.html">legate::Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ListLogicalArray.html">legate::ListLogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ListPhysicalArray.html">legate::ListPhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ListType.html">legate::ListType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1LogicalArray.html">legate::LogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1LogicalArray_1_1Impl.html">legate::LogicalArray::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1LogicalStore.html">legate::LogicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1LogicalStorePartition.html">legate::LogicalStorePartition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1LogicalStorePartition_1_1Impl.html">legate::LogicalStorePartition::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1LogicalStore_1_1Impl.html">legate::LogicalStore::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ManualTask.html">legate::ManualTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ManualTask_1_1Impl.html">legate::ManualTask::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ProxyArrayArgument.html">legate::ProxyArrayArgument</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ProxyConstraint.html">legate::ProxyConstraint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ProxyInputArguments.html">legate::ProxyInputArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ProxyOutputArguments.html">legate::ProxyOutputArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ProxyReductionArguments.html">legate::ProxyReductionArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Runtime.html">legate::Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Scalar.html">legate::Scalar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Scope.html">legate::Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ScopeFail.html">legate::ScopeFail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ScopeGuard.html">legate::ScopeGuard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Scope_1_1Impl.html">legate::Scope::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ScopedAllocator.html">legate::ScopedAllocator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ScopedAllocator_1_1Impl.html">legate::ScopedAllocator::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Shape.html">legate::Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1SharedPtr.html">legate::SharedPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Slice.html">legate::Slice</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Span.html">legate::Span</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1StringLogicalArray.html">legate::StringLogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1StringPhysicalArray.html">legate::StringPhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1StructType.html">legate::StructType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1SymbolicExpr.html">legate::SymbolicExpr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskConfig.html">legate::TaskConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskContext.html">legate::TaskContext</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskException.html">legate::TaskException</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskInfo.html">legate::TaskInfo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskInfo_1_1AddVariantKey.html">legate::TaskInfo::AddVariantKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskLocalBuffer.html">legate::TaskLocalBuffer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskRegistrar.html">legate::TaskRegistrar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskRegistrar_1_1Impl.html">legate::TaskRegistrar::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskRegistrar_1_1RecordTaskKey.html">legate::TaskRegistrar::RecordTaskKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1TaskSignature.html">legate::TaskSignature</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Type.html">legate::Type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1Variable.html">legate::Variable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1VariantInfo.html">legate::VariantInfo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1VariantOptions.html">legate::VariantOptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1VariantOptions_1_1WithCommunicatorsAccessKey.html">legate::VariantOptions::WithCommunicatorsAccessKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1comm_1_1Communicator.html">legate::comm::Communicator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1comm_1_1coll_1_1Coll__Comm.html">legate::comm::coll::Coll_Comm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1cuda_1_1StreamPool.html">legate::cuda::StreamPool</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1cuda_1_1StreamView.html">legate::cuda::StreamView</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1Trace.html">legate::experimental::Trace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1Trace_1_1Impl.html">legate::experimental::Trace::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1stl_1_1affine__map.html">legate::experimental::stl::affine_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1stl_1_1affine__map_1_1mixin.html">legate::experimental::stl::affine_map::mixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1stl_1_1initialize__library.html">legate::experimental::stl::initialize_library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1stl_1_1iterator.html">legate::experimental::stl::iterator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1stl_1_1iterator_1_1pointer.html">legate::experimental::stl::iterator::pointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1experimental_1_1stl_1_1logical__store.html">legate::experimental::stl::logical_store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError.html">legate::io::hdf5::InvalidDataSetError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1io_1_1hdf5_1_1UnsupportedHDF5DataTypeError.html">legate::io::hdf5::UnsupportedHDF5DataTypeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1Array.html">legate::mapping::Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1DimOrdering.html">legate::mapping::DimOrdering</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1InstanceMappingPolicy.html">legate::mapping::InstanceMappingPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1Machine.html">legate::mapping::Machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1MachineQueryInterface.html">legate::mapping::MachineQueryInterface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1Mapper.html">legate::mapping::Mapper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1NodeRange.html">legate::mapping::NodeRange</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1ProcessorRange.html">legate::mapping::ProcessorRange</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1Store.html">legate::mapping::Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1StoreMapping.html">legate::mapping::StoreMapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1StoreMapping_1_1ReleaseKey.html">legate::mapping::StoreMapping::ReleaseKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1mapping_1_1Task.html">legate::mapping::Task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1ordered__set.html">legate::ordered_set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1proj_1_1SymbolicExpr.html">legate::proj::SymbolicExpr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1timing_1_1Time.html">legate::timing::Time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1timing_1_1Time_1_1Impl.html">legate::timing::Time::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classlegate_1_1tuple.html">legate::tuple</a></li>
+<li class="toctree-l4"><a class="reference internal" href="class/classnvtx3_1_1scoped__range.html">nvtx3::scoped_range</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="structlist.html">Structs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1ResourceConfig.html">legate::ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1experimental_1_1stl_1_1iteration__kind.html">legate::experimental::stl::iteration_kind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1experimental_1_1stl_1_1reduction__kind.html">legate::experimental::stl::reduction_kind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1has__hash__member.html">legate::has_hash_member</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1hasher.html">legate::hasher</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__complex.html">legate::is_complex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX128_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX128 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX64_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX64 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__complex__type.html">legate::is_complex_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__complex__type_3_01complex_3_01double_01_4_01_4.html">legate::is_complex_type&lt; complex&lt; double &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__complex__type_3_01complex_3_01float_01_4_01_4.html">legate::is_complex_type&lt; complex&lt; float &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__floating__point.html">legate::is_floating_point</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__floating__point_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_floating_point&lt; Type::Code::FLOAT16 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__integral.html">legate::is_integral</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__signed.html">legate::is_signed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__signed_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_signed&lt; Type::Code::FLOAT16 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="struct/structlegate_1_1is__unsigned.html">legate::is_unsigned</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2507.html">2507</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2505.html">2505</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../oss-licenses.html">Third-party notices</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../developer/style.html">Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../developer/testing.html">Running the Test Suite</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resources.html">Links to resources</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">C++ API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Group list</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="group-list">
+<h1>Group list<a class="headerlink" href="#group-list" title="Link to this heading">#</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="group/group__accessor.html">accessor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__accessor.html#_CPPv4I0_i0E10AccessorRO"><code class="docutils literal notranslate"><span class="pre">AccessorRO</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__accessor.html#_CPPv4I0_i0E10AccessorWO"><code class="docutils literal notranslate"><span class="pre">AccessorWO</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__accessor.html#_CPPv4I0_i0E10AccessorRW"><code class="docutils literal notranslate"><span class="pre">AccessorRW</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__accessor.html#_CPPv4I0_b_i0E10AccessorRD"><code class="docutils literal notranslate"><span class="pre">AccessorRD</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__data.html">data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#c.LEGATE_TRUE_WHEN_DEBUG"><code class="docutils literal notranslate"><span class="pre">LEGATE_TRUE_WHEN_DEBUG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4I0_NSt7int32_tEE6Buffer"><code class="docutils literal notranslate"><span class="pre">Buffer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIMEN6Memory4KindENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tEN6Memory4KindENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv44nullv"><code class="docutils literal notranslate"><span class="pre">null()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv416InlineAllocationPvNSt6vectorINSt6size_tEEEN7mapping11StoreTargetE"><code class="docutils literal notranslate"><span class="pre">InlineAllocation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv417DEFAULT_ALIGNMENT"><code class="docutils literal notranslate"><span class="pre">DEFAULT_ALIGNMENT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate15ScopedAllocatorE"><code class="docutils literal notranslate"><span class="pre">legate::ScopedAllocator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate15TaskLocalBufferE"><code class="docutils literal notranslate"><span class="pre">legate::TaskLocalBuffer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate18ExternalAllocationE"><code class="docutils literal notranslate"><span class="pre">legate::ExternalAllocation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate16InlineAllocationE"><code class="docutils literal notranslate"><span class="pre">legate::InlineAllocation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate12LogicalArrayE"><code class="docutils literal notranslate"><span class="pre">legate::LogicalArray</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate16ListLogicalArrayE"><code class="docutils literal notranslate"><span class="pre">legate::ListLogicalArray</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate18StringLogicalArrayE"><code class="docutils literal notranslate"><span class="pre">legate::StringLogicalArray</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate12LogicalStoreE"><code class="docutils literal notranslate"><span class="pre">legate::LogicalStore</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate21LogicalStorePartitionE"><code class="docutils literal notranslate"><span class="pre">legate::LogicalStorePartition</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate13PhysicalArrayE"><code class="docutils literal notranslate"><span class="pre">legate::PhysicalArray</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate17ListPhysicalArrayE"><code class="docutils literal notranslate"><span class="pre">legate::ListPhysicalArray</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate19StringPhysicalArrayE"><code class="docutils literal notranslate"><span class="pre">legate::StringPhysicalArray</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate13PhysicalStoreE"><code class="docutils literal notranslate"><span class="pre">legate::PhysicalStore</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate6ScalarE"><code class="docutils literal notranslate"><span class="pre">legate::Scalar</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate5ShapeE"><code class="docutils literal notranslate"><span class="pre">legate::Shape</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4N6legate5SliceE"><code class="docutils literal notranslate"><span class="pre">legate::Slice</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__data.html#_CPPv4I0EN6legate4SpanE"><code class="docutils literal notranslate"><span class="pre">legate::Span</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__env.html">env</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__env.html#_CPPv411LEGATE_TEST"><code class="docutils literal notranslate"><span class="pre">LEGATE_TEST</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__env.html#_CPPv418LEGATE_MPI_WRAPPER"><code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__geometry.html">geometry</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__geometry.html#_CPPv4I_i0E5Point"><code class="docutils literal notranslate"><span class="pre">Point</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__geometry.html#_CPPv4I_i0E4Rect"><code class="docutils literal notranslate"><span class="pre">Rect</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__io.html">io</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__io-hdf5.html">io-hdf5</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-hdf5.html#_CPPv49from_fileRKNSt10filesystem4pathENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">from_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-hdf5.html#_CPPv4N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE"><code class="docutils literal notranslate"><span class="pre">legate::io::hdf5::UnsupportedHDF5DataTypeError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-hdf5.html#_CPPv4N6legate2io4hdf519InvalidDataSetErrorE"><code class="docutils literal notranslate"><span class="pre">legate::io::hdf5::InvalidDataSetError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__io-kvikio.html">io-kvikio</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-kvikio.html#_CPPv49from_fileRKNSt10filesystem4pathERK4Type"><code class="docutils literal notranslate"><span class="pre">from_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-kvikio.html#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArray"><code class="docutils literal notranslate"><span class="pre">to_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-kvikio.html#_CPPv49from_fileRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"><code class="docutils literal notranslate"><span class="pre">from_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-kvikio.html#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"><code class="docutils literal notranslate"><span class="pre">to_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__io-kvikio.html#_CPPv420from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE"><code class="docutils literal notranslate"><span class="pre">from_file_by_offsets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__iterator.html">iterator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__iterator.html#_CPPv4I_i0E19PointInRectIterator"><code class="docutils literal notranslate"><span class="pre">PointInRectIterator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__iterator.html#_CPPv4I_i0E21PointInDomainIterator"><code class="docutils literal notranslate"><span class="pre">PointInDomainIterator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__machine.html">machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__mapping.html">mapping</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv410TaskTarget"><code class="docutils literal notranslate"><span class="pre">TaskTarget</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv411StoreTarget"><code class="docutils literal notranslate"><span class="pre">StoreTarget</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv411AllocPolicy"><code class="docutils literal notranslate"><span class="pre">AllocPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv410InstLayout"><code class="docutils literal notranslate"><span class="pre">InstLayout</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4lsRNSt7ostreamERK14ProcessorRange"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4lsRNSt7ostreamERK7Machine"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4lsRNSt7ostreamERK10TaskTarget"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4lsRNSt7ostreamERK11StoreTarget"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping9NodeRangeE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::NodeRange</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping14ProcessorRangeE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::ProcessorRange</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::Machine</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping11DimOrderingE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::DimOrdering</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicyE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::InstanceMappingPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping12StoreMappingE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::StoreMapping</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping21MachineQueryInterfaceE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::MachineQueryInterface</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping6MapperE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::Mapper</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping4TaskE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::Task</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping5StoreE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::Store</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__mapping.html#_CPPv4N6legate7mapping6detailE"><code class="docutils literal notranslate"><span class="pre">legate::mapping::detail</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__partitioning.html">partitioning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv420ImageComputationHint"><code class="docutils literal notranslate"><span class="pre">ImageComputationHint</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45align8Variable8Variable"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45alignNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45align19ProxyInputArguments"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45align20ProxyOutputArguments"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv49broadcast8Variable"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv49broadcast8Variable5tupleINSt8uint32_tEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv49broadcastNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt8optionalI5tupleINSt8uint32_tEEEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45image8Variable8Variable20ImageComputationHint"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45imageNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt8optionalI20ImageComputationHintEE"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45scale5tupleINSt8uint64_tEE8Variable8Variable"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45scale5tupleINSt8uint64_tEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45bloat8Variable8Variable5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">bloat()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv45bloatNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">bloat()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv46inputs"><code class="docutils literal notranslate"><span class="pre">inputs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv47outputs"><code class="docutils literal notranslate"><span class="pre">outputs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv410reductions"><code class="docutils literal notranslate"><span class="pre">reductions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate8VariableE"><code class="docutils literal notranslate"><span class="pre">legate::Variable</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate10ConstraintE"><code class="docutils literal notranslate"><span class="pre">legate::Constraint</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate18ProxyArrayArgumentE"><code class="docutils literal notranslate"><span class="pre">legate::ProxyArrayArgument</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate19ProxyInputArgumentsE"><code class="docutils literal notranslate"><span class="pre">legate::ProxyInputArguments</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate20ProxyOutputArgumentsE"><code class="docutils literal notranslate"><span class="pre">legate::ProxyOutputArguments</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate23ProxyReductionArgumentsE"><code class="docutils literal notranslate"><span class="pre">legate::ProxyReductionArguments</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate15ProxyConstraintE"><code class="docutils literal notranslate"><span class="pre">legate::ProxyConstraint</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate6detailE"><code class="docutils literal notranslate"><span class="pre">legate::detail</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__partitioning.html#_CPPv4N6legate12proxy_detailE"><code class="docutils literal notranslate"><span class="pre">legate::proxy_detail</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__reduction.html">reduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E12SumReduction"><code class="docutils literal notranslate"><span class="pre">SumReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E13DiffReduction"><code class="docutils literal notranslate"><span class="pre">DiffReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E13ProdReduction"><code class="docutils literal notranslate"><span class="pre">ProdReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E12DivReduction"><code class="docutils literal notranslate"><span class="pre">DivReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E12MaxReduction"><code class="docutils literal notranslate"><span class="pre">MaxReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E12MinReduction"><code class="docutils literal notranslate"><span class="pre">MinReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E11OrReduction"><code class="docutils literal notranslate"><span class="pre">OrReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E12AndReduction"><code class="docutils literal notranslate"><span class="pre">AndReduction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__reduction.html#_CPPv4I0E12XorReduction"><code class="docutils literal notranslate"><span class="pre">XorReduction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__runtime.html">runtime</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv413ExceptionMode"><code class="docutils literal notranslate"><span class="pre">ExceptionMode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv45startNSt7int32_tEA_Pc"><code class="docutils literal notranslate"><span class="pre">start()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv45startv"><code class="docutils literal notranslate"><span class="pre">start()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv411has_startedv"><code class="docutils literal notranslate"><span class="pre">has_started()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv412has_finishedv"><code class="docutils literal notranslate"><span class="pre">has_finished()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv46finishv"><code class="docutils literal notranslate"><span class="pre">finish()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv47destroyv"><code class="docutils literal notranslate"><span class="pre">destroy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv4I0E26register_shutdown_callbackvRR1T"><code class="docutils literal notranslate"><span class="pre">register_shutdown_callback()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv411get_machinev"><code class="docutils literal notranslate"><span class="pre">get_machine()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv418is_running_in_taskv"><code class="docutils literal notranslate"><span class="pre">is_running_in_task()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv4N6legate7LibraryE"><code class="docutils literal notranslate"><span class="pre">legate::Library</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv4N6legate14ResourceConfigE"><code class="docutils literal notranslate"><span class="pre">legate::ResourceConfig</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv4N6legate7RuntimeE"><code class="docutils literal notranslate"><span class="pre">legate::Runtime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__runtime.html#_CPPv4N6legate6detailE"><code class="docutils literal notranslate"><span class="pre">legate::detail</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__stl.html">stl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__stl-algorithms.html">stl-algorithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I0E4fillvRR5Range15value_type_of_tI5RangeE"><code class="docutils literal notranslate"><span class="pre">fill()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I0DpE12for_each_zipvRR8FunctionDpRR6Inputs"><code class="docutils literal notranslate"><span class="pre">for_each_zip()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I00E8for_eachvRR5InputRR8Function"><code class="docutils literal notranslate"><span class="pre">for_each()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation"><code class="docutils literal notranslate"><span class="pre">reduce()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform"><code class="docutils literal notranslate"><span class="pre">transform_reduce()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-algorithms.html#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform"><code class="docutils literal notranslate"><span class="pre">transform_reduce()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__stl-concepts.html">stl-concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-concepts.html#_CPPv4I0E17get_logical_store12LogicalStoreRR9StoreLike"><code class="docutils literal notranslate"><span class="pre">get_logical_store()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__stl-containers.html">stl-containers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0E15value_type_of_t"><code class="docutils literal notranslate"><span class="pre">value_type_of_t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0E17element_type_of_t"><code class="docutils literal notranslate"><span class="pre">element_type_of_t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0_NSt7int32_tEE8as_typed13logical_storeI11ElementType3DimERKN6legate12LogicalStoreE"><code class="docutils literal notranslate"><span class="pre">as_typed()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0_NSt7int32_tEE9as_mdspan8mdspan_tI11ElementType3DimERKN6legate13PhysicalStoreE"><code class="docutils literal notranslate"><span class="pre">as_mdspan()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0E12create_store13logical_storeI11ElementTypeXL0EEEN4cudaSt4spanIKNSt6size_tEXL0ULEEEE11ElementType"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0_NSt6size_tEE12create_store13logical_storeI11ElementType3DimERA3Dim_KNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0_NSt6size_tEE12create_store13logical_storeI11ElementType3DimERKN4cudaSt5arrayINSt6size_tE3DimEE"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0_NSt7int32_tEE12create_store13logical_storeI11ElementType3DimERA3Dim_KNSt6size_tE11ElementType"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0_NSt6size_tEE12create_store13logical_storeI11ElementType3DimERKN4cudaSt5arrayINSt6size_tE3DimEE11ElementType"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0E6scalar13logical_storeI11ElementTypeXL0EEE11ElementType"><code class="docutils literal notranslate"><span class="pre">scalar()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0E8dim_of_v"><code class="docutils literal notranslate"><span class="pre">dim_of_v</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0E12create_store"><code class="docutils literal notranslate"><span class="pre">create_store</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-containers.html#_CPPv4I0_NSt7int32_tEEN6legate12experimental3stl13logical_storeE"><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::logical_store</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__stl-utilities.html">stl-utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-utilities.html#_CPPv4I0E11elementwise11unspecifiedRR8Function"><code class="docutils literal notranslate"><span class="pre">elementwise()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-utilities.html#_CPPv4I_Dp11LaunchParamE11launch_taskvDp6Params"><code class="docutils literal notranslate"><span class="pre">launch_task()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-utilities.html#_CPPv426LEGATE_STL_RESOURCE_CONFIG"><code class="docutils literal notranslate"><span class="pre">LEGATE_STL_RESOURCE_CONFIG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-utilities.html#_CPPv411launch_task"><code class="docutils literal notranslate"><span class="pre">launch_task</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-utilities.html#_CPPv4N6legate12experimental3stl18initialize_libraryE"><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::initialize_library</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__stl-views.html">stl-views</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-views.html#_CPPv4I0_NSt7int32_tEE8mdspan_t"><code class="docutils literal notranslate"><span class="pre">mdspan_t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-views.html#_CPPv414element_policy"><code class="docutils literal notranslate"><span class="pre">element_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-views.html#_CPPv410row_policy"><code class="docutils literal notranslate"><span class="pre">row_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-views.html#_CPPv413column_policy"><code class="docutils literal notranslate"><span class="pre">column_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-views.html#_CPPv4I_DpNSt7int32_tEE17projection_policy"><code class="docutils literal notranslate"><span class="pre">projection_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__stl-views.html#_CPPv4I0_NSt7int32_tE0E10slice_view"><code class="docutils literal notranslate"><span class="pre">slice_view</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__task.html">task</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#c.LEGATE_STREAM_VIEW_DEPRECATED"><code class="docutils literal notranslate"><span class="pre">LEGATE_STREAM_VIEW_DEPRECATED</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#c.LEGATE_STREAM_POOL_DEPRECATED"><code class="docutils literal notranslate"><span class="pre">LEGATE_STREAM_POOL_DEPRECATED</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv413SymbolicPoint"><code class="docutils literal notranslate"><span class="pre">SymbolicPoint</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4lsRNSt7ostreamERK12SymbolicExpr"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv49dimensionNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">dimension()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv48constantNSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">constant()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4lsRNSt7ostreamERK14VariantOptions"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv415DEFAULT_OPTIONS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_OPTIONS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate4comm12CommunicatorE"><code class="docutils literal notranslate"><span class="pre">legate::comm::Communicator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate4cuda10StreamViewE"><code class="docutils literal notranslate"><span class="pre">legate::cuda::StreamView</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate4cuda10StreamPoolE"><code class="docutils literal notranslate"><span class="pre">legate::cuda::StreamPool</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate12SymbolicExprE"><code class="docutils literal notranslate"><span class="pre">legate::SymbolicExpr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate8AutoTaskE"><code class="docutils literal notranslate"><span class="pre">legate::AutoTask</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate10ManualTaskE"><code class="docutils literal notranslate"><span class="pre">legate::ManualTask</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate13TaskExceptionE"><code class="docutils literal notranslate"><span class="pre">legate::TaskException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate13TaskRegistrarE"><code class="docutils literal notranslate"><span class="pre">legate::TaskRegistrar</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4I0EN6legate10LegateTaskE"><code class="docutils literal notranslate"><span class="pre">legate::LegateTask</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate10TaskConfigE"><code class="docutils literal notranslate"><span class="pre">legate::TaskConfig</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate11TaskContextE"><code class="docutils literal notranslate"><span class="pre">legate::TaskContext</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate8TaskInfoE"><code class="docutils literal notranslate"><span class="pre">legate::TaskInfo</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate13TaskSignatureE"><code class="docutils literal notranslate"><span class="pre">legate::TaskSignature</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate11VariantInfoE"><code class="docutils literal notranslate"><span class="pre">legate::VariantInfo</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__task.html#_CPPv4N6legate14VariantOptionsE"><code class="docutils literal notranslate"><span class="pre">legate::VariantOptions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__tuning.html">tuning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__tuning.html#_CPPv4N6legate14ParallelPolicyE"><code class="docutils literal notranslate"><span class="pre">legate::ParallelPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__tuning.html#_CPPv4N6legate5ScopeE"><code class="docutils literal notranslate"><span class="pre">legate::Scope</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__type.html">type</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I_N4Type4CodeEE9type_of_t"><code class="docutils literal notranslate"><span class="pre">type_of_t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I0E14type_code_of_v"><code class="docutils literal notranslate"><span class="pre">type_code_of_v</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I0E12type_code_of"><code class="docutils literal notranslate"><span class="pre">type_code_of</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I_N4Type4CodeEEN6legate11is_integralE"><code class="docutils literal notranslate"><span class="pre">legate::is_integral</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I_N4Type4CodeEEN6legate9is_signedE"><code class="docutils literal notranslate"><span class="pre">legate::is_signed</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4IEN6legate9is_signedIN4Type4Code7FLOAT16EEE"><code class="docutils literal notranslate"><span class="pre">legate::is_signed&lt;</span> <span class="pre">Type::Code::FLOAT16</span> <span class="pre">&gt;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I_N4Type4CodeEEN6legate11is_unsignedE"><code class="docutils literal notranslate"><span class="pre">legate::is_unsigned</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I_N4Type4CodeEEN6legate17is_floating_pointE"><code class="docutils literal notranslate"><span class="pre">legate::is_floating_point</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4IEN6legate17is_floating_pointIN4Type4Code7FLOAT16EEE"><code class="docutils literal notranslate"><span class="pre">legate::is_floating_point&lt;</span> <span class="pre">Type::Code::FLOAT16</span> <span class="pre">&gt;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I_N4Type4CodeEEN6legate10is_complexE"><code class="docutils literal notranslate"><span class="pre">legate::is_complex</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4IEN6legate10is_complexIN4Type4Code9COMPLEX64EEE"><code class="docutils literal notranslate"><span class="pre">legate::is_complex&lt;</span> <span class="pre">Type::Code::COMPLEX64</span> <span class="pre">&gt;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4IEN6legate10is_complexIN4Type4Code10COMPLEX128EEE"><code class="docutils literal notranslate"><span class="pre">legate::is_complex&lt;</span> <span class="pre">Type::Code::COMPLEX128</span> <span class="pre">&gt;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4I0EN6legate15is_complex_typeE"><code class="docutils literal notranslate"><span class="pre">legate::is_complex_type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4IEN6legate15is_complex_typeI7complexIfEEE"><code class="docutils literal notranslate"><span class="pre">legate::is_complex_type&lt;</span> <span class="pre">complex&lt;</span> <span class="pre">float</span> <span class="pre">&gt;</span> <span class="pre">&gt;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4IEN6legate15is_complex_typeI7complexIdEEE"><code class="docutils literal notranslate"><span class="pre">legate::is_complex_type&lt;</span> <span class="pre">complex&lt;</span> <span class="pre">double</span> <span class="pre">&gt;</span> <span class="pre">&gt;</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__type.html#_CPPv4N6legate14type_of_detailE"><code class="docutils literal notranslate"><span class="pre">legate::type_of_detail</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__types.html">types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv415ReductionOpKind"><code class="docutils literal notranslate"><span class="pre">ReductionOpKind</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv414primitive_typeN4Type4CodeE"><code class="docutils literal notranslate"><span class="pre">primitive_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv411string_typev"><code class="docutils literal notranslate"><span class="pre">string_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv411binary_typeNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">binary_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv416fixed_array_typeRK4TypeNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">fixed_array_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv411struct_typeRKNSt6vectorI4TypeEEb"><code class="docutils literal notranslate"><span class="pre">struct_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv49list_typeRK4Type"><code class="docutils literal notranslate"><span class="pre">list_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv4IDpE11struct_typeNSt11enable_if_tINSt13conjunction_vIDpNSt14is_convertibleINSt7decay_tI4ArgsEE4TypeEEEE10StructTypeEEbDpRR4Args"><code class="docutils literal notranslate"><span class="pre">struct_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv4lsRNSt7ostreamERKN4Type4CodeE"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv4lsRNSt7ostreamERK4Type"><code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv45bool_v"><code class="docutils literal notranslate"><span class="pre">bool_()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv44int8v"><code class="docutils literal notranslate"><span class="pre">int8()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv45int16v"><code class="docutils literal notranslate"><span class="pre">int16()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv45int32v"><code class="docutils literal notranslate"><span class="pre">int32()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv45int64v"><code class="docutils literal notranslate"><span class="pre">int64()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv45uint8v"><code class="docutils literal notranslate"><span class="pre">uint8()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv46uint16v"><code class="docutils literal notranslate"><span class="pre">uint16()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv46uint32v"><code class="docutils literal notranslate"><span class="pre">uint32()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv46uint64v"><code class="docutils literal notranslate"><span class="pre">uint64()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv47float16v"><code class="docutils literal notranslate"><span class="pre">float16()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv47float32v"><code class="docutils literal notranslate"><span class="pre">float32()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv47float64v"><code class="docutils literal notranslate"><span class="pre">float64()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv49complex64v"><code class="docutils literal notranslate"><span class="pre">complex64()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv410complex128v"><code class="docutils literal notranslate"><span class="pre">complex128()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv410point_typeNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">point_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv49rect_typeNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">rect_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv49null_typev"><code class="docutils literal notranslate"><span class="pre">null_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv413is_point_typeRK4Type"><code class="docutils literal notranslate"><span class="pre">is_point_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv413is_point_typeRK4TypeNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">is_point_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv415ndim_point_typeRK4Type"><code class="docutils literal notranslate"><span class="pre">ndim_point_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv412is_rect_typeRK4Type"><code class="docutils literal notranslate"><span class="pre">is_rect_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv412is_rect_typeRK4TypeNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">is_rect_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv414ndim_rect_typeRK4Type"><code class="docutils literal notranslate"><span class="pre">ndim_rect_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv4N6legate4TypeE"><code class="docutils literal notranslate"><span class="pre">legate::Type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv4N6legate14FixedArrayTypeE"><code class="docutils literal notranslate"><span class="pre">legate::FixedArrayType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv4N6legate10StructTypeE"><code class="docutils literal notranslate"><span class="pre">legate::StructType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__types.html#_CPPv4N6legate8ListTypeE"><code class="docutils literal notranslate"><span class="pre">legate::ListType</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="group/group__util.html">util</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_CONCAT_"><code class="docutils literal notranslate"><span class="pre">LEGATE_CONCAT_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_CONCAT"><code class="docutils literal notranslate"><span class="pre">LEGATE_CONCAT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_STRINGIZE_"><code class="docutils literal notranslate"><span class="pre">LEGATE_STRINGIZE_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_STRINGIZE"><code class="docutils literal notranslate"><span class="pre">LEGATE_STRINGIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_DEFINED_ENABLED_FORM_1"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED_ENABLED_FORM_1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_DEFINED_ENABLED_FORM_"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED_ENABLED_FORM_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_DEFINED_PRIVATE_3_"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED_PRIVATE_3_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_DEFINED_PRIVATE_2_"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED_PRIVATE_2_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_DEFINED_PRIVATE_1_"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED_PRIVATE_1_</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_DEFINED_PRIVATE"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED_PRIVATE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_DEFINED"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_SCOPE_GUARD"><code class="docutils literal notranslate"><span class="pre">LEGATE_SCOPE_GUARD</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#c.LEGATE_SCOPE_FAIL"><code class="docutils literal notranslate"><span class="pre">LEGATE_SCOPE_FAIL</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv411VariantImpl"><code class="docutils literal notranslate"><span class="pre">VariantImpl</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0E17LegionVariantImpl"><code class="docutils literal notranslate"><span class="pre">LegionVariantImpl</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv416ShutdownCallback"><code class="docutils literal notranslate"><span class="pre">ShutdownCallback</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv411VariantCode"><code class="docutils literal notranslate"><span class="pre">VariantCode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv411LocalTaskID"><code class="docutils literal notranslate"><span class="pre">LocalTaskID</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv412GlobalTaskID"><code class="docutils literal notranslate"><span class="pre">GlobalTaskID</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv412LocalRedopID"><code class="docutils literal notranslate"><span class="pre">LocalRedopID</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv413GlobalRedopID"><code class="docutils literal notranslate"><span class="pre">GlobalRedopID</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv420measure_microsecondsv"><code class="docutils literal notranslate"><span class="pre">measure_microseconds()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv419measure_nanosecondsv"><code class="docutils literal notranslate"><span class="pre">measure_nanoseconds()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">print_dense_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I_i0E17print_dense_arrayNSt6stringERK3ACCRK4RectI3DIME"><code class="docutils literal notranslate"><span class="pre">print_dense_array()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv49linearizeRK11DomainPointRK11DomainPointRK11DomainPoint"><code class="docutils literal notranslate"><span class="pre">linearize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv411delinearizeRK11DomainPointRK11DomainPointNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">delinearize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0DpE15double_dispatchDciN4Type4CodeE7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">double_dispatch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0DpE15double_dispatchDcii7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">double_dispatch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0DpE12dim_dispatchDci7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">dim_dispatch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">type_dispatch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0000E7flattenN6detail14FlatMDSpanViewIN4cudaSt6mdspanI7Element6Extent6Layout8AccessorEEEEN4cudaSt6mdspanI7Element6Extent6Layout8AccessorEE"><code class="docutils literal notranslate"><span class="pre">flatten()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0_DpNSt6size_tE0E18for_each_in_extentvRKN4cudaSt7extentsI9IndexTypeDp7ExtentsEERR1F"><code class="docutils literal notranslate"><span class="pre">for_each_in_extent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I_NSt7int32_tE0E18for_each_in_extentvRK5PointI3DIMERR1F"><code class="docutils literal notranslate"><span class="pre">for_each_in_extent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I_NSt7int32_tE0E18for_each_in_extentvRK4RectI3DIMERR1F"><code class="docutils literal notranslate"><span class="pre">for_each_in_extent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F"><code class="docutils literal notranslate"><span class="pre">make_scope_guard()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F"><code class="docutils literal notranslate"><span class="pre">make_scope_fail()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4N6legate6timing4TimeE"><code class="docutils literal notranslate"><span class="pre">legate::timing::Time</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0EN6legate16ProcLocalStorageE"><code class="docutils literal notranslate"><span class="pre">legate::ProcLocalStorage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0EN6legate10ScopeGuardE"><code class="docutils literal notranslate"><span class="pre">legate::ScopeGuard</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="group/group__util.html#_CPPv4I0EN6legate9ScopeFailE"><code class="docutils literal notranslate"><span class="pre">legate::ScopeFail</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">C++ API Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="group/group__accessor.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">accessor</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+<div class="bd-sidebar-secondary"></div>
+
+
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+legate::TaskRegistrar::Impl
+===========================
+
+.. doxygenclass:: legate::TaskRegistrar::Impl

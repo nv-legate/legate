@@ -1,0 +1,4 @@
+legate::has_hash_member
+=======================
+
+.. doxygenstruct:: legate::has_hash_member

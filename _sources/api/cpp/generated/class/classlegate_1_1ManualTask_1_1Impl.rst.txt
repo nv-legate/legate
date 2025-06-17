@@ -1,0 +1,4 @@
+legate::ManualTask::Impl
+========================
+
+.. doxygenclass:: legate::ManualTask::Impl

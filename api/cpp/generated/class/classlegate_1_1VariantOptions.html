@@ -1,0 +1,1041 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>legate::VariantOptions &#8212; NVIDIA legate (25.07.00.dev47+gb70bb885)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/nvidia-sphinx-theme.css?v=df3ac72c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=a66462d3"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/generated/class/classlegate_1_1VariantOptions';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.07';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="legate::VariantOptions::WithCommunicatorsAccessKey" href="classlegate_1_1VariantOptions_1_1WithCommunicatorsAccessKey.html" />
+    <link rel="prev" title="legate::VariantInfo" href="classlegate_1_1VariantInfo.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev47+gb70bb885)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev47+gb70bb885) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev47+gb70bb885)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../installation.html">Installing pre-built packages</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../networking-wheels.html">Networking with Legate Wheels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../mpi-wrapper.html">Installation of the Legate MPI wrapper</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../BUILD.html">Building from source</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../manual/index.html">User Manual</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../manual/overview/index.html">Overview</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/overview/nutshell.html">Legate In a Nutshell</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../manual/introduction/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../manual/runtime/index.html">The Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../manual/tasks/index.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../manual/data/index.html">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../manual/mappers/index.html">Mappers</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../manual/usage/index.html">Running Legate Programs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/usage/running.html">Running Legate Programs</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/usage/hdf5_gds.html">HDF5 GPU-Direct Storage I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/usage/jupyter.html">Using with Jupyter</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../../../python/logical_array.html">Arrays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/physical_store.html">Physical Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/physical_array.html">Physical Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/scalar.html">Scalar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/variant_options.html">Variant Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/resource_config.html">ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/task_context.html">Task Context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/domain.html">Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/task_config.html">Task Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/task_local_buffer.html">Task-Local Buffers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/inline_allocation.html">Inline Allocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/symbolic_expr.html">Symbolic Expressions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/auto_task.html">Auto Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/manual_task.html">Manual Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/constraint.html">Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/variable.html">Variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/library.html">Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/parallel_policy.html">ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/types.html">Types</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../index.html">C++ API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../grouplist.html">Groups</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__accessor.html">accessor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__data.html">data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__env.html">env</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__geometry.html">geometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__io.html">io</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__io-hdf5.html">io-hdf5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__io-kvikio.html">io-kvikio</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__iterator.html">iterator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__machine.html">machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__mapping.html">mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__partitioning.html">partitioning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__reduction.html">reduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__runtime.html">runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__stl.html">stl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__stl-algorithms.html">stl-algorithms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__stl-concepts.html">stl-concepts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__stl-containers.html">stl-containers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__stl-utilities.html">stl-utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__stl-views.html">stl-views</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__task.html">task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__tuning.html">tuning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__type.html">type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__types.html">types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../group/group__util.html">util</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../classlist.html">Classes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="classlaunch__task.html">launch_task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1AutoTask.html">legate::AutoTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1AutoTask_1_1Impl.html">legate::AutoTask::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1BadInternalWeakPtr.html">legate::BadInternalWeakPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Constraint.html">legate::Constraint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1DefaultDelete.html">legate::DefaultDelete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1EnableSharedFromThis.html">legate::EnableSharedFromThis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ExternalAllocation.html">legate::ExternalAllocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1FixedArrayType.html">legate::FixedArrayType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1InlineAllocation.html">legate::InlineAllocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1InternalSharedPtr.html">legate::InternalSharedPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1InternalWeakPtr.html">legate::InternalWeakPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LegateTask.html">legate::LegateTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Library.html">legate::Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ListLogicalArray.html">legate::ListLogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ListPhysicalArray.html">legate::ListPhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ListType.html">legate::ListType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalArray.html">legate::LogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalArray_1_1Impl.html">legate::LogicalArray::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStore.html">legate::LogicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStorePartition.html">legate::LogicalStorePartition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStorePartition_1_1Impl.html">legate::LogicalStorePartition::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStore_1_1Impl.html">legate::LogicalStore::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ManualTask.html">legate::ManualTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ManualTask_1_1Impl.html">legate::ManualTask::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyArrayArgument.html">legate::ProxyArrayArgument</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyConstraint.html">legate::ProxyConstraint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyInputArguments.html">legate::ProxyInputArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyOutputArguments.html">legate::ProxyOutputArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyReductionArguments.html">legate::ProxyReductionArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Runtime.html">legate::Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Scalar.html">legate::Scalar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Scope.html">legate::Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopeFail.html">legate::ScopeFail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopeGuard.html">legate::ScopeGuard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Scope_1_1Impl.html">legate::Scope::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopedAllocator.html">legate::ScopedAllocator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopedAllocator_1_1Impl.html">legate::ScopedAllocator::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Shape.html">legate::Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SharedPtr.html">legate::SharedPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Slice.html">legate::Slice</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Span.html">legate::Span</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1StringLogicalArray.html">legate::StringLogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1StringPhysicalArray.html">legate::StringPhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1StructType.html">legate::StructType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SymbolicExpr.html">legate::SymbolicExpr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskConfig.html">legate::TaskConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskContext.html">legate::TaskContext</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskException.html">legate::TaskException</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskInfo.html">legate::TaskInfo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskInfo_1_1AddVariantKey.html">legate::TaskInfo::AddVariantKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskLocalBuffer.html">legate::TaskLocalBuffer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskRegistrar.html">legate::TaskRegistrar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskRegistrar_1_1Impl.html">legate::TaskRegistrar::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskRegistrar_1_1RecordTaskKey.html">legate::TaskRegistrar::RecordTaskKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskSignature.html">legate::TaskSignature</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Type.html">legate::Type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Variable.html">legate::Variable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1VariantInfo.html">legate::VariantInfo</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">legate::VariantOptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1VariantOptions_1_1WithCommunicatorsAccessKey.html">legate::VariantOptions::WithCommunicatorsAccessKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1comm_1_1Communicator.html">legate::comm::Communicator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1comm_1_1coll_1_1Coll__Comm.html">legate::comm::coll::Coll_Comm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1cuda_1_1StreamPool.html">legate::cuda::StreamPool</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1cuda_1_1StreamView.html">legate::cuda::StreamView</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1Trace.html">legate::experimental::Trace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1Trace_1_1Impl.html">legate::experimental::Trace::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1affine__map.html">legate::experimental::stl::affine_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1affine__map_1_1mixin.html">legate::experimental::stl::affine_map::mixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1initialize__library.html">legate::experimental::stl::initialize_library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1iterator.html">legate::experimental::stl::iterator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1iterator_1_1pointer.html">legate::experimental::stl::iterator::pointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1logical__store.html">legate::experimental::stl::logical_store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError.html">legate::io::hdf5::InvalidDataSetError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1io_1_1hdf5_1_1UnsupportedHDF5DataTypeError.html">legate::io::hdf5::UnsupportedHDF5DataTypeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Array.html">legate::mapping::Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1DimOrdering.html">legate::mapping::DimOrdering</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1InstanceMappingPolicy.html">legate::mapping::InstanceMappingPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Machine.html">legate::mapping::Machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1MachineQueryInterface.html">legate::mapping::MachineQueryInterface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Mapper.html">legate::mapping::Mapper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1NodeRange.html">legate::mapping::NodeRange</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1ProcessorRange.html">legate::mapping::ProcessorRange</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Store.html">legate::mapping::Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1StoreMapping.html">legate::mapping::StoreMapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1StoreMapping_1_1ReleaseKey.html">legate::mapping::StoreMapping::ReleaseKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Task.html">legate::mapping::Task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ordered__set.html">legate::ordered_set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1proj_1_1SymbolicExpr.html">legate::proj::SymbolicExpr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1timing_1_1Time.html">legate::timing::Time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1timing_1_1Time_1_1Impl.html">legate::timing::Time::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1tuple.html">legate::tuple</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classnvtx3_1_1scoped__range.html">nvtx3::scoped_range</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../structlist.html">Structs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1ResourceConfig.html">legate::ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1experimental_1_1stl_1_1iteration__kind.html">legate::experimental::stl::iteration_kind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1experimental_1_1stl_1_1reduction__kind.html">legate::experimental::stl::reduction_kind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1has__hash__member.html">legate::has_hash_member</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1hasher.html">legate::hasher</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex.html">legate::is_complex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX128_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX128 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX64_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX64 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex__type.html">legate::is_complex_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex__type_3_01complex_3_01double_01_4_01_4.html">legate::is_complex_type&lt; complex&lt; double &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex__type_3_01complex_3_01float_01_4_01_4.html">legate::is_complex_type&lt; complex&lt; float &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__floating__point.html">legate::is_floating_point</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__floating__point_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_floating_point&lt; Type::Code::FLOAT16 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__integral.html">legate::is_integral</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__signed.html">legate::is_signed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__signed_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_signed&lt; Type::Code::FLOAT16 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__unsigned.html">legate::is_unsigned</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../changes/2507.html">2507</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../changes/2505.html">2505</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../oss-licenses.html">Third-party notices</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../developer/style.html">Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../developer/testing.html">Running the Test Suite</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Links to resources</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">C++ API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../classlist.html" class="nav-link">Class list</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate::VariantOptions</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="legate-variantoptions">
+<h1>legate::VariantOptions<a class="headerlink" href="#legate-variantoptions" title="Link to this heading">#</a></h1>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptionsE">
+<span id="_CPPv3N6legate14VariantOptionsE"></span><span id="_CPPv2N6legate14VariantOptionsE"></span><span id="legate::VariantOptions"></span><span class="target" id="classlegate_1_1VariantOptions"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VariantOptions</span></span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptionsE" title="Link to this definition">#</a><br /></dt>
+<dd><p>A helper class for specifying variant options. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions15with_concurrentEb">
+<span id="_CPPv3N6legate14VariantOptions15with_concurrentEb"></span><span id="_CPPv2N6legate14VariantOptions15with_concurrentEb"></span><span id="legate::VariantOptions::with_concurrent__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a2a85ff0a1def79daebb4977444d227b1"></span><a class="reference internal" href="#_CPPv4N6legate14VariantOptionsE" title="legate::VariantOptions"><span class="n"><span class="pre">VariantOptions</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_concurrent</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">concurrent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions15with_concurrentEb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Changes the value of the <code class="docutils literal notranslate"><span class="pre">concurrent</span></code> flag. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>`concurrent`</strong> – A new value for the <code class="docutils literal notranslate"><span class="pre">concurrent</span></code> flag </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions20with_has_allocationsEb">
+<span id="_CPPv3N6legate14VariantOptions20with_has_allocationsEb"></span><span id="_CPPv2N6legate14VariantOptions20with_has_allocationsEb"></span><span id="legate::VariantOptions::with_has_allocations__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a5faddc0850dd31715f5b1dc81f2f475b"></span><a class="reference internal" href="#_CPPv4N6legate14VariantOptionsE" title="legate::VariantOptions"><span class="n"><span class="pre">VariantOptions</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_has_allocations</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">has_allocations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions20with_has_allocationsEb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Changes the value of the <code class="docutils literal notranslate"><span class="pre">has_allocations</span></code> flag. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>`has_allocations`</strong> – A new value for the <code class="docutils literal notranslate"><span class="pre">has_allocations</span></code> flag </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions26with_elide_device_ctx_syncEb">
+<span id="_CPPv3N6legate14VariantOptions26with_elide_device_ctx_syncEb"></span><span id="_CPPv2N6legate14VariantOptions26with_elide_device_ctx_syncEb"></span><span id="legate::VariantOptions::with_elide_device_ctx_sync__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a00558ea61f3ec67cef19789520bd9732"></span><a class="reference internal" href="#_CPPv4N6legate14VariantOptionsE" title="legate::VariantOptions"><span class="n"><span class="pre">VariantOptions</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_elide_device_ctx_sync</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">elide_sync</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions26with_elide_device_ctx_syncEb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets whether the variant can elide device context synchronization after task completion. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../group/group__task.html#classlegate_1_1VariantOptions_1ae0826ba8fd4ff8188acb2a5ea651c2f0"><span class="std std-ref">elide_device_ctx_sync</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>`elide_sync`</strong> – <code class="docutils literal notranslate"><span class="pre">true</span></code> if this variant can skip synchronizing the device context after task completion, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>reference to <code class="docutils literal notranslate"><span class="pre">this</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions20with_has_side_effectEb">
+<span id="_CPPv3N6legate14VariantOptions20with_has_side_effectEb"></span><span id="_CPPv2N6legate14VariantOptions20with_has_side_effectEb"></span><span id="legate::VariantOptions::with_has_side_effect__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a63f263be20bcab74767cd52cac4a7b88"></span><a class="reference internal" href="#_CPPv4N6legate14VariantOptionsE" title="legate::VariantOptions"><span class="n"><span class="pre">VariantOptions</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_has_side_effect</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">side_effect</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions20with_has_side_effectEb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets whether the variant has side effects. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../group/group__task.html#classlegate_1_1VariantOptions_1a5b9a7f51a46797fd134ef3543519300e"><span class="std std-ref">has_side_effect</span></a>. </p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>side_effect</strong> – <code class="docutils literal notranslate"><span class="pre">true</span></code> if the task has side-effects, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>reference to <code class="docutils literal notranslate"><span class="pre">this</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions24with_may_throw_exceptionEb">
+<span id="_CPPv3N6legate14VariantOptions24with_may_throw_exceptionEb"></span><span id="_CPPv2N6legate14VariantOptions24with_may_throw_exceptionEb"></span><span id="legate::VariantOptions::with_may_throw_exception__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a316d27d168d61f9f01a4bd78047cf500"></span><a class="reference internal" href="#_CPPv4N6legate14VariantOptionsE" title="legate::VariantOptions"><span class="n"><span class="pre">VariantOptions</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_may_throw_exception</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">may_throw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions24with_may_throw_exceptionEb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets whether the variant may throw exceptions. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../group/group__task.html#classlegate_1_1VariantOptions_1a8f23a05b74fba6c129b1be86482a642a"><span class="std std-ref">may_throw_exception</span></a>. </p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>may_throw</strong> – <code class="docutils literal notranslate"><span class="pre">true</span></code> if the variant may throw exceptions, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>reference to <code class="docutils literal notranslate"><span class="pre">this</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions18with_communicatorsENSt16initializer_listINSt11string_viewEEE">
+<span id="_CPPv3N6legate14VariantOptions18with_communicatorsENSt16initializer_listINSt11string_viewEEE"></span><span id="_CPPv2N6legate14VariantOptions18with_communicatorsENSt16initializer_listINSt11string_viewEEE"></span><span id="legate::VariantOptions::with_communicators__std::initializer_list:std::string_view:"></span><span class="target" id="classlegate_1_1VariantOptions_1ac61ea2313c1486a367aff8f2a5e23137"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6legate14VariantOptionsE" title="legate::VariantOptions"><span class="n"><span class="pre">VariantOptions</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_communicators</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">initializer_list</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">comms</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions18with_communicatorsENSt16initializer_listINSt11string_viewEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets the communicator(s) for the variant. </p>
+<p>This call implies <code class="docutils literal notranslate"><span class="pre">concurrent</span> <span class="pre">=</span> <span class="pre">true</span></code> as well.</p>
+<p>The <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__task.html#classlegate_1_1VariantOptions"><span class="std std-ref"><span class="pre">VariantOptions</span></span></a></code> does not take ownership of <code class="docutils literal notranslate"><span class="pre">comms</span></code> in any way. If <code class="docutils literal notranslate"><span class="pre">comms</span></code> are not constructed from a string-literal, or some other object with static storage duration, then the user must ensure that the string(s) outlives this object.</p>
+<p>Due to limitations with constexpr in C++17, the user may register at most <code class="docutils literal notranslate"><span class="pre">MAX_COMMS</span></code> number of communicators. This restriction is expected to be lifted in the future.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../group/group__task.html#classlegate_1_1VariantOptions_1aaa2df8c5cc83ea6b6d147710ee78c376"><span class="std std-ref">communicators</span></a>. </p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>comms</strong> – The communicator(s) to use.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>reference to <code class="docutils literal notranslate"><span class="pre">this</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate14VariantOptions18populate_registrarERN6Legion20TaskVariantRegistrarE">
+<span id="_CPPv3NK6legate14VariantOptions18populate_registrarERN6Legion20TaskVariantRegistrarE"></span><span id="_CPPv2NK6legate14VariantOptions18populate_registrarERN6Legion20TaskVariantRegistrarE"></span><span id="legate::VariantOptions::populate_registrar__Legion::TaskVariantRegistrarRC"></span><span class="target" id="classlegate_1_1VariantOptions_1aab267bdd7d63401b86b78fdfaa763081"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">populate_registrar</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">Legion</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TaskVariantRegistrar</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">registrar</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate14VariantOptions18populate_registrarERN6Legion20TaskVariantRegistrarE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Populate a Legion::TaskVariantRegistrar using the options contained. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>registrar</strong> – The registrar to fill out. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions10concurrentE">
+<span id="_CPPv3N6legate14VariantOptions10concurrentE"></span><span id="_CPPv2N6legate14VariantOptions10concurrentE"></span><span id="legate::VariantOptions::concurrent__b"></span><span class="target" id="classlegate_1_1VariantOptions_1accdd2b9f1c9348754c68d40cc6056720"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">concurrent</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="k"><span class="pre">false</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions10concurrentE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Whether the variant needs a concurrent task launch. <code class="docutils literal notranslate"><span class="pre">false</span></code> by default. </p>
+<p>Normally, leaf tasks (i.e. all individual task instances created by a single launch) are allowed to execute in any order so long as their preconditions are met. For example, if a task is launched that creates 100 leaf tasks, those tasks can execute at any time so long as each individual task’s inputs are satisfied. It is even possible to have other leaf tasks (from other tasks) executing at the same time or between them.</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">concurrent</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code> says: if this task is parallelized, then all leaf tasks must execute concurrently. Note, concurrency is a <em>requirement</em>, not a grant. The entire machine must execute the tasks at exactly the same time as one giant block. No other tasks marked concurrent may execute at the same time.</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">concurrent</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> (the default) says: the task can execute as normal. The leaf tasks can execute in any order.</p>
+<p>This feature is most often used when doing collective communications (i.e. all-reduce, all-gather) inside the tasks. In this case, the tasks need to execute in lockstep because otherwise deadlocks may occur.</p>
+<p>Suppose there are 2 tasks (A and B) that do collectives. If they execute without concurrency, it is possible for half of the “task A” tasks and half of the “task B” tasks to be running at the same time. Eventually each of those tasks will reach a point where they must all-gather. The program would deadlock because both sides would be waiting for the communication that would never be able to finish.</p>
+<p>For this reason, adding any communicators (see <code class="docutils literal notranslate"><span class="pre">communicators</span></code>) automatically implies <code class="docutils literal notranslate"><span class="pre">concurrent</span> <span class="pre">=</span> <span class="pre">true</span></code>. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions15has_allocationsE">
+<span id="_CPPv3N6legate14VariantOptions15has_allocationsE"></span><span id="_CPPv2N6legate14VariantOptions15has_allocationsE"></span><span id="legate::VariantOptions::has_allocations__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a30de4ef009036b0121829a7d3bfc9eb2"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">has_allocations</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="k"><span class="pre">false</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions15has_allocationsE" title="Link to this definition">#</a><br /></dt>
+<dd><p>If the flag is <code class="docutils literal notranslate"><span class="pre">true</span></code>, the variant is allowed to create buffers (temporary or output) during execution. <code class="docutils literal notranslate"><span class="pre">false</span></code> by default. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions21elide_device_ctx_syncE">
+<span id="_CPPv3N6legate14VariantOptions21elide_device_ctx_syncE"></span><span id="_CPPv2N6legate14VariantOptions21elide_device_ctx_syncE"></span><span id="legate::VariantOptions::elide_device_ctx_sync__b"></span><span class="target" id="classlegate_1_1VariantOptions_1ae0826ba8fd4ff8188acb2a5ea651c2f0"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">elide_device_ctx_sync</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions21elide_device_ctx_syncE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Whether this variant can skip device context synchronization after completion. </p>
+<p>Normally, for device-enabled task variants, Legate will emit a device-wide barrier to ensure that all outstanding (potentially asynchronous) work performed by the variant has completed. However, if the task launches no such work, or if that work is launched using the task-specific device streams, then such a context synchronization is not necessary.</p>
+<p>Setting this value to <code class="docutils literal notranslate"><span class="pre">true</span></code> ensures that no context synchronization is performed. Setting it to <code class="docutils literal notranslate"><span class="pre">false</span></code> guarantees that a context synchronization is done.</p>
+<p>Has no effect on non-device variants (for example CPU variants).</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../group/group__task.html#classlegate_1_1VariantOptions_1a00558ea61f3ec67cef19789520bd9732"><span class="std std-ref">with_elide_device_ctx_sync()</span></a></p>
+</div>
+</p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions15has_side_effectE">
+<span id="_CPPv3N6legate14VariantOptions15has_side_effectE"></span><span id="_CPPv2N6legate14VariantOptions15has_side_effectE"></span><span id="legate::VariantOptions::has_side_effect__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a5b9a7f51a46797fd134ef3543519300e"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">has_side_effect</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions15has_side_effectE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Indicate whether a task has side effects outside of the runtime’s tracking that forbid it from replicated a task. </p>
+<p>When a task only takes scalar stores, it gets replicated by default on all the ranks, as that’s more efficient than having only one of the ranks run it and broadcast the results.</p>
+<p>However, sometimes a task may have “side effects” (which are outside the runtime’s tracking) which should otherwise forbid the runtime from replicating a particular variant.</p>
+<p>For example, the task may write something to disk, or effect some other kind of permanent change to the system. In these cases the runtime must not replicate the task, as the effect must occur exactly once. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions19may_throw_exceptionE">
+<span id="_CPPv3N6legate14VariantOptions19may_throw_exceptionE"></span><span id="_CPPv2N6legate14VariantOptions19may_throw_exceptionE"></span><span id="legate::VariantOptions::may_throw_exception__b"></span><span class="target" id="classlegate_1_1VariantOptions_1a8f23a05b74fba6c129b1be86482a642a"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">may_throw_exception</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions19may_throw_exceptionE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Whether this variant may throw an exception. </p>
+<p>Tasks that throw exception must be handled specially by the runtime in order to safely and correctly propagate the thrown exceptions. For this reason, tasks must explicitly declare whether they throw an exception.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This special handling usually comes with severe performance penalties. For example, the runtime may block the calling thread (i.e. the main thread) on the completion of the possibly throwing task, or may opt not to schedule any other tasks concurrently.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>It is highly recommended that tasks do <em>not</em> throw exceptions, and instead indicate an error state using some other way. Exceptions should be used as an absolute last resort. </p>
+</div>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions13communicatorsE">
+<span id="_CPPv3N6legate14VariantOptions13communicatorsE"></span><span id="_CPPv2N6legate14VariantOptions13communicatorsE"></span><span id="legate::VariantOptions::communicators__std::optional:std::array:std::string_view.MAX_COMMS::"></span><span class="target" id="classlegate_1_1VariantOptions_1aaa2df8c5cc83ea6b6d147710ee78c376"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6legate14VariantOptions9MAX_COMMSE" title="legate::VariantOptions::MAX_COMMS"><span class="n"><span class="pre">MAX_COMMS</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">communicators</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions13communicatorsE" title="Link to this definition">#</a><br /></dt>
+<dd><p>The communicator(s) to be used by the variant, or <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> if no communicator is to be used. </p>
+<p>Setting this to anything other than <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> implies <code class="docutils literal notranslate"><span class="pre">concurrent</span></code> to be <code class="docutils literal notranslate"><span class="pre">true</span></code>. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-attributes">Public Static Attributes</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions9MAX_COMMSE">
+<span id="_CPPv3N6legate14VariantOptions9MAX_COMMSE"></span><span id="_CPPv2N6legate14VariantOptions9MAX_COMMSE"></span><span id="legate::VariantOptions::MAX_COMMS__auto"></span><span class="target" id="classlegate_1_1VariantOptions_1ac7080ae55ccfd237a0d1c08c512324fa"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MAX_COMMS</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions9MAX_COMMSE" title="Link to this definition">#</a><br /></dt>
+<dd><p>The maximum number of communicators allowed per variant. </p>
+<p>This is a workaround for insufficient constexpr support in C++17 and will be removed in a future release. </p>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions26WithCommunicatorsAccessKeyE">
+<span id="_CPPv3N6legate14VariantOptions26WithCommunicatorsAccessKeyE"></span><span id="_CPPv2N6legate14VariantOptions26WithCommunicatorsAccessKeyE"></span><span id="legate::VariantOptions::WithCommunicatorsAccessKey"></span><span class="target" id="classlegate_1_1VariantOptions_1_1WithCommunicatorsAccessKey"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">WithCommunicatorsAccessKey</span></span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions26WithCommunicatorsAccessKeyE" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="classlegate_1_1VariantInfo.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">legate::VariantInfo</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="classlegate_1_1VariantOptions_1_1WithCommunicatorsAccessKey.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">legate::VariantOptions::WithCommunicatorsAccessKey</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptionsE"><code class="docutils literal notranslate"><span class="pre">legate::VariantOptions</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions15with_concurrentEb"><code class="docutils literal notranslate"><span class="pre">with_concurrent()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions20with_has_allocationsEb"><code class="docutils literal notranslate"><span class="pre">with_has_allocations()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions26with_elide_device_ctx_syncEb"><code class="docutils literal notranslate"><span class="pre">with_elide_device_ctx_sync()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions20with_has_side_effectEb"><code class="docutils literal notranslate"><span class="pre">with_has_side_effect()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions24with_may_throw_exceptionEb"><code class="docutils literal notranslate"><span class="pre">with_may_throw_exception()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions18with_communicatorsENSt16initializer_listINSt11string_viewEEE"><code class="docutils literal notranslate"><span class="pre">with_communicators()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14VariantOptions18populate_registrarERN6Legion20TaskVariantRegistrarE"><code class="docutils literal notranslate"><span class="pre">populate_registrar()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions10concurrentE"><code class="docutils literal notranslate"><span class="pre">concurrent</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions15has_allocationsE"><code class="docutils literal notranslate"><span class="pre">has_allocations</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions21elide_device_ctx_syncE"><code class="docutils literal notranslate"><span class="pre">elide_device_ctx_sync</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions15has_side_effectE"><code class="docutils literal notranslate"><span class="pre">has_side_effect</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions19may_throw_exceptionE"><code class="docutils literal notranslate"><span class="pre">may_throw_exception</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions13communicatorsE"><code class="docutils literal notranslate"><span class="pre">communicators</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions9MAX_COMMSE"><code class="docutils literal notranslate"><span class="pre">MAX_COMMS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14VariantOptions26WithCommunicatorsAccessKeyE"><code class="docutils literal notranslate"><span class="pre">legate::VariantOptions::WithCommunicatorsAccessKey</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

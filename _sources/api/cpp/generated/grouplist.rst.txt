@@ -1,0 +1,8 @@
+Group list
+==========
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+
+   group/*

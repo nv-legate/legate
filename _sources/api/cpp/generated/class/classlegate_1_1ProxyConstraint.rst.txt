@@ -1,0 +1,4 @@
+legate::ProxyConstraint
+=======================
+
+.. doxygenclass:: legate::ProxyConstraint

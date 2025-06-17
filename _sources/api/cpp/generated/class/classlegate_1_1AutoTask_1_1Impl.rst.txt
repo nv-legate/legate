@@ -1,0 +1,4 @@
+legate::AutoTask::Impl
+======================
+
+.. doxygenclass:: legate::AutoTask::Impl

@@ -1,0 +1,4 @@
+legate::TaskInfo::AddVariantKey
+===============================
+
+.. doxygenclass:: legate::TaskInfo::AddVariantKey

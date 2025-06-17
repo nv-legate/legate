@@ -1,0 +1,4 @@
+legate::is_floating_point< Type::Code::FLOAT16 >
+================================================
+
+.. doxygenstruct:: legate::is_floating_point< Type::Code::FLOAT16 >

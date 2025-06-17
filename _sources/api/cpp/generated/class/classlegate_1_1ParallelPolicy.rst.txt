@@ -1,0 +1,4 @@
+legate::ParallelPolicy
+======================
+
+.. doxygenclass:: legate::ParallelPolicy

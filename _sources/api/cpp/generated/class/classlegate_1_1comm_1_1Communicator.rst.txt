@@ -1,0 +1,4 @@
+legate::comm::Communicator
+==========================
+
+.. doxygenclass:: legate::comm::Communicator

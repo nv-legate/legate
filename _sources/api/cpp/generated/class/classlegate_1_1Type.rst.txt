@@ -1,0 +1,4 @@
+legate::Type
+============
+
+.. doxygenclass:: legate::Type

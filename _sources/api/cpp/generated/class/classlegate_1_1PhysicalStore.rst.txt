@@ -1,0 +1,4 @@
+legate::PhysicalStore
+=====================
+
+.. doxygenclass:: legate::PhysicalStore

@@ -1,0 +1,4 @@
+legate::is_integral
+===================
+
+.. doxygenstruct:: legate::is_integral

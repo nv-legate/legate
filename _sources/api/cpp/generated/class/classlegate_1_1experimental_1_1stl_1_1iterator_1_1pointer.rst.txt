@@ -1,0 +1,4 @@
+legate::experimental::stl::iterator::pointer
+============================================
+
+.. doxygenclass:: legate::experimental::stl::iterator::pointer

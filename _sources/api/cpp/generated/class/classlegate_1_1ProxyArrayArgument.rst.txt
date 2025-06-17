@@ -1,0 +1,4 @@
+legate::ProxyArrayArgument
+==========================
+
+.. doxygenclass:: legate::ProxyArrayArgument

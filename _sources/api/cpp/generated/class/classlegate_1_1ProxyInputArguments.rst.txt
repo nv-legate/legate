@@ -1,0 +1,4 @@
+legate::ProxyInputArguments
+===========================
+
+.. doxygenclass:: legate::ProxyInputArguments

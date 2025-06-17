@@ -1,0 +1,4 @@
+legate::experimental::stl::logical_store
+========================================
+
+.. doxygenclass:: legate::experimental::stl::logical_store

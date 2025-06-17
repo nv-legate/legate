@@ -1,0 +1,4 @@
+legate::VariantInfo
+===================
+
+.. doxygenclass:: legate::VariantInfo

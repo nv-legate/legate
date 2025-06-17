@@ -1,0 +1,4 @@
+legate::is_signed< Type::Code::FLOAT16 >
+========================================
+
+.. doxygenstruct:: legate::is_signed< Type::Code::FLOAT16 >

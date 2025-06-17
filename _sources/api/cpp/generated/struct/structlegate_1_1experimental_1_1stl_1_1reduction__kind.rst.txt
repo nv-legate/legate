@@ -1,0 +1,4 @@
+legate::experimental::stl::reduction_kind
+=========================================
+
+.. doxygenstruct:: legate::experimental::stl::reduction_kind

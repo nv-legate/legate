@@ -1,0 +1,4 @@
+legate::LogicalStore
+====================
+
+.. doxygenclass:: legate::LogicalStore

@@ -1,0 +1,4 @@
+legate::TaskSignature
+=====================
+
+.. doxygenclass:: legate::TaskSignature

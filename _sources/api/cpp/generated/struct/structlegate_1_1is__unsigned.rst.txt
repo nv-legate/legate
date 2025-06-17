@@ -1,0 +1,4 @@
+legate::is_unsigned
+===================
+
+.. doxygenstruct:: legate::is_unsigned

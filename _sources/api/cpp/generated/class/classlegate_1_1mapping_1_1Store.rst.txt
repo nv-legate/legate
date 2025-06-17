@@ -1,0 +1,4 @@
+legate::mapping::Store
+======================
+
+.. doxygenclass:: legate::mapping::Store

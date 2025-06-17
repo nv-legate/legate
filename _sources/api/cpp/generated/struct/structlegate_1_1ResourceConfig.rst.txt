@@ -1,0 +1,4 @@
+legate::ResourceConfig
+======================
+
+.. doxygenstruct:: legate::ResourceConfig

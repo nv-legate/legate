@@ -1,0 +1,4 @@
+legate::experimental::stl::affine_map
+=====================================
+
+.. doxygenclass:: legate::experimental::stl::affine_map

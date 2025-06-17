@@ -1,0 +1,4 @@
+legate::TaskException
+=====================
+
+.. doxygenclass:: legate::TaskException

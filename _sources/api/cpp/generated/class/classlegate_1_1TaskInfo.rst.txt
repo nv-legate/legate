@@ -1,0 +1,4 @@
+legate::TaskInfo
+================
+
+.. doxygenclass:: legate::TaskInfo

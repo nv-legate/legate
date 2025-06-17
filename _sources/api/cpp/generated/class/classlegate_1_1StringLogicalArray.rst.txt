@@ -1,0 +1,4 @@
+legate::StringLogicalArray
+==========================
+
+.. doxygenclass:: legate::StringLogicalArray

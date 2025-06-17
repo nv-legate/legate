@@ -1,0 +1,4 @@
+legate::experimental::stl::iteration_kind
+=========================================
+
+.. doxygenstruct:: legate::experimental::stl::iteration_kind

@@ -1,0 +1,4 @@
+legate::mapping::MachineQueryInterface
+======================================
+
+.. doxygenclass:: legate::mapping::MachineQueryInterface

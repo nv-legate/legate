@@ -1,0 +1,4 @@
+legate::is_signed
+=================
+
+.. doxygenstruct:: legate::is_signed

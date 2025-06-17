@@ -1,0 +1,4 @@
+legate::Slice
+=============
+
+.. doxygenclass:: legate::Slice

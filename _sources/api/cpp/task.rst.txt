@@ -1,5 +1,0 @@
-~~~~
-Task
-~~~~
-
-.. doxygengroup:: task

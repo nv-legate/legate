@@ -1,0 +1,4 @@
+legate::proj::SymbolicExpr
+==========================
+
+.. doxygenclass:: legate::proj::SymbolicExpr

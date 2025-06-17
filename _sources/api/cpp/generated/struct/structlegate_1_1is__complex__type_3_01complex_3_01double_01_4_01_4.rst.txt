@@ -1,0 +1,4 @@
+legate::is_complex_type< complex< double > >
+============================================
+
+.. doxygenstruct:: legate::is_complex_type< complex< double > >

@@ -1,0 +1,4 @@
+legate::TaskContext
+===================
+
+.. doxygenclass:: legate::TaskContext

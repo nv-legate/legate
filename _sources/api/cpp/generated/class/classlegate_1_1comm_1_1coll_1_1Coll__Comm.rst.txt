@@ -1,0 +1,4 @@
+legate::comm::coll::Coll_Comm
+=============================
+
+.. doxygenclass:: legate::comm::coll::Coll_Comm

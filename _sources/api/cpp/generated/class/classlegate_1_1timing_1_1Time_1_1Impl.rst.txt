@@ -1,0 +1,4 @@
+legate::timing::Time::Impl
+==========================
+
+.. doxygenclass:: legate::timing::Time::Impl

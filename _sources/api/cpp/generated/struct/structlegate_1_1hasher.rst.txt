@@ -1,0 +1,4 @@
+legate::hasher
+==============
+
+.. doxygenstruct:: legate::hasher

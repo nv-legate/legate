@@ -1,0 +1,4 @@
+legate::ScopedAllocator::Impl
+=============================
+
+.. doxygenclass:: legate::ScopedAllocator::Impl

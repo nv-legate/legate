@@ -1,0 +1,4 @@
+legate::is_floating_point
+=========================
+
+.. doxygenstruct:: legate::is_floating_point

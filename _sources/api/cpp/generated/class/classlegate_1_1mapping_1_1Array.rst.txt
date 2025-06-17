@@ -1,0 +1,4 @@
+legate::mapping::Array
+======================
+
+.. doxygenclass:: legate::mapping::Array

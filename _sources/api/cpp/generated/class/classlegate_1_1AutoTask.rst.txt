@@ -1,0 +1,4 @@
+legate::AutoTask
+================
+
+.. doxygenclass:: legate::AutoTask

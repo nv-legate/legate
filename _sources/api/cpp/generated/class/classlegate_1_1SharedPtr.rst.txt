@@ -1,0 +1,4 @@
+legate::SharedPtr
+=================
+
+.. doxygenclass:: legate::SharedPtr

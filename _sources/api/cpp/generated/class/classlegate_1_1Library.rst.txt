@@ -1,0 +1,4 @@
+legate::Library
+===============
+
+.. doxygenclass:: legate::Library

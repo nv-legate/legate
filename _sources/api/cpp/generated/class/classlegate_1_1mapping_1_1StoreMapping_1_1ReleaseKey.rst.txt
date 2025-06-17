@@ -1,0 +1,4 @@
+legate::mapping::StoreMapping::ReleaseKey
+=========================================
+
+.. doxygenclass:: legate::mapping::StoreMapping::ReleaseKey

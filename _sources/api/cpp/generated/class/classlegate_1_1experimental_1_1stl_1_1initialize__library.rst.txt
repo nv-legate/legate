@@ -1,0 +1,4 @@
+legate::experimental::stl::initialize_library
+=============================================
+
+.. doxygenclass:: legate::experimental::stl::initialize_library

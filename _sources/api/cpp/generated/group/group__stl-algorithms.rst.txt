@@ -1,0 +1,4 @@
+stl-algorithms
+==============
+
+.. doxygengroup:: stl-algorithms

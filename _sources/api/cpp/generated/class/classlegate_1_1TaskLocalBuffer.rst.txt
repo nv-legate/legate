@@ -1,0 +1,4 @@
+legate::TaskLocalBuffer
+=======================
+
+.. doxygenclass:: legate::TaskLocalBuffer

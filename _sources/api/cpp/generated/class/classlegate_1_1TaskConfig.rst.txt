@@ -1,0 +1,4 @@
+legate::TaskConfig
+==================
+
+.. doxygenclass:: legate::TaskConfig

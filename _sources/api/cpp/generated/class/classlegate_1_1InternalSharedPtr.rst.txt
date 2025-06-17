@@ -1,0 +1,4 @@
+legate::InternalSharedPtr
+=========================
+
+.. doxygenclass:: legate::InternalSharedPtr

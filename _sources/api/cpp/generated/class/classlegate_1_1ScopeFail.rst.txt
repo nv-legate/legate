@@ -1,0 +1,4 @@
+legate::ScopeFail
+=================
+
+.. doxygenclass:: legate::ScopeFail

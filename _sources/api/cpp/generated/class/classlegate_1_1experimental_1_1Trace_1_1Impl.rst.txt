@@ -1,0 +1,4 @@
+legate::experimental::Trace::Impl
+=================================
+
+.. doxygenclass:: legate::experimental::Trace::Impl

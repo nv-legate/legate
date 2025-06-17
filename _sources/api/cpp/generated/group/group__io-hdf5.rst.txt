@@ -1,0 +1,4 @@
+io-hdf5
+=======
+
+.. doxygengroup:: io-hdf5

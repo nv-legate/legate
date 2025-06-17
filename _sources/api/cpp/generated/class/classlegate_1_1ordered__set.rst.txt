@@ -1,0 +1,4 @@
+legate::ordered_set
+===================
+
+.. doxygenclass:: legate::ordered_set

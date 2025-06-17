@@ -1,0 +1,4 @@
+legate::cuda::StreamView
+========================
+
+.. doxygenclass:: legate::cuda::StreamView

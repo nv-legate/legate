@@ -1,0 +1,4 @@
+legate::tuple
+=============
+
+.. doxygenclass:: legate::tuple

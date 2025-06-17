@@ -1,0 +1,4 @@
+legate::mapping::Mapper
+=======================
+
+.. doxygenclass:: legate::mapping::Mapper

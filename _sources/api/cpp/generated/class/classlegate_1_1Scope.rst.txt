@@ -1,0 +1,4 @@
+legate::Scope
+=============
+
+.. doxygenclass:: legate::Scope
