@@ -33,6 +33,15 @@ rapids_find_package(Python3
                     REQUIRED
                     COMPONENTS Development)
 
+# Use "CYTHON" here, because that's what rapids-cmake also uses, so we are sure that it's
+# the same
+find_program(CYTHON "cython" REQUIRED)
+message(STATUS "Found cython: ${CYTHON}")
+execute_process(COMMAND ${CYTHON} --version OUTPUT_VARIABLE cy_version
+                ERROR_VARIABLE cy_version OUTPUT_STRIP_TRAILING_WHITESPACE
+                                          COMMAND_ERROR_IS_FATAL ANY)
+message(STATUS "${CYTHON} --version: ${cy_version}")
+
 include(rapids-cython-core)
 
 rapids_cython_init()
