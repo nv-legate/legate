@@ -143,15 +143,12 @@ run_test_or_analysis() {
                                -c conda-forge \
                                psutil pytest pytest-mock ipython jupyter_client cupy "${ucx_libs[@]}"
 
-            hdf5_libs=(zarr fsspec kerchunk)
+            hdf5_libs=(zarr fsspec kerchunk h5py)
             # shellcheck disable=SC2154
             rapids-conda-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                "${hdf5_libs[@]}"
-            # Conda packages for h5py are very outdated only going up to 3.11. See
-            # pyproject.toml for reason to skip h5py 3.13.0
-            rapids-pip-retry install 'h5py!=3.13.0'
             set -u
 
             cd "${LEGATE_DIR}"
