@@ -31,7 +31,7 @@ dependencies = [
     "fsspec",
     "kerchunk",
     "rich",
-    "nvidia-nccl-cu12",
+    "nvidia-nccl-cu12<2.27.0",
     "libucx-cu12",
     "nvidia-libcal-cu12",
 ]
