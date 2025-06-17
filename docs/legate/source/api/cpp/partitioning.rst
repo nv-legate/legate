@@ -1,6 +1,0 @@
-~~~~~~~~~~~~
-Partitioning
-~~~~~~~~~~~~
-
-.. doxygengroup:: partitioning
-    :members:

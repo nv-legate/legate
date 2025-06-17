@@ -101,10 +101,10 @@ VAL Scalar::value() const
 
 // These are defined in the .cpp
 template <>
-std::string_view Scalar::value() const;
+std::string_view Scalar::value<std::string_view>() const;
 
 template <>
-std::string Scalar::value() const;
+std::string Scalar::value<std::string>() const;
 
 template <>
 Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const;

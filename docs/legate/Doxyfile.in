@@ -1079,7 +1079,14 @@ EXCLUDE_PATTERNS       =
 # wildcard * is used, a substring. Examples: ANamespace, AClass,
 # ANamespace::AClass, ANamespace::*Test
 
-EXCLUDE_SYMBOLS        = detail
+EXCLUDE_SYMBOLS        = detail::* \
+                         legate::detail::* \
+                         *detail::* \
+                         fmt::* \
+                         std::* \
+                         *_tag \
+                         *Tag \
+                         pthread_barrier_t
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -2421,13 +2428,20 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = "DOXYGEN" \
                          "LEGATE_DOXYGEN=1" \
-                         "LEGATE_HOST_DEVICE=__host__ __device__" \
+                         "LEGATE_HOST_DEVICE=" \
+                         "LEGATE_HOST=" \
+                         "LEGATE_DEVICE=" \
                          "LEGATE_USE_CUDA=1" \
                          "LEGATE_USE_OPENMP=1" \
                          "LEGATE_STL_REQUIRES=requires" \
                          "LEGATE_DEFINED(X)=defined(X) && X" \
                          "LEGATE_STL_UNSPECIFIED(...)=unspecified" \
-                         "LEGATE_CHECK_ENV_VAR_DOCS(X):=X"
+                         "LEGATE_CHECK_ENV_VAR_DOCS(X)=ENV_VAR X" \
+                         "LEGATE_CPP_VERSION_TODO(...)=" \
+                         "LEGATE_PRAGMA_EDG_IGNORE(...)=" \
+                         "LEGATE_PRAGMA_GNU_IGNORE(...)=" \
+                         "LEGATE_PRAGMA_GCC_IGNORE(...)=" \
+                         "LEGATE_OPT_MINSIZE="
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

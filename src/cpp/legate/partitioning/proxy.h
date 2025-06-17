@@ -76,7 +76,9 @@ class TaskArgsBase {
   [[nodiscard]] constexpr ProxyArrayArgument operator[](std::uint32_t index) const noexcept;
 
  private:
+#ifndef DOXYGEN
   friend T;
+#endif
 
   constexpr TaskArgsBase() = default;
 };

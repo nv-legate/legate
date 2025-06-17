@@ -1,5 +1,0 @@
-~~~~
-Util
-~~~~
-
-.. doxygengroup:: util

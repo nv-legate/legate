@@ -277,7 +277,7 @@ class DocsConfig(SectionConfig):
             "myst-parser",
             "nbsphinx",
             "nvidia-sphinx-theme",
-            "sphinx>=8",
+            "sphinx>=8.2",
             "sphinx-copybutton",
         )
 

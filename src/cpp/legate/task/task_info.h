@@ -96,7 +96,7 @@ class TaskInfo {
   class AddVariantKey {
     AddVariantKey() = default;
 
-    friend TaskInfo;
+    friend class TaskInfo;
     friend void legate::detail::cython::cytaskinfo_add_variant(legate::TaskInfo*,
                                                                const legate::Library&,
                                                                legate::VariantCode,

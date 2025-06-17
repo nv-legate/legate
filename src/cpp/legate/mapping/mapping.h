@@ -437,7 +437,7 @@ class StoreMapping {
     ReleaseKey() = default;
 
     friend class detail::BaseMapper;
-    friend StoreMapping;
+    friend class StoreMapping;
   };
 
   // NOLINTNEXTLINE(readability-identifier-naming)

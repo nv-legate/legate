@@ -3,23 +3,8 @@ C++ API Reference
 ~~~~~~~~~~~~~~~~~
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   data
-   partitioning
-   runtime
-   mapping
-   tuning
-   types
-   typedefs
-   task
-   util
-
-Experimental API
-----------------
-
-.. toctree::
-   :maxdepth: 1
-
-   io
-   ../../legate.stl/source/reference/index
+   Groups <generated/grouplist.rst>
+   Classes <generated/classlist.rst>
+   Structs <generated/structlist.rst>

@@ -16,6 +16,8 @@
 #include <cstring>
 #include <type_traits>
 
+namespace detail {
+
 namespace {
 
 template <std::int32_t NDIM>
@@ -29,13 +31,15 @@ __device__ void copy_output(
 
 }  // namespace
 
+}  // namespace detail
+
 #define COPY_OUTPUT_TPL_INST(NDIM)                                                     \
   extern "C" __global__ void __launch_bounds__(1, 1) legate_copy_output_##NDIM(        \
     legate::AccessorWO<legate::Domain, 1> out,                                         \
     legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMin<NDIM>> in_low,  \
     legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMax<NDIM>> in_high) \
   {                                                                                    \
-    copy_output<NDIM>(out, in_low, in_high);                                           \
+    detail::copy_output<NDIM>(out, in_low, in_high);                                   \
   }
 
 LEGION_FOREACH_N(COPY_OUTPUT_TPL_INST)
@@ -43,6 +47,8 @@ LEGION_FOREACH_N(COPY_OUTPUT_TPL_INST)
 #undef COPY_OUTPUT_TPL_INST
 
 // ==========================================================================================
+
+namespace detail {
 
 namespace {
 
@@ -71,6 +77,8 @@ __device__ void find_bounding_box_sorted_kernel(
 
 }  // namespace
 
+}  // namespace detail
+
 #define FIND_BBOX_SORTED_TPL_INST(STORE_NDIM, POINT_NDIM)                                        \
   extern "C" __global__ void __launch_bounds__(LEGATE_THREADS_PER_BLOCK, LEGATE_MIN_CTAS_PER_SM) \
     legate_find_bounding_box_sorted_kernel_rect_##STORE_NDIM##_##POINT_NDIM(                     \
@@ -79,7 +87,7 @@ __device__ void find_bounding_box_sorted_kernel(
       legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMax<POINT_NDIM>> out_high,  \
       legate::AccessorRO<legate::Rect<POINT_NDIM>, STORE_NDIM> in)                               \
   {                                                                                              \
-    find_bounding_box_sorted_kernel(unravel, out_low, out_high, in);                             \
+    detail::find_bounding_box_sorted_kernel(unravel, out_low, out_high, in);                     \
   }                                                                                              \
                                                                                                  \
   extern "C" __global__ void __launch_bounds__(LEGATE_THREADS_PER_BLOCK, LEGATE_MIN_CTAS_PER_SM) \
@@ -89,7 +97,7 @@ __device__ void find_bounding_box_sorted_kernel(
       legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMax<POINT_NDIM>> out_high,  \
       legate::AccessorRO<legate::Point<POINT_NDIM>, STORE_NDIM> in)                              \
   {                                                                                              \
-    find_bounding_box_sorted_kernel(unravel, out_low, out_high, in);                             \
+    detail::find_bounding_box_sorted_kernel(unravel, out_low, out_high, in);                     \
   }
 
 LEGION_FOREACH_NN(FIND_BBOX_SORTED_TPL_INST)
@@ -97,6 +105,8 @@ LEGION_FOREACH_NN(FIND_BBOX_SORTED_TPL_INST)
 #undef FIND_BBOX_SORTED_TPL_INST
 
 // ==========================================================================================
+
+namespace detail {
 
 namespace {
 
@@ -200,6 +210,8 @@ __device__ void find_bounding_box_kernel(legate::detail::Unravel<STORE_NDIM> unr
 
 }  // namespace
 
+}  // namespace detail
+
 #define FIND_BBOX_TPL_INST(STORE_NDIM, POINT_NDIM)                                               \
   extern "C" __global__ void __launch_bounds__(LEGATE_THREADS_PER_BLOCK, LEGATE_MIN_CTAS_PER_SM) \
     legate_find_bounding_box_kernel_rect_##STORE_NDIM##_##POINT_NDIM(                            \
@@ -211,7 +223,7 @@ __device__ void find_bounding_box_kernel(legate::detail::Unravel<STORE_NDIM> unr
       legate::Point<POINT_NDIM> identity_low,                                                    \
       legate::Point<POINT_NDIM> identity_high)                                                   \
   {                                                                                              \
-    find_bounding_box_kernel(                                                                    \
+    detail::find_bounding_box_kernel(                                                            \
       unravel, num_iters, out_low, out_high, in, identity_low, identity_high);                   \
   }                                                                                              \
                                                                                                  \
@@ -225,7 +237,7 @@ __device__ void find_bounding_box_kernel(legate::detail::Unravel<STORE_NDIM> unr
       legate::Point<POINT_NDIM> identity_low,                                                    \
       legate::Point<POINT_NDIM> identity_high)                                                   \
   {                                                                                              \
-    find_bounding_box_kernel(                                                                    \
+    detail::find_bounding_box_kernel(                                                            \
       unravel, num_iters, out_low, out_high, in, identity_low, identity_high);                   \
   }
 

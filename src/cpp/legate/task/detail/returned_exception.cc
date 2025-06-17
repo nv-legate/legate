@@ -22,10 +22,6 @@ namespace legate::detail {
 template <typename T, typename... Ts>
 struct is_same_as_one_of<T, std::variant<Ts...>> : is_same_as_one_of<T, Ts...> {};
 
-}  // namespace legate::detail
-
-namespace legate::detail {
-
 template <typename T>
 /*static*/ ReturnedException ReturnedException::construct_specific_from_buffer_(const void* buf)
 {

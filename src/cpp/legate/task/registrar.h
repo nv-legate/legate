@@ -92,7 +92,7 @@ class TaskRegistrar {
   class RecordTaskKey {
     RecordTaskKey() = default;
 
-    friend TaskRegistrar;
+    friend class TaskRegistrar;
     template <typename T>
     friend class LegateTask;
   };

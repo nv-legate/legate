@@ -15,6 +15,8 @@
 #include <legate/generated/fatbin/offsets_to_ranges_fatbin.h>
 #include <legate/generated/fatbin/ranges_to_offsets_fatbin.h>
 #else
+inline namespace detail {
+
 namespace {
 
 // NOLINTBEGIN
@@ -24,6 +26,8 @@ constexpr const void* ranges_to_offsets_fatbin = nullptr;
 // NOLINTEND
 
 }  // namespace
+
+}  // namespace detail
 #endif
 
 namespace legate::detail {

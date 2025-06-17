@@ -57,8 +57,10 @@ std::vector<StringType> string_split(std::string_view command, const char sep)
   return qargs;
 }
 
+#ifndef DOXYGEN
 template std::vector<std::string> string_split(std::string_view command, const char sep);
 template std::vector<std::string_view> string_split(std::string_view command, const char sep);
+#endif
 
 bool multi_node_job()
 {

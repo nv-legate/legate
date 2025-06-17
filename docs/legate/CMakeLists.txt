@@ -20,7 +20,7 @@ set(DOXYGEN_INPUT_DIR "${legate_LOCAL_INCLUDE_DIR}")
 set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 set(DOXYGEN_INDEX_FILE "${DOXYGEN_OUTPUT_DIR}/xml/index.html")
 set(DOXYGEN_STRIP_FROM_INC_PATH "${LEGATE_DIR}/src/cpp")
-set(DOXYGEN_EXAMPLE_PATH "\"${LEGATE_DIR}/tests/cpp\" \"${LEGATE_DIR}/src/cpp\"")
+set(DOXYGEN_EXAMPLE_PATH "${LEGATE_DIR}/tests/cpp,${LEGATE_DIR}/src/cpp")
 
 set(DOXYFILE_IN "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
 set(DOXYFILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
@@ -75,10 +75,28 @@ add_custom_target(symlink_license_file
                   COMMENT "Symlinking licenses.txt -> ${SPHINX_SOURCE}/generated")
 add_dependencies(symlink_license_file legate_write_licenses)
 
+cmake_path(SET generated_cpp_api_dir NORMALIZE
+           "${CMAKE_CURRENT_BINARY_DIR}/generated_cpp_api")
+file(MAKE_DIRECTORY "${generated_cpp_api_dir}")
+add_custom_target(generate_cpp_api_rst
+                  COMMAND ${LEGATE_DIR}/scripts/maint/gen_api_doc.py
+                          "${DOXYGEN_OUTPUT_DIR}/xml" --generate=class,struct,group
+                          --output-dir="${generated_cpp_api_dir}" --force
+                  WORKING_DIRECTORY "${generated_cpp_api_dir}"
+                  COMMENT "Generating C++ API rst files")
+add_dependencies(generate_cpp_api_rst Doxygen)
+
+add_custom_target(symlink_cpp_api_dir
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink "${generated_cpp_api_dir}"
+                          "${SPHINX_SOURCE}/api/cpp/generated"
+                  COMMENT "Symlinking ${generated_cpp_api_dir} -> ${SPHINX_SOURCE}/api/cpp/generated"
+)
+add_dependencies(symlink_cpp_api_dir generate_cpp_api_rst)
+
 add_custom_target(Sphinx
                   COMMAND "${SPHINX_EXECUTABLE}" -b html
                           -Dbreathe_projects.legate="${DOXYGEN_OUTPUT_DIR}/xml" -W
                           "${SPHINX_SOURCE}" "${SPHINX_BUILD}/legate/latest"
                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
                   COMMENT "Generating documentation with Sphinx")
-add_dependencies(Sphinx symlink_license_file)
+add_dependencies(Sphinx symlink_cpp_api_dir symlink_license_file)

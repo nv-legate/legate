@@ -55,7 +55,7 @@ class Enumerator {
  * @brief Enumerate an iterable
  *
  * @param iterable The iterable to enumerate
- * @praram start [optional] Set the starting value for the enumerator
+ * @param start [optional] Set the starting value for the enumerator
  *
  * @return The enumerator iterator adaptor
  *
@@ -65,7 +65,7 @@ class Enumerator {
  * bidirectional iteration, then the returned enumerator will assume the iterator category of
  * \p iterable.
  *
- * @snippet noinit/enumerator.cc Constructing an enumerator
+ * @snippet noinit/enumerate.cc Constructing an enumerator
  */
 template <typename T>
 [[nodiscard]] zip_detail::Zipper<zip_detail::ZiperatorShortest, Enumerator, T> enumerate(

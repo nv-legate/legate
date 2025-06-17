@@ -35,9 +35,9 @@
 #define CHECK_ABI_COMPATIBLE(cu_function, our_function) static_assert(true)
 #endif
 
-namespace {
-
 namespace abi_detail {
+
+namespace {
 
 template <typename T1, typename T2, typename = void>
 struct abi_compatible : std::false_type {};  // NOLINT(readability-identifier-naming)
@@ -99,9 +99,9 @@ template <typename R1, typename... Args1, typename R2, typename... Args2>
   return false;
 }
 
-}  // namespace abi_detail
-
 }  // namespace
+
+}  // namespace abi_detail
 
 namespace legate::cuda::detail {
 

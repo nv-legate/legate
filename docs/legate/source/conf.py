@@ -105,6 +105,8 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
 }
 
+suppress_warnings = ["duplicate_declaration.cpp"]
+
 mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
 
 pygments_style = "sphinx"

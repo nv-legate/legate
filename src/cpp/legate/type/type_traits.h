@@ -47,6 +47,7 @@ namespace legate {
 // TODO(jfaibussowit)
 // Once the deprecation period elapses for type_code_of, we should move this to the primary
 // namespace
+#ifndef DOXYGEN
 namespace type_code_of_detail {
 
 template <typename T, typename SFINAE = void>
@@ -118,6 +119,7 @@ struct type_code_of<T, std::enable_if_t<std::is_enum_v<T>>>
   : type_code_of<std::underlying_type_t<T>> {};
 
 }  // namespace type_code_of_detail
+#endif
 
 /**
  * @brief A template constexpr that converts types to type codes

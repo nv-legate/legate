@@ -9,6 +9,8 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace detail {
+
 namespace {
 
 __device__ __forceinline__ std::size_t global_tid_1d()
@@ -18,6 +20,8 @@ __device__ __forceinline__ std::size_t global_tid_1d()
 
 }  // namespace
 
+}  // namespace detail
+
 extern "C" __global__ void legate_offsets_to_ranges_kernel(
   std::size_t offsets_volume,
   std::int64_t vardata_volume,
@@ -26,7 +30,7 @@ extern "C" __global__ void legate_offsets_to_ranges_kernel(
   legate::AccessorWO<legate::Rect<1>, 1> ranges_acc,
   legate::AccessorRO<std::int32_t, 1> offsets_acc)
 {
-  if (const auto tid = global_tid_1d(); tid >= offsets_volume) {
+  if (const auto tid = detail::global_tid_1d(); tid >= offsets_volume) {
     const auto p = offsets_lo + tid;
     auto& range  = ranges_acc[p];
 

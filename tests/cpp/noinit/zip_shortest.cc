@@ -93,20 +93,6 @@ TEST(ZipShortestUnit, Relational)
   EXPECT_FALSE(it != zipper.end());
 }
 
-TEST(ZipShortestUnit, DoxySnippets)
-{
-  /// [Constructing a zipper]
-  std::vector<float> vec{1, 2, 3, 4, 5};
-  std::list<int> list{5, 4, 3, 2, 1};
-
-  // Add all elements of a list to each element of a vector
-  for (auto&& [vi, li] : legate::detail::zip_equal(vec, list)) {
-    vi = static_cast<float>(li + 10);
-    std::cout << vi << ", ";
-  }
-  /// [Constructing a zipper]
-}
-
 // NOLINTEND(readability-magic-numbers)
 
 }  // namespace zip_shortest_test
