@@ -119,7 +119,7 @@ def BuildLog(build_kind: BuildKind) -> Generator[None, None, None]:
     log_file = Path("exception_raised_before_log_init")
     try:
         with Tee(
-            get_legate_config().SKBUILD_BUILD_DIR / f"{build_kind}.log"
+            get_legate_config().LEGATE_ARCH_DIR / f"pip-{build_kind}.log"
         ) as log_file:
             rich_print(f"[bold yellow]{BANNER}")
             rn = time.strftime("%a, %d %b %Y %H:%M:%S %z")
