@@ -86,7 +86,9 @@ class GPU(TestStage):
         fbsize = min(gpu.total for gpu in system.gpus) / (1 << 20)  # MB
         oversub_factor = int(fbsize // (fbmem * bloat_factor))
 
-        gpu_workers = degree * oversub_factor
+        # fbsize can be zero on certain hardware. In this case just force
+        # a single worker
+        gpu_workers = 1 if fbsize == 0 else degree * oversub_factor
 
         mem_workers = system.memory // (SMALL_SYSMEM * bloat_factor)
 

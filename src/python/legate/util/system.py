@@ -106,10 +106,16 @@ class System:
 
         results = []
         for i in range(num_gpus):
-            info = pynvml.nvmlDeviceGetMemoryInfo(
-                pynvml.nvmlDeviceGetHandleByIndex(i)
-            )
-            results.append(GPUInfo(i, int(info.total)))
+            try:
+                info = pynvml.nvmlDeviceGetMemoryInfo(
+                    pynvml.nvmlDeviceGetHandleByIndex(i)
+                )
+                results.append(GPUInfo(i, int(info.total)))
+
+            # nvmlDeviceGetMemoryInfo raises NVMLError when there is no
+            # memory associated with a device.
+            except pynvml.NVMLError:
+                results.append(GPUInfo(i, 0))
 
         # Since pyNVML currently ignores CUDA_VISIBLE_DEVICES, we need to parse
         # it ourselves
