@@ -94,7 +94,6 @@ set_property(DIRECTORY
              PROPERTY CMAKE_CONFIGURE_DEPENDS
                       "${LEGATE_CMAKE_DIR}/versions/versions.json"
                       "${LEGATE_CMAKE_DIR}/versions/legion_version.json"
-                      "${LEGATE_CMAKE_DIR}/templates/install_info.py.in"
                       "${LEGATE_CMAKE_DIR}/templates/uninstall.cmake.in"
                       "${LEGATE_CMAKE_DIR}/templates/legate_defines.h.in")
 
