@@ -88,7 +88,7 @@ build:
     - '*libcuda.so*'
     - '*libgtest.so*'
 
-  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ network_tag }}{{ cpu_gpu_tag }}{{ debug_tag }}{{ upload_tag }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}"
+  string: "{% if gpu_enabled_bool %}cuda{{ cuda_major }}_{% endif %}py{{ py_version }}{{ network_tag }}{{ cpu_gpu_tag }}{{ debug_tag }}{{ upload_tag }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}"
   script_env:
     - SCCACHE_BUCKET
     - SCCACHE_REGION
