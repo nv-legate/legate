@@ -19,6 +19,7 @@ from legate.core import (
     VariantCode,
     align,
     bloat,
+    broadcast,
     get_legate_runtime,
     image,
     scale,
@@ -233,9 +234,7 @@ class TestPyTask:
             ty.float64, in_arr.shape, in_arr, False
         )
 
-        @task(
-            variants=tuple(VariantCode), constraints=(align("store", "out"),)
-        )
+        @task(variants=tuple(VariantCode), constraints=(broadcast("out"),))
         def array_sum_task(
             store: InputStore, out: ReductionStore[ADD]
         ) -> None:

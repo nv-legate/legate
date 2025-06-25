@@ -329,6 +329,17 @@ class TestTransposeErrors:
         with pytest.raises(RuntimeError, match=expected_msg):
             arr.transpose((0,))
 
+    def test_non_iterable(self) -> None:
+        runtime = get_legate_runtime()
+        ty_list = ty.struct_type([ty.int32])
+        arr = runtime.create_array(ty_list, (1, 2, 3, 4))
+        # string is considered an iterable, though it won't work later
+        # use something ridiculous here to get to the exception
+        axes = print
+        expected_msg = f"Expected an iterable but got {type(axes)}"
+        with pytest.raises(ValueError, match=expected_msg):
+            arr.transpose(axes)  # type: ignore[arg-type]
+
 
 class TestDelinearize:
     @pytest.mark.parametrize("dtype", _PRIMITIVES)
@@ -406,6 +417,17 @@ class TestdDelinearizeErrors:
         expected_msg = "List array does not support store transformations"
         with pytest.raises(RuntimeError, match=expected_msg):
             arr.delinearize(0, (6,))
+
+    def test_non_iterable(self) -> None:
+        runtime = get_legate_runtime()
+        ty_list = ty.struct_type([ty.int32])
+        arr = runtime.create_array(ty_list, (1, 2, 3, 4))
+        # string is considered an iterable, though it won't work later
+        # use something ridiculous here to get to the exception
+        axes = print
+        expected_msg = f"Expected an iterable but got {type(axes)}"
+        with pytest.raises(ValueError, match=expected_msg):
+            arr.delinearize(0, axes)  # type: ignore[arg-type]
 
 
 class TestFromRawHandle:
@@ -574,6 +596,23 @@ class TestCreateErrors:
             _ = arr.volume
         with pytest.raises(ValueError, match=msg):
             _ = arr.size
+
+    def test_getitem_from_nullable(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "Indexing is not implemented for nested or nullable arrays"
+        arr = runtime.create_array(ty.int32, (1, 2, 3), nullable=True)
+        with pytest.raises(NotImplementedError, match=msg):
+            arr[0]
+        arr = runtime.create_array(ty.string_type, (1,))
+        with pytest.raises(NotImplementedError, match=msg):
+            arr[0]
+
+    def test_null_mask_non_nullable(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "Invalid to retrieve the null mask of a non-nullable array"
+        arr = runtime.create_array(ty.int32, (1, 2, 3), nullable=False)
+        with pytest.raises(ValueError, match=msg):
+            _ = arr.null_mask
 
 
 if __name__ == "__main__":

@@ -10,6 +10,8 @@ import pytest
 from legate.core import (
     LEGATE_MAX_DIM,
     LogicalArray,
+    StoreTarget,
+    TaskTarget,
     Type,
     get_legate_runtime,
     types as ty,
@@ -28,9 +30,9 @@ class TestArrayCreation:
         runtime = get_legate_runtime()
         np_arr0, store = random_array_and_store(shape)
         lg_arr1 = LogicalArray.from_store(store)
-        np_arr1 = np.asarray(lg_arr1.get_physical_array())
+        np_arr1 = np.asarray(lg_arr1)
         lg_arr2 = runtime.create_array_like(lg_arr1, dtype)
-        np_arr2 = np.asarray(lg_arr2.get_physical_array())
+        np_arr2 = np.asarray(lg_arr2)
         # not sure what else to assert on
         assert np_arr2.shape == np_arr1.shape
         if dtype is None:
@@ -39,16 +41,31 @@ class TestArrayCreation:
             assert lg_arr2.type == dtype
         assert not lg_arr2.data.equal_storage(lg_arr1.data)
         np.testing.assert_allclose(np_arr1, np_arr0)
+        assert lg_arr2.volume == lg_arr1.volume
+
+    @pytest.mark.skipif(
+        get_legate_runtime().machine.preferred_target != TaskTarget.GPU,
+        reason="FBMEM target only works with GPU",
+    )
+    def test_fbmem_target(self) -> None:
+        # Need to explicitly check cupy existence here
+        try:
+            import cupy  # type: ignore[import-not-found]
+        except ModuleNotFoundError:
+            pytest.skip(reason="Test requires cupy to be installed")
+        runtime = get_legate_runtime()
+        lg_arr = runtime.create_array(ty.int32, shape=(3, 3, 3))
+        lg_arr.fill(1)
+        np_arr = np.ones((3, 3, 3), np.int32)
+        assert np.allclose(cupy.asarray(lg_arr), np_arr)
+        # not sure what can be validated, just check the call returns alright
+        # for code coverage
+        lg_arr.offload_to(StoreTarget.SYSMEM)
 
 
 class TestPromote:
-    @pytest.mark.skip(
-        reason="issue 498, "
-        "promoted.data.get_physical_store().get_inline_allocation() crashed"
-    )
-    @pytest.mark.parametrize("dtype", ARRAY_TYPES)
-    @pytest.mark.parametrize("nullable", [True, False])
-    def test_dtype(self, dtype: ty.Type, nullable: bool) -> None:
+    @pytest.mark.parametrize("dtype", ARRAY_TYPES, ids=str)
+    def test_dtype(self, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
         arr_np = np.empty(dtype=dtype.to_numpy_dtype(), shape=(1, 2, 3, 4))
         store = runtime.create_store_from_buffer(
@@ -66,13 +83,10 @@ class TestPromote:
         assert promoted_arr.shape == expanded_arr.shape
         assert promoted_arr.dtype == expanded_arr.dtype
 
-    @pytest.mark.skip(
-        reason="issue 498, "
-        "promoted.data.get_physical_store().get_inline_allocation() crashed"
-    )
-    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES)
-    @pytest.mark.parametrize("nullable", [True, False])
-    def test_shape(self, shape: tuple[int, ...], nullable: bool) -> None:
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    def test_shape(self, shape: tuple[int, ...]) -> None:
+        if len(shape) >= LEGATE_MAX_DIM:
+            pytest.skip(reason="promote exceeds max dim")
         runtime = get_legate_runtime()
         arr_np = np.empty(dtype=np.int64, shape=shape)
         store = runtime.create_store_from_buffer(
@@ -126,6 +140,19 @@ class TestTranspose:
         )
         arr_t_data = np.asarray(arr_t)
         assert np.array_equal(arr_t_data, logical_t_data, equal_nan=True)
+
+    def test_nullable(self) -> None:
+        dtype = ty.int32
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(dtype=dtype, shape=(1, 2, 3), nullable=True)
+        assert not arr.unbound
+        assert arr.ndim == 3
+        assert arr.shape == (1, 2, 3)
+        assert arr.type == dtype
+        assert arr.nullable
+        assert not arr.nested
+        assert arr.num_children == 0
+        assert arr.null_mask.shape == arr.shape
 
 
 class TestArrayCreationErrors:
