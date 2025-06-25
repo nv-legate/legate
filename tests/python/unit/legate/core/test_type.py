@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import re
 import ctypes
 from typing import TYPE_CHECKING, Any
 
@@ -86,6 +87,8 @@ class TestType:
 
     def test_init_null(self) -> None:
         assert Type() == ty.null_type
+        # for code coverage
+        assert Type() != ""  # type: ignore[comparison-overlap]
 
     @pytest.mark.parametrize("dtype", _PRIMITIVES)
     def test_primitive_properties(self, dtype: Type) -> None:
@@ -169,6 +172,22 @@ class TestTypeErrors:
         msg = f"{dtype.__name__} objects must not be constructed directly"
         with pytest.raises(ValueError, match=msg):
             _ = dtype()
+
+    def test_custom_type_to_numpy_dtype(self) -> None:
+        class ListType(ty.Type):
+            @property
+            def code(self) -> TypeCode:
+                return ty.TypeCode.STRUCT
+
+        msg = re.escape(f"Invalid type code: {ty.TypeCode.STRUCT}")
+        with pytest.raises(ValueError, match=msg):
+            ListType().to_numpy_dtype()
+
+    def test_unsupported_numpy_dtype(self) -> None:
+        dtype = np.dtype(np.timedelta64)
+        msg = re.escape(f"Unhandled numpy data type: {dtype}")
+        with pytest.raises(NotImplementedError, match=msg):
+            ty.Type.from_numpy_dtype(dtype)
 
 
 if __name__ == "__main__":

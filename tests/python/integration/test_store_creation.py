@@ -10,7 +10,13 @@ import numpy as np
 
 import pytest
 
-from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
+from legate.core import (
+    LEGATE_MAX_DIM,
+    Scalar,
+    Shape,
+    get_legate_runtime,
+    types as ty,
+)
 
 from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES
 
@@ -70,6 +76,20 @@ class TestStoreCreation:
         )
         arr_np = np.empty(shape=shape)
         assert arr_np.shape == arr_store.shape
+
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    def test_store_shape_obj(self, shape: tuple[int, ...]) -> None:
+        runtime = get_legate_runtime()
+        store_shape = Shape(shape)
+        store = runtime.create_store(dtype=ty.int32, shape=store_shape)
+        arr_np = np.empty(shape=shape)
+        for i in range(len(store.shape)):
+            assert store.shape[i] == arr_np.shape[i]
+        # for code coverage purposes
+        assert store.shape == shape
+        assert store.volume == store.shape.volume
+        assert repr(store.shape) == str(store.shape)
+        assert store.shape != print
 
     @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
     @pytest.mark.parametrize(
