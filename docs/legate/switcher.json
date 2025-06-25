@@ -20,10 +20,10 @@
         "version": "25.03"
     },
     {
-        "name": "25.05",
+        "name": "25.07",
         "preferred": true,
-        "url": "https://docs.nvidia.com/legate/25.05/",
-        "version": "25.05"
+        "url": "https://docs.nvidia.com/legate/25.07/",
+        "version": "25.07"
     },
     {
         "name": "dev",
