@@ -1,60 +1,87 @@
 #!/usr/bin/env bash
 
-export SCRIPT_DIR="${CONDA_PREFIX}/gex-wrapper"
+set -eo pipefail
+
+readonly DEFAULT_CONDUIT="ofi"
+readonly DEFAULT_SYSTEM_CONFIG="slingshot11"
+readonly DEFAULT_CUDA="ON"
+
+# Determine script directory dynamically
+readonly SCRIPT_DIR="${CONDA_PREFIX}/gex-wrapper"
 
 # Initialize variables with default values
-conduit="ofi"  # Default conduit
-system_config="slingshot11"  # Default system configuration
+conduit="${DEFAULT_CONDUIT}"
+system_config="${DEFAULT_SYSTEM_CONFIG}"
+cuda="${DEFAULT_CUDA}"
 
 # Help function to display usage
 gex_wrapper_help() {
-   echo "Usage: build-gex-wrapper [-h] [-c conduit] [-s system_config]"
+   echo "Usage: build-gex-wrapper [-h | --help] [-c conduit | --conduit conduit] [-s system_config | --system_config system_config] [-u ON/OFF | --use-cuda ON/OFF]"
    echo "Build the Realm GASNet-EX wrapper in your conda environment."
    echo
    echo "Options:"
-   echo "  -h                Display this help and exit"
-   echo "  -c CONDUIT        Specify the GASNet conduit to use (default '${conduit}')"
-   echo "  -s SYSTEM_CONFIG  Specify the system or machine-specific configuration (default '${system_config}')"
+   echo "  -h, --help               Display this help and exit"
+   echo "  -c, --conduit CONDUIT     Specify the GASNet conduit to use (default '${DEFAULT_CONDUIT}')"
+   echo "  -s, --system_config SYS   Specify the system-specific configuration (default '${DEFAULT_SYSTEM_CONFIG}')"
+   echo "  -u, --use-cuda ON/OFF     Enable (ON) or disable (OFF) CUDA (default '${DEFAULT_CUDA}')"
    echo
 }
 
-# Parse command-line options
-while getopts ":hc:s:" opt; do
-  case ${opt} in
-    h)
+# Parse command-line options (supporting both single-dash and double-dash)
+ARGS=$(getopt -o hc:s:u: -l help,conduit:,system_config:,use-cuda: -- "$@") || {
+  gex_wrapper_help
+  exit 1
+}
+eval set -- "$ARGS"
+
+while true; do
+  case "$1" in
+    -h | --help)
       gex_wrapper_help
       exit 0
       ;;
-    c)
-      conduit="${OPTARG}"
+    -c | --conduit)
+      conduit="$2"
+      shift 2
       ;;
-    s)
-      system_config="${OPTARG}"
+    -s | --system_config)
+      system_config="$2"
+      shift 2
       ;;
-    \?)
-      echo "Invalid option: -${OPTARG}" >&2
-      gex_wrapper_help
-      exit 1
+    -u | --use-cuda)
+      cuda="$2"
+      if [[ "$cuda" != "ON" && "$cuda" != "OFF" ]]; then
+        echo "Invalid value for --use-cuda: must be ON or OFF" >&2
+        exit 1
+      fi
+      shift 2
       ;;
-    :)
-      echo "Option -${OPTARG} requires an argument." >&2
-      gex_wrapper_help
-      exit 1
+    --)
+      shift
+      break
       ;;
     *)
-      echo "Invalid option: -${OPTARG}" >&2
+      echo "Unexpected option: $1" >&2
+      gex_wrapper_help
       exit 1
       ;;
   esac
 done
 
-# Check if CONDA_PREFIX is set
+# Ensure CONDA_PREFIX is set
 if [[ -z "${CONDA_PREFIX}" ]]; then
-  echo "Please activate the environment in which to build the wrapper:"
-  echo "\$ conda activate <your-env-name-here>"
-  echo ""
-  echo "Then re-run this script:"
-  echo "\$  ${SHELL} ${SCRIPT_DIR}/conda/gasnet_wrapper/build-gex-wrapper.sh"
+  echo "Error: Please activate a conda environment before running this script."
+  echo "Run:"
+  echo "  \$ conda activate <your-env-name>"
+  echo "Then re-run this script."
+  exit 1
+fi
+
+# Ensure cmake is available
+if ! command -v cmake &>/dev/null; then
+  echo "Error: cmake is not installed or not in PATH."
+  echo "Please install it via your package manager or conda:"
+  echo "  \$ conda install -c conda-forge cmake"
   exit 1
 fi
 
@@ -62,20 +89,36 @@ echo "Building GASNet-EX wrapper:"
 echo "  Installation directory: ${CONDA_PREFIX}/lib"
 echo "  Conduit: ${conduit}"
 echo "  System configuration: ${system_config}"
+echo "  CUDA enabled: ${cuda}"
 
 # Proceed with the build process
-cd "${SCRIPT_DIR}" || { echo "Failed to navigate to gex-wrapper directory"; exit 1; }
+if [[ ! -d "${SCRIPT_DIR}" ]]; then
+  echo "Error: gex-wrapper directory '${SCRIPT_DIR}' not found."
+  exit 1
+fi
+
+cd "${SCRIPT_DIR}" || { echo "Error: Failed to navigate to ${SCRIPT_DIR}"; exit 1; }
 mkdir -p src/build
-cd src/build || { echo "Failed to navigate to build directory"; exit 1; }
-cmake -DLEGION_SOURCE_DIR="${SCRIPT_DIR}" -DCMAKE_INSTALL_PREFIX="${SCRIPT_DIR}" -DGASNet_CONDUIT="${conduit}" -DGASNet_SYSTEM="${system_config}" ..
+cd src/build || { echo "Error: Failed to navigate to build directory"; exit 1; }
+
+CMAKE_ARGS=(
+  -DLEGION_SOURCE_DIR="${SCRIPT_DIR}"
+  -DCMAKE_INSTALL_PREFIX="${SCRIPT_DIR}"
+  -DGASNet_CONDUIT="${conduit}"
+  -DGASNet_SYSTEM="${system_config}"
+  -DGEX_WRAPPER_BUILD_SHARED=ON
+)
+
+if [[ "${cuda}" == "ON" ]]; then
+  CMAKE_ARGS+=(-DGASNet_CONFIGURE_ARGS="--enable-kind-cuda-uva")
+fi
+
+cmake "${CMAKE_ARGS[@]}" ..
 cmake --build .
 cmake --install .
-cd ..
-rm -rf build
 
 echo
-echo "Reactivate the conda environment to set the necessary environment variables:"
-echo ""
-echo "\$ conda deactivate"
-# shellcheck disable=SC2154
-echo "\$ conda activate ${CONDA_DEFAULT_ENV}"
+echo "Reactivate the conda environment to set necessary environment variables:"
+echo
+echo "  \$ conda deactivate"
+echo "  \$ conda activate ${CONDA_DEFAULT_ENV}"
