@@ -30,6 +30,17 @@ class IndexAttach final : public Operation {
 
   [[nodiscard]] Kind kind() const override;
 
+  /**
+   * @return `false`, `IndexAttach` operations, like `Attach` are inherently lazy, and never
+   * need to be actively submitted.
+   */
+  [[nodiscard]] bool needs_flush() const override;
+
+  /**
+   * @return `false`, `IndexAttach` operations operate on predefined subregions already.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   InternalSharedPtr<LogicalRegionField> region_field_{};
   std::uint32_t dim_{};

@@ -19,6 +19,21 @@ class Discard final : public Operation {
   void launch() override;
 
   [[nodiscard]] Kind kind() const override;
+
+  /**
+   * Discards are always lazily applied, and their results are not externally visible.
+   *
+   * @return `false`, as `Discard` operations never need to immediately flush the scheduling
+   * window.
+   */
+  [[nodiscard]] bool needs_flush() const override;
+
+  /**
+   * @return `false`, as `Discard` operations are performed on an entire LogicalRegion and
+   * hence requires no partitioning.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
   /**
    * Discard operations are always streamable.
    *

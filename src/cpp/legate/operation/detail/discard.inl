@@ -21,4 +21,8 @@ inline Operation::Kind Discard::kind() const { return Kind::DISCARD; }
 
 inline bool Discard::supports_streaming() const { return true; }
 
+inline bool Discard::needs_flush() const { return false; }
+
+inline bool Discard::needs_partitioning() const { return false; }
+
 }  // namespace legate::detail

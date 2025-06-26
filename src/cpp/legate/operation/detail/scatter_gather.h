@@ -39,6 +39,11 @@ class ScatterGather final : public Operation {
   [[nodiscard]] Kind kind() const override;
   [[nodiscard]] bool needs_flush() const override;
 
+  /**
+   * @return `true`, `ScatterGather` operations must have operands pre-partitioned.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   bool source_indirect_out_of_range_{true};
   bool target_indirect_out_of_range_{true};

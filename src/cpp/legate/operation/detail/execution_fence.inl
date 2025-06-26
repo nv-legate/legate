@@ -17,4 +17,8 @@ inline ExecutionFence::ExecutionFence(std::uint64_t unique_id, bool block)
 
 inline Operation::Kind ExecutionFence::kind() const { return Kind::EXECUTION_FENCE; }
 
+inline bool ExecutionFence::needs_flush() const { return block_; }
+
+inline bool ExecutionFence::needs_partitioning() const { return false; }
+
 }  // namespace legate::detail

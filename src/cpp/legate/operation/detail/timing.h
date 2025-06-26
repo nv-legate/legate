@@ -34,6 +34,18 @@ class Timing final : public Operation {
 
   [[nodiscard]] Kind kind() const override;
 
+  /**
+   * @return `false`, `Timing` operations are inherently lazy (they time the actual task
+   * bodies, not any launching overhead), and therefore don't need to be actively submitted.
+   */
+  [[nodiscard]] bool needs_flush() const override;
+
+  /**
+   * @return `false`, `Timing` operations are meta-operations that operate "on" task bodies
+   * themselves, not any stores. So they don't need to be partitioned.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   Precision precision_{Precision::MICRO};
   InternalSharedPtr<LogicalStore> store_{};

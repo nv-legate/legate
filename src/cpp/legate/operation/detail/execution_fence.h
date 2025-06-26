@@ -20,6 +20,17 @@ class ExecutionFence final : public Operation {
 
   [[nodiscard]] Kind kind() const override;
 
+  /**
+   * @return `true` if the `ExecutionFence` is blocking, `false` otherwise.
+   */
+  [[nodiscard]] bool needs_flush() const override;
+
+  /**
+   * @return `false`, `ExecutionFence` operations operate on the scheduling window, not stores,
+   * and are therefore partition-agnostic.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   bool block_{};
 };

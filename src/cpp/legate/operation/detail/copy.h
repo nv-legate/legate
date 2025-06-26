@@ -34,6 +34,11 @@ class Copy final : public Operation {
   [[nodiscard]] Kind kind() const override;
   [[nodiscard]] bool needs_flush() const override;
 
+  /**
+   * @return `true`.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   StoreArg target_{};
   StoreArg source_{};

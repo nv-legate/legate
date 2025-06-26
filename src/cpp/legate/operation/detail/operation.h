@@ -20,7 +20,6 @@
 #include <fmt/format.h>
 
 #include <deque>
-#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -74,7 +73,19 @@ class Operation {
 
   [[nodiscard]] virtual Kind kind() const = 0;
   [[nodiscard]] virtual std::string to_string(bool show_provenance) const;
-  [[nodiscard]] virtual bool needs_flush() const;
+
+  /**
+   * @brief Whether the operation should immediately flush the scheduling window (regardless of
+   * size) when it is submitted.
+   *
+   * @return `true` if the scheduling window should be flushed, `false` otherwise.
+   *
+   * A potential reason for needing an immediate flush is that at least one argument to the
+   * operation is unbound. In this case, the operation should be scheduled as soon as possible
+   * to allow downstream tasks to block on its completion to learn the true size of the store.
+   */
+  [[nodiscard]] virtual bool needs_flush() const = 0;
+
   [[nodiscard]] virtual bool supports_replicated_write() const;
   /**
    * When an operation supports streaming it is treated specially inside a Scope that is Streaming.
@@ -85,10 +96,25 @@ class Operation {
    * @return Whether the operation supports streaming.
    */
   [[nodiscard]] virtual bool supports_streaming() const;
-  // When `is_internal()` returns `true` on an operation, the runtime skips validation and the flush
-  // check on the operation.
-  [[nodiscard]] bool is_internal() const;
-  [[nodiscard]] bool needs_partitioning() const;
+
+  /**
+   * @brief Whether the operation requires automatic partitioning analysis before launch.
+   *
+   * Operations that require partitioning analysis are launched via the `launch(Strategy*)`
+   * overload. Operations that do NOT require the analysis, are launched via the `launch()`
+   * overload.
+   *
+   * Operations may not require partitioning analysis for a number of reasons:
+   *
+   * 1. The operation does its own bespoke (or user-specified) partitioning. For example,
+   *    `ManualTask` has its partitioning specified by the user.
+   * 2. The operation is partition-agnostic. For example, `ExecutionFence` does not require any
+   *    partitioning in order to run.
+   *
+   * @return `true` if the operation requires partitioning analysis to be performed, `false`
+   * otherwise.
+   */
+  [[nodiscard]] virtual bool needs_partitioning() const = 0;
 
   [[nodiscard]] const Variable* find_or_declare_partition(
     const InternalSharedPtr<LogicalStore>& store);

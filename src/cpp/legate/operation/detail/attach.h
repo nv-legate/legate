@@ -28,6 +28,18 @@ class Attach final : public Operation {
 
   [[nodiscard]] Kind kind() const override;
 
+  /**
+   * @return `false`, as `Attach` operations never need to immediately flush the scheduling
+   * window. The results are lazily applied.
+   */
+  [[nodiscard]] bool needs_flush() const override;
+
+  /**
+   * @return `false`, as `Attach` operations are performed on a specific partitioned store
+   * already.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   InternalSharedPtr<LogicalRegionField> region_field_{};
   std::uint32_t dim_{};

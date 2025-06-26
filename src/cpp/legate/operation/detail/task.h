@@ -161,6 +161,12 @@ class AutoTask final : public Task {
 
   [[nodiscard]] Kind kind() const override;
 
+  /**
+   * @return `true`, `AutoTask` operations by definition have the runtime compute the
+   * partitioning for each argument.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   void fixup_ranges_(Strategy& strategy);
 
@@ -199,6 +205,12 @@ class ManualTask final : public Task {
   void launch() override;
 
   [[nodiscard]] Kind kind() const override;
+
+  /**
+   * @return `false`, `ManualTask` operations by definition have the runtime compute the
+   * partitioning for each argument.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
 
  private:
   Strategy strategy_{};

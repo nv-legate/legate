@@ -14,4 +14,6 @@ inline void Reduce::validate() {}
 
 inline Operation::Kind Reduce::kind() const { return Kind::REDUCE; }
 
+inline bool Reduce::needs_partitioning() const { return true; }
+
 }  // namespace legate::detail

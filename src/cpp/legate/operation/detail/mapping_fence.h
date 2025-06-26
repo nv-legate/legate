@@ -19,6 +19,18 @@ class MappingFence final : public Operation {
   void launch() override;
 
   [[nodiscard]] Kind kind() const override;
+
+  /**
+   * @return `false`, `MappingFence` operations are inherently lazy, and never need to be
+   * actively submitted.
+   */
+  [[nodiscard]] bool needs_flush() const override;
+
+  /**
+   * @return `false`, `MappingFence` operations operate on the scheduling window itself, and
+   * are therefore partition-agnostic.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
 };
 
 }  // namespace legate::detail

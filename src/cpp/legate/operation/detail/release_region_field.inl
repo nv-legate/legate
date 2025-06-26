@@ -24,4 +24,8 @@ inline ReleaseRegionField::ReleaseRegionField(
 
 inline Operation::Kind ReleaseRegionField::kind() const { return Kind::RELEASE_REGION_FIELD; }
 
+inline bool ReleaseRegionField::needs_flush() const { return false; }
+
+inline bool ReleaseRegionField::needs_partitioning() const { return false; }
+
 }  // namespace legate::detail

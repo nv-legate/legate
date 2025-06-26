@@ -14,4 +14,6 @@ inline void Gather::set_indirect_out_of_range(bool flag) { out_of_range_ = flag;
 
 inline Operation::Kind Gather::kind() const { return Kind::GATHER; }
 
+inline bool Gather::needs_partitioning() const { return true; }
+
 }  // namespace legate::detail

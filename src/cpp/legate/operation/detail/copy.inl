@@ -12,4 +12,6 @@ namespace legate::detail {
 
 inline Operation::Kind Copy::kind() const { return Kind::COPY; }
 
+inline bool Copy::needs_partitioning() const { return true; }
+
 }  // namespace legate::detail

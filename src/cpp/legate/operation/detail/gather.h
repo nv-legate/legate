@@ -37,6 +37,11 @@ class Gather final : public Operation {
   [[nodiscard]] Kind kind() const override;
   [[nodiscard]] bool needs_flush() const override;
 
+  /**
+   * @return `true`, `Gather` operations operate on specific subsets of stores.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   bool out_of_range_{true};
   StoreArg target_{};

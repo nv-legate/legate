@@ -12,4 +12,8 @@ namespace legate::detail {
 
 inline Operation::Kind IndexAttach::kind() const { return Kind::INDEX_ATTACH; }
 
+inline bool IndexAttach::needs_flush() const { return false; }
+
+inline bool IndexAttach::needs_partitioning() const { return false; }
+
 }  // namespace legate::detail

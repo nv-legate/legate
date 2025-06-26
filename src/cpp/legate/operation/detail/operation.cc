@@ -63,60 +63,11 @@ Operation::Operation(std::uint64_t unique_id,
 {
 }
 
-bool Operation::is_internal() const
+void Operation::launch() { LEGATE_ABORT("This method should have been overridden"); }
+
+void Operation::launch(Strategy* /*strategy*/)
 {
-  switch (kind()) {
-    case Kind::ATTACH: [[fallthrough]];
-    case Kind::DISCARD: [[fallthrough]];
-    case Kind::EXECUTION_FENCE: [[fallthrough]];
-    case Kind::INDEX_ATTACH: [[fallthrough]];
-    case Kind::MAPPING_FENCE: [[fallthrough]];
-    case Kind::RELEASE_REGION_FIELD: [[fallthrough]];
-    case Kind::TIMING: {
-      return true;
-    }
-
-    case Kind::AUTO_TASK: [[fallthrough]];
-    case Kind::COPY: [[fallthrough]];
-    case Kind::FILL: [[fallthrough]];
-    case Kind::GATHER: [[fallthrough]];
-    case Kind::MANUAL_TASK: [[fallthrough]];
-    case Kind::REDUCE: [[fallthrough]];
-    case Kind::SCATTER: [[fallthrough]];
-    case Kind::SCATTER_GATHER: {
-      return false;
-    }
-  }
-
-  throw TracedException<std::invalid_argument>{"invalid operation kind"};
-}
-
-bool Operation::needs_partitioning() const
-{
-  switch (kind()) {
-    case Kind::AUTO_TASK: [[fallthrough]];
-    case Kind::COPY: [[fallthrough]];
-    case Kind::FILL: [[fallthrough]];
-    case Kind::GATHER: [[fallthrough]];
-    case Kind::REDUCE: [[fallthrough]];
-    case Kind::SCATTER: [[fallthrough]];
-    case Kind::SCATTER_GATHER: {
-      return true;
-    }
-
-    case Kind::ATTACH: [[fallthrough]];
-    case Kind::DISCARD: [[fallthrough]];
-    case Kind::EXECUTION_FENCE: [[fallthrough]];
-    case Kind::INDEX_ATTACH: [[fallthrough]];
-    case Kind::MANUAL_TASK: [[fallthrough]];
-    case Kind::MAPPING_FENCE: [[fallthrough]];
-    case Kind::RELEASE_REGION_FIELD: [[fallthrough]];
-    case Kind::TIMING: {
-      return false;
-    }
-  }
-
-  throw TracedException<std::invalid_argument>{"invalid operation kind"};
+  LEGATE_ABORT("This method should have been overridden");
 }
 
 std::string Operation::to_string(bool show_provenance) const
@@ -127,12 +78,6 @@ std::string Operation::to_string(bool show_provenance) const
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
   }
   return result;
-}
-
-bool Operation::needs_flush() const
-{
-  LEGATE_ABORT("This method should have been overridden");
-  return false;
 }
 
 const Variable* Operation::find_or_declare_partition(const InternalSharedPtr<LogicalStore>& store)

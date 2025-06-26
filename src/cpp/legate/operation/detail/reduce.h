@@ -43,6 +43,11 @@ class Reduce final : public Operation {
   [[nodiscard]] Kind kind() const override;
   [[nodiscard]] bool needs_flush() const override;
 
+  /**
+   * @return `true`, `Reduce` operations require the operands to be pre-partitioned.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   std::int32_t radix_{};
   std::reference_wrapper<const Library> library_;

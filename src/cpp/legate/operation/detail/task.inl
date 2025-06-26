@@ -60,8 +60,12 @@ inline const VariantInfo& Task::variant_info_() const { return vinfo_; }
 
 inline Operation::Kind AutoTask::kind() const { return Kind::AUTO_TASK; }
 
+inline bool AutoTask::needs_partitioning() const { return true; }
+
 // ==========================================================================================
 
 inline Operation::Kind ManualTask::kind() const { return Kind::MANUAL_TASK; }
+
+inline bool ManualTask::needs_partitioning() const { return false; }
 
 }  // namespace legate::detail

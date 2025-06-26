@@ -22,4 +22,6 @@ inline void ScatterGather::set_target_indirect_out_of_range(bool flag)
 
 inline Operation::Kind ScatterGather::kind() const { return Kind::SCATTER_GATHER; }
 
+inline bool ScatterGather::needs_partitioning() const { return true; }
+
 }  // namespace legate::detail

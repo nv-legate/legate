@@ -14,4 +14,6 @@ inline void Scatter::set_indirect_out_of_range(bool flag) { out_of_range_ = flag
 
 inline Operation::Kind Scatter::kind() const { return Kind::SCATTER; }
 
+inline bool Scatter::needs_partitioning() const { return true; }
+
 }  // namespace legate::detail

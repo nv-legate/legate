@@ -34,6 +34,11 @@ class Fill final : public Operation {
   [[nodiscard]] Kind kind() const override;
   [[nodiscard]] bool needs_flush() const override;
 
+  /**
+   * @return `true`, `Fill` operations operate on specific subsets of stores.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
  private:
   Legion::Future get_fill_value_() const;
 

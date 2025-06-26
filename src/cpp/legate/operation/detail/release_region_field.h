@@ -24,6 +24,19 @@ class ReleaseRegionField final : public Operation {
   void launch() override;
 
   [[nodiscard]] Kind kind() const override;
+
+  /**
+   * @return `false`, `ReleaseRegionField` operations are inherently lazy, and never need to be
+   * actively submitted.
+   */
+  [[nodiscard]] bool needs_flush() const override;
+
+  /**
+   * @return `false`, `ReleaseRegionField` operations operate on pure physical states, and
+   * don't require the logical partitioning mechanisms.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
   /**
    * ReleaseRegionField operation is streamable if the RegionField it is
    * trying to release is still mapped or does not have any invalidation

@@ -561,20 +561,12 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
     log_legate().debug() << op->to_string(true /*show_provenance*/) << " submitted";
   }
 
-  // Must validate all operations (internal or not), because this call will check the task
-  // signatures if they are set.
+  // This call will check the task signatures if they are set, so call it before appending to
+  // operations_.
   op->validate();
 
-  // Special case for internal operations
-  if (op->is_internal()) {
-    operations_.emplace_back(std::move(op));
-    if (operations_.size() >= config().window_size()) {
-      flush_scheduling_window();
-    }
-    return;
-  }
+  const auto& submitted = operations_.emplace_back(std::move(op));
 
-  auto& submitted = operations_.emplace_back(std::move(op));
   if (submitted->needs_flush() || operations_.size() >= config().window_size()) {
     flush_scheduling_window();
   }
@@ -1502,13 +1494,12 @@ void Runtime::issue_mapping_fence()
 
 void Runtime::issue_execution_fence(bool block /*=false*/)
 {
-  // FIXME: This needs to be a Legate operation
-  submit(make_internal_shared<ExecutionFence>(current_op_id_(), block));
+  auto op = make_internal_shared<ExecutionFence>(current_op_id_(), block);
+
+  // Do this before submission, because it may flush, which may launch other tasks, which need
+  // to see an incremented op id.
   increment_op_id_();
-  if (block) {
-    // This will block on the execution fence
-    flush_scheduling_window();
-  }
+  submit(std::move(op));
 }
 
 InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precision)

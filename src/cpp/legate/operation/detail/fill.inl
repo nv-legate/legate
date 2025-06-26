@@ -12,4 +12,6 @@ namespace legate::detail {
 
 inline Operation::Kind Fill::kind() const { return Kind::FILL; }
 
+inline bool Fill::needs_partitioning() const { return true; }
+
 }  // namespace legate::detail
