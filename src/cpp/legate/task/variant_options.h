@@ -81,15 +81,39 @@ class VariantOptions {
   bool has_allocations{false};
 
   /**
-   * @brief Whether this variant can skip device context synchronization after completion.
+   * @brief Whether this variant can skip full device context synchronization after completion,
+   * or whether it can synchronize only on the task stream.
    *
-   * Normally, for device-enabled task variants, Legate will emit a device-wide barrier to
-   * ensure that all outstanding (potentially asynchronous) work performed by the variant has
-   * completed. However, if the task launches no such work, or if that work is launched using
-   * the task-specific device streams, then such a context synchronization is not necessary.
+   * The user should typically set `elide_device_ctx_sync = true` for better performance,
+   * unless their task performs GPU work outside of its assigned stream. It is, in effect, a
+   * promise that the user task does not perform work on a stream other than the task's
+   * stream. Or, if the task does do work on external streams, that those streams are
+   * synchronized (possibly asynchronously) against the task stream before leaving the task
+   * body.
    *
-   * Setting this value to `true` ensures that no context synchronization is performed. Setting
-   * it to `false` guarantees that a context synchronization is done.
+   * The default is currently `false` for backwards compatibility, but it may default to `true`
+   * in the future.
+   *
+   * When `elide_device_ctx_sync = false`:
+   * - The runtime will call the equivalent of `cuCtxSynchronize()` at the end of each GPU
+   *   task.
+   * - This acts as a full device-wide barrier, ensuring any outstanding GPU work has
+   *   completed.
+   *
+   * When `elide_device_ctx_sync = true`:
+   * - The runtime may assume all GPU work was issued on the task's stream.
+   * - Instead of a full synchronization, the runtime may insert stream dependencies for
+   *   downstream tasks specific to each point, so any dependent work need only wait on the
+   *   exact leaf task instance that produced it.
+   * - This avoids expensive context-wide synchronization, improving efficiency.
+   *
+   * @note The synchronization schemes described here have no effect on
+   * `Runtime::issue_execution_fence()`. Execution fences wait until all prior tasks are
+   * "complete", and since GPU work is treated as part of a task’s execution, a task is not
+   * considered "complete" until its stream is idle. As a result, an execution fence after a
+   * GPU task *always* has the same behavior, regardless of the synchronization scheme
+   * used. Either the runtime waits for the device-wide sync to finish, or it waits until all
+   * leaf-task streams are idle.
    *
    * Has no effect on non-device variants (for example CPU variants).
    *
