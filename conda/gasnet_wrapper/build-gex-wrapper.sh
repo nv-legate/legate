@@ -32,7 +32,7 @@ ARGS=$(getopt -o hc:s:u: -l help,conduit:,system_config:,use-cuda: -- "$@") || {
   gex_wrapper_help
   exit 1
 }
-eval set -- "$ARGS"
+eval set -- "${ARGS}"
 
 while true; do
   case "$1" in
@@ -50,7 +50,7 @@ while true; do
       ;;
     -u | --use-cuda)
       cuda="$2"
-      if [[ "$cuda" != "ON" && "$cuda" != "OFF" ]]; then
+      if [[ "${cuda}" != "ON" && "${cuda}" != "OFF" ]]; then
         echo "Invalid value for --use-cuda: must be ON or OFF" >&2
         exit 1
       fi
@@ -121,4 +121,5 @@ echo
 echo "Reactivate the conda environment to set necessary environment variables:"
 echo
 echo "  \$ conda deactivate"
+# shellcheck disable=SC2154
 echo "  \$ conda activate ${CONDA_DEFAULT_ENV}"
