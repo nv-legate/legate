@@ -34,7 +34,9 @@ class TileByOffsetsRead : public LegateTask<TileByOffsetsRead> {
     TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_BY_OFFSETS_READ}}
       .with_signature(legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
         {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
-      );
+                      )
+      .with_variant_options(
+        legate::VariantOptions{}.with_has_side_effect(true).with_elide_device_ctx_sync(true));
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

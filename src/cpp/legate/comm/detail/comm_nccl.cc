@@ -68,7 +68,8 @@ class Payload {
 class InitId : public detail::LegionTask<InitId> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_NCCL_ID}};
+    legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_NCCL_ID}}.with_variant_options(
+      legate::VariantOptions{}.with_elide_device_ctx_sync(true));
 
   static ncclUniqueId gpu_variant(const Legion::Task* task,
                                   const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -89,9 +90,8 @@ class InitId : public detail::LegionTask<InitId> {
 class Init : public detail::LegionTask<Init> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_NCCL}};
-
-  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+    legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_NCCL}}.with_variant_options(
+      legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
 
   static ncclComm_t* gpu_variant(const Legion::Task* task,
                                  const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -180,9 +180,8 @@ class Init : public detail::LegionTask<Init> {
 class Finalize : public detail::LegionTask<Finalize> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{CoreTask::FINALIZE_NCCL}};
-
-  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+    legate::TaskConfig{legate::LocalTaskID{CoreTask::FINALIZE_NCCL}}.with_variant_options(
+      legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
 
   static void gpu_variant(const Legion::Task* task,
                           const std::vector<Legion::PhysicalRegion>& /*regions*/,

@@ -30,7 +30,8 @@ namespace legate::detail::comm::local {
 class InitMapping : public detail::LegionTask<InitMapping> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING}};
+    legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING}}.with_variant_options(
+      legate::VariantOptions{}.with_elide_device_ctx_sync(true));
 
   static int cpu_variant(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -67,7 +68,7 @@ class Init : public detail::LegionTask<Init> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL}}.with_variant_options(
-      legate::VariantOptions{}.with_concurrent(true));
+      legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
 
   static legate::comm::coll::CollComm cpu_variant(
     const Legion::Task* task,
@@ -116,7 +117,7 @@ class Finalize : public detail::LegionTask<Finalize> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{LocalTaskID{CoreTask::FINALIZE_CPUCOLL}}.with_variant_options(
-      legate::VariantOptions{}.with_concurrent(true));
+      legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
 
   static void cpu_variant(const Legion::Task* task,
                           const std::vector<Legion::PhysicalRegion>& /*regions*/,

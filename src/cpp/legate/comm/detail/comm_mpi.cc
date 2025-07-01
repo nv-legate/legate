@@ -35,7 +35,8 @@ namespace legate::detail::comm::mpi {
 class InitMapping : public legate::detail::LegionTask<InitMapping> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING}};
+    legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING}}.with_variant_options(
+      legate::VariantOptions{}.with_elide_device_ctx_sync(true));
 
   static int cpu_variant(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& /*regions*/,

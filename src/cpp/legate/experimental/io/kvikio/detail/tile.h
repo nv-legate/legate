@@ -31,10 +31,12 @@ namespace legate::experimental::io::kvikio::detail {
 class TileRead : public LegateTask<TileRead> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_READ}}.with_signature(
-      legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
+    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_READ}}
+      .with_signature(legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
         {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
-    );
+                      )
+      .with_variant_options(
+        legate::VariantOptions{}.with_has_side_effect(true).with_elide_device_ctx_sync(true));
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
@@ -57,10 +59,12 @@ class TileRead : public LegateTask<TileRead> {
 class TileWrite : public LegateTask<TileWrite> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_WRITE}}.with_signature(
-      legate::TaskSignature{}.inputs(1).outputs(0).scalars(2).redops(0).constraints(
+    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_WRITE}}
+      .with_signature(legate::TaskSignature{}.inputs(1).outputs(0).scalars(2).redops(0).constraints(
         {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
-    );
+                      )
+      .with_variant_options(
+        legate::VariantOptions{}.with_has_side_effect(true).with_elide_device_ctx_sync(true));
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

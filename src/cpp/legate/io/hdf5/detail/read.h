@@ -35,7 +35,8 @@ class HDF5Read : public LegateTask<HDF5Read> {
     TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_HDF5_FILE_READ}}
       .with_signature(TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
         {Span<const legate::ProxyConstraint>{}}) /* some compilers complain with {{}} */)
-      .with_variant_options(VariantOptions{}.with_has_side_effect(true));
+      .with_variant_options(
+        VariantOptions{}.with_has_side_effect(true).with_elide_device_ctx_sync(true));
 
   static constexpr auto GPU_VARIANT_OPTIONS = VariantOptions{}
                                                 .with_elide_device_ctx_sync(true)

@@ -31,7 +31,8 @@ class BasicRead : public LegateTask<BasicRead> {
       .with_signature(legate::TaskSignature{}.inputs(0).outputs(1).scalars(1).redops(0).constraints(
         {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
                       )
-      .with_variant_options(legate::VariantOptions{}.with_has_side_effect(true));
+      .with_variant_options(
+        legate::VariantOptions{}.with_has_side_effect(true).with_elide_device_ctx_sync(true));
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
@@ -55,7 +56,8 @@ class BasicWrite : public LegateTask<BasicWrite> {
       .with_signature(legate::TaskSignature{}.inputs(1).outputs(0).scalars(1).redops(0).constraints(
         {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
                       )
-      .with_variant_options(legate::VariantOptions{}.with_has_side_effect(true));
+      .with_variant_options(
+        legate::VariantOptions{}.with_has_side_effect(true).with_elide_device_ctx_sync(true));
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
