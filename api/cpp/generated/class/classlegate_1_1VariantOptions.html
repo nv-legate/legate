@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::VariantOptions &#8212; NVIDIA legate (25.07.00.dev56+g4462b0cd)</title>
+    <title>legate::VariantOptions &#8212; NVIDIA legate (25.07.00.dev61+g8b7781e2)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=338aefea"></script>
+    <script src="../../../../_static/documentation_options.js?v=0b778c65"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev56+g4462b0cd) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev56+g4462b0cd) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev61+g8b7781e2) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev61+g8b7781e2) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev56+g4462b0cd)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev61+g8b7781e2)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev56+g4462b0cd) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev56+g4462b0cd) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev61+g8b7781e2) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev61+g8b7781e2) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev56+g4462b0cd)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev61+g8b7781e2)</p>
   
 </a>
 
@@ -803,15 +803,31 @@
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate14VariantOptions21elide_device_ctx_syncE">
 <span id="_CPPv3N6legate14VariantOptions21elide_device_ctx_syncE"></span><span id="_CPPv2N6legate14VariantOptions21elide_device_ctx_syncE"></span><span id="legate::VariantOptions::elide_device_ctx_sync__b"></span><span class="target" id="classlegate_1_1VariantOptions_1ae0826ba8fd4ff8188acb2a5ea651c2f0"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">elide_device_ctx_sync</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14VariantOptions21elide_device_ctx_syncE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Whether this variant can skip device context synchronization after completion. </p>
-<p>Normally, for device-enabled task variants, Legate will emit a device-wide barrier to ensure that all outstanding (potentially asynchronous) work performed by the variant has completed. However, if the task launches no such work, or if that work is launched using the task-specific device streams, then such a context synchronization is not necessary.</p>
-<p>Setting this value to <code class="docutils literal notranslate"><span class="pre">true</span></code> ensures that no context synchronization is performed. Setting it to <code class="docutils literal notranslate"><span class="pre">false</span></code> guarantees that a context synchronization is done.</p>
-<p>Has no effect on non-device variants (for example CPU variants).</p>
+<dd><p>Whether this variant can skip full device context synchronization after completion, or whether it can synchronize only on the task stream. </p>
+<p>The user should typically set <code class="docutils literal notranslate"><span class="pre">elide_device_ctx_sync</span> <span class="pre">=</span> <span class="pre">true</span></code> for better performance, unless their task performs GPU work outside of its assigned stream. It is, in effect, a promise that the user task does not perform work on a stream other than the task’s stream. Or, if the task does do work on external streams, that those streams are synchronized (possibly asynchronously) against the task stream before leaving the task body.</p>
+<p>The default is currently <code class="docutils literal notranslate"><span class="pre">false</span></code> for backwards compatibility, but it may default to <code class="docutils literal notranslate"><span class="pre">true</span></code> in the future.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">elide_device_ctx_sync</span> <span class="pre">=</span> <span class="pre">false</span></code>:<ul class="simple">
+<li><p>The runtime will call the equivalent of <code class="docutils literal notranslate"><span class="pre">cuCtxSynchronize()</span></code> at the end of each GPU task.</p></li>
+<li><p>This acts as a full device-wide barrier, ensuring any outstanding GPU work has completed.</p></li>
+</ul>
+</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">elide_device_ctx_sync</span> <span class="pre">=</span> <span class="pre">true</span></code>:<ul class="simple">
+<li><p>The runtime may assume all GPU work was issued on the task’s stream.</p></li>
+<li><p>Instead of a full synchronization, the runtime may insert stream dependencies for downstream tasks specific to each point, so any dependent work need only wait on the exact leaf task instance that produced it.</p></li>
+<li><p>This avoids expensive context-wide synchronization, improving efficiency.</p></li>
+</ul>
+</p>
+<p>
+Has no effect on non-device variants (for example CPU variants).</p>
 <p><div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <p><a class="reference internal" href="../group/group__task.html#classlegate_1_1VariantOptions_1a00558ea61f3ec67cef19789520bd9732"><span class="std std-ref">with_elide_device_ctx_sync()</span></a></p>
 </div>
 </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The synchronization schemes described here have no effect on <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__runtime.html#classlegate_1_1Runtime_1aee58f31c99882ddd268c3f52e4ee3055"><span class="std std-ref"><span class="pre">Runtime::issue_execution_fence()</span></span></a></code>. Execution fences wait until all prior tasks are “complete”, and since GPU work is treated as part of a task’s execution, a task is not considered “complete” until its stream is idle. As a result, an execution fence after a GPU task <em>always</em> has the same behavior, regardless of the synchronization scheme used. Either the runtime waits for the device-wide sync to finish, or it waits until all leaf-task streams are idle.</p>
+</div>
 </dd></dl>
 
 <dl class="cpp var">
