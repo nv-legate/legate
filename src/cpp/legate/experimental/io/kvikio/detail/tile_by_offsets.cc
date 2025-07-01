@@ -7,12 +7,11 @@
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
 
 #include <legate/data/physical_store.h>
+#include <legate/experimental/io/kvikio/detail/legate_kvikio_file_handle.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/linearize.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/span.h>
-
-#include <kvikio/file_handle.hpp>
 
 #include <cstdint>
 #include <string>
@@ -57,7 +56,7 @@ void TileByOffsetsReadFn::operator()(legate::TaskContext context,
     legate::detail::linearize(launch_domain.lo(), launch_domain.hi(), task_index);
   const Span<const std::uint64_t> offsets = context.scalar(1).values<std::uint64_t>();
 
-  auto f            = ::kvikio::FileHandle{std::string{path}, "r"};
+  auto f            = ::legate_kvikio::FileHandle{std::string{path}, "r"};
   auto&& data       = store->span_write_accessor<DTYPE, DIM>();
   const auto offset = offsets[flatten_task_index];
 
