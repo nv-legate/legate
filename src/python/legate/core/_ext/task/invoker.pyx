@@ -39,6 +39,8 @@ from ..._lib.task.task_context cimport TaskContext
 from ..._lib.task.task_signature cimport make_task_signature
 from ..._lib.type.types cimport Type, TypeCode, binary_type
 
+from ..._lib.runtime.runtime import ProfileRange
+
 from ...data_interface import (
     MAX_DATA_INTERFACE_VERSION,
     MIN_DATA_INTERFACE_VERSION,
@@ -738,7 +740,8 @@ cdef class VariantInvoker:
             ctx_arg_name = next(iter(params.keys()))
             kw[ctx_arg_name] = ctx
 
-        func(**kw)
+        with ProfileRange(func.__name__):
+            func(**kw)
 
     @staticmethod
     cdef object _get_signature(object func):

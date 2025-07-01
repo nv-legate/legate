@@ -1163,10 +1163,10 @@ cdef class Runtime(Unconstructable):
         _shutdown_manager.add_shutdown_callback(callback)
 
     cdef void start_profiling_range(self):
-        self.start_profiling_range()
+        self._handle.start_profiling_range()
 
     cdef void stop_profiling_range(self, std_string_view provenance):
-        self.stop_profiling_range(provenance)
+        self._handle.stop_profiling_range(provenance)
 
 
 cdef tuple[bool, bool] _set_realm_backtrace(str value):
