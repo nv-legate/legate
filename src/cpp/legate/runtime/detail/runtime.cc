@@ -597,8 +597,9 @@ void Runtime::schedule_(std::vector<InternalSharedPtr<Operation>>&& operations)
 
     // TODO(wonchanl): We need the side effect from the launch calls to get key partitions set
     // correctly. In the future, the partitioner should manage key partitions.
-    const auto strategy = Partitioner{{it, it + 1}}.partition_stores();
-    (*it)->launch(strategy.get());
+    auto strategy = Partitioner{{it, it + 1}}.partition_stores();
+
+    (*it)->launch(&strategy);
   }
 }
 

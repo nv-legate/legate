@@ -208,24 +208,24 @@ void ConstraintSolver::solve_constraints()
   }
 }
 
-void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
+void ConstraintSolver::solve_dependent_constraints(Strategy* strategy)
 {
   const auto solve_image_constraint = [&strategy](const ImageConstraint& image_constraint) {
-    auto image = image_constraint.resolve(strategy);
+    auto image = image_constraint.resolve(*strategy);
 
-    strategy.insert(image_constraint.var_range(), std::move(image));
+    strategy->insert(*image_constraint.var_range(), std::move(image));
   };
 
   const auto solve_scale_constraint = [&strategy](const ScaleConstraint& scale_constraint) {
-    auto scaled = scale_constraint.resolve(strategy);
+    auto scaled = scale_constraint.resolve(*strategy);
 
-    strategy.insert(scale_constraint.var_bigger(), std::move(scaled));
+    strategy->insert(*scale_constraint.var_bigger(), std::move(scaled));
   };
 
   const auto solve_bloat_constraint = [&strategy](const BloatConstraint& bloat_constraint) {
-    auto bloated = bloat_constraint.resolve(strategy);
+    auto bloated = bloat_constraint.resolve(*strategy);
 
-    strategy.insert(bloat_constraint.var_bloat(), std::move(bloated));
+    strategy->insert(*bloat_constraint.var_bloat(), std::move(bloated));
   };
 
   for (auto&& constraint : constraints_) {
@@ -248,15 +248,15 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
   }
 }
 
-const std::vector<const Variable*>& ConstraintSolver::find_equivalence_class(
-  const Variable* partition_symbol) const
+Span<const Variable* const> ConstraintSolver::find_equivalence_class(
+  const Variable& partition_symbol) const
 {
-  return equiv_class_map_.at(*partition_symbol)->partition_symbols;
+  return equiv_class_map_.at(partition_symbol)->partition_symbols;
 }
 
-const Restrictions& ConstraintSolver::find_restrictions(const Variable* partition_symbol) const
+const Restrictions& ConstraintSolver::find_restrictions(const Variable& partition_symbol) const
 {
-  return equiv_class_map_.at(*partition_symbol)->restrictions;
+  return equiv_class_map_.at(partition_symbol)->restrictions;
 }
 
 void ConstraintSolver::dump()

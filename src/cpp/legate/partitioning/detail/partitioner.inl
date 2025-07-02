@@ -10,12 +10,8 @@
 
 namespace legate::detail {
 
-inline bool Strategy::parallel(const Operation* op) const { return launch_domain(op).is_valid(); }
-
-// ==========================================================================================
-
 inline Partitioner::Partitioner(Span<const InternalSharedPtr<Operation>> operations)
-  : operations_{std::move(operations)}
+  : operations_{operations}
 {
 }
 

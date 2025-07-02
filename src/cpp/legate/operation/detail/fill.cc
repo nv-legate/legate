@@ -77,8 +77,8 @@ void Fill::launch(Strategy* strategy)
   }
 
   auto launcher        = FillLauncher{machine_, priority()};
-  auto&& launch_domain = strategy->launch_domain(this);
-  auto&& part          = (*strategy)[lhs_var_];
+  auto&& launch_domain = strategy->launch_domain(*this);
+  auto&& part          = (*strategy)[*lhs_var_];
   const auto lhs_proj  = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
 
   if (launch_domain.is_valid()) {

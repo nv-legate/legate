@@ -1117,15 +1117,15 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
   GlobalRedopID redop)
 {
   if (unbound()) {
-    auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(variable);
+    auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(*variable);
     return OutputRegionArg{this, field_space, field_id};
   }
 
-  auto&& partition     = strategy[variable];
+  auto&& partition     = strategy[*variable];
   auto store_partition = create_partition_(self, partition);
   auto store_proj      = store_partition->create_store_projection(launch_domain, projection);
 
-  store_proj.is_key = strategy.is_key_partition(variable);
+  store_proj.is_key = strategy.is_key_partition(*variable);
   store_proj.redop  = redop;
 
   if (privilege == LEGION_REDUCE && store_partition->is_disjoint_for(launch_domain)) {

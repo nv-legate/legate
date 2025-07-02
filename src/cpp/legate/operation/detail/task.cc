@@ -169,7 +169,7 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   auto& strategy = *strategy_ptr;
   auto launcher =
     detail::TaskLauncher{library(), machine(), parallel_policy(), provenance(), local_task_id()};
-  auto&& launch_domain     = strategy.launch_domain(this);
+  auto&& launch_domain     = strategy.launch_domain(*this);
   const auto valid_launch  = launch_domain.is_valid();
   const auto launch_volume = launch_domain.get_volume();
 
@@ -574,7 +574,7 @@ void AutoTask::launch(Strategy* p_strategy)
 
 void AutoTask::fixup_ranges_(Strategy& strategy)
 {
-  auto&& launch_domain = strategy.launch_domain(this);
+  auto&& launch_domain = strategy.launch_domain(*this);
   if (!launch_domain.is_valid()) {
     return;
   }
@@ -615,7 +615,7 @@ ManualTask::ManualTask(const Library& library,
          std::move(machine),
          /* can_inline_launch */ false}
 {
-  strategy_.set_launch_domain(this, launch_domain);
+  strategy_.set_launch_domain(*this, launch_domain);
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
@@ -702,9 +702,9 @@ void ManualTask::add_store_(std::vector<TaskArrayArg>& store_args,
     const auto field_id =
       runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
 
-    strategy_.insert(partition_symbol, std::move(partition), std::move(field_space), field_id);
+    strategy_.insert(*partition_symbol, std::move(partition), std::move(field_space), field_id);
   } else {
-    strategy_.insert(partition_symbol, std::move(partition));
+    strategy_.insert(*partition_symbol, std::move(partition));
   }
 }
 

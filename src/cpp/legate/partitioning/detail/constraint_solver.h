@@ -11,6 +11,7 @@
 #include <legate/utilities/detail/ordered_set.h>
 #include <legate/utilities/hash.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 
 #include <deque>
 #include <memory>
@@ -36,13 +37,13 @@ class ConstraintSolver {
 
   void dump();
 
-  [[nodiscard]] const std::vector<const Variable*>& partition_symbols() const;
+  [[nodiscard]] Span<const Variable* const> partition_symbols() const;
 
   void solve_constraints();
-  void solve_dependent_constraints(Strategy& strategy);
-  [[nodiscard]] const std::vector<const Variable*>& find_equivalence_class(
-    const Variable* partition_symbol) const;
-  [[nodiscard]] const Restrictions& find_restrictions(const Variable* partition_symbol) const;
+  void solve_dependent_constraints(Strategy* strategy);
+  [[nodiscard]] Span<const Variable* const> find_equivalence_class(
+    const Variable& partition_symbol) const;
+  [[nodiscard]] const Restrictions& find_restrictions(const Variable& partition_symbol) const;
   [[nodiscard]] AccessMode find_access_mode(const Variable& partition_symbol) const;
   [[nodiscard]] bool is_output(const Variable& partition_symbol) const;
   [[nodiscard]] bool is_dependent(const Variable& partition_symbol) const;

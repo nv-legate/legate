@@ -424,6 +424,7 @@ target_sources(legate
                        legate/partitioning/detail/partitioner.cc
                        legate/partitioning/detail/partitioning_tasks.cc
                        legate/partitioning/detail/restriction.cc
+                       legate/partitioning/detail/strategy.cc
                        legate/partitioning/detail/proxy/align.cc
                        legate/partitioning/detail/proxy/broadcast.cc
                        legate/partitioning/detail/proxy/image.cc

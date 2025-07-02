@@ -30,7 +30,7 @@ inline bool ConstraintSolver::is_dependent(const Variable& partition_symbol) con
   return is_dependent_.at(partition_symbol);
 }
 
-inline const std::vector<const Variable*>& ConstraintSolver::partition_symbols() const
+inline Span<const Variable* const> ConstraintSolver::partition_symbols() const
 {
   return partition_symbols_.elements();
 }

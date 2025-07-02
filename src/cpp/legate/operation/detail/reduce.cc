@@ -58,12 +58,12 @@ void Reduce::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
   // Copy is deliberate, launch_domain is updated in the loop
-  auto launch_domain = strategy.launch_domain(this);
+  auto launch_domain = strategy.launch_domain(*this);
   auto n_tasks       = launch_domain.is_valid() ? launch_domain.get_volume() : 1;
 
   LEGATE_ASSERT(!launch_domain.is_valid() || launch_domain.dim == 1);
 
-  auto input_part      = strategy[input_part_];
+  auto input_part      = strategy[*input_part_];
   auto input_partition = create_store_partition(input_, input_part);
 
   // generating projection functions to use in tree_reduction task

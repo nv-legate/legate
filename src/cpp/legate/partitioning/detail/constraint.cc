@@ -120,7 +120,7 @@ std::string ImageConstraint::to_string() const
 InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
 {
   const auto* src = var_function();
-  auto&& src_part = strategy[src];
+  auto&& src_part = strategy[*src];
   if (src_part->has_launch_domain()) {
     auto* op = src->operation();
     return create_image(
@@ -159,7 +159,7 @@ std::string ScaleConstraint::to_string() const
 
 InternalSharedPtr<Partition> ScaleConstraint::resolve(const detail::Strategy& strategy) const
 {
-  return strategy[var_smaller()]->scale(factors_);
+  return strategy[*var_smaller()]->scale(factors_);
 }
 
 void BloatConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
@@ -197,7 +197,7 @@ std::string BloatConstraint::to_string() const
 
 InternalSharedPtr<Partition> BloatConstraint::resolve(const detail::Strategy& strategy) const
 {
-  return strategy[var_source()]->bloat(low_offsets_, high_offsets_);
+  return strategy[*var_source()]->bloat(low_offsets_, high_offsets_);
 }
 
 InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs)
