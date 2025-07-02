@@ -6,10 +6,9 @@
 
 #include <legate/experimental/io/kvikio/detail/basic.h>
 
+#include <legate/experimental/io/kvikio/detail/legate_kvikio_file_handle.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/dispatch.h>
-
-#include <kvikio/file_handle.hpp>
 
 #include <string>
 #include <string_view>
@@ -48,9 +47,9 @@ void KvikioReadWriteFn::operator()(const legate::TaskContext& context,
   const auto nbytes = volume * sizeof(DTYPE);
   const auto offset = static_cast<std::size_t>(shape.lo) * sizeof(DTYPE);
   static_assert(
-    !std::is_constructible_v<::kvikio::FileHandle, std::string_view, const std::string&>,
+    !std::is_constructible_v<::legate_kvikio::FileHandle, std::string_view, const std::string&>,
     "can use std::string_view as filepath argument instead of std::string");
-  auto f = ::kvikio::FileHandle{std::string{path}, is_read_op ? "r" : "r+"};
+  auto f = ::legate_kvikio::FileHandle{std::string{path}, is_read_op ? "r" : "r+"};
 
   // We know that the accessor is contiguous because we set `policy.exact = true`
   // in `Mapper::store_mappings()`.

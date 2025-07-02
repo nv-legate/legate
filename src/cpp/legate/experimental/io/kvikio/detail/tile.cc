@@ -6,11 +6,10 @@
 
 #include <legate/experimental/io/kvikio/detail/tile.h>
 
+#include <legate/experimental/io/kvikio/detail/legate_kvikio_file_handle.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/span.h>
-
-#include <kvikio/file_handle.hpp>
 
 #include <fmt/ranges.h>
 
@@ -78,7 +77,7 @@ void TileReadWriteFn::operator()(legate::TaskContext context,
   const auto tile_start = context.scalar(1).values<std::uint64_t>();
   const auto tile_coord = get_tile_coord_(task_index, tile_start);
   const auto filepath   = get_file_path_(path, tile_coord);
-  auto f                = ::kvikio::FileHandle{filepath, is_read_op ? "r" : "w"};
+  auto f                = ::legate_kvikio::FileHandle{filepath, is_read_op ? "r" : "w"};
   const auto nbytes     = shape_volume * sizeof(DTYPE);
   // We know that the accessor is contiguous because we set `policy.exact = true`
   // in `mapper.cc`.
