@@ -68,22 +68,19 @@ cdef dict _compute_array_interface(
     tuple strides,
     uintptr_t pointer,
 ):
-    cdef dict ret
-
-    np_dtype = ty.to_numpy_dtype()
     if math.prod(shape) == 0:
-        # For some reason NumPy doesn't like a null pointer even when the
-        # array size is 0, so we just make an empty ndarray and return its
-        # array interface object
-        ret = np.empty(shape, dtype=np_dtype).__array_interface__
-    else:
-        ret = {
-            "version": 3,
-            "shape": shape,
-            "typestr": np_dtype.str,
-            "data": (pointer, False),
-            "strides": strides,
-        }
+        # For some reason NumPy doesn't like a null pointer even when the array
+        # size is 0, so we use a fake nonzero pointer value. 1 is a good
+        # stand-in, because it will also map to the zero page
+        pointer = 1
+
+    cdef dict ret = {
+        "version": 3,
+        "shape": shape,
+        "typestr": ty.to_numpy_dtype().str,
+        "data": (pointer, False),
+        "strides": strides,
+    }
 
     cdef void *cu_stream = _get_cuda_stream()
 
