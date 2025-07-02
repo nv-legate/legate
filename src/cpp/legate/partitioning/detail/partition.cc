@@ -133,10 +133,11 @@ bool Tiling::is_disjoint_for(const Domain& launch_domain) const
 
 bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  constexpr auto satisfies_restriction = [](Restriction r, std::size_t ext) {
+  constexpr auto satisfies_restriction = [](Restriction r, std::uint64_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
-  return apply(satisfies_restriction, restrictions, color_shape_).all();
+
+  return apply_reduce_all(satisfies_restriction, restrictions, color_shape());
 }
 
 InternalSharedPtr<Partition> Tiling::scale(const tuple<std::uint64_t>& factors) const
@@ -152,7 +153,12 @@ InternalSharedPtr<Partition> Tiling::scale(const tuple<std::uint64_t>& factors) 
 InternalSharedPtr<Partition> Tiling::bloat(const tuple<std::uint64_t>& low_offsets,
                                            const tuple<std::uint64_t>& high_offsets) const
 {
-  auto tile_shape = tile_shape_ + low_offsets + high_offsets;
+  tuple<std::uint64_t> tile_shape;
+
+  tile_shape.reserve(this->tile_shape().size());
+  for (auto&& [tshape, lo, hi] : zip_equal(this->tile_shape(), low_offsets, high_offsets)) {
+    tile_shape.append_inplace(tshape + lo + hi);
+  }
   auto offsets =
     apply([](std::int64_t off, std::size_t diff) { return off - static_cast<std::int64_t>(diff); },
           offsets_,
@@ -250,17 +256,21 @@ tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& exten
                   color_shape())};
   }
 
-  auto lo = apply(std::plus<std::int64_t>{}, tile_shape_ * color, offsets_);
-  auto hi = apply(std::plus<std::int64_t>{}, tile_shape_ * (color + 1), offsets_);
-  lo      = apply([](std::int64_t v) { return std::max(static_cast<std::int64_t>(0), v); }, lo);
-  hi =
-    apply([](std::size_t a, std::int64_t b) { return std::min(static_cast<std::int64_t>(a), b); },
-          extents,
-          hi);
-  return apply(
-    [](std::int64_t h, std::int64_t l) { return h >= l ? static_cast<std::uint64_t>(h - l) : 0; },
-    hi,
-    lo);
+  tuple<std::uint64_t> ret;
+
+  ret.reserve(tile_shape().size());
+  for (auto&& [shape, clr, off, ext] : zip_equal(tile_shape(), color, offsets(), extents)) {
+    const auto lo = std::max(std::int64_t{0}, static_cast<std::int64_t>(shape * clr) + off);
+    const auto hi =
+      std::min(static_cast<std::int64_t>(ext), static_cast<std::int64_t>(shape * (clr + 1)) + off);
+
+    if (hi >= lo) {
+      ret.append_inplace(hi - lo);
+    } else {
+      ret.append_inplace(0);
+    }
+  }
+  return ret;
 }
 
 tuple<std::int64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color) const
@@ -273,9 +283,15 @@ tuple<std::int64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color)
                   color_shape())};
   }
 
-  return apply([](std::uint64_t a, std::int64_t b) { return static_cast<std::int64_t>(a) + b; },
-               strides_ * color,
-               offsets_);
+  tuple<std::int64_t> ret;
+
+  ret.reserve(strides().size());
+  for (auto&& [stride, clr, off] : zip_equal(strides(), color, offsets())) {
+    const auto scaled_color = static_cast<std::int64_t>(stride * clr);
+
+    ret.append_inplace(scaled_color + off);
+  }
+  return ret;
 }
 
 std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
@@ -317,10 +333,11 @@ bool Weighted::is_disjoint_for(const Domain& launch_domain) const
 
 bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  constexpr auto satisfies_restriction = [](Restriction r, std::size_t ext) {
+  constexpr auto satisfies_restriction = [](Restriction r, std::uint64_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
-  return apply(satisfies_restriction, restrictions, color_shape_).all();
+
+  return apply_reduce_all(satisfies_restriction, restrictions, color_shape());
 }
 
 InternalSharedPtr<Partition> Weighted::scale(const tuple<std::uint64_t>& /*factors*/) const
@@ -426,10 +443,11 @@ bool Image::is_disjoint_for(const Domain& launch_domain) const
 
 bool Image::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  constexpr auto satisfies_restriction = [](Restriction r, std::size_t ext) {
+  constexpr auto satisfies_restriction = [](Restriction r, std::uint64_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
-  return apply(satisfies_restriction, restrictions, color_shape()).all();
+
+  return apply_reduce_all(satisfies_restriction, restrictions, color_shape());
 }
 
 InternalSharedPtr<Partition> Image::scale(const tuple<std::uint64_t>& /*factors*/) const

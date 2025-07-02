@@ -171,6 +171,26 @@ bool Storage::is_mapped() const
   return !unbound() && kind() == Kind::REGION_FIELD && get_region_field()->is_mapped();
 }
 
+namespace {
+
+// Using tuple instead of Span because PartitionManager.use_complete_tiling() takes tuples...
+[[nodiscard]] bool can_tile_completely_for(const tuple<std::uint64_t>& shape,
+                                           const tuple<std::uint64_t>& tile_shape,
+                                           const tuple<std::int64_t>& offsets)
+{
+  const auto zipper           = zip_equal(shape, tile_shape, offsets);
+  constexpr auto is_divisible = [](std::tuple<std::uint64_t, std::uint64_t, std::int64_t> tup) {
+    const auto [shp, tshap, off] = tup;
+
+    return ((shp % tshap) == 0) && ((off % tshap) == 0);
+  };
+
+  return std::all_of(zipper.begin(), zipper.end(), is_divisible) &&
+         Runtime::get_runtime().partition_manager().use_complete_tiling(shape, tile_shape);
+}
+
+}  // namespace
+
 InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self,
                                           tuple<std::uint64_t> tile_shape,
                                           tuple<std::int64_t> offsets)
@@ -181,11 +201,9 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self
     return self;
   }
 
-  const auto root   = get_root(self);
-  const auto& shape = root->extents();
-  const auto can_tile_completely =
-    (shape % tile_shape).sum() == 0 && (offsets % tile_shape).sum() == 0 &&
-    Runtime::get_runtime().partition_manager().use_complete_tiling(shape, tile_shape);
+  auto&& root                    = get_root(self);
+  const auto& shape              = root->extents();
+  const auto can_tile_completely = can_tile_completely_for(shape, tile_shape, offsets);
 
   tuple<std::uint64_t> color_shape, color;
   if (can_tile_completely) {

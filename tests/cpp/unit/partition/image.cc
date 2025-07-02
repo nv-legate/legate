@@ -98,6 +98,10 @@ TEST_F(ImageTest, SatisfiesRestrictions)
 
 TEST_F(ImageTest, SatisfiesRestrictionsNegative)
 {
+  if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    GTEST_SKIP() << "Sizes are only checked in debug builds";
+  }
+
   auto restrictions1 = legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
                                                     legate::detail::Restriction::AVOID};
   ASSERT_THROW(static_cast<void>(image->satisfies_restrictions(restrictions1)),
