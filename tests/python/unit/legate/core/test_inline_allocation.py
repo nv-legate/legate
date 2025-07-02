@@ -147,7 +147,7 @@ class TestInlineAllocation:
             # that the stream value is *not* some value
             cai = alloc.__cuda_array_interface__
             assert cai["version"] == 3
-            assert cai["shape"] == shape
+            assert cai["shape"] == arr.shape
             assert cai["typestr"] == dtype.to_numpy_dtype().str
             assert cai["data"] == (alloc.ptr, False)
             assert cai["strides"] == arr.strides
