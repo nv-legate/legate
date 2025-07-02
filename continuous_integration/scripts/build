@@ -56,6 +56,10 @@ setup_profiler() {
 
   export CONDA_ROOT="/tmp/conda-croot/legate-profiler"
   export CONDA_OUTPUT="/tmp/conda-build/legate-profiler"
+
+  GPU_ENABLED=true
+  [[ "${USE_CUDA:-}" = "OFF" ]] && GPU_ENABLED=false
+  export GPU_ENABLED=${GPU_ENABLED}
 }
 
 build_legate_profiler() {
@@ -69,6 +73,7 @@ build_legate_profiler() {
   conda_build_args+=(-c conda-forge);
   conda_build_args+=(--croot "${CONDA_ROOT}");
   conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
+  conda_build_args+=(--variants "{gpu_enabled: ${GPU_ENABLED}}")
 
   run_command 'Install base dependencies' rapids-conda-retry install -y boa conda-verify python
   run_command 'Install build dependencies' rapids-conda-retry install -y -c conda-forge gcc gxx make pkg-config

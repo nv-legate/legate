@@ -1,6 +1,16 @@
 ---
 {% set name = "legate-profiler" %}
 
+{% if gpu_enabled == "true" %}
+  {% set gpu_enabled_bool = true %}
+  {% set cpu_gpu_tag='' %}
+{% elif gpu_enabled == "false" %}
+  {% set gpu_enabled_bool = false %}
+  {% set cpu_gpu_tag='_cpu' %}
+{% else %}
+  {% set gpu_enabled_bool = false %}
+{% endif %}
+
 {% set default_env_var = '' %}
 {% set legate_version = '' %}
 {% if LEGATE_GIT_DESCRIBE_TAG is defined %}
@@ -22,6 +32,10 @@
 {% set git_shallow = environ.get('LEGION_GIT_SHALLOW', true) %}
 {% set git_describe_hash = environ.get('LEGATE_GIT_DESCRIBE_HASH', '0') %}
 
+{% set cuda_version='.'.join(environ.get('CUDA', '12.2.2').split('.')[:2]) %}
+{% set cuda_major=cuda_version.split('.')[0]|int %}
+{% set py_version=environ.get('CONDA_PY', 36) %}
+
 package:
   name: {{ name|lower }}
   version: {{ legate_version }}
@@ -35,15 +49,32 @@ build:
   include_recipe: false
   number: 0
   skip: true  # [not linux]
-  string: {{ git_describe_hash }}
+  string: {{ git_describe_hash }}{{ cpu_gpu_tag }}
+  script_env:
+    - LIBCLANG_PATH=$BUILD_PREFIX/lib
+  {% if gpu_enabled_bool %}
+    - BUILD_WITH_CUDA=1
+  {% else %}
+    - BUILD_WITH_CUDA=0
+  {% endif %}
 
 requirements:
   build:
+    - cmake
+    - make
     - rust >={{ rust_min_version }}
     - {{ compiler('c') }}
     - libclang
     - clang
-
+    {% if gpu_enabled_bool %}
+    - cuda-nvcc
+    - cuda-cudart-dev
+    - cuda-cupti-dev
+    - cuda-nvtx-dev
+    - cuda-nvml-dev
+    - cuda-cupti-dev
+    - cuda-version ={{ cuda_version }}
+    {% endif %}
   host:
     - openssl
 

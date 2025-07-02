@@ -63,7 +63,7 @@ jobs:
           - linux
           - linux-aarch64
         target-device:
-          - cpu
+          - gpu
         python-version:
           - "3.13"
     uses:
