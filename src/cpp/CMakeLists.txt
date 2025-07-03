@@ -302,8 +302,8 @@ target_link_libraries(legate
                               # See
                               # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
                               $<TARGET_NAME_IF_EXISTS:CUDA::nvtx3>
-                              fmt::fmt-header-only
-                              argparse::argparse
+                              $<COMPILE_ONLY:fmt::fmt-header-only>
+                              $<COMPILE_ONLY:argparse::argparse>
                               kvikio::kvikio
                               $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
                               $<TARGET_NAME_IF_EXISTS:HighFive::HighFive>

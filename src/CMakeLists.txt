@@ -168,26 +168,4 @@ endif()
 
 add_subdirectory(${legate_project_suffix})
 
-if(CMAKE_GENERATOR STREQUAL "Ninja")
-  function(add_touch_legate_ninja_build_target)
-    if(SKBUILD)
-      set(_suf "_python")
-    else()
-      set(_suf)
-    endif()
-    add_custom_target("touch_legate${_suf}_ninja_build" ALL
-                      COMMAND ${CMAKE_COMMAND} -E touch_nocreate
-                              "${CMAKE_CURRENT_BINARY_DIR}/build.ninja"
-                      COMMENT "touch build.ninja so ninja doesn't re-run CMake on rebuild"
-                      VERBATIM)
-    foreach(_dep IN ITEMS legate legate_python Legion LegionRuntime Realm RealmRuntime
-                          Regent)
-      if(TARGET ${_dep})
-        add_dependencies("touch_legate${_suf}_ninja_build" ${_dep})
-      endif()
-    endforeach()
-  endfunction()
-  add_touch_legate_ninja_build_target()
-endif()
-
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

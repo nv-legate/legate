@@ -22,7 +22,7 @@ function(find_or_configure_kvikio)
                   GIT_REPOSITORY "${git_url}" SYSTEM TRUE
                   GIT_TAG "${git_tag}" SOURCE_SUBDIR cpp
                   EXCLUDE_FROM_ALL ${exclude_from_all}
-                  OPTIONS "KvikIO_BUILD_EXAMPLES OFF")
+                  OPTIONS "KvikIO_BUILD_EXAMPLES OFF" "KvikIO_REMOTE_SUPPORT OFF")
 
   if(exclude_from_all)
     legate_install_dependencies(TARGETS kvikio::kvikio)
