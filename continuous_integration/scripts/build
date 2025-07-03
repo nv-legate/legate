@@ -86,7 +86,7 @@ build_legate_release() {
   conda_build_args+=(--quiet);
   conda_build_args+=(--override-channels);
 
-  conda_build_args+=(-c legate/label/ucc140);
+  conda_build_args+=(-c legate/label/ucc144);
   conda_build_args+=(-c conda-forge);
 
   conda_build_args+=(--croot /tmp/conda-croot/legate);
