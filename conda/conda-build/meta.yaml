@@ -216,9 +216,7 @@ requirements:
 {% if network == 'ucx' %}
     # UCX version is pinned exactly for now. See #2451.
     - ucx 1.18.0 {{ ucx_build }}
-    # because of #2451, we need a custom UCC package
-    # that is built with the same UCX version.
-    - legate-ucc
+    - ucc
 {% endif %}
     - openmpi <5
 
