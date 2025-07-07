@@ -84,18 +84,16 @@ function(legate_add_tidy_target)
   cmake_path(RELATIVE_PATH src BASE_DIRECTORY "${LEGATE_DIR}" OUTPUT_VARIABLE rel_src)
   string(MAKE_C_IDENTIFIER "${rel_src}_tidy" tidy_target)
 
-  set(clang_tidy_cmd "${BASE_CLANG_TIDY_COMMAND}" -p "${CMAKE_BINARY_DIR}" "${src}")
-  # Even if you pass the --quiet flag to clang-tidy it still prints a bunch of useless
-  # "35505 warnings generated." to stderr (it counts warnings that you suppress or come
-  # from system headers). That isn't useful, so filter them out.
-  set(filter_warnings "${LEGATE_SED}" -E [=["/[0-9]+ warnings generated\./d"]=])
-
   add_custom_target("${tidy_target}"
                     DEPENDS "${src}"
-                    COMMAND "${clang_tidy_cmd}" 2>&1 | "${filter_warnings}"
+                    COMMAND "${CMAKE_COMMAND}" #
+                            -DCLANG_TIDY="${BASE_CLANG_TIDY_COMMAND}" #
+                            -DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}" #
+                            -DSRC="${src}" #
+                            -DSED="${LEGATE_SED}" #
+                            -P "${LEGATE_CMAKE_DIR}/scripts/clang_tidy.cmake"
                     COMMENT "clang-tidy ${rel_src}"
                     COMMAND_EXPAND_LISTS)
-
   add_dependencies(tidy "${tidy_target}")
 endfunction()
 
