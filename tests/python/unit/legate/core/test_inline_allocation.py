@@ -38,7 +38,9 @@ class TestInlineAllocation:
         alloc = store.get_physical_store().get_inline_allocation()
         strides = compute_strides(shape, dtype)
 
-        assert alloc.ptr != 0
+        # alloc.ptr should never be 0 (nullptr) here because we aren't creating
+        # empty shapes.
+        assert alloc.ptr > 0
         assert alloc.strides == strides
         assert alloc.shape == shape
         assert alloc.target == StoreTarget.SYSMEM
@@ -131,7 +133,9 @@ class TestInlineAllocation:
             alloc = x.get_inline_allocation()
             arr = cp.asarray(alloc)
 
-            assert alloc.ptr != 0
+            # alloc.ptr could be 0 (nullptr) if we are suitably
+            # overparallelized
+            assert alloc.ptr >= 0
             assert alloc.strides == arr.strides
             assert alloc.shape == arr.shape
             assert alloc.target == StoreTarget.FBMEM
@@ -149,7 +153,9 @@ class TestInlineAllocation:
             assert cai["version"] == 3
             assert cai["shape"] == arr.shape
             assert cai["typestr"] == dtype.to_numpy_dtype().str
-            assert cai["data"] == (alloc.ptr, False)
+            # 1 below is a magic number we use as a stand-in for nullptr, which
+            # numpy apparently does not like.
+            assert cai["data"] == (alloc.ptr if alloc.ptr else 1, False)
             assert cai["strides"] == arr.strides
             # stream is either None, or an integer. If None, then no sync is
             # required by the consumer. 0 is disallowed outright because it is
