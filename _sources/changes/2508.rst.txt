@@ -1,0 +1,72 @@
+Changes: 25.08
+==============
+..
+   STYLE:
+   * Capitalize sentences.
+   * Use the imperative tense: Add, Improve, Change, etc.
+   * Use a period (.) at the end of entries.
+   * Be concise yet informative.
+   * If possible, provide an executive summary of the new feature, but do not
+     just repeat its doc string. However, if the feature requires changes from
+     the user, then describe those changes in detail, and provide examples of
+     the changes required.
+
+
+.. rubric:: General
+
+C++
+---
+
+.. rubric:: General
+
+.. rubric:: Data
+
+- Add ``PhysicalStore::span_read_accessor()``, ``PhysicalStore::span_write_accessor()``,
+  ``PhysicalStore::span_read_write_accessor()``, and
+  ``PhysicalStore::span_reduce_accessor()`` which return ``cuda::std::mdspan``'s as
+  alternatives to the usual accessor interfaces.
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+.. rubric:: Tuning
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
+
+- Add ``legate::flatten()`` helper function, to allow users to construct a flat view over
+  a ``cuda::std::mdspan``.
+- Add ``legate::for_each_in_extent()`` helper function to allow users to efficiently
+  iterate over an N-dimensional extent space.
+
+.. rubric:: I/O
+
+
+Python
+------
+
+.. rubric:: General
+
+.. rubric:: Data
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+.. rubric:: Tuning
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
+
+.. rubric:: I/O

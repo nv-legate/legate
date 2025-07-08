@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.07 &#8212; NVIDIA legate (25.07.00.dev72+gd6a6884d)</title>
+    <title>Changes: 25.07 &#8212; NVIDIA legate (25.08.00.dev0)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=bbecefad"></script>
+    <script src="../_static/documentation_options.js?v=ec2237a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,15 +51,15 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.07';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.08';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
     <link rel="icon" href="../_static/favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Changes: 25.05" href="2505.html" />
-    <link rel="prev" title="Change Log" href="index.html" />
+    <link rel="next" title="Changes: 25.03" href="2503.html" />
+    <link rel="prev" title="Changes: 25.08" href="2508.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev72+gd6a6884d)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev0)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev72+gd6a6884d)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev0)</p>
   
 </a>
 
@@ -555,8 +555,8 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../versions.html">Versions</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Changelog</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="2508.html">2508</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">2507</a></li>
-<li class="toctree-l2"><a class="reference internal" href="2505.html">2505</a></li>
 <li class="toctree-l2"><a class="reference internal" href="2503.html">2503</a></li>
 <li class="toctree-l2"><a class="reference internal" href="2501.html">2501</a></li>
 <li class="toctree-l2"><a class="reference internal" href="2411.html">2411</a></li>
@@ -644,28 +644,79 @@
   <section id="changes-25-07">
 <h1>Changes: 25.07<a class="headerlink" href="#changes-25-07" title="Link to this heading">#</a></h1>
 <p class="rubric">General</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LEGATE_NEED_*</span></code> environment variables are no longer consulted to infer what
+build-time features (e.g. CUDA support or networking support) are required for
+the current run. Legate can infer this automatically.</p></li>
+<li><p>Legate now expects to always initialize Legion during <code class="docutils literal notranslate"><span class="pre">legate::start()</span></code>. If Legion is
+already initialized at this stage, an exception is thrown.</p></li>
+<li><p>Drop support for Python 3.10 and add support for Python 3.13.</p></li>
+<li><p>Command line option <code class="docutils literal notranslate"><span class="pre">--spy</span></code> has been removed.  The Legion spy tool is not at the
+right level of abstraction for end-users.</p></li>
+</ul>
 <section id="c">
 <h2>C++<a class="headerlink" href="#c" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
+<ul>
+<li><p>Add ability for users to statically declare task-wide configuration options, such as the
+task’s signature, constraints, and default variant options via a new <code class="docutils literal notranslate"><span class="pre">static</span> <span class="pre">const</span>
+<span class="pre">legate::TaskConfig</span> <span class="pre">TASK_CONFIG</span></code> member on task declarations.</p>
+<p>As part of this new feature, the old-style <code class="docutils literal notranslate"><span class="pre">TASK_ID</span></code> member is no longer read. Since
+this would otherwise be a silent breaking change, we have elected to emit a static
+assertion (i.e. a compiler error) in case the old-style <code class="docutils literal notranslate"><span class="pre">TASK_ID</span></code> member is
+found. This static assertion is only emitted in places where dynamically passing the
+task ID is not possible. Specifically, if the user calls the following routines:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::LegateTask::register_variants(std::map&lt;VariantCode,</span> <span class="pre">VariantOptions&gt;)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::LegateTask::register_variants(legate::Library,</span> <span class="pre">const</span> <span class="pre">std::map&lt;legate::VariantCode,</span> <span class="pre">legate::VariantOptions&gt;&amp;)</span></code></p></li>
+</ul>
+<p>Then an error <strong>will</strong> be emitted if <code class="docutils literal notranslate"><span class="pre">TASK_ID</span></code> is detected. Calling the
+<code class="docutils literal notranslate"><span class="pre">register_variants()</span></code> overload which accepts either a <code class="docutils literal notranslate"><span class="pre">legate::TaskConfig</span></code> or
+<code class="docutils literal notranslate"><span class="pre">legate::LocalTaskID</span></code> will not emit an error.</p>
+</li>
+</ul>
 <p class="rubric">Data</p>
 <ul class="simple">
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_read_accessor()</span></code>, <code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_write_accessor()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_read_write_accessor()</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_reduce_accessor()</span></code> which return <code class="docutils literal notranslate"><span class="pre">cuda::std::mdspan</span></code>’s as
-alternatives to the usual accessor interfaces.</p></li>
+<li><p>Add support for <code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code> to <code class="docutils literal notranslate"><span class="pre">legate::Scalar</span></code>.</p></li>
+<li><p>Add an optional <code class="docutils literal notranslate"><span class="pre">target</span></code> parameter to
+<code class="docutils literal notranslate"><span class="pre">legate::LogicalArray::get_physical_array()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">legate::LogicalStore::get_physical_store()</span></code>. The <code class="docutils literal notranslate"><span class="pre">target</span></code> controls where
+the physical array/store is allocated.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::InlineAllocation::target</span></code> member to signify which kind of memory the
+inline allocation holds.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::TaskLocalBuffer</span></code>, a type-and-dimension-erased buffer object for use
+within tasks.</p></li>
 </ul>
 <p class="rubric">Mapping</p>
+<ul class="simple">
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate::mapping::InstanceMappingPolicy::subsumes</span></code>. This function
+would compare the requested layouts between two policies, to decide if an
+Instance allocated for one Store could be reused for another. After recent
+changes, two Instances created for the same requested layout can have
+different actual layouts, depending on the transformations of the
+corresponding Stores. Remove this function to avoid any confusion.</p></li>
+</ul>
 <p class="rubric">Partitioning</p>
 <p class="rubric">Tasks</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::TaskConfig</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::LegateTask::register_variants()</span></code> overload which accepts a
+<code class="docutils literal notranslate"><span class="pre">legate::TaskConfig</span></code>.</p></li>
+</ul>
 <p class="rubric">Tuning</p>
+<ul class="simple">
+<li><p>Move <code class="docutils literal notranslate"><span class="pre">legate::Scope</span></code> to a separate group (<code class="docutils literal notranslate"><span class="pre">tuning</span></code>) in documentation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">legate/runtime/scope.h</span></code> is now <code class="docutils literal notranslate"><span class="pre">legate/tuning/scope.h</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::ParallelPolicy</span></code> to describe parallelization policies for a scope.
+<code class="docutils literal notranslate"><span class="pre">legate::ParallelPolicy</span></code> objects can be used with <code class="docutils literal notranslate"><span class="pre">legate::Scope</span></code>.</p></li>
+</ul>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
 <p class="rubric">Utilities</p>
 <ul class="simple">
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::flatten()</span></code> helper function, to allow users to construct a flat view over
-a <code class="docutils literal notranslate"><span class="pre">cuda::std::mdspan</span></code>.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::for_each_in_extent()</span></code> helper function to allow users to efficiently
-iterate over an N-dimensional extent space.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Span::rbegin()</span></code> and <code class="docutils literal notranslate"><span class="pre">legate::Span::rend()</span></code> to allow reverse iteration.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Span::front()</span></code> and <code class="docutils literal notranslate"><span class="pre">legate::Span::back()</span></code> to allow accessing the first
+and last element.</p></li>
 </ul>
 <p class="rubric">I/O</p>
 </section>
@@ -673,12 +724,55 @@ iterate over an N-dimensional extent space.</p></li>
 <h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
 <p class="rubric">Data</p>
+<ul class="simple">
+<li><p>Add an optional <code class="docutils literal notranslate"><span class="pre">target</span></code> parameter to
+<code class="docutils literal notranslate"><span class="pre">legate.core.LogicalArray.get_physical_array()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">legate.core.LogicalStore.get_physical_store()</span></code>. The <code class="docutils literal notranslate"><span class="pre">target</span></code> controls
+where the physical array/store is allocated.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.InlineAllocation.target</span></code> property to retrieve the type of memory held
+by the allocation.</p></li>
+<li><p>Add support for the PEP-3118 buffer protocol to <code class="docutils literal notranslate"><span class="pre">legate.core.InlineAllocation</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.PhysicalStore.create_output_buffer()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.PhysicalStore.bind_data()</span></code>.</p></li>
+</ul>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
 <p class="rubric">Tasks</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.VariantOptions</span></code> to allow describing per-variant configuration options.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskContext.is_single_task()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskContext.task_index</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskContext.launch_domain</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskContext.machine</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskContext.provenance</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskContext.task_stream</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.task.PyTask.library</span></code> to retrieve the <code class="docutils literal notranslate"><span class="pre">Library</span></code> that a task was
+registered with.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskConfig</span></code>.</p></li>
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate.core.task.task()</span></code> arguments. Replace <code class="docutils literal notranslate"><span class="pre">throws_exception</span></code> and
+<code class="docutils literal notranslate"><span class="pre">throws_exception</span></code> with <code class="docutils literal notranslate"><span class="pre">options</span></code>, which is either a <code class="docutils literal notranslate"><span class="pre">legate.core.TaskConfig</span></code> or
+<code class="docutils literal notranslate"><span class="pre">legate.core.VariantOptions</span></code>.</p></li>
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate.core.task.PyTask.__init__()</span></code>. Replace <code class="docutils literal notranslate"><span class="pre">throws_exception</span></code> and
+<code class="docutils literal notranslate"><span class="pre">throws_exception</span></code> with <code class="docutils literal notranslate"><span class="pre">options</span></code>, which is either a <code class="docutils literal notranslate"><span class="pre">legate.core.TaskConfig</span></code> or
+<code class="docutils literal notranslate"><span class="pre">legate.core.VariantOptions</span></code>.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate.core.task.PyTask.UNREGISTERED_ID</span></code>.</p></li>
+<li><p>Add support for unbound stores in Python tasks.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.TaskLocalBuffer</span></code>.</p></li>
+</ul>
 <p class="rubric">Tuning</p>
+<ul class="simple">
+<li><p>Move <code class="docutils literal notranslate"><span class="pre">legate.core.Scope</span></code> to a separate group (<code class="docutils literal notranslate"><span class="pre">tuning</span></code>) in documentation.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.ParallelPolicy</span></code> to describe parallelization policies for a scope.
+<code class="docutils literal notranslate"><span class="pre">legate.core.ParallelPolicy</span></code> objects can be used with <code class="docutils literal notranslate"><span class="pre">legate.core.Scope</span></code>.</p></li>
+</ul>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.ResourceConfig</span></code> to specify library resource configuration parameters.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.Runtime.find_or_create_library()</span></code> to search for, or create
+<code class="docutils literal notranslate"><span class="pre">Library</span></code> instances.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.Library.name</span></code> to access the name of the library.</p></li>
+</ul>
 <p class="rubric">Utilities</p>
 <p class="rubric">I/O</p>
 </section>
@@ -695,20 +789,20 @@ iterate over an N-dimensional extent space.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="index.html"
+       href="2508.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Change Log</p>
+        <p class="prev-next-title">Changes: 25.08</p>
       </div>
     </a>
     <a class="right-next"
-       href="2505.html"
+       href="2503.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Changes: 25.05</p>
+        <p class="prev-next-title">Changes: 25.03</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
