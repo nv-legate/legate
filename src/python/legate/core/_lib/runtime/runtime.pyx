@@ -20,6 +20,7 @@ import pickle
 import sys
 from collections.abc import Collection
 from contextlib import contextmanager
+from functools import wraps
 from typing import Any, Iterator
 
 from ..data.external_allocation cimport _ExternalAllocation, create_from_buffer
@@ -1316,12 +1317,14 @@ def track_provenance(
 
     def decorator(func: AnyCallable) -> AnyCallable:
         if nested:
+            @wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 cdef tuple info = _caller_frameinfo()
                 cdef str provenance = _provenance_from_frameinfo(info)
                 with Scope(provenance=provenance):
                     return func(*args, **kwargs)
         else:
+            @wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 if len(Scope.provenance()) > 0:
                     return func(*args, **kwargs)

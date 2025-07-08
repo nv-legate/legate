@@ -38,6 +38,16 @@ def nested() -> str:
 
 
 class Test_track_provenance:
+    @pytest.mark.parametrize("nested", (True, False, None))
+    def test_docstring(self, nested: bool | None) -> None:
+        kw = {} if nested is None else {"nested": nested}
+
+        @track_provenance(**kw)
+        def func() -> None:
+            """A docstring."""
+
+        assert func.__doc__ == "A docstring."
+
     def test_unnested(self) -> None:
         human, machine = json.loads(unnested())
         assert "test_runtime.py" in human

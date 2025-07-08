@@ -33,7 +33,7 @@ docs/legate/source/api/cpp/generated
 docs/legate/source/generated/
 *.egg-info
 .cache
-.coverage
+.coverage*
 .vscode
 _cmake_test_compile
 !cmake/versions.json
