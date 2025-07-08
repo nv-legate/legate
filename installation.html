@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; NVIDIA legate (25.07.00.dev70+g141c1e2f)</title>
+    <title>Installation &#8212; NVIDIA legate (25.07.00.dev72+gd6a6884d)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=6575420b"></script>
+    <script src="_static/documentation_options.js?v=bbecefad"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev70+g141c1e2f) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev70+g141c1e2f) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev70+g141c1e2f)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev72+gd6a6884d)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev70+g141c1e2f) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev70+g141c1e2f) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev72+gd6a6884d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev70+g141c1e2f)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev72+gd6a6884d)</p>
   
 </a>
 
@@ -664,8 +664,9 @@ Legate, e.g. <a class="reference external" href="https://docs.nvidia.com/cupynum
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Packages are only offered for Linux (x86_64 and aarch64) supporting Python
-versions 3.11 to 3.13.</p>
+<p>Packages are offered for Linux (x86_64 and aarch64) and macOS (aarch64,
+pip wheels only), supporting Python versions 3.11 to 3.13. Windows is only
+supported through WSL.</p>
 </div>
 <p>Nightly top-of-tree builds of Legate are available under the “experimental” label:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate/label/experimental<span class="w"> </span>legate
@@ -712,8 +713,9 @@ installed alongside downstream libraries, such as <a class="reference external" 
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Packages are only offered for Linux (x86_64 and aarch64) supporting Python
-versions 3.11 to 3.13.</p>
+<p>Packages are offered for Linux (x86_64 and aarch64) and macOS (aarch64,
+pip wheels only), supporting Python versions 3.11 to 3.13. Windows is only
+supported through WSL.</p>
 </div>
 </section>
 <section id="networking-with-legate-packages">
@@ -754,12 +756,12 @@ we accept contributions that fix such incompatibilities.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>CPU architecture</p></td>
-<td><p>x86-64 (Haswell), aarch64</p></td>
-<td><p>older x86-64, Apple Silicon</p></td>
+<td><p>x86-64 (Haswell), aarch64 (armv8-a)</p></td>
+<td><p>older x86-64</p></td>
 </tr>
 <tr class="row-odd"><td><p>OS</p></td>
-<td><p>Ubuntu 22.04</p></td>
-<td><p>other Linux, macOS</p></td>
+<td><p>Ubuntu (22.04), macOS (11, ARM-based only), WSL</p></td>
+<td><p>other Linux or macOS</p></td>
 </tr>
 <tr class="row-even"><td><p>Compilers</p></td>
 <td><p>GCC 11</p></td>
