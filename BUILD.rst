@@ -248,7 +248,7 @@ Operating system
 ----------------
 
 Legate has been tested on Linux and macOS, although only a few flavors of Linux such as
-Ubuntu have been thoroughly tested. There is currently no support for Windows.
+Ubuntu have been thoroughly tested. Windows is currently only supported through WSL.
 
 Python
 ------

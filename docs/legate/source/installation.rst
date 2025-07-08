@@ -34,8 +34,9 @@ Legate, e.g. `cuPyNumeric <https://docs.nvidia.com/cupynumeric>`_:
 
 .. important::
 
-  Packages are only offered for Linux (x86_64 and aarch64) supporting Python
-  versions 3.11 to 3.13.
+   Packages are offered for Linux (x86_64 and aarch64) and macOS (aarch64,
+   pip wheels only), supporting Python versions 3.11 to 3.13. Windows is only
+   supported through WSL.
 
 Nightly top-of-tree builds of Legate are available under the "experimental" label:
 
@@ -94,8 +95,9 @@ installed alongside downstream libraries, such as `cuPyNumeric
 
 .. important::
 
-   Packages are only offered for Linux (x86_64 and aarch64) supporting Python
-   versions 3.11 to 3.13.
+   Packages are offered for Linux (x86_64 and aarch64) and macOS (aarch64,
+   pip wheels only), supporting Python versions 3.11 to 3.13. Windows is only
+   supported through WSL.
 
 Networking with Legate Packages
 ===============================
@@ -140,11 +142,11 @@ we accept contributions that fix such incompatibilities.
      - Full support (min version)
      - Best-effort support (min version)
    * - CPU architecture
-     - x86-64 (Haswell), aarch64
-     - older x86-64, Apple Silicon
+     - x86-64 (Haswell), aarch64 (armv8-a)
+     - older x86-64
    * - OS
-     - Ubuntu 22.04
-     - other Linux, macOS
+     - Ubuntu (22.04), macOS (11, ARM-based only), WSL
+     - other Linux or macOS
    * - Compilers
      - GCC 11
      - Any compiler supporting C++17
