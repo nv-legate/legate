@@ -10,7 +10,7 @@
         {% set legate_version = environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var).lstrip('v') %}
     {% endif %}
 {% else %}
-    {% set legate_version = '25.07.00' %}
+    {% set legate_version = '25.08.00' %}
 {% endif %}
 
 {% set major_version = (legate_version|string).split(".")[0] %}
