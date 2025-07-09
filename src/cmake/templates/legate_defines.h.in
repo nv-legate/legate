@@ -160,7 +160,7 @@
 #define LEGATE_PRAGMA_EDG_IGNORE(...) LEGATE_PRAGMA(nv_diag_suppress __VA_ARGS__)
 #elif LEGATE_NVHPC || LEGATE_EDG
 #define LEGATE_PRAGMA_PUSH() \
-  LEGATE_PRAGMA(diagnostic push) LEGATE_PRAGMA_EDG_IGNORE(invalid_error_number)
+  LEGATE_PRAGMA(diagnostic push); LEGATE_PRAGMA_EDG_IGNORE(invalid_error_number)
 #define LEGATE_PRAGMA_POP() LEGATE_PRAGMA(diagnostic pop)
 #define LEGATE_PRAGMA_EDG_IGNORE(...) LEGATE_PRAGMA(diag_suppress __VA_ARGS__)
 #elif LEGATE_CLANG || LEGATE_GCC
