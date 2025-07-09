@@ -139,7 +139,9 @@ copy_release_artifacts() {
 copy_profiler_artifacts() {
   rapids-logger Copying profiler artifacts
   cp -r /tmp/conda-build  "${ARTIFACTS_DIR}"
+  echo "::group::Profiler Directory Dump"
   ls -lahR "${ARTIFACTS_DIR}"
+  echo "::endgroup::"
 }
 
 copy_docs_artifacts() {

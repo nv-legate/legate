@@ -31,7 +31,7 @@ make -j 16
 make install
 # 'PREFIX' is set by conda-build at runtime
 # shellcheck disable=SC2154
-cp "${TMP_INSTALL}/bin/legion_prof" "${PREFIX}/bin/"
+cp "${TMP_INSTALL}/bin/legion_prof" "${PREFIX}/bin/legate_prof"
 
 rm -rf "${TMP_INSTALL}"
 
