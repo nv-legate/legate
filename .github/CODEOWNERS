@@ -11,6 +11,9 @@ src/python/legate/jupyter @eddy16112
 pyproject.toml @nv-legate/build-reviewers
 setup.cfg @nv-legate/build-reviewers
 
+# cpp
+src/cpp @nv-legate/cpp-reviewers
+
 # cmake
 src/cmake @nv-legate/build-reviewers
 *.cmake @nv-legate/build-reviewers
@@ -26,9 +29,6 @@ makefile @nv-legate/build-reviewers
 continuous_integration @nv-legate/devops-reviewers
 conda @nv-legate/devops-reviewers
 scripts/ @nv-legate/devops-reviewers
-
-# cpp
-src/cpp @nv-legate/cpp-reviewers
 
 # docs
 docs/ @nv-legate/docs-reviewers
