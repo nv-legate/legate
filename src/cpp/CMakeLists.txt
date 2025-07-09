@@ -47,6 +47,13 @@ if(Legion_USE_CUDA)
   # flags).
   #
   # But 9 times out of 10, people are passing this in, because they are using configure.
+
+  # It is important to define CUDA architectures, as the current default of 52 is too old.
+  # This must be populated before the enable_language call as that will set the default.
+  if(NOT DEFINED ENV{CUDAARCHS})
+    set_ifndef(CMAKE_CUDA_ARCHITECTURES "all-major")
+  endif()
+
   enable_language(CUDA)
 
   include("${LEGATE_CMAKE_DIR}/Modules/cuda_arch_helpers.cmake")
