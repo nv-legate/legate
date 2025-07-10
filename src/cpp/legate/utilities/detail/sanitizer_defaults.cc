@@ -6,46 +6,52 @@
 
 #ifndef DOXYGEN
 
-#include <legate_defines.h>
+#include <legate_defines.h>  // IWYU pragma: keep
 
-#include <legate/utilities/macros.h>
+#include <legate/utilities/macros.h>  // IWYU pragma: keep
 
 extern "C" {
 
 // NOLINTBEGIN
 const char* __asan_default_options()
 {
-  constexpr const char* ret =
-#include <legate/asan_default_options.h>
+  return
+#include <legate/generated/asan_default_options.h>
     ;
-  return ret;
 }
 
 const char* __ubsan_default_options()
 {
   return
-#include <legate/ubsan_default_options.h>
+#include <legate/generated/ubsan_default_options.h>
+    ;
+}
+
+const char* __ubsan_default_suppressions()
+{
+  return
+#include <legate/generated/ubsan_suppressions.h>
     ;
 }
 
 const char* __lsan_default_suppressions()
 {
   return
-#include <legate/lsan_suppressions.h>
+#include <legate/generated/lsan_suppressions.h>
     ;
 }
 
 const char* __tsan_default_options()
 {
   return
-#include <legate/tsan_default_options.h>
+#include <legate/generated/tsan_default_options.h>
     ;
 }
 
 const char* __tsan_default_suppressions()
 {
   return
-#include <legate/tsan_suppressions.h>
+#include <legate/generated/tsan_suppressions.h>
     ;
 }
 // NOLINTEND

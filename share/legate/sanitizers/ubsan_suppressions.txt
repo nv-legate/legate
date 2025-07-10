@@ -1,0 +1,3 @@
+vptr:Legion::Internal::RemoteContext::RemoteContext
+vptr:Legion::Internal::Runtime::find_or_request_equivalence_set
+enum:Realm::Cuda::CudaModule::create_module

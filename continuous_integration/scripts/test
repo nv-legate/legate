@@ -50,7 +50,7 @@ set_ld_preload()
     #                                               v~~ trailing ':' here
     ASAN_OPTIONS="$(IFS=':'; echo "${asan_opts[*]}"):"
     export ASAN_OPTIONS
-    export UBSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt"
+    export UBSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt"
     export LSAN_OPTIONS="suppressions=${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt"
     export TSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt"
 

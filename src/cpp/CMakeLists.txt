@@ -322,30 +322,35 @@ include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
 legate_generate_sanitizer_options(
   SRC ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
   DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/asan_default_options.h"
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/asan_default_options.h"
 )
 
 legate_generate_sanitizer_options(
   SRC ${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt
   DELIM [[\n]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/lsan_suppressions.h"
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/lsan_suppressions.h"
 )
 
 legate_generate_sanitizer_options(
   SRC ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
   DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/ubsan_default_options.h"
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/ubsan_default_options.h"
+)
+legate_generate_sanitizer_options(
+  SRC ${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt
+  DELIM [[\n]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/ubsan_suppressions.h"
 )
 
 legate_generate_sanitizer_options(
   SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt
   DELIM [[\n]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tsan_suppressions.h"
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/tsan_suppressions.h"
 )
 legate_generate_sanitizer_options(
   SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt
   DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tsan_default_options.h"
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/tsan_default_options.h"
 )
 
 target_sources(legate
@@ -888,6 +893,7 @@ install(FILES ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
               ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt
               ${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt
               ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
+              ${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/sanitizers")
 
 # ########################################################################################
