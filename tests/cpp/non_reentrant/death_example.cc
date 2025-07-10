@@ -27,11 +27,12 @@ void kill_process()
 
 }  // namespace
 
-// __has_feature(address_sanitizer) is available only on Clang, so we unify it to
-// __SANITIZE_ADDRESS__ that GCC sets
-#if defined(__has_feature)
-#if __has_feature(address_sanitizer)
+// Unify ASan detection between Clang and GCC
+#ifndef __SANITIZE_ADDRESS__          // already defined by recent GCC
+#ifdef __has_feature                  // Clang (and modern GCC) gate
+#if __has_feature(address_sanitizer)  // Clang with -fsanitize=address
 #define __SANITIZE_ADDRESS__
+#endif
 #endif
 #endif
 

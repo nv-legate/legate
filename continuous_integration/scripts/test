@@ -23,6 +23,14 @@ set_ld_preload()
     # /path/to/your/file.py
     # shellcheck disable=SC2154
     local libasan_path="${CONDA_PREFIX}/lib/libasan.so"
+    # We need to preload the standard library as well, otherwise we sometimes (*) get:
+    # AddressSanitizer: CHECK failed: asan_interceptors.cpp:458 "((__interception::real___cxa_throw)) != (0)" (0x0, 0x0)
+    # This is related to an old GCC bug:
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=84428
+    #
+    # (*) sometimes, because we only observed it one sanitizer build with GCC 14
+    local stdlib_path="${CONDA_PREFIX}/lib/libstdc++.so"
+
 
     if [[ ! -f "${libasan_path}" ]]; then
       rapids-logger "Sanitizer libraries not found."
@@ -30,7 +38,7 @@ set_ld_preload()
       return 1
     fi
 
-    export LEGATE_LD_PRELOAD="${libasan_path}"
+    export LEGATE_LD_PRELOAD="${libasan_path}:${stdlib_path}"
 
     local asan_opts=()
     asan_opts+=("check_initialization_order=1")

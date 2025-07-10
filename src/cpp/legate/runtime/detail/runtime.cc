@@ -76,7 +76,11 @@
 #include <cstdlib>
 #include <iostream>
 #include <mappers/logging_wrapper.h>
+// GCC 14 alloc-zero warning when using Conda installed compiler
+LEGATE_PRAGMA_PUSH();
+LEGATE_PRAGMA_GCC_IGNORE("-Walloc-zero");
 #include <regex>
+LEGATE_PRAGMA_POP();
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -1128,8 +1132,25 @@ const Legion::IndexSpace& Runtime::find_or_create_index_space(const Domain& doma
     return finder->second;
   }
 
+  // GCC 14 uninitialized warning from Legion
+  //
+  // Sample error:
+  // In member function 'bool Legion::Domain::operator==(const Legion::Domain&) const',
+  // ...
+  //    inlined from 'const Legion::IndexSpace& legate::detail::Runtime::find_or_create_index_space
+  //    (const Legion::Domain&)'
+  //    at /path/to/legate/work/src/cpp/legate/runtime/detail/runtime.cc:1138:46:
+  // /path/to/legate/work/arch-conda/skbuild_core/_deps/legion-src/runtime/legion/
+  // legion_domain.inl:844:23:
+  // error: '*(const Legion::Domain*)((char*)<unknown> + 8).Legion::Domain::rect_data[12]'
+  // may be used uninitialized [-Werror=maybe-uninitialized]
+  //      844 |       if(rect_data[i*2] != rhs.rect_data[i*2]) return false;
+  //          |          ~~~~~~~~~~~~~^
+  LEGATE_PRAGMA_PUSH();
+  LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized");
   auto [it, _] = cached_index_spaces_.emplace(
     domain, get_legion_runtime()->create_index_space(get_legion_context(), domain));
+  LEGATE_PRAGMA_POP();
   return it->second;
 }
 

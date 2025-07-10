@@ -161,7 +161,7 @@ build:
   {% set sanitizer_lib = "compiler-rt" %}
   {% set openmp_lib = "llvm-openmp" %}
 {% elif "gxx" in compiler("cxx") %}
-  {% set compiler_version = 11.2 %}
+  {% set compiler_version = 14 %}
   {% set sanitizer_lib = "libsanitizer" %}
   {% set openmp_lib = "_openmp_mutex" %}
 {% endif %}
