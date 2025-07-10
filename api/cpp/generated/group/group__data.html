@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>data &#8212; NVIDIA legate (25.08.00.dev5+g3cb8def9)</title>
+    <title>data &#8212; NVIDIA legate (25.08.00.dev9+g01d2dd3c)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=f16d7619"></script>
+    <script src="../../../../_static/documentation_options.js?v=d3e1f47d"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,11 +130,11 @@
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev5+g3cb8def9) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev5+g3cb8def9) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev9+g01d2dd3c) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev9+g01d2dd3c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev5+g3cb8def9)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev9+g01d2dd3c)</p>
   
 </a></div>
     
@@ -241,11 +241,11 @@
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev5+g3cb8def9) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev5+g3cb8def9) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev9+g01d2dd3c) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev9+g01d2dd3c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev5+g3cb8def9)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev9+g01d2dd3c)</p>
   
 </a>
 
@@ -3800,7 +3800,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dd><div class="docutils container">
 <em>#include &lt;legate/utilities/span.h&gt;</em></div>
 <p>A simple span implementation used in Legate. </p>
-<p>Should eventually be replaced with std::span once we bump up the C++ standard version to C++20 </p>
+<p>Should eventually be replaced with std::span once we bump up the C++ standard version to C++20. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
 <dl class="cpp function">
@@ -3841,8 +3841,8 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Pointer to the data </p></li>
-<li><p><strong>size</strong> – Number of elements </p></li>
+<li><p><strong>data</strong> – Pointer to the data. </p></li>
+<li><p><strong>size</strong> – Number of elements. </p></li>
 </ul>
 </dd>
 </dl>
@@ -3854,7 +3854,29 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dd><p>Returns the number of elements. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The number of elements </p>
+<dd class="field-odd"><p>The number of elements. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span6cbeginEv">
+<span id="_CPPv3NK6legate4Span6cbeginEv"></span><span id="_CPPv2NK6legate4Span6cbeginEv"></span><span id="legate::Span::cbeginC"></span><span class="target" id="classlegate_1_1Span_1ad13e8b387f9485628dc00605bca1be2c"></span><span class="n"><span class="pre">const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
+<dd><p>Returns the pointer to the first element. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pointer to the first element. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4cendEv">
+<span id="_CPPv3NK6legate4Span4cendEv"></span><span id="_CPPv2NK6legate4Span4cendEv"></span><span id="legate::Span::cendC"></span><span class="target" id="classlegate_1_1Span_1a6f4b22c31148b5b826810e6f261e583f"></span><span class="n"><span class="pre">const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
+<dd><p>Returns the pointer to the end of allocation. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pointer to the end of allocation. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3865,7 +3887,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dd><p>Returns the pointer to the first element. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the first element </p>
+<dd class="field-odd"><p>Pointer to the first element. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3876,7 +3898,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dd><p>Returns the pointer to the end of allocation. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the end of allocation </p>
+<dd class="field-odd"><p>Pointer to the end of allocation. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3887,7 +3909,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dd><p>Returns the pointer to the first element. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the first element </p>
+<dd class="field-odd"><p>Pointer to the first element. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3898,14 +3920,34 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dd><p>Returns the pointer to the end of allocation. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the end of allocation </p>
+<dd class="field-odd"><p>Pointer to the end of allocation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span7crbeginEv">
+<span id="_CPPv3NK6legate4Span7crbeginEv"></span><span id="_CPPv2NK6legate4Span7crbeginEv"></span><span id="legate::Span::crbeginC"></span><span class="target" id="classlegate_1_1Span_1ae3397adc390b5fc030a8d908f61d68c0"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">crbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An iterator to the last element. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span5crendEv">
+<span id="_CPPv3NK6legate4Span5crendEv"></span><span id="_CPPv2NK6legate4Span5crendEv"></span><span id="legate::Span::crendC"></span><span class="target" id="classlegate_1_1Span_1af80772f2811abc9eb00cd183872d59e5"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">crend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An iterator to the location preceding the first element. </p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span6rbeginEv">
-<span id="_CPPv3NK6legate4Span6rbeginEv"></span><span id="_CPPv2NK6legate4Span6rbeginEv"></span><span id="legate::Span::rbeginC"></span><span class="target" id="classlegate_1_1Span_1a322f8e512b27c8e61afc8b249aa2fd25"></span><span class="n"><span class="pre">reverse_const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<span id="_CPPv3NK6legate4Span6rbeginEv"></span><span id="_CPPv2NK6legate4Span6rbeginEv"></span><span id="legate::Span::rbeginC"></span><span class="target" id="classlegate_1_1Span_1a1aabe67dbd5cbb3872634e7ce7306b30"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>An iterator to the last element. </p>
@@ -3915,10 +3957,10 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4rendEv">
-<span id="_CPPv3NK6legate4Span4rendEv"></span><span id="_CPPv2NK6legate4Span4rendEv"></span><span id="legate::Span::rendC"></span><span class="target" id="classlegate_1_1Span_1a98984eb7056e213e707bad951b9dfcd2"></span><span class="n"><span class="pre">reverse_const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<span id="_CPPv3NK6legate4Span4rendEv"></span><span id="_CPPv2NK6legate4Span4rendEv"></span><span id="legate::Span::rendC"></span><span class="target" id="classlegate_1_1Span_1a87f4643e5ef66abd41451dd97bfb8833"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator one past the first element. </p>
+<dd class="field-odd"><p>An iterator to the location preceding the first element. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3938,7 +3980,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <span id="_CPPv3N6legate4Span4rendEv"></span><span id="_CPPv2N6legate4Span4rendEv"></span><span id="legate::Span::rend"></span><span class="target" id="classlegate_1_1Span_1a07f10262abc82ce5379ee0bc0777d860"></span><span class="n"><span class="pre">reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator one past the first element. </p>
+<dd class="field-odd"><p>An iterator to the location preceding the first element. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3969,7 +4011,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <dd><p>Slices off the first <code class="docutils literal notranslate"><span class="pre">off</span></code> elements. Passing an <code class="docutils literal notranslate"><span class="pre">off</span></code> greater than the size will fail with an assertion failure. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>off</strong> – Number of elements to skip</p>
+<dd class="field-odd"><p><strong>off</strong> – Number of elements to skip.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A span for range <code class="docutils literal notranslate"><span class="pre">[off,</span> <a class="reference internal" href="#classlegate_1_1Span_1a75a0996d82b2ac3949b4661f7061092e"><span class="std std-ref"><span class="pre">size()</span></span></a><span class="pre">)</span></code></p>
@@ -4275,10 +4317,14 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span4SpanENSt16initializer_listI1TEE"><code class="docutils literal notranslate"><span class="pre">Span()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span4SpanEP1T9size_type"><code class="docutils literal notranslate"><span class="pre">Span()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4sizeEv"><code class="docutils literal notranslate"><span class="pre">size()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span6cbeginEv"><code class="docutils literal notranslate"><span class="pre">cbegin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4cendEv"><code class="docutils literal notranslate"><span class="pre">cend()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span5beginEv"><code class="docutils literal notranslate"><span class="pre">begin()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span3endEv"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span5beginEv"><code class="docutils literal notranslate"><span class="pre">begin()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span3endEv"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span7crbeginEv"><code class="docutils literal notranslate"><span class="pre">crbegin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span5crendEv"><code class="docutils literal notranslate"><span class="pre">crend()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span6rbeginEv"><code class="docutils literal notranslate"><span class="pre">rbegin()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4rendEv"><code class="docutils literal notranslate"><span class="pre">rend()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span6rbeginEv"><code class="docutils literal notranslate"><span class="pre">rbegin()</span></code></a></li>
