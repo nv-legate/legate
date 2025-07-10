@@ -113,33 +113,80 @@ VariantCode to_variant_code(TaskTarget target)
 
 VariantCode to_variant_code(Processor::Kind kind) { return to_variant_code(to_target(kind)); }
 
-void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,
-                                              std::vector<Legion::DimensionKind>& ordering) const
+// ==========================================================================================
+
+std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(std::uint32_t ndim) const
 {
-  // TODO(wonchanl): We need to implement the relative dimension ordering
+  std::vector<Legion::DimensionKind> ordering;
+
   switch (kind) {
     case Kind::C: {
       LEGATE_ASSERT(ndim > 0);
-      ordering.reserve(ordering.size() + ndim);
+      ordering.reserve(ndim);
       for (auto dim = static_cast<std::int32_t>(ndim) - 1; dim >= 0; --dim) {
         ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
     case Kind::FORTRAN: {
-      ordering.reserve(ordering.size() + ndim);
+      LEGATE_ASSERT(ndim > 0);
+      ordering.reserve(ndim);
       for (std::uint32_t dim = 0; dim < ndim; ++dim) {
         ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
     case Kind::CUSTOM: {
-      ordering.reserve(ordering.size() + dims.size());
+      ordering.reserve(dims.size());
       for (auto dim : dims) {
         ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
+  }
+
+  return ordering;
+}
+
+tuple<std::int32_t> DimOrdering::generate_integer_dims(std::uint32_t ndim) const
+{
+  tuple<std::int32_t> ret;
+
+  ret.reserve(ndim);
+  switch (kind) {
+    case Kind::C: [[fallthrough]];
+    case Kind::FORTRAN: {
+      for (std::uint32_t dim = 0; dim < ndim; ++dim) {
+        ret.append_inplace(dim);
+      }
+      return ret;
+    }
+    case Kind::CUSTOM: {
+      for (auto dim : dims) {
+        ret.append_inplace(dim);
+      }
+      return ret;
+    }
+  }
+
+  LEGATE_ABORT("Unhandled dimension ordering kind: ", legate::detail::to_underlying(kind));
+}
+
+void DimOrdering::integer_to_legion_dims(Span<const std::int32_t> int_dims,
+                                         std::vector<Legion::DimensionKind>* legion_dims) const
+{
+  LEGATE_ASSERT(legion_dims);
+
+  const auto convert_fn = [legion_dims](const auto& beg, const auto& end) {
+    std::transform(beg, end, std::back_inserter(*legion_dims), [](const std::int32_t d) {
+      return static_cast<Legion::DimensionKind>(d + LEGION_DIM_X);
+    });
+  };
+
+  switch (kind) {
+    case Kind::C: convert_fn(int_dims.crbegin(), int_dims.crend()); break;
+    case Kind::FORTRAN: [[fallthrough]];
+    case Kind::CUSTOM: convert_fn(int_dims.cbegin(), int_dims.cend()); break;
   }
 }
 
@@ -233,20 +280,55 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
 void StoreMapping::populate_layout_constraints(
   Legion::LayoutConstraintSet& layout_constraints) const
 {
+  if (stores().size() > 1) {
+    // We assume that all stores in the mapping have the same number of dimensions
+    // at least, and that the other stores follow the dimension ordering of the
+    // first store, which may be adjusted due to transforms, such as, transpose.
+    LEGATE_ASSERT(std::all_of(stores().cbegin(), stores().cend(), [&](const auto* st) {
+      return st->dim() == store()->dim();
+    }));
+  }
+
+  // We want to enforce user's intent by using the LogicalStore's dimension
+  // ordering to determine RegionField's dimension ordering. A compelling example
+  // being the desire to reorder the dims of a transposed store such that the new
+  // lowest dimension is physically contiguous. To achieve this:
+  // 1. We generate initial integer dims using the LogicalStore's dim count
+  // 2. Feed them through the store's transform stack via invert_dims(). This is
+  //    needed because LogicalStore's dim ordering and count can be different from the
+  //    RegionField due to store transforms.
+  // 3. Convert the resulting integer dims to Legion dims
+  tuple<std::int32_t> int_dims = policy().ordering.impl()->generate_integer_dims(store()->dim());
+
+  int_dims = store()->invert_dims(std::move(int_dims));
+
   auto&& first_region_field = store()->region_field();
+
+  if (int_dims.empty() && first_region_field.dim() == 1) {
+    // Special case where empty store is represented by a 1D region field
+    int_dims.append_inplace(0);
+  } else {
+    LEGATE_ASSERT(static_cast<std::int32_t>(int_dims.size()) == first_region_field.dim());
+  }
+
   std::vector<Legion::DimensionKind> dimension_ordering{};
 
   dimension_ordering.reserve(
-    (policy().layout == InstLayout::AOS || policy().layout == InstLayout::SOA) +
-    static_cast<std::size_t>(first_region_field.dim()));
-  if (policy().layout == InstLayout::AOS) {
-    dimension_ordering.push_back(LEGION_DIM_F);
+    (policy().layout == InstLayout::AOS || policy().layout == InstLayout::SOA) + int_dims.size());
+
+  switch (policy().layout) {
+    case InstLayout::AOS: {
+      dimension_ordering.push_back(LEGION_DIM_F);
+      policy().ordering.impl()->integer_to_legion_dims(int_dims.data(), &dimension_ordering);
+      break;
+    }
+    case InstLayout::SOA: {
+      policy().ordering.impl()->integer_to_legion_dims(int_dims.data(), &dimension_ordering);
+      dimension_ordering.push_back(LEGION_DIM_F);
+      break;
+    }
   }
-  policy().ordering.impl()->populate_dimension_ordering(
-    static_cast<std::uint32_t>(first_region_field.dim()), dimension_ordering);
-  if (policy().layout == InstLayout::SOA) {
-    dimension_ordering.push_back(LEGION_DIM_F);
-  }
+
   // This 2-step is necessary because Legion::OrderingConstraint constructor takes the vector
   // by const-ref. Similarly, layout_constraints.add_constraint() ALSO takes its
   // OrderingConstraint by const-ref, meaning that if we go the usual route of

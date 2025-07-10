@@ -131,4 +131,12 @@ std::vector<std::int32_t> Store::find_imaginary_dims() const
   return {};
 }
 
+tuple<std::int32_t> Store::invert_dims(tuple<std::int32_t> dims) const
+{
+  if (transform_) {
+    return transform_->invert_dims(std::move(dims));
+  }
+  return dims;
+}
+
 }  // namespace legate::mapping::detail

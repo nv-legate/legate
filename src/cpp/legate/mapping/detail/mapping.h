@@ -43,8 +43,37 @@ class DimOrdering {
 
   [[nodiscard]] bool operator==(const DimOrdering& other) const;
 
-  void populate_dimension_ordering(std::uint32_t ndim,
-                                   std::vector<Legion::DimensionKind>& ordering) const;
+  /**
+   * @brief Generates a vector of Legion dimensions of size `ndim`.
+   *
+   * @param ndim The number of dimensions to generate.
+   *
+   * @returns a vector of Legion dimensions.
+   */
+  [[nodiscard]] std::vector<Legion::DimensionKind> generate_legion_dims(std::uint32_t ndim) const;
+
+  /**
+   * Generates a tuple of integer dimensions in the range [0..ndim), in an
+   * order dependent on `kind`.
+   *
+   * @param ndim number of dimensions.
+   *
+   * @returns a tuple of integers in the range [0..ndim).
+   */
+  [[nodiscard]] tuple<std::int32_t> generate_integer_dims(std::uint32_t ndim) const;
+
+  /**
+   * convert integer dimensions into Legion::DimensionKind, and in some cases,
+   * re-order based on `kind`.
+   *
+   * @param int_dims tuple of integer dims in the range [0..int_dims.size()).
+   *
+   * @param legion_dims vector of Legion::DimensionKind that is populated with the
+   *        output.
+   *
+   */
+  void integer_to_legion_dims(Span<const std::int32_t> int_dims,
+                              std::vector<Legion::DimensionKind>* legion_dims) const;
 
   Kind kind{};
   std::vector<std::int32_t> dims{};
