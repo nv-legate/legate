@@ -34,7 +34,7 @@ class InitStringTask : public legate::LegateTask<InitStringTask> {
   const auto buf          = chars.create_output_buffer<std::int8_t>(legate::Point<DIM>{SIZE},
                                                            /* bind_buffer */ true);
 
-  for (auto it = legate::PointInRectIterator{buf.get_bounds()}; it.valid(); ++it) {
+  for (auto it = legate::PointInRectIterator<DIM>{buf.get_bounds()}; it.valid(); ++it) {
     buf[*it] = 0;
   }
   string_array.ranges().data().bind_empty_data();
