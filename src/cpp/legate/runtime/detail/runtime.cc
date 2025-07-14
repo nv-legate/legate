@@ -551,12 +551,35 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
 
 void Runtime::flush_scheduling_window()
 {
-  if (operations_.empty()) {
-    return;
-  }
+  // We should only execute the operations resident in the queue at the time of flush, no more,
+  // no less. It is possible that during the flush additional operations may be queued, and so
+  // we use the size of the window on entrance to determine the number of ops to flush.
+  //
+  // It is also possible to invoke a recursive scheduling window flush, (for example, if an
+  // operation launches a discard in its destructor, and we have a scheduling window of size
+  // 1), so we must also guard against the possibility that a previous (recursive) flush has
+  // already emptied the queue for us.
+  //
+  // This is why we check flush_size > 0 && !operations_.empty().
+  for (auto flush_size = operations_.size(); flush_size > 0 && !operations_.empty(); --flush_size) {
+    auto op = std::move(operations_.front());
 
-  schedule_(std::move(operations_));
-  operations_.clear();
+    operations_.pop();
+    if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      log_legate().debug() << op->to_string(true /*show_provenance*/) << " launched";
+    }
+
+    if (!op->needs_partitioning()) {
+      op->launch();
+      continue;
+    }
+
+    // TODO(wonchanl): We need the side effect from the launch calls to get key partitions set
+    // correctly. In the future, the partitioner should manage key partitions.
+    auto strategy = Partitioner{{&op, &op + 1}}.partition_stores();
+
+    op->launch(&strategy);
+  }
 }
 
 void Runtime::submit(InternalSharedPtr<Operation> op)
@@ -569,7 +592,7 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   // operations_.
   op->validate();
 
-  const auto& submitted = operations_.emplace_back(std::move(op));
+  const auto& submitted = operations_.emplace(std::move(op));
 
   if (submitted->needs_flush() || operations_.size() >= config().window_size()) {
     flush_scheduling_window();
@@ -582,29 +605,6 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   LEGATE_ASSERT(!op->needs_partitioning());
 
   op->launch();
-}
-
-void Runtime::schedule_(std::vector<InternalSharedPtr<Operation>>&& operations)
-{
-  // Move into temporary to "complete" the move from the caller side.
-  const auto ops = std::move(operations);
-
-  for (auto it = ops.begin(); it != ops.end(); ++it) {
-    if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      log_legate().debug() << (*it)->to_string(true /*show_provenance*/) << " launched";
-    }
-
-    if (!(*it)->needs_partitioning()) {
-      (*it)->launch();
-      continue;
-    }
-
-    // TODO(wonchanl): We need the side effect from the launch calls to get key partitions set
-    // correctly. In the future, the partitioner should manage key partitions.
-    auto strategy = Partitioner{{it, it + 1}}.partition_stores();
-
-    (*it)->launch(&strategy);
-  }
 }
 
 InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Shape>& shape,

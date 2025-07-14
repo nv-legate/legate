@@ -35,6 +35,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -384,10 +385,6 @@ class Runtime {
   void inline_task_start() noexcept;
   void inline_task_end() noexcept;
 
- private:
-  static void schedule_(std::vector<InternalSharedPtr<Operation>>&& operations);
-
- public:
   [[nodiscard]] static Runtime& get_runtime();
   static void start();
   [[nodiscard]] bool initialized() const;
@@ -454,7 +451,7 @@ class Runtime {
   std::unordered_map<ShardingDesc, Legion::ShardingID, hasher<ShardingDesc>>
     registered_shardings_{};
 
-  std::vector<InternalSharedPtr<Operation>> operations_{};
+  std::queue<InternalSharedPtr<Operation>> operations_{};
   std::uint64_t cur_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
