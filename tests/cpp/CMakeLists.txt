@@ -180,6 +180,7 @@ set(with_runtime_SRC
     unit/dispatch.cc
     unit/formatter.cc
     unit/library.cc
+    unit/logical_region_field.cc
     unit/machine.cc
     unit/mapping.cc
     unit/registration.cc
