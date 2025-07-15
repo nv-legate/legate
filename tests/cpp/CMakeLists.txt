@@ -179,6 +179,7 @@ set(with_runtime_SRC
     unit/debug.cc
     unit/dispatch.cc
     unit/formatter.cc
+    unit/future_wrapper.cc
     unit/library.cc
     unit/logical_region_field.cc
     unit/machine.cc
