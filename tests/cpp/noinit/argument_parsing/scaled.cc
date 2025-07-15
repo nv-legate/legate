@@ -60,4 +60,19 @@ TYPED_TEST(ScaledUnit, Mutate)
   ASSERT_EQ(scal.scale(), SCALE);
 }
 
+TYPED_TEST(ScaledUnit, ToString)
+{
+  constexpr auto VALUE = 123;
+  constexpr auto SCALE = 10;
+  const auto scal      = legate::detail::Scaled<TypeParam>{VALUE, SCALE};
+
+  std::stringstream ss;
+  std::stringstream ss_expected;
+
+  ss << scal;
+  ss_expected << "Scaled(scale: " << SCALE << ", value: " << VALUE << ")";
+
+  ASSERT_EQ(ss.str(), ss_expected.str());
+}
+
 }  // namespace test_scaled

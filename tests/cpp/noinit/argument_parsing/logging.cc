@@ -95,6 +95,34 @@ TEST_F(ArgumentParsingLoggingUnit, MissingLoggerName)
       "Invalid logger specification '=foo', has no logger name. Expected 'logger_name=value'.")));
 }
 
+TEST_F(ArgumentParsingLoggingUnit, UnterminatedSingleQuote)
+{
+  constexpr auto spec = std::string_view{"'legate=all"};
+
+  ASSERT_THAT([&] { static_cast<void>(legate::detail::convert_log_levels(spec)); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Unterminated quote: 'legate=all'")));
+}
+
+TEST_F(ArgumentParsingLoggingUnit, UnterminatedDoubleQuote)
+{
+  constexpr auto spec = std::string_view{"\"legate=all"};
+
+  ASSERT_THAT([&] { static_cast<void>(legate::detail::convert_log_levels(spec)); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Unterminated quote: 'legate=all'")));
+}
+
+TEST_F(ArgumentParsingLoggingUnit, MissingEqualSign)
+{
+  constexpr auto spec = std::string_view{"legate"};
+
+  ASSERT_THAT([&] { static_cast<void>(legate::detail::convert_log_levels(spec)); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Invalid logger specification 'legate', does not contain an "
+                                     "'='. Expected 'logger_name=value'.")));
+}
+
 TEST_F(ArgumentParsingLoggingUnit, InvalidLoggerLevel)
 {
   constexpr auto spec = std::string_view{"legate=invalid_level"};

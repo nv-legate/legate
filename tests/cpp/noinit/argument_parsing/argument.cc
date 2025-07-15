@@ -17,13 +17,14 @@
 
 namespace test_argument {
 
-using ArgumentTypes = ::testing::Types<std::int32_t, std::string, std::filesystem::path>;
+using ArgumentTypes = ::testing::Types<std::int32_t, std::string, std::filesystem::path, float>;
 
 namespace {
 
 [[nodiscard]] std::string as_string(std::string s) { return s; }
 [[nodiscard]] std::string as_string(const std::filesystem::path& p) { return p; }
 [[nodiscard]] std::string as_string(std::int32_t v) { return std::to_string(v); }
+[[nodiscard]] std::string as_string(float v) { return std::to_string(v); }
 
 template <typename T>
 class Values {};
@@ -44,6 +45,23 @@ class Values<std::int32_t> {
   [[nodiscard]] static constexpr std::int32_t second_alternate_value()
   {
     return 6789;  // NOLINT(readability-magic-numbers)
+  }
+};
+
+template <>
+class Values<float> {
+ public:
+  [[nodiscard]] static constexpr float default_value()
+  {
+    return 1.0F;  // NOLINT(readability-magic-numbers)
+  }
+  [[nodiscard]] static constexpr float alternate_value()
+  {
+    return 2.0F;  // NOLINT(readability-magic-numbers)
+  }
+  [[nodiscard]] static constexpr float second_alternate_value()
+  {
+    return 3.0F;  // NOLINT(readability-magic-numbers)
   }
 };
 
@@ -201,6 +219,49 @@ TYPED_TEST(ArgumentUnit, ActionDontSetFlag)
   ASSERT_EQ(arg.value(), default_value);
   ASSERT_NE(arg.value(), action_value);
   ASSERT_NE(arg.value(), set_value);
+}
+
+TYPED_TEST(ArgumentUnit, ToString)
+{
+  const auto flag          = std::string{"--foo"};
+  const auto default_value = this->defaults.default_value();
+  auto arg                 = legate::detail::Argument<TypeParam>{this->parser, flag, default_value};
+
+  std::stringstream ss;
+  const auto ss_flags = ss.flags();
+  std::stringstream ss_expected;
+
+  ss << arg;
+  ss_expected << "Argument(flag: --foo, value: " << default_value << ")";
+
+  ASSERT_EQ(ss.str(), ss_expected.str());
+  ASSERT_EQ(ss_flags, ss.flags());
+}
+
+using ArgumentUnitNegative = ArgumentUnit<std::string>;
+
+class ThrowingBuffer : public std::streambuf {
+ protected:
+  int overflow(int) override { throw std::ios_base::failure{"Simulated failure"}; }
+};
+
+TEST_F(ArgumentUnitNegative, ToStringThrows)
+{
+  const auto flag  = std::string{"--foo"};
+  const auto value = std::string{"abc"};
+  auto arg         = legate::detail::Argument<std::string>{this->parser, flag, value};
+
+  ThrowingBuffer buffer;
+  std::ostream throwing_stream{&buffer};
+
+  throwing_stream.exceptions(std::ios::badbit);
+
+  const auto ss_flags = throwing_stream.flags();
+
+  ASSERT_THAT(
+    [&] { throwing_stream << arg; },
+    ::testing::ThrowsMessage<std::ios_base::failure>(::testing::HasSubstr("Simulated failure")));
+  ASSERT_EQ(ss_flags, throwing_stream.flags());
 }
 
 }  // namespace test_argument

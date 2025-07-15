@@ -7,7 +7,9 @@
 #include <legate/runtime/detail/argument_parsing/flags/sysmem.h>
 
 #include <legate/runtime/detail/argument_parsing/argument.h>
+#include <legate/runtime/detail/argument_parsing/config_realm.h>
 #include <legate/runtime/detail/argument_parsing/exceptions.h>
+#include <legate/runtime/detail/argument_parsing/parse.h>
 
 #include <realm/module_config.h>
 
@@ -120,6 +122,16 @@ TEST_F(ConfigureSysMemUnit, AutoConfigFail)
     ::testing::ThrowsMessage<legate::detail::AutoConfigurationError>(
       ::testing::HasSubstr("Core Realm module could not determine the available system memory.")));
   ASSERT_EQ(sysmem.value().unscaled_value(), -1);
+}
+
+TEST_F(ConfigureSysMemUnit, RealmConfigFail)
+{
+  const auto parsed = legate::detail::parse_args({"parsed", "--sysmem", "1"});
+
+  ASSERT_THAT(
+    [&] { legate::detail::configure_realm(parsed); },
+    ::testing::ThrowsMessage<legate::detail::ConfigurationError>(::testing::HasSubstr(
+      "Unable to set core->sysmem from flag --sysmem (the Realm core module is not available).")));
 }
 
 }  // namespace test_configure_symem

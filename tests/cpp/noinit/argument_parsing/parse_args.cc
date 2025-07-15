@@ -95,6 +95,15 @@ TEST_F(ParseArgsUnit, EmptyArgs)
                 ::testing::HasSubstr("Command-line argument to parse must have at least 1 value")));
 }
 
+TEST_F(ParseArgsUnit, InvalidBooleanArgs)
+{
+  ASSERT_THAT(
+    [] { static_cast<void>(legate::detail::parse_args({"dummy", "--auto-config", "yes1"})); },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Unknown boolean argument yes1, expected one of '1, t, true, y, yes' or "
+                           "'0, f, false, n, no'")));
+}
+
 TEST_F(ParseArgsUnit, NoArgs)
 {
   const auto parsed = legate::detail::parse_args({"dummy"});
@@ -201,6 +210,15 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   ASSERT_THAT(parsed.cuda_driver_path, ArgumentMatches(std::string{"libdummy_cuda_driver.so"}));
 
 #undef TEMP_ENV_VAR
+}
+
+using ParseArgsDeathTest = ParseArgsUnit;
+
+TEST_F(ParseArgsDeathTest, InvalidArgs)
+{
+  ASSERT_EXIT(static_cast<void>(legate::detail::parse_args({"dummy", "--invalid-args"})),
+              ::testing::ExitedWithCode(EXIT_FAILURE),
+              ::testing::HasSubstr("== LEGATE ERROR: Unknown argument: --invalid-args"));
 }
 
 namespace {

@@ -119,6 +119,7 @@ bool ParseBoolArg::do_parse_(std::string_view value)
 
   throw TracedException<std::invalid_argument>{
     fmt::format("Unknown boolean argument {}, expected one of '{}' or '{}'",
+                value,
                 fmt::join(truthy_values, ", "),
                 fmt::join(falsey_values, ", "))};
 }
