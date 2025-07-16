@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include <legate/utilities/tuple.h>
+#include <legate/utilities/detail/small_vector.h>
+
+#include <cstdint>
 
 namespace legate::detail {
 
@@ -19,7 +21,7 @@ enum class Restriction : std::uint8_t {
   FORBID = 2, /*!< The dimension must not be partitioned */
 };
 
-using Restrictions = tuple<Restriction>;
+using Restrictions = SmallVector<Restriction>;
 
 [[nodiscard]] Restriction join(Restriction lhs, Restriction rhs);
 

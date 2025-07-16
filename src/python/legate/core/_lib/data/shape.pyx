@@ -4,7 +4,6 @@
 
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp.utility cimport move as std_move
-from libcpp.vector cimport vector as std_vector
 
 from collections.abc import Collection, Iterator
 from operator import index as operator_index
@@ -49,12 +48,12 @@ cdef class Shape:
         If the shape is of an unbound array or store, the call blocks the
         execution until the shape becomes ready.
         """
-        cdef const std_vector[uint64_t]* v = NULL
+        cdef _tuple[uint64_t] ext
 
         if self._extents is None:
             with nogil:
-                v = &self._handle.extents().data()
-            self._extents = tuple(v[0])
+                ext = self._handle.extents()
+            self._extents = tuple(ext.data())
         return self._extents
 
     @property

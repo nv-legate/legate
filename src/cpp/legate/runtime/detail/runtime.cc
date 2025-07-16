@@ -71,6 +71,7 @@
 #include <realm/network.h>
 
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 #include <fmt/ranges.h>
 
 #include <cstdlib>
@@ -815,7 +816,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
 
 Runtime::IndexAttachResult Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
-  const tuple<std::uint64_t>& tile_shape,
+  const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
   InternalSharedPtr<Type> type,
   const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
   InternalSharedPtr<mapping::detail::DimOrdering> ordering)
@@ -849,7 +850,17 @@ Runtime::IndexAttachResult Runtime::create_store(
     }
     visited.insert(color_hash);
     auto& alloc        = allocs.emplace_back(allocation.impl());
-    auto substore      = partition->get_child_store(color);
+    auto substore      = partition->get_child_store([](const tuple<std::uint64_t>& color_tup) {
+      // Work around CCCL bug, see https://github.com/NVIDIA/cccl/issues/5116
+      // Otherwise this would just be get_child_store({color.begin(), color.end()})
+      SmallVector<std::uint64_t, LEGATE_MAX_DIM> vec;
+
+      vec.reserve(color_tup.size());
+      for (auto&& c : color_tup) {
+        vec.push_back(c);
+      }
+      return vec;
+    }(color));
     auto required_size = substore->volume() * type_size;
 
     LEGATE_ASSERT(alloc->ptr());
@@ -882,8 +893,8 @@ Runtime::IndexAttachResult Runtime::create_store(
 }
 
 void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
-                                         tuple<std::uint64_t> low_offsets,
-                                         tuple<std::uint64_t> high_offsets,
+                                         SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
+                                         SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets,
                                          bool initialize)
 {
   if (scope().machine()->count() <= 1) {
@@ -936,7 +947,7 @@ class ExtractExceptionFn {
   {
     if (pending.raised()) {
       return {std::move(pending)};
-    }  // namespace
+    }
     return std::nullopt;
   }  // namespace
 };
@@ -1112,7 +1123,7 @@ RegionManager& Runtime::find_or_create_region_manager(const Legion::IndexSpace& 
   return region_managers_.try_emplace(index_space, index_space).first->second;
 }
 
-const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<std::uint64_t>& extents)
+const Legion::IndexSpace& Runtime::find_or_create_index_space(Span<const std::uint64_t> extents)
 {
   if (extents.size() > LEGATE_MAX_DIM) {
     throw TracedException<std::out_of_range>{fmt::format(
@@ -1120,7 +1131,6 @@ const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<std::u
       LEGATE_MAX_DIM,
       extents.size())};
   }
-
   return find_or_create_index_space(to_domain(extents));
 }
 
@@ -1526,8 +1536,9 @@ void Runtime::issue_execution_fence(bool block /*=false*/)
 
 InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precision)
 {
-  static auto empty_shape = make_internal_shared<Shape>(tuple<std::uint64_t>{});
-  auto timestamp          = create_store(empty_shape, int64(), true /* optimize_scalar */);
+  static auto empty_shape =
+    make_internal_shared<Shape>(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{});
+  auto timestamp = create_store(empty_shape, int64(), true /* optimize_scalar */);
   submit(make_internal_shared<Timing>(current_op_id_(), precision, timestamp));
   increment_op_id_();
   return timestamp;
@@ -1602,40 +1613,49 @@ Legion::ProjectionID Runtime::get_affine_projection(std::uint32_t src_ndim,
   return proj_id;
 }
 
-Legion::ProjectionID Runtime::get_delinearizing_projection(const tuple<std::uint64_t>& color_shape)
+Legion::ProjectionID Runtime::get_delinearizing_projection(Span<const std::uint64_t> color_shape)
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Query delinearizing projection {color_shape: "
-                         << color_shape.to_string() << "}";
+    log_legate().debug() << fmt::format("Query delinearizing projection {{color_shape: {}}}",
+                                        color_shape);
   }
 
-  auto finder = delinearizing_projections_.find(color_shape);
+  LEGATE_CPP_VERSION_TODO(20,
+                          "Use heterogeneous lookup in unordered_map instead of making this copy");
+  const auto color_shape_copy = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape};
+
+  auto finder = delinearizing_projections_.find(color_shape_copy);
   if (delinearizing_projections_.end() != finder) {
     return finder->second;
   }
 
   auto proj_id = core_library().get_projection_id(next_projection_id_++);
 
-  register_delinearizing_projection_functor(color_shape, proj_id);
-  delinearizing_projections_[color_shape] = proj_id;
+  register_delinearizing_projection_functor(color_shape_copy, proj_id);
+  delinearizing_projections_[color_shape_copy] = proj_id;
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Register delinearizing projection " << proj_id
-                         << "{color_shape: " << color_shape.to_string() << "}";
+    log_legate().debug() << fmt::format(
+      "Register delinearizing projection {} {{color_shape: {}}}", proj_id, color_shape);
   }
 
   return proj_id;
 }
 
-Legion::ProjectionID Runtime::get_compound_projection(const tuple<std::uint64_t>& color_shape,
+Legion::ProjectionID Runtime::get_compound_projection(Span<const std::uint64_t> color_shape,
                                                       const proj::SymbolicPoint& point)
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Query compound projection {color_shape: " << color_shape.to_string()
-                         << ", point: " << point << "}";
+    log_legate().debug() << fmt::format("Query compound projection {{color_shape: {}, point: {}}}",
+                                        color_shape,
+                                        fmt::streamed(point));
   }
 
-  auto key    = CompoundProjectionDesc{color_shape, point};
+  LEGATE_CPP_VERSION_TODO(20,
+                          "Use heterogeneous lookup in unordered_map instead of making this copy");
+  const auto color_shape_copy = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape};
+
+  auto key    = CompoundProjectionDesc{color_shape_copy, point};
   auto finder = compound_projections_.find(key);
   if (compound_projections_.end() != finder) {
     return finder->second;
@@ -1643,13 +1663,15 @@ Legion::ProjectionID Runtime::get_compound_projection(const tuple<std::uint64_t>
 
   auto proj_id = core_library().get_projection_id(next_projection_id_++);
 
-  register_compound_projection_functor(color_shape, point, proj_id);
+  register_compound_projection_functor(color_shape_copy, point, proj_id);
   compound_projections_[key] = proj_id;
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Register compound projection " << proj_id
-                         << " {color_shape: " << color_shape.to_string() << ", point: " << point
-                         << "}";
+    log_legate().debug() << fmt::format(
+      "Register compound projection {} {{color_shape: {}, point: {}}}",
+      proj_id,
+      color_shape_copy,
+      fmt::streamed(point));
   }
 
   return proj_id;

@@ -148,22 +148,23 @@ std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(std::uint32
   return ordering;
 }
 
-tuple<std::int32_t> DimOrdering::generate_integer_dims(std::uint32_t ndim) const
+legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> DimOrdering::generate_integer_dims(
+  std::uint32_t ndim) const
 {
-  tuple<std::int32_t> ret;
+  legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> ret;
 
   ret.reserve(ndim);
   switch (kind) {
     case Kind::C: [[fallthrough]];
     case Kind::FORTRAN: {
-      for (std::uint32_t dim = 0; dim < ndim; ++dim) {
-        ret.append_inplace(dim);
+      for (std::int32_t dim = 0; static_cast<std::uint32_t>(dim) < ndim; ++dim) {
+        ret.push_back(dim);
       }
       return ret;
     }
     case Kind::CUSTOM: {
       for (auto dim : dims) {
-        ret.append_inplace(dim);
+        ret.push_back(dim);
       }
       return ret;
     }
@@ -230,7 +231,7 @@ const Store* StoreMapping::store() const { return stores().front(); }
 
 std::uint32_t StoreMapping::requirement_index() const
 {
-  if (!stores().size()) {
+  if (stores().empty()) {
     constexpr std::uint32_t INVALID = -1U;
 
     return INVALID;
@@ -298,7 +299,7 @@ void StoreMapping::populate_layout_constraints(
   //    needed because LogicalStore's dim ordering and count can be different from the
   //    RegionField due to store transforms.
   // 3. Convert the resulting integer dims to Legion dims
-  tuple<std::int32_t> int_dims = policy().ordering.impl()->generate_integer_dims(store()->dim());
+  auto int_dims = policy().ordering.impl()->generate_integer_dims(store()->dim());
 
   int_dims = store()->invert_dims(std::move(int_dims));
 
@@ -306,7 +307,7 @@ void StoreMapping::populate_layout_constraints(
 
   if (int_dims.empty() && first_region_field.dim() == 1) {
     // Special case where empty store is represented by a 1D region field
-    int_dims.append_inplace(0);
+    int_dims.push_back(0);
   } else {
     LEGATE_ASSERT(static_cast<std::int32_t>(int_dims.size()) == first_region_field.dim());
   }
@@ -319,11 +320,11 @@ void StoreMapping::populate_layout_constraints(
   switch (policy().layout) {
     case InstLayout::AOS: {
       dimension_ordering.push_back(LEGION_DIM_F);
-      policy().ordering.impl()->integer_to_legion_dims(int_dims.data(), &dimension_ordering);
+      policy().ordering.impl()->integer_to_legion_dims(int_dims, &dimension_ordering);
       break;
     }
     case InstLayout::SOA: {
-      policy().ordering.impl()->integer_to_legion_dims(int_dims.data(), &dimension_ordering);
+      policy().ordering.impl()->integer_to_legion_dims(int_dims, &dimension_ordering);
       dimension_ordering.push_back(LEGION_DIM_F);
       break;
     }

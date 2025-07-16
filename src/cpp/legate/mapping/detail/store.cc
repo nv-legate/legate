@@ -123,7 +123,7 @@ Domain Store::domain() const
   return result;
 }
 
-std::vector<std::int32_t> Store::find_imaginary_dims() const
+legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> Store::find_imaginary_dims() const
 {
   if (transform_) {
     return transform_->find_imaginary_dims();
@@ -131,7 +131,8 @@ std::vector<std::int32_t> Store::find_imaginary_dims() const
   return {};
 }
 
-tuple<std::int32_t> Store::invert_dims(tuple<std::int32_t> dims) const
+legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> Store::invert_dims(
+  legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
   if (transform_) {
     return transform_->invert_dims(std::move(dims));

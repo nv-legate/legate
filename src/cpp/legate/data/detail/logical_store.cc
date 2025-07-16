@@ -21,8 +21,10 @@
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/type/detail/types.h>
+#include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/detail/type_traits.h>
@@ -63,7 +65,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
       return Kind::REGION_FIELD;
     }()},
     provenance_{std::move(provenance)},
-    offsets_{legate::full(dim(), std::int64_t{0})}
+    offsets_{tags::size_tag, dim(), 0}
 {
   if (kind_ == Kind::REGION_FIELD && !unbound()) {
     auto&& runtime = Runtime::get_runtime();
@@ -82,7 +84,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::str
     shape_{std::move(shape)},
     kind_{Kind::FUTURE},
     provenance_{std::move(provenance)},
-    offsets_{legate::full(dim(), std::int64_t{0})},
+    offsets_{tags::size_tag, dim(), 0},
     future_{std::move(future)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -90,10 +92,10 @@ Storage::Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::str
   }
 }
 
-Storage::Storage(tuple<std::uint64_t> extents,
+Storage::Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
                  InternalSharedPtr<StoragePartition> parent,
-                 tuple<std::uint64_t> color,
-                 tuple<std::int64_t> offsets)
+                 SmallVector<std::uint64_t, LEGATE_MAX_DIM> color,
+                 SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     level_{parent->level() + 1},
@@ -124,7 +126,7 @@ Storage::~Storage()
 }
 // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
-const tuple<std::int64_t>& Storage::offsets() const
+Span<const std::int64_t> Storage::offsets() const
 {
   LEGATE_ASSERT(!unbound_);
   return offsets_;
@@ -147,8 +149,8 @@ bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
     return false;
   }
 
-  auto& lexts = lhs->extents();
-  auto& rexts = rhs->extents();
+  auto&& lexts = lhs->extents();
+  auto&& rexts = rhs->extents();
 
   for (std::uint32_t idx = 0; idx < dim(); ++idx) {
     auto lext = static_cast<std::int64_t>(lexts[idx]);
@@ -173,10 +175,10 @@ bool Storage::is_mapped() const
 
 namespace {
 
-// Using tuple instead of Span because PartitionManager.use_complete_tiling() takes tuples...
-[[nodiscard]] bool can_tile_completely_for(const tuple<std::uint64_t>& shape,
-                                           const tuple<std::uint64_t>& tile_shape,
-                                           const tuple<std::int64_t>& offsets)
+[[nodiscard]] bool can_tile_completely_for(Span<const std::uint64_t> shape,
+                                           Span<const std::uint64_t> tile_shape,
+                                           Span<const std::int64_t> offsets)
+
 {
   const auto zipper           = zip_equal(shape, tile_shape, offsets);
   constexpr auto is_divisible = [](std::tuple<std::uint64_t, std::uint64_t, std::int64_t> tup) {
@@ -192,8 +194,8 @@ namespace {
 }  // namespace
 
 InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self,
-                                          tuple<std::uint64_t> tile_shape,
-                                          tuple<std::int64_t> offsets)
+                                          SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+                                          SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
 {
   LEGATE_ASSERT(self.get() == this);
 
@@ -205,14 +207,25 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self
   const auto& shape              = root->extents();
   const auto can_tile_completely = can_tile_completely_for(shape, tile_shape, offsets);
 
-  tuple<std::uint64_t> color_shape, color;
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape, color;
+
+  color_shape.reserve(shape.size());
+  color.reserve(shape.size());
   if (can_tile_completely) {
-    color_shape = shape / tile_shape;
-    color       = offsets / tile_shape;
+    std::transform(shape.begin(),
+                   shape.end(),
+                   tile_shape.begin(),
+                   std::back_inserter(color_shape),
+                   std::divides<>{});
+    std::transform(offsets.begin(),
+                   offsets.end(),
+                   tile_shape.begin(),
+                   std::back_inserter(color),
+                   std::divides<>{});
     std::fill(offsets.begin(), offsets.end(), 0);
   } else {
-    color_shape = legate::full<std::uint64_t>(shape.size(), 1);
-    color       = legate::full<std::uint64_t>(shape.size(), 0);
+    color_shape.assign(tags::size_tag, shape.size(), 1);
+    color.assign(tags::size_tag, shape.size(), 0);
   }
 
   auto tiling = create_tiling(std::move(tile_shape), std::move(color_shape), std::move(offsets));
@@ -373,7 +386,7 @@ void Storage::free_early() noexcept
 
 Restrictions Storage::compute_restrictions() const
 {
-  return legate::full<Restriction>(dim(), Restriction::ALLOW);
+  return {tags::size_tag, dim(), Restriction::ALLOW};
 }
 
 std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
@@ -461,7 +474,7 @@ InternalSharedPtr<Storage> StoragePartition::get_root(const InternalSharedPtr<St
 }
 
 InternalSharedPtr<Storage> StoragePartition::get_child_storage(
-  const InternalSharedPtr<StoragePartition>& self, tuple<std::uint64_t> color)
+  const InternalSharedPtr<StoragePartition>& self, SmallVector<std::uint64_t, LEGATE_MAX_DIM> color)
 {
   LEGATE_ASSERT(self.get() == this);
 
@@ -472,12 +485,13 @@ InternalSharedPtr<Storage> StoragePartition::get_child_storage(
   auto tiling        = static_cast<Tiling*>(partition_.get());
   auto child_extents = tiling->get_child_extents(parent_->extents(), color);
   auto child_offsets = tiling->get_child_offsets(color);
+
   return make_internal_shared<Storage>(
     std::move(child_extents), self, std::move(color), std::move(child_offsets));
 }
 
 InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
-  const tuple<std::uint64_t>& color)
+  Span<const std::uint64_t> color)
 {
   if (partition_->kind() != Partition::Kind::TILING) {
     throw TracedException<std::runtime_error>{"Sub-storage is implemented only for tiling"};
@@ -540,7 +554,7 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
   }
 }
 
-LogicalStore::LogicalStore(tuple<std::uint64_t> extents,
+LogicalStore::LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
                            InternalSharedPtr<Storage> storage,
                            InternalSharedPtr<Type> type,
                            InternalSharedPtr<TransformStack> transform)
@@ -605,8 +619,12 @@ InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, st
       fmt::format("Invalid promotion on dimension {} for a {}-D store", extra_dim, dim())};
   }
 
-  auto new_extents = extents().insert(extra_dim, dim_size);
-  auto transform   = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
+  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{extents()};
+
+  new_extents.insert(new_extents.begin() + extra_dim, dim_size);
+
+  auto transform = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
+
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), storage_, type(), std::move(transform));
 }
@@ -625,14 +643,17 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
       fmt::format("Projection index {} is out of bounds [0, {})", index, old_extents[d])};
   }
 
-  auto new_extents = old_extents.remove(d);
-  auto transform   = stack(transform_, std::make_unique<Project>(d, index));
+  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{old_extents};
+
+  new_extents.erase(new_extents.begin() + d);
+
+  auto transform = stack(transform_, std::make_unique<Project>(d, index));
   auto substorage =
-    volume() == 0
-      ? storage_
-      : slice_storage(storage_,
-                      transform->invert_extents(new_extents),
-                      transform->invert_point(legate::full<std::int64_t>(new_extents.size(), 0)));
+    volume() == 0 ? storage_
+                  : slice_storage(storage_,
+                                  transform->invert_extents(new_extents),
+                                  transform->invert_point({tags::size_tag, new_extents.size(), 0}));
+
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), std::move(substorage), type(), std::move(transform));
 }
@@ -662,7 +683,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
                                                     std::max(std::int64_t{0}, stop));
   };
 
-  auto exts          = extents();
+  auto exts          = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{extents()};
   auto [start, stop] = sanitize_slice(slice, static_cast<std::int64_t>(exts[dim]));
 
   if (start < stop && (start >= exts[dim] || stop > exts[dim])) {
@@ -687,17 +708,17 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
 
   auto transform =
     (start == 0) ? transform_ : stack(transform_, std::make_unique<Shift>(dim, -start));
-  auto substorage =
-    volume() == 0
-      ? storage_
-      : slice_storage(storage_,
-                      transform->invert_extents(exts),
-                      transform->invert_point(legate::full<std::int64_t>(exts.size(), 0)));
+  auto substorage = volume() == 0
+                      ? storage_
+                      : slice_storage(storage_,
+                                      transform->invert_extents(exts),
+                                      transform->invert_point({tags::size_tag, exts.size(), 0}));
   return make_internal_shared<LogicalStore>(
     std::move(exts), std::move(substorage), type(), std::move(transform));
 }
 
-InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t> axes)
+InternalSharedPtr<LogicalStore> LogicalStore::transpose(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> axes)
 {
   if (axes.size() != dim()) {
     throw TracedException<std::invalid_argument>{
@@ -715,14 +736,14 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t
     }
   }
 
-  auto new_extents = extents().map(axes);
+  auto new_extents = array_map<SmallVector<std::uint64_t, LEGATE_MAX_DIM>>(extents(), axes);
   auto transform   = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), storage_, type(), std::move(transform));
 }
 
-InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
-                                                          std::vector<std::uint64_t> sizes)
+InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
+  std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes)
 {
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
     throw TracedException<std::invalid_argument>{
@@ -735,7 +756,6 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
     auto begin = new_dim_extents.begin();
     auto end   = new_dim_extents.end();
     return std::reduce(begin, end, std::size_t{1}, std::multiplies<>{}) == to_match &&
-           // overflow check
            std::all_of(begin, end, [&to_match](auto size) { return size <= to_match; });
   };
 
@@ -744,26 +764,24 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
       fmt::format("Dimension of size {} cannot be delinearized into {}", old_extents[dim], sizes)};
   }
 
-  auto new_extents = tuple<std::uint64_t>{};
+  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
 
-  new_extents.reserve(old_extents.size() + sizes.size() - 1);
-  for (int i = 0; i < dim; i++) {
-    new_extents.append_inplace(old_extents[i]);
-  }
-  for (auto&& size : sizes) {
-    new_extents.append_inplace(size);
-  }
-  for (auto i = static_cast<std::uint32_t>(dim + 1); i < old_extents.size(); i++) {
-    new_extents.append_inplace(old_extents[i]);
+  new_extents.reserve(old_extents.size() + sizes.size());
+  std::copy_n(old_extents.begin(), dim, std::back_inserter(new_extents));
+  std::copy(sizes.begin(), sizes.end(), std::back_inserter(new_extents));
+  if (static_cast<std::uint32_t>(dim + 1) < old_extents.size()) {
+    std::copy(old_extents.begin() + dim + 1, old_extents.end(), std::back_inserter(new_extents));
   }
 
   auto transform = stack(transform_, std::make_unique<Delinearize>(dim, std::move(sizes)));
+
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), storage_, type(), std::move(transform));
 }
 
 InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
-  const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape)
+  const InternalSharedPtr<LogicalStore>& self,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape)
 {
   LEGATE_ASSERT(self.get() == this);
   if (tile_shape.size() != dim()) {
@@ -772,11 +790,20 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
                   extents().size(),
                   tile_shape.size())};
   }
-  if (tile_shape.volume() == 0) {
+  if (array_volume(tile_shape) == 0) {
     throw TracedException<std::invalid_argument>{"Tile shape must have a volume greater than 0"};
   }
-  auto color_shape = apply([](auto c, auto t) { return (c + t - 1) / t; }, extents(), tile_shape);
-  auto partition   = create_tiling(std::move(tile_shape), std::move(color_shape));
+
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape;
+
+  color_shape.reserve(extents().size());
+  std::transform(extents().begin(),
+                 extents().end(),
+                 tile_shape.begin(),
+                 std::back_inserter(color_shape),
+                 [](std::uint64_t c, std::uint64_t t) { return (c + t - 1) / t; });
+
+  auto partition = create_tiling(std::move(tile_shape), std::move(color_shape));
   return create_partition_(self, std::move(partition), true);
 }
 
@@ -869,7 +896,7 @@ Restrictions LogicalStore::compute_restrictions(bool is_output) const
 
 Legion::ProjectionID LogicalStore::compute_projection(
   const Domain& launch_domain,
-  const tuple<std::uint64_t>& color_shape,
+  Span<const std::uint64_t> color_shape,
   const std::optional<SymbolicPoint>& projection) const
 {
   // If this is a sequential launch, the projection functor id is always 0
@@ -1228,7 +1255,7 @@ bool LogicalStore::equal_storage(const LogicalStore& other) const
 ////////////////////////////////////////////////////
 
 InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
-  const tuple<std::uint64_t>& color) const
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
   if (partition_->kind() != Partition::Kind::TILING) {
     throw TracedException<std::runtime_error>{
@@ -1241,10 +1268,8 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
       fmt::format("Color {} is invalid for partition of color shape {}", color, color_shape())};
   }
 
-  auto transform = store_->transform();
-  // TODO(jfaibussowit)
-  // Can move color here
-  auto inverted_color = transform->invert_color(color);
+  auto transform      = store_->transform();
+  auto inverted_color = transform->invert_color(std::move(color));
   auto child_storage  = storage_partition_->get_child_storage(storage_partition_, inverted_color);
 
   auto child_extents = tiling->get_child_extents(store_->extents(), inverted_color);
@@ -1285,7 +1310,7 @@ bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const
   return storage_partition_->is_disjoint_for(launch_domain);
 }
 
-const tuple<std::uint64_t>& LogicalStorePartition::color_shape() const
+Span<const std::uint64_t> LogicalStorePartition::color_shape() const
 {
   return partition_->color_shape();
 }

@@ -12,6 +12,7 @@
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/zip.h>
 #include <legate/utilities/macros.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/tuple.h>
 
 #include <algorithm>
@@ -192,7 +193,8 @@ void tuple<T>::reserve(size_type size)
 
 namespace detail {
 
-void assert_in_range(std::size_t tuple_size, std::int32_t pos);
+// NOLINTNEXTLINE(readability-redundant-declaration)
+void assert_in_range(std::size_t container_size, std::int64_t pos);
 
 }  // namespace detail
 
@@ -341,12 +343,12 @@ bool tuple<T>::any(PRED&& pred) const
 
 namespace detail {
 
-void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t>& mapping);
+void assert_valid_mapping(std::size_t container_size, Span<const std::int32_t> mapping);
 
 }  // namespace detail
 
 template <typename T>
-tuple<T> tuple<T>::map(const std::vector<std::int32_t>& mapping) const
+tuple<T> tuple<T>::map(Span<const std::int32_t> mapping) const
 {
   tuple new_values;
 
@@ -511,6 +513,7 @@ auto apply(FUNC&& func, const tuple<T>& rhs)
 
 namespace detail {
 
+// NOLINTNEXTLINE(readability-redundant-declaration)
 [[noreturn]] void throw_invalid_tuple_sizes(std::size_t lhs_size, std::size_t rhs_size);
 
 }  // namespace detail

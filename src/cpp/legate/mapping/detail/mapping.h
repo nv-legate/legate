@@ -8,6 +8,7 @@
 
 #include <legate/mapping/detail/store.h>
 #include <legate/mapping/mapping.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
@@ -60,7 +61,8 @@ class DimOrdering {
    *
    * @returns a tuple of integers in the range [0..ndim).
    */
-  [[nodiscard]] tuple<std::int32_t> generate_integer_dims(std::uint32_t ndim) const;
+  [[nodiscard]] legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> generate_integer_dims(
+    std::uint32_t ndim) const;
 
   /**
    * convert integer dimensions into Legion::DimensionKind, and in some cases,

@@ -24,7 +24,7 @@ inline std::string_view ReturnedPythonException::message() const
   return bytes_ ? bytes_->msg : std::string_view{""};
 }
 
-inline bool ReturnedPythonException::raised() const { return pickle().size(); }
+inline bool ReturnedPythonException::raised() const { return !pickle().empty(); }
 
 inline std::size_t ReturnedPythonException::legion_buffer_size() const
 {

@@ -34,16 +34,16 @@ TEST_F(TransformShiftUnit, ShiftConvert)
   ASSERT_EQ(transform->target_ndim(0), 0);
   ASSERT_TRUE(transform->is_convertible());
 
-  auto dims = std::vector<std::int32_t>({0});
+  auto dims = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0};
 
   ASSERT_NO_THROW(transform->find_imaginary_dims(dims));
-  ASSERT_EQ(dims, std::vector<std::int32_t>({0}));
+  ASSERT_THAT(dims, ::testing::ElementsAre(0));
 }
 
 TEST_F(TransformShiftUnit, ShiftConvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::Shift>(1, 2);
-  auto expected  = legate::tuple<std::uint64_t>{1, 2, 3};
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 3};
   auto color     = transform->convert_color(expected);
 
   ASSERT_EQ(color, expected);
@@ -52,16 +52,16 @@ TEST_F(TransformShiftUnit, ShiftConvertColor)
 TEST_F(TransformShiftUnit, ShiftConvertColorShape)
 {
   auto transform = legate::make_internal_shared<legate::detail::Shift>(2, 4);
-  auto expected  = legate::tuple<std::uint64_t>{1, 3, 3};
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 3, 3};
   auto color     = transform->convert_color_shape(expected);
 
-  ASSERT_EQ(color, (legate::tuple<std::uint64_t>{1, 3, 3}));
+  ASSERT_THAT(color, ::testing::ElementsAre(1, 3, 3));
 }
 
 TEST_F(TransformShiftUnit, ShiftConvertExtents)
 {
   auto transform = legate::make_internal_shared<legate::detail::Shift>(2, 4);
-  auto expected  = legate::tuple<std::uint64_t>{2, 5, 3};
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 5, 3};
   auto extents   = transform->convert_extents(expected);
 
   ASSERT_EQ(extents, expected);
@@ -91,7 +91,7 @@ TEST_F(TransformShiftUnit, ShiftInvertSymbolicPoint)
 TEST_F(TransformShiftUnit, ShiftInvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::Shift>(3, 3);
-  auto expected  = legate::tuple<std::uint64_t>{3, 2, 1};
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 2, 1};
   auto color     = transform->invert_color(expected);
 
   ASSERT_EQ(color, expected);
@@ -100,7 +100,7 @@ TEST_F(TransformShiftUnit, ShiftInvertColor)
 TEST_F(TransformShiftUnit, ShiftInvertColorShape)
 {
   auto transform = legate::make_internal_shared<legate::detail::Shift>(2, 1);
-  auto expected  = legate::tuple<std::uint64_t>{1};
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
   auto color     = transform->invert_color_shape(expected);
 
   ASSERT_EQ(color, expected);
@@ -108,9 +108,10 @@ TEST_F(TransformShiftUnit, ShiftInvertColorShape)
 
 TEST_F(TransformShiftUnit, ShiftInvertExtents)
 {
-  auto transform = legate::make_internal_shared<legate::detail::Shift>(LEGATE_MAX_DIM + 1, 3);
-  auto expected  = legate::tuple<std::uint64_t>{1, 1, 1, 1, 1, 1, 1, 1, 1};
-  auto extents   = transform->invert_extents(expected);
+  auto transform = legate::make_internal_shared<legate::detail::Shift>(LEGATE_MAX_DIM, 3);
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{
+    legate::detail::tags::size_tag, LEGATE_MAX_DIM, 1};
+  auto extents = transform->invert_extents(expected);
 
   ASSERT_EQ(extents, expected);
 }

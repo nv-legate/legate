@@ -17,6 +17,7 @@
 #include <legate/task/variant_options.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/span.h>
 
 #include <cstdint>
 #include <map>
@@ -143,6 +144,21 @@ class Runtime {
   [[nodiscard]] ManualTask create_task(Library library,
                                        LocalTaskID task_id,
                                        const tuple<std::uint64_t>& launch_shape);
+
+  // The following overloads are needed to disambiguate
+  //
+  // create_task(..., {some, initializer, list});
+  //
+  // both tuple and Span have implicit constructors from initializer list, so we need to
+  // provide an explicit initializer_list overload as well. Ideally we phase out tuple (in
+  // which case Span should be the other overload that remains), but until then, we need all 3.
+  [[nodiscard]] ManualTask create_task(Library library,
+                                       LocalTaskID task_id,
+                                       Span<const std::uint64_t> launch_shape);
+  [[nodiscard]] ManualTask create_task(Library library,
+                                       LocalTaskID task_id,
+                                       std::initializer_list<std::uint64_t> launch_shape);
+
   /**
    * @brief Creates a ManualTask
    *
@@ -565,8 +581,8 @@ class Runtime {
    * @note This API is experimental
    */
   void prefetch_bloated_instances(const LogicalStore& store,
-                                  tuple<std::uint64_t> low_offsets,
-                                  tuple<std::uint64_t> high_offsets,
+                                  Span<const std::uint64_t> low_offsets,
+                                  Span<const std::uint64_t> high_offsets,
                                   bool initialize = false);
 
   /**

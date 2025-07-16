@@ -11,7 +11,9 @@
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/hash.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <iosfwd>
@@ -47,9 +49,9 @@ class Partition {
   [[nodiscard]] virtual bool is_convertible() const                                         = 0;
 
   [[nodiscard]] virtual InternalSharedPtr<Partition> scale(
-    const tuple<std::uint64_t>& factors) const = 0;
+    Span<const std::uint64_t> factors) const = 0;
   [[nodiscard]] virtual InternalSharedPtr<Partition> bloat(
-    const tuple<std::uint64_t>& low_offsets, const tuple<std::uint64_t>& high_offsets) const = 0;
+    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const = 0;
 
   // NOLINTNEXTLINE(google-default-arguments)
   [[nodiscard]] virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
@@ -60,7 +62,7 @@ class Partition {
 
   [[nodiscard]] virtual std::string to_string() const = 0;
 
-  [[nodiscard]] virtual const tuple<std::uint64_t>& color_shape() const = 0;
+  [[nodiscard]] virtual Span<const std::uint64_t> color_shape() const = 0;
 
   [[nodiscard]] virtual InternalSharedPtr<Partition> convert(
     const InternalSharedPtr<Partition>& self,
@@ -80,10 +82,9 @@ class NoPartition : public Partition {
   [[nodiscard]] bool is_convertible() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> scale(
-    const tuple<std::uint64_t>& factors) const override;
+    Span<const std::uint64_t> factors) const override;
   [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    const tuple<std::uint64_t>& low_offsets,
-    const tuple<std::uint64_t>& high_offsets) const override;
+    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion /*region*/,
                                                    bool /*complete*/) const override;
@@ -93,7 +94,7 @@ class NoPartition : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
+  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
     const InternalSharedPtr<Partition>& self,
@@ -129,13 +130,13 @@ class Tiling : public Partition {
    * @param color_shape The number of colors in each dimension.
    * @param offsets The number of entries to skip per dimension.
    */
-  Tiling(tuple<std::uint64_t> tile_shape,
-         tuple<std::uint64_t> color_shape,
-         tuple<std::int64_t> offsets);
-  Tiling(tuple<std::uint64_t> tile_shape,
-         tuple<std::uint64_t> color_shape,
-         tuple<std::int64_t> offsets,
-         tuple<std::uint64_t> strides);
+  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
+  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+         SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
 
   bool operator==(const Tiling& other) const;
 
@@ -147,10 +148,9 @@ class Tiling : public Partition {
   [[nodiscard]] bool is_convertible() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> scale(
-    const tuple<std::uint64_t>& factors) const override;
+    Span<const std::uint64_t> factors) const override;
   [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    const tuple<std::uint64_t>& low_offsets,
-    const tuple<std::uint64_t>& high_offsets) const override;
+    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                    bool complete) const override;
@@ -160,8 +160,8 @@ class Tiling : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const tuple<std::uint64_t>& tile_shape() const;
-  [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
+  [[nodiscard]] Span<const std::uint64_t> tile_shape() const;
+  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
     const InternalSharedPtr<Partition>& self,
@@ -170,9 +170,9 @@ class Tiling : public Partition {
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const override;
 
-  [[nodiscard]] const tuple<std::int64_t>& offsets() const;
-  [[nodiscard]] const tuple<std::uint64_t>& strides() const;
-  [[nodiscard]] bool has_color(const tuple<std::uint64_t>& color) const;
+  [[nodiscard]] Span<const std::int64_t> offsets() const;
+  [[nodiscard]] Span<const std::uint64_t> strides() const;
+  [[nodiscard]] bool has_color(Span<const std::uint64_t> color) const;
 
   /**
    * @brief Apply the tiling to the extents of a parent Store and retrieve the extents of a
@@ -201,18 +201,19 @@ class Tiling : public Partition {
    *
    * @return The sub-region of `extents` corresponding to `color`.
    */
-  [[nodiscard]] tuple<std::uint64_t> get_child_extents(const tuple<std::uint64_t>& extents,
-                                                       const tuple<std::uint64_t>& color) const;
-  [[nodiscard]] tuple<std::int64_t> get_child_offsets(const tuple<std::uint64_t>& color) const;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> get_child_extents(
+    Span<const std::uint64_t> extents, Span<const std::uint64_t> color) const;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> get_child_offsets(
+    Span<const std::uint64_t> color) const;
 
   [[nodiscard]] std::size_t hash() const;
 
  private:
   bool overlapped_{};
-  tuple<std::uint64_t> tile_shape_{};
-  tuple<std::uint64_t> color_shape_{};
-  tuple<std::int64_t> offsets_{};
-  tuple<std::uint64_t> strides_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
 };
 
 class Weighted : public Partition {
@@ -231,10 +232,9 @@ class Weighted : public Partition {
   [[nodiscard]] bool is_complete_for(const detail::Storage& /*storage*/) const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> scale(
-    const tuple<std::uint64_t>& factors) const override;
+    Span<const std::uint64_t> factors) const override;
   [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    const tuple<std::uint64_t>& low_offsets,
-    const tuple<std::uint64_t>& high_offsets) const override;
+    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                    bool complete) const override;
@@ -244,7 +244,7 @@ class Weighted : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
+  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
     const InternalSharedPtr<Partition>& self,
@@ -261,7 +261,7 @@ class Weighted : public Partition {
  private:
   Legion::FutureMap weights_{};
   Domain color_domain_{};
-  tuple<std::uint64_t> color_shape_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
 };
 
 class Image : public Partition {
@@ -281,10 +281,9 @@ class Image : public Partition {
   [[nodiscard]] bool is_convertible() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> scale(
-    const tuple<std::uint64_t>& factors) const override;
+    Span<const std::uint64_t> factors) const override;
   [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    const tuple<std::uint64_t>& low_offsets,
-    const tuple<std::uint64_t>& high_offsets) const override;
+    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                    bool complete) const override;
@@ -294,7 +293,7 @@ class Image : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
+  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
     const InternalSharedPtr<Partition>& self,
@@ -312,14 +311,16 @@ class Image : public Partition {
 
 [[nodiscard]] InternalSharedPtr<NoPartition> create_no_partition();
 
-[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
-                                                      tuple<std::uint64_t> color_shape,
-                                                      tuple<std::int64_t> offsets = {});
+[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets = {});
 
-[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
-                                                      tuple<std::uint64_t> color_shape,
-                                                      tuple<std::int64_t> offsets,
-                                                      tuple<std::uint64_t> strides);
+[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
 
 [[nodiscard]] InternalSharedPtr<Weighted> create_weighted(const Legion::FutureMap& weights,
                                                           const Domain& color_domain);

@@ -410,9 +410,10 @@ TEST_F(LogicalRegionFieldUnit, ChildInvalidationCallbacks)
   auto runtime           = legate::Runtime::get_runtime();
   auto store             = runtime->create_store(legate::Shape{3}, legate::uint32());
   auto root_region_field = store.impl()->get_region_field();
-  auto tiling = legate::detail::create_tiling(legate::tuple<std::uint64_t>{1},  // tile_shape
-                                              legate::tuple<std::uint64_t>{1},  // color_shape
-                                              legate::tuple<std::int64_t>{}     // offsets (empty)
+  auto tiling            = legate::detail::create_tiling(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1},  // tile_shape
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1},  // color_shape
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{}     // offsets (empty)
   );
   auto child_region_field = root_region_field->get_child(tiling.get(), {0}, true);
   std::vector<int> callback_order;

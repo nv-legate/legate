@@ -15,6 +15,7 @@
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <optional>
@@ -91,7 +92,7 @@ class LogicalArray {
    *
    * @return The store's extents
    */
-  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
+  [[nodiscard]] tuple<std::uint64_t> extents() const;
 
   /**
    * @brief Returns the number of elements in the array.
@@ -189,7 +190,7 @@ class LogicalArray {
    * axis name.
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray transpose(const std::vector<std::int32_t>& axes) const;
+  [[nodiscard]] LogicalArray transpose(Span<const std::int32_t> axes) const;
 
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
@@ -205,8 +206,7 @@ class LogicalArray {
    * the extent of the chosen dimension
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray delinearize(std::int32_t dim,
-                                         const std::vector<std::uint64_t>& sizes) const;
+  [[nodiscard]] LogicalArray delinearize(std::int32_t dim, Span<const std::uint64_t> sizes) const;
 
   /**
    * @brief Returns the store of this array

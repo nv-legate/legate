@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/operation/projection.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/tuple.h>
 
 namespace legate::proj {
@@ -38,12 +39,13 @@ void register_affine_projection_functor(std::uint32_t src_ndim,
                                         const proj::SymbolicPoint& point,
                                         Legion::ProjectionID proj_id);
 
-void register_delinearizing_projection_functor(const tuple<std::uint64_t>& color_shape,
-                                               Legion::ProjectionID proj_id);
+void register_delinearizing_projection_functor(
+  const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape, Legion::ProjectionID proj_id);
 
-void register_compound_projection_functor(const tuple<std::uint64_t>& color_shape,
-                                          const proj::SymbolicPoint& point,
-                                          Legion::ProjectionID proj_id);
+void register_compound_projection_functor(
+  const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape,
+  const proj::SymbolicPoint& point,
+  Legion::ProjectionID proj_id);
 
 [[nodiscard]] ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id);
 

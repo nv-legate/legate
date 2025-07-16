@@ -18,8 +18,6 @@ inline bool Shape::ready() const { return state_ == State::READY; }
 
 inline std::uint32_t Shape::ndim() const { return dim_; }
 
-inline std::size_t Shape::volume() { return extents().volume(); }
-
 inline bool Shape::operator!=(Shape& other) { return !operator==(other); }
 
 }  // namespace legate::detail

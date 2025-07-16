@@ -8,7 +8,8 @@
 
 #include <legate/partitioning/detail/proxy/constraint.h>
 #include <legate/partitioning/proxy.h>
-#include <legate/utilities/tuple.h>
+#include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/span.h>
 
 #include <cstdint>
 #include <string_view>
@@ -37,8 +38,8 @@ class ProxyBloat final : public ProxyConstraint {
    */
   ProxyBloat(value_type var_source,
              value_type var_bloat,
-             tuple<std::uint64_t> low_offsets,
-             tuple<std::uint64_t> high_offsets) noexcept;
+             SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
+             SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets) noexcept;
 
   /**
    * @return The source variable.
@@ -53,12 +54,12 @@ class ProxyBloat final : public ProxyConstraint {
   /**
    * @return The low offsets.
    */
-  [[nodiscard]] constexpr const tuple<std::uint64_t>& low_offsets() const noexcept;
+  [[nodiscard]] constexpr Span<const std::uint64_t> low_offsets() const noexcept;
 
   /**
    * @return The high offsets.
    */
-  [[nodiscard]] constexpr const tuple<std::uint64_t>& high_offsets() const noexcept;
+  [[nodiscard]] constexpr Span<const std::uint64_t> high_offsets() const noexcept;
 
   /**
    * @return The name of the bloat constraint.
@@ -87,8 +88,8 @@ class ProxyBloat final : public ProxyConstraint {
  private:
   value_type var_source_;
   value_type var_bloat_;
-  tuple<std::uint64_t> low_offsets_{};
-  tuple<std::uint64_t> high_offsets_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets_{};
 };
 
 }  // namespace legate::detail

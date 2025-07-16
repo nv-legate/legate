@@ -19,20 +19,23 @@ namespace {
 
 void do_bloat_final(const Variable* var_source,
                     const Variable* var_bloat,
-                    const tuple<std::uint64_t>& low_offsets,
-                    const tuple<std::uint64_t>& high_offsets,
+                    Span<const std::uint64_t> low_offsets,
+                    Span<const std::uint64_t> high_offsets,
                     AutoTask* task)
 {
   if (var_source != var_bloat) {
-    task->add_constraint(bloat(var_source, var_bloat, low_offsets, high_offsets),
+    task->add_constraint(bloat(var_source,
+                               var_bloat,
+                               SmallVector<std::uint64_t, LEGATE_MAX_DIM>{low_offsets},
+                               SmallVector<std::uint64_t, LEGATE_MAX_DIM>{high_offsets}),
                          /* bypass_signature_check */ true);
   }
 }
 
 void do_bloat(const TaskArrayArg* var_source,
               const TaskArrayArg* var_bloat,
-              const tuple<std::uint64_t>& low_offsets,
-              const tuple<std::uint64_t>& high_offsets,
+              Span<const std::uint64_t> low_offsets,
+              Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
   do_bloat_final(task->find_or_declare_partition(var_source->array),
@@ -44,8 +47,8 @@ void do_bloat(const TaskArrayArg* var_source,
 
 void do_bloat(const TaskArrayArg* var_source,
               Span<const TaskArrayArg> var_bloat,
-              const tuple<std::uint64_t>& low_offsets,
-              const tuple<std::uint64_t>& high_offsets,
+              Span<const std::uint64_t> low_offsets,
+              Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
   const auto* source_part = task->find_or_declare_partition(var_source->array);
@@ -58,8 +61,8 @@ void do_bloat(const TaskArrayArg* var_source,
 
 void do_bloat(Span<const TaskArrayArg> var_source,
               const TaskArrayArg* var_bloat,
-              const tuple<std::uint64_t>& low_offsets,
-              const tuple<std::uint64_t>& high_offsets,
+              Span<const std::uint64_t> low_offsets,
+              Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
   const auto* bloat_part = task->find_or_declare_partition(var_bloat->array);
@@ -72,8 +75,8 @@ void do_bloat(Span<const TaskArrayArg> var_source,
 
 void do_bloat(Span<const TaskArrayArg> var_source,
               Span<const TaskArrayArg> var_bloat,
-              const tuple<std::uint64_t>& low_offsets,
-              const tuple<std::uint64_t>& high_offsets,
+              Span<const std::uint64_t> low_offsets,
+              Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
   for (auto&& src : var_source) {
@@ -85,8 +88,8 @@ void do_bloat(Span<const TaskArrayArg> var_source,
 
 ProxyBloat::ProxyBloat(value_type var_source,
                        value_type var_bloat,
-                       tuple<std::uint64_t> low_offsets,
-                       tuple<std::uint64_t> high_offsets) noexcept
+                       SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
+                       SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets) noexcept
   : var_source_{std::move(var_source)},
     var_bloat_{std::move(var_bloat)},
     low_offsets_{std::move(low_offsets)},
@@ -115,11 +118,10 @@ void ProxyBloat::apply(AutoTask* task) const
 bool ProxyBloat::operator==(const ProxyConstraint& rhs) const
 {
   if (const auto* rhsptr = dynamic_cast<const ProxyBloat*>(&rhs)) {
-    return std::tie(var_source(), var_bloat(), low_offsets(), high_offsets()) ==
-           std::tie(rhsptr->var_source(),
-                    rhsptr->var_bloat(),
-                    rhsptr->low_offsets(),
-                    rhsptr->high_offsets());
+    return std::tie(var_source(), var_bloat()) ==
+             std::tie(rhsptr->var_source(), rhsptr->var_bloat()) &&
+           low_offsets().deep_equal(rhsptr->low_offsets()) &&
+           high_offsets().deep_equal(rhsptr->high_offsets());
   }
   return false;
 }

@@ -234,8 +234,9 @@ void LogicalRegionField::release_region_field() noexcept
   released_ = true;
 }
 
-InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(
-  const Tiling* tiling, const tuple<std::uint64_t>& color, bool complete)
+InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* tiling,
+                                                                    Span<const std::uint64_t> color,
+                                                                    bool complete)
 {
   auto legion_partition = get_legion_partition(tiling, complete);
   auto color_point      = to_domain_point(color);

@@ -11,7 +11,6 @@
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
 #include <legate/partitioning/proxy.h>
-#include <legate/utilities/tuple.h>
 
 #include <cstdint>
 #include <optional>
@@ -22,7 +21,7 @@ namespace legate::detail {
 namespace {
 
 void do_broadcast_final(const Variable* var,
-                        const std::optional<tuple<std::uint32_t>>& axes,
+                        const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes,
                         AutoTask* task)
 {
   auto&& constraint = [&](legate::Variable pub_var) {
@@ -36,14 +35,14 @@ void do_broadcast_final(const Variable* var,
 }
 
 void do_broadcast(const TaskArrayArg* arg,
-                  const std::optional<tuple<std::uint32_t>>& axes,
+                  const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes,
                   AutoTask* task)
 {
   do_broadcast_final(task->find_or_declare_partition(arg->array), axes, task);
 }
 
 void do_broadcast(Span<const TaskArrayArg> args,
-                  const std::optional<tuple<std::uint32_t>>& axes,
+                  const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes,
                   AutoTask* task)
 {
   for (auto&& arg : args) {
@@ -53,7 +52,8 @@ void do_broadcast(Span<const TaskArrayArg> args,
 
 }  // namespace
 
-ProxyBroadcast::ProxyBroadcast(value_type value, std::optional<tuple<std::uint32_t>> axes) noexcept
+ProxyBroadcast::ProxyBroadcast(
+  value_type value, std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>> axes) noexcept
   : value_{std::move(value)}, axes_{std::move(axes)}
 {
 }

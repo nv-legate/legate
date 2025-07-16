@@ -514,6 +514,7 @@ target_sources(legate
                        legate/utilities/detail/linearize.cc
                        legate/utilities/detail/error.cc
                        legate/utilities/detail/proc_local_storage.cc
+                       legate/utilities/detail/array_algorithms.cc
                        legate/timing/timing.cc
                        # stl
                        legate/experimental/stl/detail/clang_tidy_dummy.cpp

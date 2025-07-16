@@ -7,6 +7,7 @@
 #include <legate/runtime/detail/projection.h>
 
 #include <legate/runtime/detail/library.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/typedefs.h>
@@ -107,7 +108,7 @@ AffineProjection<SRC_NDIM, TGT_NDIM>::create_transform(const proj::SymbolicPoint
 
 class DelinearizingProjection final : public ProjectionFunction {
  public:
-  explicit DelinearizingProjection(const tuple<std::uint64_t>& color_shape);
+  explicit DelinearizingProjection(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape);
 
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point) const override;
 
@@ -115,7 +116,8 @@ class DelinearizingProjection final : public ProjectionFunction {
   std::vector<std::int64_t> strides_{};
 };
 
-DelinearizingProjection::DelinearizingProjection(const tuple<std::uint64_t>& color_shape)
+DelinearizingProjection::DelinearizingProjection(
+  const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape)
   : strides_(color_shape.size(), 1)
 {
   for (std::uint32_t dim = color_shape.size() - 1; dim > 0; --dim) {
@@ -144,7 +146,8 @@ DomainPoint DelinearizingProjection::project_point(const DomainPoint& point) con
 template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
 class CompoundProjection final : public ProjectionFunction {
  public:
-  CompoundProjection(const tuple<std::uint64_t>& color_shape, const proj::SymbolicPoint& point);
+  CompoundProjection(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape,
+                     const proj::SymbolicPoint& point);
 
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point) const override;
 
@@ -154,8 +157,8 @@ class CompoundProjection final : public ProjectionFunction {
 };
 
 template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
-CompoundProjection<SRC_NDIM, TGT_NDIM>::CompoundProjection(const tuple<std::uint64_t>& color_shape,
-                                                           const proj::SymbolicPoint& point)
+CompoundProjection<SRC_NDIM, TGT_NDIM>::CompoundProjection(
+  const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape, const proj::SymbolicPoint& point)
   : delinearizing_projection_{color_shape}, affine_projection_{point}
 {
 }
@@ -248,7 +251,7 @@ class RegisterAffineFunctorFn {
 class RegisterCompoundFunctorFn {
  public:
   template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
-  void operator()(const tuple<std::uint64_t>& color_shape,
+  void operator()(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape,
                   const proj::SymbolicPoint& point,
                   Legion::ProjectionID proj_id)
   {
@@ -287,15 +290,16 @@ void register_affine_projection_functor(std::uint32_t src_ndim,
                           proj_id);
 }
 
-void register_delinearizing_projection_functor(const tuple<std::uint64_t>& color_shape,
-                                               Legion::ProjectionID proj_id)
+void register_delinearizing_projection_functor(
+  const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape, Legion::ProjectionID proj_id)
 {
   register_legion_functor(proj_id, std::make_unique<DelinearizingProjection>(color_shape));
 }
 
-void register_compound_projection_functor(const tuple<std::uint64_t>& color_shape,
-                                          const proj::SymbolicPoint& point,
-                                          Legion::ProjectionID proj_id)
+void register_compound_projection_functor(
+  const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape,
+  const proj::SymbolicPoint& point,
+  Legion::ProjectionID proj_id)
 {
   legate::double_dispatch(static_cast<std::int32_t>(color_shape.size()),
                           static_cast<std::int32_t>(point.size()),

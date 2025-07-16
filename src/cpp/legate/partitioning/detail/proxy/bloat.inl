@@ -20,12 +20,12 @@ constexpr const ProxyBloat::value_type& ProxyBloat::var_bloat() const noexcept
   return var_bloat_;
 }
 
-constexpr const tuple<std::uint64_t>& ProxyBloat::low_offsets() const noexcept
+constexpr Span<const std::uint64_t> ProxyBloat::low_offsets() const noexcept
 {
   return low_offsets_;
 }
 
-constexpr const tuple<std::uint64_t>& ProxyBloat::high_offsets() const noexcept
+constexpr Span<const std::uint64_t> ProxyBloat::high_offsets() const noexcept
 {
   return high_offsets_;
 }

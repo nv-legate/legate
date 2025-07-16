@@ -32,7 +32,7 @@ inline Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion /*r
 
 inline bool NoPartition::has_launch_domain() const { return false; }
 
-inline const tuple<std::uint64_t>& NoPartition::color_shape() const
+inline Span<const std::uint64_t> NoPartition::color_shape() const
 {
   throw TracedException<std::invalid_argument>{"NoPartition doesn't support color_shape"};
 }
@@ -45,17 +45,18 @@ inline bool Tiling::is_convertible() const { return true; }
 
 inline bool Tiling::has_launch_domain() const { return true; }
 
-inline const tuple<std::uint64_t>& Tiling::tile_shape() const { return tile_shape_; }
+inline Span<const std::uint64_t> Tiling::tile_shape() const { return tile_shape_; }
 
-inline const tuple<std::uint64_t>& Tiling::color_shape() const { return color_shape_; }
+inline Span<const std::uint64_t> Tiling::color_shape() const { return color_shape_; }
 
-inline const tuple<std::int64_t>& Tiling::offsets() const { return offsets_; }
+inline Span<const std::int64_t> Tiling::offsets() const { return offsets_; }
 
-inline const tuple<std::uint64_t>& Tiling::strides() const { return strides_; }
+inline Span<const std::uint64_t> Tiling::strides() const { return strides_; }
 
-inline bool Tiling::has_color(const tuple<std::uint64_t>& color) const
+inline bool Tiling::has_color(Span<const std::uint64_t> color) const
 {
-  return (color.size() == color_shape().size()) && color.less(color_shape());
+  return std::equal(
+    color.begin(), color.end(), color_shape().begin(), color_shape().end(), std::less<>{});
 }
 
 // ==========================================================================================
@@ -74,7 +75,7 @@ inline bool Weighted::has_launch_domain() const { return true; }
 
 inline Domain Weighted::launch_domain() const { return color_domain_; }
 
-inline const tuple<std::uint64_t>& Weighted::color_shape() const { return color_shape_; }
+inline Span<const std::uint64_t> Weighted::color_shape() const { return color_shape_; }
 
 // ==========================================================================================
 

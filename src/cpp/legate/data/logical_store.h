@@ -15,6 +15,7 @@
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/span.h>
 
 #include <optional>
 #include <utility>
@@ -144,7 +145,7 @@ class LogicalStore {
    *
    * @return The store's extents
    */
-  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
+  [[nodiscard]] tuple<std::uint64_t> extents() const;
 
   /**
    * @brief Returns the number of elements in the store.
@@ -396,7 +397,7 @@ class LogicalStore {
    * @return A store partition
    */
   [[nodiscard]] LogicalStorePartition partition_by_tiling(
-    std::vector<std::uint64_t> tile_shape) const;
+    Span<const std::uint64_t> tile_shape) const;
 
   /**
    * @brief Creates a `PhysicalStore` for this `LogicalStore`
@@ -489,8 +490,8 @@ class LogicalStorePartition {
   explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition> impl);
 
   [[nodiscard]] LogicalStore store() const;
-  [[nodiscard]] const tuple<std::uint64_t>& color_shape() const;
-  [[nodiscard]] LogicalStore get_child_store(const tuple<std::uint64_t>& color) const;
+  [[nodiscard]] tuple<std::uint64_t> color_shape() const;
+  [[nodiscard]] LogicalStore get_child_store(Span<const std::uint64_t> color) const;
 
   [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& impl() const;
 

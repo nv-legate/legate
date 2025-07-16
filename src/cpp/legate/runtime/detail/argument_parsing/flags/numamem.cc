@@ -34,7 +34,7 @@ void configure_numamem(bool auto_config,
 
   // Negative value here indicates we forgot to configure openmp before calling this function.
   LEGATE_CHECK(omps.value() >= 0);
-  if (omps.value() == 0 || numa_mems.size() == 0 || omps.value() % numa_mems.size() != 0) {
+  if (omps.value() == 0 || numa_mems.empty() || omps.value() % numa_mems.size() != 0) {
     numamem_value = 0;
     return;
   }

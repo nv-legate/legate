@@ -13,6 +13,7 @@
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
 #include <legate/runtime/runtime.h>
 #include <legate/type/types.h>
+#include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
 
@@ -221,7 +222,8 @@ LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
   auto partition      = ret.data().partition_by_tiling(tile_shape);
   auto&& launch_shape = partition.color_shape();
 
-  if (const auto launch_vol = launch_shape.volume(); launch_vol != offsets.size()) {
+  if (const auto launch_vol = legate::detail::array_volume(launch_shape);
+      launch_vol != offsets.size()) {
     throw legate::detail::TracedException<std::invalid_argument>{
       fmt::format("Number of offsets ({}) must match the number of array tiles ({})",
                   offsets.size(),

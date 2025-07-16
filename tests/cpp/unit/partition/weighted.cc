@@ -50,8 +50,7 @@ TEST_F(WeightedTest, Compare)
 
 TEST_F(WeightedTest, ColorShape)
 {
-  auto expected_color_shape = legate::tuple<std::uint64_t>{2};
-  ASSERT_EQ(weighted->color_shape(), expected_color_shape);
+  ASSERT_THAT(weighted->color_shape(), ::testing::ElementsAre(2));
 }
 
 TEST_F(WeightedTest, IsCompleteFor)
@@ -117,15 +116,15 @@ TEST_F(WeightedTest, SatisfiesRestrictionsNegative)
 TEST_F(WeightedTest, Scale)
 {
   // Scale is not implemented for weighted partitions
-  auto factors = legate::tuple<std::uint64_t>{2, 2};
+  constexpr std::uint64_t factors[] = {2, 2};
   ASSERT_THROW(static_cast<void>(weighted->scale(factors)), std::runtime_error);
 }
 
 TEST_F(WeightedTest, Bloat)
 {
   // Bloat is not implemented for weighted partitions
-  auto low_offsets  = legate::tuple<std::uint64_t>{0, 0};
-  auto high_offsets = legate::tuple<std::uint64_t>{1, 1};
+  constexpr std::uint64_t low_offsets[]  = {0, 0};
+  constexpr std::uint64_t high_offsets[] = {1, 1};
   ASSERT_THROW(static_cast<void>(weighted->bloat(low_offsets, high_offsets)), std::runtime_error);
 }
 
@@ -140,7 +139,7 @@ TEST_F(WeightedTest, Convert)
 
   // Test non-identity transformation
   auto dim        = 2;
-  auto sizes      = std::vector<std::uint64_t>{2, 1};
+  auto sizes      = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1};
   auto transform2 = legate::make_internal_shared<legate::detail::TransformStack>(
     std::make_unique<legate::detail::Delinearize>(dim, std::move(sizes)), std::move(transform1));
   ASSERT_THROW(static_cast<void>(weighted->convert(weighted, transform2)),
@@ -158,13 +157,15 @@ TEST_F(WeightedTest, Invert)
 
   // Test non-identity transformation
   auto dim        = 1;
-  auto sizes      = std::vector<std::uint64_t>{1};
+  auto sizes      = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
   auto transform2 = legate::make_internal_shared<legate::detail::TransformStack>(
     std::make_unique<legate::detail::Delinearize>(dim, std::move(sizes)), std::move(transform1));
 
   auto weighted2            = weighted->invert(weighted, transform2);
-  auto expected_color_shape = transform2->invert_color_shape(weighted2->color_shape());
-  ASSERT_EQ(weighted2->color_shape(), expected_color_shape);
+  auto expected_color_shape = transform2->invert_color_shape(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{weighted2->color_shape()});
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{weighted2->color_shape()}),
+            expected_color_shape);
 }
 
 TEST_F(WeightedTest, ToString)

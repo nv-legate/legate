@@ -23,8 +23,9 @@ using TransformPromoteUnit = DefaultFixture;
 TEST_F(TransformPromoteUnit, PromoteConvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::Promote>(2, 3);
-  auto color     = transform->convert_color(legate::tuple<std::uint64_t>{1, 3});
-  auto expected  = legate::tuple<std::uint64_t>{1, 3, 0};
+  auto color =
+    transform->convert_color(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 3});
+  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 3, 0};
 
   ASSERT_EQ(color, expected);
   ASSERT_EQ(transform->target_ndim(1), 0);
@@ -37,7 +38,10 @@ TEST_F(TransformPromoteUnit, PromoteConvertColorNegative)
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     ASSERT_THAT(
-      [&] { static_cast<void>(transform->convert_color(legate::tuple<std::uint64_t>{1})); },
+      [&] {
+        static_cast<void>(
+          transform->convert_color(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1}));
+      },
       ::testing::ThrowsMessage<std::out_of_range>(
         ::testing::HasSubstr("Index 2 out of range [0, 2)")));
   }
@@ -46,8 +50,9 @@ TEST_F(TransformPromoteUnit, PromoteConvertColorNegative)
 TEST_F(TransformPromoteUnit, PromoteInvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::Promote>(2, 3);
-  auto color     = transform->invert_color(legate::tuple<std::uint64_t>{1, 2, 3});
-  auto expected  = legate::tuple<std::uint64_t>{1, 2};
+  auto color =
+    transform->invert_color(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 3});
+  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2};
 
   ASSERT_EQ(color, expected);
 }
@@ -58,7 +63,10 @@ TEST_F(TransformPromoteUnit, PromoteInvertColorNegative)
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     ASSERT_THAT(
-      [&] { static_cast<void>(transform->invert_color(legate::tuple<std::uint64_t>{1, 2})); },
+      [&] {
+        static_cast<void>(transform->invert_color(
+          legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2}));
+      },
       ::testing::ThrowsMessage<std::out_of_range>(
         ::testing::HasSubstr("Index 2 out of range [0, 2)")));
   }

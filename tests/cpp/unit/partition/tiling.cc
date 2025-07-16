@@ -26,18 +26,18 @@ class TilingTest : public DefaultFixture {
 
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_tiling()
   {
-    auto tile_shape  = legate::tuple<std::uint64_t>{4, 4};
-    auto color_shape = legate::tuple<std::uint64_t>{2, 2};
-    auto offsets     = legate::tuple<std::int64_t>{1, 1};
+    auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
+    auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
+    auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
     return legate::detail::create_tiling(tile_shape, color_shape, offsets);
   }
 
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_overlapped_tiling()
   {
-    auto tile_shape  = legate::tuple<std::uint64_t>{4, 4};
-    auto color_shape = legate::tuple<std::uint64_t>{2, 2};
-    auto offsets     = legate::tuple<std::int64_t>{1, 1};
-    auto strides     = legate::tuple<std::uint64_t>{3, 3};
+    auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
+    auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
+    auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
+    auto strides     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3};
     return legate::detail::create_tiling(tile_shape, color_shape, offsets, strides);
   }
 
@@ -48,14 +48,18 @@ TEST_F(TilingTest, Kind) { ASSERT_EQ(tiling->kind(), legate::detail::Partition::
 
 TEST_F(TilingTest, Shape)
 {
-  auto expected_tile_shape  = legate::tuple<std::uint64_t>{4, 4};
-  auto expected_color_shape = legate::tuple<std::uint64_t>{2, 2};
-  auto expected_offsets     = legate::tuple<std::int64_t>{1, 1};
-  auto expected_strides     = legate::tuple<std::uint64_t>{4, 4};
-  EXPECT_EQ(tiling->tile_shape(), expected_tile_shape);
-  EXPECT_EQ(tiling->color_shape(), expected_color_shape);
-  EXPECT_EQ(tiling->offsets(), expected_offsets);
-  EXPECT_EQ(tiling->strides(), expected_strides);
+  auto expected_tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
+  auto expected_color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
+  auto expected_offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
+  auto expected_strides     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
+  EXPECT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->tile_shape()}),
+            expected_tile_shape);
+  EXPECT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->color_shape()}),
+            expected_color_shape);
+  EXPECT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling->offsets()}),
+            expected_offsets);
+  EXPECT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->strides()}),
+            expected_strides);
 }
 
 TEST_F(TilingTest, Compare)
@@ -142,33 +146,39 @@ TEST_F(TilingTest, IsDisjointFor)
 
 TEST_F(TilingTest, Scale)
 {
-  auto scale_factor = legate::tuple<std::uint64_t>{2, 2};
+  auto scale_factor = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
   auto partition    = tiling->scale(scale_factor);
   auto scaled       = dynamic_cast<legate::detail::Tiling*>(partition.get());
 
-  auto expected_tile_shape  = legate::tuple<std::uint64_t>{8, 8};
-  auto expected_color_shape = legate::tuple<std::uint64_t>{2, 2};
-  auto expected_offsets     = legate::tuple<std::int64_t>{2, 2};
+  auto expected_tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{8, 8};
+  auto expected_color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
+  auto expected_offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{2, 2};
 
-  ASSERT_EQ(scaled->tile_shape(), expected_tile_shape);
-  ASSERT_EQ(scaled->color_shape(), expected_color_shape);
-  ASSERT_EQ(scaled->offsets(), expected_offsets);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{scaled->tile_shape()}),
+            expected_tile_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{scaled->color_shape()}),
+            expected_color_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{scaled->offsets()}),
+            expected_offsets);
 }
 
 TEST_F(TilingTest, Bloat)
 {
-  auto low_offsets  = legate::tuple<std::uint64_t>{1, 1};
-  auto high_offsets = legate::tuple<std::uint64_t>{1, 1};
+  auto low_offsets  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
+  auto high_offsets = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
   auto partition    = tiling->bloat(low_offsets, high_offsets);
   auto bloated      = dynamic_cast<legate::detail::Tiling*>(partition.get());
 
-  auto expected_tile_shape  = legate::tuple<std::uint64_t>{6, 6};
-  auto expected_color_shape = legate::tuple<std::uint64_t>{2, 2};
-  auto expected_offsets     = legate::tuple<std::int64_t>{0, 0};
+  auto expected_tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{6, 6};
+  auto expected_color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
+  auto expected_offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{0, 0};
 
-  ASSERT_EQ(bloated->tile_shape(), expected_tile_shape);
-  ASSERT_EQ(bloated->color_shape(), expected_color_shape);
-  ASSERT_EQ(bloated->offsets(), expected_offsets);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{bloated->tile_shape()}),
+            expected_tile_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{bloated->color_shape()}),
+            expected_color_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{bloated->offsets()}),
+            expected_offsets);
 }
 
 TEST_F(TilingTest, Convert)
@@ -188,15 +198,23 @@ TEST_F(TilingTest, Convert)
   auto partition2 = tiling->convert(tiling, transform2);
   auto tiling2    = dynamic_cast<legate::detail::Tiling*>(partition2.get());
 
-  auto expected_tile_shape  = transform2->convert_extents(tiling->tile_shape());
-  auto expected_color_shape = transform2->convert_color_shape(tiling->color_shape());
-  auto expected_offsets     = transform2->convert_point(tiling->offsets());
-  auto expected_strides     = transform2->convert_extents(tiling->strides());
+  auto expected_tile_shape = transform2->convert_extents(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->tile_shape()});
+  auto expected_color_shape = transform2->convert_color_shape(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->color_shape()});
+  auto expected_offsets = transform2->convert_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling->offsets()});
+  auto expected_strides = transform2->convert_extents(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->strides()});
 
-  ASSERT_EQ(tiling2->tile_shape(), expected_tile_shape);
-  ASSERT_EQ(tiling2->color_shape(), expected_color_shape);
-  ASSERT_EQ(tiling2->offsets(), expected_offsets);
-  ASSERT_EQ(tiling2->strides(), expected_strides);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->tile_shape()}),
+            expected_tile_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->color_shape()}),
+            expected_color_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling2->offsets()}),
+            expected_offsets);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->strides()}),
+            expected_strides);
 }
 
 TEST_F(TilingTest, Invert)
@@ -210,21 +228,30 @@ TEST_F(TilingTest, Invert)
 
   // Test non-identity transformation
   auto dim        = 1;
-  auto sizes      = std::vector<std::uint64_t>{1};
+  auto sizes      = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
   auto transform2 = legate::make_internal_shared<legate::detail::TransformStack>(
     std::make_unique<legate::detail::Delinearize>(dim, std::move(sizes)), std::move(transform1));
 
-  auto expected_tile_shape  = transform2->invert_extents(tiling->tile_shape());
-  auto expected_color_shape = transform2->invert_color_shape(tiling->color_shape());
-  auto expected_offsets     = transform2->invert_point(tiling->offsets());
-  auto expected_strides     = transform2->invert_extents(tiling->strides());
+  auto expected_tile_shape = transform2->invert_extents(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->tile_shape()});
+  auto expected_color_shape = transform2->invert_color_shape(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->color_shape()});
+  auto expected_offsets = transform2->invert_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling->offsets()});
+  auto expected_strides = transform2->invert_extents(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->strides()});
 
   auto partition2 = tiling->invert(tiling, transform2);
   auto tiling2    = dynamic_cast<legate::detail::Tiling*>(partition2.get());
-  ASSERT_EQ(tiling2->tile_shape(), expected_tile_shape);
-  ASSERT_EQ(tiling2->color_shape(), expected_color_shape);
-  ASSERT_EQ(tiling2->offsets(), expected_offsets);
-  ASSERT_EQ(tiling2->strides(), expected_strides);
+
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->tile_shape()}),
+            expected_tile_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->color_shape()}),
+            expected_color_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling2->offsets()}),
+            expected_offsets);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->strides()}),
+            expected_strides);
 }
 
 TEST_F(TilingTest, ToString)
@@ -237,53 +264,53 @@ TEST_F(TilingTest, ToString)
 
 TEST_F(TilingTest, ChildExtents)
 {
-  auto extents = legate::tuple<std::uint64_t>{2, 2};
+  auto extents = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
 
   // Input extents are within the selected tile
-  auto color1            = legate::tuple<std::uint64_t>{0, 0};
+  auto color1            = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
   auto child_extents1    = tiling->get_child_extents(extents, color1);
-  auto expected_extents1 = legate::tuple<std::uint64_t>{1, 1};
+  auto expected_extents1 = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
   ASSERT_EQ(child_extents1, expected_extents1);
 
   // Input extents are out of the selected tile
-  auto color2            = legate::tuple<std::uint64_t>{1, 1};
+  auto color2            = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
   auto child_extents2    = tiling->get_child_extents(extents, color2);
-  auto expected_extents2 = legate::tuple<std::uint64_t>{0, 0};
+  auto expected_extents2 = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
   ASSERT_EQ(child_extents2, expected_extents2);
 }
 
 TEST_F(TilingTest, ChildExtentsNegative)
 {
-  auto extents = legate::tuple<std::uint64_t>{2, 2};
-  auto color   = legate::tuple<std::uint64_t>{2, 2};
+  auto extents = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
+  auto color   = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
   ASSERT_THROW(static_cast<void>(tiling->get_child_extents(extents, color)), std::invalid_argument);
 }
 
 TEST_F(TilingTest, ChildOffsets)
 {
-  auto color            = legate::tuple<std::uint64_t>{1, 1};
+  auto color            = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
   auto child_offsets    = tiling->get_child_offsets(color);
-  auto expected_offsets = legate::tuple<std::int64_t>{5, 5};
+  auto expected_offsets = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{5, 5};
   ASSERT_EQ(child_offsets, expected_offsets);
 }
 
 TEST_F(TilingTest, ChildOffsetsNegative)
 {
-  auto color = legate::tuple<std::uint64_t>{2, 2};
+  auto color = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
   ASSERT_THROW(static_cast<void>(tiling->get_child_offsets(color)), std::invalid_argument);
 }
 
 TEST_F(TilingTest, HasColor)
 {
-  auto color1     = legate::tuple<std::uint64_t>{0, 0};
+  auto color1     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
   auto has_color1 = tiling->has_color(color1);
   ASSERT_TRUE(has_color1);
 
-  auto color2     = legate::tuple<std::uint64_t>{1, 1};
+  auto color2     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
   auto has_color2 = tiling->has_color(color2);
   ASSERT_TRUE(has_color2);
 
-  auto color3     = legate::tuple<std::uint64_t>{2, 2};
+  auto color3     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
   auto has_color3 = tiling->has_color(color3);
   ASSERT_FALSE(has_color3);
 }

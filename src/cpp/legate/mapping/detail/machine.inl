@@ -56,7 +56,7 @@ inline LocalProcessorRange::LocalProcessorRange(const std::vector<Processor>& pr
 
 inline const Processor& LocalProcessorRange::first() const { return procs_.front(); }
 
-inline bool LocalProcessorRange::empty() const { return procs_.size() == 0; }
+inline bool LocalProcessorRange::empty() const { return procs_.empty(); }
 
 inline std::uint32_t LocalProcessorRange::total_proc_count() const { return total_proc_count_; }
 

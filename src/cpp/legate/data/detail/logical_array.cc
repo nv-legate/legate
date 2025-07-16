@@ -70,20 +70,20 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::slice(std::int32_t dim, Slice 
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::transpose(
-  const std::vector<std::int32_t>& axes) const
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const
 {
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->transpose(axes)) : std::nullopt;
-  auto data = this->data()->transpose(axes);
+  auto data = this->data()->transpose(std::move(axes));
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
-  std::int32_t dim, const std::vector<std::uint64_t>& sizes) const
+  std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes) const
 {
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->delinearize(dim, sizes)) : std::nullopt;
-  auto data = this->data()->delinearize(dim, sizes);
+  auto data = this->data()->delinearize(dim, std::move(sizes));
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -243,14 +243,15 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::slice(std::int32_t, Slice) con
   return {};
 }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(const std::vector<std::int32_t>&) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM>) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
   return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
-  std::int32_t, const std::vector<std::uint64_t>&) const
+  std::int32_t, SmallVector<std::uint64_t, LEGATE_MAX_DIM>) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
   return {};
@@ -446,7 +447,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::slice(std::int32_t dim, Slic
 }
 
 InternalSharedPtr<LogicalArray> StructLogicalArray::transpose(
-  const std::vector<std::int32_t>& axes) const
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const
 {
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->transpose(axes)) : std::nullopt;
@@ -455,7 +456,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::transpose(
 }
 
 InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
-  std::int32_t dim, const std::vector<std::uint64_t>& sizes) const
+  std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes) const
 {
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->delinearize(dim, sizes)) : std::nullopt;

@@ -18,6 +18,7 @@
 #include <legate/mapping/detail/store.h>
 #include <legate/type/detail/types.h>
 #include <legate/type/type_traits.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
@@ -46,6 +47,9 @@ class BaseDeserializer {
 
   template <typename T>
   void unpack_impl(std::vector<T>& values);
+
+  template <typename T, std::uint32_t SIZE>
+  void unpack_impl(SmallVector<T, SIZE>& values);
 
   template <typename T1, typename T2>
   void unpack_impl(std::pair<T1, T2>& values);

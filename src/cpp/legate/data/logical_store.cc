@@ -12,6 +12,7 @@
 #include <legate/data/physical_store.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/small_vector.h>
 
 namespace legate {
 
@@ -42,7 +43,7 @@ Type LogicalStore::type() const { return Type{impl()->type()}; }
 
 Shape LogicalStore::shape() const { return Shape{impl()->shape()}; }
 
-const tuple<std::uint64_t>& LogicalStore::extents() const { return shape().extents(); }
+tuple<std::uint64_t> LogicalStore::extents() const { return shape().extents(); }
 
 std::size_t LogicalStore::volume() const { return impl()->volume(); }
 
@@ -72,10 +73,10 @@ LogicalStore LogicalStore::project(std::int32_t dim, std::int64_t index) const
   return LogicalStore{impl()->project(dim, index)};
 }
 
-LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<std::uint64_t> tile_shape) const
+LogicalStorePartition LogicalStore::partition_by_tiling(Span<const std::uint64_t> tile_shape) const
 {
-  return LogicalStorePartition{
-    detail::partition_store_by_tiling(impl(), tuple<std::uint64_t>{std::move(tile_shape)})};
+  return LogicalStorePartition{detail::partition_store_by_tiling(
+    impl(), {detail::tags::iterator_tag, tile_shape.begin(), tile_shape.end()})};
 }
 
 LogicalStore LogicalStore::slice(std::int32_t dim, Slice sl) const
@@ -85,12 +86,14 @@ LogicalStore LogicalStore::slice(std::int32_t dim, Slice sl) const
 
 LogicalStore LogicalStore::transpose(std::vector<std::int32_t>&& axes) const
 {
-  return LogicalStore{impl()->transpose(std::move(axes))};
+  return LogicalStore{
+    impl()->transpose(detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{std::move(axes)})};
 }
 
 LogicalStore LogicalStore::delinearize(std::int32_t dim, std::vector<std::uint64_t> sizes) const
 {
-  return LogicalStore{impl()->delinearize(dim, std::move(sizes))};
+  return LogicalStore{
+    impl()->delinearize(dim, detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{std::move(sizes)})};
 }
 
 PhysicalStore LogicalStore::get_physical_store(std::optional<mapping::StoreTarget> target) const
@@ -154,14 +157,18 @@ LogicalStorePartition::LogicalStorePartition(InternalSharedPtr<detail::LogicalSt
 
 LogicalStore LogicalStorePartition::store() const { return LogicalStore{impl()->store()}; }
 
-const tuple<std::uint64_t>& LogicalStorePartition::color_shape() const
+tuple<std::uint64_t> LogicalStorePartition::color_shape() const
 {
-  return impl()->color_shape();
+  auto&& color_shape = impl()->color_shape();
+  auto vec           = std::vector<std::uint64_t>{color_shape.begin(), color_shape.end()};
+
+  return tuple<std::uint64_t>{std::move(vec)};
 }
 
-LogicalStore LogicalStorePartition::get_child_store(const tuple<std::uint64_t>& color) const
+LogicalStore LogicalStorePartition::get_child_store(Span<const std::uint64_t> color) const
 {
-  return LogicalStore{impl()->get_child_store(color)};
+  return LogicalStore{
+    impl()->get_child_store(detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color})};
 }
 
 const SharedPtr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const

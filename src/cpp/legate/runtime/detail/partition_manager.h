@@ -11,6 +11,7 @@
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/hash.h>
 #include <legate/utilities/hash.h>
+#include <legate/utilities/span.h>
 
 #include <map>
 #include <tuple>
@@ -46,14 +47,15 @@ class PartitionManager {
   [[nodiscard]] const std::vector<std::uint32_t>& get_factors(
     const mapping::detail::Machine& machine);
 
-  [[nodiscard]] tuple<std::uint64_t> compute_launch_shape(const mapping::detail::Machine& machine,
-                                                          const ParallelPolicy& parallel_policy,
-                                                          const Restrictions& restrictions,
-                                                          const tuple<std::uint64_t>& shape);
-  [[nodiscard]] tuple<std::uint64_t> compute_tile_shape(const tuple<std::uint64_t>& extents,
-                                                        const tuple<std::uint64_t>& launch_shape);
-  [[nodiscard]] bool use_complete_tiling(const tuple<std::uint64_t>& extents,
-                                         const tuple<std::uint64_t>& tile_shape);
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> compute_launch_shape(
+    const mapping::detail::Machine& machine,
+    const ParallelPolicy& parallel_policy,
+    const Restrictions& restrictions,
+    Span<const std::uint64_t> shape);
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> compute_tile_shape(
+    Span<const std::uint64_t> extents, Span<const std::uint64_t> launch_shape);
+  [[nodiscard]] bool use_complete_tiling(Span<const std::uint64_t> extents,
+                                         Span<const std::uint64_t> tile_shape);
 
   [[nodiscard]] Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
                                                             const Tiling& tiling) const;

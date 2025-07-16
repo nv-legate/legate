@@ -83,35 +83,47 @@ inline Restrictions Shift::convert(Restrictions restrictions, bool /*forbid_fake
   return restrictions;
 }
 
-inline tuple<std::uint64_t> Shift::convert_color(tuple<std::uint64_t> color) const { return color; }
+inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+{
+  return color;
+}
 
-inline tuple<std::uint64_t> Shift::convert_color_shape(tuple<std::uint64_t> color_shape) const
+inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
   return color_shape;
 }
 
-inline tuple<std::uint64_t> Shift::convert_extents(tuple<std::uint64_t> extents) const
+inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
   return extents;
 }
 
 inline Restrictions Shift::invert(Restrictions restrictions) const { return restrictions; }
 
-inline tuple<std::uint64_t> Shift::invert_color(tuple<std::uint64_t> color) const { return color; }
+inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::invert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+{
+  return color;
+}
 
-inline tuple<std::uint64_t> Shift::invert_color_shape(tuple<std::uint64_t> color_shape) const
+inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::invert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
   return color_shape;
 }
 
-inline tuple<std::uint64_t> Shift::invert_extents(tuple<std::uint64_t> extents) const
+inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::invert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
   return extents;
 }
 
 inline std::int32_t Shift::target_ndim(std::int32_t source_ndim) const { return source_ndim; }
 
-inline void Shift::find_imaginary_dims(std::vector<std::int32_t>&) const {}
+inline void Shift::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const {}
 
 inline bool Shift::is_convertible() const { return true; }
 
@@ -142,7 +154,7 @@ inline bool Transpose::is_convertible() const { return true; }
 
 // ==========================================================================================
 
-inline void Delinearize::find_imaginary_dims(std::vector<std::int32_t>&) const {}
+inline void Delinearize::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const {}
 
 inline bool Delinearize::is_convertible() const { return false; }
 

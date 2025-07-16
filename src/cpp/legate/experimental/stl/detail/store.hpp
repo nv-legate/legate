@@ -294,11 +294,11 @@ class logical_store
     Runtime* runtime = legate::Runtime::get_runtime();
     // create_store() takes const-ref for now, but may not always be the case
     // NOLINTNEXTLINE(misc-const-correctness)
-    Shape shape({exts.begin(), exts.end()});
+    Shape shape{std::vector<std::uint64_t>{exts.begin(), exts.end()}};
     return runtime->create_store(std::move(shape), primitive_type(type_code_of_v<ElementType>));
   }
 
-  [[nodiscard]] static LogicalStore create_(const ::cuda::std::array<std::size_t, Dim> exts)
+  [[nodiscard]] static LogicalStore create_(const ::cuda::std::array<std::size_t, Dim>& exts)
   {
     return create_(::cuda::std::span{exts});
   }

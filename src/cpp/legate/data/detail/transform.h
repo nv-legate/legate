@@ -10,6 +10,7 @@
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/runtime/detail/projection.h>
 #include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
@@ -36,21 +37,26 @@ class Transform {
   [[nodiscard]] virtual Restrictions convert(Restrictions restrictions,
                                              bool forbid_fake_dim) const = 0;
 
-  [[nodiscard]] virtual tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const = 0;
-  [[nodiscard]] virtual tuple<std::uint64_t> convert_color_shape(
-    tuple<std::uint64_t> extents) const                                                    = 0;
-  [[nodiscard]] virtual tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const = 0;
-  [[nodiscard]] virtual tuple<std::uint64_t> convert_extents(
-    tuple<std::uint64_t> extents) const = 0;
+  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const = 0;
+  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
+  [[nodiscard]] virtual SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const = 0;
+  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
 
   [[nodiscard]] virtual proj::SymbolicPoint invert(proj::SymbolicPoint point) const = 0;
   [[nodiscard]] virtual Restrictions invert(Restrictions restrictions) const        = 0;
 
-  [[nodiscard]] virtual tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const = 0;
-  [[nodiscard]] virtual tuple<std::uint64_t> invert_color_shape(
-    tuple<std::uint64_t> extents) const                                                         = 0;
-  [[nodiscard]] virtual tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const       = 0;
-  [[nodiscard]] virtual tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const = 0;
+  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const = 0;
+  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
+  [[nodiscard]] virtual SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const = 0;
+  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
 
   [[nodiscard]] virtual bool is_convertible() const = 0;
   virtual void pack(BufferBuilder& buffer) const    = 0;
@@ -67,13 +73,14 @@ class Transform {
    * @returns a tuple of dims obtained
    *          by applying the inverse transform (based on the derived class).
    */
-  [[nodiscard]] virtual tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const = 0;
+  [[nodiscard]] virtual SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const = 0;
 };
 
 class StoreTransform : public Transform {
  public:
-  [[nodiscard]] virtual std::int32_t target_ndim(std::int32_t source_ndim) const = 0;
-  virtual void find_imaginary_dims(std::vector<std::int32_t>&) const             = 0;
+  [[nodiscard]] virtual std::int32_t target_ndim(std::int32_t source_ndim) const     = 0;
+  virtual void find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const = 0;
 };
 
 class TransformStack final : public Transform {
@@ -90,18 +97,26 @@ class TransformStack final : public Transform {
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -112,7 +127,7 @@ class TransformStack final : public Transform {
 
   void dump() const;
 
-  [[nodiscard]] std::vector<std::int32_t> find_imaginary_dims() const;
+  [[nodiscard]] SmallVector<std::int32_t, LEGATE_MAX_DIM> find_imaginary_dims() const;
 
   /**
    * @brief Invokes `invert_dims()` down the transform stack recursively.
@@ -123,7 +138,8 @@ class TransformStack final : public Transform {
    * @returns a tuple of dims obtained
    *          by applying `invert_dims()` recursively down the transform stack.
    */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
+  [[nodiscard]] SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const override;
 
  private:
   struct private_tag {};
@@ -153,18 +169,26 @@ class Shift final : public StoreTransform {
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -172,7 +196,7 @@ class Shift final : public StoreTransform {
 
   [[nodiscard]] std::int32_t target_ndim(std::int32_t source_ndim) const override;
 
-  void find_imaginary_dims(std::vector<std::int32_t>&) const override;
+  void find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const override;
 
   /**
    * @brief Is a NOOP for Shift.
@@ -182,7 +206,8 @@ class Shift final : public StoreTransform {
    *
    * @returns dims unmodified.
    */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
+  [[nodiscard]] SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const override;
 
  private:
   std::int32_t dim_{};
@@ -199,18 +224,26 @@ class Promote final : public StoreTransform {
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -218,7 +251,7 @@ class Promote final : public StoreTransform {
 
   [[nodiscard]] std::int32_t target_ndim(std::int32_t source_ndim) const override;
 
-  void find_imaginary_dims(std::vector<std::int32_t>&) const override;
+  void find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const override;
 
   /**
    * @brief Remove the value that equals `extram_dim_` from input tuple of
@@ -229,7 +262,8 @@ class Promote final : public StoreTransform {
    *
    * @returns a tuple of dimensions that has `extra_dim_` removed from it.
    */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
+  [[nodiscard]] SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const override;
 
  private:
   std::int32_t extra_dim_{};
@@ -246,18 +280,26 @@ class Project final : public StoreTransform {
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -265,7 +307,7 @@ class Project final : public StoreTransform {
 
   [[nodiscard]] std::int32_t target_ndim(std::int32_t source_ndim) const override;
 
-  void find_imaginary_dims(std::vector<std::int32_t>&) const override;
+  void find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const override;
 
   /**
    * @brief Add back `dim_` to the input tuple of
@@ -276,7 +318,8 @@ class Project final : public StoreTransform {
    *
    * @returns a tuple of dimensions with `dim_` inserted back.
    */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
+  [[nodiscard]] SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const override;
 
  private:
   std::int32_t dim_{};
@@ -285,7 +328,7 @@ class Project final : public StoreTransform {
 
 class Transpose final : public StoreTransform {
  public:
-  explicit Transpose(std::vector<std::int32_t>&& axes);
+  explicit Transpose(SmallVector<std::int32_t, LEGATE_MAX_DIM>&& axes);
 
   [[nodiscard]] Domain transform(const Domain& domain) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
@@ -293,18 +336,26 @@ class Transpose final : public StoreTransform {
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -312,7 +363,7 @@ class Transpose final : public StoreTransform {
 
   [[nodiscard]] std::int32_t target_ndim(std::int32_t source_ndim) const override;
 
-  void find_imaginary_dims(std::vector<std::int32_t>&) const override;
+  void find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const override;
 
   /**
    * @brief Reorder the input tuple of dimensions in the inverse order of
@@ -323,16 +374,17 @@ class Transpose final : public StoreTransform {
    *
    * @returns a tuple of dimensions permuted based on `inverse_`.
    */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
+  [[nodiscard]] SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const override;
 
  private:
-  std::vector<std::int32_t> axes_{};
-  std::vector<std::int32_t> inverse_{};
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> axes_{};
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> inverse_{};
 };
 
 class Delinearize final : public StoreTransform {
  public:
-  Delinearize(std::int32_t dim, std::vector<std::uint64_t>&& sizes);
+  Delinearize(std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& sizes);
 
   [[nodiscard]] Domain transform(const Domain& domain) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
@@ -340,18 +392,26 @@ class Delinearize final : public StoreTransform {
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
-  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -359,7 +419,7 @@ class Delinearize final : public StoreTransform {
 
   [[nodiscard]] std::int32_t target_ndim(std::int32_t source_ndim) const override;
 
-  void find_imaginary_dims(std::vector<std::int32_t>&) const override;
+  void find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const override;
 
   /**
    * @brief Remove the new dimensions that were added as a result of Deliearize,
@@ -373,12 +433,13 @@ class Delinearize final : public StoreTransform {
    *          (dim_, x=(dim_ + sizes_.size()) removed and all values y >= x
    *          renumbered to y-x-1.
    */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
+  [[nodiscard]] SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const override;
 
  private:
   std::int32_t dim_{};
-  std::vector<std::uint64_t> sizes_{};
-  std::vector<std::uint64_t> strides_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
   std::uint64_t volume_{};
 };
 

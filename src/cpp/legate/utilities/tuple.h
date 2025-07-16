@@ -10,6 +10,7 @@
 
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/hash.h>
+#include <legate/utilities/span.h>
 
 #include <cstdint>
 #include <initializer_list>
@@ -101,7 +102,7 @@ class tuple {
   [[nodiscard]] bool any() const;
   template <typename PRED>
   [[nodiscard]] bool any(PRED&& pred) const;
-  [[nodiscard]] tuple map(const std::vector<std::int32_t>& mapping) const;
+  [[nodiscard]] tuple map(Span<const std::int32_t> mapping) const;
   void map_inplace(std::vector<std::int32_t>& mapping);
 
   [[nodiscard]] std::string to_string() const;

@@ -130,7 +130,7 @@ void ConstraintSolver::solve_constraints()
   // Set the restrictions according to broadcasting constraints
   auto handle_broadcast = [&table](const Broadcast& broadcast) {
     auto* variable    = broadcast.variable();
-    auto& axes        = broadcast.axes();
+    auto&& axes       = broadcast.axes();
     auto* equiv_class = table.at(*variable);
     if (axes.empty()) {
       equiv_class->restrict_all();

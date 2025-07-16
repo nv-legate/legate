@@ -101,11 +101,11 @@ TEST_F(Constraint, Broadcast)
   auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
   auto part1   = task.declare_partition();
 
-  auto dims      = legate::from_range<std::uint32_t>(3);
+  auto dims      = legate::detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>{0, 1, 2};
   auto broadcast = legate::detail::broadcast(part1.impl(), dims);
   ASSERT_EQ(broadcast->kind(), legate::detail::Constraint::Kind::BROADCAST);
   ASSERT_EQ(broadcast->variable(), part1.impl());
-  ASSERT_EQ(broadcast->axes(), dims);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>{broadcast->axes()}), dims);
   ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(broadcast.get()), nullptr);
   ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(broadcast.get()), broadcast.get());
   ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(broadcast.get()), nullptr);

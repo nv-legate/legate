@@ -6,6 +6,7 @@
 
 #include <legate/data/detail/transform.h>
 
+#include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -29,7 +30,8 @@ Restrictions TransformStack::convert(Restrictions restrictions, bool forbid_fake
     std::move(restrictions));
 }
 
-tuple<std::uint64_t> TransformStack::convert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -38,7 +40,8 @@ tuple<std::uint64_t> TransformStack::convert_color(tuple<std::uint64_t> color) c
     std::move(color));
 }
 
-tuple<std::uint64_t> TransformStack::convert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -47,7 +50,8 @@ tuple<std::uint64_t> TransformStack::convert_color_shape(tuple<std::uint64_t> co
     std::move(color_shape));
 }
 
-tuple<std::int64_t> TransformStack::convert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> TransformStack::convert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -56,7 +60,8 @@ tuple<std::int64_t> TransformStack::convert_point(tuple<std::int64_t> point) con
     std::move(point));
 }
 
-tuple<std::uint64_t> TransformStack::convert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -83,7 +88,8 @@ Restrictions TransformStack::invert(Restrictions restrictions) const
     std::move(restrictions));
 }
 
-tuple<std::uint64_t> TransformStack::invert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::invert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -92,7 +98,8 @@ tuple<std::uint64_t> TransformStack::invert_color(tuple<std::uint64_t> color) co
     std::move(color));
 }
 
-tuple<std::uint64_t> TransformStack::invert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::invert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -101,7 +108,8 @@ tuple<std::uint64_t> TransformStack::invert_color_shape(tuple<std::uint64_t> col
     std::move(color_shape));
 }
 
-tuple<std::int32_t> TransformStack::invert_dims(tuple<std::int32_t> dims) const
+SmallVector<std::int32_t, LEGATE_MAX_DIM> TransformStack::invert_dims(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -110,7 +118,8 @@ tuple<std::int32_t> TransformStack::invert_dims(tuple<std::int32_t> dims) const
     std::move(dims));
 }
 
-tuple<std::int64_t> TransformStack::invert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> TransformStack::invert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -119,7 +128,8 @@ tuple<std::int64_t> TransformStack::invert_point(tuple<std::int64_t> point) cons
     std::move(point));
 }
 
-tuple<std::uint64_t> TransformStack::invert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::invert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -203,9 +213,10 @@ void TransformStack::dump() const
   std::cerr << *this << std::endl;  // NOLINT(performance-avoid-endl)
 }
 
-std::vector<std::int32_t> TransformStack::find_imaginary_dims() const
+SmallVector<std::int32_t, LEGATE_MAX_DIM> TransformStack::find_imaginary_dims() const
 {
-  std::vector<std::int32_t> dims;
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dims;
+
   if (parent_) {
     dims = parent_->find_imaginary_dims();
   }
@@ -246,13 +257,15 @@ Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) cons
   return result;
 }
 
-tuple<std::int64_t> Shift::convert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Shift::convert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
   point[dim_] += offset_;
   return point;
 }
 
-tuple<std::int64_t> Shift::invert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Shift::invert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
   point[dim_] -= offset_;
   return point;
@@ -271,7 +284,11 @@ void Shift::print(std::ostream& out) const
       << "offset: " << offset_ << ")";
 }
 
-tuple<std::int32_t> Shift::invert_dims(tuple<std::int32_t> dims) const { return dims; }
+SmallVector<std::int32_t, LEGATE_MAX_DIM> Shift::invert_dims(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
+{
+  return dims;
+}
 
 // ==========================================================================================
 
@@ -325,32 +342,36 @@ Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) co
 
 Restrictions Promote::convert(Restrictions restrictions, bool forbid_fake_dim) const
 {
-  restrictions.insert_inplace(extra_dim_,
-                              forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
+  restrictions.insert(restrictions.begin() + extra_dim_,
+                      forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
   return restrictions;
 }
 
-tuple<std::uint64_t> Promote::convert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
-  color.insert_inplace(extra_dim_, 0);
+  color.insert(color.begin() + extra_dim_, 0);
   return color;
 }
 
-tuple<std::uint64_t> Promote::convert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
-  color_shape.insert_inplace(extra_dim_, 1);
+  color_shape.insert(color_shape.begin() + extra_dim_, 1);
   return color_shape;
 }
 
-tuple<std::int64_t> Promote::convert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Promote::convert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
-  point.insert_inplace(extra_dim_, 0);
+  point.insert(point.begin() + extra_dim_, 0);
   return point;
 }
 
-tuple<std::uint64_t> Promote::convert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
-  extents.insert_inplace(extra_dim_, dim_size_);
+  extents.insert(extents.begin() + extra_dim_, dim_size_);
   return extents;
 }
 
@@ -362,31 +383,35 @@ proj::SymbolicPoint Promote::invert(proj::SymbolicPoint point) const
 
 Restrictions Promote::invert(Restrictions restrictions) const
 {
-  restrictions.remove_inplace(extra_dim_);
+  restrictions.erase(restrictions.begin() + extra_dim_);
   return restrictions;
 }
 
-tuple<std::uint64_t> Promote::invert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::invert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
-  color.remove_inplace(extra_dim_);
+  color.erase(color.begin() + extra_dim_);
   return color;
 }
 
-tuple<std::uint64_t> Promote::invert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::invert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
-  color_shape.remove_inplace(extra_dim_);
+  color_shape.erase(color_shape.begin() + extra_dim_);
   return color_shape;
 }
 
-tuple<std::int64_t> Promote::invert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Promote::invert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
-  point.remove_inplace(extra_dim_);
+  point.erase(point.begin() + extra_dim_);
   return point;
 }
 
-tuple<std::uint64_t> Promote::invert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::invert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
-  extents.remove_inplace(extra_dim_);
+  extents.erase(extents.begin() + extra_dim_);
   return extents;
 }
 
@@ -404,7 +429,7 @@ void Promote::print(std::ostream& out) const
   out << "dim_size: " << dim_size_ << ")";
 }
 
-void Promote::find_imaginary_dims(std::vector<std::int32_t>& dims) const
+void Promote::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>& dims) const
 {
   for (auto&& dim : dims) {
     if (dim >= extra_dim_) {
@@ -414,14 +439,16 @@ void Promote::find_imaginary_dims(std::vector<std::int32_t>& dims) const
   dims.push_back(extra_dim_);
 }
 
-tuple<std::int32_t> Promote::invert_dims(tuple<std::int32_t> dims) const
+SmallVector<std::int32_t, LEGATE_MAX_DIM> Promote::invert_dims(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
   // Remove the promoted dimension from the ordering(extra_dim_)
   // and renumber dims > extra_dim_
 
   const auto it = std::find(dims.begin(), dims.end(), extra_dim_);
+
   LEGATE_ASSERT(it != dims.end());
-  dims.remove_inplace(static_cast<std::int32_t>(it - dims.begin()));
+  dims.erase(it);
 
   std::transform(
     dims.begin(), dims.end(), dims.begin(), [&](auto d) { return d > extra_dim_ ? d - 1 : d; });
@@ -481,31 +508,35 @@ Legion::DomainAffineTransform Project::inverse_transform(std::int32_t in_dim) co
 
 Restrictions Project::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
-  restrictions.remove_inplace(dim_);
+  restrictions.erase(restrictions.begin() + dim_);
   return restrictions;
 }
 
-tuple<std::uint64_t> Project::convert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
-  color.remove_inplace(dim_);
+  color.erase(color.begin() + dim_);
   return color;
 }
 
-tuple<std::uint64_t> Project::convert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
-  color_shape.remove_inplace(dim_);
+  color_shape.erase(color_shape.begin() + dim_);
   return color_shape;
 }
 
-tuple<std::int64_t> Project::convert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Project::convert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
-  point.remove_inplace(dim_);
+  point.erase(point.begin() + dim_);
   return point;
 }
 
-tuple<std::uint64_t> Project::convert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
-  extents.remove_inplace(dim_);
+  extents.erase(extents.begin() + dim_);
   return extents;
 }
 
@@ -517,31 +548,35 @@ proj::SymbolicPoint Project::invert(proj::SymbolicPoint point) const
 
 Restrictions Project::invert(Restrictions restrictions) const
 {
-  restrictions.insert_inplace(dim_, Restriction::ALLOW);
+  restrictions.insert(restrictions.begin() + dim_, Restriction::ALLOW);
   return restrictions;
 }
 
-tuple<std::uint64_t> Project::invert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::invert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
-  color.insert_inplace(dim_, 0);
+  color.insert(color.begin() + dim_, 0);
   return color;
 }
 
-tuple<std::uint64_t> Project::invert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::invert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
-  color_shape.insert_inplace(dim_, 1);
+  color_shape.insert(color_shape.begin() + dim_, 1);
   return color_shape;
 }
 
-tuple<std::int64_t> Project::invert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Project::invert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
-  point.insert_inplace(dim_, coord_);
+  point.insert(point.begin() + dim_, coord_);
   return point;
 }
 
-tuple<std::uint64_t> Project::invert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::invert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
-  extents.insert_inplace(dim_, 1);
+  extents.insert(extents.begin() + dim_, 1);
   return extents;
 }
 
@@ -559,7 +594,7 @@ void Project::print(std::ostream& out) const
   out << "coord: " << coord_ << ")";
 }
 
-void Project::find_imaginary_dims(std::vector<std::int32_t>& dims) const
+void Project::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>& dims) const
 {
   auto finder = std::find(dims.begin(), dims.end(), dim_);
   if (finder != dims.end()) {
@@ -572,19 +607,20 @@ void Project::find_imaginary_dims(std::vector<std::int32_t>& dims) const
   }
 }
 
-tuple<std::int32_t> Project::invert_dims(tuple<std::int32_t> dims) const
+SmallVector<std::int32_t, LEGATE_MAX_DIM> Project::invert_dims(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
   // Add back the projected dimension and renumber dims > projected dim_
   std::transform(
     dims.begin(), dims.end(), dims.begin(), [&](auto&& d) { return d >= dim_ ? d + 1 : d; });
 
-  dims.insert_inplace(dim_, dim_);
+  dims.insert(dims.begin() + dim_, dim_);
   return dims;
 }
 
 // ==========================================================================================
 
-Transpose::Transpose(std::vector<std::int32_t>&& axes) : axes_{std::move(axes)}
+Transpose::Transpose(SmallVector<std::int32_t, LEGATE_MAX_DIM>&& axes) : axes_{std::move(axes)}
 {
   const auto size = axes_.size();
   // could alternatively do
@@ -640,31 +676,35 @@ Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) 
 Restrictions Transpose::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
   // No in-place available
-  return restrictions.map(axes_);
+  return array_map(restrictions, axes_);
 }
 
-tuple<std::uint64_t> Transpose::convert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
   // No in-place available
-  return color.map(axes_);
+  return array_map(color, axes_);
 }
 
-tuple<std::uint64_t> Transpose::convert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
   // No in-place available
-  return color_shape.map(axes_);
+  return array_map(color_shape, axes_);
 }
 
-tuple<std::int64_t> Transpose::convert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Transpose::convert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
   // No in-place available
-  return point.map(axes_);
+  return array_map(point, axes_);
 }
 
-tuple<std::uint64_t> Transpose::convert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
   // No in-place available
-  return extents.map(axes_);
+  return array_map(extents, axes_);
 }
 
 proj::SymbolicPoint Transpose::invert(proj::SymbolicPoint point) const
@@ -676,37 +716,41 @@ proj::SymbolicPoint Transpose::invert(proj::SymbolicPoint point) const
 Restrictions Transpose::invert(Restrictions restrictions) const
 {
   // No in-place available
-  return restrictions.map(inverse_);
+  return array_map(restrictions, inverse_);
 }
 
-tuple<std::uint64_t> Transpose::invert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::invert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
   // No in-place available
-  return color.map(inverse_);
+  return array_map(color, inverse_);
 }
 
-tuple<std::uint64_t> Transpose::invert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::invert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
   // No in-place available
-  return color_shape.map(inverse_);
+  return array_map(color_shape, inverse_);
 }
 
-tuple<std::int64_t> Transpose::invert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Transpose::invert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
   // No in-place available
-  return point.map(inverse_);
+  return array_map(point, inverse_);
 }
 
-tuple<std::uint64_t> Transpose::invert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::invert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
   // No in-place available
-  return extents.map(inverse_);
+  return array_map(extents, inverse_);
 }
 
-namespace {  // anonymous
+namespace {
 
 template <typename T>
-void print_vector(std::ostream& out, const std::vector<T>& vec)
+void print_vector(std::ostream& out, const SmallVector<T, LEGATE_MAX_DIM>& vec)
 {
   bool past_first = false;
   out << "[";
@@ -721,7 +765,7 @@ void print_vector(std::ostream& out, const std::vector<T>& vec)
   out << "]";
 }
 
-}  // anonymous namespace
+}  // namespace
 
 void Transpose::pack(BufferBuilder& buffer) const
 {
@@ -740,7 +784,7 @@ void Transpose::print(std::ostream& out) const
   out << ")";
 }
 
-void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
+void Transpose::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>& dims) const
 {
   // i should be added to X.transpose(axes).promoted iff axes[i] is in X.promoted
   // e.g. X.promoted = [0] => X.transpose((1,2,0)).promoted = [2]
@@ -752,15 +796,16 @@ void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
   }
 }
 
-tuple<std::int32_t> Transpose::invert_dims(tuple<std::int32_t> dims) const
+SmallVector<std::int32_t, LEGATE_MAX_DIM> Transpose::invert_dims(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
-  return dims.map(inverse_);
+  return array_map(dims, inverse_);
 }
 
 // ==========================================================================================
 
-Delinearize::Delinearize(std::int32_t dim, std::vector<std::uint64_t>&& sizes)
-  : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
+Delinearize::Delinearize(std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& sizes)
+  : dim_{dim}, sizes_{std::move(sizes)}, strides_{tags::size_tag, sizes_.size(), 1}, volume_{1}
 {
   // Need this double cast since sizes_.size() might be < 2, and since the condition is >= 0,
   // we cannot just use std::size_t here
@@ -838,36 +883,40 @@ Restrictions Delinearize::convert(Restrictions restrictions, bool /*forbid_fake_
 
   result.reserve(restrictions.size() + (sizes_.size() - 1));
   for (auto dim = 0; dim <= dim_; ++dim) {
-    result.append_inplace(restrictions[dim]);
+    result.push_back(restrictions[dim]);
   }
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    result.append_inplace(Restriction::FORBID);
+    result.push_back(Restriction::FORBID);
   }
   for (std::uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim) {
-    result.append_inplace(restrictions[dim]);
+    result.push_back(restrictions[dim]);
   }
   return result;
 }
 
-tuple<std::uint64_t> Delinearize::convert_color(tuple<std::uint64_t> /*color*/) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::convert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> /*color*/) const
 {
   throw TracedException<NonInvertibleTransformation>{};
   return {};
 }
 
-tuple<std::uint64_t> Delinearize::convert_color_shape(tuple<std::uint64_t> /*color_shape*/) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::convert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> /*color_shape*/) const
 {
   throw TracedException<NonInvertibleTransformation>{};
   return {};
 }
 
-tuple<std::uint64_t> Delinearize::convert_extents(tuple<std::uint64_t> /*extents*/) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::convert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> /*extents*/) const
 {
   throw TracedException<NonInvertibleTransformation>{};
   return {};
 }
 
-tuple<std::int64_t> Delinearize::convert_point(tuple<std::int64_t> /*point*/) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Delinearize::convert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> /*point*/) const
 {
   throw TracedException<NonInvertibleTransformation>{};
   return {};
@@ -893,19 +942,20 @@ Restrictions Delinearize::invert(Restrictions restrictions) const
 
   result.reserve(restrictions.size() - (sizes_.size() - 1));
   for (auto dim = 0; dim <= dim_; ++dim) {
-    result.append_inplace(restrictions[dim]);
+    result.push_back(restrictions[dim]);
   }
 
   for (auto dim = dim_ + sizes_.size(); dim < restrictions.size(); ++dim) {
-    result.append_inplace(restrictions[dim]);
+    result.push_back(restrictions[dim]);
   }
   return result;
 }
 
-tuple<std::uint64_t> Delinearize::invert_color(tuple<std::uint64_t> color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::invert_color(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
   auto sum = std::uint64_t{0};
-  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+  for (std::uint64_t idx = 1; idx < sizes_.size(); ++idx) {
     sum += color[dim_ + idx];
   }
 
@@ -914,17 +964,18 @@ tuple<std::uint64_t> Delinearize::invert_color(tuple<std::uint64_t> color) const
   }
 
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    color.remove_inplace(dim_ + 1);
+    color.erase(color.begin() + dim_ + 1);
   }
 
   return color;
 }
 
-tuple<std::uint64_t> Delinearize::invert_color_shape(tuple<std::uint64_t> color_shape) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::invert_color_shape(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
 {
   auto volume = std::uint64_t{1};
-  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    volume *= color_shape[dim_ + idx];
+  for (std::uint64_t idx = 1; idx < sizes_.size(); ++idx) {
+    volume *= color_shape[static_cast<std::uint64_t>(dim_) + idx];
   }
 
   if (volume != 1) {
@@ -932,16 +983,17 @@ tuple<std::uint64_t> Delinearize::invert_color_shape(tuple<std::uint64_t> color_
   }
 
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    color_shape.remove_inplace(dim_ + 1);
+    color_shape.erase(color_shape.begin() + dim_ + 1);
   }
   return color_shape;
 }
 
-tuple<std::int64_t> Delinearize::invert_point(tuple<std::int64_t> point) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Delinearize::invert_point(
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {
-  auto sum = std::uint64_t{0};
-  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    sum += point[dim_ + idx];
+  auto sum = std::int64_t{0};
+  for (std::uint64_t idx = 1; idx < sizes_.size(); ++idx) {
+    sum += point[static_cast<std::uint64_t>(dim_) + idx];
   }
 
   if (sum != 0) {
@@ -949,25 +1001,26 @@ tuple<std::int64_t> Delinearize::invert_point(tuple<std::int64_t> point) const
   }
 
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    point.remove_inplace(dim_ + 1);
+    point.erase(point.begin() + dim_ + 1);
   }
-  point[dim_] *= static_cast<std::int64_t>(strides_[0]);
+  point[static_cast<std::uint64_t>(dim_)] *= static_cast<std::int64_t>(strides_[0]);
 
   return point;
 }
 
-tuple<std::uint64_t> Delinearize::invert_extents(tuple<std::uint64_t> extents) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::invert_extents(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
 {
-  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    if (extents[dim_ + idx] != sizes_[idx]) {
+  for (std::uint64_t idx = 1; idx < sizes_.size(); ++idx) {
+    if (extents[static_cast<std::uint64_t>(dim_) + idx] != sizes_[idx]) {
       throw TracedException<NonInvertibleTransformation>{};
     }
   }
 
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    extents.remove_inplace(dim_ + 1);
+    extents.erase(extents.begin() + dim_ + 1);
   }
-  extents[dim_] *= strides_[0];
+  extents[static_cast<std::uint64_t>(dim_)] *= strides_[0];
 
   return extents;
 }
@@ -996,17 +1049,17 @@ std::int32_t Delinearize::target_ndim(std::int32_t source_ndim) const
   return static_cast<std::int32_t>(source_ndim - strides_.size() + 1);
 }
 
-tuple<std::int32_t> Delinearize::invert_dims(tuple<std::int32_t> dims) const
+SmallVector<std::int32_t, LEGATE_MAX_DIM> Delinearize::invert_dims(
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
   // Collapse the delinearized dimensions back to the original dimension
   const auto num_extra_dims = static_cast<std::int32_t>(sizes_.size()) - 1;
   auto new_end              = std::remove_if(dims.begin(), dims.end(), [&](const auto& d) {
     return (d > dim_) && (d <= (dim_ + num_extra_dims));
   });
+
   LEGATE_ASSERT(new_end != dims.end());
-  // TODO(amberhassaan): this would be vector::erase if we were to replace
-  // legate::tuple with std::vector
-  dims.data().erase(new_end, dims.end());
+  dims.erase(new_end, dims.end());
 
   std::transform(dims.begin(), dims.end(), dims.begin(), [&](const auto& d) {
     return (d > (dim_ + num_extra_dims)) ? (d - num_extra_dims) : d;

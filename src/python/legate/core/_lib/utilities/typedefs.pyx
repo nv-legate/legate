@@ -10,6 +10,7 @@ from collections import namedtuple
 
 from .detail.tuple cimport _to_domain_point
 from .utils cimport tuple_from_iterable
+from .tuple cimport _tuple
 
 LocalTaskID = NewType("LocalTaskID", int)
 GlobalTaskID = NewType("GlobalTaskID", int)
@@ -21,7 +22,9 @@ DomainPoint: TypeAlias = tuple[int, ...]
 Domain = namedtuple("Domain", ("lo", "hi"), defaults=((0,), (0,)))
 
 cdef _DomainPoint domain_point_from_iterable(object iterable):
-    return _to_domain_point(tuple_from_iterable[uint64_t](iterable))
+    cdef _tuple[uint64_t] tup = tuple_from_iterable[uint64_t](iterable)
+
+    return _to_domain_point(tup)
 
 cdef DomainPoint_t domain_point_to_py(const _DomainPoint& point):
     cdef int dim = point.get_dim()

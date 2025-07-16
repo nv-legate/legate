@@ -15,7 +15,8 @@ constexpr const ProxyBroadcast::value_type& ProxyBroadcast::value() const noexce
   return value_;
 }
 
-constexpr const std::optional<tuple<std::uint32_t>>& ProxyBroadcast::axes() const noexcept
+constexpr const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& ProxyBroadcast::axes()
+  const noexcept
 {
   return axes_;
 }

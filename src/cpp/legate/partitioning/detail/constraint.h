@@ -9,8 +9,9 @@
 #include <legate/data/shape.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
-#include <legate/utilities/tuple.h>
+#include <legate/utilities/span.h>
 
 #include <string>
 #include <vector>
@@ -88,7 +89,7 @@ class Broadcast final : public Constraint {
  public:
   explicit Broadcast(const Variable* variable);
 
-  Broadcast(const Variable* variable, tuple<std::uint32_t> axes);
+  Broadcast(const Variable* variable, SmallVector<std::uint32_t, LEGATE_MAX_DIM> axes);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -99,12 +100,12 @@ class Broadcast final : public Constraint {
   [[nodiscard]] std::string to_string() const override;
 
   [[nodiscard]] const Variable* variable() const;
-  [[nodiscard]] const tuple<std::uint32_t>& axes() const;
+  [[nodiscard]] Span<const std::uint32_t> axes() const;
 
  private:
   const Variable* variable_{};
   // Broadcast all dimensions when empty
-  tuple<std::uint32_t> axes_{};
+  SmallVector<std::uint32_t, LEGATE_MAX_DIM> axes_{};
 };
 
 class ImageConstraint final : public Constraint {
@@ -134,7 +135,7 @@ class ImageConstraint final : public Constraint {
 
 class ScaleConstraint final : public Constraint {
  public:
-  ScaleConstraint(tuple<std::uint64_t> factors,
+  ScaleConstraint(SmallVector<std::uint64_t, LEGATE_MAX_DIM> factors,
                   const Variable* var_smaller,
                   const Variable* var_bigger);
 
@@ -146,14 +147,14 @@ class ScaleConstraint final : public Constraint {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const tuple<std::uint64_t>& factors() const;
+  [[nodiscard]] Span<const std::uint64_t> factors() const;
   [[nodiscard]] const Variable* var_smaller() const;
   [[nodiscard]] const Variable* var_bigger() const;
 
   [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 
  private:
-  tuple<std::uint64_t> factors_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> factors_{};
   const Variable* var_smaller_{};
   const Variable* var_bigger_{};
 };
@@ -162,8 +163,8 @@ class BloatConstraint final : public Constraint {
  public:
   BloatConstraint(const Variable* var_source,
                   const Variable* var_bloat,
-                  tuple<std::uint64_t> low_offsets,
-                  tuple<std::uint64_t> high_offsets);
+                  SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
+                  SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -175,37 +176,39 @@ class BloatConstraint final : public Constraint {
 
   [[nodiscard]] const Variable* var_source() const;
   [[nodiscard]] const Variable* var_bloat() const;
-  [[nodiscard]] const tuple<std::uint64_t>& low_offsets() const;
-  [[nodiscard]] const tuple<std::uint64_t>& high_offsets() const;
+  [[nodiscard]] Span<const std::uint64_t> low_offsets() const;
+  [[nodiscard]] Span<const std::uint64_t> high_offsets() const;
 
   [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 
  private:
   const Variable* var_source_{};
   const Variable* var_bloat_{};
-  tuple<std::uint64_t> low_offsets_{};
-  tuple<std::uint64_t> high_offsets_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets_{};
 };
 
 [[nodiscard]] InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs);
 
 [[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable);
 
-[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable,
-                                                     tuple<std::uint32_t> axes);
+[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(
+  const Variable* variable, SmallVector<std::uint32_t, LEGATE_MAX_DIM> axes);
 
 [[nodiscard]] InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
                                                        const Variable* var_range,
                                                        ImageComputationHint hint);
 
-[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(tuple<std::uint64_t> factors,
-                                                       const Variable* var_smaller,
-                                                       const Variable* var_bigger);
+[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> factors,
+  const Variable* var_smaller,
+  const Variable* var_bigger);
 
-[[nodiscard]] InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
-                                                       const Variable* var_bloat,
-                                                       tuple<std::uint64_t> low_offsets,
-                                                       tuple<std::uint64_t> high_offsets);
+[[nodiscard]] InternalSharedPtr<BloatConstraint> bloat(
+  const Variable* var_source,
+  const Variable* var_bloat,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets);
 
 }  // namespace legate::detail
 

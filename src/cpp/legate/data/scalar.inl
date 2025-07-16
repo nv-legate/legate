@@ -53,7 +53,12 @@ Scalar::Scalar(const T& value, const Type& type)
 }
 
 template <typename T>
-Scalar::Scalar(const std::vector<T>& values)
+Scalar::Scalar(const std::vector<T>& values) : Scalar{Span<const T>{values}}
+{
+}
+
+template <typename T>
+Scalar::Scalar(Span<const T> values)
   : Scalar{checked_create_impl_(fixed_array_type(primitive_type(type_code_of_v<T>), values.size()),
                                 values.data(),
                                 /* copy */ true,

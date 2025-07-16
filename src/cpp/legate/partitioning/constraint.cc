@@ -12,6 +12,7 @@
 #include <legate/partitioning/detail/proxy/broadcast.h>
 #include <legate/partitioning/detail/proxy/image.h>
 #include <legate/partitioning/detail/proxy/scale.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/shared_ptr.h>
 
 namespace legate {
@@ -51,9 +52,10 @@ ProxyConstraint align(ProxyOutputArguments proxies) { return align(proxies[0], p
 
 Constraint broadcast(Variable variable) { return Constraint{detail::broadcast(variable.impl())}; }
 
-Constraint broadcast(Variable variable, tuple<std::uint32_t> axes)
+Constraint broadcast(Variable variable, Span<const std::uint32_t> axes)
 {
-  return Constraint{detail::broadcast(variable.impl(), std::move(axes))};
+  return Constraint{
+    detail::broadcast(variable.impl(), detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>{axes})};
 }
 
 // ------------------------------------------------------------------------------------------
@@ -62,10 +64,16 @@ ProxyConstraint broadcast(std::variant<ProxyArrayArgument,
                                        ProxyInputArguments,
                                        ProxyOutputArguments,
                                        ProxyReductionArguments> value,
-                          std::optional<tuple<std::uint32_t>> axes)
+                          const std::optional<tuple<std::uint32_t>>& axes)
 {
-  return ProxyConstraint{
-    legate::make_shared<detail::ProxyBroadcast>(std::move(value), std::move(axes))};
+  return ProxyConstraint{legate::make_shared<detail::ProxyBroadcast>(
+    std::move(value),
+    axes.has_value() ? std::make_optional<detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>>(
+                         // &* to work around CCCL bug https://github.com/NVIDIA/cccl/issues/5116
+                         detail::tags::iterator_tag,
+                         &*(axes->begin()),
+                         &*(axes->end()))
+                     : std::nullopt)};
 }
 
 // ------------------------------------------------------------------------------------------
@@ -92,15 +100,17 @@ ProxyConstraint image(
 
 // ------------------------------------------------------------------------------------------
 
-Constraint scale(tuple<std::uint64_t> factors, Variable var_smaller, Variable var_bigger)
+Constraint scale(Span<const std::uint64_t> factors, Variable var_smaller, Variable var_bigger)
 {
-  return Constraint{detail::scale(std::move(factors), var_smaller.impl(), var_bigger.impl())};
+  return Constraint{detail::scale(detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{factors},
+                                  var_smaller.impl(),
+                                  var_bigger.impl())};
 }
 
 // ------------------------------------------------------------------------------------------
 
 ProxyConstraint scale(
-  tuple<std::uint64_t> factors,
+  Span<const std::uint64_t> factors,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_smaller,
@@ -109,18 +119,23 @@ ProxyConstraint scale(
       var_bigger)
 {
   return ProxyConstraint{legate::make_shared<detail::ProxyScale>(
-    std::move(factors), std::move(var_smaller), std::move(var_bigger))};
+    detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{factors},
+    std::move(var_smaller),
+    std::move(var_bigger))};
 }
 
 // ------------------------------------------------------------------------------------------
 
 Constraint bloat(Variable var_source,
                  Variable var_bloat,
-                 tuple<std::uint64_t> low_offsets,
-                 tuple<std::uint64_t> high_offsets)
+                 Span<const std::uint64_t> low_offsets,
+                 Span<const std::uint64_t> high_offsets)
 {
-  return Constraint{detail::bloat(
-    var_source.impl(), var_bloat.impl(), std::move(low_offsets), std::move(high_offsets))};
+  return Constraint{
+    detail::bloat(var_source.impl(),
+                  var_bloat.impl(),
+                  detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{low_offsets},
+                  detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{high_offsets})};
 }
 
 // ------------------------------------------------------------------------------------------
@@ -132,11 +147,14 @@ ProxyConstraint bloat(
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_bloat,
-  tuple<std::uint64_t> low_offsets,
-  tuple<std::uint64_t> high_offsets)
+  Span<const std::uint64_t> low_offsets,
+  Span<const std::uint64_t> high_offsets)
 {
   return ProxyConstraint{legate::make_shared<detail::ProxyBloat>(
-    std::move(var_source), std::move(var_bloat), std::move(low_offsets), std::move(high_offsets))};
+    std::move(var_source),
+    std::move(var_bloat),
+    detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{low_offsets},
+    detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{high_offsets})};
 }
 
 }  // namespace legate

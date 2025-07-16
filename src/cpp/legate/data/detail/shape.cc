@@ -8,6 +8,8 @@
 
 #include <legate/data/shape.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/array_algorithms.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 
@@ -17,14 +19,14 @@
 
 namespace legate::detail {
 
-Shape::Shape(tuple<std::uint64_t>&& extents)
+Shape::Shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& extents)
   : state_{State::READY},
     dim_{static_cast<std::uint32_t>(extents.size())},
     extents_{std::move(extents)}
 {
 }
 
-const tuple<std::uint64_t>& Shape::extents()
+Span<const std::uint64_t> Shape::extents()
 {
   switch (state_) {
     case State::UNBOUND: {
@@ -44,6 +46,8 @@ const tuple<std::uint64_t>& Shape::extents()
   }
   return extents_;
 }
+
+std::size_t Shape::volume() { return array_volume(extents()); }
 
 const Legion::IndexSpace& Shape::index_space()
 {
@@ -106,7 +110,7 @@ bool Shape::operator==(Shape& other)
     return true;
   }
   // Otherwise, we have no choice but block waiting on the exact extents
-  return extents() == other.extents();
+  return extents().deep_equal(other.extents());
 }
 
 void Shape::ensure_binding_()

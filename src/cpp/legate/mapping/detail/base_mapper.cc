@@ -282,7 +282,7 @@ void validate_colocation(Span<const mapping::StoreMapping> client_mappings, cons
     const auto* mapping = client_mapping.impl();
     auto&& stores       = mapping->stores();
 
-    LEGATE_CHECK(stores.size());
+    LEGATE_CHECK(!stores.empty());
     LEGATE_CHECK(!(mapping->for_future() || mapping->for_unbound_store()) || stores.size() == 1);
 
     const auto cant_colocate = [&first_store = *stores.front()](const Store* store) {

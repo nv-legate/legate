@@ -79,7 +79,7 @@ void ScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<std::uint32_t>(store_->type()->size());
   buffer.pack<std::uint32_t>(store_->type()->alignment());
   buffer.pack<std::uint64_t>(scalar_offset_);
-  buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+  buffer.pack<std::uint64_t>(store_->get_storage()->extents());
 }
 
 void ScalarStoreArg::analyze(StoreAnalyzer& analyzer) const { analyzer.insert(future_); }
@@ -94,7 +94,7 @@ void ReplicatedScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& 
   buffer.pack<std::uint32_t>(store_->type()->size());
   buffer.pack<std::uint32_t>(store_->type()->alignment());
   buffer.pack<std::uint64_t>(scalar_offset_);
-  buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+  buffer.pack<std::uint64_t>(store_->get_storage()->extents());
 }
 
 void ReplicatedScalarStoreArg::analyze(StoreAnalyzer& analyzer) const
@@ -120,9 +120,11 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
   // this logic hasn't been implemented yet, as unbound scalar stores are not exposed to the API.
   // The code below works for the only use case in the runtime (approximate image computation)
   if (store_->unbound()) {
-    buffer.pack<std::uint64_t>(std::vector<std::uint64_t>{1});
+    static constexpr std::uint64_t extents[1] = {1};
+
+    buffer.pack<std::uint64_t>(extents);
   } else {
-    buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+    buffer.pack<std::uint64_t>(store_->get_storage()->extents());
   }
 }
 

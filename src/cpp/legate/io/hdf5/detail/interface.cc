@@ -107,7 +107,7 @@ namespace {
     // it, and dim = 0 is unsupported.
     uint_dims.emplace_back(1);
   }
-  return Shape{std::move(uint_dims)};
+  return Shape{uint_dims};
 }
 
 [[nodiscard]] LogicalArray create_output_array(const std::string& path,

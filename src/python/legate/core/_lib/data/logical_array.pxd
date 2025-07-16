@@ -22,7 +22,7 @@ cdef extern from "legate/data/logical_array.h" namespace "legate" nogil:
         int32_t dim() except+
         _Type type() except+
         _Shape shape() except+
-        const _tuple[uint64_t]& extents() except+
+        _tuple[uint64_t] extents() except+
         size_t volume() except+
         bool unbound() except+
         bool nullable() except+

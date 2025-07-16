@@ -118,11 +118,11 @@ cdef class LogicalStore(Unconstructable):
         :returns: The extents of the store.
         :rtype: tuple[int, ...]
         """
-        cdef const std_vector[uint64_t] *ext = NULL
+        cdef _tuple[uint64_t] ext
 
         with nogil:
-            ext = &self._handle.extents().data()
-        return tuple(ext[0])
+            ext = self._handle.extents()
+        return tuple(ext.data())
 
     @property
     def volume(self) -> size_t:
@@ -586,7 +586,7 @@ cdef class LogicalStore(Unconstructable):
         cdef _LogicalStorePartition handle
 
         with nogil:
-            handle = self._handle.partition_by_tiling(std_move(tile_shape))
+            handle = self._handle.partition_by_tiling(tile_shape)
 
         return LogicalStorePartition.from_handle(std_move(handle))
 
@@ -773,11 +773,11 @@ cdef class LogicalStorePartition:
         :returns: The color shape for this partition.
         :rtype: tuple[int, ...]
         """
-        cdef const std_vector[uint64_t] *v = NULL
+        cdef _tuple[uint64_t] shape
 
         with nogil:
-            v = &self._handle.color_shape().data()
-        return tuple(v[0])
+            shape = self._handle.color_shape()
+        return tuple(shape.data())
 
     def get_child_store(self, *color) -> LogicalStore:
         r"""

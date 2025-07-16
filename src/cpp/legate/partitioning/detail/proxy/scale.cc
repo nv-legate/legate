@@ -17,18 +17,19 @@ namespace legate::detail {
 
 namespace {
 
-void do_scale_final(const tuple<std::uint64_t>& factors,
+void do_scale_final(Span<const std::uint64_t> factors,
                     const Variable* var_smaller,
                     const Variable* var_bigger,
                     AutoTask* task)
 {
   if (var_smaller != var_bigger) {
-    task->add_constraint(scale(factors, var_smaller, var_bigger),
-                         /* bypass_signature_check */ true);
+    task->add_constraint(
+      scale(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{factors}, var_smaller, var_bigger),
+      /* bypass_signature_check */ true);
   }
 }
 
-void do_scale(const tuple<std::uint64_t>& factors,
+void do_scale(Span<const std::uint64_t> factors,
               const TaskArrayArg* var_smaller,
               const TaskArrayArg* var_bigger,
               AutoTask* task)
@@ -39,7 +40,7 @@ void do_scale(const tuple<std::uint64_t>& factors,
                  task);
 }
 
-void do_scale(const tuple<std::uint64_t>& factors,
+void do_scale(Span<const std::uint64_t> factors,
               const TaskArrayArg* var_smaller,
               Span<const TaskArrayArg> var_bigger,
               AutoTask* task)
@@ -51,7 +52,7 @@ void do_scale(const tuple<std::uint64_t>& factors,
   }
 }
 
-void do_scale(const tuple<std::uint64_t>& factors,
+void do_scale(Span<const std::uint64_t> factors,
               Span<const TaskArrayArg> var_smaller,
               const TaskArrayArg* var_bigger,
               AutoTask* task)
@@ -63,7 +64,7 @@ void do_scale(const tuple<std::uint64_t>& factors,
   }
 }
 
-void do_scale(const tuple<std::uint64_t>& factors,
+void do_scale(Span<const std::uint64_t> factors,
               Span<const TaskArrayArg> var_smaller,
               Span<const TaskArrayArg> var_bigger,
               AutoTask* task)
@@ -75,7 +76,7 @@ void do_scale(const tuple<std::uint64_t>& factors,
 
 }  // namespace
 
-ProxyScale::ProxyScale(tuple<std::uint64_t> factors,
+ProxyScale::ProxyScale(SmallVector<std::uint64_t, LEGATE_MAX_DIM> factors,
                        value_type var_smaller,
                        value_type var_bigger) noexcept
   : factors_{std::move(factors)},
@@ -103,8 +104,9 @@ void ProxyScale::apply(AutoTask* task) const
 bool ProxyScale::operator==(const ProxyConstraint& rhs) const
 {
   if (const auto* rhsptr = dynamic_cast<const ProxyScale*>(&rhs)) {
-    return std::tie(var_smaller(), var_bigger(), factors()) ==
-           std::tie(rhsptr->var_smaller(), rhsptr->var_bigger(), rhsptr->factors());
+    return std::tie(var_smaller(), var_bigger()) ==
+             std::tie(rhsptr->var_smaller(), rhsptr->var_bigger()) &&
+           factors().deep_equal(rhsptr->factors());
   }
   return false;
 }

@@ -6,10 +6,12 @@
 
 #pragma once
 
-#include <legate/utilities/detail/formatters.h>
-#include <legate/utilities/tuple.h>
+#include <legate_defines.h>
 
-#include <legion.h>
+#include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/span.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 #include <string>
@@ -25,13 +27,13 @@ class Shape {
 
  public:
   explicit Shape(std::uint32_t dim);
-  explicit Shape(tuple<std::uint64_t>&& extents);
+  explicit Shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& extents);
 
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] bool ready() const;
   [[nodiscard]] std::uint32_t ndim() const;
   [[nodiscard]] std::size_t volume();
-  [[nodiscard]] const tuple<std::uint64_t>& extents();
+  [[nodiscard]] Span<const std::uint64_t> extents();
   [[nodiscard]] const Legion::IndexSpace& index_space();
 
   void set_index_space(const Legion::IndexSpace& index_space);
@@ -47,7 +49,7 @@ class Shape {
 
   State state_{State::UNBOUND};
   std::uint32_t dim_{};
-  tuple<std::uint64_t> extents_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents_{};
   Legion::IndexSpace index_space_{};
 };
 

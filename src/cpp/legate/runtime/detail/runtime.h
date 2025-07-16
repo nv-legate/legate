@@ -27,6 +27,7 @@
 #include <legate/type/types.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/hash.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
@@ -204,14 +205,14 @@ class Runtime {
     std::pair<InternalSharedPtr<LogicalStore>, InternalSharedPtr<LogicalStorePartition>>;
   [[nodiscard]] IndexAttachResult create_store(
     const InternalSharedPtr<Shape>& shape,
-    const tuple<std::uint64_t>& tile_shape,
+    const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
     InternalSharedPtr<Type> type,
     const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
     InternalSharedPtr<mapping::detail::DimOrdering> ordering);
 
   void prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
-                                  tuple<std::uint64_t> low_offsets,
-                                  tuple<std::uint64_t> high_offsets,
+                                  SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
+                                  SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets,
                                   bool initialize);
 
  private:
@@ -263,7 +264,7 @@ class Runtime {
   [[nodiscard]] const Scope& scope() const;
 
   [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(
-    const tuple<std::uint64_t>& extents);
+    Span<const std::uint64_t> extents);
   [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(const Domain& domain);
   [[nodiscard]] Legion::IndexPartition create_restricted_partition(
     const Legion::IndexSpace& index_space,
@@ -371,9 +372,9 @@ class Runtime {
   [[nodiscard]] Legion::ProjectionID get_affine_projection(std::uint32_t src_ndim,
                                                            const proj::SymbolicPoint& point);
   [[nodiscard]] Legion::ProjectionID get_delinearizing_projection(
-    const tuple<std::uint64_t>& color_shape);
-  [[nodiscard]] Legion::ProjectionID get_compound_projection(
-    const tuple<std::uint64_t>& color_shape, const proj::SymbolicPoint& point);
+    Span<const std::uint64_t> color_shape);
+  [[nodiscard]] Legion::ProjectionID get_compound_projection(Span<const std::uint64_t> color_shape,
+                                                             const proj::SymbolicPoint& point);
   [[nodiscard]] Legion::ShardingID get_sharding(const mapping::detail::Machine& machine,
                                                 Legion::ProjectionID proj_id);
 
@@ -434,13 +435,16 @@ class Runtime {
 
   std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
 
-  using AffineProjectionDesc   = std::pair<std::uint32_t, proj::SymbolicPoint>;
-  using CompoundProjectionDesc = std::pair<tuple<std::uint64_t>, proj::SymbolicPoint>;
+  using AffineProjectionDesc = std::pair<std::uint32_t, proj::SymbolicPoint>;
+  using CompoundProjectionDesc =
+    std::pair<SmallVector<std::uint64_t, LEGATE_MAX_DIM>, proj::SymbolicPoint>;
   std::int64_t next_projection_id_{
     static_cast<std::int64_t>(CoreProjectionOp::FIRST_DYNAMIC_FUNCTOR)};
   std::unordered_map<AffineProjectionDesc, Legion::ProjectionID, hasher<AffineProjectionDesc>>
     affine_projections_{};
-  std::unordered_map<tuple<std::uint64_t>, Legion::ProjectionID, hasher<tuple<std::uint64_t>>>
+  std::unordered_map<SmallVector<std::uint64_t, LEGATE_MAX_DIM>,
+                     Legion::ProjectionID,
+                     hasher<SmallVector<std::uint64_t, LEGATE_MAX_DIM>>>
     delinearizing_projections_{};
   std::unordered_map<CompoundProjectionDesc, Legion::ProjectionID, hasher<CompoundProjectionDesc>>
     compound_projections_{};

@@ -25,7 +25,7 @@ class DelinearizeInvertRestrictions : public TransformDelinearizeUnit,
                                         // Original dimension to delinearize
                                         std::int32_t,
                                         // Sizes of delinearized dimensions
-                                        std::vector<std::uint64_t>,
+                                        legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>,
                                         // Input restrictions before the transform
                                         std::vector<legate::detail::Restriction>,
                                         // Expected restrictions after invert
@@ -91,29 +91,33 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_F(TransformDelinearizeUnit, DelinearizeConvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   ASSERT_THAT(
-    [&] { static_cast<void>(transform->convert_color(legate::tuple<std::uint64_t>{2, 1, 6})); },
+    [&] {
+      static_cast<void>(transform->convert_color(
+        legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 6}));
+    },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));
   ASSERT_FALSE(transform->is_convertible());
 
-  auto dims = std::vector<std::int32_t>({0});
+  auto dims = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0};
 
   ASSERT_NO_THROW(transform->find_imaginary_dims(dims));
-  ASSERT_EQ(dims, std::vector<std::int32_t>({0}));
+  ASSERT_THAT(dims, ::testing::ElementsAre(0));
 }
 
 TEST_F(TransformDelinearizeUnit, DelinearizeConvertColorShape)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   // not convertible for color shape delinearize
   ASSERT_THAT(
     [&] {
-      static_cast<void>(transform->convert_color_shape(legate::tuple<std::uint64_t>{2, 1, 6}));
+      static_cast<void>(transform->convert_color_shape(
+        legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 6}));
     },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));
@@ -122,11 +126,14 @@ TEST_F(TransformDelinearizeUnit, DelinearizeConvertColorShape)
 TEST_F(TransformDelinearizeUnit, DelinearizeConvertExtents)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   // not convertible for color extents delinearize
   ASSERT_THAT(
-    [&] { static_cast<void>(transform->convert_extents(legate::tuple<std::uint64_t>{2, 1, 6})); },
+    [&] {
+      static_cast<void>(transform->convert_extents(
+        legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 6}));
+    },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));
 }
@@ -134,11 +141,14 @@ TEST_F(TransformDelinearizeUnit, DelinearizeConvertExtents)
 TEST_F(TransformDelinearizeUnit, DelinearizeConvertPoint)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   // not convertible for point delinearize
   ASSERT_THAT(
-    [&] { static_cast<void>(transform->convert_point(legate::tuple<std::int64_t>{2, -1, 6})); },
+    [&] {
+      static_cast<void>(transform->convert_point(
+        legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{2, -1, 6}));
+    },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));
 }
@@ -167,9 +177,10 @@ TEST_P(DelinearizeInvertRestrictions, Basic)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
-  auto result   = transform->invert_color(legate::tuple<std::uint64_t>{2, 1, 7, 0, 0});
-  auto expected = legate::tuple<std::uint64_t>{2, 1, 7};
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
+  auto result = transform->invert_color(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 7, 0, 0});
+  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 7};
 
   ASSERT_EQ(result, expected);
 }
@@ -177,12 +188,13 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertColor)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertColorNegative)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   // dim_ = 2, sum of color[3:4] != 0
   ASSERT_THAT(
     [&] {
-      static_cast<void>(transform->invert_color(legate::tuple<std::uint64_t>{2, 2, 1, 3, 6}));
+      static_cast<void>(transform->invert_color(
+        legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2, 1, 3, 6}));
     },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));
@@ -191,9 +203,10 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertColorNegative)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertColorShape)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
-  auto result   = transform->invert_color_shape(legate::tuple<std::uint64_t>{2, 1, 7, 1, 1});
-  auto expected = legate::tuple<std::uint64_t>{2, 1, 7};
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
+  auto result = transform->invert_color_shape(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 7, 1, 1});
+  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 7};
 
   ASSERT_EQ(result, expected);
 }
@@ -201,12 +214,13 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertColorShape)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertColorShapeNegative)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    2, std::vector<std::uint64_t>({2, 1, 3}));
+    2, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   // dim_ = 2, volume of color_shape[3:4] != 1
   ASSERT_THAT(
     [&] {
-      static_cast<void>(transform->invert_color_shape(legate::tuple<std::uint64_t>{2, 1, 7, 0, 0}));
+      static_cast<void>(transform->invert_color_shape(
+        legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 7, 0, 0}));
     },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));
@@ -215,9 +229,10 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertColorShapeNegative)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertPoint)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    0, std::vector<std::uint64_t>({2, 1, 3}));
-  auto result   = transform->invert_point(legate::tuple<std::int64_t>{2, 2, -2, -1, 6, 7});
-  auto expected = legate::tuple<std::int64_t>{6, -1, 6, 7};
+    0, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
+  auto result = transform->invert_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{2, 2, -2, -1, 6, 7});
+  auto expected = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{6, -1, 6, 7};
 
   ASSERT_EQ(result, expected);
 }
@@ -225,12 +240,13 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertPoint)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertPointNegative)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    0, std::vector<std::uint64_t>({2, 1, 3}));
+    0, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   // dim_ = 0, sum of point[1:2] != 0
   ASSERT_THAT(
     [&] {
-      static_cast<void>(transform->invert_point(legate::tuple<std::int64_t>{2, 1, 2, -1, 6, 7}));
+      static_cast<void>(transform->invert_point(
+        legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{2, 1, 2, -1, 6, 7}));
     },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));
@@ -239,9 +255,10 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertPointNegative)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertExtents)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    1, std::vector<std::uint64_t>({2, 1, 3}));
-  auto result   = transform->invert_extents(legate::tuple<std::uint64_t>{1, 2, 1, 3, 4});
-  auto expected = legate::tuple<std::uint64_t>{1, 6, 4};
+    1, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
+  auto result = transform->invert_extents(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 1, 3, 4});
+  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 6, 4};
 
   ASSERT_EQ(result, expected);
 }
@@ -249,12 +266,13 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertExtents)
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertExtentsNegative)
 {
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(
-    0, std::vector<std::uint64_t>({2, 1, 3}));
+    0, legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 1, 3});
 
   // dim_ = 0, extents[dim_ + idx] != sizes_[idx]
   ASSERT_THAT(
     [&] {
-      static_cast<void>(transform->invert_extents(legate::tuple<std::uint64_t>{1, 2, 1, 2, 4}));
+      static_cast<void>(transform->invert_extents(
+        legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 1, 2, 4}));
     },
     ::testing::ThrowsMessage<legate::detail::NonInvertibleTransformation>(
       ::testing::HasSubstr("Non-invertible transformation")));

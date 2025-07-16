@@ -20,17 +20,11 @@ void BufferBuilder::pack(const T& value)
 }
 
 template <typename T>
-void BufferBuilder::pack(const std::vector<T>& values)
+void BufferBuilder::pack(Span<const T> values)
 {
   const std::uint32_t size = values.size();
   pack(size);
   pack_buffer(values.data(), size * sizeof(T), alignof(T));
-}
-
-template <typename T>
-void BufferBuilder::pack(const tuple<T>& values)
-{
-  pack(values.data());
 }
 
 }  // namespace legate::detail

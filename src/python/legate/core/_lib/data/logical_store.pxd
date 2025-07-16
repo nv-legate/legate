@@ -28,7 +28,7 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         bool overlaps(const _LogicalStore&) except+
         _Type type() except+
         _Shape shape() except+
-        const _tuple[uint64_t]& extents() except+
+        _tuple[uint64_t] extents() except+
         size_t volume() except+
         bool unbound() except+
         bool transformed() except+
@@ -51,7 +51,7 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition() except+
         _LogicalStorePartition(const _LogicalStorePartition&) except+
         _LogicalStore store() except+
-        const _tuple[uint64_t]& color_shape() except+
+        _tuple[uint64_t] color_shape() except+
         _LogicalStore get_child_store(const _tuple[uint64_t]&) except+
 
 

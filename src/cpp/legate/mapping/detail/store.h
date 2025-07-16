@@ -8,11 +8,11 @@
 
 #include <legate/mapping/mapping.h>
 #include <legate/type/detail/types.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
 #include <tuple>
-#include <vector>
 
 namespace legate::detail {
 
@@ -117,7 +117,8 @@ class Store {
 
   [[nodiscard]] Domain domain() const;
 
-  [[nodiscard]] std::vector<std::int32_t> find_imaginary_dims() const;
+  [[nodiscard]] legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> find_imaginary_dims()
+    const;
 
   /**
    * @brief applies inverse transform on a tuple representing the dimensions of a
@@ -128,7 +129,8 @@ class Store {
    *
    * @returns the transformed tuple of dimensions.
    */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const;
+  [[nodiscard]] legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> invert_dims(
+    legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const;
 
  private:
   bool is_future_{};

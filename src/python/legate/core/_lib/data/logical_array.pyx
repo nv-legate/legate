@@ -116,11 +116,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The extents of the array.
         :rtype: tuple[int, ...]
         """
-        cdef const std_vector[uint64_t] *v = NULL
+        cdef _tuple[uint64_t] ext
 
         with nogil:
-            v = &self._handle.extents().data()
-        return tuple(v[0])
+            ext = self._handle.extents()
+        return tuple(ext.data())
 
     @property
     def volume(self) -> size_t:
@@ -347,7 +347,7 @@ cdef class LogicalArray(Unconstructable):
         cdef _LogicalArray handle
 
         with nogil:
-            handle = self._handle.transpose(std_move(cpp_axes))
+            handle = self._handle.transpose(cpp_axes)
         return LogicalArray.from_handle(std_move(handle))
 
     cpdef LogicalArray delinearize(self, int32_t dim, object shape):
@@ -383,7 +383,7 @@ cdef class LogicalArray(Unconstructable):
         cdef _LogicalArray handle
 
         with nogil:
-            handle = self._handle.delinearize(dim, std_move(sizes))
+            handle = self._handle.delinearize(dim, sizes)
         return LogicalArray.from_handle(std_move(handle))
 
     cpdef void fill(self, object value):

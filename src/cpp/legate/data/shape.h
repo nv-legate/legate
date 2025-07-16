@@ -9,6 +9,7 @@
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/tuple.h>
 #include <legate/utilities/typedefs.h>
 
@@ -69,13 +70,22 @@ class Shape {
   Shape();
 
   /**
+   * @brief Constructs a `Shape` from a `Span` of extents
+   *
+   * The constructed `Shape` is immediately ready
+   *
+   * @param extents Dimension extents
+   */
+  Shape(Span<const std::uint64_t> extents);  // NOLINT(google-explicit-constructor)
+
+  /**
    * @brief Constructs a `Shape` from a `tuple` of extents
    *
    * The constructed `Shape` is immediately ready
    *
    * @param extents Dimension extents
    */
-  Shape(tuple<std::uint64_t> extents);  // NOLINT(google-explicit-constructor)
+  Shape(const tuple<std::uint64_t>& extents);  // NOLINT(google-explicit-constructor)
 
   /**
    * @brief Constructs a `Shape` from a `std::vector` of extents
@@ -84,7 +94,7 @@ class Shape {
    *
    * @param extents Dimension extents
    */
-  explicit Shape(std::vector<std::uint64_t> extents);
+  explicit Shape(const std::vector<std::uint64_t>& extents);
 
   /**
    * @brief Constructs a `Shape` from a `std::initializer_list` of extents
@@ -102,7 +112,7 @@ class Shape {
    *
    * @return Dimension extents
    */
-  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
+  [[nodiscard]] tuple<std::uint64_t> extents() const;
 
   /**
    * @brief Returns the `Shape`'s volume

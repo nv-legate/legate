@@ -10,7 +10,7 @@
 
 namespace legate::detail {
 
-constexpr const tuple<std::uint64_t>& ProxyScale::factors() const noexcept { return factors_; }
+constexpr Span<const std::uint64_t> ProxyScale::factors() const noexcept { return factors_; }
 
 constexpr const ProxyScale::value_type& ProxyScale::var_smaller() const noexcept
 {

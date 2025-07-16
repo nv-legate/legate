@@ -11,6 +11,7 @@
 #include <legate/data/detail/region_field.h>
 #include <legate/data/shape.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 
 #include <legion.h>
 
@@ -131,7 +132,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   void release_region_field() noexcept;
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child(const Tiling* tiling,
-                                                                const tuple<std::uint64_t>& color,
+                                                                Span<const std::uint64_t> color,
                                                                 bool complete);
   [[nodiscard]] Legion::LogicalPartition get_legion_partition(const Partition* partition,
                                                               bool complete);

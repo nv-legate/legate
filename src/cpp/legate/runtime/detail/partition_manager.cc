@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 
 namespace legate::detail {
 
@@ -73,7 +74,7 @@ const std::vector<std::uint32_t>& PartitionManager::get_factors(
 namespace {
 
 std::tuple<std::vector<std::size_t>, std::vector<std::uint32_t>, std::int64_t> prune_dimensions(
-  const Restrictions& restrictions, const tuple<std::uint64_t>& shape)
+  const Restrictions& restrictions, Span<const std::uint64_t> shape)
 {
   // Prune out any dimensions that are 1
   std::vector<std::size_t> temp_shape{};
@@ -226,10 +227,11 @@ std::vector<std::size_t> compute_shape_nd(const std::vector<std::uint32_t>& fact
 
 }  // namespace
 
-tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
-                                                            const ParallelPolicy& parallel_policy,
-                                                            const Restrictions& restrictions,
-                                                            const tuple<std::uint64_t>& shape)
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shape(
+  const mapping::detail::Machine& machine,
+  const ParallelPolicy& parallel_policy,
+  const Restrictions& restrictions,
+  Span<const std::uint64_t> shape)
 {
   const auto curr_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
   LEGATE_ASSERT(curr_num_pieces > 0);
@@ -239,7 +241,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
   }
 
   // If we only have one point then we never do parallel launches
-  if (shape.all([](auto extent) { return 1 == extent; })) {
+  if (std::all_of(shape.begin(), shape.end(), [](auto extent) { return 1 == extent; })) {
     return {};
   }
 
@@ -276,35 +278,44 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
   // Project back onto the original number of dimensions
   LEGATE_CHECK(temp_result.size() == ndim);
 
-  auto result = legate::full<std::uint64_t>(shape.size(), 1);
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> result;
+
+  result.assign(tags::size_tag, shape.size(), 1);
   for (std::uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
   }
   return result;
 }
 
-tuple<std::uint64_t> PartitionManager::compute_tile_shape(const tuple<std::uint64_t>& extents,
-                                                          const tuple<std::uint64_t>& launch_shape)
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_tile_shape(
+  Span<const std::uint64_t> extents, Span<const std::uint64_t> launch_shape)
 {
   LEGATE_CHECK(extents.size() == launch_shape.size());
-  tuple<std::uint64_t> tile_shape;
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape;
 
   tile_shape.reserve(extents.size());
-  for (auto&& [x, y] : legate::detail::zip_equal(extents, launch_shape)) {
-    tile_shape.append_inplace((x + y - 1) / y);
-  }
+  std::transform(extents.begin(),
+                 extents.end(),
+                 launch_shape.begin(),
+                 std::back_inserter(tile_shape),
+                 [](std::uint64_t ext, std::uint64_t shape) { return (ext + shape - 1) / shape; });
   return tile_shape;
 }
 
-bool PartitionManager::use_complete_tiling(const tuple<std::uint64_t>& extents,
-                                           const tuple<std::uint64_t>& tile_shape)
+bool PartitionManager::use_complete_tiling(Span<const std::uint64_t> extents,
+                                           Span<const std::uint64_t> tile_shape)
 {
   // If it would generate a very large number of elements then
   // we'll apply a heuristic for now and not actually tile it
   // TODO(wonchanl): A better heuristic for this in the future
   constexpr auto MAX_TILES_HEURISTIC  = 256;
   constexpr auto MAX_PIECES_HEURISTIC = 16;
-  const auto num_tiles                = (extents / tile_shape).volume();
+  const auto num_tiles                = std::transform_reduce(extents.begin(),
+                                               extents.end(),
+                                               tile_shape.begin(),
+                                               std::size_t{1},
+                                               std::multiplies<>{},
+                                               std::divides<>{});
   const auto num_pieces = static_cast<std::uint64_t>(Runtime::get_runtime().get_machine().count());
   return num_tiles <= MAX_TILES_HEURISTIC || num_tiles <= MAX_PIECES_HEURISTIC * num_pieces;
 }

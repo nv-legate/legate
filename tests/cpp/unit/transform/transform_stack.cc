@@ -24,7 +24,7 @@ using TransformStackUnitDeathTest = TransformStackUnit;
 TEST_F(TransformStackUnit, ConvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::TransformStack>();
-  auto expected  = legate::tuple<std::uint64_t>{1};
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
   auto color     = transform->convert_color(expected);
 
   ASSERT_EQ(color, expected);
@@ -33,7 +33,7 @@ TEST_F(TransformStackUnit, ConvertColor)
 TEST_F(TransformStackUnit, InvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::TransformStack>();
-  auto expected  = legate::tuple<std::uint64_t>{1, 2, 3};
+  auto expected  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 3};
   auto color     = transform->invert_color(expected);
 
   ASSERT_EQ(color, expected);

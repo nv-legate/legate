@@ -8,7 +8,7 @@
 
 #include <legate/partitioning/detail/proxy/constraint.h>
 #include <legate/partitioning/proxy.h>
-#include <legate/utilities/tuple.h>
+#include <legate/utilities/detail/small_vector.h>
 
 #include <cstdint>
 #include <optional>
@@ -34,7 +34,8 @@ class ProxyBroadcast final : public ProxyConstraint {
    * @param value The value to broadcast.
    * @param axes The (possibly null) axes of value to broadcast.
    */
-  ProxyBroadcast(value_type value, std::optional<tuple<std::uint32_t>> axes) noexcept;
+  ProxyBroadcast(value_type value,
+                 std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>> axes) noexcept;
 
   /**
    * @return The value to broadcast.
@@ -44,7 +45,8 @@ class ProxyBroadcast final : public ProxyConstraint {
   /**
    * @return The (possibly null) axes to broadcast of `value()`.
    */
-  [[nodiscard]] constexpr const std::optional<tuple<std::uint32_t>>& axes() const noexcept;
+  [[nodiscard]] constexpr const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes()
+    const noexcept;
 
   /**
    * @return The name of the broadcast constraint.
@@ -72,7 +74,7 @@ class ProxyBroadcast final : public ProxyConstraint {
 
  private:
   value_type value_;
-  std::optional<tuple<std::uint32_t>> axes_{};
+  std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>> axes_{};
 };
 
 }  // namespace legate::detail

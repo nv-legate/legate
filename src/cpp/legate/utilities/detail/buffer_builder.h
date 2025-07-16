@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/utilities/tuple.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <vector>
@@ -41,14 +41,8 @@ class BufferBuilder {
    * @param values Values to serialize in a vector
    */
   template <typename T>
-  void pack(const std::vector<T>& values);
-  /**
-   * @brief Serializes multiple values
-   *
-   * @param values Values to serialize in a tuple
-   */
-  template <typename T>
-  void pack(const tuple<T>& values);
+  void pack(Span<const T> values);
+
   /**
    * @brief Serializes an arbitrary allocation
    *

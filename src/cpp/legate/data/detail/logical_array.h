@@ -55,9 +55,9 @@ class LogicalArray {
                                                                 std::int64_t index) const       = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> transpose(
-    const std::vector<std::int32_t>& axes) const = 0;
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> delinearize(
-    std::int32_t dim, const std::vector<std::uint64_t>& sizes) const = 0;
+    std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes) const = 0;
 
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& data() const;
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& null_mask() const = 0;
@@ -115,9 +115,9 @@ class BaseLogicalArray final : public LogicalArray {
                                                         std::int64_t index) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> transpose(
-    const std::vector<std::int32_t>& axes) const override;
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> delinearize(
-    std::int32_t dim, const std::vector<std::uint64_t>& sizes) const override;
+    std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes) const override;
 
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& data() const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
@@ -177,9 +177,9 @@ class ListLogicalArray final : public LogicalArray {
                                                         std::int64_t index) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> transpose(
-    const std::vector<std::int32_t>& axes) const override;
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> delinearize(
-    std::int32_t dim, const std::vector<std::uint64_t>& sizes) const override;
+    std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes) const override;
 
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array(
@@ -239,9 +239,9 @@ class StructLogicalArray final : public LogicalArray {
                                                         std::int64_t index) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> transpose(
-    const std::vector<std::int32_t>& axes) const override;
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> delinearize(
-    std::int32_t dim, const std::vector<std::uint64_t>& sizes) const override;
+    std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes) const override;
 
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array(

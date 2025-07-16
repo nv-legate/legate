@@ -173,7 +173,7 @@ class Constraint {
  *
  * @throw std::invalid_argument If the list of axes is empty
  */
-[[nodiscard]] Constraint broadcast(Variable variable, tuple<std::uint32_t> axes);
+[[nodiscard]] Constraint broadcast(Variable variable, Span<const std::uint32_t> axes);
 
 /**
  * @brief Construct a broadcast constraint descriptor.
@@ -199,11 +199,11 @@ class Constraint {
  *
  * @see broadcast(Variable, tuple<std::uint32_t>)
  */
-[[nodiscard]] ProxyConstraint broadcast(std::variant<ProxyArrayArgument,
-                                                     ProxyInputArguments,
-                                                     ProxyOutputArguments,
-                                                     ProxyReductionArguments> value,
-                                        std::optional<tuple<std::uint32_t>> axes = std::nullopt);
+[[nodiscard]] ProxyConstraint broadcast(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      value,
+  const std::optional<tuple<std::uint32_t>>& axes = std::nullopt);
 
 /**
  * @brief Hints to the runtime for the image computation
@@ -300,7 +300,7 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @return Scaling constraint
  */
-[[nodiscard]] Constraint scale(tuple<std::uint64_t> factors,
+[[nodiscard]] Constraint scale(Span<const std::uint64_t> factors,
                                Variable var_smaller,
                                Variable var_bigger);
 
@@ -321,7 +321,7 @@ enum class ImageComputationHint : std::uint8_t {
  * @see scale(tuple<std::uint64_t>, Variable, Variable)
  */
 [[nodiscard]] ProxyConstraint scale(
-  tuple<std::uint64_t> factors,
+  Span<const std::uint64_t> factors,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_smaller,
@@ -359,8 +359,8 @@ enum class ImageComputationHint : std::uint8_t {
  */
 [[nodiscard]] Constraint bloat(Variable var_source,
                                Variable var_bloat,
-                               tuple<std::uint64_t> low_offsets,
-                               tuple<std::uint64_t> high_offsets);
+                               Span<const std::uint64_t> low_offsets,
+                               Span<const std::uint64_t> high_offsets);
 
 /**
  * @brief Construct a bloat constraint descriptor.
@@ -386,8 +386,8 @@ enum class ImageComputationHint : std::uint8_t {
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_bloat,
-  tuple<std::uint64_t> low_offsets,
-  tuple<std::uint64_t> high_offsets);
+  Span<const std::uint64_t> low_offsets,
+  Span<const std::uint64_t> high_offsets);
 
 /** @} */
 

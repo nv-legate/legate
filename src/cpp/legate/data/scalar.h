@@ -120,6 +120,15 @@ class Scalar {
   explicit Scalar(std::string_view string);
 
   /**
+   * @brief Creates an owned `Scalar` from a `Span` of scalars. The values in the input
+   * span will be copied.
+   *
+   * @param values Values to create a `Scalar` with in a vector.
+   */
+  template <typename T>
+  explicit Scalar(Span<const T> values);
+
+  /**
    * @brief Creates an owned `Scalar` from a `std::vector` of scalars. The values in the input
    * vector will be copied.
    *

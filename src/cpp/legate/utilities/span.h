@@ -19,6 +19,9 @@
 
 namespace legate {
 
+template <typename T>
+class tuple;
+
 namespace detail {
 
 template <typename T, typename = void>
@@ -73,9 +76,22 @@ class Span {
    * @param container The container-like object.
    */
   template <typename C,
-            typename = std::enable_if_t<detail::is_container_v<C> &&
-                                        !std::is_same_v<C, std::initializer_list<T>>>>
+            typename = std::enable_if_t<
+              detail::is_container_v<C> &&                     // NOLINT(modernize-type-traits)
+              !std::is_same_v<C, std::initializer_list<T>> &&  // NOLINT(modernize-type-traits)
+              !std::is_same_v<C, tuple<value_type>>>>          // NOLINT(modernize-type-traits)
   constexpr Span(C& container);  // NOLINT(google-explicit-constructor)
+
+  /**
+   * @brief Construct a `Span` from a `tuple`.
+   *
+   * This overload must exist because `tuple::data()` returns a reference to the underlying
+   * container, not the underlying pointer (as is usually expected by `data()`) which causes
+   * the `Span(C& container)` overload to brick.
+   *
+   * @param tup The tuple to construct the span from.
+   */
+  constexpr Span(const tuple<value_type>& tup);  // NOLINT(google-explicit-constructor)
 
   /**
    * @brief Construct a span from an initializer list of items directly.
@@ -110,7 +126,23 @@ class Span {
    */
   [[nodiscard]] constexpr size_type size() const;
 
+  /**
+   * @return `true` if the span has size 0, `false` otherwise.
+   */
+  [[nodiscard]] constexpr bool empty() const;
+
   [[nodiscard]] constexpr reference operator[](size_type pos) const;
+
+  /**
+   * @brief Access an element with bounds checking.
+   *
+   * @param pos The index of the element to access.
+   *
+   * @return A reference to the element as index `pos`
+   *
+   * @throw std::out_of_range if `pos` is not in bounds of the span.
+   */
+  [[nodiscard]] constexpr reference at(size_type pos) const;
 
   /**
    * @brief Returns the pointer to the first element.
@@ -216,6 +248,31 @@ class Span {
    * @return Pointer to the data.
    */
   [[nodiscard]] constexpr pointer data() const;
+
+  /**
+   * @brief Compare the values of the span for equality.
+   *
+   * Since span is fundamentally a "view" or "handle" type, when a user writes:
+   * ```cpp
+   * span == other_span
+   * ```
+   * It is not immediately clear what they mean to compare. Should `operator==()` behave like
+   * `std::shared_ptr` and compare the pointer values? Should it compare the container values?
+   * For this reason, the standard does not actually define `operator==()` (or any of the other
+   * comparison operators) for `std::span`, and we don't either. Instead, we provide this
+   * helper function to make the comparison explicit.
+   *
+   * If we ever have need for pointer comparisons, we could add `shallow_compare()`, but then
+   * it's just as easy (and expressive) for the user to write
+   * ```cpp
+   * span.data() == other_span.data()
+   * ```
+   *
+   * @param other The span to compare against.
+   *
+   * @return `true` if all values of this span are equal to that of `other`, `false` otherwise.
+   */
+  [[nodiscard]] constexpr bool deep_equal(const Span<const value_type>& other) const;
 
  private:
   struct container_tag {};

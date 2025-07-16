@@ -8,6 +8,8 @@
 
 #include <legate/data/detail/logical_store.h>
 
+#include <utility>
+
 namespace legate::detail {
 
 inline std::uint64_t Storage::id() const { return storage_id_; }
@@ -18,7 +20,7 @@ inline bool Storage::unbound() const { return unbound_; }
 
 inline const InternalSharedPtr<Shape>& Storage::shape() const { return shape_; }
 
-inline const tuple<std::uint64_t>& Storage::extents() const { return shape()->extents(); }
+inline Span<const std::uint64_t> Storage::extents() const { return shape()->extents(); }
 
 inline std::size_t Storage::volume() const { return shape()->volume(); }
 
@@ -57,7 +59,7 @@ inline bool LogicalStore::unbound() const { return get_storage()->unbound(); }
 
 inline const InternalSharedPtr<Shape>& LogicalStore::shape() const { return shape_; }
 
-inline const tuple<std::uint64_t>& LogicalStore::extents() const { return shape()->extents(); }
+inline Span<const std::uint64_t> LogicalStore::extents() const { return shape()->extents(); }
 
 inline std::size_t LogicalStore::volume() const { return shape()->volume(); }
 
@@ -149,9 +151,10 @@ inline InternalSharedPtr<StoragePartition> create_storage_partition(
   return self->create_partition(self, std::move(partition), std::move(complete));
 }
 
-inline InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
-                                                tuple<std::uint64_t> tile_shape,
-                                                tuple<std::int64_t> offsets)
+inline InternalSharedPtr<Storage> slice_storage(
+  const InternalSharedPtr<Storage>& self,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
 {
   return self->slice(self, std::move(tile_shape), std::move(offsets));
 }
@@ -164,7 +167,8 @@ inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<Logic
 }
 
 inline InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
-  const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape)
+  const InternalSharedPtr<LogicalStore>& self,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape)
 {
   return self->partition_by_tiling_(self, std::move(tile_shape));
 }

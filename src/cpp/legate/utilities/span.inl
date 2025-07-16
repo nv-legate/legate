@@ -10,6 +10,7 @@
 #include <legate/utilities/cpp_version.h>
 #include <legate/utilities/span.h>
 
+#include <cstdint>
 #include <iterator>
 #include <type_traits>
 
@@ -54,6 +55,11 @@ constexpr Span<T>::Span(C& container) : Span{container, container_tag{}}
 }
 
 template <typename T>
+constexpr Span<T>::Span(const tuple<value_type>& tup) : Span{tup.data(), container_tag{}}
+{
+}
+
+template <typename T>
 constexpr Span<T>::Span(std::initializer_list<T> il) : Span{il, container_tag{}}
 {
 }
@@ -79,9 +85,28 @@ constexpr typename Span<T>::size_type Span<T>::size() const
 }
 
 template <typename T>
+constexpr bool Span<T>::empty() const
+{
+  return size() == 0;
+}
+
+template <typename T>
 constexpr typename Span<T>::reference Span<T>::operator[](size_type pos) const
 {
   LEGATE_ASSERT(pos < size_);
+  return data_[pos];
+}
+
+namespace detail {
+
+void assert_in_range(std::size_t container_size, std::int64_t pos);
+
+}  // namespace detail
+
+template <typename T>
+constexpr typename Span<T>::reference Span<T>::at(size_type pos) const
+{
+  detail::assert_in_range(size(), static_cast<std::int64_t>(pos));
   return data_[pos];
 }
 
@@ -186,6 +211,12 @@ template <typename T>
 constexpr typename Span<T>::pointer Span<T>::data() const
 {
   return data_;
+}
+
+template <typename T>
+constexpr bool Span<T>::deep_equal(const Span<const value_type>& other) const
+{
+  return (this == &other) || std::equal(begin(), end(), other.begin(), other.end());
 }
 
 }  // namespace legate

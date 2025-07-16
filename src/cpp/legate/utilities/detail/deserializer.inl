@@ -69,6 +69,18 @@ void BaseDeserializer<Deserializer>::unpack_impl(std::vector<T>& values)
 }
 
 template <typename Deserializer>
+template <typename T, std::uint32_t SIZE>
+void BaseDeserializer<Deserializer>::unpack_impl(SmallVector<T, SIZE>& values)
+{
+  auto size = unpack<std::uint32_t>();
+
+  values.reserve(size);
+  for (std::uint32_t idx = 0; idx < size; ++idx) {
+    values.emplace_back(unpack<T>());
+  }
+}
+
+template <typename Deserializer>
 template <typename T1, typename T2>
 void BaseDeserializer<Deserializer>::unpack_impl(std::pair<T1, T2>& values)
 {
@@ -231,14 +243,14 @@ InternalSharedPtr<TransformStack> BaseDeserializer<Deserializer>::unpack_transfo
                                                   std::move(parent));
     }
     case CoreTransform::TRANSPOSE: {
-      auto axes   = unpack<std::vector<std::int32_t>>();
+      auto axes   = unpack<SmallVector<std::int32_t, LEGATE_MAX_DIM>>();
       auto parent = unpack_transform_();
       return make_internal_shared<TransformStack>(std::make_unique<Transpose>(std::move(axes)),
                                                   std::move(parent));
     }
     case CoreTransform::DELINEARIZE: {
       auto dim    = unpack<std::int32_t>();
-      auto sizes  = unpack<std::vector<std::uint64_t>>();
+      auto sizes  = unpack<SmallVector<std::uint64_t, LEGATE_MAX_DIM>>();
       auto parent = unpack_transform_();
       return make_internal_shared<TransformStack>(
         std::make_unique<Delinearize>(dim, std::move(sizes)), std::move(parent));

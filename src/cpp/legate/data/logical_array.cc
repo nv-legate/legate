@@ -38,7 +38,7 @@ Type LogicalArray::type() const { return Type{impl()->type()}; }
 
 Shape LogicalArray::shape() const { return Shape{impl()->shape()}; }
 
-const tuple<std::uint64_t>& LogicalArray::extents() const { return shape().extents(); }
+tuple<std::uint64_t> LogicalArray::extents() const { return shape().extents(); }
 
 std::size_t LogicalArray::volume() const { return impl()->volume(); }
 
@@ -65,15 +65,15 @@ LogicalArray LogicalArray::slice(std::int32_t dim, Slice sl) const
   return LogicalArray{impl()->slice(dim, sl)};
 }
 
-LogicalArray LogicalArray::transpose(const std::vector<std::int32_t>& axes) const
+LogicalArray LogicalArray::transpose(Span<const std::int32_t> axes) const
 {
-  return LogicalArray{impl()->transpose(axes)};
+  return LogicalArray{impl()->transpose(detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{axes})};
 }
 
-LogicalArray LogicalArray::delinearize(std::int32_t dim,
-                                       const std::vector<std::uint64_t>& sizes) const
+LogicalArray LogicalArray::delinearize(std::int32_t dim, Span<const std::uint64_t> sizes) const
 {
-  return LogicalArray{impl()->delinearize(dim, sizes)};
+  return LogicalArray{
+    impl()->delinearize(dim, detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{sizes})};
 }
 
 LogicalStore LogicalArray::data() const { return LogicalStore{impl()->data()}; }

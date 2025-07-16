@@ -8,7 +8,8 @@
 
 #include <legate/partitioning/detail/proxy/constraint.h>
 #include <legate/partitioning/proxy.h>
-#include <legate/utilities/tuple.h>
+#include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/span.h>
 
 #include <cstdint>
 #include <string_view>
@@ -34,12 +35,14 @@ class ProxyScale final : public ProxyConstraint {
    * @param var_smaller The variable to scale.
    * @param var_bigger The variable to scale to.
    */
-  ProxyScale(tuple<std::uint64_t> factors, value_type var_smaller, value_type var_bigger) noexcept;
+  ProxyScale(SmallVector<std::uint64_t, LEGATE_MAX_DIM> factors,
+             value_type var_smaller,
+             value_type var_bigger) noexcept;
 
   /**
    * @return The scaling factors.
    */
-  [[nodiscard]] constexpr const tuple<std::uint64_t>& factors() const noexcept;
+  [[nodiscard]] constexpr Span<const std::uint64_t> factors() const noexcept;
 
   /**
    * @return The variable to scale.
@@ -76,7 +79,7 @@ class ProxyScale final : public ProxyConstraint {
   [[nodiscard]] bool operator==(const ProxyConstraint& rhs) const override;
 
  private:
-  tuple<std::uint64_t> factors_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> factors_{};
   value_type var_smaller_;
   value_type var_bigger_;
 };

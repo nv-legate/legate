@@ -26,10 +26,11 @@ class ImageTest : public DefaultFixture {
 
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Image> create_image()
   {
-    auto runtime   = legate::Runtime::get_runtime();
-    auto store     = runtime->create_store(legate::Shape{1}, legate::int32());
-    auto partition = legate::detail::create_tiling(legate::tuple<std::uint64_t>{1},
-                                                   legate::tuple<std::uint64_t>{1});
+    auto runtime = legate::Runtime::get_runtime();
+    auto store   = runtime->create_store(legate::Shape{1}, legate::int32());
+    auto partition =
+      legate::detail::create_tiling(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1},
+                                    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1});
     return legate::detail::create_image(store.impl(),
                                         partition,
                                         legate::mapping::detail::Machine{},
@@ -61,8 +62,9 @@ TEST_F(ImageTest, IsDisjointFor)
 
 TEST_F(ImageTest, ColorShape)
 {
-  auto expected_color_shape = legate::tuple<std::uint64_t>{1};
-  ASSERT_EQ(image->color_shape(), expected_color_shape);
+  auto expected_color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{image->color_shape()}),
+            expected_color_shape);
 }
 
 TEST_F(ImageTest, IsCompleteFor)
@@ -115,15 +117,15 @@ TEST_F(ImageTest, SatisfiesRestrictionsNegative)
 TEST_F(ImageTest, Scale)
 {
   // Scale is not implemented for image partitions
-  auto factors = legate::tuple<std::uint64_t>{2, 2};
+  auto factors = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
   ASSERT_THROW(static_cast<void>(image->scale(factors)), std::runtime_error);
 }
 
 TEST_F(ImageTest, Bloat)
 {
   // Bloat is not implemented for image partitions
-  auto low_offsets  = legate::tuple<std::uint64_t>{0, 0};
-  auto high_offsets = legate::tuple<std::uint64_t>{1, 1};
+  auto low_offsets  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
+  auto high_offsets = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
   ASSERT_THROW(static_cast<void>(image->bloat(low_offsets, high_offsets)), std::runtime_error);
 }
 
@@ -156,7 +158,7 @@ TEST_F(ImageTest, Invert)
 
   // Test non-identity transformation
   auto dim        = 1;
-  auto sizes      = std::vector<std::uint64_t>{1};
+  auto sizes      = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
   auto transform2 = legate::make_internal_shared<legate::detail::TransformStack>(
     std::make_unique<legate::detail::Delinearize>(dim, std::move(sizes)), std::move(transform1));
   ASSERT_THROW(static_cast<void>(image->invert(image, transform2)),

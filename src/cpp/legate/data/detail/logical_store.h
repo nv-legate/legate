@@ -18,13 +18,13 @@
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 
-#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
-#include <vector>
 
 namespace legate {
 
@@ -57,10 +57,10 @@ class Storage {
   // Create a Future-backed storage. Initialized eagerly.
   Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::string_view provenance);
   // Create a RegionField-backed sub-storage.
-  Storage(tuple<std::uint64_t> extents,
+  Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
           InternalSharedPtr<StoragePartition> parent,
-          tuple<std::uint64_t> color,
-          tuple<std::int64_t> offsets);
+          SmallVector<std::uint64_t, LEGATE_MAX_DIM> color,
+          SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
   ~Storage();
 
   Storage(Storage&&) noexcept            = default;
@@ -70,8 +70,8 @@ class Storage {
   [[nodiscard]] bool replicated() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
-  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
-  [[nodiscard]] const tuple<std::int64_t>& offsets() const;
+  [[nodiscard]] Span<const std::uint64_t> extents() const;
+  [[nodiscard]] Span<const std::int64_t> offsets() const;
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;
@@ -81,9 +81,10 @@ class Storage {
   [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] bool is_mapped() const;
 
-  [[nodiscard]] InternalSharedPtr<Storage> slice(const InternalSharedPtr<Storage>& self,
-                                                 tuple<std::uint64_t> tile_shape,
-                                                 tuple<std::int64_t> offsets);
+  [[nodiscard]] InternalSharedPtr<Storage> slice(
+    const InternalSharedPtr<Storage>& self,
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
   [[nodiscard]] const Storage* get_root() const;
   [[nodiscard]] Storage* get_root();
   [[nodiscard]] InternalSharedPtr<const Storage> get_root(
@@ -132,8 +133,8 @@ class Storage {
 
   std::int32_t level_{};
   std::optional<InternalSharedPtr<StoragePartition>> parent_{};
-  tuple<std::uint64_t> color_{};
-  tuple<std::int64_t> offsets_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_{};
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
 
   std::size_t scalar_offset_{};
   std::optional<InternalSharedPtr<LogicalRegionField>> region_field_{};
@@ -157,9 +158,10 @@ class StoragePartition {
     const InternalSharedPtr<const StoragePartition>&) const;
   [[nodiscard]] InternalSharedPtr<Storage> get_root(const InternalSharedPtr<StoragePartition>&);
   [[nodiscard]] InternalSharedPtr<Storage> get_child_storage(
-    const InternalSharedPtr<StoragePartition>& self, tuple<std::uint64_t> color);
+    const InternalSharedPtr<StoragePartition>& self,
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color);
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child_data(
-    const tuple<std::uint64_t>& color);
+    Span<const std::uint64_t> color);
 
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
     const mapping::detail::Machine& machine,
@@ -183,7 +185,7 @@ class LogicalStore {
   LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr<Type> type);
   // This constructor is invoked exclusively by store transformations that construct stores from
   // immediate extents.
-  LogicalStore(tuple<std::uint64_t> extents,
+  LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
                InternalSharedPtr<Storage> storage,
                InternalSharedPtr<Type> type,
                InternalSharedPtr<TransformStack> transform);
@@ -193,7 +195,7 @@ class LogicalStore {
 
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
-  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
+  [[nodiscard]] Span<const std::uint64_t> extents() const;
   [[nodiscard]] std::size_t volume() const;
   // Size of the backing storage
   [[nodiscard]] std::size_t storage_size() const;
@@ -228,15 +230,18 @@ class LogicalStore {
                                                        Slice sl);
 
  public:
-  [[nodiscard]] InternalSharedPtr<LogicalStore> transpose(std::vector<std::int32_t> axes);
-  [[nodiscard]] InternalSharedPtr<LogicalStore> delinearize(std::int32_t dim,
-                                                            std::vector<std::uint64_t> sizes);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> transpose(
+    SmallVector<std::int32_t, LEGATE_MAX_DIM> axes);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> delinearize(
+    std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes);
 
  private:
   friend InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
-    const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape);
+    const InternalSharedPtr<LogicalStore>& self,
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape);
   [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_by_tiling_(
-    const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape);
+    const InternalSharedPtr<LogicalStore>& self,
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape);
 
  public:
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
@@ -287,7 +292,7 @@ class LogicalStore {
  public:
   [[nodiscard]] Legion::ProjectionID compute_projection(
     const Domain& launch_domain,
-    const tuple<std::uint64_t>& color_shape,
+    Span<const std::uint64_t> color_shape,
     const std::optional<SymbolicPoint>& projection = {}) const;
 
   void pack(BufferBuilder& buffer) const;
@@ -360,11 +365,11 @@ class LogicalStorePartition {
   [[nodiscard]] const InternalSharedPtr<StoragePartition>& storage_partition() const;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
   [[nodiscard]] InternalSharedPtr<LogicalStore> get_child_store(
-    const tuple<std::uint64_t>& color) const;
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const;
   [[nodiscard]] StoreProjection create_store_projection(
     const Domain& launch_domain, const std::optional<SymbolicPoint>& projection = {});
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
-  [[nodiscard]] const tuple<std::uint64_t>& color_shape() const;
+  [[nodiscard]] Span<const std::uint64_t> color_shape() const;
 
  private:
   InternalSharedPtr<Partition> partition_{};
@@ -377,15 +382,17 @@ class LogicalStorePartition {
   InternalSharedPtr<Partition> partition,
   std::optional<bool> complete);
 
-[[nodiscard]] InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
-                                                       tuple<std::uint64_t> tile_shape,
-                                                       tuple<std::int64_t> offsets);
+[[nodiscard]] InternalSharedPtr<Storage> slice_storage(
+  const InternalSharedPtr<Storage>& self,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(
   const InternalSharedPtr<LogicalStore>& self, std::int32_t dim, Slice sl);
 
 [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
-  const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape);
+  const InternalSharedPtr<LogicalStore>& self,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape);
 
 [[nodiscard]] InternalSharedPtr<LogicalStorePartition> create_store_partition(
   const InternalSharedPtr<LogicalStore>& self,

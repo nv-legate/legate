@@ -67,7 +67,21 @@ ManualTask Runtime::create_task(Library library,
                                 LocalTaskID task_id,
                                 const tuple<std::uint64_t>& launch_shape)
 {
+  return create_task(library, task_id, launch_shape.data());
+}
+
+ManualTask Runtime::create_task(Library library,
+                                LocalTaskID task_id,
+                                Span<const std::uint64_t> launch_shape)
+{
   return create_task(library, task_id, detail::to_domain(launch_shape));
+}
+
+ManualTask Runtime::create_task(Library library,
+                                LocalTaskID task_id,
+                                std::initializer_list<std::uint64_t> launch_shape)
+{
+  return create_task(library, task_id, Span<const std::uint64_t>{launch_shape});
 }
 
 ManualTask Runtime::create_task(Library library, LocalTaskID task_id, const Domain& launch_domain)
@@ -295,18 +309,26 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
   const std::vector<std::pair<ExternalAllocation, tuple<std::uint64_t>>>& allocations,
   const mapping::DimOrdering& ordering)
 {
+  // &* to work around CCCL bug https://github.com/NVIDIA/cccl/issues/5116
   auto [store, partition] =
-    impl_->create_store(shape.impl(), tile_shape, type.impl(), allocations, ordering.impl());
+    impl_->create_store(shape.impl(),
+                        {detail::tags::iterator_tag, &*tile_shape.begin(), &*tile_shape.end()},
+                        type.impl(),
+                        allocations,
+                        ordering.impl());
   return {LogicalStore{std::move(store)}, LogicalStorePartition{std::move(partition)}};
 }
 
 void Runtime::prefetch_bloated_instances(const LogicalStore& store,
-                                         tuple<std::uint64_t> low_offsets,
-                                         tuple<std::uint64_t> high_offsets,
+                                         Span<const std::uint64_t> low_offsets,
+                                         Span<const std::uint64_t> high_offsets,
                                          bool initialize)
 {
   impl_->prefetch_bloated_instances(
-    store.impl(), std::move(low_offsets), std::move(high_offsets), initialize);
+    store.impl(),
+    detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{low_offsets},
+    detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{high_offsets},
+    initialize);
 }
 
 void Runtime::issue_mapping_fence() { impl_->issue_mapping_fence(); }

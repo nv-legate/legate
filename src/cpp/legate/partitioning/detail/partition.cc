@@ -10,6 +10,8 @@
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/types.h>
+#include <legate/utilities/detail/array_algorithms.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 
@@ -20,6 +22,7 @@
 #include <algorithm>
 #include <functional>
 #include <stdexcept>
+#include <utility>
 
 namespace legate::detail {
 
@@ -28,13 +31,13 @@ bool NoPartition::is_disjoint_for(const Domain& launch_domain) const
   return !launch_domain.is_valid() || launch_domain.get_volume() == 1;
 }
 
-InternalSharedPtr<Partition> NoPartition::scale(const tuple<std::uint64_t>& /*factors*/) const
+InternalSharedPtr<Partition> NoPartition::scale(Span<const std::uint64_t> /*factors*/) const
 {
   return create_no_partition();
 }
 
-InternalSharedPtr<Partition> NoPartition::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
-                                                const tuple<std::uint64_t>& /*high_offsets*/) const
+InternalSharedPtr<Partition> NoPartition::bloat(Span<const std::uint64_t> /*low_offsts*/,
+                                                Span<const std::uint64_t> /*high_offsets*/) const
 {
   return create_no_partition();
 }
@@ -62,30 +65,34 @@ InternalSharedPtr<Partition> NoPartition::invert(
 
 // ==========================================================================================
 
-Tiling::Tiling(tuple<std::uint64_t> tile_shape,
-               tuple<std::uint64_t> color_shape,
-               tuple<std::int64_t> offsets)
+Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+               SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+               SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
   : tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
-    offsets_{offsets.empty() ? legate::full<std::int64_t>(tile_shape_.size(), 0)
-                             : std::move(offsets)},
+    offsets_{std::move(offsets)},
     strides_{tile_shape_}
 {
+  if (offsets_.empty()) {
+    offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
+  }
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
 
-Tiling::Tiling(tuple<std::uint64_t> tile_shape,
-               tuple<std::uint64_t> color_shape,
-               tuple<std::int64_t> offsets,
-               tuple<std::uint64_t> strides)
-  : overlapped_{!strides.greater_equal(tile_shape)},
+Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+               SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+               SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+               SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides)
+  : overlapped_{!array_all_of(std::greater_equal<>{}, strides, tile_shape)},
     tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
-    offsets_{offsets.empty() ? legate::full<std::int64_t>(tile_shape_.size(), 0)
-                             : std::move(offsets)},
+    offsets_{std::move(offsets)},
     strides_{std::move(strides)}
 {
+  if (this->offsets().empty()) {
+    offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
+  }
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
@@ -128,7 +135,7 @@ bool Tiling::is_disjoint_for(const Domain& launch_domain) const
   // TODO(wonchanl): The check really should be that every two points from the launch domain are
   // mapped to two different colors
   return !overlapped_ &&
-         (!launch_domain.is_valid() || launch_domain.get_volume() <= color_shape_.volume());
+         (!launch_domain.is_valid() || launch_domain.get_volume() <= array_volume(color_shape_));
 }
 
 bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
@@ -136,38 +143,55 @@ bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
   constexpr auto satisfies_restriction = [](Restriction r, std::uint64_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
-
-  return apply_reduce_all(satisfies_restriction, restrictions, color_shape());
+  return array_all_of(satisfies_restriction, restrictions, color_shape());
 }
 
-InternalSharedPtr<Partition> Tiling::scale(const tuple<std::uint64_t>& factors) const
+InternalSharedPtr<Partition> Tiling::scale(Span<const std::uint64_t> factors) const
 {
-  auto new_offsets = apply(
-    [](std::int64_t off, std::size_t factor) { return off * static_cast<std::int64_t>(factor); },
-    offsets_,
-    factors);
-  return create_tiling(
-    tile_shape_ * factors, tuple<std::uint64_t>{color_shape_}, std::move(new_offsets));
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> new_tile_shape;
+
+  std::transform(tile_shape().begin(),
+                 tile_shape().end(),
+                 factors.begin(),
+                 std::back_inserter(new_tile_shape),
+                 std::multiplies<>{});
+
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> new_offsets;
+
+  new_offsets.reserve(offsets().size());
+  std::transform(
+    offsets().begin(),
+    offsets().end(),
+    factors.begin(),
+    std::back_inserter(new_offsets),
+    [](std::int64_t off, std::size_t factor) { return off * static_cast<std::int64_t>(factor); });
+  return create_tiling(new_tile_shape, color_shape_, new_offsets);
 }
 
-InternalSharedPtr<Partition> Tiling::bloat(const tuple<std::uint64_t>& low_offsets,
-                                           const tuple<std::uint64_t>& high_offsets) const
+InternalSharedPtr<Partition> Tiling::bloat(Span<const std::uint64_t> low_offsets,
+                                           Span<const std::uint64_t> high_offsets) const
 {
-  tuple<std::uint64_t> tile_shape;
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape;
 
   tile_shape.reserve(this->tile_shape().size());
-  for (auto&& [tshape, lo, hi] : zip_equal(this->tile_shape(), low_offsets, high_offsets)) {
-    tile_shape.append_inplace(tshape + lo + hi);
+  for (auto&& [cur_shape, lo, hi] : zip_equal(this->tile_shape(), low_offsets, high_offsets)) {
+    tile_shape.emplace_back(cur_shape + lo + hi);
   }
-  auto offsets =
-    apply([](std::int64_t off, std::size_t diff) { return off - static_cast<std::int64_t>(diff); },
-          offsets_,
-          low_offsets);
+
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets;
+
+  offsets.reserve(this->offsets().size());
+  std::transform(
+    this->offsets().begin(),
+    this->offsets().end(),
+    low_offsets.begin(),
+    std::back_inserter(offsets),
+    [](std::int64_t off, std::size_t diff) { return off - static_cast<std::int64_t>(diff); });
 
   return create_tiling(std::move(tile_shape),
-                       tuple<std::uint64_t>{color_shape_},
+                       SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape()},
                        std::move(offsets),
-                       tuple<std::uint64_t>{tile_shape_});
+                       SmallVector<std::uint64_t, LEGATE_MAX_DIM>{this->tile_shape()});
 }
 
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
@@ -226,10 +250,11 @@ InternalSharedPtr<Partition> Tiling::convert(
   if (transform->identity()) {
     return self;
   }
-  return create_tiling(transform->convert_extents(tile_shape()),
-                       transform->convert_color_shape(color_shape()),
-                       transform->convert_point(offsets()),
-                       transform->convert_extents(strides_));
+  return create_tiling(
+    transform->convert_extents(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tile_shape()}),
+    transform->convert_color_shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape()}),
+    transform->convert_point(SmallVector<std::int64_t, LEGATE_MAX_DIM>{offsets()}),
+    transform->convert_extents(strides_));
 }
 
 InternalSharedPtr<Partition> Tiling::invert(
@@ -239,14 +264,15 @@ InternalSharedPtr<Partition> Tiling::invert(
   if (transform->identity()) {
     return self;
   }
-  return create_tiling(transform->invert_extents(tile_shape()),
-                       transform->invert_color_shape(color_shape()),
-                       transform->invert_point(offsets()),
-                       transform->invert_extents(strides_));
+  return create_tiling(
+    transform->invert_extents(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tile_shape()}),
+    transform->invert_color_shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape()}),
+    transform->invert_point(SmallVector<std::int64_t, LEGATE_MAX_DIM>{offsets()}),
+    transform->invert_extents(strides_));
 }
 
-tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& extents,
-                                               const tuple<std::uint64_t>& color) const
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Tiling::get_child_extents(
+  Span<const std::uint64_t> extents, Span<const std::uint64_t> color) const
 {
   if (!has_color(color)) {
     throw TracedException<std::invalid_argument>{
@@ -256,7 +282,7 @@ tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& exten
                   color_shape())};
   }
 
-  tuple<std::uint64_t> ret;
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> ret;
 
   ret.reserve(tile_shape().size());
   for (auto&& [shape, clr, off, ext] : zip_equal(tile_shape(), color, offsets(), extents)) {
@@ -265,15 +291,16 @@ tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& exten
       std::min(static_cast<std::int64_t>(ext), static_cast<std::int64_t>(shape * (clr + 1)) + off);
 
     if (hi >= lo) {
-      ret.append_inplace(hi - lo);
+      ret.push_back(hi - lo);
     } else {
-      ret.append_inplace(0);
+      ret.push_back(0);
     }
   }
   return ret;
 }
 
-tuple<std::int64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color) const
+SmallVector<std::int64_t, LEGATE_MAX_DIM> Tiling::get_child_offsets(
+  Span<const std::uint64_t> color) const
 {
   if (!has_color(color)) {
     throw TracedException<std::invalid_argument>{
@@ -283,13 +310,13 @@ tuple<std::int64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color)
                   color_shape())};
   }
 
-  tuple<std::int64_t> ret;
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> ret;
 
   ret.reserve(strides().size());
   for (auto&& [stride, clr, off] : zip_equal(strides(), color, offsets())) {
     const auto scaled_color = static_cast<std::int64_t>(stride * clr);
 
-    ret.append_inplace(scaled_color + off);
+    ret.push_back(scaled_color + off);
   }
   return ret;
 }
@@ -337,17 +364,17 @@ bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
     return r != Restriction::FORBID || ext == 1;
   };
 
-  return apply_reduce_all(satisfies_restriction, restrictions, color_shape());
+  return array_all_of(satisfies_restriction, restrictions, color_shape());
 }
 
-InternalSharedPtr<Partition> Weighted::scale(const tuple<std::uint64_t>& /*factors*/) const
+InternalSharedPtr<Partition> Weighted::scale(Span<const std::uint64_t> /*factors*/) const
 {
   throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
-InternalSharedPtr<Partition> Weighted::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
-                                             const tuple<std::uint64_t>& /*high_offsets*/) const
+InternalSharedPtr<Partition> Weighted::bloat(Span<const std::uint64_t> /*low_offsts*/,
+                                             Span<const std::uint64_t> /*high_offsets*/) const
 {
   throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
@@ -407,7 +434,13 @@ InternalSharedPtr<Partition> Weighted::invert(
   if (transform->identity()) {
     return self;
   }
-  auto color_domain = to_domain(transform->invert_color_shape(color_shape_));
+
+  const auto color_domain = [&] {
+    const auto inverted =
+      transform->invert_color_shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape()});
+
+    return to_domain(inverted);
+  }();
   // Weighted partitions are created only for 1D stores. So, if we're here, the 1D store to which
   // this partition is applied would be a degenerate N-D store such that all but one dimension are
   // of extent 1. So, we only need to delinearize the future map holding the weights so the domain
@@ -447,17 +480,17 @@ bool Image::satisfies_restrictions(const Restrictions& restrictions) const
     return r != Restriction::FORBID || ext == 1;
   };
 
-  return apply_reduce_all(satisfies_restriction, restrictions, color_shape());
+  return array_all_of(satisfies_restriction, restrictions, color_shape());
 }
 
-InternalSharedPtr<Partition> Image::scale(const tuple<std::uint64_t>& /*factors*/) const
+InternalSharedPtr<Partition> Image::scale(Span<const std::uint64_t> /*factors*/) const
 {
   throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
-InternalSharedPtr<Partition> Image::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
-                                          const tuple<std::uint64_t>& /*high_offsets*/) const
+InternalSharedPtr<Partition> Image::bloat(Span<const std::uint64_t> /*low_offsts*/,
+                                          Span<const std::uint64_t> /*high_offsets*/) const
 {
   throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
@@ -523,7 +556,7 @@ std::string Image::to_string() const
                      hint_);
 }
 
-const tuple<std::uint64_t>& Image::color_shape() const { return func_partition_->color_shape(); }
+Span<const std::uint64_t> Image::color_shape() const { return func_partition_->color_shape(); }
 
 InternalSharedPtr<Partition> Image::convert(
   const InternalSharedPtr<Partition>& self,
@@ -550,18 +583,18 @@ InternalSharedPtr<NoPartition> create_no_partition()
   return result;
 }
 
-InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
-                                        tuple<std::uint64_t> color_shape,
-                                        tuple<std::int64_t> offsets /*= {}*/)
+InternalSharedPtr<Tiling> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+                                        SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+                                        SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets /*= {}*/)
 {
   return make_internal_shared<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets));
 }
 
-InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
-                                        tuple<std::uint64_t> color_shape,
-                                        tuple<std::int64_t> offsets,
-                                        tuple<std::uint64_t> strides)
+InternalSharedPtr<Tiling> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+                                        SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+                                        SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+                                        SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides)
 {
   return make_internal_shared<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));
