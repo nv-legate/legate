@@ -24,7 +24,6 @@ Build and run the Python tests:
    $ pip install .
    $ pytest ./tests/python
 
-
 Build and run both the C++ and Python tests:
 
 .. code-block:: sh
@@ -34,6 +33,15 @@ Build and run both the C++ and Python tests:
    $ pip install .
    $ ./test.py
    $ pytest ./tests/python
+
+
+Build and run the C++ benchmarks:
+
+.. code-block:: sh
+
+   $ ./configure --with-benchmarks
+   $ make
+   $ $LEGATE_DIR/$LEGATE_ARCH/cmake_build/cpp/benchmarks/bin/*
 
 .. _sec_testing_cpp:
 
