@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Mapping &#8212; NVIDIA legate (25.08.00.dev16+gd60485e7)</title>
+    <title>Mapping &#8212; NVIDIA legate (25.08.00.dev19+g55141b2a)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=976bc0c8"></script>
+    <script src="../../_static/documentation_options.js?v=bc7eab32"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev16+gd60485e7)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev19+g55141b2a)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev16+gd60485e7)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev19+g55141b2a)</p>
   
 </a>
 
@@ -648,7 +648,7 @@ Instead, it goes through a series of steps that prepare it for efficient executi
 underlying hardware. A key step in this process is <em>mapping</em>, which determines how and
 where the task will run.</p>
 <p>Legate divides task execution into two conceptual parts: the <em>what</em> and the <em>how</em>.</p>
-<p>The <em>what</em> refers to the logical structure of the program—the tasks that are submitted,
+<p>The <em>what</em> refers to the logical structure of the program – the tasks that are submitted,
 the specific task variants that are selected, the data the tasks operate on, and the
 dependencies between them. It also includes the actual implementation of the tasks (their
 bodies). This portion of the execution is defined by the application code itself and is
@@ -666,12 +666,12 @@ and maintain.</p>
 <span id="sec-mapping-exec-pipeline"></span><h2>Execution Pipeline Overview:<a class="headerlink" href="#execution-pipeline-overview" title="Link to this heading">#</a></h2>
 <p>The typical execution flow for a Legate task is as follows:</p>
 <ol class="arabic simple">
-<li><p><strong>Task Submission</strong> – The user program submits tasks to the Legate runtime.</p></li>
-<li><p><strong>Runtime Analysis</strong> – The runtime analyzes task dependencies and prepares the
+<li><p><strong>Task Submission</strong> - The user program submits tasks to the Legate runtime.</p></li>
+<li><p><strong>Runtime Analysis</strong> - The runtime analyzes task dependencies and prepares the
 execution plan.</p></li>
-<li><p><strong>Mapping</strong> – The mapper is invoked via a series of callbacks, and assigns tasks to
+<li><p><strong>Mapping</strong> - The mapper is invoked via a series of callbacks, and assigns tasks to
 hardware resources and manages memory allocation.</p></li>
-<li><p><strong>Execution</strong> – Once mapped, the runtime executes the tasks on the designated hardware.</p></li>
+<li><p><strong>Execution</strong> - Once mapped, the runtime executes the tasks on the designated hardware.</p></li>
 </ol>
 <p>This pipeline allows Legate to efficiently schedule and execute large numbers of parallel
 tasks while abstracting away low-level system details.</p>
@@ -870,7 +870,7 @@ member variables.</p>
         <div class="footer-item">
 <div class="extra_footer">
   
-  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  <script type="text/javascript">if (typeof _satellite !== "undefined"){ _satellite.pageBottom();}</script>
   
 </div></div>
       

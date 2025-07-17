@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Building Legate from Source &#8212; NVIDIA legate (25.08.00.dev16+gd60485e7)</title>
+    <title>Building Legate from Source &#8212; NVIDIA legate (25.08.00.dev19+g55141b2a)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=976bc0c8"></script>
+    <script src="_static/documentation_options.js?v=bc7eab32"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev16+gd60485e7)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev19+g55141b2a)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev16+gd60485e7) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev16+gd60485e7)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev19+g55141b2a)</p>
   
 </a>
 
@@ -718,6 +718,13 @@ machines. For example, to configure a debug build on a <a class="reference exter
 or <a class="reference external" href="https://gasnet.lbl.gov/">GASNet</a> (use <code class="docutils literal notranslate"><span class="pre">--with-gasnet</span></code>) see the discussion on
 <a class="reference internal" href="#dependency-listing"><span class="std std-ref">dependencies</span></a> for more details.</p>
 <p>Compiling with networking support requires MPI.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you would like to build Legate with testing enabled, please refer to
+<a class="reference internal" href="developer/testing.html#ch-testing"><span class="std std-ref">Legate Test Suite</span></a> for further information. In particular, the C++ tests require
+passing the additional <code class="docutils literal notranslate"><span class="pre">--with-tests</span></code> (and <code class="docutils literal notranslate"><span class="pre">--with-benchmarks</span></code>) flags to
+<code class="docutils literal notranslate"><span class="pre">configure</span></code> to enable building the tests and benchmarks respectively.</p>
+</div>
 </section>
 <section id="building-python-bindings">
 <span id="build-python-bindings"></span><h3>Building Python Bindings<a class="headerlink" href="#building-python-bindings" title="Link to this heading">#</a></h3>
@@ -1146,7 +1153,7 @@ variables to guard against it) but a bare <code class="docutils literal notransl
         <div class="footer-item">
 <div class="extra_footer">
   
-  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  <script type="text/javascript">if (typeof _satellite !== "undefined"){ _satellite.pageBottom();}</script>
   
 </div></div>
       
