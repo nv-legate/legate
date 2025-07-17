@@ -138,6 +138,15 @@ repos:
         exclude: '^tests/cpp/.*$'
         additional_dependencies:
           - rich
+      - id: ascii-only
+        name: ascii-only
+        description: "Make sure only ASCII characters are used in source files"
+        entry: ./scripts/pre-commit/ascii_only.py
+        language: python
+        types_or: [file, text]
+        exclude: '.*\.(png|pdf)$'
+        additional_dependencies:
+          - rich
       - id: cmake-format
         name: cmake-format
         entry: ./scripts/pre-commit/cmake-format.bash cmake-format

@@ -31,23 +31,23 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::load_refcount
 // never null when calling maybe_destroy_()
 //
 // Sample error log below:
-// In member function ‘std::__atomic_base<_IntTp>::__int_type
+// In member function 'std::__atomic_base<_IntTp>::__int_type
 // std::__atomic_base<_IntTp>::fetch_add(__int_type, std::memory_order) [with _ITp
-// = unsigned int]’,
-// inlined from ‘static legate::detail::ControlBlockBase::ref_count_type
+// = unsigned int]',
+// inlined from 'static legate::detail::ControlBlockBase::ref_count_type
 // legate::detail::ControlBlockBase::increment_refcount_(std::atomic<unsigned
-// int>*)’ at
+// int>*)' at
 // /path/to/legate/utilities/detail/shared_ptr_control_block.inl:33:29,
 // ...
-// /usr/include/c++/13/bits/atomic_base.h:635:34: error: ‘unsigned int
-// __atomic_add_fetch_4(volatile void*, unsigned int, int)’ writing 4 bytes into a
+// /usr/include/c++/13/bits/atomic_base.h:635:34: error: 'unsigned int
+// __atomic_add_fetch_4(volatile void*, unsigned int, int)' writing 4 bytes into a
 // region of size 0 overflows the destination [-Werror=stringop-overflow=]
 // 635 |       { return __atomic_fetch_add(&_M_i, __i, int(__m)); }
 // | ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
-// In function ‘void legate::InternalSharedPtr<T>::init_shared_from_this_(const
+// In function 'void legate::InternalSharedPtr<T>::init_shared_from_this_(const
 // legate::EnableSharedFromThis<U>*, V*) [with U =
 // legate::detail::LogicalRegionField; V = legate::detail::LogicalRegionField; T =
-// legate::detail::LogicalRegionField]’:
+// legate::detail::LogicalRegionField]':
 //
 // cc1plus: note: destination object is likely at address zero
 //

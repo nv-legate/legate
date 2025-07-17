@@ -109,7 +109,7 @@ class VariantOptions {
    *
    * @note The synchronization schemes described here have no effect on
    * `Runtime::issue_execution_fence()`. Execution fences wait until all prior tasks are
-   * "complete", and since GPU work is treated as part of a task’s execution, a task is not
+   * "complete", and since GPU work is treated as part of a task's execution, a task is not
    * considered "complete" until its stream is idle. As a result, an execution fence after a
    * GPU task *always* has the same behavior, regardless of the synchronization scheme
    * used. Either the runtime waits for the device-wide sync to finish, or it waits until all

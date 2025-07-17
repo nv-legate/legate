@@ -89,8 +89,9 @@ class TestSystem:
     ) -> None:
         s = m.TestSystem()
 
+        bad_stdout = b"\xfe\xb1a"
         mock_subprocess_run.return_value = CompletedProcess(
-            CMD, 10, stdout=b"\xfe\xb1a"
+            CMD, 10, stdout=bad_stdout
         )
 
         result = s.run(CMD.split(), "test/file")
@@ -103,7 +104,7 @@ class TestSystem:
         assert not result.skipped
         assert not result.timeout
         assert result.returncode == 10
-        assert result.output == "��a"
+        assert result.output == bad_stdout.decode(errors="replace")
         assert not result.passed
 
     def test_dry_run(self, mock_subprocess_run: MagicMock) -> None:

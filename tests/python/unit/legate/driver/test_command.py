@@ -123,7 +123,7 @@ class Test_cmd_bind:
         # TODO(jfaibussowit)
         # Replace below with itertools.batched once we hit python 3.12
         def pairwise(iterable: tuple[str, ...]) -> list[tuple[str, str]]:
-            # pairwise('ABCDEF') → AB CD EF
+            # pairwise('ABCDEF') -> AB CD EF
             from itertools import islice
 
             iterator = iter(iterable)

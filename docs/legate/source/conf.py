@@ -84,7 +84,7 @@ html_theme_options = {
         "version_match": BASE_VERSION,
     },
     "extra_footer": [
-        '<script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>'  # NOQA: E501
+        '<script type="text/javascript">if (typeof _satellite !== "undefined"){ _satellite.pageBottom();}</script>'  # NOQA: E501
     ],
     "show_version_warning_banner": True,
 }

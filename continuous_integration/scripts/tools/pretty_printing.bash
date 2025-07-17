@@ -47,7 +47,8 @@ function end_group()
   fi
 
   if [[ "${build_status}" != '0' ]]; then
-    echo -e "::error::\e[${red}m ${name} - Failed (⬆️ click above for full log ⬆️)\e[0m"
+    local fail_msg="Failed (⬆️ click above for full log ⬆️)"  # legate-lint: no-ascii-only
+    echo -e "::error::\e[${red}m ${name} - ${fail_msg}\e[0m"
     exit "${build_status}"
   fi
 }
