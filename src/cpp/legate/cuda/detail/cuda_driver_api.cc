@@ -189,10 +189,13 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuGetErrorString, &get_error_string_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuGetErrorName, &get_error_name_);
 
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemAllocAsync, &mem_alloc_async_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeAsync, &mem_free_async_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemcpyAsync, &mem_cpy_async_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamCreate, &stream_create_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamDestroy, &stream_destroy_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamWaitEvent, &stream_wait_event_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamSynchronize, &stream_synchronize_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventCreate, &event_create_);
@@ -280,6 +283,22 @@ const char* CUDADriverAPI::get_error_name(CUresult error) const
   return str;
 }
 
+void* CUDADriverAPI::mem_alloc_async(std::size_t num_bytes, CUstream stream) const
+{
+  CUdeviceptr ret{};
+
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(mem_alloc_async_(&ret, num_bytes, stream));
+  return reinterpret_cast<void*>(ret);  // NOLINT(performance-no-int-to-ptr)
+}
+
+void CUDADriverAPI::mem_free_async(void** ptr, CUstream stream) const
+{
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(mem_free_async_(reinterpret_cast<CUdeviceptr>(*ptr), stream));
+  *ptr = nullptr;
+}
+
 void CUDADriverAPI::mem_cpy_async(CUdeviceptr dst,
                                   CUdeviceptr src,
                                   std::size_t num_bytes,
@@ -318,6 +337,12 @@ void CUDADriverAPI::stream_synchronize(CUstream stream) const
 {
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(stream_synchronize_(stream));
+}
+
+void CUDADriverAPI::stream_wait_event(CUstream stream, CUevent event, unsigned int flags) const
+{
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(stream_wait_event_(stream, event, flags));
 }
 
 CUevent CUDADriverAPI::event_create(unsigned int flags) const

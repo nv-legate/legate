@@ -92,6 +92,7 @@ from ._lib.task.task_info import TaskInfo
 from ._lib.task.variant_options import VariantOptions
 from ._lib.tuning.parallel_policy import ParallelPolicy
 from ._lib.tuning.scope import Scope
+from ._lib.utilities.detail.dlpack.from_dlpack import from_dlpack
 from ._lib.utilities.typedefs import (
     Domain,
     DomainPoint,

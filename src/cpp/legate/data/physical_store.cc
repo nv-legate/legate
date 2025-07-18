@@ -9,6 +9,7 @@
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/logical_store.h>
 #include <legate/data/physical_array.h>
+#include <legate/utilities/detail/dlpack/to_dlpack.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
@@ -113,6 +114,12 @@ bool PhysicalStore::is_unbound_store() const { return impl()->is_unbound_store()
 bool PhysicalStore::is_partitioned() const { return impl()->is_partitioned(); }
 
 mapping::StoreTarget PhysicalStore::target() const { return impl()->target(); }
+
+std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)>
+PhysicalStore::to_dlpack(std::optional<bool> copy, std::optional<CUstream_st*> stream) const
+{
+  return detail::to_dlpack(*this, std::move(copy), std::move(stream));
+}
 
 PhysicalStore::PhysicalStore(const PhysicalArray& array)
   : PhysicalStore{

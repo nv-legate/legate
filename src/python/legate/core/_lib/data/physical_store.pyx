@@ -13,10 +13,68 @@ from ..utilities.typedefs cimport (
     Domain_t
 )
 from ..utilities.unconstructable cimport Unconstructable
+from ..utilities.detail.dlpack.to_dlpack cimport to_dlpack
+from ..utilities.detail.dlpack.dlpack cimport DLDeviceType
 from .inline_allocation cimport _InlineAllocation, InlineAllocation
 from .buffer cimport _TaskLocalBuffer, TaskLocalBuffer
 
 from typing import Any
+
+
+cdef extern from "legate/cuda/detail/cuda_driver_api.h" nogil:
+    r"""
+    #include <legate/runtime/runtime.h>
+    #include <legate/runtime/detail/runtime.h>
+    #include <legate/utilities/detail/traced_exception.h>
+
+    #include <realm/cuda/cuda_module.h>
+
+    #include <cstdint>
+
+    namespace {
+
+    legate::CUdevice get_current_cuda_device()
+    {
+      if (legate::is_running_in_task()) {
+        return legate::cuda::detail::get_cuda_driver_api()->ctx_get_device();
+      }
+
+      // If we are in the top-level task, then ctx_get_device() may not be
+      // accurate, because the current device might not be where the PhysicalStore
+      // ends up.
+      //
+      // Rather, Realm will copy the data to the first GPU that was assigned to
+      // the top-level task on the local node.
+      auto&& proc = legate::detail::Runtime::get_runtime()
+                      .local_machine()
+                      .gpus()
+                      .at(0);
+
+      std::int32_t device_id = -1;
+      // The symbols for get_cuda_device_id() exist regardless of whether Realm
+      // has CUDA support, but if it doesn't we get linker errors are runtime
+      // because the CUDA module was never compiled.
+      if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+        const auto success = Realm::Cuda::get_cuda_device_id(proc, &device_id);
+
+        if (!success) {
+          throw legate::detail::TracedException<std::invalid_argument>{
+            "Current Processor is not GPU"
+          };
+        }
+      } else {
+        throw legate::detail::TracedException<std::runtime_error>{
+          "Legate was not compiled for CUDA support, although a GPU memory "
+          "PhysicalStore was requested. This should not happen."
+        };
+      }
+
+      return static_cast<legate::CUdevice>(device_id);
+    }
+
+    } // namespace
+    """
+    int32_t get_current_cuda_device() except+
 
 cdef class PhysicalStore(Unconstructable):
     @staticmethod
@@ -199,3 +257,81 @@ cdef class PhysicalStore(Unconstructable):
         :rtype: dict[str, Any]
         """
         return self.get_inline_allocation().__cuda_array_interface__
+
+    def __dlpack__(
+        self,
+        *,
+        stream: int | Any | None = None,
+        max_version: tuple[int, int] | None = None,
+        dl_device: tuple[Enum, int] | None = None,
+        copy = None
+    ) -> object:
+        r"""
+        Exports the store for consumption by `from_dlpack()` as a DLPack
+        capsule.
+
+        For all of the parameters listed below, please consult the Python
+        array API standard for `__dlpack__()` for further discussion on their
+        meaning and semantics.
+
+        Parameters
+        ----------
+        stream : int | Any | None, optional
+            The stream to export the store on, if any.
+        max_version: tuple[int, int] | None, optional
+            The maximum DLPack version that the exported capsule should support.
+        dl_device: tuple[Enum, int] | None, optional
+            The device to export the store to.
+        copy: bool | None, optional
+            Whether to copy the underlying data or not.
+
+        Returns
+        -------
+        PyCapsule
+            The DLPack capsule.
+
+        Raises
+        ------
+        BufferError
+            If the store cannot be exported as a DLPack capsule with the given
+            options.
+
+        See Also
+        --------
+        https://data-apis.org/array-api/latest/API_specification/generated/array_api.array.__dlpack__.html#array_api.array.__dlpack__
+        """
+        return to_dlpack(
+            self,
+            stream=stream,
+            max_version=max_version,
+            dl_device=dl_device,
+            copy=copy
+        )
+
+    cpdef tuple[int32_t, int32_t] __dlpack_device__(self):
+        r"""Returns device type and device ID in DLPack format. Meant for use
+        within `from_dlpack()`.
+
+        Returns
+        -------
+        tuple[int, int]
+            A tuple (device_type, device_id) in DLPack format.
+        """
+        cdef StoreTarget target = self.target
+
+        if target in (StoreTarget.SYSMEM, StoreTarget.SOCKETMEM):
+            return (DLDeviceType.kDLCPU, 0)
+        if target == StoreTarget.FBMEM:
+            return (DLDeviceType.kDLCUDA, get_current_cuda_device())
+        if target == StoreTarget.ZCMEM:
+            # The DLPack standard says in the case of pinned memory device_id
+            # should be 0 (see
+            # dmlc.github.io/dlpack/latest/c_api.html#c.DLDevice.device_id).
+            #
+            # I.e. pinned memory is not associated with any particular
+            # device. This is actually true only if the cudaHostAllocPortable
+            # flag is used, but luckily that's what Realm does.
+            return (DLDeviceType.kDLCUDAHost, 0)
+
+        m = f"Unhandled store target: {target}"
+        raise AssertionError(m)

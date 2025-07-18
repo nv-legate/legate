@@ -42,6 +42,8 @@ class CUDADriverAPI {
   [[nodiscard]] const char* get_error_string(CUresult error) const;
   [[nodiscard]] const char* get_error_name(CUresult error) const;
 
+  [[nodiscard]] void* mem_alloc_async(std::size_t num_bytes, CUstream stream) const;
+  void mem_free_async(void** ptr, CUstream stream) const;
   void mem_cpy_async(CUdeviceptr dst,
                      CUdeviceptr src,
                      std::size_t num_bytes,
@@ -50,6 +52,7 @@ class CUDADriverAPI {
 
   [[nodiscard]] CUstream stream_create(unsigned int flags) const;
   void stream_destroy(CUstream* stream) const;
+  void stream_wait_event(CUstream stream, CUevent event, unsigned int flags = 0) const;
   void stream_synchronize(CUstream stream) const;
 
   [[nodiscard]] CUevent event_create(unsigned int flags = 0) const;
@@ -122,14 +125,17 @@ class CUDADriverAPI {
   CUresult (*get_error_string_)(CUresult error, const char** str) = nullptr;
   CUresult (*get_error_name_)(CUresult error, const char** str)   = nullptr;
 
+  CUresult (*mem_alloc_async_)(CUdeviceptr* dptr, std::size_t num_bytes, CUstream stream) = nullptr;
+  CUresult (*mem_free_async_)(CUdeviceptr ptr, CUstream stream)                           = nullptr;
   CUresult (*mem_cpy_async_)(CUdeviceptr dst,
                              CUdeviceptr src,
                              std::size_t num_bytes,
-                             CUstream stream) = nullptr;
+                             CUstream stream)                                             = nullptr;
 
-  CUresult (*stream_create_)(CUstream* stream, unsigned int flags) = nullptr;
-  CUresult (*stream_destroy_)(CUstream stream)                     = nullptr;
-  CUresult (*stream_synchronize_)(CUstream stream)                 = nullptr;
+  CUresult (*stream_create_)(CUstream* stream, unsigned int flags)                   = nullptr;
+  CUresult (*stream_destroy_)(CUstream stream)                                       = nullptr;
+  CUresult (*stream_wait_event_)(CUstream stream, CUevent event, unsigned int flags) = nullptr;
+  CUresult (*stream_synchronize_)(CUstream stream)                                   = nullptr;
 
   CUresult (*event_create_)(CUevent* event, unsigned int flags)          = nullptr;
   CUresult (*event_record_)(CUevent event, CUstream stream)              = nullptr;

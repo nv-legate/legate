@@ -256,6 +256,9 @@ set(with_runtime_SRC
     unit/task_signature/basic.cc
     unit/task_signature/register.cc
     unit/task_config/basic.cc
+    unit/dlpack/from_dlpack/versioned.cc
+    unit/dlpack/from_dlpack/unversioned.cc
+    unit/dlpack/to_dlpack/to_dlpack.cc
     # experimental
     experimental/stl/elementwise.cc
     experimental/stl/fill.cc

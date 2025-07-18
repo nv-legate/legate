@@ -60,7 +60,7 @@ repos:
         language: python
         'types_or': [c++, c, cuda]
         stages: [pre-commit]
-        exclude: '^(src/cpp/legate/utilities/abort.h|share/legate/mpi_wrapper/.*|share/legate/realm_ucp_bootstrap/.*)$'
+        exclude: '^(src/cpp/legate/utilities/abort.h|share/legate/mpi_wrapper/.*|share/legate/realm_ucp_bootstrap/.*|src/cpp/legate/utilities/detail/dlpack/dlpack\.h)$'
       - id: traced-throw
         name: traced-throw
         description: 'Convert throw statements to throwing legate TracedException'

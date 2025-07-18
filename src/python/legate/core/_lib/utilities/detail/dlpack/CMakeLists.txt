@@ -3,10 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "utilities")
+list(APPEND CMAKE_MESSAGE_CONTEXT "dlpack")
 
-add_subdirectory(detail)
-
-set(cython_sources typedefs.pyx utils.pyx unconstructable.pyx)
+set(cython_sources dlpack.pyx from_dlpack.pyx to_dlpack.pyx)
 
 legate_create_cython_modules(SOURCES "${cython_sources}")

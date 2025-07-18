@@ -38,3 +38,5 @@ cdef class PhysicalStore(Unconstructable):
     )
     cpdef void bind_data(self, TaskLocalBuffer buffer, object extent = *)
     cpdef InlineAllocation get_inline_allocation(self)
+
+    cpdef tuple[int32_t, int32_t] __dlpack_device__(self)

@@ -515,6 +515,9 @@ target_sources(legate
                        legate/utilities/detail/error.cc
                        legate/utilities/detail/proc_local_storage.cc
                        legate/utilities/detail/array_algorithms.cc
+                       legate/utilities/detail/dlpack/from_dlpack.cc
+                       legate/utilities/detail/dlpack/to_dlpack.cc
+                       legate/utilities/detail/dlpack/common.cc
                        legate/timing/timing.cc
                        # stl
                        legate/experimental/stl/detail/clang_tidy_dummy.cpp
@@ -811,6 +814,9 @@ install(FILES legate/utilities/detail/mdspan/flat_mdspan_view.h
               legate/utilities/detail/mdspan/for_each_in_extent.inl
               legate/utilities/detail/mdspan/util.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/mdspan)
+
+install(FILES legate/utilities/detail/dlpack/dlpack.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/dlpack)
 
 # ########################################################################################
 # * install Legate I/O -----------------------------------------------------------

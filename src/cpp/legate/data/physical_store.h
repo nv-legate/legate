@@ -13,6 +13,7 @@
 #include <legate/data/logical_store.h>
 #include <legate/mapping/mapping.h>
 #include <legate/type/type_traits.h>
+#include <legate/utilities/detail/dlpack/dlpack.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/detail/mdspan/reduction_accessor.h>
 #include <legate/utilities/dispatch.h>
@@ -24,6 +25,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <utility>
 
@@ -31,6 +33,8 @@
  * @file
  * @brief Class definition for legate::PhysicalStore
  */
+
+struct CUstream_st;
 
 namespace legate::detail {
 class PhysicalStore;
@@ -637,6 +641,33 @@ class PhysicalStore {
    * @return `true` if the store is partitioned, `false` otherwise
    */
   [[nodiscard]] bool is_partitioned() const;
+
+  /**
+   * @brief Export this store into the DLPack format.
+   *
+   * The value of `copy` has the following semantics:
+   *
+   * - `true`: Legate *must* copy the data. If Legate fails to copy the data, for any reason,
+   *   an exception is thrown.
+   * - `false`: Legate must *never* copy the data. If the store cannot be exported without a
+   *   copy, then an exception is thrown.
+   * - `std::nullopt`: Legate may copy the data if it is deemed necessary. Currently, this is
+   *   never the case, and Legate will always provide a view.
+   *
+   * In any case, if a copy is made, the `DLManagedTensorVersioned::flags` member will have the
+   * `DLPACK_FLAG_BITMASK_IS_COPIED` bit set.
+   *
+   * The `std::unique_ptr` returned by this routine will automatically call the deleter of the
+   * DLPack tensor in its destructor.
+   *
+   * @param copy Whether to copy the underlying data or not.
+   * @param stream A stream on which the data must be coherent after this routine returns.
+   *
+   * @return The DLPack managed tensor.
+   */
+  [[nodiscard]] std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)>
+  to_dlpack(std::optional<bool> copy           = std::nullopt,
+            std::optional<CUstream_st*> stream = std::nullopt) const;
 
   /**
    * @brief Constructs a store out of an array

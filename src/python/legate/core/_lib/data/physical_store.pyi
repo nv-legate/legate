@@ -5,6 +5,8 @@
 from collections.abc import Sequence
 from typing import Any
 
+from typing_extensions import CapsuleType
+
 from ..mapping.mapping import StoreTarget
 from ..type.types import Type
 from ..utilities.typedefs import Domain
@@ -32,3 +34,12 @@ class PhysicalStore(Unconstructable):
     def __array_interface__(self) -> dict[str, Any]: ...
     @property
     def __cuda_array_interface__(self) -> dict[str, Any]: ...
+    def __dlpack__(
+        self,
+        *,
+        stream: int | Any | None = None,
+        max_version: tuple[int, int] | None = None,
+        dl_device: tuple[int, int] | None = None,
+        copy: bool | None = None,
+    ) -> CapsuleType: ...
+    def __dlpack_device__(self) -> tuple[int, int]: ...

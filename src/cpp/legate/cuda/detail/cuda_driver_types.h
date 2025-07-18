@@ -35,6 +35,12 @@ using CUkernel   = ::CUkern_st*;
 
 enum CUlibraryOption : int;
 enum CUjit_option : int;
+
+#ifdef CU_STREAM_PER_THREAD
+#define LEGATE_CU_STREAM_DEFAULT CU_STREAM_PER_THREAD
+#else
+#define LEGATE_CU_STREAM_DEFAULT ((CUstream)0x2)
+#endif
 // NOLINTEND
 
 }  // namespace legate
