@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>partitioning &#8212; NVIDIA legate (25.08.00.dev19+g55141b2a)</title>
+    <title>partitioning &#8212; NVIDIA legate (25.08.00.dev22+gf4bc7cff)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=bc7eab32"></script>
+    <script src="../../../../_static/documentation_options.js?v=3fa1807c"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,11 +130,11 @@
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev19+g55141b2a)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev22+gf4bc7cff)</p>
   
 </a></div>
     
@@ -241,11 +241,11 @@
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev19+g55141b2a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev19+g55141b2a)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev22+gf4bc7cff)</p>
   
 </a>
 
@@ -529,6 +529,12 @@
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../structlist.html">Structs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLDataType.html">DLDataType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLDevice.html">DLDevice</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLManagedTensor.html">DLManagedTensor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html">DLManagedTensorVersioned</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLPackVersion.html">DLPackVersion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLTensor.html">DLTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1ResourceConfig.html">legate::ResourceConfig</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1experimental_1_1stl_1_1iteration__kind.html">legate::experimental::stl::iteration_kind</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1experimental_1_1stl_1_1reduction__kind.html">legate::experimental::stl::reduction_kind</a></li>
@@ -2749,6 +2755,138 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail15to_store_targetE12DLDeviceType">
+<span id="_CPPv3N6legate6detail15to_store_targetE12DLDeviceType"></span><span id="_CPPv2N6legate6detail15to_store_targetE12DLDeviceType"></span><span id="legate::detail::to_store_target__DLDeviceType"></span><span class="target" id="common_8cc_1ac8c3e173576c075e4e1d617a2cca0c7f"></span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">StoreTarget</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_store_target</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DLDeviceType</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail15to_store_targetE12DLDeviceType" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert the DLPack device type to Legate StoreTarget. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dtype</strong> – The device type to convert.</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the conversion is not supported. </p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The store target.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail14to_dlpack_typeEN6legate4Type4CodeE">
+<span id="_CPPv3N6legate6detail14to_dlpack_typeEN6legate4Type4CodeE"></span><span id="_CPPv2N6legate6detail14to_dlpack_typeEN6legate4Type4CodeE"></span><span id="legate::detail::to_dlpack_type__legate::Type::Code"></span><span class="target" id="common_8cc_1a17316f310428328136045dd030f04535"></span><span class="n"><span class="pre">DLDataTypeCode</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_dlpack_type</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../class/classlegate_1_1Type.html#_CPPv4N6legate4TypeE" title="legate::Type"><span class="n"><span class="pre">Type</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../class/classlegate_1_1Type.html#_CPPv4N6legate4Type4CodeE" title="legate::Type::Code"><span class="n"><span class="pre">Code</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail14to_dlpack_typeEN6legate4Type4CodeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert a Legate type code to DLPack format. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>code</strong> – The legate type to convert.</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the conversion is not supported. </p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dlpack code.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail14dl_tensor_sizeERK8DLTensor">
+<span id="_CPPv3N6legate6detail14dl_tensor_sizeERK8DLTensor"></span><span id="_CPPv2N6legate6detail14dl_tensor_sizeERK8DLTensor"></span><span id="legate::detail::dl_tensor_size__DLTensorCR"></span><span class="target" id="common_8cc_1aa78827029c0b240f8e381bd59ceb17e2"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dl_tensor_size</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../struct/structDLTensor.html#_CPPv48DLTensor" title="DLTensor"><span class="n"><span class="pre">DLTensor</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail14dl_tensor_sizeERK8DLTensor" title="Link to this definition">#</a><br /></dt>
+<dd><p>Compute the size (in bytes) of the data array of a <a class="reference internal" href="../struct/structDLTensor.html#structDLTensor"><span class="std std-ref">DLTensor</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tensor</strong> – The tensor to compute the size of.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The size. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail11from_dlpackEPP24DLManagedTensorVersioned">
+<span id="_CPPv3N6legate6detail11from_dlpackEPP24DLManagedTensorVersioned"></span><span id="_CPPv2N6legate6detail11from_dlpackEPP24DLManagedTensorVersioned"></span><span id="legate::detail::from_dlpack__DLManagedTensorVersionedPP"></span><span class="target" id="from__dlpack_8cc_1aff32d8ec6bbd5cdd0d4432cd3fa8a38e"></span><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../class/classlegate_1_1LogicalStore.html#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">from_dlpack</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html#_CPPv424DLManagedTensorVersioned" title="DLManagedTensorVersioned"><span class="n"><span class="pre">DLManagedTensorVersioned</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dlm_tensor</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail11from_dlpackEPP24DLManagedTensorVersioned" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> from a DLPack versioned tensor. </p>
+<p>This routine takes ownership of <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code>, and is responsible for disposing of <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> via the deleter member thereof.</p>
+<p>If any exception is thrown, the <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> pointer is deleted using the deleter.</p>
+<p>On success, <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> is set to <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> to indicate that it has been consumed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dlm_tensor</strong> – A pointer (to pointer) of the DLPack tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The logical store. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail11from_dlpackEPP15DLManagedTensor">
+<span id="_CPPv3N6legate6detail11from_dlpackEPP15DLManagedTensor"></span><span id="_CPPv2N6legate6detail11from_dlpackEPP15DLManagedTensor"></span><span id="legate::detail::from_dlpack__DLManagedTensorPP"></span><span class="target" id="from__dlpack_8cc_1a99e7d3500bd060420ff9baf27fb6e381"></span><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../class/classlegate_1_1LogicalStore.html#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">from_dlpack</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="../struct/structDLManagedTensor.html#_CPPv415DLManagedTensor" title="DLManagedTensor"><span class="n"><span class="pre">DLManagedTensor</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dlm_tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail11from_dlpackEPP15DLManagedTensor" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> from a DLPack un-versioned tensor. </p>
+<p>This routine has identical ownership semantics as <code class="docutils literal notranslate"><span class="pre">from_dlpack(DLManagedTensorVersioned**)</span></code>. See that routine for further discussion on lifetimes.</p>
+<p>As with the other overload, <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> is set to <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> on success.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The user should prefer using the versioned DLPack interface instead. There are no protections for backwards incompatibilities with this routine.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dlm_tensor</strong> – A pointer (to pointer) of the DLPack tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The logical store. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE">
+<span id="_CPPv3N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE"></span><span id="_CPPv2N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE"></span><span id="legate::detail::to_dlpack__legate::PhysicalStoreCR.std::optional:b:.std::optional:CUstream:.std::optional:DLPackVersion:.std::optional:DLDevice:"></span><span class="target" id="to__dlpack_8cc_1aa69d6e0bf9cee6d7728c3f4451380e25"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html#_CPPv424DLManagedTensorVersioned" title="DLManagedTensorVersioned"><span class="n"><span class="pre">DLManagedTensorVersioned</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html#_CPPv424DLManagedTensorVersioned" title="DLManagedTensorVersioned"><span class="n"><span class="pre">DLManagedTensorVersioned</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_dlpack</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../class/classlegate_1_1PhysicalStore.html#_CPPv4N6legate13PhysicalStoreE" title="legate::PhysicalStore"><span class="n"><span class="pre">PhysicalStore</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">store</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">bool</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">copy</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CUstream</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">stream</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../struct/structDLPackVersion.html#_CPPv413DLPackVersion" title="DLPackVersion"><span class="n"><span class="pre">DLPackVersion</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">max_version</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../struct/structDLDevice.html#_CPPv48DLDevice" title="DLDevice"><span class="n"><span class="pre">DLDevice</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Export a store into the DLPack format. </p>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">copy</span></code> has the following semantics:</p>
+<p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: Legate <em>must</em> copy the data. If Legate fails to copy the data, for any reason, an exception is thrown.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: Legate must <em>never</em> copy the data. If the store cannot be exported without a copy, then an exception is thrown.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>: Legate may copy the data if it is deemed necessary. Currently, this is never the case, and Legate will always provide a view.</p></li>
+</ul>
+</p>
+<p>In any case, if a copy is made, the <code class="docutils literal notranslate"><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html#structDLManagedTensorVersioned_1ae4ae22403724ef647a87df80553c8364"><span class="std std-ref"><span class="pre">DLManagedTensorVersioned::flags</span></span></a></code> member will have the <code class="docutils literal notranslate"><span class="pre">DLPACK_FLAG_BITMASK_IS_COPIED</span></code> bit set.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">max_version</span></code> is provided, and this routine cannot satisfy the version requirement, an exception is thrown. If <code class="docutils literal notranslate"><span class="pre">max_version</span></code> is not provided, then the returned tensor will be of the highest version available.</p>
+<p>Since <code class="docutils literal notranslate"><a class="reference internal" href="group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code>s cannot be moved, <code class="docutils literal notranslate"><span class="pre">device</span></code> has very little use (and exists purely to allow the Python API to pass it, per the array standard). In a nutshell, if the device of the tensor that would be created by this routine doesn’t exactly match <code class="docutils literal notranslate"><span class="pre">device</span></code>, then an exception is thrown.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">std::unique_ptr</span></code> returned by this routine will automatically call the deleter of the DLPack tensor in its destructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>store</strong> – The store to export. </p></li>
+<li><p><strong>copy</strong> – Whether to copy the underlying data or not. </p></li>
+<li><p><strong>stream</strong> – A stream on which the data must be coherent after this routine returns. </p></li>
+<li><p><strong>max_version</strong> – The maximum version that the returned tensor should support. </p></li>
+<li><p><strong>device</strong> – The device that the returned tensor should reside on.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The DLPack managed tensor. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4I0EN6legate6detail9enumerateEN10zip_detail6ZipperIN10zip_detail17ZiperatorShortestE10Enumerator1TEERR1TN10Enumerator10value_typeE">
 <span id="_CPPv3I0EN6legate6detail9enumerateERR1TN10Enumerator10value_typeE"></span><span id="_CPPv2I0EN6legate6detail9enumerateERR1TN10Enumerator10value_typeE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="enumerate_8h_1a788fcc3fefae5b0c196bb188ff5f3096"></span><span class="n"><span class="pre">zip_detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Zipper</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">zip_detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ZiperatorShortest</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">Enumerator</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6legate6detail9enumerateEN10zip_detail6ZipperIN10zip_detail17ZiperatorShortestE10Enumerator1TEERR1TN10Enumerator10value_typeE" title="legate::detail::enumerate::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enumerate</span></span></span><span class="sig-paren">(</span>
 
@@ -3799,6 +3937,12 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail9array_mapE1TRK1T4SpanIKNSt7int32_tEE"><code class="docutils literal notranslate"><span class="pre">array_map()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00EN6legate6detail9array_mapE1U4SpanIK1TE4SpanIKNSt7int32_tEE"><code class="docutils literal notranslate"><span class="pre">array_map()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00DpEN6legate6detail12array_all_ofEbRR1FRK1TDpRK2Tn"><code class="docutils literal notranslate"><span class="pre">array_all_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail15to_store_targetE12DLDeviceType"><code class="docutils literal notranslate"><span class="pre">to_store_target()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail14to_dlpack_typeEN6legate4Type4CodeE"><code class="docutils literal notranslate"><span class="pre">to_dlpack_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail14dl_tensor_sizeERK8DLTensor"><code class="docutils literal notranslate"><span class="pre">dl_tensor_size()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11from_dlpackEPP24DLManagedTensorVersioned"><code class="docutils literal notranslate"><span class="pre">from_dlpack()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11from_dlpackEPP15DLManagedTensor"><code class="docutils literal notranslate"><span class="pre">from_dlpack()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE"><code class="docutils literal notranslate"><span class="pre">to_dlpack()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail9enumerateEN10zip_detail6ZipperIN10zip_detail17ZiperatorShortestE10Enumerator1TEERR1TN10Enumerator10value_typeE"><code class="docutils literal notranslate"><span class="pre">enumerate()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail21LEGATE_DEFINE_ENV_VAREb11LEGATE_TEST"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINE_ENV_VAR()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail21LEGATE_DEFINE_ENV_VAREb17LEGATE_SHOW_USAGE"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINE_ENV_VAR()</span></code></a></li>

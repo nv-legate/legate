@@ -1,0 +1,4 @@
+DLManagedTensorVersioned
+========================
+
+.. doxygenstruct:: DLManagedTensorVersioned
