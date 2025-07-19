@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.08 &#8212; NVIDIA legate (25.08.00.dev22+gf4bc7cff)</title>
+    <title>Changes: 25.08 &#8212; NVIDIA legate (25.08.00.dev0)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=3fa1807c"></script>
+    <script src="../_static/documentation_options.js?v=ec2237a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev22+gf4bc7cff)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev0)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev22+gf4bc7cff)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev0)</p>
   
 </a>
 
@@ -528,12 +528,6 @@
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../api/cpp/generated/structlist.html">Structs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLDataType.html">DLDataType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLDevice.html">DLDevice</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLManagedTensor.html">DLManagedTensor</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLManagedTensorVersioned.html">DLManagedTensorVersioned</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLPackVersion.html">DLPackVersion</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLTensor.html">DLTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structlegate_1_1ResourceConfig.html">legate::ResourceConfig</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structlegate_1_1experimental_1_1stl_1_1iteration__kind.html">legate::experimental::stl::iteration_kind</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structlegate_1_1experimental_1_1stl_1_1reduction__kind.html">legate::experimental::stl::reduction_kind</a></li>
@@ -659,7 +653,6 @@
 <code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_read_write_accessor()</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_reduce_accessor()</span></code> which return <code class="docutils literal notranslate"><span class="pre">cuda::std::mdspan</span></code>’s as
 alternatives to the usual accessor interfaces.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::PhysicalStore::to_dlpack()</span></code> to export the store in DLPack format.</p></li>
 </ul>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
@@ -673,27 +666,13 @@ alternatives to the usual accessor interfaces.</p></li>
 a <code class="docutils literal notranslate"><span class="pre">cuda::std::mdspan</span></code>.</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::for_each_in_extent()</span></code> helper function to allow users to efficiently
 iterate over an N-dimensional extent space.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Span(const</span> <span class="pre">legate::tuple&lt;T&gt;&amp;)</span></code> to construct a <code class="docutils literal notranslate"><span class="pre">legate::Span</span></code> from a
-<code class="docutils literal notranslate"><span class="pre">legate::tuple</span></code>.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Span::empty()</span></code> to check whether a span’s size is 0.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Span::at()</span></code>, to access an element with bounds checking.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Span::deep_equal()</span></code> to do a “deep”, pointwise equality comparison.</p></li>
 </ul>
 <p class="rubric">I/O</p>
 </section>
 <section id="python">
 <h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
-<ul class="simple">
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.from_dlpack()</span></code> to enable importing DLPack compatible tensors as
-<code class="docutils literal notranslate"><span class="pre">legate.core.LogicalStore</span></code>.</p></li>
-</ul>
 <p class="rubric">Data</p>
-<ul class="simple">
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.PhysicalStore.__dlpack__()</span></code> and
-<code class="docutils literal notranslate"><span class="pre">legate.core.PhysicalStore.__dlpack_device__()</span></code> to support exporting physical stores
-as DLPack capsules.</p></li>
-</ul>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
 <p class="rubric">Tasks</p>
@@ -850,7 +829,7 @@ as DLPack capsules.</p></li>
         <div class="footer-item">
 <div class="extra_footer">
   
-  <script type="text/javascript">if (typeof _satellite !== "undefined"){ _satellite.pageBottom();}</script>
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
   
 </div></div>
       

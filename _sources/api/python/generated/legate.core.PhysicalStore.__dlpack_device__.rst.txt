@@ -1,6 +1,0 @@
-legate.core.PhysicalStore.\_\_dlpack\_device\_\_
-================================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: PhysicalStore.__dlpack_device__

@@ -13,8 +13,6 @@
 
    .. autosummary::
    
-      ~ReductionStore.__dlpack__
-      ~ReductionStore.__dlpack_device__
       ~ReductionStore.__init__
       ~ReductionStore.bind_data
       ~ReductionStore.create_output_buffer

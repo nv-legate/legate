@@ -11,7 +11,7 @@ where the task will run.
 
 Legate divides task execution into two conceptual parts: the *what* and the *how*.
 
-The *what* refers to the logical structure of the program -- the tasks that are submitted,
+The *what* refers to the logical structure of the program—the tasks that are submitted,
 the specific task variants that are selected, the data the tasks operate on, and the
 dependencies between them. It also includes the actual implementation of the tasks (their
 bodies). This portion of the execution is defined by the application code itself and is
@@ -35,12 +35,12 @@ Execution Pipeline Overview:
 
 The typical execution flow for a Legate task is as follows:
 
-1. **Task Submission** - The user program submits tasks to the Legate runtime.
-2. **Runtime Analysis** - The runtime analyzes task dependencies and prepares the
+1. **Task Submission** – The user program submits tasks to the Legate runtime.
+2. **Runtime Analysis** – The runtime analyzes task dependencies and prepares the
    execution plan.
-3. **Mapping** - The mapper is invoked via a series of callbacks, and assigns tasks to
+3. **Mapping** – The mapper is invoked via a series of callbacks, and assigns tasks to
    hardware resources and manages memory allocation.
-4. **Execution** - Once mapped, the runtime executes the tasks on the designated hardware.
+4. **Execution** – Once mapped, the runtime executes the tasks on the designated hardware.
 
 This pipeline allows Legate to efficiently schedule and execute large numbers of parallel
 tasks while abstracting away low-level system details.

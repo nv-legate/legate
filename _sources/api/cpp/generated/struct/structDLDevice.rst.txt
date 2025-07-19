@@ -1,4 +1,0 @@
-DLDevice
-========
-
-.. doxygenstruct:: DLDevice

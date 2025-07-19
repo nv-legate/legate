@@ -1,4 +1,0 @@
-DLDataType
-==========
-
-.. doxygenstruct:: DLDataType

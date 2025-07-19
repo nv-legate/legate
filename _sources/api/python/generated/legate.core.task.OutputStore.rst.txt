@@ -13,8 +13,6 @@
 
    .. autosummary::
    
-      ~OutputStore.__dlpack__
-      ~OutputStore.__dlpack_device__
       ~OutputStore.__init__
       ~OutputStore.bind_data
       ~OutputStore.create_output_buffer
