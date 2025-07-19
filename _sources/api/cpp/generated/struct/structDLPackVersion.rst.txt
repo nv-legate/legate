@@ -1,0 +1,4 @@
+DLPackVersion
+=============
+
+.. doxygenstruct:: DLPackVersion

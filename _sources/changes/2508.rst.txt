@@ -25,6 +25,7 @@ C++
   ``PhysicalStore::span_read_write_accessor()``, and
   ``PhysicalStore::span_reduce_accessor()`` which return ``cuda::std::mdspan``'s as
   alternatives to the usual accessor interfaces.
+- Add ``legate::PhysicalStore::to_dlpack()`` to export the store in DLPack format.
 
 .. rubric:: Mapping
 
@@ -44,6 +45,11 @@ C++
   a ``cuda::std::mdspan``.
 - Add ``legate::for_each_in_extent()`` helper function to allow users to efficiently
   iterate over an N-dimensional extent space.
+- Add ``legate::Span(const legate::tuple<T>&)`` to construct a ``legate::Span`` from a
+  ``legate::tuple``.
+- Add ``legate::Span::empty()`` to check whether a span's size is 0.
+- Add ``legate::Span::at()``, to access an element with bounds checking.
+- Add ``legate::Span::deep_equal()`` to do a "deep", pointwise equality comparison.
 
 .. rubric:: I/O
 
@@ -53,7 +59,14 @@ Python
 
 .. rubric:: General
 
+- Add ``legate.core.from_dlpack()`` to enable importing DLPack compatible tensors as
+  ``legate.core.LogicalStore``.
+
 .. rubric:: Data
+
+- Add ``legate.core.PhysicalStore.__dlpack__()`` and
+  ``legate.core.PhysicalStore.__dlpack_device__()`` to support exporting physical stores
+  as DLPack capsules.
 
 .. rubric:: Mapping
 

@@ -1,0 +1,4 @@
+DLManagedTensor
+===============
+
+.. doxygenstruct:: DLManagedTensor

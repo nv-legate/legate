@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Legate Test Suite &#8212; NVIDIA legate (25.08.00.dev0)</title>
+    <title>Legate Test Suite &#8212; NVIDIA legate (25.08.00.dev22+gf4bc7cff)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=ec2237a2"></script>
+    <script src="../_static/documentation_options.js?v=3fa1807c"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev22+gf4bc7cff)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev22+gf4bc7cff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev22+gf4bc7cff)</p>
   
 </a>
 
@@ -528,6 +528,12 @@
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../api/cpp/generated/structlist.html">Structs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLDataType.html">DLDataType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLDevice.html">DLDevice</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLManagedTensor.html">DLManagedTensor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLManagedTensorVersioned.html">DLManagedTensorVersioned</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLPackVersion.html">DLPackVersion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structDLTensor.html">DLTensor</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structlegate_1_1ResourceConfig.html">legate::ResourceConfig</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structlegate_1_1experimental_1_1stl_1_1iteration__kind.html">legate::experimental::stl::iteration_kind</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/struct/structlegate_1_1experimental_1_1stl_1_1reduction__kind.html">legate::experimental::stl::reduction_kind</a></li>
@@ -666,6 +672,12 @@ $<span class="w"> </span>./test.py
 $<span class="w"> </span>pytest<span class="w"> </span>./tests/python
 </pre></div>
 </div>
+<p>Build and run the C++ benchmarks:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./configure<span class="w"> </span>--with-benchmarks
+$<span class="w"> </span>make
+$<span class="w"> </span><span class="nv">$LEGATE_DIR</span>/<span class="nv">$LEGATE_ARCH</span>/cmake_build/cpp/benchmarks/bin/*
+</pre></div>
+</div>
 </section>
 <section id="c">
 <span id="sec-testing-cpp"></span><h2>C++<a class="headerlink" href="#c" title="Link to this heading">#</a></h2>
@@ -701,16 +713,16 @@ constraints are handled (such as running “death tests” in individual process
 would otherwise have to do manually.</p>
 <p>To run via the test runner, simply invoke it:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./test.py
-╔═<span class="w"> </span>Test<span class="w"> </span>Suite<span class="w"> </span>Configuration<span class="w"> </span><span class="o">(</span>GTest<span class="o">)</span><span class="w"> </span>═══════════════════════════════════════════╗
-║<span class="w">                                                                              </span>║
-║<span class="w">        </span>Feature<span class="w"> </span>stages<span class="w">  </span>cpus<span class="w">                                                  </span>║
-║<span class="w">    </span>System<span class="w"> </span>description<span class="w">  </span><span class="m">12</span><span class="w"> </span>cpus<span class="w"> </span>/<span class="w"> </span>N/A<span class="w"> </span>gpus<span class="w">                                    </span>║
-║<span class="w">  </span>Test<span class="w"> </span>files<span class="w"> </span>per<span class="w"> </span>stage<span class="w">  </span><span class="m">4</span><span class="w">                                                     </span>║
-║<span class="w">                                                                              </span>║
-╚══════════════════════════════════════════════════════════════════════════════╝
-╭──────────────────────────────────────────────────────────────────────────────╮
-│<span class="w"> </span>Entering<span class="w"> </span>stage:<span class="w"> </span>CPU<span class="w"> </span><span class="o">(</span>with<span class="w"> </span><span class="m">4</span><span class="w"> </span>workers<span class="o">)</span><span class="w">                                         </span>│
-╰──────────────────────────────────────────────────────────────────────────────╯
+<span class="o">==</span><span class="w"> </span>Test<span class="w"> </span>Suite<span class="w"> </span>Configuration<span class="w"> </span><span class="o">(</span>GTest<span class="o">)</span><span class="w"> </span><span class="o">============================================</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="p">|</span><span class="w">        </span>Feature<span class="w"> </span>stages<span class="w">  </span>cpus<span class="w">                                                  </span><span class="p">|</span>
+<span class="p">|</span><span class="w">    </span>System<span class="w"> </span>description<span class="w">  </span><span class="m">12</span><span class="w"> </span>cpus<span class="w"> </span>/<span class="w"> </span>N/A<span class="w"> </span>gpus<span class="w">                                    </span><span class="p">|</span>
+<span class="p">|</span><span class="w">  </span>Test<span class="w"> </span>files<span class="w"> </span>per<span class="w"> </span>stage<span class="w">  </span><span class="m">4</span><span class="w">                                                     </span><span class="p">|</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="o">================================================================================</span>
+--------------------------------------------------------------------------------
+<span class="p">|</span><span class="w"> </span>Entering<span class="w"> </span>stage:<span class="w"> </span>CPU<span class="w"> </span><span class="o">(</span>with<span class="w"> </span><span class="m">4</span><span class="w"> </span>workers<span class="o">)</span><span class="w">                                         </span><span class="p">|</span>
+--------------------------------------------------------------------------------
 <span class="o">[</span>PASS<span class="o">]</span><span class="w"> </span><span class="o">(</span>CPU<span class="o">)</span><span class="w"> </span><span class="m">3</span>.39s<span class="w"> </span><span class="o">{</span><span class="m">15</span>:51:27.82,<span class="w"> </span><span class="m">15</span>:51:31.21<span class="o">}</span><span class="w"> </span>AlignedUnpack.Bug1
 <span class="o">[</span>PASS<span class="o">]</span><span class="w"> </span><span class="o">(</span>CPU<span class="o">)</span><span class="w"> </span><span class="m">3</span>.52s<span class="w"> </span><span class="o">{</span><span class="m">15</span>:51:27.82,<span class="w"> </span><span class="m">15</span>:51:31.34<span class="o">}</span><span class="w"> </span>AliasViaPromote.Bug1
 <span class="o">[</span>PASS<span class="o">]</span><span class="w"> </span><span class="o">(</span>CPU<span class="o">)</span><span class="w"> </span><span class="m">1</span>.17s<span class="w"> </span><span class="o">{</span><span class="m">15</span>:51:31.22,<span class="w"> </span><span class="m">15</span>:51:32.39<span class="o">}</span><span class="w"> </span>DanglingStorePartition.Bug1
@@ -724,32 +736,32 @@ would otherwise have to do manually.</p>
 <code class="docutils literal notranslate"><span class="pre">test.py</span></code>. This flag accepts a standard Python regular expression that will be applied
 to the list of tests before running them:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./test.py<span class="w"> </span>--gtest-filter<span class="o">=</span><span class="s1">&#39;LogicalStore.*ReinterpretAs&#39;</span>
-╔═<span class="w"> </span>Test<span class="w"> </span>Suite<span class="w"> </span>Configuration<span class="w"> </span><span class="o">(</span>GTest<span class="o">)</span><span class="w"> </span>═══════════════════════════════════════════╗
-║<span class="w">                                                                              </span>║
-║<span class="w">        </span>Feature<span class="w"> </span>stages<span class="w">  </span>cpus<span class="w">                                                  </span>║
-║<span class="w">    </span>System<span class="w"> </span>description<span class="w">  </span><span class="m">12</span><span class="w"> </span>cpus<span class="w"> </span>/<span class="w"> </span>N/A<span class="w"> </span>gpus<span class="w">                                    </span>║
-║<span class="w">  </span>Test<span class="w"> </span>files<span class="w"> </span>per<span class="w"> </span>stage<span class="w">  </span><span class="m">4</span><span class="w">                                                     </span>║
-║<span class="w">                                                                              </span>║
-╚══════════════════════════════════════════════════════════════════════════════╝
-╭──────────────────────────────────────────────────────────────────────────────╮
-│<span class="w"> </span>Entering<span class="w"> </span>stage:<span class="w"> </span>CPU<span class="w"> </span><span class="o">(</span>with<span class="w"> </span><span class="m">4</span><span class="w"> </span>workers<span class="o">)</span><span class="w">                                         </span>│
-╰──────────────────────────────────────────────────────────────────────────────╯
+<span class="o">==</span><span class="w"> </span>Test<span class="w"> </span>Suite<span class="w"> </span>Configuration<span class="w"> </span><span class="o">(</span>GTest<span class="o">)</span><span class="w"> </span><span class="o">============================================</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="p">|</span><span class="w">        </span>Feature<span class="w"> </span>stages<span class="w">  </span>cpus<span class="w">                                                  </span><span class="p">|</span>
+<span class="p">|</span><span class="w">    </span>System<span class="w"> </span>description<span class="w">  </span><span class="m">12</span><span class="w"> </span>cpus<span class="w"> </span>/<span class="w"> </span>N/A<span class="w"> </span>gpus<span class="w">                                    </span><span class="p">|</span>
+<span class="p">|</span><span class="w">  </span>Test<span class="w"> </span>files<span class="w"> </span>per<span class="w"> </span>stage<span class="w">  </span><span class="m">4</span><span class="w">                                                     </span><span class="p">|</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="o">================================================================================</span>
+--------------------------------------------------------------------------------
+<span class="p">|</span><span class="w"> </span>Entering<span class="w"> </span>stage:<span class="w"> </span>CPU<span class="w"> </span><span class="o">(</span>with<span class="w"> </span><span class="m">4</span><span class="w"> </span>workers<span class="o">)</span><span class="w">                                         </span><span class="p">|</span>
+--------------------------------------------------------------------------------
 <span class="o">[</span>PASS<span class="o">]</span><span class="w"> </span><span class="o">(</span>CPU<span class="o">)</span><span class="w"> </span><span class="m">1</span>.41s<span class="w"> </span><span class="o">{</span><span class="m">15</span>:54:49.28,<span class="w"> </span><span class="m">15</span>:54:50.69<span class="o">}</span><span class="w"> </span>LogicalStoreUnit/ReinterpretAs.Basic/0
 <span class="o">[</span>PASS<span class="o">]</span><span class="w"> </span><span class="o">(</span>CPU<span class="o">)</span><span class="w"> </span><span class="m">1</span>.41s<span class="w"> </span><span class="o">{</span><span class="m">15</span>:54:49.28,<span class="w"> </span><span class="m">15</span>:54:50.69<span class="o">}</span><span class="w"> </span>LogicalStoreUnit/ReinterpretAs.Basic/1
 <span class="o">[</span>PASS<span class="o">]</span><span class="w"> </span><span class="o">(</span>CPU<span class="o">)</span><span class="w"> </span><span class="m">1</span>.41s<span class="w"> </span><span class="o">{</span><span class="m">15</span>:54:49.28,<span class="w"> </span><span class="m">15</span>:54:50.69<span class="o">}</span><span class="w"> </span>LogicalStoreUnit/ReinterpretAs.Basic/2
-╭──────────────────────────────────────────────────────────────────────────────╮
-│<span class="w"> </span>Exiting<span class="w"> </span>stage:<span class="w"> </span>CPU<span class="w">                                                           </span>│
-│<span class="w">                                                                              </span>│
-│<span class="w"> </span>Passed<span class="w"> </span><span class="m">3</span><span class="w"> </span>of<span class="w"> </span><span class="m">3</span><span class="w"> </span>tests<span class="w"> </span><span class="o">(</span><span class="m">100</span>.0%<span class="o">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span>.42s<span class="w">                                        </span>│
-╰──────────────────────────────────────────────────────────────────────────────╯
-───────────────────────────────────────────────────────────────────────────────
-╔═<span class="w"> </span>Overall<span class="w"> </span>summary<span class="w"> </span>════════════════════════════════════════════════════════════╗
-║<span class="w">                                                                              </span>║
-║<span class="w"> </span>*<span class="w"> </span>CPU<span class="w">   </span>:<span class="w"> </span><span class="m">3</span><span class="w"> </span>/<span class="w"> </span><span class="m">3</span><span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span>.42s<span class="w">                                              </span>║
-║<span class="w">                                                                              </span>║
-║<span class="w"> </span>Passed<span class="w"> </span><span class="m">3</span><span class="w"> </span>of<span class="w"> </span><span class="m">3</span><span class="w"> </span>tests<span class="w"> </span><span class="o">(</span><span class="m">100</span>.0%<span class="o">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span>.42s<span class="w">                                        </span>║
-║<span class="w">                                                                              </span>║
-╚══════════════════════════════════════════════════════════════════════════════╝
+--------------------------------------------------------------------------------
+<span class="p">|</span><span class="w"> </span>Exiting<span class="w"> </span>stage:<span class="w"> </span>CPU<span class="w">                                                           </span><span class="p">|</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>Passed<span class="w"> </span><span class="m">3</span><span class="w"> </span>of<span class="w"> </span><span class="m">3</span><span class="w"> </span>tests<span class="w"> </span><span class="o">(</span><span class="m">100</span>.0%<span class="o">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span>.42s<span class="w">                                        </span><span class="p">|</span>
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+<span class="o">==</span><span class="w"> </span>Overall<span class="w"> </span><span class="nv">summary</span><span class="w"> </span><span class="o">=============================================================</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>*<span class="w"> </span>CPU<span class="w">   </span>:<span class="w"> </span><span class="m">3</span><span class="w"> </span>/<span class="w"> </span><span class="m">3</span><span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span>.42s<span class="w">                                              </span><span class="p">|</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="p">|</span><span class="w"> </span>Passed<span class="w"> </span><span class="m">3</span><span class="w"> </span>of<span class="w"> </span><span class="m">3</span><span class="w"> </span>tests<span class="w"> </span><span class="o">(</span><span class="m">100</span>.0%<span class="o">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span>.42s<span class="w">                                        </span><span class="p">|</span>
+<span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
+<span class="o">================================================================================</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -1001,7 +1013,7 @@ tests/python/unit/legate/core/test_task.py<span class="w"> </span>..............
         <div class="footer-item">
 <div class="extra_footer">
   
-  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  <script type="text/javascript">if (typeof _satellite !== "undefined"){ _satellite.pageBottom();}</script>
   
 </div></div>
       

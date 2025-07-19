@@ -113,6 +113,14 @@ or `GASNet <https://gasnet.lbl.gov/>`_ (use ``--with-gasnet``) see the discussio
 
 Compiling with networking support requires MPI.
 
+.. note::
+
+   If you would like to build Legate with testing enabled, please refer to
+   :ref:`ch_testing` for further information. In particular, the C++ tests require
+   passing the additional ``--with-tests`` (and ``--with-benchmarks``) flags to
+   ``configure`` to enable building the tests and benchmarks respectively.
+
+
 .. _build_python_bindings:
 
 Building Python Bindings
