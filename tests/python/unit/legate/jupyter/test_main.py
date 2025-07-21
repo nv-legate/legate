@@ -10,6 +10,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 import legate.jupyter as m
+import legate.util.system
+import legate.driver.driver
+import legate.jupyter.config
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -25,10 +28,6 @@ if TYPE_CHECKING:
 # legate is installed in CI, so skip for now.
 @pytest.mark.skip
 def test_main(mocker: MockerFixture) -> None:
-    import legate.util.system
-    import legate.driver.driver
-    import legate.jupyter.config
-
     config_spy = mocker.spy(legate.jupyter.config.Config, "__init__")
     system_spy = mocker.spy(legate.util.system.System, "__init__")
     driver_spy = mocker.spy(legate.driver.driver.LegateDriver, "__init__")

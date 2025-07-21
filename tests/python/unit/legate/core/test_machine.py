@@ -14,6 +14,7 @@ from legate.core import (
     ProcessorRange,
     ProcessorSlice,
     TaskTarget,
+    get_machine,
 )
 
 
@@ -255,8 +256,6 @@ class TestMachine:
         )
 
     def test_idempotent_scopes(self) -> None:
-        from legate.core import get_machine
-
         machine = get_machine()
         with machine:
             assert machine == get_machine()
@@ -265,8 +264,6 @@ class TestMachine:
                 assert machine == get_machine()
 
     def test_empty_scope(self) -> None:
-        from legate.core import get_machine
-
         machine = get_machine()
         rng = machine.get_processor_range()
         empty_rng = ProcessorRange.create(
@@ -278,8 +275,6 @@ class TestMachine:
                 pass
 
     def test_set_machine_twice(self) -> None:
-        from legate.core import get_machine
-
         machine = get_machine()
         with machine:
             err_msg = "Each machine can be set only once to the scope"

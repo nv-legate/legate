@@ -44,9 +44,9 @@ shape_chunks = (
 
 
 def is_multi_gpu_ci() -> bool:
-    from os import environ
+    from os import environ  # noqa: PLC0415
 
-    from legate.core import TaskTarget
+    from legate.core import TaskTarget  # noqa: PLC0415
 
     num_gpu = get_legate_runtime().get_machine().count(target=TaskTarget.GPU)
     return bool(num_gpu > 1 and "CI" in environ)

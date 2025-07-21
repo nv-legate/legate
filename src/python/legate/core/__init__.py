@@ -24,9 +24,9 @@ import numpy as _np  # noqa: ICN001
 # Implement the same loading logic from libucx on the C++ side, and remove
 # this workaround.
 def _maybe_import_ucx_module() -> Any:
-    import os
+    import os  # noqa: PLC0415
 
-    from ..install_info import wheel_build
+    from ..install_info import wheel_build  # noqa: PLC0415
 
     if not wheel_build:
         return None
@@ -36,7 +36,7 @@ def _maybe_import_ucx_module() -> Any:
     # See https://github.com/rapidsai/ucx-wheels/blob/main/python/libucx/libucx/load.py#L55
     # for the environment variable check and logic for library loading.
     try:
-        import libucx  # type: ignore[import-not-found]
+        import libucx  # type: ignore[import-not-found]  # noqa: PLC0415
     except ModuleNotFoundError:
         return None
 

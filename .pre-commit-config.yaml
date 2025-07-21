@@ -75,20 +75,20 @@ repos:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes"]
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v20.1.5'
+    rev: 'v20.1.8'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
         exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.13
+    rev: v0.12.4
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.16.0'
+    rev: 'v1.17.0'
     hooks:
       - id: mypy
         pass_filenames: false
@@ -96,7 +96,7 @@ repos:
         # config/ensure_aedifix.py as well in case aedifix version changes
         additional_dependencies: [numpy, pytest, pytest_mock, types-psutil, rich, "dask[distributed]", "git+https://github.com/nv-legate/aedifix@1.6.0"]
   - repo: https://github.com/MarcoGorelli/cython-lint
-    rev: v0.16.6
+    rev: v0.16.7
     hooks:
       - id: cython-lint
       - id: double-quote-cython-strings

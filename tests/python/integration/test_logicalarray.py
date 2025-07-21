@@ -50,7 +50,7 @@ class TestArrayCreation:
     def test_fbmem_target(self) -> None:
         # Need to explicitly check cupy existence here
         try:
-            import cupy  # type: ignore[import-not-found]
+            import cupy  # type: ignore[import-not-found]  # noqa: PLC0415
         except ModuleNotFoundError:
             pytest.skip(reason="Test requires cupy to be installed")
         runtime = get_legate_runtime()

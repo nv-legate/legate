@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import tomllib
+import platform
 from argparse import Action, ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,8 +33,6 @@ def drop_patch(version: str) -> str:
 
 
 def normalize_platform_arch() -> str:
-    import platform
-
     match arch := platform.machine():
         case "x86_64":
             return "64"
@@ -338,8 +338,6 @@ class EnvConfig:
 
 # --- Setup -------------------------------------------------------------------
 def get_min_py() -> str:
-    import tomllib
-
     with (Path(__file__).parent.parent / "pyproject.toml").open(
         mode="rb"
     ) as f:

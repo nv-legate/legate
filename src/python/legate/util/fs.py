@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import re
+import sysconfig
 from pathlib import Path
 
 from .types import LegatePaths
@@ -234,7 +235,7 @@ def get_legate_build_dir(legate_parent_dir: Path) -> Path | None:
             # We have an editable install, only now is it safe to consult the
             # variable. We cannot do it above because we needed to make sure we
             # weren't in fully-installed-mode
-            from ..install_info import LEGATE_ARCH
+            from ..install_info import LEGATE_ARCH  # noqa: PLC0415
 
             return LEGATE_ARCH
 
@@ -264,8 +265,6 @@ def make_legate_bind_path(base: Path) -> Path:
 
 
 def get_legate_paths_from_installed_dir(legate_mod_dir: Path) -> LegatePaths:
-    import sysconfig
-
     # If legate_build_dir is None, then we are either dealing with an
     # installed version of legate or we may have been called from
     # test.py. legate_mod_dir is either
@@ -353,7 +352,7 @@ def get_legate_paths() -> LegatePaths:
     2. The python libraries are regularly installed.
     3. The python libraries are installed 'editable' mode.
     """
-    import legate
+    import legate  # noqa: PLC0415
 
     legate_mod_dir = Path(legate.__path__[0])
     legate_build_dir = get_legate_build_dir(legate_mod_dir.parent)

@@ -101,7 +101,7 @@ def convert_int(value: str) -> int:
     return int(value)
 
 
-def convert_bool(value: bool | str) -> bool:
+def convert_bool(value: bool | str) -> bool:  # noqa: FBT001
     """Convert a string to True or False.
 
     If a boolean is passed in, it is returned as-is. Otherwise the function

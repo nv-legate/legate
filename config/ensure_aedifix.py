@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import sys
+from importlib.metadata import PackageNotFoundError, version
+from subprocess import check_call
+
+from packaging.version import Version
+
 
 def ensure_aedifix() -> None:
-    from importlib.metadata import PackageNotFoundError, version
-
-    from packaging.version import Version
-
     # update pre-commit-config.yml as well in case this is changed
     VERSION = Version("1.6.0")
 
@@ -27,8 +29,5 @@ def ensure_aedifix() -> None:
 
         raise RuntimeError  # noqa: TRY301
     except (PackageNotFoundError, RuntimeError):
-        import sys
-        from subprocess import check_call
-
         package = f"git+https://github.com/nv-legate/aedifix@{VERSION}"
         check_call([sys.executable, "-m", "pip", "install", package])

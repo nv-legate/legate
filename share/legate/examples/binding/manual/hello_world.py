@@ -21,7 +21,7 @@ def main(lib_path: Path) -> None:
     """
     # Deliberately in main() so that the user can run --help on the program
     # without needing to build the .so (or setup legate) first.
-    from legate import get_legate_runtime
+    from legate import get_legate_runtime  # noqa: PLC0415
 
     libhello_world = CDLL(lib_path)
 

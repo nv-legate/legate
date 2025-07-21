@@ -161,7 +161,7 @@ class InfoAction(Action):
         values: str | Sequence[T] | None,  # noqa: ARG002
         option_string: str | None = None,  # noqa: ARG002
     ) -> NoReturn:
-        from .info import print_build_info
+        from .info import print_build_info  # noqa: PLC0415
 
         print_build_info()
         sys.exit()

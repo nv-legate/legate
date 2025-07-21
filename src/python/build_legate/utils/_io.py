@@ -90,7 +90,10 @@ def Tee(log_file: Path) -> Generator[Path, None, None]:
         stdout.flush()
         stderr.flush()
     else:
-        from contextlib import redirect_stderr, redirect_stdout
+        from contextlib import (  # noqa: PLC0415
+            redirect_stderr,
+            redirect_stdout,
+        )
 
         with (
             log_file.open("w") as fd,

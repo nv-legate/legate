@@ -41,7 +41,7 @@ except ModuleNotFoundError:
 class TestDaskCluster:
     # This function is executed as Dask Task, hence the deferred import
     def getenv(self, env_var: str) -> str:
-        import os
+        import os  # noqa: PLC0415
 
         return os.environ[env_var]
 

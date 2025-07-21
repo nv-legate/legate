@@ -4,11 +4,14 @@
 from __future__ import annotations
 
 import re
+import sys
+from contextlib import nullcontext
 from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from legate.tester.config import Config
+from legate.tester.defaults import CPU_PIN
 from legate.tester.project import Project
 from legate.tester.stages._osx import cpu as m
 from legate.tester.stages.util import UNPIN_ENV, Shard
@@ -24,11 +27,6 @@ unpin_and_test = dict(UNPIN_ENV)
 
 
 def get_warn_cpu_pin_context_manager() -> AbstractContextManager[Any]:
-    import sys
-    from contextlib import nullcontext
-
-    from legate.tester.defaults import CPU_PIN
-
     match sys.platform:
         case "darwin":
             # If this is ever not "none", then the CPU.shard_args() function

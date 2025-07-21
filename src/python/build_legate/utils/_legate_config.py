@@ -32,7 +32,7 @@ def _get_legate_dir() -> Path:
             # Technically _push_legate_dir_to_sys_path() already gets us 99% of
             # the way to LEGATE_DIR, but let's use the get_legate_dir utility
             # anyway
-            from scripts.get_legate_dir import get_legate_dir
+            from scripts.get_legate_dir import get_legate_dir  # noqa: PLC0415
 
         legate_dir = get_legate_dir()
 
@@ -47,11 +47,11 @@ def _get_legate_arch() -> str:
 
     try:
         with _push_legate_dir_to_sys_path():
-            from scripts.get_legate_arch import (  # type: ignore[import-not-found,unused-ignore]
+            from scripts.get_legate_arch import (  # type: ignore[import-not-found,unused-ignore]  # noqa: PLC0415
                 get_legate_arch,
             )
     except ModuleNotFoundError:
-        from ._io import warning_print
+        from ._io import warning_print  # noqa: PLC0415
 
         # User has not run configure, so come up with a suitable name.
         def get_legate_arch() -> str:

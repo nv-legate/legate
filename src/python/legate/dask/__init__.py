@@ -19,8 +19,8 @@ __all__ = ("main",)
 
 
 def main() -> int:  # noqa: D103
-    import sys
+    import sys  # noqa: PLC0415
 
-    from .main import main as _main
+    from .main import main as _main  # noqa: PLC0415
 
     return _main(sys.argv)

@@ -9,11 +9,14 @@ def build_wheel(  # noqa: D103
     config_settings: dict[str, list[str] | str] | None = None,
     metadata_directory: str | None = None,
 ) -> str:
-    from scikit_build_core.build import (  # type: ignore[import-not-found]
+    # Imports are done locally as the global namespace of this file is
+    # important. Pip will try to import all symbols from this package so we
+    # want to export build_wheel and build_wheel *only*.
+    from scikit_build_core.build import (  # type: ignore[import-not-found]  # noqa: PLC0415
         build_wheel as orig_build_wheel,
     )
 
-    from .utils import BuildLog, build_impl
+    from .utils import BuildLog, build_impl  # noqa: PLC0415
 
     with BuildLog(build_kind="wheel"):
         return build_impl(

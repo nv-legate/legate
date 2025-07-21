@@ -7,7 +7,9 @@ import os
 import re
 import sys
 import shutil
+import sysconfig
 import subprocess
+from multiprocessing import cpu_count
 from pathlib import Path
 
 from ._io import vprint
@@ -102,8 +104,6 @@ def fix_env() -> None:
             cache_dir=get_legate_config().LEGATE_CMAKE_DIR,
         )
     except (RuntimeError, FileNotFoundError):
-        from multiprocessing import cpu_count
-
         par = str(cpu_count())
 
     par = os.environ.setdefault("CMAKE_BUILD_PARALLEL_LEVEL", par)
@@ -168,8 +168,6 @@ def get_original_python_executable() -> tuple[str, dict[str, str]]:
     """
     if not building_with_build_isolation():
         return sys.executable, os.environ.copy()
-
-    import sysconfig
 
     py_names = (
         "python3",

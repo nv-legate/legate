@@ -66,7 +66,7 @@ def _setenv(selfaddr: str, peersaddr: str) -> None:
     peersaddr : str
         Space-separated string of all worker addresses.
     """
-    import os
+    import os  # noqa: PLC0415
 
     os.environ[WORKER_SELF_INFO] = selfaddr
     os.environ[WORKER_PEERS_INFO] = peersaddr

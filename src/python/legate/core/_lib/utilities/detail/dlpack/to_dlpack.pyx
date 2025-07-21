@@ -89,7 +89,7 @@ cpdef object to_dlpack(
         # The spec also says:
         #
         # > If stream is -1, the value may be used by the consumer to signal
-        #   “producer must not perform any synchronization”.
+        #   "producer must not perform any synchronization".
         #
         # But we choose to ignore it, (which is within our rights), because it
         # makes no sense. If the user doesn't give us a stream to signal the

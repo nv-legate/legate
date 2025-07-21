@@ -8,6 +8,9 @@ import sys
 from typing import TYPE_CHECKING
 
 import legate.driver as m
+import legate.util.system
+import legate.driver.config
+import legate.driver.driver
 
 if TYPE_CHECKING:
     import pytest
@@ -21,10 +24,6 @@ if TYPE_CHECKING:
 
 
 def test_main(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
-    import legate.util.system
-    import legate.driver.config
-    import legate.driver.driver
-
     config_spy = mocker.spy(legate.driver.config.Config, "__init__")
     system_spy = mocker.spy(legate.util.system.System, "__init__")
     driver_spy = mocker.spy(legate.driver.driver.LegateDriver, "__init__")

@@ -124,7 +124,7 @@ class Test_cmd_bind:
         # Replace below with itertools.batched once we hit python 3.12
         def pairwise(iterable: tuple[str, ...]) -> list[tuple[str, str]]:
             # pairwise('ABCDEF') -> AB CD EF
-            from itertools import islice
+            from itertools import islice  # noqa: PLC0415
 
             iterator = iter(iterable)
             ret = []

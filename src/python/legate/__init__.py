@@ -13,12 +13,12 @@ __path__ = extend_path(__path__, __name__)
 # this mode also unconditionally always uses the current date as input, which
 # is too inflexible for our use. So, we fix up the version format ourselves.
 def _fixup_version() -> str:
-    import os
+    import os  # noqa: PLC0415
 
     if (v := os.environ.get("LEGATE_USE_VERSION")) is not None:
         return v
 
-    from ._version import __version_tuple__ as vt
+    from ._version import __version_tuple__ as vt  # noqa: PLC0415
 
     calver_base = ".".join(f"{x:02}" for x in vt[:3])
     dev = f".{vt[3]}" if len(vt) > 3 else ""  # noqa: PLR2004

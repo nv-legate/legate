@@ -168,7 +168,7 @@ class Legate(MainPackage):
         argv : Sequence[str]
             The command line arguments for this configuration.
         """
-        from scripts.get_legate_dir import get_legate_dir
+        from scripts.get_legate_dir import get_legate_dir  # noqa: PLC0415
 
         legate_dir = Path(get_legate_dir())
         super().__init__(
@@ -216,7 +216,7 @@ class Legate(MainPackage):
         # baz     2.15.0  /path/to/baz
         # ...
         try:
-            import pip  # noqa: F401
+            import pip  # noqa: F401, PLC0415
         except ModuleNotFoundError as mnfe:
             self.log(
                 f"pip does not appear to be installed: '{mnfe}'. Nothing to do"
@@ -280,7 +280,9 @@ class Legate(MainPackage):
     def check_min_cmake_version(self) -> None:
         r"""Assert the minimum cmake version is met."""
         try:
-            from packaging.version import parse as version_parse
+            from packaging.version import (  # noqa: PLC0415
+                parse as version_parse,
+            )
         except ModuleNotFoundError:
             # error: All conditional function variants must have identical
             # signatures

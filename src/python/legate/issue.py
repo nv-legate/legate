@@ -34,7 +34,7 @@ def try_version(module_name: str, attr: str) -> str:
 
 
 def legion_version() -> str:
-    import legate.install_info as info
+    import legate.install_info as info  # noqa: PLC0415
 
     result = info.legion_version
     if result == "":

@@ -211,9 +211,9 @@ class TestFunction(Protocol[_P, _T_co]):
 
 
 def test_function(
-    inputs: tuple[str, ...] = (),
-    outputs: tuple[str, ...] = (),
-    scalars: tuple[str, ...] = (),
+    inputs: tuple[str, ...] = (),  # noqa: PT028
+    outputs: tuple[str, ...] = (),  # noqa: PT028
+    scalars: tuple[str, ...] = (),  # noqa: PT028
 ) -> Callable[[Callable[_P, _T]], TestFunction[_P, _T]]:
     def wrapper(fn: Callable[_P, _T]) -> TestFunction[_P, _T]:
         fn_ret = TYPE_CAST(TestFunction[_P, _T], fn)

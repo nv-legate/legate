@@ -162,7 +162,7 @@ class LegateDriver:
 
 
 def get_versions() -> LegateVersions:
-    from legate import __version__ as lg_version
+    from legate import __version__ as lg_version  # noqa: PLC0415
 
     return LegateVersions(legate_version=lg_version)
 

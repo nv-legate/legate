@@ -127,7 +127,7 @@ class TestShutdownCallback:
 )
 def test_shutdown_callback(test_case: str) -> None:
     try:
-        import coverage  # type: ignore[import-not-found] # noqa: F401
+        import coverage  # type: ignore[import-not-found]  # noqa: F401, PLC0415
 
         cov_args = ["coverage", "run", "-m"]
     except ModuleNotFoundError:

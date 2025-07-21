@@ -38,7 +38,7 @@ LAUNCHER_VAR_PREFIXES = (
 )
 
 
-class Launcher:
+class Launcher:  # noqa: PLW1641
     """A base class for custom launch handlers for Legate.
 
     Subclasses should set ``kind`` and ``cmd`` properties during their

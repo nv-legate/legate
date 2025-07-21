@@ -81,7 +81,7 @@ class TestInlineAllocation:
     @pytest.mark.parametrize("dtype", (ty.int8, ty.int16, ty.int32, ty.int64))
     @pytest.mark.parametrize("shape", ((1,), (1, 2, 3), (1, 2, 3, 4)))
     def test_to_cupy_array(self, dtype: Type, shape: tuple[int, ...]) -> None:
-        import cupy as cp  # type: ignore[import-not-found]
+        import cupy as cp  # type: ignore[import-not-found]  # noqa: PLC0415
 
         @task(variants=(VariantCode.GPU,))
         def foo(x: InputStore, val: int) -> None:
@@ -126,7 +126,7 @@ class TestInlineAllocation:
     @pytest.mark.parametrize("dtype", (ty.int8, ty.int16, ty.int32, ty.int64))
     @pytest.mark.parametrize("shape", ((1,), (1, 2, 3), (1, 2, 3, 4)))
     def test_stream(self, dtype: Type, shape: tuple[int, ...]) -> None:
-        import cupy as cp  # type: ignore[import-not-found, unused-ignore]
+        import cupy as cp  # type: ignore[import-not-found, unused-ignore]  # noqa: PLC0415
 
         @task(variants=(VariantCode.GPU,))
         def foo(x: InputStore) -> None:

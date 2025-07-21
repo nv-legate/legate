@@ -12,10 +12,10 @@ __all__ = ("legate_main",)
 
 
 def prepare_driver(argv: list[str]) -> LegateDriver:
-    from ..util.system import System
-    from ..util.ui import error
-    from . import Config
-    from .driver import format_verbose
+    from ..util.system import System  # noqa: PLC0415
+    from ..util.ui import error  # noqa: PLC0415
+    from . import Config  # noqa: PLC0415
+    from .driver import format_verbose  # noqa: PLC0415
 
     try:
         config = Config(argv)

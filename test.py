@@ -67,7 +67,7 @@ def _find_tests(prefix: Path) -> tuple[Path, list[Path]] | None:
 def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
     if not (LEGATE_ARCH := os.environ.get("LEGATE_ARCH", "").strip()):
         try:
-            from scripts.get_legate_arch import (  # type: ignore[import-not-found, unused-ignore]
+            from scripts.get_legate_arch import (  # type: ignore[import-not-found, unused-ignore]  # noqa: PLC0415
                 get_legate_arch,
             )
         except ModuleNotFoundError:
@@ -76,7 +76,7 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
 
         LEGATE_ARCH = get_legate_arch()
 
-    from scripts.get_legate_dir import get_legate_dir
+    from scripts.get_legate_dir import get_legate_dir  # noqa: PLC0415
 
     legate_arch_dir = Path(get_legate_dir()) / LEGATE_ARCH
 

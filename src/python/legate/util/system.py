@@ -86,7 +86,7 @@ class System:
             #
             # But pynvml may or may not be installed, and so the suggested
             # narrower error code ends up being wrong half the time.
-            import pynvml  # type: ignore[import, unused-ignore]
+            import pynvml  # type: ignore[import, unused-ignore]  # noqa: PLC0415
 
             # Also a pynvml package is available on some platforms that won't
             # have GPUs for some reason. In which case this init call will

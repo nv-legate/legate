@@ -340,9 +340,9 @@ class TestStage(Protocol):
     def _launch_gdb_and_exit(
         self, config: Config, system: TestSystem
     ) -> NoReturn:
-        import os
-        import sys
-        from subprocess import run
+        import os  # noqa: PLC0415
+        import sys  # noqa: PLC0415
+        from subprocess import run  # noqa: PLC0415
 
         cmd = self.runner.cmd_gdb(config)
         env = os.environ | self.env(config, system)

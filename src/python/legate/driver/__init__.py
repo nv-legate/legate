@@ -3,6 +3,10 @@
 
 from __future__ import annotations
 
+import os
+import sys
+import shlex
+
 from .config import Config
 from .driver import LegateDriver
 from .launcher import Launcher
@@ -12,11 +16,7 @@ __all__ = ("Config", "Launcher", "LegateDriver", "main")
 
 def main() -> int:
     """Main function for legate entry point."""
-    import os
-    import sys
-    import shlex
-
-    from .main import legate_main as _main
+    from .main import legate_main as _main  # noqa: PLC0415
 
     # A little explanation. We want to encourage configuration options be
     # passed via LEGATE_CONFIG, in order to be considerate to user scripts.

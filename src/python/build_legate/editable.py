@@ -9,19 +9,24 @@ def build_editable(  # noqa: D103
     config_settings: dict[str, list[str] | str] | None = None,
     metadata_directory: str | None = None,
 ) -> str:
-    import os
+    # Imports are done locally as the global namespace of this file is
+    # important. Pip will try to import all symbols from this package so we
+    # want to export build_editable and build_editable *only*.
+    import os  # noqa: PLC0415
 
-    from scikit_build_core.build import (  # type: ignore[import-not-found]
+    from scikit_build_core.build import (  # type: ignore[import-not-found]  # noqa: PLC0415
         build_editable as orig_build_editable,
     )
 
-    from .utils import BuildLog, build_impl, vprint
+    from .utils import BuildLog, build_impl, vprint  # noqa: PLC0415
 
     with BuildLog(build_kind="editable"):
         do_patch = os.environ.get("LEGATE_PATCH_SKBUILD", "1").strip() == "1"
         vprint("patching skbuild_core.build.wheel._make_editable:", do_patch)
         if do_patch:
-            from .utils._monkey import monkey_patch_skbuild_editable
+            from .utils._monkey import (  # noqa: PLC0415
+                monkey_patch_skbuild_editable,
+            )
 
             monkey_patch_skbuild_editable()
 

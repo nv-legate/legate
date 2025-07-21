@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-# ruff: noqa: A005
 from ._lib.type.types import (
     FixedArrayType,
     ReductionOpKind,
