@@ -29,6 +29,16 @@ C++
 
 .. rubric:: Mapping
 
+- Remove ``legate::mapping::InstLayout``. Support for ``AOS`` never really worked, only
+  ``SOA``. Since this causes the entire enum to have just a single value, it is
+  removed. All stores will have ``SOA`` layout.
+- Remove ``legate::mapping::InstanceMappingPolicy::layout`` as a result of removing
+  ``InstLayout``.
+- Remove ``legate::mapping::InstanceMappingPolicy::with_instance_layout()`` as a result of
+  removing ``InstLayout``.
+- Remove ``legate::mapping::InstanceMappingPolicy::set_instance_layout()`` as a result of
+  removing ``InstLayout``.
+
 .. rubric:: Partitioning
 
 .. rubric:: Tasks
