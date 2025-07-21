@@ -105,21 +105,6 @@ enum class AllocPolicy : std::uint8_t {
 };
 
 /**
- * @brief An enum class for instant layouts
- */
-enum class InstLayout : std::uint8_t {
-  /**
-   * @brief Indicates the store must be mapped to an SOA instance
-   */
-  SOA,
-  /**
-   * @brief Indicates the store must be mapped to an AOS instance. No different than `SOA` in a
-   * store mapping for a single store
-   */
-  AOS,
-};
-
-/**
  * @brief A descriptor for dimension ordering
  */
 class DimOrdering {
@@ -220,10 +205,7 @@ class InstanceMappingPolicy {
    * @brief Allocation policy
    */
   AllocPolicy allocation{AllocPolicy::MAY_ALLOC};
-  /**
-   * @brief Instance layout for the instance
-   */
-  InstLayout layout{InstLayout::SOA};
+
   /**
    * @brief Dimension ordering for the instance. C order by default.
    */
@@ -265,17 +247,6 @@ class InstanceMappingPolicy {
   [[nodiscard]] InstanceMappingPolicy& with_allocation_policy(AllocPolicy allocation) &;
   [[nodiscard]] InstanceMappingPolicy with_allocation_policy(AllocPolicy allocation) const&;
   [[nodiscard]] InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) &&;
-
-  /**
-   * @brief Changes the instance layout
-   *
-   * @param layout A new instance layout
-   *
-   * @return This instance mapping policy
-   */
-  [[nodiscard]] InstanceMappingPolicy& with_instance_layout(InstLayout layout) &;
-  [[nodiscard]] InstanceMappingPolicy with_instance_layout(InstLayout layout) const&;
-  [[nodiscard]] InstanceMappingPolicy&& with_instance_layout(InstLayout layout) &&;
 
   /**
    * @brief Changes the dimension ordering
@@ -322,12 +293,7 @@ class InstanceMappingPolicy {
    * @param allocation A new allocation policy
    */
   void set_allocation_policy(AllocPolicy allocation);
-  /**
-   * @brief Changes the instance layout
-   *
-   * @param layout A new instance layout
-   */
-  void set_instance_layout(InstLayout layout);
+
   /**
    * @brief Changes the dimension ordering
    *

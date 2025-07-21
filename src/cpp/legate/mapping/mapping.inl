@@ -54,22 +54,6 @@ inline InstanceMappingPolicy&& InstanceMappingPolicy::with_allocation_policy(
   return std::move(with_allocation_policy(_allocation));
 }
 
-inline InstanceMappingPolicy& InstanceMappingPolicy::with_instance_layout(InstLayout _layout) &
-{
-  set_instance_layout(_layout);
-  return *this;
-}
-
-inline InstanceMappingPolicy InstanceMappingPolicy::with_instance_layout(InstLayout _layout) const&
-{
-  return InstanceMappingPolicy{*this}.with_instance_layout(_layout);
-}
-
-inline InstanceMappingPolicy&& InstanceMappingPolicy::with_instance_layout(InstLayout _layout) &&
-{
-  return std::move(with_instance_layout(_layout));
-}
-
 inline InstanceMappingPolicy& InstanceMappingPolicy::with_ordering(DimOrdering _ordering) &
 {
   set_ordering(std::move(_ordering));
@@ -124,8 +108,6 @@ inline void InstanceMappingPolicy::set_allocation_policy(AllocPolicy _allocation
 {
   allocation = _allocation;
 }
-
-inline void InstanceMappingPolicy::set_instance_layout(InstLayout _layout) { layout = _layout; }
 
 inline void InstanceMappingPolicy::set_ordering(DimOrdering _ordering)
 {

@@ -80,7 +80,6 @@ TEST_F(InstanceMappingPolicyTest, Create)
 
   ASSERT_EQ(policy.target, legate::mapping::StoreTarget::SYSMEM);
   ASSERT_EQ(policy.allocation, legate::mapping::AllocPolicy::MAY_ALLOC);
-  ASSERT_EQ(policy.layout, legate::mapping::InstLayout::SOA);
   ASSERT_EQ(policy.ordering, legate::mapping::DimOrdering{});
   ASSERT_EQ(policy.exact, false);
 }
@@ -89,7 +88,6 @@ TEST_F(InstanceMappingPolicyTest, Set)
 {
   constexpr auto target     = legate::mapping::StoreTarget::FBMEM;
   constexpr auto allocation = legate::mapping::AllocPolicy::MUST_ALLOC;
-  constexpr auto layout     = legate::mapping::InstLayout::AOS;
   const auto dim_order      = legate::mapping::DimOrdering::fortran_order();
   legate::mapping::InstanceMappingPolicy policy{};
 
@@ -103,21 +101,12 @@ TEST_F(InstanceMappingPolicyTest, Set)
             legate::mapping::InstanceMappingPolicy{}.with_target(target).with_allocation_policy(
               allocation));
 
-  // Set instance layout
-  policy.set_instance_layout(layout);
-  ASSERT_EQ(policy,
-            legate::mapping::InstanceMappingPolicy{}
-              .with_target(target)
-              .with_allocation_policy(allocation)
-              .with_instance_layout(layout));
-
   // Set ordering
   policy.set_ordering(dim_order);
   ASSERT_EQ(policy,
             legate::mapping::InstanceMappingPolicy{}
               .with_target(target)
               .with_allocation_policy(allocation)
-              .with_instance_layout(layout)
               .with_ordering(dim_order));
 
   // Set exact
@@ -126,7 +115,6 @@ TEST_F(InstanceMappingPolicyTest, Set)
             legate::mapping::InstanceMappingPolicy{}
               .with_target(target)
               .with_allocation_policy(allocation)
-              .with_instance_layout(layout)
               .with_ordering(dim_order)
               .with_exact(true));
 }

@@ -95,8 +95,8 @@ DimOrdering::~DimOrdering() noexcept = default;
 
 bool InstanceMappingPolicy::operator==(const InstanceMappingPolicy& other) const
 {
-  return target == other.target && allocation == other.allocation && layout == other.layout &&
-         exact == other.exact && redundant == other.redundant && ordering == other.ordering;
+  return target == other.target && allocation == other.allocation && exact == other.exact &&
+         redundant == other.redundant && ordering == other.ordering;
 }
 
 bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const

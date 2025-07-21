@@ -753,7 +753,7 @@ void BaseMapper::tighten_write_policies_(const Legion::Mappable& mappable,
 bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& ctx,
                                          const Legion::Mappable& mappable,
                                          const Processor& target_proc,
-                                         const std::vector<Legion::FieldID>& fields,
+                                         Legion::FieldID field,
                                          const std::vector<Legion::LogicalRegion>& regions,
                                          const InstanceMappingPolicy& policy,
                                          Memory target_memory,
@@ -770,12 +770,12 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
     LEGION_AFFINE_REDUCTION_SPECIALIZE, static_cast<Legion::ReductionOpID>(redop)});
 
   // reuse reductions only for GPU tasks
-  const auto can_cache = target_proc.kind() == Processor::TOC_PROC && fields.size() == 1 &&
-                         regions.size() == 1 && policy.allocation != AllocPolicy::MUST_ALLOC;
+  const auto can_cache = target_proc.kind() == Processor::TOC_PROC && regions.size() == 1 &&
+                         policy.allocation != AllocPolicy::MUST_ALLOC;
   if (can_cache) {
     // See if we already have it in our local instances
     auto ret = reduction_instances_.find_instance(
-      redop, regions.front(), fields.front(), target_memory, policy, *layout_constraints);
+      redop, regions.front(), field, target_memory, policy, *layout_constraints);
 
     if (ret.has_value()) {
       *result = *std::move(ret);
@@ -860,7 +860,7 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
 
   if (can_cache) {
     // Record reduction instance
-    reduction_instances_.record_instance(redop, regions.front(), fields.front(), *result, policy);
+    reduction_instances_.record_instance(redop, regions.front(), field, *result, policy);
   }
 
   runtime->subscribe(ctx, *result);
@@ -876,7 +876,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
                                        const Legion::Mappable& mappable,
                                        const std::set<const Legion::RegionRequirement*>& reqs,
                                        const InstanceMappingPolicy& policy,
-                                       const std::vector<Legion::FieldID>& fields,
+                                       Legion::FieldID field,
                                        const Legion::LayoutConstraintSet& layout_constraints,
                                        Memory target_memory,
                                        bool must_alloc_collective_writes,
@@ -896,15 +896,15 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
   const auto alloc_policy = must_alloc_collective_writes && has_collective_write(reqs)
                               ? AllocPolicy::MUST_ALLOC
                               : policy.allocation;
-  const auto can_cache    = fields.size() == 1 && regions.size() == 1 &&
-                         alloc_policy != AllocPolicy::MUST_ALLOC &&
+
+  const auto can_cache = regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC &&
                          // Redundant copies get invalidated immediately after this operation so
                          // they shouldn't be cached
                          !policy.redundant;
 
   const auto found_in_cache = [&] {
     auto cached = local_instances_.find_instance(
-      regions.front(), fields.front(), target_memory, policy, layout_constraints);
+      regions.front(), field, target_memory, policy, layout_constraints);
     const auto found = cached.has_value();
 
     if (found) {
@@ -924,7 +924,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
   }
 
   const auto domain = [&]() -> std::optional<Domain> {
-    if (fields.size() == 1 && regions.size() == 1) {
+    if (regions.size() == 1) {
       // When the client mapper didn't request colocation and also didn't want the instance
       // to be exact, we can do an interesting optimization here to try to reduce unnecessary
       // inter-memory copies. For logical regions that are overlapping we try
@@ -957,7 +957,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
       return true /* success */;
     }
     group = local_instances_.find_region_group(
-      regions.front(), *domain, fields.front(), target_memory, policy.exact);
+      regions.front(), *domain, field, target_memory, policy.exact);
     regions.assign(group->regions.begin(), group->regions.end());
   }
 
@@ -996,9 +996,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
 
   if (!find_or_create_instance()) {
     if (group != nullptr) {
-      LEGATE_CHECK(fields.size() == 1);
-      local_instances_.remove_pending_instance(
-        regions.front(), group, fields.front(), target_memory);
+      local_instances_.remove_pending_instance(regions.front(), group, field, target_memory);
     }
     return false;
   }
@@ -1029,8 +1027,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
     }
   }
   if (group != nullptr) {
-    LEGATE_CHECK(fields.size() == 1);
-    local_instances_.record_instance(regions.front(), group, fields.front(), *result, policy);
+    local_instances_.record_instance(regions.front(), group, field, *result, policy);
   }
   // *need_acquire == false means the instance is fresh
   if (!*need_acquire) {
@@ -1088,7 +1085,15 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
 
   mapping.populate_layout_constraints(layout_constraints);
 
-  const auto& fields    = layout_constraints.field_constraint.field_set;
+  const auto field = [&] {
+    auto&& fields = layout_constraints.field_constraint.field_set;
+
+    // Due to removing InstLayout::AOS (and therefore defaulting to Instlayout::SOA), we should
+    // only ever have 1 field (probably). See
+    // https://github.com/nv-legate/legate.internal/pull/2514#pullrequestreview-3026966414.
+    LEGATE_CHECK(fields.size() == 1);
+    return fields.front();
+  }();
   bool need_acquire     = false;
   std::size_t footprint = 0;
   bool success          = false;
@@ -1106,7 +1111,7 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
                                     mappable,
                                     reqs,
                                     policy,
-                                    fields,
+                                    field,
                                     layout_constraints,
                                     target_memory,
                                     must_alloc_collective_writes,
@@ -1118,7 +1123,7 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     success = map_reduction_instance_(ctx,
                                       mappable,
                                       target_proc,
-                                      fields,
+                                      field,
                                       regions,
                                       policy,
                                       target_memory,

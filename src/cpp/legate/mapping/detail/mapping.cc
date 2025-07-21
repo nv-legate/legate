@@ -314,21 +314,9 @@ void StoreMapping::populate_layout_constraints(
 
   std::vector<Legion::DimensionKind> dimension_ordering{};
 
-  dimension_ordering.reserve(
-    (policy().layout == InstLayout::AOS || policy().layout == InstLayout::SOA) + int_dims.size());
-
-  switch (policy().layout) {
-    case InstLayout::AOS: {
-      dimension_ordering.push_back(LEGION_DIM_F);
-      policy().ordering.impl()->integer_to_legion_dims(int_dims, &dimension_ordering);
-      break;
-    }
-    case InstLayout::SOA: {
-      policy().ordering.impl()->integer_to_legion_dims(int_dims, &dimension_ordering);
-      dimension_ordering.push_back(LEGION_DIM_F);
-      break;
-    }
-  }
+  dimension_ordering.reserve(int_dims.size() + 1);
+  policy().ordering.impl()->integer_to_legion_dims(int_dims, &dimension_ordering);
+  dimension_ordering.push_back(LEGION_DIM_F);
 
   // This 2-step is necessary because Legion::OrderingConstraint constructor takes the vector
   // by const-ref. Similarly, layout_constraints.add_constraint() ALSO takes its
@@ -342,21 +330,19 @@ void StoreMapping::populate_layout_constraints(
   layout_constraints.ordering_constraint.contiguous = false;
   layout_constraints.add_constraint(Legion::MemoryConstraint{to_kind(policy().target)});
 
-  std::vector<Legion::FieldID> fields{};
-
-  if (stores().size() > 1) {
+  if ((stores().size() > 1) && LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     std::unordered_set<Legion::FieldID> field_set{};
 
-    field_set.reserve(stores().size());
-    std::transform(stores().begin(),
-                   stores().end(),
-                   std::inserter(field_set, field_set.end()),
-                   [](const auto& store) { return store->region_field().field_id(); });
-    fields.assign(field_set.begin(), field_set.end());
-  } else {
-    fields.push_back(first_region_field.field_id());
+    for (auto&& st : stores()) {
+      field_set.insert(st->region_field().field_id());
+    }
+    // Due to removing InstLayout::AOS (and therefore defaulting to Instlayout::SOA), we should
+    // only ever have 1 field (probably). See
+    // https://github.com/nv-legate/legate.internal/pull/2514#pullrequestreview-3026966414.
+    LEGATE_CHECK(field_set.size() == 1);
   }
-  layout_constraints.field_constraint.field_set  = std::move(fields);
+
+  layout_constraints.field_constraint.field_set  = {first_region_field.field_id()};
   layout_constraints.field_constraint.contiguous = false;
   layout_constraints.field_constraint.inorder    = false;
 }
