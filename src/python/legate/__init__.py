@@ -18,7 +18,17 @@ def _fixup_version() -> str:
     if (v := os.environ.get("LEGATE_USE_VERSION")) is not None:
         return v
 
-    from ._version import __version_tuple__ as vt  # noqa: PLC0415
+    try:
+        from ._version import __version_tuple__ as vt  # noqa: PLC0415
+    except ModuleNotFoundError:
+        from datetime import datetime  # noqa: PLC0415
+
+        # We haven't built the python bindings yet, so just construct the
+        # version from current year and month. The actual version string
+        # shouldn't matter because if we haven't built the python side, then
+        # surely nobody (external) would be inspecting this anyways.
+        rn = datetime.now()
+        return f"{rn.strftime('%y')}.{rn.month:02}.0.dev"
 
     calver_base = ".".join(f"{x:02}" for x in vt[:3])
     dev = f".{vt[3]}" if len(vt) > 3 else ""  # noqa: PLR2004
