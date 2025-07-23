@@ -80,6 +80,7 @@ class Config:
         )
         self.profiling = Profiling(
             profile=False,
+            provenance=None,
             cprofile=False,
             nvprof=False,
             nsys=False,

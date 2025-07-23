@@ -24,6 +24,7 @@ from ..type.types cimport Type, _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain, _LocalTaskID, VariantCode
 from ..utilities.unconstructable cimport Unconstructable
+from .detail.config cimport _Config
 from .detail.runtime cimport _RuntimeImpl
 from .library cimport Library, _Library
 from .resource cimport _ResourceConfig, ResourceConfig
@@ -231,6 +232,8 @@ cdef class Runtime(Unconstructable):
 
     @staticmethod
     cdef Runtime from_handle(_Runtime*)
+
+    cdef const _Config* const config(self)
 
     cpdef Library find_library(self, str library_name)
     cdef tuple[Library, bool] find_or_create_library_mapper(

@@ -86,6 +86,12 @@ class TestParserDefaults:
     def test_profile(self) -> None:
         assert m.parser.get_default("profile") is False
 
+    def test_provenance(self) -> None:
+        assert m.parser.get_default("provenance") is None
+
+    def test_cprofile(self) -> None:
+        assert m.parser.get_default("cprofile") is False
+
     def test_nvprof(self) -> None:
         assert m.parser.get_default("nvprof") is False
 

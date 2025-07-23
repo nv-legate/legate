@@ -9,6 +9,7 @@ import sys
 import json
 import atexit
 from subprocess import PIPE, STDOUT, run
+from unittest import mock
 
 import pytest
 
@@ -22,21 +23,6 @@ from legate.core import (
 )
 
 
-@track_provenance()
-def func() -> str:
-    return Scope.provenance()
-
-
-@track_provenance()
-def unnested() -> str:
-    return func()
-
-
-@track_provenance(nested=True)
-def nested() -> str:
-    return func()
-
-
 class Test_track_provenance:
     @pytest.mark.parametrize("nested", (True, False, None))
     def test_docstring(self, nested: bool | None) -> None:
@@ -48,17 +34,53 @@ class Test_track_provenance:
 
         assert func.__doc__ == "A docstring."
 
+    @pytest.mark.parametrize("nested", (True, False, None))
+    def test_noop_without_profiling(self, nested: bool | None) -> None:
+        def func() -> None:
+            pass
+
+        kw = {} if nested is None else {"nested": nested}
+        wrapped = track_provenance(**kw)(func)
+
+        assert wrapped is func
+
     def test_unnested(self) -> None:
-        human, machine = json.loads(unnested())
-        assert "test_runtime.py" in human
-        assert "test_runtime.py" in machine["file"]
-        assert "line" in machine
+        with mock.patch(
+            "legate.core._lib.runtime.runtime._Provenance.config_value"
+        ) as mp:
+            mp.return_value = True
+
+            @track_provenance()
+            def func() -> str:
+                return Scope.provenance()
+
+            @track_provenance()
+            def unnested() -> str:
+                return func()
+
+            human, machine = json.loads(unnested())
+            assert "test_runtime.py" in human
+            assert "test_runtime.py" in machine["file"]
+            assert "line" in machine
 
     def test_nested(self) -> None:
-        human, machine = json.loads(nested())
-        assert "test_runtime.py" in human
-        assert "test_runtime.py" in machine["file"]
-        assert "line" in machine
+        with mock.patch(
+            "legate.core._lib.runtime.runtime._Provenance.config_value"
+        ) as mp:
+            mp.return_value = True
+
+            @track_provenance()
+            def func() -> str:
+                return Scope.provenance()
+
+            @track_provenance(nested=True)
+            def nested() -> str:
+                return func()
+
+            human, machine = json.loads(nested())
+            assert "test_runtime.py" in human
+            assert "test_runtime.py" in machine["file"]
+            assert "line" in machine
 
 
 @pytest.mark.xfail(

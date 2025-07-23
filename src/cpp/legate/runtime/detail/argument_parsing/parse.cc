@@ -505,7 +505,15 @@ ParsedArgs parse_args(std::vector<std::string> args)
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Profiling and logging");
 
-  auto profile     = parser.add_argument("--profile", "Whether to collect profiling logs", false);
+  auto profile    = parser.add_argument("--profile", "Whether to collect profiling logs", false);
+  auto provenance = parser.add_argument(
+    "--provenance",
+    "Whether to record call provenance. \n"
+    "\n"
+    "Enabling call provenance will cause stack trace information to be included in Legion "
+    "profiles, progress output, nvtx ranges, and some error messages. Enabling --profile "
+    "will automatically enable --provenance.",
+    false);
   auto log_levels  = parser.add_argument("--logging", logging_help_str(), std::string{});
   auto log_dir     = parser.add_argument("--logdir",
                                      "Directory to emit logfiles to, defaults to current directory",
@@ -617,6 +625,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
           /* zcmem */ std::move(zcmem),
           /* regmem */ std::move(regmem),
           /* profile */ std::move(profile),
+          /* provenance */ std::move(provenance),
           /* log_levels */ std::move(log_levels),
           /* log_dir */ std::move(log_dir),
           /* log_to_file */ std::move(log_to_file),

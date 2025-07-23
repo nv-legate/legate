@@ -143,6 +143,9 @@ cdef class Runtime(Unconstructable):
         result._handle = handle
         return result
 
+    cdef const _Config* const config(self):
+        return &self._handle.impl().config()
+
     cpdef Library find_library(self, str library_name):
         r"""
         Find a `Library`.
@@ -1290,6 +1293,13 @@ cdef str _provenance_from_frameinfo(info: tuple[str, int]):
     return _assemble_provenance(f"{fname}:{lineno}", file=fname, line=lineno)
 
 
+# This exists to support testing
+class _Provenance:
+    @staticmethod
+    def config_value() -> bool:
+        return get_legate_runtime().config().provenance()
+
+
 def track_provenance(
     bool nested = False
 ) -> Callable[[AnyCallable], AnyCallable]:
@@ -1315,7 +1325,12 @@ def track_provenance(
     legate.core.runtime.Runtime.track_provenance
     """
 
+    provenance = _Provenance.config_value()
+
     def decorator(func: AnyCallable) -> AnyCallable:
+        if not provenance:
+            return func
+
         if nested:
             @wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:

@@ -28,6 +28,8 @@ TEST_F(ConfigTest, DefaultValues)
   ASSERT_FALSE(config.synchronize_stream_view());
   ASSERT_FALSE(config.warmup_nccl());
   ASSERT_FALSE(config.enable_inline_task_launch());
+  ASSERT_FALSE(config.profile());
+  ASSERT_FALSE(config.provenance());
   ASSERT_EQ(config.num_omp_threads(), 0);
   ASSERT_FALSE(config.show_mapper_usage());
   ASSERT_FALSE(config.need_cuda());

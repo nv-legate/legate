@@ -130,6 +130,12 @@ def env_profile(config: ConfigProtocol) -> EnvPart:
     return ("--profile",) if config.profiling.profile else ()
 
 
+def env_provenance(config: ConfigProtocol) -> EnvPart:
+    if config.profiling.provenance is None:
+        return ("--provenance",) if config.profiling.profile else ()
+    return ("--provenance",) if config.profiling.provenance else ()
+
+
 def env_freeze_on_error(config: ConfigProtocol) -> EnvPart:
     return ("--freeze-on-error",) if config.debugging.freeze_on_error else ()
 
@@ -194,6 +200,7 @@ ENV_PARTS_LEGATE = (
     env_logdir,
     env_log_file,
     env_profile,
+    env_provenance,
     env_freeze_on_error,
     env_auto_config,
     env_show_config,

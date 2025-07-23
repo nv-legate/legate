@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import re
 from typing import Any
+from unittest import mock
 
 import numpy as np
 
@@ -61,16 +62,21 @@ class TestAutoTask:
             )
         assert auto_task.provenance() == provenance
 
-    def test_track_provenance(self) -> None:
-        runtime = get_legate_runtime()
-        library = tasks.basic_task.library
-        auto_task = track_provenance()(runtime.create_auto_task)(
-            library, tasks.basic_task.task_id
-        )
-        pattern = r"[^/](/[^:]+):.*"
-        found = re.search(pattern, auto_task.provenance())
-        assert found
-        assert found.groups()[0] == __file__
+    def test_track_provenance(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        with mock.patch(
+            "legate.core._lib.runtime.runtime._Provenance.config_value"
+        ) as mp:
+            mp.return_value = True
+
+            runtime = get_legate_runtime()
+            library = tasks.basic_task.library
+            auto_task = track_provenance()(runtime.create_auto_task)(
+                library, tasks.basic_task.task_id
+            )
+            pattern = r"[^/](/[^:]+):.*"
+            found = re.search(pattern, auto_task.provenance())
+            assert found
+            assert found.groups()[0] == __file__
 
     @pytest.mark.parametrize("exc", [ValueError, AssertionError, RuntimeError])
     def test_pytask_exception_handling(self, exc: type[Exception]) -> None:

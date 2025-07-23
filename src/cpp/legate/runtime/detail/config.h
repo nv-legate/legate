@@ -45,6 +45,8 @@ class Config {
   LEGATE_CONFIG_VAR(bool, need_cuda, false);
   LEGATE_CONFIG_VAR(bool, need_openmp, false);
   LEGATE_CONFIG_VAR(bool, need_network, false);
+  LEGATE_CONFIG_VAR(bool, profile, false);
+  LEGATE_CONFIG_VAR(bool, provenance, false);
 };
 
 #undef LEGATE_CONFIG_VAR

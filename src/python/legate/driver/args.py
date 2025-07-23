@@ -329,6 +329,18 @@ profiling.add_argument(
     help="Whether to collect profiling logs",
 )
 
+profiling.add_argument(
+    "--provenance",
+    dest="provenance",
+    action="store_true",
+    required=False,
+    default=None,
+    help="Whether to record call provenance. "
+    "Enabling call provenance will cause stack trace information to be "
+    "included in Legion profiles, progress output, nvtx ranges, and some "
+    "error messages. Setting --profile will automatically set --provenance.",
+)
+
 
 profiling.add_argument(
     "--cprofile",

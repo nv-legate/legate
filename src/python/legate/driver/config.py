@@ -95,6 +95,7 @@ class Memory(DataclassMixin):
 @dataclass(frozen=True)
 class Profiling(DataclassMixin):
     profile: bool
+    provenance: bool | None
     cprofile: bool
     nvprof: bool
     nsys: bool

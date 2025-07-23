@@ -42,6 +42,7 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_logdir,
         m.env_log_file,
         m.env_profile,
+        m.env_provenance,
         m.env_freeze_on_error,
         m.env_auto_config,
         m.env_show_config,
@@ -135,6 +136,23 @@ class Test_profile:
         config = genconfig(["--profile"])
         result = m.env_profile(config)
         assert result == ("--profile",)
+
+
+class Test_provenance:
+    def test_default(self, genconfig: GenConfig) -> None:
+        config = genconfig([])
+        result = m.env_provenance(config)
+        assert result == ()
+
+    def test_default_with_profile(self, genconfig: GenConfig) -> None:
+        config = genconfig(["--profile"])
+        result = m.env_provenance(config)
+        assert result == ("--provenance",)
+
+    def test_value(self, genconfig: GenConfig) -> None:
+        config = genconfig(["--provenance"])
+        result = m.env_provenance(config)
+        assert result == ("--provenance",)
 
 
 class Test_freeze_on_error:

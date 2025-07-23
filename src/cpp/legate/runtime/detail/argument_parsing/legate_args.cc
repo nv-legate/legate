@@ -82,6 +82,13 @@ Config prefill_config(const ParsedArgs& args)
   } else {
     cfg.set_need_network(multi_node_job());
   }
+  // Turn on provenance if profiling is enabled
+  cfg.set_profile(args.profile.value());
+  if (args.provenance.was_set()) {
+    cfg.set_provenance(args.provenance.value());
+  } else {
+    cfg.set_provenance(args.profile.value());
+  }
   return cfg;
 }
 
