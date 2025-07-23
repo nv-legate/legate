@@ -55,6 +55,10 @@ function preamble()
   # So thanks, conda, once again, for doing something "helpful"!
   unset NVCC_APPEND_FLAGS
   unset NVCC_PREPEND_FLAGS
+  # Some conda package (probably CUDA) sets this to include a bunch of ancient arches
+  # (e.g. sm_50 or sm_60). Unset this variable to make sure we pick Legate's default
+  # range.
+  unset CUDAARCHS
 
   configure_args=()
   if [[ "${USE_OPENMP:-OFF}" == 'OFF' ]]; then
