@@ -62,8 +62,8 @@ cdef class TaskLocalBuffer(Unconstructable):
         cdef tuple shape
 
         if self.dim == 0:
-            strides = ()
-            shape = ()
+            strides = ()  # pragma: no cover
+            shape = ()  # pragma: no cover
         else:
             strides = tuple(alloc.strides)
             shape = InlineAllocation._compute_shape(self._handle.domain())

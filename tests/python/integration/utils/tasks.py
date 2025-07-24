@@ -11,7 +11,10 @@ except ModuleNotFoundError:
     cupy = None
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 from legate.core import (
     InlineAllocation,

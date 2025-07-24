@@ -36,6 +36,12 @@ class TestTaskContext:
             # This task is always a single task, it has no arguments so there
             # is nothing to parallelize
             assert ctx.is_single_task() is True
+            assert ctx.task_index == (0,)
+            assert ctx.machine == get_legate_runtime().get_machine().only(
+                TaskTarget.CPU
+            )
+            # for code coverage
+            _ = ctx.provenance
             assert ctx.launch_domain == ((0,), (0,))
             assert ctx.task_stream is None
             assert ctx.can_raise_exception() is False
@@ -59,6 +65,12 @@ class TestTaskContext:
             # This task is always a single task, it has no arguments so there
             # is nothing to parallelize
             assert ctx.is_single_task() is True
+            assert ctx.task_index == (0,)
+            assert ctx.machine == get_legate_runtime().get_machine().only(
+                TaskTarget.GPU
+            )
+            # for code coverage
+            _ = ctx.provenance
             assert ctx.launch_domain == ((0,), (0,))
             assert ctx.task_stream is not None
             assert isinstance(ctx.task_stream, int)

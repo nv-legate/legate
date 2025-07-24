@@ -4,9 +4,12 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 import pytest
 
@@ -17,6 +20,7 @@ from legate.core import (
     TaskTarget,
     Type,
     VariantCode,
+    VariantOptions,
     align,
     bloat,
     broadcast,
@@ -154,6 +158,37 @@ class TestPyTask:
 
         fill_int_task(out_store, val)
         np.testing.assert_allclose(out_arr, exp_arr)
+
+    @pytest.mark.parametrize(
+        "shape",
+        [pytest.param((), marks=pytest.mark.xfail(run=False)), *SHAPES],
+    )
+    def test_bind_buffer(self, shape: tuple[int, ...]) -> None:
+        val = 98765
+
+        @task(
+            variants=tuple(VariantCode),
+            options=VariantOptions(has_allocations=True),
+        )
+        def bind(out: tasks.OutputStore) -> None:
+            buf = out.create_output_buffer(shape)
+            tasks.asarray(buf).fill(val)
+
+        runtime = get_legate_runtime()
+        out_store = runtime.create_store(ty.int32, ndim=len(shape))
+        exp_arr: NDArray[Any] = np.ndarray(shape, dtype=np.int32)
+        exp_arr.fill(val)
+        assert out_store.unbound
+        # TODO(yimoj) [issue-2529]
+        # Executing this task will hit Legion error when ndim == 0
+        # Legion::OutputRequirement::OutputRequirement(Legion::FieldSpace,
+        # const std::set<unsigned int>&, int, bool): Assertion `false' failed.
+        bind(out_store)
+        runtime.issue_execution_fence(block=True)
+        assert not out_store.unbound
+        np.testing.assert_allclose(
+            np.asarray(out_store.get_physical_store()), exp_arr
+        )
 
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     @pytest.mark.parametrize(
