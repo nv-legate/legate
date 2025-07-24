@@ -4,8 +4,10 @@ echo -e "\n\n--------------------- CONDA/LEGATE-PROFILER/BUILD.SH (nsys) -------
 set -xeo pipefail
 
 # Set CUDA environment explicitly (important for cmake detection)
-NVCC_PATH=$(command -v nvcc) || exit 1
-export CUDACXX="${NVCC_PATH}"
+if [[ "${BUILD_WITH_CUDA:-0}" == "1" ]]; then
+    NVCC_PATH=$(command -v nvcc) || exit 1
+    export CUDACXX="${NVCC_PATH}"
+fi
 
 # Needed for cargo
 export CMAKE_CUDA_COMPILER=${CUDACXX}

@@ -2,15 +2,6 @@
 on:
   workflow_call:
     inputs:
-      build-mode:
-        required: true
-        type: string
-      build-type:
-        required: true
-        type: string
-      network:
-        required: true
-        type: string
       platform:
         required: true
         type: string
@@ -18,19 +9,18 @@ on:
         required: false
         type: string
         default: ''
+      build-type:
+        type: string
+        required: true
       python-version:
-        required: false
         type: string
+        required: true
       target-device:
-        required: true
         type: string
-      build-has-tests:
         required: true
-        type: boolean
-      upload-action:
-        required: false
-        default: 'upload-package-None'
+      network:
         type: string
+        required: true
       refname:
         required: true
         type: string
@@ -38,17 +28,59 @@ on:
         required: true
         type: string
 
-defaults:
-  run:
-    shell: bash --noprofile --norc -xeuo pipefail {0}
-
 jobs:
-  build:
+  build-profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.38
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.39
     with:
-      build-has-tests: ${{ inputs.build-has-tests }}
+      client-repo: ${{ github.event.repository.name }}
+      client-ref: ${{ inputs.ref-sha }}
+      target-device: ${{ inputs.target-device }}
+      runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
+      build-has-tests: false
+      build-type: profiler
+      use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
+      platform: ${{ inputs.platform }}
+      legate-gh-ci-tag: "v1.39"
+      build-mode: ""
+      python-version: ${{ inputs.python-version }}
+      network: ${{ inputs.network }}
+      setup-python-proxy-cache: true
+      timeout: 25
+    secrets: inherit
+
+  upload-profiler:
+    needs: build-profiler
+    name: Upload Legate Profiler
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.39
+    with:
+      build-mode: ""
+      build-type: profiler
+      client-repo: ${{ github.event.repository.name }}
+      client-ref: ${{ inputs.ref-sha }}
+      build-has-tests: false
+      legate-gh-ci-tag: "v1.39"
+      name: Upload package to Anaconda
+      network: ${{ inputs.network }}
+      pkgSubString: "legate-profiler"
+      platform: ${{ inputs.platform }}
+      python-version: ${{ inputs.python-version }}
+      repos-Root: "legate-profiler"
+      target-device: ${{ inputs.target-device }}
+      upload-action: "upload-package-Anaconda"
+      refname: ${{ inputs.refname }}
+      default-branch: ${{ inputs.default-branch }}
+      timeout: 15
+    secrets: inherit
+
+  build-legate:
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.39
+    with:
+      build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
       target-device: ${{ inputs.target-device }}
@@ -56,21 +88,21 @@ jobs:
       build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      dependencies-file: ""
-      legate-gh-ci-tag: "v1.38"
-      build-mode: ${{ inputs.build-mode }}
+      legate-gh-ci-tag: "v1.39"
+      build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
       timeout: 180
     secrets: inherit
 
-  setup-test:
+  setup-profiler-test:
     name: Setup test
     # Don't run GPU tests on linux-aarch64. We don't have enough test machines for this.
-    if: inputs.build-has-tests == true && (inputs.build-type == 'nightly' || inputs.target-device != 'gpu' || inputs.platform != 'linux-aarch64')
+    if: inputs.build-type == 'nightly' || inputs.target-device != 'gpu' || inputs.platform != 'linux-aarch64'
     needs:
-      - build
+      - build-legate
+      - build-profiler
     runs-on: linux-amd64-cpu4
     timeout-minutes: 20
     outputs:
@@ -90,8 +122,7 @@ jobs:
             'macos-latest:cpu:cpu:mac'
           )
           TEST_CONFIGS=(
-            'Python Unit Tests:python'
-            'C++ Unit Tests:cpp'
+            'Legate profiler test:profiler'
           )
 
           for RUNNER in "${RUNNERS[@]}"; do
@@ -125,20 +156,21 @@ jobs:
           echo "matrix=${MATRIX_JSON}" >> "${GITHUB_OUTPUT}"
 
   test-within-container:
-    if: github.repository_owner == 'nv-legate' && inputs.build-has-tests == true && (inputs.platform == 'linux' || inputs.platform == 'linux-aarch64')
+    if: github.repository_owner == 'nv-legate' && (inputs.platform == 'linux' || inputs.platform == 'linux-aarch64')
     needs:
-      - setup-test
+      - setup-profiler-test
+      - build-profiler
 
-    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.build-mode }}, ${{ inputs.network }})
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.network }})
 
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
+      matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.38
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.39
     with:
-      build-has-tests: ${{ inputs.build-has-tests }}
+      build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
       build-type: ${{ inputs.build-type }}
@@ -148,12 +180,14 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.38"
-      build-mode: ${{ inputs.build-mode }}
+      legate-gh-ci-tag: "v1.39"
+      build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: ${{ matrix.runner.setup-python-proxy-cache }}
       enable-core-dumps: false
+      profiler-artifact-name: ${{ needs.build-profiler.outputs.artifact-name }}
+      output-build-type: "profiler-output-${{ matrix.runner.device }}"
       timeout: 90
     secrets: inherit
 
@@ -161,61 +195,35 @@ jobs:
   test-without-container:
     if: github.repository_owner == 'nv-legate' && (inputs.platform != 'linux' && inputs.platform != 'linux-aarch64')
     needs:
-      - setup-test
+      - setup-profiler-test
+      - build-profiler
 
-    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.build-mode }}, ucx enabled)
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.network }})
 
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
+      matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.38
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.39
     with:
-      build-has-tests: ${{ inputs.build-has-tests }}
+      build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
       build-type: ${{ inputs.build-type }}
-      name: ${{ matrix.test-config.name }}
+      name: "${{ matrix.test-config.name }} (${{ matrix.runner.device }})"
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ matrix.runner.name }}
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.38"
-      build-mode: ${{ inputs.build-mode }}
+      legate-gh-ci-tag: "v1.39"
+      build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: ${{ matrix.runner.setup-python-proxy-cache }}
       enable-core-dumps: false
+      profiler-artifact-name: ${{ needs.build-profiler.outputs.artifact-name }}
+      output-build-type: "profiler-output-${{ matrix.runner.device }}"
       timeout: 90
-    secrets: inherit
-
-  upload:
-    needs: test-within-container
-    # The use of always() below, ensures the step will run even on failure of the tests
-    # before if other conditionals are all true.
-    # We use the package with tests to test and then upload corresponding package without test.
-    if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.build-has-tests == true }}
-    name: Upload package to Server
-    uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.38
-    with:
-      build-has-tests: false
-      client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
-      build-type: ${{ inputs.build-type }}
-      name: Upload to Anaconda
-      target-device: ${{ inputs.target-device }}
-      platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.38"
-      build-mode: ${{ inputs.build-mode }}
-      network: ${{ inputs.network }}
-      upload-action: ${{ needs.test-within-container.result == 'failure' && 'upload-package-Anaconda' || 'upload-package-Anaconda-tested' }}
-      pkgSubString: "legate"
-      repos-Root: "legate"
-      python-version: ${{ inputs.python-version }}
-      refname: ${{ inputs.refname }}
-      default-branch: ${{ inputs.default-branch }}
-      timeout: 15
     secrets: inherit

@@ -55,30 +55,6 @@ jobs:
       default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit
 
-  build-legate-profiler:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - linux
-          - linux-aarch64
-        target-device:
-          - gpu
-        python-version:
-          - "3.13"
-    uses:
-      ./.github/workflows/gh-legate-profiler.yml
-    with:
-      platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
-      build-type: profiler
-      python-version: ${{ matrix.python-version }}
-      target-device: ${{ matrix.target-device }}
-      network: "ucx"
-      refname: ${{ github.ref_name }}
-      default-branch: ${{ github.event.repository.default_branch }}
-    secrets: inherit
-
   build-nightly-docs:
     name: Build Nightly documentation (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.build-mode }}, ucx enabled)
     strategy:

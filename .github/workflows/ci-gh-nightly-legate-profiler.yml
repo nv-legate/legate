@@ -1,0 +1,58 @@
+---
+name: Build and test the legate profiler
+
+concurrency:
+  group: ${{ startsWith(github.ref_name, 'main') && format('unique-{0}', github.run_id) || format('ci-legate-profiler-{0}-from-{1}', github.event_name, github.ref_name) }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref-sha:
+        description: 'The Full-commit SHA to checkout. Default=HEAD'
+        required: false
+        default: ''
+  schedule:
+    - cron: '0 22 * * *'  # Nightly at 10:00 PM
+  push:
+    branches:
+      - "pull-request/[0-9]+"
+      - "branch-*"
+      - "main"
+
+jobs:
+  build-and-test-legate-profiler:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux
+          - linux-aarch64
+        target-device:
+          - gpu
+          - cpu
+        python-version:
+          - "3.13"
+    uses:
+      ./.github/workflows/gh-build-and-test-legate-profiler.yml
+    with:
+      platform: ${{ matrix.platform }}
+      ref-sha: ${{ github.event.inputs.ref-sha }}
+      build-type: ci
+      python-version: ${{ matrix.python-version }}
+      target-device: ${{ matrix.target-device }}
+      network: "ucx"
+      refname: ${{ github.ref_name }}
+      default-branch: ${{ github.event.repository.default_branch }}
+    secrets: inherit
+
+  tests-pass:
+    if: always()
+    needs:
+      - build-and-test-legate-profiler
+    runs-on: linux-amd64-cpu4
+    timeout-minutes: 15
+    steps:
+      - name: Check job results
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

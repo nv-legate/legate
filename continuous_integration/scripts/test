@@ -294,6 +294,29 @@ run_test_or_analysis() {
             export LEGATE_WINDOW_SIZE=1024
             run_all_runtime_tests
             ;;
+        "profiler")
+            rapids-logger "Running legate profiler..."
+
+            # shellcheck disable=SC2154
+            if [[ "${USE_CUDA}" == "ON" ]]; then
+              NCPUS=$(nproc --ignore 1)
+            else
+              NCPUS=1
+            fi
+
+            LEGATE_AUTO_CONFIG=0 LEGATE_TEST=1 legate --profile --cpus "${NCPUS}" --gpus "${GPUS_COUNT}" "${CONDA_PREFIX}/bin/tests_with_runtime" --gtest_filter=TaskStoreTests/*
+            find "${REPO_DIR}" -iname "*.prof"
+            # shellcheck disable=SC2154
+            rapids-conda-retry install \
+                  -y \
+                  -n "${CONDA_ENV}" \
+                  -c "${PROFILER_DIR}/conda-build/legate-profiler" \
+                  legate-profiler
+
+            "${CONDA_PREFIX}"/bin/legate_prof archive "${REPO_DIR}"/legate_*.prof
+            # shellcheck disable=SC2154
+            cp -a legion_prof "${OUTPUT_ARTIFACTS_DIR}"/
+            ;;
         *)
             rapids-logger "Invalid case: $1"
             return 1

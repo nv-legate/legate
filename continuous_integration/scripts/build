@@ -133,7 +133,9 @@ copy_release_artifacts() {
   rapids-logger Copying release artifacts
   cp -r /tmp/out          "${ARTIFACTS_DIR}"
   cp -r /tmp/conda-build  "${ARTIFACTS_DIR}"
+  echo "::group::Directory structure of the generated artifacts"
   ls -lahR "${ARTIFACTS_DIR}"
+  echo "::endgroup::"
 }
 
 copy_profiler_artifacts() {
