@@ -24,9 +24,6 @@ namespace legate::detail {
 const InternalSharedPtr<LogicalStore>& LogicalArray::data() const
 {
   throw TracedException<std::invalid_argument>{"Data store of a nested array cannot be retrieved"};
-
-  static const InternalSharedPtr<LogicalStore> ptr;
-  return ptr;
 }
 
 /*static*/ InternalSharedPtr<LogicalArray> LogicalArray::from_store(
@@ -117,7 +114,6 @@ InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array(
 InternalSharedPtr<LogicalArray> BaseLogicalArray::child(std::uint32_t /*index*/) const
 {
   throw TracedException<std::invalid_argument>{"Non-nested array has no child sub-array"};
-  return {};
 }
 
 void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
@@ -228,33 +224,28 @@ bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardat
 InternalSharedPtr<LogicalArray> ListLogicalArray::promote(std::int32_t, std::size_t) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
-  return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::project(std::int32_t, std::int64_t) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
-  return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::slice(std::int32_t, Slice) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
-  return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(
   SmallVector<std::int32_t, LEGATE_MAX_DIM>) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
-  return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
   std::int32_t, SmallVector<std::uint64_t, LEGATE_MAX_DIM>) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
-  return {};
 }
 
 InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array(
@@ -278,7 +269,6 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::child(std::uint32_t index) con
     default: {  // legate-lint: no-switch-default
       throw TracedException<std::out_of_range>{
         fmt::format("List array does not have child {}", index)};
-      break;
     }
   }
   return nullptr;

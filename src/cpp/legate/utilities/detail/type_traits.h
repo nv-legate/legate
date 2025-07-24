@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/cpp_version.h>
+#include <legate/utilities/macros.h>
 
 #include <type_traits>
 
@@ -51,7 +54,7 @@ struct is_pure_move_constructible
 template <typename T>
 inline constexpr bool is_pure_move_constructible_v = is_pure_move_constructible<T>::value;
 
-#ifndef __NVCC__
+#if !LEGATE_DEFINED(LEGATE_NVCC) && !LEGATE_DEFINED(LEGATE_NVHPC)
 // This does not appear to work for NVCC...
 namespace is_pure_move_constructible_test {
 
@@ -86,7 +89,7 @@ struct is_pure_move_assignable
 template <typename T>
 inline constexpr bool is_pure_move_assignable_v = is_pure_move_assignable<T>::value;
 
-#ifndef __NVCC__
+#if !LEGATE_DEFINED(LEGATE_NVCC) && !LEGATE_DEFINED(LEGATE_NVHPC)
 // This does not appear to work for NVCC...
 namespace is_pure_move_assignable_test {
 

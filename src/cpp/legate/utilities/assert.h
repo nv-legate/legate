@@ -12,17 +12,13 @@
 #include <legate/utilities/cpp_version.h>
 #include <legate/utilities/macros.h>
 
-#ifndef __has_builtin
-#define __has_builtin(x) 0
-#endif
-
 #if LEGATE_CPP_VERSION >= 23
 #include <utility>
 
 #define LEGATE_UNREACHABLE() ::std::unreachable()
 #elif __has_builtin(__builtin_unreachable) || defined(__GNUC__)  // clang, gcc
 #define LEGATE_UNREACHABLE() __builtin_unreachable()
-#elif defined(_MSC_VER) && !defined(__clang__)  // MSVC
+#elif LEGATE_DEFINED(LEGATE_MSVC)  // MSVC
 #define LEGATE_UNREACHABLE() __assume(false)
 #else
 #define LEGATE_UNREACHABLE() LEGATE_ABORT("Unreachable code path executed!")
@@ -30,18 +26,18 @@
 
 #if LEGATE_CPP_VERSION >= 23
 #define LEGATE_ASSUME(...) [[assume(__VA_ARGS__)]]
-#elif defined(_MSC_VER) && !defined(__clang__)  // MSVC
+#elif LEGATE_DEFINED(LEGATE_MSVC)
 #define LEGATE_ASSUME(...) __assume(__VA_ARGS__)
-#elif defined(__clang__) && __has_builtin(__builtin_assume)  // clang
+#elif LEGATE_DEFINED(LEGATE_CLANG) && __has_builtin(__builtin_assume)
 #define LEGATE_ASSUME(...)                                  \
   do {                                                      \
-    _Pragma("clang diagnostic push");                       \
-    _Pragma("clang diagnostic ignored \"-Wassume\"");       \
+    LEGATE_PRAGMA_PUSH();                                   \
+    LEGATE_PRAGMA_GNU_IGNORE("-Wassume");                   \
     /* NOLINTNEXTLINE(readability-simplify-boolean-expr) */ \
     __builtin_assume(!!(__VA_ARGS__));                      \
-    _Pragma("clang diagnostic pop");                        \
+    LEGATE_PRAGMA_POP();                                    \
   } while (0)
-#elif defined(__GNUC__) && (__GNUC__ >= 13)
+#elif LEGATE_DEFINED(LEGATE_GCC) && (__GNUC__ >= 13)
 #define LEGATE_ASSUME(...) __attribute__((__assume__(__VA_ARGS__)))
 #else  // gcc (and really old clang)
 // gcc does not have its own __builtin_assume() intrinsic. One could fake it via

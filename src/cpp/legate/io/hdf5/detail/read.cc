@@ -66,16 +66,20 @@ void read_hdf5_file(const HDF5GlobalLock&,
  * @param store The Legate store to read into
  */
 class HDF5ReadFn {
-  // We define `is_supported` to handle unsupported dtype through SFINAE, not sure why
-  // clang-tidy complains about this being a C-style cast though...
+  // We define `is_supported` to handle unsupported dtype through SFINAE. It used to be a
+  // static constexpr bool variable, but then NVC++ complained that it was "never used". Making
+  // it a function hopefully silences this useless warning.
   template <legate::Type::Code CODE>
-  static constexpr bool IS_SUPPORTED =
-    !legate::is_complex<CODE>::value;  // NOLINT(google-readability-casting)
+  static constexpr bool is_supported_()
+  {
+    return !legate::is_complex<CODE>::value;
+  }
 
  public:
-  template <legate::Type::Code CODE,
-            std::int32_t DIM,
-            std::enable_if_t<IS_SUPPORTED<CODE>>* = nullptr>  // NOLINT(google-readability-casting)
+  template <
+    legate::Type::Code CODE,
+    std::int32_t DIM,
+    typename = std::enable_if_t<is_supported_<CODE>()>>  // NOLINT(google-readability-casting)
   void operator()(const legate::TaskContext& context,
                   legate::PhysicalStore* store,
                   bool is_device) const
@@ -141,7 +145,7 @@ class HDF5ReadFn {
 
   template <legate::Type::Code CODE,
             std::int32_t DIM,
-            std::enable_if_t<!IS_SUPPORTED<CODE>>* = nullptr>
+            typename = std::enable_if_t<!is_supported_<CODE>()>>
   void operator()(const legate::TaskContext&, legate::PhysicalStore*, bool)
   {
     throw legate::detail::TracedException<std::runtime_error>{

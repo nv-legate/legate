@@ -93,6 +93,16 @@ function(legate_configure_default_compiler_flags)
       "-Wtsan"
       "-Wenum-conversion"
       "-Wpacked")
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
+    list(APPEND
+         default_warning_flags
+         # NVC++ warns about not overriding all virtual functions in a derived class. But
+         # that, my dear compiler, is the point of making these functions virtual, not
+         # pure virtual. So we can disable this worthless warning.
+         "--diag_suppress partial_override")
+  endif()
+
   set(default_cxx_flags_debug
       ${default_warning_flags}
       "-g"

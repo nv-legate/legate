@@ -15,6 +15,10 @@ namespace legate::detail {
 
 namespace {
 
+// NVC++ warns that there is no return from this non-void-returning function. But if we add a
+// return statement, it says the return is unreachable. So which is it?
+LEGATE_PRAGMA_PUSH();
+LEGATE_PRAGMA_EDG_IGNORE(implicit_return_from_non_void_function);
 template <std::int32_t N>
 Point<N> create_point(coord_t val) noexcept
 {
@@ -24,6 +28,7 @@ Point<N> create_point(coord_t val) noexcept
     LEGATE_ABORT("Something bad happened");
   }
 }
+LEGATE_PRAGMA_POP();
 
 }  // namespace
 
