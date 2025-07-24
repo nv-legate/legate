@@ -615,8 +615,16 @@ if(APPLE)
   target_compile_definitions(legate PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
 endif()
 
+# RealmRuntime may or may not be an ALIAS target depending on whether the version used by
+# Legion is the one before or after Realm split off from Legion.
+set(REALM_TARGET RealmRuntime)
+get_target_property(aliased_target "${REALM_TARGET}" ALIASED_TARGET)
+if(aliased_target)
+  set(REALM_TARGET "${aliased_target}")
+endif()
+
 # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
-foreach(target legate LegionRuntime RealmRuntime)
+foreach(target legate LegionRuntime ${REALM_TARGET})
   target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
   if(Legion_USE_CUDA)
     # CCCL 2.7.0 (which is what we use) disables __half support if it detects that it
