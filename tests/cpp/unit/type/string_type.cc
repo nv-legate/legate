@@ -23,7 +23,9 @@ TEST_F(StringTypeUnit, StringType)
   const legate::Type type = legate::string_type();
 
   ASSERT_EQ(type.code(), legate::Type::Code::STRING);
-  ASSERT_THROW(static_cast<void>(type.size()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(type.size()); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Size of a variable size type is undefined")));
   ASSERT_EQ(type.alignment(), alignof(std::max_align_t));
   ASSERT_TRUE(type.variable_size());
   ASSERT_FALSE(type.is_primitive());

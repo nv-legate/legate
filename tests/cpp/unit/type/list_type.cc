@@ -51,7 +51,9 @@ TEST_P(ListTypeTest, Basic)
   const auto type                      = legate::list_type(element_type);
 
   ASSERT_EQ(type.code(), legate::Type::Code::LIST);
-  ASSERT_THROW((void)type.size(), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(type.size()); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Size of a variable size type is undefined")));
   ASSERT_EQ(type.alignment(), 0);
   ASSERT_TRUE(type.variable_size());
   ASSERT_FALSE(type.is_primitive());
@@ -67,18 +69,36 @@ TEST_P(ListTypeTest, Basic)
   ASSERT_EQ(list_type.element_type(), element_type);
 }
 
+TEST_F(ListTypeUnit, Equal)
+{
+  auto type = legate::list_type(legate::int16());
+
+  ASSERT_TRUE(type == type);
+}
+
+TEST_F(ListTypeUnit, NotEqual)
+{
+  auto type1 = legate::list_type(legate::int16());
+  auto type2 = legate::list_type(legate::int32());
+
+  ASSERT_FALSE(type1 == type2);
+}
+
 TEST_F(ListTypeUnit, ListTypeBadType)
 {
-  // variable size types
-  ASSERT_THROW(static_cast<void>(legate::list_type(legate::string_type())), std::runtime_error);
-  ASSERT_THROW(static_cast<void>(legate::list_type(legate::list_type(legate::uint32()))),
-               std::runtime_error);
+  ASSERT_THAT([&]() { static_cast<void>(legate::list_type(legate::string_type())); },
+              testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("Nested variable size types are not implemented yet")));
+  ASSERT_THAT([&]() { static_cast<void>(legate::list_type(legate::list_type(legate::uint32()))); },
+              testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("Nested variable size types are not implemented yet")));
 }
 
 TEST_F(ListTypeUnit, ListTypeBadCast)
 {
-  // invalid casts
-  ASSERT_THROW(static_cast<void>(legate::string_type().as_struct_type()), std::invalid_argument);
+  ASSERT_THAT(
+    [&]() { static_cast<void>(legate::string_type().as_list_type()); },
+    testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("Type is not a list type")));
 }
 
 }  // namespace list_type_test

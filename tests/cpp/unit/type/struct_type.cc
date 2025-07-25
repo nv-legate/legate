@@ -128,21 +128,47 @@ TEST_P(StructTypeTest, Basic)
   test_struct_type(type, align, total_size, alignment, to_string, field_types);
 }
 
-TEST_F(StructTypeUnit, StructTypeBadType)
+TEST_F(StructTypeUnit, Equal)
 {
-  // field type has variable size
-  ASSERT_THROW(static_cast<void>(legate::struct_type(true, legate::string_type(), legate::int16())),
-               std::runtime_error);
-  ASSERT_THROW(static_cast<void>(legate::struct_type(false, legate::string_type())),
-               std::runtime_error);
-  ASSERT_THROW(static_cast<void>(legate::struct_type(true)), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(legate::struct_type(false)), std::invalid_argument);
+  auto type = legate::struct_type(true, legate::int16(), legate::bool_(), legate::float64());
+
+  ASSERT_TRUE(type == type);
+}
+
+TEST_F(StructTypeUnit, NotEqual)
+{
+  auto type1 = legate::struct_type(true, legate::int16());
+  auto type2 = legate::int16();
+
+  ASSERT_FALSE(type1 == type2);
+}
+
+TEST_F(StructTypeUnit, StructTypeBadFields)
+{
+  ASSERT_THAT(
+    [&]() { static_cast<void>(legate::struct_type(true, legate::string_type(), legate::int16())); },
+    testing::ThrowsMessage<std::runtime_error>(
+      ::testing::HasSubstr("Struct types can't have a variable size field")));
+  ASSERT_THAT([&]() { static_cast<void>(legate::struct_type(false, legate::string_type())); },
+              testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("Struct types can't have a variable size field")));
+}
+
+TEST_F(StructTypeUnit, StructTypeEmptyFields)
+{
+  ASSERT_THAT([&]() { static_cast<void>(legate::struct_type(true)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Struct types must have at least one field")));
+  ASSERT_THAT([&]() { static_cast<void>(legate::struct_type(false)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Struct types must have at least one field")));
 }
 
 TEST_F(StructTypeUnit, StructTypeBadCast)
 {
-  // invalid casts
-  ASSERT_THROW(static_cast<void>(legate::uint32().as_struct_type()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(legate::uint32().as_struct_type()); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Type is not a struct type")));
 }
 
 TEST_P(RectTypeTest, Basic)
@@ -156,6 +182,8 @@ TEST_P(RectTypeTest, Basic)
 
   test_struct_type(type, true, full_size, sizeof(std::uint64_t), to_string, field_types);
   ASSERT_TRUE(legate::is_rect_type(type, dim));
+  ASSERT_TRUE(legate::is_rect_type(type));
+  ASSERT_EQ(legate::ndim_rect_type(type), dim);
 }
 
 TEST_P(RectTypeDimMismatchTest, Basic)
@@ -165,14 +193,22 @@ TEST_P(RectTypeDimMismatchTest, Basic)
 
 TEST_P(RectTypeMismatchTest, Basic)
 {
-  const auto [type, size] = GetParam();
+  const auto& param = GetParam();
+  const auto type   = std::get<0>(param);
+  const auto size   = std::get<1>(param);
 
   ASSERT_FALSE(legate::is_rect_type(type, size));
+  ASSERT_FALSE(legate::is_rect_type(type));
+  ASSERT_THAT([&]() { static_cast<void>(legate::ndim_rect_type(type)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Expected a rect type but got")));
 }
 
 TEST_P(RectTypeNegativeDimTest, RectType)
 {
-  ASSERT_THROW(static_cast<void>(legate::rect_type(GetParam())), std::out_of_range);
+  ASSERT_THAT([&]() { static_cast<void>(legate::rect_type(GetParam())); },
+              testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("is not a supported number of dimensions")));
 }
 
 }  // namespace struct_type_test

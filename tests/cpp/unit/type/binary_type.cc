@@ -50,7 +50,9 @@ TEST_F(BinaryTypeUnit, BinaryTypeBad)
 {
   constexpr auto BINARY_TYPE_OVER_SIZE = 0xFFFFF + 1;
 
-  ASSERT_THROW(static_cast<void>(legate::binary_type(BINARY_TYPE_OVER_SIZE)), std::out_of_range);
+  ASSERT_THAT([&]() { static_cast<void>(legate::binary_type(BINARY_TYPE_OVER_SIZE)); },
+              testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("Maximum size for opaque binary types is")));
 }
 
 }  // namespace binary_type_test

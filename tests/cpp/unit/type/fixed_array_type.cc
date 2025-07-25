@@ -102,14 +102,33 @@ TEST_F(FixedArrayTypeUnit, FixedArrayTypeBadType)
 {
   // element type has variable size
   static constexpr auto N = 10;
-  ASSERT_THROW(static_cast<void>(legate::fixed_array_type(legate::string_type(), N)),
-               std::invalid_argument);
+
+  ASSERT_THAT([&]() { static_cast<void>(legate::fixed_array_type(legate::string_type(), N)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Size of a variable size type is undefined")));
 }
 
 TEST_F(FixedArrayTypeUnit, FixedArrayTypeBadCast)
 {
-  // invalid casts
-  ASSERT_THROW(static_cast<void>(legate::uint32().as_fixed_array_type()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(legate::uint32().as_fixed_array_type()); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Type is not a fixed array type")));
+}
+
+TEST_F(FixedArrayTypeUnit, Equal)
+{
+  auto type1 = legate::fixed_array_type(legate::uint32(), 1);
+  auto type2 = legate::fixed_array_type(legate::uint32(), 1);
+
+  ASSERT_TRUE(type1 == type2);
+}
+
+TEST_F(FixedArrayTypeUnit, NotEqual)
+{
+  auto type1 = legate::uint16();
+  auto type2 = legate::fixed_array_type(legate::uint32(), 1);
+
+  ASSERT_FALSE(type2 == type1);
 }
 
 TEST_P(PointTypeTest, Basic)
@@ -118,14 +137,18 @@ TEST_P(PointTypeTest, Basic)
   auto type      = legate::point_type(dim);
 
   test_fixed_array_type(type, legate::int64(), dim, fmt::format("int64[{}]", dim));
+  ASSERT_TRUE(legate::is_point_type(type));
   ASSERT_TRUE(legate::is_point_type(type, dim));
+  ASSERT_EQ(legate::ndim_point_type(type), dim);
 }
 
 TEST_F(FixedArrayTypeUnit, PointTypeSpecific)
 {
   // Note: There are several cases in the runtime where 64-bit integers need to be interpreted as 1D
   // points, so we need a more lenient type checking in those cases.
+  ASSERT_TRUE(legate::is_point_type(legate::int64()));
   ASSERT_TRUE(legate::is_point_type(legate::int64(), 1));
+  ASSERT_EQ(legate::ndim_point_type(legate::int64()), 1);
 }
 
 TEST_P(PointTypeDimMismatchTest, Basic)
@@ -135,14 +158,22 @@ TEST_P(PointTypeDimMismatchTest, Basic)
 
 TEST_P(PointTypeMismatchTest, Basic)
 {
-  const auto [type, size] = GetParam();
+  const auto& param = GetParam();
+  const auto type   = std::get<0>(param);
+  const auto size   = std::get<1>(param);
 
+  ASSERT_FALSE(legate::is_point_type(type));
   ASSERT_FALSE(legate::is_point_type(type, size));
+  ASSERT_THAT([&]() { static_cast<void>(legate::ndim_point_type(type)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Expected a point type but got")));
 }
 
 TEST_P(PointTypeNegativeDimTest, PointType)
 {
-  ASSERT_THROW(static_cast<void>(legate::point_type(GetParam())), std::out_of_range);
+  ASSERT_THAT([&]() { static_cast<void>(legate::point_type(GetParam())); },
+              testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("is not a supported number of dimensions")));
 }
 
 }  // namespace fixed_array_type_test

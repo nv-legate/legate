@@ -146,7 +146,23 @@ TEST_P(PrimitiveTypeTest, Basic)
 
 TEST_P(NegativeTypeTest, PrimitiveType)
 {
-  ASSERT_THROW(static_cast<void>(legate::primitive_type(GetParam())), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(legate::primitive_type(GetParam())); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Cannot statically determine size of non-integral type")));
+}
+
+TEST_F(PrimitiveTypeUnit, InvalidTypeCode)
+{
+  constexpr std::uint32_t INVALID_TYPE_CODE = 100;
+
+  ASSERT_THAT(
+    [&]() {
+      // Note: aim to test the invalid type code
+      // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange)
+      static_cast<void>(legate::primitive_type(static_cast<legate::Type::Code>(INVALID_TYPE_CODE)));
+      // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange)
+    },
+    testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("invalid type code")));
 }
 
 }  // namespace primitive_type_test
