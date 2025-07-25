@@ -255,6 +255,11 @@ set(with_runtime_SRC
     unit/task_signature/nargs.cc
     unit/task_signature/basic.cc
     unit/task_signature/register.cc
+    unit/task_signature/alignment.cc
+    unit/task_signature/bloat.cc
+    unit/task_signature/broadcast.cc
+    unit/task_signature/image.cc
+    unit/task_signature/scale.cc
     unit/task_config/basic.cc
     unit/dlpack/from_dlpack/versioned.cc
     unit/dlpack/from_dlpack/unversioned.cc
