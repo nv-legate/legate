@@ -9,11 +9,11 @@
 #include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/physical_array.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 namespace legate::detail {
 
@@ -31,7 +31,7 @@ class PhysicalArray {
   [[nodiscard]] virtual const InternalSharedPtr<PhysicalStore>& data() const;
   [[nodiscard]] virtual const InternalSharedPtr<PhysicalStore>& null_mask() const           = 0;
   [[nodiscard]] virtual InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const   = 0;
-  virtual void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const = 0;
+  virtual void populate_stores(SmallVector<InternalSharedPtr<PhysicalStore>>& result) const = 0;
 
   [[nodiscard]] virtual Domain domain() const                = 0;
   virtual void check_shape_dimension(std::int32_t dim) const = 0;
@@ -53,7 +53,7 @@ class BasePhysicalArray final : public PhysicalArray {
   [[nodiscard]] const InternalSharedPtr<PhysicalStore>& data() const override;
   [[nodiscard]] const InternalSharedPtr<PhysicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const override;
-  void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
+  void populate_stores(SmallVector<InternalSharedPtr<PhysicalStore>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(std::int32_t dim) const override;
@@ -79,7 +79,7 @@ class ListPhysicalArray final : public PhysicalArray {
 
   [[nodiscard]] const InternalSharedPtr<PhysicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const override;
-  void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
+  void populate_stores(SmallVector<InternalSharedPtr<PhysicalStore>>& result) const override;
   [[nodiscard]] const InternalSharedPtr<BasePhysicalArray>& descriptor() const;
   [[nodiscard]] const InternalSharedPtr<PhysicalArray>& vardata() const;
 
@@ -96,7 +96,7 @@ class StructPhysicalArray final : public PhysicalArray {
  public:
   StructPhysicalArray(InternalSharedPtr<Type> type,
                       std::optional<InternalSharedPtr<PhysicalStore>> null_mask,
-                      std::vector<InternalSharedPtr<PhysicalArray>>&& fields);
+                      SmallVector<InternalSharedPtr<PhysicalArray>>&& fields);
 
   [[nodiscard]] std::int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
@@ -108,7 +108,7 @@ class StructPhysicalArray final : public PhysicalArray {
 
   [[nodiscard]] const InternalSharedPtr<PhysicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const override;
-  void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
+  void populate_stores(SmallVector<InternalSharedPtr<PhysicalStore>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(std::int32_t dim) const override;
@@ -116,7 +116,7 @@ class StructPhysicalArray final : public PhysicalArray {
  private:
   InternalSharedPtr<Type> type_{};
   std::optional<InternalSharedPtr<PhysicalStore>> null_mask_{};
-  std::vector<InternalSharedPtr<PhysicalArray>> fields_{};
+  SmallVector<InternalSharedPtr<PhysicalArray>> fields_{};
 };
 
 }  // namespace legate::detail

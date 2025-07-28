@@ -699,7 +699,7 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array_(
   bool nullable,
   bool optimize_scalar)
 {
-  std::vector<InternalSharedPtr<LogicalArray>> fields;
+  SmallVector<InternalSharedPtr<LogicalArray>> fields;
   const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
   auto null_mask =
     nullable ? std::make_optional(create_store(shape, bool_(), optimize_scalar)) : std::nullopt;

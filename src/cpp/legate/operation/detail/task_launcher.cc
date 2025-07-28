@@ -17,6 +17,7 @@
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/small_vector.h>
 
 #include <cstdint>
 #include <optional>
@@ -293,7 +294,7 @@ void TaskLauncher::import_output_regions_(
 void TaskLauncher::post_process_unbound_stores_(
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  std::vector<const OutputRegionArg*> unbound_stores;
+  SmallVector<const OutputRegionArg*> unbound_stores;
 
   for (auto&& output : outputs_) {
     std::visit([&](auto&& opt) { opt.record_unbound_stores(unbound_stores); }, output);
@@ -365,7 +366,7 @@ void TaskLauncher::post_process_unbound_stores_(
   const Legion::Domain& launch_domain,
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  std::vector<const OutputRegionArg*> unbound_stores;
+  SmallVector<const OutputRegionArg*> unbound_stores;
 
   for (auto&& arg : outputs_) {
     std::visit([&](auto&& opt) { opt.record_unbound_stores(unbound_stores); }, arg);

@@ -19,7 +19,7 @@
 
 namespace legate::detail {
 
-void Variable::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+void Variable::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(this);
 }
@@ -31,7 +31,7 @@ std::string Variable::to_string() const
 
 const InternalSharedPtr<LogicalStore>& Variable::store() const { return op_->find_store(this); }
 
-void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+void Alignment::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
 {
   partition_symbols.reserve(partition_symbols.size() + 2);
   partition_symbols.push_back(lhs_);
@@ -63,7 +63,7 @@ void Alignment::validate() const
 
 std::string Alignment::to_string() const { return fmt::format("Align({}, {})", *lhs(), *rhs()); }
 
-void Broadcast::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+void Broadcast::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(variable_);
 }
@@ -90,7 +90,7 @@ std::string Broadcast::to_string() const
   return fmt::format("Broadcast({}, {})", *variable(), axes());
 }
 
-void ImageConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+void ImageConstraint::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(var_function_);
   partition_symbols.push_back(var_range_);
@@ -129,7 +129,7 @@ InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& st
   return create_no_partition();
 }
 
-void ScaleConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+void ScaleConstraint::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(var_smaller_);
   partition_symbols.push_back(var_bigger_);
@@ -162,7 +162,7 @@ InternalSharedPtr<Partition> ScaleConstraint::resolve(const detail::Strategy& st
   return strategy[*var_smaller()]->scale(factors_);
 }
 
-void BloatConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+void BloatConstraint::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(var_source_);
   partition_symbols.push_back(var_bloat_);

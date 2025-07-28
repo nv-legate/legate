@@ -82,7 +82,7 @@ inline Domain ListPhysicalArray::domain() const { return descriptor()->domain();
 inline StructPhysicalArray::StructPhysicalArray(
   InternalSharedPtr<Type> type,
   std::optional<InternalSharedPtr<PhysicalStore>> null_mask,
-  std::vector<InternalSharedPtr<PhysicalArray>>&& fields)
+  SmallVector<InternalSharedPtr<PhysicalArray>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
 }

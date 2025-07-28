@@ -10,9 +10,7 @@
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/utilities/detail/core_ids.h>
-
-#include <memory>
-#include <vector>
+#include <legate/utilities/detail/small_vector.h>
 
 namespace legate {
 class Scalar;
@@ -67,7 +65,7 @@ class CopyLauncher {
   void add_target_indirect(const InternalSharedPtr<LogicalStore>& store,
                            StoreProjection store_proj);
 
-  void add_store(std::vector<CopyArg>& args,
+  void add_store(SmallVector<CopyArg>& args,
                  const InternalSharedPtr<LogicalStore>& store,
                  StoreProjection store_proj,
                  Legion::PrivilegeMode privilege);
@@ -90,10 +88,10 @@ class CopyLauncher {
   std::int64_t tag_{};
   Legion::ProjectionID key_proj_id_{};
 
-  std::vector<CopyArg> inputs_{};
-  std::vector<CopyArg> outputs_{};
-  std::vector<CopyArg> source_indirect_{};
-  std::vector<CopyArg> target_indirect_{};
+  SmallVector<CopyArg> inputs_{};
+  SmallVector<CopyArg> outputs_{};
+  SmallVector<CopyArg> source_indirect_{};
+  SmallVector<CopyArg> target_indirect_{};
 
   bool source_indirect_out_of_range_{true};
   bool target_indirect_out_of_range_{true};

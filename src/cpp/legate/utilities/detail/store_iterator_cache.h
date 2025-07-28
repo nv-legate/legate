@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <vector>
+#include <legate/utilities/detail/small_vector.h>
 
 namespace legate::detail {
 
 template <typename T>
 class StoreIteratorCache {
  public:
-  using container_type = std::vector<T>;
+  using container_type = SmallVector<T>;
 
   template <typename U>
   [[nodiscard]] container_type& operator()(const U& array);

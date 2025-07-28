@@ -12,27 +12,27 @@
 
 namespace legate::detail {
 
-inline const std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::inputs() const noexcept
+inline Span<const InternalSharedPtr<PhysicalArray>> TaskContext::inputs() const noexcept
 {
   return inputs_;
 }
 
-inline const std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::outputs() const noexcept
+inline Span<const InternalSharedPtr<PhysicalArray>> TaskContext::outputs() const noexcept
 {
   return outputs_;
 }
 
-inline const std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::reductions() const noexcept
+inline Span<const InternalSharedPtr<PhysicalArray>> TaskContext::reductions() const noexcept
 {
   return reductions_;
 }
 
-inline const std::vector<InternalSharedPtr<Scalar>>& TaskContext::scalars() const noexcept
+inline Span<const InternalSharedPtr<Scalar>> TaskContext::scalars() const noexcept
 {
   return scalars_;
 }
 
-inline const std::vector<legate::comm::Communicator>& TaskContext::communicators() const noexcept
+inline Span<const legate::comm::Communicator> TaskContext::communicators() const noexcept
 {
   return comms_;
 }
@@ -52,14 +52,13 @@ inline std::optional<ReturnedException>& TaskContext::get_exception() noexcept {
 
 // ===========================================================================================
 
-inline const std::vector<InternalSharedPtr<PhysicalStore>>& TaskContext::get_unbound_stores_()
+inline Span<const InternalSharedPtr<PhysicalStore>> TaskContext::get_unbound_stores_()
   const noexcept
 {
   return unbound_stores_;
 }
 
-inline const std::vector<InternalSharedPtr<PhysicalStore>>& TaskContext::get_scalar_stores_()
-  const noexcept
+inline Span<const InternalSharedPtr<PhysicalStore>> TaskContext::get_scalar_stores_() const noexcept
 {
   return scalar_stores_;
 }

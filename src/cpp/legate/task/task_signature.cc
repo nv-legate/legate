@@ -8,9 +8,9 @@
 
 #include <legate/partitioning/proxy.h>
 #include <legate/task/detail/task_signature.h>
+#include <legate/utilities/detail/small_vector.h>
 
 #include <optional>
-#include <vector>
 
 namespace legate {
 
@@ -83,7 +83,7 @@ TaskSignature& TaskSignature::redops(std::uint32_t low_bound, std::uint32_t uppe
 
 TaskSignature& TaskSignature::constraints(std::optional<Span<const ProxyConstraint>> constraints)
 {
-  std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> ret = std::nullopt;
+  std::optional<detail::SmallVector<InternalSharedPtr<detail::ProxyConstraint>>> ret = std::nullopt;
 
   if (constraints.has_value()) {
     auto& vec = ret.emplace();

@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -160,13 +161,31 @@ void SmallVector<T, S>::assign(tags::iterator_tag_t, It begin, It end)
 template <typename T, std::uint32_t S>
 typename SmallVector<T, S>::reference SmallVector<T, S>::at(size_type pos)
 {
-  return std::visit([&](auto&& st) -> reference { return st.at(pos); }, storage_());
+  return std::visit(
+    Overload{[&](small_storage_type& st) -> reference {
+               // Work around CCCL bug https://github.com/NVIDIA/cccl/issues/5294
+               if (pos == st.size()) {
+                 throw std::out_of_range{"inplace_vector::at"};  // legate-lint: no-traced-throw
+               }
+               return st.at(pos);
+             },
+             [&](big_storage_type& st) -> reference { return st.at(pos); }},
+    storage_());
 }
 
 template <typename T, std::uint32_t S>
 typename SmallVector<T, S>::const_reference SmallVector<T, S>::at(size_type pos) const
 {
-  return std::visit([&](auto&& st) -> const_reference { return st.at(pos); }, storage_());
+  return std::visit(
+    Overload{[&](const small_storage_type& st) -> const_reference {
+               // Work around CCCL bug https://github.com/NVIDIA/cccl/issues/5294
+               if (pos == st.size()) {
+                 throw std::out_of_range{"inplace_vector::at"};  // legate-lint: no-traced-throw
+               }
+               return st.at(pos);
+             },
+             [&](const big_storage_type& st) -> const_reference { return st.at(pos); }},
+    storage_());
 }
 
 // ------------------------------------------------------------------------------------------
@@ -194,7 +213,7 @@ typename SmallVector<T, S>::reference
 SmallVector<T, S>::front()  // NOLINT(bugprone-exception-escape)
   noexcept
 {
-  return std::visit([](auto&& st) { return st.front(); }, storage_());
+  return std::visit([](auto&& st) -> reference { return st.front(); }, storage_());
 }
 
 template <typename T, std::uint32_t S>
@@ -202,7 +221,7 @@ typename SmallVector<T, S>::const_reference
 SmallVector<T, S>::front()  // NOLINT(bugprone-exception-escape)
   const noexcept
 {
-  return std::visit([](auto&& st) { return st.front(); }, storage_());
+  return std::visit([](auto&& st) -> const_reference { return st.front(); }, storage_());
 }
 
 // ------------------------------------------------------------------------------------------
@@ -212,7 +231,7 @@ typename SmallVector<T, S>::reference
 SmallVector<T, S>::back()  // NOLINT(bugprone-exception-escape)
   noexcept
 {
-  return std::visit([](auto&& st) { return st.back(); }, storage_());
+  return std::visit([](auto&& st) -> reference { return st.back(); }, storage_());
 }
 
 template <typename T, std::uint32_t S>
@@ -220,7 +239,7 @@ typename SmallVector<T, S>::const_reference
 SmallVector<T, S>::back()  // NOLINT(bugprone-exception-escape)
   const noexcept
 {
-  return std::visit([](auto&& st) { return st.back(); }, storage_());
+  return std::visit([](auto&& st) -> const_reference { return st.back(); }, storage_());
 }
 
 // ------------------------------------------------------------------------------------------

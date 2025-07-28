@@ -76,13 +76,13 @@ Copy::Copy(const Legion::Copy& copy,
   priority_    = dez.unpack<std::int32_t>();
 
   // Copy
-  inputs_ = dez.unpack<std::vector<Store>>();
+  inputs_ = dez.unpack<legate::detail::SmallVector<Store>>();
   dez.next_requirement_list();
-  outputs_ = dez.unpack<std::vector<Store>>();
+  outputs_ = dez.unpack<legate::detail::SmallVector<Store>>();
   dez.next_requirement_list();
-  input_indirections_ = dez.unpack<std::vector<Store>>();
+  input_indirections_ = dez.unpack<legate::detail::SmallVector<Store>>();
   dez.next_requirement_list();
-  output_indirections_ = dez.unpack<std::vector<Store>>();
+  output_indirections_ = dez.unpack<legate::detail::SmallVector<Store>>();
   for (auto&& input : inputs_) {
     LEGATE_ASSERT(!input.is_future());
   }

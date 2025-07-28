@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/partitioning/detail/proxy/constraint.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
 
@@ -16,7 +17,6 @@
 #include <optional>
 #include <string_view>
 #include <variant>
-#include <vector>
 
 namespace legate::detail {
 
@@ -124,7 +124,7 @@ class TaskSignature {
   constexpr void scalars(std::optional<Nargs> n) noexcept;
   constexpr void redops(std::optional<Nargs> n) noexcept;
   void constraints(
-    std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> cstrnts) noexcept;
+    std::optional<SmallVector<InternalSharedPtr<detail::ProxyConstraint>>> cstrnts) noexcept;
 
   [[nodiscard]] constexpr const std::optional<Nargs>& inputs() const noexcept;
   [[nodiscard]] constexpr const std::optional<Nargs>& outputs() const noexcept;
@@ -168,7 +168,7 @@ class TaskSignature {
   std::optional<Nargs> num_outputs_{};
   std::optional<Nargs> num_scalars_{};
   std::optional<Nargs> num_redops_{};
-  std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> constraints_{};
+  std::optional<SmallVector<InternalSharedPtr<detail::ProxyConstraint>>> constraints_{};
 };
 
 }  // namespace legate::detail

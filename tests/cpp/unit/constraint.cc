@@ -8,6 +8,8 @@
 
 #include <legate.h>
 
+#include <legate/utilities/detail/small_vector.h>
+
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -56,7 +58,7 @@ TEST_F(Constraint, Variable)
   auto part2_imp = part2.impl();
 
   // Test find_partition_symbols
-  std::vector<const legate::detail::Variable*> symbols = {};
+  legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
   part_imp->find_partition_symbols(symbols);
   part1_imp->find_partition_symbols(symbols);
   part2_imp->find_partition_symbols(symbols);
@@ -87,7 +89,7 @@ TEST_F(Constraint, Alignment)
   ASSERT_FALSE(alignment->is_trivial());
 
   // Test find_partition_symbols
-  std::vector<const legate::detail::Variable*> symbols = {};
+  legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
   alignment->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 2);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part1.impl()) != symbols.end());
@@ -113,7 +115,7 @@ TEST_F(Constraint, Broadcast)
   ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(broadcast.get()), nullptr);
 
   // Test find_partition_symbols
-  std::vector<const legate::detail::Variable*> symbols = {};
+  legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
   broadcast->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 1);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part1.impl()) != symbols.end());
@@ -140,7 +142,7 @@ TEST_F(Constraint, ImageConstraint)
   ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(image_constraint.get()), nullptr);
 
   // Test find_partition_symbols
-  std::vector<const legate::detail::Variable*> symbols = {};
+  legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
   image_constraint->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 2);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part_func.impl()) != symbols.end());
@@ -169,7 +171,7 @@ TEST_F(Constraint, ScaleConstraint)
   ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(scale_constraint.get()), nullptr);
 
   // Test find_partition_symbols
-  std::vector<const legate::detail::Variable*> symbols = {};
+  legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
   scale_constraint->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 2);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part_smaller.impl()) != symbols.end());
@@ -200,7 +202,7 @@ TEST_F(Constraint, BloatConstraint)
             bloat_constraint.get());
 
   // Test find_partition_symbols
-  std::vector<const legate::detail::Variable*> symbols = {};
+  legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
   bloat_constraint->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 2);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part_source.impl()) != symbols.end());

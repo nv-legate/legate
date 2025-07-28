@@ -35,20 +35,20 @@ inline const Library& Task::library() const { return library_; }
 
 inline LocalTaskID Task::local_task_id() const { return task_id_; }
 
-inline const std::vector<InternalSharedPtr<Scalar>>& Task::scalars() const { return scalars_; }
+inline Span<const InternalSharedPtr<Scalar>> Task::scalars() const { return scalars_; }
 
-inline const std::vector<TaskArrayArg>& Task::inputs() const { return inputs_; }
+inline Span<const TaskArrayArg> Task::inputs() const { return inputs_; }
 
-inline const std::vector<TaskArrayArg>& Task::outputs() const { return outputs_; }
+inline Span<const TaskArrayArg> Task::outputs() const { return outputs_; }
 
-inline const std::vector<TaskArrayArg>& Task::reductions() const { return reductions_; }
+inline Span<const TaskArrayArg> Task::reductions() const { return reductions_; }
 
-inline const std::vector<InternalSharedPtr<LogicalStore>>& Task::scalar_outputs() const
+inline Span<const InternalSharedPtr<LogicalStore>> Task::scalar_outputs() const
 {
   return scalar_outputs_;
 }
 
-inline const std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>&
+inline Span<const std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>
 Task::scalar_reductions() const
 {
   return scalar_reductions_;

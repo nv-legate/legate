@@ -35,7 +35,7 @@ cdef extern from "legate/task/task_context.h" namespace "legate" nogil:
         size_t num_inputs() except+
         size_t num_outputs() except+
         size_t num_reductions() except+
-        const std_vector[_Scalar]& scalars() except+
+        std_vector[_Scalar] scalars() except+
         size_t num_scalars() except+
         bool can_raise_exception() except+
         bool is_single_task() except+

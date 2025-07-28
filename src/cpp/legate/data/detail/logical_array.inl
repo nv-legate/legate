@@ -98,7 +98,7 @@ inline const InternalSharedPtr<LogicalStore>& ListLogicalArray::primary_store() 
 inline StructLogicalArray::StructLogicalArray(
   InternalSharedPtr<Type> type,
   std::optional<InternalSharedPtr<LogicalStore>> null_mask,
-  std::vector<InternalSharedPtr<LogicalArray>>&& fields)
+  SmallVector<InternalSharedPtr<LogicalArray>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
 }
@@ -116,7 +116,7 @@ inline std::uint32_t StructLogicalArray::num_children() const
   return static_cast<std::uint32_t>(fields_.size());
 }
 
-inline const std::vector<InternalSharedPtr<LogicalArray>>& StructLogicalArray::fields() const
+inline Span<const InternalSharedPtr<LogicalArray>> StructLogicalArray::fields() const
 {
   return fields_;
 }

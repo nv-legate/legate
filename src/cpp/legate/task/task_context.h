@@ -128,7 +128,7 @@ class TaskContext {
    *
    * @return Vector of communicators
    */
-  [[nodiscard]] const std::vector<comm::Communicator>& communicators() const;
+  [[nodiscard]] std::vector<comm::Communicator> communicators() const;
 
   /**
    * @brief Returns the number of task's inputs

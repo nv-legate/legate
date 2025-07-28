@@ -12,11 +12,12 @@
 #include <legate/data/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/task/detail/returned_exception.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 
 #include <optional>
 #include <string_view>
-#include <vector>
 
 namespace legate::detail {
 
@@ -26,20 +27,20 @@ class TaskContext {
     VariantCode variant_kind{};
     bool can_raise_exception{};
     bool can_elide_device_ctx_sync{};
-    std::vector<InternalSharedPtr<PhysicalArray>> inputs{};
-    std::vector<InternalSharedPtr<PhysicalArray>> outputs{};
-    std::vector<InternalSharedPtr<PhysicalArray>> reductions{};
-    std::vector<InternalSharedPtr<Scalar>> scalars{};
-    std::vector<legate::comm::Communicator> comms{};
+    SmallVector<InternalSharedPtr<PhysicalArray>> inputs{};
+    SmallVector<InternalSharedPtr<PhysicalArray>> outputs{};
+    SmallVector<InternalSharedPtr<PhysicalArray>> reductions{};
+    SmallVector<InternalSharedPtr<Scalar>> scalars{};
+    SmallVector<legate::comm::Communicator> comms{};
   };
 
   explicit TaskContext(CtorArgs&& args);
 
-  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalArray>>& inputs() const noexcept;
-  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalArray>>& outputs() const noexcept;
-  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalArray>>& reductions() const noexcept;
-  [[nodiscard]] const std::vector<InternalSharedPtr<Scalar>>& scalars() const noexcept;
-  [[nodiscard]] const std::vector<legate::comm::Communicator>& communicators() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalArray>> inputs() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalArray>> outputs() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalArray>> reductions() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<Scalar>> scalars() const noexcept;
+  [[nodiscard]] Span<const legate::comm::Communicator> communicators() const noexcept;
 
   [[nodiscard]] virtual GlobalTaskID task_id() const noexcept                    = 0;
   [[nodiscard]] virtual bool is_single_task() const noexcept                     = 0;
@@ -64,20 +65,18 @@ class TaskContext {
   void concurrent_task_barrier();
 
  protected:
-  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalStore>>& get_unbound_stores_()
-    const noexcept;
-  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalStore>>& get_scalar_stores_()
-    const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> get_unbound_stores_() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> get_scalar_stores_() const noexcept;
 
  private:
   VariantCode variant_kind_{};
-  std::vector<InternalSharedPtr<PhysicalArray>> inputs_{};
-  std::vector<InternalSharedPtr<PhysicalArray>> outputs_{};
-  std::vector<InternalSharedPtr<PhysicalArray>> reductions_{};
-  std::vector<InternalSharedPtr<PhysicalStore>> unbound_stores_{};
-  std::vector<InternalSharedPtr<PhysicalStore>> scalar_stores_{};
-  std::vector<InternalSharedPtr<Scalar>> scalars_{};
-  std::vector<legate::comm::Communicator> comms_{};
+  SmallVector<InternalSharedPtr<PhysicalArray>> inputs_{};
+  SmallVector<InternalSharedPtr<PhysicalArray>> outputs_{};
+  SmallVector<InternalSharedPtr<PhysicalArray>> reductions_{};
+  SmallVector<InternalSharedPtr<PhysicalStore>> unbound_stores_{};
+  SmallVector<InternalSharedPtr<PhysicalStore>> scalar_stores_{};
+  SmallVector<InternalSharedPtr<Scalar>> scalars_{};
+  SmallVector<legate::comm::Communicator> comms_{};
   bool can_raise_exception_{};
   bool can_elide_device_ctx_sync_{};
   std::optional<ReturnedException> excn_{std::nullopt};

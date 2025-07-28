@@ -376,10 +376,10 @@ std::size_t Task::calculate_future_size_() const
   // following way: each output or reduction scalar store embeds a buffer to hold the update; each
   // unbound store gets a buffer that holds the number of elements, which will later be retrieved to
   // keep track of the store's key partition (of the legate::detail::Weighted type).
-  auto&& all_array_args = {std::cref(inputs()), std::cref(outputs()), std::cref(reductions())};
-  auto layout           = TaskReturnLayoutForUnpack{};
-  for (auto&& array_args : all_array_args) {
-    for (auto&& [arr, mapping, projection] : array_args.get()) {
+  auto layout = TaskReturnLayoutForUnpack{};
+
+  for (auto&& array_args : {inputs(), outputs(), reductions()}) {
+    for (auto&& [arr, mapping, projection] : array_args) {
       arr->calculate_pack_size(&layout);
     }
   }
@@ -685,7 +685,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
   reduction_ops_.push_back(legion_redop_id);
 }
 
-void ManualTask::add_store_(std::vector<TaskArrayArg>& store_args,
+void ManualTask::add_store_(SmallVector<TaskArrayArg>& store_args,
                             const InternalSharedPtr<LogicalStore>& store,
                             InternalSharedPtr<Partition> partition,
                             std::optional<SymbolicPoint> projection)

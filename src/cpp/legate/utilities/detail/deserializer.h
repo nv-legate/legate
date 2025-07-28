@@ -45,16 +45,13 @@ class BaseDeserializer {
   template <typename T, std::enable_if_t<type_code_of_v<T> != Type::Code::NIL>* = nullptr>
   void unpack_impl(T& value);
 
-  template <typename T>
-  void unpack_impl(std::vector<T>& values);
-
   template <typename T, std::uint32_t SIZE>
   void unpack_impl(SmallVector<T, SIZE>& values);
 
   template <typename T1, typename T2>
   void unpack_impl(std::pair<T1, T2>& values);
 
-  [[nodiscard]] std::vector<InternalSharedPtr<detail::Scalar>> unpack_scalars();
+  [[nodiscard]] SmallVector<InternalSharedPtr<detail::Scalar>> unpack_scalars();
   [[nodiscard]] InternalSharedPtr<detail::Scalar> unpack_scalar();
   void unpack_impl(mapping::TaskTarget& value);
   void unpack_impl(mapping::ProcessorRange& value);
@@ -76,7 +73,7 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
 
   using BaseDeserializer::unpack_impl;
 
-  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>> unpack_arrays();
+  [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalArray>> unpack_arrays();
   [[nodiscard]] InternalSharedPtr<PhysicalArray> unpack_array();
   [[nodiscard]] InternalSharedPtr<BasePhysicalArray> unpack_base_array();
   [[nodiscard]] InternalSharedPtr<ListPhysicalArray> unpack_list_array();
@@ -115,7 +112,7 @@ class TaskDeserializer : public legate::detail::BaseDeserializer<TaskDeserialize
 
   using BaseDeserializer::unpack_impl;
 
-  [[nodiscard]] std::vector<InternalSharedPtr<Array>> unpack_arrays();
+  [[nodiscard]] legate::detail::SmallVector<InternalSharedPtr<Array>> unpack_arrays();
   [[nodiscard]] InternalSharedPtr<Array> unpack_array();
   [[nodiscard]] InternalSharedPtr<BaseArray> unpack_base_array();
   [[nodiscard]] InternalSharedPtr<ListArray> unpack_list_array();

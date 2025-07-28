@@ -13,6 +13,7 @@
 #include <legate/mapping/mapping.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/deserializer.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstddef>
@@ -56,10 +57,10 @@ class Task : public Mappable {
   [[nodiscard]] legate::detail::Library& library();
   [[nodiscard]] const legate::detail::Library& library() const;
 
-  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& inputs() const;
-  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& outputs() const;
-  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& reductions() const;
-  [[nodiscard]] const std::vector<InternalSharedPtr<legate::detail::Scalar>>& scalars() const;
+  [[nodiscard]] Span<const InternalSharedPtr<Array>> inputs() const;
+  [[nodiscard]] Span<const InternalSharedPtr<Array>> outputs() const;
+  [[nodiscard]] Span<const InternalSharedPtr<Array>> reductions() const;
+  [[nodiscard]] Span<const InternalSharedPtr<legate::detail::Scalar>> scalars() const;
 
   [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] const DomainPoint& point() const;
@@ -87,10 +88,10 @@ class Task : public Mappable {
   // Doesn't work. But it is for all intents and purposes a reference wrapper.
   legate::detail::Library* library_{};
 
-  std::vector<InternalSharedPtr<Array>> inputs_{};
-  std::vector<InternalSharedPtr<Array>> outputs_{};
-  std::vector<InternalSharedPtr<Array>> reductions_{};
-  std::vector<InternalSharedPtr<legate::detail::Scalar>> scalars_{};
+  legate::detail::SmallVector<InternalSharedPtr<Array>> inputs_{};
+  legate::detail::SmallVector<InternalSharedPtr<Array>> outputs_{};
+  legate::detail::SmallVector<InternalSharedPtr<Array>> reductions_{};
+  legate::detail::SmallVector<InternalSharedPtr<legate::detail::Scalar>> scalars_{};
   std::size_t future_size_{};
   bool can_raise_exception_{};
 };
@@ -101,20 +102,20 @@ class Copy : public Mappable {
        Legion::Mapping::MapperRuntime& runtime,
        Legion::Mapping::MapperContext context);
 
-  [[nodiscard]] const std::vector<Store>& inputs() const;
-  [[nodiscard]] const std::vector<Store>& outputs() const;
-  [[nodiscard]] const std::vector<Store>& input_indirections() const;
-  [[nodiscard]] const std::vector<Store>& output_indirections() const;
+  [[nodiscard]] Span<const Store> inputs() const;
+  [[nodiscard]] Span<const Store> outputs() const;
+  [[nodiscard]] Span<const Store> input_indirections() const;
+  [[nodiscard]] Span<const Store> output_indirections() const;
 
   [[nodiscard]] const DomainPoint& point() const;
 
  private:
   std::reference_wrapper<const Legion::Copy> copy_;
 
-  std::vector<Store> inputs_{};
-  std::vector<Store> outputs_{};
-  std::vector<Store> input_indirections_{};
-  std::vector<Store> output_indirections_{};
+  legate::detail::SmallVector<Store> inputs_{};
+  legate::detail::SmallVector<Store> outputs_{};
+  legate::detail::SmallVector<Store> input_indirections_{};
+  legate::detail::SmallVector<Store> output_indirections_{};
 };
 
 }  // namespace legate::mapping::detail

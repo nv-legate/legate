@@ -201,7 +201,7 @@ ArrayAnalyzable BaseLogicalArray::to_launcher_arg_for_fixup(const Domain& launch
   return BaseArrayArg{store_to_launcher_arg_for_fixup(data(), launch_domain, privilege)};
 }
 
-void BaseLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
+void BaseLogicalArray::collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const
 {
   trackers.emplace_back(data());
   if (nullable()) {
@@ -347,7 +347,7 @@ ArrayAnalyzable ListLogicalArray::to_launcher_arg_for_fixup(const Domain& launch
   return ListArrayArg{type(), std::move(descriptor_arg), std::move(vardata_arg)};
 }
 
-void ListLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
+void ListLogicalArray::collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const
 {
   descriptor_->collect_storage_trackers(trackers);
   vardata_->collect_storage_trackers(trackers);
@@ -377,10 +377,10 @@ bool StructLogicalArray::unbound() const
 
 namespace {
 
-// provide a generic template in case the return type of the vector is different from
-// fields/needs to be manually specified
+// Some API still take std::vector, so provide a copy of `make_array_from_op()` that produces
+// `std::vector`s.
 template <typename U, typename T, typename F>
-std::vector<U> make_array_from_op(const std::vector<T>& fields, F&& generator_fn)
+std::vector<U> make_vector_from_op(Span<const T> fields, F&& generator_fn)
 {
   std::vector<U> result;
 
@@ -390,9 +390,22 @@ std::vector<U> make_array_from_op(const std::vector<T>& fields, F&& generator_fn
   return result;
 }
 
+// provide a generic template in case the return type of the vector is different from
+// fields/needs to be manually specified
+template <typename U, typename T, typename F>
+SmallVector<U> make_array_from_op(Span<const T> fields, F&& generator_fn)
+{
+  SmallVector<U> result;
+
+  result.reserve(fields.size());
+  std::transform(
+    fields.begin(), fields.end(), std::back_inserter(result), std::forward<F>(generator_fn));
+  return result;
+}
+
 // in case the return type of the vector is the same as fields
 template <typename T, typename F>
-std::vector<T> make_array_from_op(const std::vector<T>& fields, F&& generator_fn)
+SmallVector<T> make_array_from_op(Span<const T> fields, F&& generator_fn)
 {
   return make_array_from_op<T, T, F>(fields, std::forward<F>(generator_fn));
 }
@@ -411,8 +424,8 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::promote(std::int32_t extra_d
 {
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->promote(extra_dim, dim_size)) : std::nullopt;
-  auto fields =
-    make_array_from_op(fields_, [&](auto& field) { return field->promote(extra_dim, dim_size); });
+  auto fields = make_array_from_op(
+    this->fields(), [&](auto& field) { return field->promote(extra_dim, dim_size); });
 
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
@@ -423,7 +436,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::project(std::int32_t dim,
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->project(dim, index)) : std::nullopt;
   auto fields =
-    make_array_from_op(fields_, [&](auto& field) { return field->project(dim, index); });
+    make_array_from_op(this->fields(), [&](auto& field) { return field->project(dim, index); });
 
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
@@ -432,7 +445,8 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::slice(std::int32_t dim, Slic
 {
   auto null_mask =
     nullable() ? std::make_optional(slice_store(this->null_mask(), dim, sl)) : std::nullopt;
-  auto fields = make_array_from_op(fields_, [&](auto& field) { return field->slice(dim, sl); });
+  auto fields =
+    make_array_from_op(this->fields(), [&](auto& field) { return field->slice(dim, sl); });
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
@@ -441,7 +455,8 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::transpose(
 {
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->transpose(axes)) : std::nullopt;
-  auto fields = make_array_from_op(fields_, [&](auto& field) { return field->transpose(axes); });
+  auto fields =
+    make_array_from_op(this->fields(), [&](auto& field) { return field->transpose(axes); });
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
@@ -451,7 +466,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
   auto null_mask =
     nullable() ? std::make_optional(this->null_mask()->delinearize(dim, sizes)) : std::nullopt;
   auto fields =
-    make_array_from_op(fields_, [&](auto& field) { return field->delinearize(dim, sizes); });
+    make_array_from_op(this->fields(), [&](auto& field) { return field->delinearize(dim, sizes); });
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
@@ -474,7 +489,7 @@ InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array(
   }
 
   auto field_arrays = make_array_from_op<InternalSharedPtr<PhysicalArray>>(
-    fields_,
+    fields(),
     [&](auto& field) { return field->get_physical_array(target, ignore_future_mutability); });
 
   return make_internal_shared<StructPhysicalArray>(
@@ -573,7 +588,7 @@ ArrayAnalyzable StructLogicalArray::to_launcher_arg(
                                           null_redop);
   }
 
-  auto field_args = make_array_from_op<ArrayAnalyzable>(fields_, [&](auto& field) {
+  auto field_args = make_vector_from_op<ArrayAnalyzable>(fields(), [&](auto& field) {
     return field->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop);
   });
 
@@ -584,12 +599,12 @@ ArrayAnalyzable StructLogicalArray::to_launcher_arg_for_fixup(const Domain& laun
                                                               Legion::PrivilegeMode privilege) const
 {
   return StructArrayArg{
-    type(), std::nullopt, make_array_from_op<ArrayAnalyzable>(fields_, [&](auto& field) {
+    type(), std::nullopt, make_vector_from_op<ArrayAnalyzable>(fields(), [&](auto& field) {
       return field->to_launcher_arg_for_fixup(launch_domain, privilege);
     })};
 }
 
-void StructLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
+void StructLogicalArray::collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const
 {
   if (nullable()) {
     trackers.emplace_back(null_mask());

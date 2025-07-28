@@ -46,7 +46,7 @@ InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(std::uint32_t /*index*
   throw TracedException<std::invalid_argument>{"Non-nested array has no child sub-array"};
 }
 
-void BasePhysicalArray::populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void BasePhysicalArray::populate_stores(SmallVector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   result.push_back(data());
   if (nullable()) {
@@ -83,7 +83,7 @@ InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) c
   return {};
 }
 
-void ListPhysicalArray::populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void ListPhysicalArray::populate_stores(SmallVector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   descriptor()->populate_stores(result);
   vardata()->populate_stores(result);
@@ -127,7 +127,7 @@ InternalSharedPtr<PhysicalArray> StructPhysicalArray::child(std::uint32_t index)
 }
 
 void StructPhysicalArray::populate_stores(
-  std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+  SmallVector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   for (auto&& field : fields_) {
     field->populate_stores(result);

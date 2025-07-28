@@ -12,6 +12,7 @@
 #include <legate/data/detail/user_storage_tracker.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/projection.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstddef>
@@ -19,7 +20,6 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
-#include <vector>
 
 namespace legate::detail {
 
@@ -88,7 +88,7 @@ class LogicalArray {
     InternalSharedPtr<LogicalStore> store);
   [[nodiscard]] bool needs_flush() const;
 
-  virtual void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const = 0;
+  virtual void collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const = 0;
   virtual void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const              = 0;
 };
 
@@ -146,7 +146,7 @@ class BaseLogicalArray final : public LogicalArray {
   [[nodiscard]] ArrayAnalyzable to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
-  void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
+  void collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const override;
   void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const override;
 
  private:
@@ -207,7 +207,7 @@ class ListLogicalArray final : public LogicalArray {
   [[nodiscard]] ArrayAnalyzable to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
-  void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
+  void collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const override;
   void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const override;
 
  private:
@@ -220,7 +220,7 @@ class StructLogicalArray final : public LogicalArray {
  public:
   StructLogicalArray(InternalSharedPtr<Type> type,
                      std::optional<InternalSharedPtr<LogicalStore>> null_mask,
-                     std::vector<InternalSharedPtr<LogicalArray>>&& fields);
+                     SmallVector<InternalSharedPtr<LogicalArray>>&& fields);
 
   [[nodiscard]] std::uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
@@ -248,7 +248,7 @@ class StructLogicalArray final : public LogicalArray {
     legate::mapping::StoreTarget target, bool ignore_future_mutability) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
-  [[nodiscard]] const std::vector<InternalSharedPtr<LogicalArray>>& fields() const;
+  [[nodiscard]] Span<const InternalSharedPtr<LogicalArray>> fields() const;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const override;
@@ -268,13 +268,13 @@ class StructLogicalArray final : public LogicalArray {
   [[nodiscard]] ArrayAnalyzable to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
-  void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
+  void collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const override;
   void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const override;
 
  private:
   InternalSharedPtr<Type> type_{};
   std::optional<InternalSharedPtr<LogicalStore>> null_mask_{};
-  std::vector<InternalSharedPtr<LogicalArray>> fields_{};
+  SmallVector<InternalSharedPtr<LogicalArray>> fields_{};
 };
 
 }  // namespace legate::detail

@@ -30,7 +30,7 @@ class Variable {
 
   friend bool operator==(const Variable& lhs, const Variable& rhs);
 
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const;
+  void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const;
 
   [[nodiscard]] bool closed() const;
   [[nodiscard]] std::string to_string() const;
@@ -57,7 +57,7 @@ class Constraint {
   };
 
   virtual ~Constraint() = default;
-  virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
+  virtual void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const = 0;
   [[nodiscard]] virtual std::string to_string() const                                        = 0;
   [[nodiscard]] virtual Kind kind() const                                                    = 0;
   virtual void validate() const                                                              = 0;
@@ -69,7 +69,7 @@ class Alignment final : public Constraint {
 
   [[nodiscard]] Kind kind() const override;
 
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const override;
 
   void validate() const override;
 
@@ -93,7 +93,7 @@ class Broadcast final : public Constraint {
 
   [[nodiscard]] Kind kind() const override;
 
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const override;
 
   void validate() const override;
 
@@ -116,7 +116,7 @@ class ImageConstraint final : public Constraint {
 
   [[nodiscard]] Kind kind() const override;
 
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const override;
 
   void validate() const override;
 
@@ -141,7 +141,7 @@ class ScaleConstraint final : public Constraint {
 
   [[nodiscard]] Kind kind() const override;
 
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const override;
 
   void validate() const override;
 
@@ -168,7 +168,7 @@ class BloatConstraint final : public Constraint {
 
   [[nodiscard]] Kind kind() const override;
 
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const override;
 
   void validate() const override;
 

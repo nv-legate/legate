@@ -34,7 +34,8 @@ template <typename T>
   // If this is indeed what the user wants, they should need to opt in to it explicitly. 256 is
   // a bit of a magic number, but it's the same as LLVM uses. Per their rationale, it should be
   // large enough to not be easily hit, but not so large that this check never fires.
-  static_assert(sizeof(T) <= 256,  //  NOLINT(readability-magic-numbers)
+  static_assert(sizeof(T)  // NOLINT(bugprone-sizeof-expression)
+                  <= 256,  // NOLINT(readability-magic-numbers)
                 "Trying to use the default storage size for SmallVector<T>, but using a type that "
                 "is really big. If this is intentional, please explicitly set the inline storage "
                 "size with SmallVector<T, N>.");
@@ -89,7 +90,8 @@ template <typename T>
 
   constexpr std::uint32_t preferred_inline_bytes =
     preferred_sizeof - potential_inline_storage_capacity;
-  constexpr std::uint32_t num_elements_that_fit = preferred_inline_bytes / sizeof(T);
+  constexpr std::uint32_t num_elements_that_fit =
+    preferred_inline_bytes / sizeof(T);  // NOLINT(bugprone-sizeof-expression)
 
   return num_elements_that_fit == 0 ? 1 : num_elements_that_fit;
 }
@@ -168,11 +170,17 @@ class SmallVector {
    */
   [[nodiscard]] static constexpr std::uint32_t small_capacity() noexcept;
 
-  SmallVector()                                  = default;
-  SmallVector(const SmallVector&)                = default;
-  SmallVector& operator=(const SmallVector&)     = default;
+  SmallVector()                              = default;
+  SmallVector(const SmallVector&)            = default;
+  SmallVector& operator=(const SmallVector&) = default;
+  // If the variant throws in move ctor (which it cannot, but compilers won't figure that out),
+  // we do not care, we would rather abort the program. If we remove noexcept here, then every
+  // STL object will opt to copy SmallVector rather than move it whenever they need to, which
+  // is not ideal.
+  // NOLINTBEGIN(bugprone-exception-escape)
   SmallVector(SmallVector&&) noexcept            = default;
   SmallVector& operator=(SmallVector&&) noexcept = default;
+  // NOLINTEND(bugprone-exception-escape)
 
   /**
    * @brief Constructs a `SmallVector` with a given size, filled with the specified value.
@@ -505,6 +513,24 @@ class SmallVector {
 
   storage_type data_{};
 };
+
+// ==========================================================================================
+
+template <typename T>
+SmallVector(tags::size_tag_t, std::size_t, const T&) -> SmallVector<T>;
+
+template <typename It>
+SmallVector(tags::iterator_tag_t, It, It)
+  -> SmallVector<typename std::iterator_traits<It>::value_type>;
+
+template <typename T>
+SmallVector(Span<const T>) -> SmallVector<T>;
+
+template <typename T>
+SmallVector(std::vector<T>) -> SmallVector<T>;
+
+template <typename T>
+SmallVector(std::initializer_list<T>) -> SmallVector<T>;
 
 // ==========================================================================================
 

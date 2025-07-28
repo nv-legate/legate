@@ -36,10 +36,10 @@ namespace {
 class InlineTaskContext final : public TaskContext {
  public:
   InlineTaskContext(VariantCode variant_code,
-                    std::vector<InternalSharedPtr<PhysicalArray>> inputs,
-                    std::vector<InternalSharedPtr<PhysicalArray>> outputs,
-                    std::vector<InternalSharedPtr<PhysicalArray>> reductions,
-                    std::vector<InternalSharedPtr<Scalar>> scalars,
+                    SmallVector<InternalSharedPtr<PhysicalArray>> inputs,
+                    SmallVector<InternalSharedPtr<PhysicalArray>> outputs,
+                    SmallVector<InternalSharedPtr<PhysicalArray>> reductions,
+                    SmallVector<InternalSharedPtr<Scalar>> scalars,
                     const Task* task);
 
   [[nodiscard]] GlobalTaskID task_id() const noexcept override;
@@ -62,10 +62,10 @@ const Task& InlineTaskContext::task_() const { return *op_task_; }
 // ==========================================================================================
 
 InlineTaskContext::InlineTaskContext(VariantCode variant_code,
-                                     std::vector<InternalSharedPtr<PhysicalArray>> inputs,
-                                     std::vector<InternalSharedPtr<PhysicalArray>> outputs,
-                                     std::vector<InternalSharedPtr<PhysicalArray>> reductions,
-                                     std::vector<InternalSharedPtr<Scalar>> scalars,
+                                     SmallVector<InternalSharedPtr<PhysicalArray>> inputs,
+                                     SmallVector<InternalSharedPtr<PhysicalArray>> outputs,
+                                     SmallVector<InternalSharedPtr<PhysicalArray>> reductions,
+                                     SmallVector<InternalSharedPtr<Scalar>> scalars,
                                      const Task* task)
   : TaskContext{{variant_code,
                  task->can_throw_exception(),
@@ -74,7 +74,7 @@ InlineTaskContext::InlineTaskContext(VariantCode variant_code,
                  std::move(outputs),
                  std::move(reductions),
                  std::move(scalars),
-                 std::vector<legate::comm::Communicator>{}}},
+                 SmallVector<legate::comm::Communicator>{}}},
     op_task_{task}
 {
 }
@@ -114,13 +114,13 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
 // ==========================================================================================
 
-[[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>> fill_vector(
-  const std::vector<TaskArrayArg>& src,
+[[nodiscard]] SmallVector<InternalSharedPtr<PhysicalArray>> fill_vector(
+  Span<const TaskArrayArg> src,
   bool ignore_future_mutability,
   const StoreIteratorCache<InternalSharedPtr<PhysicalStore>>& get_stores_cache,
-  std::vector<Legion::UntypedDeferredValue>* deferred_buffers)
+  SmallVector<Legion::UntypedDeferredValue>* deferred_buffers)
 {
-  std::vector<InternalSharedPtr<PhysicalArray>> dest;
+  SmallVector<InternalSharedPtr<PhysicalArray>> dest;
 
   dest.reserve(src.size());
   for (auto&& elem : src) {
@@ -145,7 +145,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 [[nodiscard]] InlineTaskContext make_inline_task_context(
   const Task& task,
   VariantCode variant_code,
-  std::vector<Legion::UntypedDeferredValue>* deferred_buffers)
+  SmallVector<Legion::UntypedDeferredValue>* deferred_buffers)
 {
   const auto get_stores_cache = StoreIteratorCache<InternalSharedPtr<PhysicalStore>>{};
 
@@ -181,18 +181,18 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
                            std::move(inputs),
                            std::move(outputs),
                            std::move(reductions),
-                           task.scalars(),
+                           SmallVector<InternalSharedPtr<Scalar>>{task.scalars()},
                            &task};
 }
 
 template <typename F>
-[[nodiscard]] std::pair<std::optional<ReturnedException>, std::vector<Legion::UntypedDeferredValue>>
+[[nodiscard]] std::pair<std::optional<ReturnedException>, SmallVector<Legion::UntypedDeferredValue>>
 execute_task(const Task& task,
              VariantCode variant_code,
              VariantImpl variant_impl,
              F&& get_task_name)
 {
-  auto deferred_buffers = std::vector<Legion::UntypedDeferredValue>{};
+  auto deferred_buffers = SmallVector<Legion::UntypedDeferredValue>{};
   auto ctx              = make_inline_task_context(task, variant_code, &deferred_buffers);
   auto exn =
     task_detail::task_body(legate::TaskContext{&ctx}, variant_impl, std::forward<F>(get_task_name));
@@ -201,7 +201,7 @@ execute_task(const Task& task,
 }
 
 void handle_return_values(const Task& task,
-                          const std::vector<Legion::UntypedDeferredValue>& deferred_buffers)
+                          Span<const Legion::UntypedDeferredValue> deferred_buffers)
 {
   // Order of deferred_buffers and scalar_outputs, scalar_reductions must be the same. See
   // make_inline_task_context() for more details.

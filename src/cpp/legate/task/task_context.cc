@@ -9,6 +9,7 @@
 #include <legate/mapping/detail/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/task_context.h>
+#include <legate/utilities/span.h>
 
 #include <type_traits>
 
@@ -21,7 +22,7 @@ namespace legate {
 namespace {
 
 [[nodiscard]] std::vector<PhysicalArray> to_arrays(
-  const std::vector<InternalSharedPtr<detail::PhysicalArray>>& array_impls)
+  Span<const InternalSharedPtr<detail::PhysicalArray>> array_impls)
 {
   return {array_impls.begin(), array_impls.end()};
 }
@@ -72,15 +73,14 @@ std::vector<Scalar> TaskContext::scalars() const
 
 const comm::Communicator& TaskContext::communicator(std::uint32_t index) const
 {
-  // Revert back to using impl()->communicators() if communicators() ever returns a non-ref. No
-  // point in creating a whole temporary vector just to check its size :)
-  static_assert(std::is_lvalue_reference_v<decltype(communicators())>);
-  return communicators().at(index);
+  return impl()->communicators().at(index);
 }
 
-const std::vector<comm::Communicator>& TaskContext::communicators() const
+std::vector<comm::Communicator> TaskContext::communicators() const
 {
-  return impl()->communicators();
+  auto&& comms = impl()->communicators();
+
+  return {comms.begin(), comms.end()};
 }
 
 std::size_t TaskContext::num_inputs() const
@@ -107,11 +107,7 @@ std::size_t TaskContext::num_scalars() const
   return impl()->scalars().size();
 }
 
-std::size_t TaskContext::num_communicators() const
-{
-  static_assert(std::is_lvalue_reference_v<decltype(communicators())>);
-  return communicators().size();
-}
+std::size_t TaskContext::num_communicators() const { return impl()->communicators().size(); }
 
 bool TaskContext::is_single_task() const { return impl()->is_single_task(); }
 

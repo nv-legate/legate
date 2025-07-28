@@ -64,7 +64,7 @@ void OutputRegionArg::analyze(StoreAnalyzer& analyzer) const
   analyzer.insert(store_->dim(), field_space_, field_id_);
 }
 
-void OutputRegionArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
+void OutputRegionArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
 {
   args.push_back(this);
 }
@@ -153,7 +153,7 @@ std::optional<Legion::ProjectionID> BaseArrayArg::get_key_proj_id() const
   return std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, data_);
 }
 
-void BaseArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
+void BaseArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
 {
   std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, data_);
   if (null_mask_.has_value()) {
@@ -194,7 +194,7 @@ std::optional<Legion::ProjectionID> ListArrayArg::get_key_proj_id() const
   return std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, pimpl_->vardata);
 }
 
-void ListArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
+void ListArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
 {
   std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, pimpl_->descriptor);
   std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, pimpl_->vardata);
@@ -243,7 +243,7 @@ std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
   return std::nullopt;
 }
 
-void StructArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
+void StructArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
 {
   if (null_mask_.has_value()) {
     std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, *null_mask_);

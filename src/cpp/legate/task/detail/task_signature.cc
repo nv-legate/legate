@@ -23,7 +23,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace fmt {
 
@@ -112,7 +111,7 @@ bool operator!=(const TaskSignature::Nargs& lhs, const TaskSignature::Nargs& rhs
 // ------------------------------------------------------------------------------------------
 
 void TaskSignature::constraints(
-  std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> cstrnts) noexcept
+  std::optional<SmallVector<InternalSharedPtr<detail::ProxyConstraint>>> cstrnts) noexcept
 {
   constraints_ = std::move(cstrnts);
 }

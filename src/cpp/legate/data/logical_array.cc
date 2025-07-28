@@ -11,10 +11,10 @@
 #include <legate/data/physical_array.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
-#include <vector>
 
 namespace legate {
 
@@ -29,7 +29,7 @@ class LogicalArray::Impl {
 
  private:
   SharedPtr<detail::LogicalArray> impl_{};
-  std::vector<detail::UserStorageTracker> trackers_{};
+  detail::SmallVector<detail::UserStorageTracker> trackers_{};
 };
 
 std::uint32_t LogicalArray::dim() const { return impl()->dim(); }

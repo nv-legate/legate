@@ -58,17 +58,6 @@ void BaseDeserializer<Deserializer>::unpack_impl(T& value)
 }
 
 template <typename Deserializer>
-template <typename T>
-void BaseDeserializer<Deserializer>::unpack_impl(std::vector<T>& values)
-{
-  auto size = unpack<std::uint32_t>();
-  values.reserve(size);
-  for (std::uint32_t idx = 0; idx < size; ++idx) {
-    values.emplace_back(unpack<T>());
-  }
-}
-
-template <typename Deserializer>
 template <typename T, std::uint32_t SIZE>
 void BaseDeserializer<Deserializer>::unpack_impl(SmallVector<T, SIZE>& values)
 {
@@ -89,10 +78,10 @@ void BaseDeserializer<Deserializer>::unpack_impl(std::pair<T1, T2>& values)
 }
 
 template <typename Deserializer>
-std::vector<InternalSharedPtr<detail::Scalar>> BaseDeserializer<Deserializer>::unpack_scalars()
+SmallVector<InternalSharedPtr<detail::Scalar>> BaseDeserializer<Deserializer>::unpack_scalars()
 {
-  std::vector<InternalSharedPtr<detail::Scalar>> values;
-  auto size = unpack<std::uint32_t>();
+  SmallVector<InternalSharedPtr<detail::Scalar>> values;
+  const auto size = unpack<std::uint32_t>();
 
   values.reserve(size);
   for (std::uint32_t idx = 0; idx < size; ++idx) {

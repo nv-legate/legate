@@ -12,6 +12,7 @@
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
@@ -20,7 +21,6 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 namespace legate {
 
@@ -91,12 +91,12 @@ class Task : public Operation {
   [[nodiscard]] bool can_throw_exception() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const;
 
-  [[nodiscard]] const std::vector<InternalSharedPtr<Scalar>>& scalars() const;
-  [[nodiscard]] const std::vector<TaskArrayArg>& inputs() const;
-  [[nodiscard]] const std::vector<TaskArrayArg>& outputs() const;
-  [[nodiscard]] const std::vector<TaskArrayArg>& reductions() const;
-  [[nodiscard]] const std::vector<InternalSharedPtr<LogicalStore>>& scalar_outputs() const;
-  [[nodiscard]] const std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>&
+  [[nodiscard]] Span<const InternalSharedPtr<Scalar>> scalars() const;
+  [[nodiscard]] Span<const TaskArrayArg> inputs() const;
+  [[nodiscard]] Span<const TaskArrayArg> outputs() const;
+  [[nodiscard]] Span<const TaskArrayArg> reductions() const;
+  [[nodiscard]] Span<const InternalSharedPtr<LogicalStore>> scalar_outputs() const;
+  [[nodiscard]] Span<const std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>
   scalar_reductions() const;
 
   [[nodiscard]] const Library& library() const;
@@ -113,19 +113,19 @@ class Task : public Operation {
   bool has_side_effect_{};
   bool can_throw_exception_{};
   bool can_elide_device_ctx_sync_{};
-  std::vector<InternalSharedPtr<Scalar>> scalars_{};
+  SmallVector<InternalSharedPtr<Scalar>> scalars_{};
 
  protected:
-  std::vector<TaskArrayArg> inputs_{};
-  std::vector<TaskArrayArg> outputs_{};
-  std::vector<TaskArrayArg> reductions_{};
-  std::vector<GlobalRedopID> reduction_ops_{};
+  SmallVector<TaskArrayArg> inputs_{};
+  SmallVector<TaskArrayArg> outputs_{};
+  SmallVector<TaskArrayArg> reductions_{};
+  SmallVector<GlobalRedopID> reduction_ops_{};
 
  private:
-  std::vector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
-  std::vector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
-  std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
-  std::vector<std::reference_wrapper<CommunicatorFactory>> communicator_factories_{};
+  SmallVector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
+  SmallVector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
+  SmallVector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
+  SmallVector<std::reference_wrapper<CommunicatorFactory>> communicator_factories_{};
   bool can_inline_launch_{};
 };
 
@@ -170,8 +170,8 @@ class AutoTask final : public Task {
  private:
   void fixup_ranges_(Strategy& strategy);
 
-  std::vector<InternalSharedPtr<Constraint>> constraints_{};
-  std::vector<LogicalArray*> arrays_to_fixup_{};
+  SmallVector<InternalSharedPtr<Constraint>> constraints_{};
+  SmallVector<LogicalArray*> arrays_to_fixup_{};
 };
 
 class ManualTask final : public Task {
@@ -196,7 +196,7 @@ class ManualTask final : public Task {
                      std::optional<SymbolicPoint> projection);
 
  private:
-  void add_store_(std::vector<TaskArrayArg>& store_args,
+  void add_store_(SmallVector<TaskArrayArg>& store_args,
                   const InternalSharedPtr<LogicalStore>& store,
                   InternalSharedPtr<Partition> partition,
                   std::optional<SymbolicPoint> projection = {});

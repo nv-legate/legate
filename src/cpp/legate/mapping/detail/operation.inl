@@ -27,13 +27,13 @@ inline legate::detail::Library& Task::library() { return *library_; }
 
 inline const legate::detail::Library& Task::library() const { return *library_; }
 
-inline const std::vector<InternalSharedPtr<Array>>& Task::inputs() const { return inputs_; }
+inline Span<const InternalSharedPtr<Array>> Task::inputs() const { return inputs_; }
 
-inline const std::vector<InternalSharedPtr<Array>>& Task::outputs() const { return outputs_; }
+inline Span<const InternalSharedPtr<Array>> Task::outputs() const { return outputs_; }
 
-inline const std::vector<InternalSharedPtr<Array>>& Task::reductions() const { return reductions_; }
+inline Span<const InternalSharedPtr<Array>> Task::reductions() const { return reductions_; }
 
-inline const std::vector<InternalSharedPtr<legate::detail::Scalar>>& Task::scalars() const
+inline Span<const InternalSharedPtr<legate::detail::Scalar>> Task::scalars() const
 {
   return scalars_;
 }
@@ -54,13 +54,13 @@ inline TaskTarget Task::target() const { return machine().preferred_target(); }
 
 // ==========================================================================================
 
-inline const std::vector<Store>& Copy::inputs() const { return inputs_; }
+inline Span<const Store> Copy::inputs() const { return inputs_; }
 
-inline const std::vector<Store>& Copy::outputs() const { return outputs_; }
+inline Span<const Store> Copy::outputs() const { return outputs_; }
 
-inline const std::vector<Store>& Copy::input_indirections() const { return input_indirections_; }
+inline Span<const Store> Copy::input_indirections() const { return input_indirections_; }
 
-inline const std::vector<Store>& Copy::output_indirections() const { return output_indirections_; }
+inline Span<const Store> Copy::output_indirections() const { return output_indirections_; }
 
 inline const DomainPoint& Copy::point() const { return copy_.get().index_point; }
 

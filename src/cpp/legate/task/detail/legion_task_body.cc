@@ -65,7 +65,7 @@ namespace {
       arrival = dez.unpack<Legion::PhaseBarrier>();
       wait    = dez.unpack<Legion::PhaseBarrier>();
     }
-    ret.comms = dez.unpack<std::vector<comm::Communicator>>();
+    ret.comms = dez.unpack<SmallVector<comm::Communicator>>();
   }
 
   // For reduction tree cases, some input stores may be mapped to NO_REGION

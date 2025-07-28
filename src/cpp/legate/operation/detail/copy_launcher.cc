@@ -39,7 +39,7 @@ void CopyArg::pack(BufferBuilder& buffer) const
   buffer.pack<std::uint32_t>(field_id_);
 }
 
-void CopyLauncher::add_store(std::vector<CopyArg>& args,
+void CopyLauncher::add_store(SmallVector<CopyArg>& args,
                              const InternalSharedPtr<LogicalStore>& store,
                              StoreProjection store_proj,
                              Legion::PrivilegeMode privilege)
@@ -133,7 +133,7 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
   pack_sharding_functor_id(buffer);
   buffer.pack(priority_);
 
-  auto pack_args = [&buffer](const std::vector<CopyArg>& args) {
+  auto pack_args = [&buffer](Span<const CopyArg> args) {
     buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
     for (auto&& arg : args) {
       arg.pack(buffer);
@@ -157,7 +157,7 @@ constexpr bool is_single_v<Legion::CopyLauncher> = true;
 template <typename Launcher>
 void CopyLauncher::populate_copy_(Launcher& launcher)
 {
-  constexpr auto populate_requirements = [](std::vector<CopyArg>& args, auto& requirements) {
+  constexpr auto populate_requirements = [](SmallVector<CopyArg>& args, auto& requirements) {
     requirements.reserve(args.size());
     LEGATE_CHECK(requirements.empty());
     for (auto&& arg : args) {

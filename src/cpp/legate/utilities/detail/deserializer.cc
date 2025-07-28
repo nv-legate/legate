@@ -32,10 +32,10 @@ TaskDeserializer::TaskDeserializer(const Legion::Task& task,
   runtime->get_output_regions(ctx, outputs_);
 }
 
-std::vector<InternalSharedPtr<PhysicalArray>> TaskDeserializer::unpack_arrays()
+SmallVector<InternalSharedPtr<PhysicalArray>> TaskDeserializer::unpack_arrays()
 {
-  std::vector<InternalSharedPtr<PhysicalArray>> arrays;
-  auto size = unpack<std::uint32_t>();
+  SmallVector<InternalSharedPtr<PhysicalArray>> arrays;
+  const auto size = unpack<std::uint32_t>();
 
   arrays.reserve(size);
   for (std::uint32_t idx = 0; idx < size; ++idx) {
@@ -77,7 +77,7 @@ InternalSharedPtr<StructPhysicalArray> TaskDeserializer::unpack_struct_array()
   auto type = unpack_type_();
   LEGATE_CHECK(type->code == Type::Code::STRUCT);
 
-  std::vector<InternalSharedPtr<PhysicalArray>> fields;
+  SmallVector<InternalSharedPtr<PhysicalArray>> fields;
   const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
   auto nullable       = unpack<bool>();
   auto null_mask      = nullable ? std::make_optional(unpack_store()) : std::nullopt;
@@ -192,10 +192,10 @@ TaskDeserializer::TaskDeserializer(const Legion::Task& task,
 {
 }
 
-std::vector<InternalSharedPtr<Array>> TaskDeserializer::unpack_arrays()
+legate::detail::SmallVector<InternalSharedPtr<Array>> TaskDeserializer::unpack_arrays()
 {
-  std::vector<InternalSharedPtr<Array>> arrays;
-  auto size = unpack<std::uint32_t>();
+  legate::detail::SmallVector<InternalSharedPtr<Array>> arrays;
+  const auto size = unpack<std::uint32_t>();
 
   arrays.reserve(size);
   for (std::uint32_t idx = 0; idx < size; ++idx) {
@@ -238,7 +238,7 @@ InternalSharedPtr<StructArray> TaskDeserializer::unpack_struct_array()
   auto type = unpack_type_();
   LEGATE_CHECK(type->code == Type::Code::STRUCT);
 
-  std::vector<InternalSharedPtr<Array>> fields;
+  legate::detail::SmallVector<InternalSharedPtr<Array>> fields;
   const auto& st_type = dynamic_cast<const legate::detail::StructType&>(*type);
   auto nullable       = unpack<bool>();
   auto null_mask      = nullable ? std::make_optional(unpack_store()) : std::nullopt;

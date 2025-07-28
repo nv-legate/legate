@@ -105,7 +105,7 @@ void ConstraintSolver::solve_constraints()
       }
     };
 
-    std::vector<const Variable*> part_symbs_to_unify;
+    SmallVector<const Variable*> part_symbs_to_unify;
 
     alignment.find_partition_symbols(part_symbs_to_unify);
     LEGATE_ASSERT(!part_symbs_to_unify.empty());

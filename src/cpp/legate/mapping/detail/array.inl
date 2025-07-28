@@ -65,7 +65,7 @@ inline const InternalSharedPtr<Array>& ListArray::vardata() const { return varda
 
 inline StructArray::StructArray(InternalSharedPtr<legate::detail::Type> type,
                                 std::optional<InternalSharedPtr<Store>> null_mask,
-                                std::vector<InternalSharedPtr<Array>>&& fields)
+                                legate::detail::SmallVector<InternalSharedPtr<Array>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
 }
@@ -81,6 +81,6 @@ inline bool StructArray::nullable() const { return null_mask_.has_value(); }
 
 inline bool StructArray::nested() const { return true; }
 
-inline const std::vector<InternalSharedPtr<Array>>& StructArray::fields() const { return fields_; }
+inline Span<const InternalSharedPtr<Array>> StructArray::fields() const { return fields_; }
 
 }  // namespace legate::mapping::detail

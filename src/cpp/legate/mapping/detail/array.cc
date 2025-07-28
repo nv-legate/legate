@@ -48,7 +48,7 @@ InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
   return {};
 }
 
-void BaseArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void BaseArray::populate_stores(legate::detail::SmallVector<InternalSharedPtr<Store>>& result) const
 {
   result.push_back(data());
   if (nullable()) {
@@ -84,7 +84,7 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
   return {};
 }
 
-void ListArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void ListArray::populate_stores(legate::detail::SmallVector<InternalSharedPtr<Store>>& result) const
 {
   descriptor()->populate_stores(result);
   vardata()->populate_stores(result);
@@ -127,7 +127,8 @@ InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const
   return fields().at(index);
 }
 
-void StructArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void StructArray::populate_stores(
+  legate::detail::SmallVector<InternalSharedPtr<Store>>& result) const
 {
   for (auto&& field : fields()) {
     field->populate_stores(result);

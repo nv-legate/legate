@@ -9,10 +9,10 @@
 #include <legate/data/detail/array_kind.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/type/detail/types.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <optional>
-#include <vector>
 
 namespace legate::mapping::detail {
 
@@ -32,8 +32,9 @@ class Array {
   [[nodiscard]] virtual const InternalSharedPtr<Store>& null_mask() const         = 0;
   [[nodiscard]] virtual InternalSharedPtr<Array> child(std::uint32_t index) const = 0;
 
-  virtual void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const = 0;
-  [[nodiscard]] virtual Domain domain() const                                       = 0;
+  virtual void populate_stores(
+    legate::detail::SmallVector<InternalSharedPtr<Store>>& result) const = 0;
+  [[nodiscard]] virtual Domain domain() const                            = 0;
 };
 
 class BaseArray final : public Array {
@@ -51,7 +52,8 @@ class BaseArray final : public Array {
   [[nodiscard]] const InternalSharedPtr<Store>& data() const override;
   [[nodiscard]] const InternalSharedPtr<Store>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
-  void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
+  void populate_stores(
+    legate::detail::SmallVector<InternalSharedPtr<Store>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
 
@@ -76,7 +78,8 @@ class ListArray final : public Array {
 
   [[nodiscard]] const InternalSharedPtr<Store>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
-  void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
+  void populate_stores(
+    legate::detail::SmallVector<InternalSharedPtr<Store>>& result) const override;
   [[nodiscard]] const InternalSharedPtr<BaseArray>& descriptor() const;
   [[nodiscard]] const InternalSharedPtr<Array>& vardata() const;
   [[nodiscard]] Domain domain() const override;
@@ -91,7 +94,7 @@ class StructArray final : public Array {
  public:
   StructArray(InternalSharedPtr<legate::detail::Type> type,
               std::optional<InternalSharedPtr<Store>> null_mask,
-              std::vector<InternalSharedPtr<Array>>&& fields);
+              legate::detail::SmallVector<InternalSharedPtr<Array>>&& fields);
 
   [[nodiscard]] std::int32_t dim() const override;
   [[nodiscard]] legate::detail::ArrayKind kind() const override;
@@ -103,16 +106,17 @@ class StructArray final : public Array {
 
   [[nodiscard]] const InternalSharedPtr<Store>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
-  void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
+  void populate_stores(
+    legate::detail::SmallVector<InternalSharedPtr<Store>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
 
-  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& fields() const;
+  [[nodiscard]] Span<const InternalSharedPtr<Array>> fields() const;
 
  private:
   InternalSharedPtr<legate::detail::Type> type_{};
   std::optional<InternalSharedPtr<Store>> null_mask_{};
-  std::vector<InternalSharedPtr<Array>> fields_{};
+  legate::detail::SmallVector<InternalSharedPtr<Array>> fields_{};
 };
 
 }  // namespace legate::mapping::detail

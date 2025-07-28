@@ -9,6 +9,7 @@
 #include <legate/data/detail/scalar.h>
 #include <legate/data/scalar.h>
 #include <legate/operation/detail/store_projection.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <memory>
@@ -119,7 +120,7 @@ class AnalyzableBase {
   virtual void analyze(StoreAnalyzer& analyzer) const                           = 0;
 
   [[nodiscard]] virtual std::optional<Legion::ProjectionID> get_key_proj_id() const;
-  virtual void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const;
+  virtual void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const;
   virtual void perform_invalidations() const;
 };
 
@@ -146,7 +147,7 @@ class OutputRegionArg final : public AnalyzableBase {
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
-  void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
+  void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
 
   [[nodiscard]] LogicalStore* store() const;
   [[nodiscard]] const Legion::FieldSpace& field_space() const;
@@ -221,7 +222,7 @@ class BaseArrayArg final : public AnalyzableBase {
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
   [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
-  void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
+  void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
  private:
@@ -238,7 +239,7 @@ class ListArrayArg final : public AnalyzableBase {
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
   [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
-  void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
+  void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
  private:
@@ -268,12 +269,14 @@ class StructArrayArg final : public AnalyzableBase {
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
   [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
-  void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
+  void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
  private:
   InternalSharedPtr<Type> type_{};
   std::optional<StoreAnalyzable> null_mask_{};
+  // This must stay as a vector because SmallVector tries to inspect sizeof(T), which at this
+  // point would be incomplete
   std::vector<ArrayAnalyzable> fields_{};
 };
 

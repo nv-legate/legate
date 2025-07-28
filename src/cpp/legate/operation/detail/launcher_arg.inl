@@ -16,7 +16,7 @@ inline std::optional<Legion::ProjectionID> AnalyzableBase::get_key_proj_id() con
 }
 
 inline void AnalyzableBase::record_unbound_stores(
-  std::vector<const OutputRegionArg*>& /* args */) const
+  SmallVector<const OutputRegionArg*>& /* args */) const
 {
 }
 

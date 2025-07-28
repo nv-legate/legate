@@ -547,10 +547,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   // Generate default mappings for stores that are not yet mapped by the client mapper
   const auto default_option = options.front();
-  for (auto&& arr : {std::cref(legate_task.inputs()),
-                     std::cref(legate_task.outputs()),
-                     std::cref(legate_task.reductions())}) {
-    generate_default_mappings(arr.get(),
+  for (auto&& arr : {legate_task.inputs(), legate_task.outputs(), legate_task.reductions()}) {
+    generate_default_mappings(arr,
                               default_option,
                               task,
                               &mapped_futures,
