@@ -15,7 +15,7 @@ ifndef LEGATE_ARCH
 export LEGATE_ARCH := $(shell ./scripts/get_legate_arch.py)
 endif
 
-include $(LEGATE_DIR)/config/legate_internal/variables.mk
+include $(LEGATE_DIR)/$(LEGATE_ARCH)/variables.mk
 
 ## Option types:
 ##
@@ -45,37 +45,7 @@ include $(LEGATE_DIR)/config/legate_internal/variables.mk
 ## Print this help message.
 ##
 .PHONY: help
-help:
-	@printf "Usage: make [MAKE_OPTIONS] [target] (see 'make --help' for MAKE_OPTIONS)\n"
-	@printf ""
-	@$(AWK) ' \
-    { \
-      if ($$0 ~ /^.PHONY: [a-zA-Z\-\0-9]+$$/) {	\
-        helpCommand = substr($$0, index($$0, ":") + 2);	\
-        if (helpMessage) { \
-          printf "\033[36m%-20s\033[0m %s\n", helpCommand, helpMessage; \
-          helpMessage = ""; \
-        } \
-      } else if ($$0 ~ /^[a-zA-Z\-\0-9.]+:/) { \
-        helpCommand = substr($$0, 0, index($$0, ":")); \
-        if (helpMessage) { \
-          printf "\033[36m%-20s\033[0m %s\n", helpCommand, helpMessage; \
-          helpMessage = ""; \
-        } \
-      } else if ($$0 ~ /^##/) { \
-        if (helpMessage) { \
-          helpMessage = helpMessage"\n                     "substr($$0, 3); \
-        } else { \
-          helpMessage = substr($$0, 3); \
-        } \
-      } else { \
-        if (helpMessage) { \
-          print "\n                     "helpMessage"\n"; \
-        } \
-        helpMessage = ""; \
-      } \
-    }' \
-    $(MAKEFILE_LIST)
+help: aedifix-default-help
 
 ## Build the library.
 ##
