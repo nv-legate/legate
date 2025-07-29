@@ -8,7 +8,12 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 from subprocess import check_call
 
-from packaging.version import Version
+try:
+    from packaging.version import Version
+except (ModuleNotFoundError, ImportError):
+    from pip._vendor.packaging.version import (  # type: ignore[assignment]
+        Version,
+    )
 
 
 def ensure_aedifix() -> None:
