@@ -207,26 +207,33 @@ class MPILauncher(Launcher):
 
         ranks = config.multi_node.ranks
 
-        cmd = ["mpirun", "-n", str(ranks), *self._mpirun_commands(config)]
-
         # hack: the launcher.env does not know about what the driver does with
         # LEGATE_CONFIG, but we do need to make sure it gets forwarded
-        env_vars = set(self.env).union({"LEGATE_CONFIG"})
+        env_vars = [
+            var
+            for var in set(self.env).union({"LEGATE_CONFIG"})
+            if self.is_launcher_var(var)
+        ]
 
-        for var in sorted(env_vars):
-            if self.is_launcher_var(var):
-                cmd += ["-x", var]
+        cmd = [
+            "mpirun",
+            "-n",
+            str(ranks),
+            *self._mpirun_commands(config, env_vars),
+        ]
 
         self.cmd = tuple(cmd + config.multi_node.launcher_extra)
 
-    def _mpirun_commands(self, config: ConfigProtocol) -> list[str]:
+    def _mpirun_commands(
+        self, config: ConfigProtocol, env_vars: list[str]
+    ) -> list[str]:
         out = subprocess.check_output(["mpirun", "--version"]).decode()
         out_lo = out.casefold()
 
         if any(sub in out_lo for sub in ("open mpi", "openmpi", "open-mpi")):
-            return self._openmpi_mpirun_commands(config)
+            return self._openmpi_mpirun_commands(config, env_vars)
         if any(sub in out_lo for sub in ("mpich", "hydra")):
-            return self._mpich_mpirun_commands(config)
+            return self._mpich_mpirun_commands(config, env_vars)
 
         m = (
             f"Unknown MPI implementation:\n\n{out}\n\nPlease file a bug at "
@@ -235,15 +242,23 @@ class MPILauncher(Launcher):
         )
         raise RuntimeError(m)
 
-    def _openmpi_mpirun_commands(self, config: ConfigProtocol) -> list[str]:
+    def _openmpi_mpirun_commands(
+        self, config: ConfigProtocol, env_vars: list[str]
+    ) -> list[str]:
         ret = ["--npernode", str(config.multi_node.ranks_per_node)]
         ret += ["--bind-to", "none"]
         ret += ["--mca", "mpi_warn_on_fork", "0"]
+        for var in env_vars:
+            ret += ["-x", var]
         return ret
 
-    def _mpich_mpirun_commands(self, config: ConfigProtocol) -> list[str]:
+    def _mpich_mpirun_commands(
+        self, config: ConfigProtocol, env_vars: list[str]
+    ) -> list[str]:
         ret = ["-ppn", str(config.multi_node.ranks_per_node)]
         ret += ["--bind-to", "none"]
+        if env_vars:
+            ret += ["-envlist", ",".join(env_vars)]
         return ret
 
 
