@@ -87,11 +87,9 @@ function(legate_set_default_cuda_arch)
   # where we'd do that
   _legate_get_supported_arch_list_nvcc(arch_list "${_LEGATE_DEST_VAR}")
 
-  # Remove < sm_60. We do this because we need full atomic support, which was not complete
-  # until sm_60.
-  list(FILTER arch_list EXCLUDE REGEX [=[^[0-5][0-9]$]=])
+  # Remove < sm_70 as that is the lowest version supported by the project.
+  list(FILTER arch_list EXCLUDE REGEX [=[^[0-6][0-9]$]=])
   if(ONLY_MAJOR)
-    list(GET arch_list -1 largest_virtual_arch)
     # Remove any non-major architectures, they should all numeric-only except for Hopper,
     # which strangely has sm_90a.
     #
@@ -105,13 +103,6 @@ function(legate_set_default_cuda_arch)
     #
     # arch_list = [90, 100, 120]
     #
-    # To match all-major, which compiles for:
-    #
-    # ...all supported major real architectures, and the highest major virtual
-    # architecture.
-    list(APPEND arch_list "${largest_virtual_arch}")
-    # In case the last APPEND was pointless (i.e. highest arch ended in a 0)
-    list(REMOVE_DUPLICATES arch_list)
   endif()
 
   # A CMake architecture list entry of "80" means to build both compute and sm. What we
