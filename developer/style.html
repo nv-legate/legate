@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Style &#8212; NVIDIA legate (25.08.00.dev37+g91df2f4d)</title>
+    <title>Code Style &#8212; NVIDIA legate (25.08.00.dev39+g5c0802c7)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=9977ac4c"></script>
+    <script src="../_static/documentation_options.js?v=79c397a2"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev37+g91df2f4d)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev39+g5c0802c7)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev37+g91df2f4d)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev39+g5c0802c7)</p>
   
 </a>
 
@@ -844,6 +844,34 @@ should probably be called <code class="docutils literal notranslate"><span class
 <li><p>Don’t use verbose names. <code class="docutils literal notranslate"><span class="pre">iterator_into_vector</span></code> is no more informative than
 e.g. <code class="docutils literal notranslate"><span class="pre">it</span></code>. <code class="docutils literal notranslate"><span class="pre">temporary_vector</span></code> is no better (arguably, it is worse) than just <code class="docutils literal notranslate"><span class="pre">tmp</span></code>.</p></li>
 </ol>
+</li>
+<li><p>Instead of</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Type</span><span class="w"> </span><span class="n">var</span><span class="p">;</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cond</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Prefer returning a value from an immediate lambda:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cond</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">...;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">...;</span>
+<span class="p">}();</span><span class="w">  </span><span class="c1">// Note, lambda is executed immediately</span>
+</pre></div>
+</div>
+<p>This has 2 main benefits:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>It ensures that <code class="docutils literal notranslate"><span class="pre">var</span></code> is always initialized (you’ll never forget to set it if you
+have a lot of if branches).</p></li>
+<li><p>You can make <code class="docutils literal notranslate"><span class="pre">var</span></code> <code class="docutils literal notranslate"><span class="pre">const</span></code>.</p></li>
+</ol>
+</div></blockquote>
 </li>
 </ol>
 </section>

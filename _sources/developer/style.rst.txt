@@ -229,6 +229,36 @@ Variables
    #. Don't use verbose names. ``iterator_into_vector`` is no more informative than
       e.g. ``it``. ``temporary_vector`` is no better (arguably, it is worse) than just ``tmp``.
 
+#. Instead of
+
+   .. code-block:: cpp
+
+      Type var;
+
+      if (cond) {
+        var = ...;
+      } else {
+        var = ...;
+      }
+
+   Prefer returning a value from an immediate lambda:
+
+   .. code-block:: cpp
+
+      const auto var = [&] {
+        if (cond) {
+          return ...;
+        }
+        return ...;
+      }();  // Note, lambda is executed immediately
+
+   This has 2 main benefits:
+
+    #. It ensures that ``var`` is always initialized (you'll never forget to set it if you
+       have a lot of if branches).
+    #. You can make ``var`` ``const``.
+
+
 Misc
 ----
 

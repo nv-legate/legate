@@ -120,51 +120,42 @@ latest source code, see :ref:`legate_source_build`.
 Support Matrix
 ==============
 
-The following table lists Legate's minimum supported versions of major
-dependencies.
-
-"Full support" means that the corresponding versions (and all later ones) are
-being tested regularly, released as downloadable packages, and are expected to work.
-Please report any incompatibility you find against a fully-supported version
-by opening a bug.
-
-"Best-effort support" means that the corresponding versions may not be actively packaged
-and shipped, but that Legate should be compatible with them. In particular, Legate should
-be able to be compiled from source for these configurations.
-
-We may not actively work to fix any incompatibilities discovered under these versions, but
-we accept contributions that fix such incompatibilities.
+The following table lists Legate's supported version range for major
+dependencies. The listed versions are being tested regularly, and supported by
+our downloadable packages.
 
 .. list-table:: Support Matrix
    :header-rows: 1
 
    * - Dependency
-     - Full support (min version)
-     - Best-effort support (min version)
+     - Versions supported
    * - CPU architecture
-     - x86-64 (Haswell), aarch64 (armv8-a)
-     - older x86-64
+     -
+        * x86-64 (Haswell and later)
+        * aarch64 (armv8-a and later)
    * - OS
-     - Ubuntu (22.04), macOS (11, ARM-based only), WSL
-     - other Linux or macOS
+     -
+        * Ubuntu (22.04 and later)
+        * macOS (11 and later, ARM-based only)
+        * WSL
    * - Compilers
-     - GCC 11
-     - Any compiler supporting C++17
+     -
+        * GCC (11-14)
    * - GPU architecture
-     - Volta
-     - Pascal
+     - Volta and later
    * - CUDA toolkit
-     - 12.2
-     - 11.8
+     - 12.2 and later
    * - Python
      - 3.11, 3.12, 3.13
-     -
    * - NumPy
-     - 1.22
-     -
+     - 1.22 and later
 
-Legate is tested and guaranteed to be compatible with Volta and later GPU
-architectures. You can use Legate with Pascal GPUs as well, but there could
+You may be able to build Legate from source and run under other configurations,
+but no guarantees are given that Legate will work properly in that case. We may
+not actively work to fix any incompatibilities discovered under unsupported
+configurations, but we accept contributions that fix such incompatibilities.
+
+In particular, if you try to use Legate on Pascal (or earlier) GPUs, there could
 be issues due to lack of independent thread scheduling. Please report any such
 issues by opening a bug.
 

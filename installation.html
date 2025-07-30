@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; NVIDIA legate (25.08.00.dev37+g91df2f4d)</title>
+    <title>Installation &#8212; NVIDIA legate (25.08.00.dev39+g5c0802c7)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=9977ac4c"></script>
+    <script src="_static/documentation_options.js?v=79c397a2"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev37+g91df2f4d)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev39+g5c0802c7)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev37+g91df2f4d) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.08.00.dev39+g5c0802c7) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.08.00.dev37+g91df2f4d)</p>
+    <p class="title logo__title">NVIDIA legate (25.08.00.dev39+g5c0802c7)</p>
   
 </a>
 
@@ -741,59 +741,58 @@ latest source code, see <a class="reference internal" href="BUILD.html#legate-so
 </section>
 <section id="support-matrix">
 <span id="id3"></span><h2>Support Matrix<a class="headerlink" href="#support-matrix" title="Link to this heading">#</a></h2>
-<p>The following table lists Legate’s minimum supported versions of major
-dependencies.</p>
-<p>“Full support” means that the corresponding versions (and all later ones) are
-being tested regularly, released as downloadable packages, and are expected to work.
-Please report any incompatibility you find against a fully-supported version
-by opening a bug.</p>
-<p>“Best-effort support” means that the corresponding versions may not be actively packaged
-and shipped, but that Legate should be compatible with them. In particular, Legate should
-be able to be compiled from source for these configurations.</p>
-<p>We may not actively work to fix any incompatibilities discovered under these versions, but
-we accept contributions that fix such incompatibilities.</p>
+<p>The following table lists Legate’s supported version range for major
+dependencies. The listed versions are being tested regularly, and supported by
+our downloadable packages.</p>
 <div class="pst-scrollable-table-container"><table class="table" id="id4">
 <caption><span class="caption-text">Support Matrix</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Dependency</p></th>
-<th class="head"><p>Full support (min version)</p></th>
-<th class="head"><p>Best-effort support (min version)</p></th>
+<th class="head"><p>Versions supported</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>CPU architecture</p></td>
-<td><p>x86-64 (Haswell), aarch64 (armv8-a)</p></td>
-<td><p>older x86-64</p></td>
+<td><ul class="simple">
+<li><p>x86-64 (Haswell and later)</p></li>
+<li><p>aarch64 (armv8-a and later)</p></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><p>OS</p></td>
-<td><p>Ubuntu (22.04), macOS (11, ARM-based only), WSL</p></td>
-<td><p>other Linux or macOS</p></td>
+<td><ul class="simple">
+<li><p>Ubuntu (22.04 and later)</p></li>
+<li><p>macOS (11 and later, ARM-based only)</p></li>
+<li><p>WSL</p></li>
+</ul>
+</td>
 </tr>
 <tr class="row-even"><td><p>Compilers</p></td>
-<td><p>GCC 11</p></td>
-<td><p>Any compiler supporting C++17</p></td>
+<td><ul class="simple">
+<li><p>GCC (11-14)</p></li>
+</ul>
+</td>
 </tr>
 <tr class="row-odd"><td><p>GPU architecture</p></td>
-<td><p>Volta</p></td>
-<td><p>Pascal</p></td>
+<td><p>Volta and later</p></td>
 </tr>
 <tr class="row-even"><td><p>CUDA toolkit</p></td>
-<td><p>12.2</p></td>
-<td><p>11.8</p></td>
+<td><p>12.2 and later</p></td>
 </tr>
 <tr class="row-odd"><td><p>Python</p></td>
 <td><p>3.11, 3.12, 3.13</p></td>
-<td></td>
 </tr>
 <tr class="row-even"><td><p>NumPy</p></td>
-<td><p>1.22</p></td>
-<td></td>
+<td><p>1.22 and later</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Legate is tested and guaranteed to be compatible with Volta and later GPU
-architectures. You can use Legate with Pascal GPUs as well, but there could
+<p>You may be able to build Legate from source and run under other configurations,
+but no guarantees are given that Legate will work properly in that case. We may
+not actively work to fix any incompatibilities discovered under unsupported
+configurations, but we accept contributions that fix such incompatibilities.</p>
+<p>In particular, if you try to use Legate on Pascal (or earlier) GPUs, there could
 be issues due to lack of independent thread scheduling. Please report any such
 issues by opening a bug.</p>
 </section>
