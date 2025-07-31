@@ -44,6 +44,7 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/mpi_detection.h>
 #include <legate/runtime/detail/shard.h>
+#include <legate/runtime/detail/streaming.h>
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/legion_task.h>
@@ -116,6 +117,7 @@ Runtime::Runtime(const Config& config)
     config_{config},
     field_reuse_size_{local_machine().calculate_field_reuse_size(this->config().field_reuse_frac())}
 {
+  static_cast<void>(scope_.exchange_scheduling_window_size(this->config().window_size()));
 }
 
 Library& Runtime::create_library(
@@ -307,10 +309,8 @@ std::pair<mapping::detail::Machine, const VariantInfo&> Runtime::slice_machine_f
 InternalSharedPtr<AutoTask> Runtime::create_task(const Library& library, LocalTaskID task_id)
 {
   auto&& [machine, vinfo] = slice_machine_for_task_(*library.find_task(task_id));
-  auto task               = make_internal_shared<AutoTask>(
-    library, vinfo, task_id, current_op_id_(), scope().priority(), std::move(machine));
-  increment_op_id_();
-  return task;
+  return make_internal_shared<AutoTask>(
+    library, vinfo, task_id, new_op_id(), scope().priority(), std::move(machine));
 }
 
 InternalSharedPtr<ManualTask> Runtime::create_task(const Library& library,
@@ -321,28 +321,16 @@ InternalSharedPtr<ManualTask> Runtime::create_task(const Library& library,
     throw TracedException<std::invalid_argument>{"Launch domain must not be empty"};
   }
   auto&& [machine, vinfo] = slice_machine_for_task_(*library.find_task(task_id));
-  auto task               = make_internal_shared<ManualTask>(library,
-                                               vinfo,
-                                               task_id,
-                                               launch_domain,
-                                               current_op_id_(),
-                                               scope().priority(),
-                                               std::move(machine));
-  increment_op_id_();
-  return task;
+  return make_internal_shared<ManualTask>(
+    library, vinfo, task_id, launch_domain, new_op_id(), scope().priority(), std::move(machine));
 }
 
 void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,
                          InternalSharedPtr<LogicalStore> source,
                          std::optional<std::int32_t> redop)
 {
-  submit(make_internal_shared<Copy>(std::move(target),
-                                    std::move(source),
-                                    current_op_id_(),
-                                    scope().priority(),
-                                    get_machine(),
-                                    redop));
-  increment_op_id_();
+  submit(make_internal_shared<Copy>(
+    std::move(target), std::move(source), new_op_id(), scope().priority(), get_machine(), redop));
 }
 
 void Runtime::issue_gather(InternalSharedPtr<LogicalStore> target,
@@ -353,11 +341,10 @@ void Runtime::issue_gather(InternalSharedPtr<LogicalStore> target,
   submit(make_internal_shared<Gather>(std::move(target),
                                       std::move(source),
                                       std::move(source_indirect),
-                                      current_op_id_(),
+                                      new_op_id(),
                                       scope().priority(),
                                       get_machine(),
                                       redop));
-  increment_op_id_();
 }
 
 void Runtime::issue_scatter(InternalSharedPtr<LogicalStore> target,
@@ -368,11 +355,10 @@ void Runtime::issue_scatter(InternalSharedPtr<LogicalStore> target,
   submit(make_internal_shared<Scatter>(std::move(target),
                                        std::move(target_indirect),
                                        std::move(source),
-                                       current_op_id_(),
+                                       new_op_id(),
                                        scope().priority(),
                                        get_machine(),
                                        redop));
-  increment_op_id_();
 }
 
 void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
@@ -385,11 +371,10 @@ void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
                                              std::move(target_indirect),
                                              std::move(source),
                                              std::move(source_indirect),
-                                             current_op_id_(),
+                                             new_op_id(),
                                              scope().priority(),
                                              get_machine(),
                                              redop));
-  increment_op_id_();
 }
 
 void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
@@ -451,8 +436,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<
   }
 
   submit(make_internal_shared<Fill>(
-    std::move(lhs), std::move(value), current_op_id_(), scope().priority(), get_machine()));
-  increment_op_id_();
+    std::move(lhs), std::move(value), new_op_id(), scope().priority(), get_machine()));
 }
 
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
@@ -462,8 +446,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
   }
 
   submit(make_internal_shared<Fill>(
-    std::move(lhs), std::move(value), current_op_id_(), scope().priority(), get_machine()));
-  increment_op_id_();
+    std::move(lhs), std::move(value), new_op_id(), scope().priority(), get_machine()));
 }
 
 void Runtime::tree_reduce(const Library& library,
@@ -482,11 +465,10 @@ void Runtime::tree_reduce(const Library& library,
                                       std::move(store),
                                       std::move(out_store),
                                       task_id,
-                                      current_op_id_(),
+                                      new_op_id(),
                                       radix,
                                       scope().priority(),
                                       std::move(machine)));
-  increment_op_id_();
 }
 
 namespace {
@@ -552,6 +534,25 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
 
 void Runtime::flush_scheduling_window()
 {
+  if (scope().parallel_policy().streaming()) {
+    // Accessor is needed because the underlying container for a queue is a protected
+    // member. First instinct would be not to do these protected accesses and to just use
+    // std::deque directly everywhere, but that's not advisable.
+    //
+    // The runtime interacts with the ops stream as FIFO. It pushes to the back, and pops from
+    // the front, so it should also see the stream as it is, a queue.
+    //
+    // The processing code needs to see a mutable, semi-linear stream of operations, and
+    // therefore needs to see the `std::deque` (or whatever underlying data structure is used).
+    //
+    // The standard allowed this escape-hatch for exactly such situations, there is no harm in
+    // accessing the protected member like this to use it.
+    struct Container : std::queue<InternalSharedPtr<Operation>> {
+      using queue::c;
+    };
+
+    process_streaming_run(&static_cast<Container&>(operations_).c);
+  }
   // We should only execute the operations resident in the queue at the time of flush, no more,
   // no less. It is possible that during the flush additional operations may be queued, and so
   // we use the size of the window on entrance to determine the number of ops to flush.
@@ -595,7 +596,7 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
 
   const auto& submitted = operations_.emplace(std::move(op));
 
-  if (submitted->needs_flush() || operations_.size() >= config().window_size()) {
+  if (submitted->needs_flush() || operations_.size() >= scope().scheduling_window_size()) {
     flush_scheduling_window();
   }
 }
@@ -804,13 +805,11 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
 
   auto store = create_store(shape, std::move(type), false /*optimize_scalar*/);
 
-  submit(make_internal_shared<Attach>(current_op_id_(),
+  submit(make_internal_shared<Attach>(new_op_id(),
                                       store->get_region_field(),
                                       store->dim(),
                                       std::move(allocation),
                                       std::move(ordering)));
-  increment_op_id_();
-
   return store;
 }
 
@@ -881,14 +880,12 @@ Runtime::IndexAttachResult Runtime::create_store(
     subregions.push_back(substore->get_region_field()->region());
   }
 
-  submit(make_internal_shared<IndexAttach>(current_op_id_(),
+  submit(make_internal_shared<IndexAttach>(new_op_id(),
                                            store->get_region_field(),
                                            store->dim(),
                                            std::move(subregions),
                                            std::move(allocs),
                                            std::move(ordering)));
-  increment_op_id_();
-
   return {std::move(store), std::move(partition)};
 }
 
@@ -1200,6 +1197,8 @@ Legion::IndexPartition Runtime::create_image_partition(
   }
 
   BufferBuilder buffer;
+
+  buffer.pack<StreamingGeneration>(std::nullopt);
   machine.pack(buffer);
   buffer.pack<std::uint32_t>(get_sharding(machine, 0));
   buffer.pack<std::int32_t>(scope().priority());
@@ -1508,30 +1507,19 @@ void Runtime::issue_release_region_field(
   InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unmap, bool unordered)
 {
   submit(make_internal_shared<ReleaseRegionField>(
-    current_op_id_(), std::move(physical_state), unmap, unordered));
-  increment_op_id_();
+    new_op_id(), std::move(physical_state), unmap, unordered));
 }
 
 void Runtime::issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)
 {
-  submit(make_internal_shared<Discard>(current_op_id_(), region, field_id));
-  increment_op_id_();
+  submit(make_internal_shared<Discard>(new_op_id(), region, field_id));
 }
 
-void Runtime::issue_mapping_fence()
-{
-  submit(make_internal_shared<MappingFence>(current_op_id_()));
-  increment_op_id_();
-}
+void Runtime::issue_mapping_fence() { submit(make_internal_shared<MappingFence>(new_op_id())); }
 
 void Runtime::issue_execution_fence(bool block /*=false*/)
 {
-  auto op = make_internal_shared<ExecutionFence>(current_op_id_(), block);
-
-  // Do this before submission, because it may flush, which may launch other tasks, which need
-  // to see an incremented op id.
-  increment_op_id_();
-  submit(std::move(op));
+  submit(make_internal_shared<ExecutionFence>(new_op_id(), block));
 }
 
 InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precision)
@@ -1539,8 +1527,7 @@ InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precisi
   static auto empty_shape =
     make_internal_shared<Shape>(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{});
   auto timestamp = create_store(empty_shape, int64(), true /* optimize_scalar */);
-  submit(make_internal_shared<Timing>(current_op_id_(), precision, timestamp));
-  increment_op_id_();
+  submit(make_internal_shared<Timing>(new_op_id(), precision, timestamp));
   return timestamp;
 }
 

@@ -11,6 +11,7 @@
 #include <legate/operation/detail/store_projection.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/detail/streaming.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/core_ids.h>
 
@@ -81,6 +82,7 @@ BufferBuilder FillLauncher::pack_mapper_arg_(Legion::ProjectionID proj_id) const
 {
   BufferBuilder buffer;
 
+  buffer.pack<StreamingGeneration>(std::nullopt);
   machine_.pack(buffer);
   buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, proj_id));
   buffer.pack(priority_);

@@ -112,32 +112,53 @@ Variable AutoTask::add_reduction(LogicalArray array,
   return partition_symbol;
 }
 
-void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_()->add_scalar_arg(scalar.impl()); }
+void AutoTask::add_scalar_arg(  // NOLINT(readability-make-member-function-const)
+  const Scalar& scalar)
+{
+  impl_()->add_scalar_arg(scalar.impl());
+}
 
-void AutoTask::add_constraint(const Constraint& constraint)
+void AutoTask::add_constraint(  // NOLINT(readability-make-member-function-const)
+  const Constraint& constraint)
 {
   impl_()->add_constraint(constraint.impl());
 }
 
-Variable AutoTask::find_or_declare_partition(const LogicalArray& array)
+Variable AutoTask::find_or_declare_partition(  // NOLINT(readability-make-member-function-const)
+  const LogicalArray& array)
 {
   return Variable{impl_()->find_or_declare_partition(array.impl())};
 }
 
-Variable AutoTask::declare_partition() { return Variable{impl_()->declare_partition()}; }
+Variable AutoTask::declare_partition()  // NOLINT(readability-make-member-function-const)
+{
+  return Variable{impl_()->declare_partition()};
+}
 
 std::string_view AutoTask::provenance() const { return impl_()->provenance().as_string_view(); }
 
-void AutoTask::set_concurrent(bool concurrent) { impl_()->set_concurrent(concurrent); }
+void AutoTask::set_concurrent(bool concurrent)  // NOLINT(readability-make-member-function-const)
+{
+  impl_()->set_concurrent(concurrent);
+}
 
-void AutoTask::set_side_effect(bool has_side_effect) { impl_()->set_side_effect(has_side_effect); }
+void AutoTask::set_side_effect(  // NOLINT(readability-make-member-function-const)
+  bool has_side_effect)
+{
+  impl_()->set_side_effect(has_side_effect);
+}
 
-void AutoTask::throws_exception(bool can_throw_exception)
+void AutoTask::throws_exception(  // NOLINT(readability-make-member-function-const)
+  bool can_throw_exception)
 {
   impl_()->throws_exception(can_throw_exception);
 }
 
-void AutoTask::add_communicator(std::string_view name) { impl_()->add_communicator(name); }
+void AutoTask::add_communicator(  // NOLINT(readability-make-member-function-const)
+  std::string_view name)
+{
+  impl_()->add_communicator(name);
+}
 
 AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl)
   : pimpl_{make_internal_shared<Impl>(std::move(impl))}

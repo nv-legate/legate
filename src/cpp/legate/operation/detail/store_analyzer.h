@@ -28,15 +28,48 @@ class ProjectionSet {
               const StoreProjection& store_proj,
               bool relax_interference_checks);
 
-  Legion::PrivilegeMode privilege{};
-  std::set<BaseStoreProjection> store_projs{};
-  bool is_key{};
+  /**
+   * @return The coalesced privilege of the projection set.
+   *
+   * @note This is not the true coalesced privilege of the projection set. During privilege
+   * promotion, any discard-output masks (inserted as a result of streaming) are stripped out
+   * of the privilege. In order to reconstruct the full true privilege, the caller must perform:
+   *
+   * ```c++
+   * auto priv = proj_set.privilege();
+   *
+   * if (proj_set.had_streaming_discard()) {
+   *   priv |= LEGION_DISCARD_OUTPUT_MASK;
+   * }
+   * ```
+   */
+  [[nodiscard]] Legion::PrivilegeMode privilege() const;
+
+  /**
+   * @return The store projections.
+   */
+  [[nodiscard]] const std::set<BaseStoreProjection>& store_projs() const;
+
+  /**
+   * @return Whether this projection set corresponds to the key store.
+   */
+  [[nodiscard]] bool is_key() const;
+
+  /**
+   * @return Whether this projection set had the streaming discard privilege privilege stripped
+   * out during privilege promotion.
+   */
+  [[nodiscard]] bool had_streaming_discard() const;
+
+ private:
+  bool had_streaming_discard_{};
+  Legion::PrivilegeMode privilege_{};
+  std::set<BaseStoreProjection> store_projs_{};
+  bool is_key_{};
 };
 
 class FieldSet {
  public:
-  using Key = std::pair<Legion::PrivilegeMode, BaseStoreProjection>;
-
   void insert(Legion::FieldID field_id,
               Legion::PrivilegeMode privilege,
               const StoreProjection& store_proj,
@@ -51,12 +84,20 @@ class FieldSet {
   void populate_launcher(Launcher* task, const Legion::LogicalRegion& region) const;
 
  private:
+  // Note the privilege in this "Key" is not the true promoted privilege of the store. If the
+  // incoming store had the streaming discard mask (discard-output), then this mask will have
+  // been stripped out during privilege promotion. The true promoted privilege will be `priv |
+  // LEGION_DISCARD_OUTPUT_MASK`, if `Entry::has_streaming_discard_` is true, otherwise just
+  // `priv`.
+  using Key = std::pair<Legion::PrivilegeMode, BaseStoreProjection>;
+
   class Entry {
    public:
     std::vector<Legion::FieldID> fields{};
     bool is_key{};
+    bool has_streaming_discard_{};
   };
-  // This must be an ordered map to avoid control divergence
+  // This must be an ordered map to avoid control divergence.
   std::map<Key, Entry> coalesced_{};
   using ReqIndexMapKey = std::pair<Key, Legion::FieldID>;
   std::unordered_map<ReqIndexMapKey, std::uint32_t, hasher<ReqIndexMapKey>> req_indices_{};

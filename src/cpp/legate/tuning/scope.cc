@@ -60,8 +60,26 @@ class Scope::Impl {
       throw detail::TracedException<std::invalid_argument>{
         "Parallel policy can be set only once for each scope"};
     }
-    parallel_policy_ =
-      detail::Runtime::get_runtime().scope().exchange_parallel_policy(std::move(parallel_policy));
+
+    const auto new_is_streaming = parallel_policy.streaming();
+    auto& global_scope          = detail::Runtime::get_runtime().scope();
+
+    parallel_policy_ = global_scope.exchange_parallel_policy(std::move(parallel_policy));
+    // If the window size isn't big enough you never get any streaming, because every streaming
+    // run will be size 1, and so will just get mapped normally. So we want to artificially
+    // increase the scheduling window size (to some suitable large window) for the duration of
+    // a streaming scope.
+    //
+    // This scope variable is not yet fully exposed to the user (they are only allowed to
+    // toggle it globally, at program startup), but in case it ever is exposed, respect their
+    // scheduling window value first.
+    if (!scheduling_window_size_.has_value()) {
+      constexpr auto BIG_WINDOW = 1024U;
+
+      if (new_is_streaming && (global_scope.scheduling_window_size() < BIG_WINDOW)) {
+        scheduling_window_size_ = global_scope.exchange_scheduling_window_size(BIG_WINDOW);
+      }
+    }
   }
 
   ~Impl()
@@ -85,6 +103,10 @@ class Scope::Impl {
       static_cast<void>(detail::Runtime::get_runtime().scope().exchange_parallel_policy(
         std::move(*parallel_policy_)));
     }
+    if (scheduling_window_size_.has_value()) {
+      static_cast<void>(detail::Runtime::get_runtime().scope().exchange_scheduling_window_size(
+        *scheduling_window_size_));
+    }
   }
 
  private:
@@ -93,6 +115,7 @@ class Scope::Impl {
   std::optional<std::string> provenance_{};
   InternalSharedPtr<mapping::detail::Machine> machine_{};
   std::optional<ParallelPolicy> parallel_policy_{};
+  std::optional<std::uint32_t> scheduling_window_size_{};
 };
 
 template class DefaultDelete<Scope::Impl>;

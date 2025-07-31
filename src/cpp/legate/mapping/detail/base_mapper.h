@@ -14,12 +14,19 @@
 
 #include <legion.h>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+namespace legate::detail {
+
+class StreamingGeneration;
+
+}  // namespace legate::detail
 
 namespace legate::mapping::detail {
 
@@ -219,6 +226,76 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                           const MapDataflowGraphInput& input,
                           MapDataflowGraphOutput& output) override;
 
+ private:
+  /**
+   * @brief Select streaming tasks to map.
+   *
+   * @param task The Legion task to potentially map.
+   * @param stream_gen The task's streaming generation.
+   * @param mapped_tasks The set of already mapped tasks. If this routine choses to map, it
+   * will insert `task` into `mapped_tasks`.
+   *
+   * Conceptually we can model the execution of `N` tasks, each with `M` leafs as a `N x M`
+   * matrix:
+   *
+   * |------|------|------|
+   * | A[0] | A[1] | A[2] |
+   * |------|------|------|
+   * | B[0] | B[1] | A[2] |
+   * |------|------|------|
+   * | C[0] | C[1] | C[2] |
+   * |------|------|------|
+   *
+   * Normally tasks execute "horizontally", where all instances of a particular task are
+   * executed before any dependent operations. This is akin to executing the above matrix row
+   * by row (assuming C depends on B depends on A).
+   *
+   * But in streaming, the tasks are executed "vertically", where for each submitted task, the
+   * same slice of leaf tasks are executed. In the matrix example, this would be executing it
+   * column by column.
+   *
+   * First, some terminology:
+   *
+   * - streaming generation: This is a unique ID that we assign to all tasks of a single
+   *   streaming run with. In the example above, this is all tasks inside our matrix. If the
+   *   streaming generation is the same, we are working on the same matrix.
+   * - streaming size: This is the number of tasks per generation. In our case, the number of
+   *   rows in the matrix.
+   *
+   * Prerequisites for the below:
+   *
+   * - All streaming tasks must have the same number of leaf tasks. In effect, each row of the
+   *   matrix must have the same number of columns.
+   *
+   * - The sharding points for each task is the same. In effect, each shard should get a
+   *   complete column of the matrix; if a node starts mapping column `c`, then it should
+   *   expect to eventually see every row in that column.
+   *
+   * - All streaming runs must have a mapping fence inserted after they are scheduled. In
+   *   effect, if we start working on streaming generation `N`, we expect to handle every task
+   *   in the matrix before we start working on generation `N + 1`.
+   *
+   *   This restriction exists because the top-level code only knows how many tasks are part of
+   *   the streaming generation (number of rows), but it doesn't yet know into how many shards
+   *   those tasks will be parallelized into (number of columns).
+   *
+   *   A counter-example: suppose we did not have this restriction and the code below has just
+   *   fully mapped a column. Some new tasks come in, but their streaming generation is
+   *   different to our current generation. Does the mapper wait, hoping that more tasks from
+   *   the previous generation show up? Or does it conclude that the previous generation has
+   *   finished, and start mapping the new generation? Without the mapping fence, this question
+   *   is undecidable. But with the mapping fence we know that if we encounter a new
+   *   generation, that means the old generation is definitely finished.
+   *
+   * - All leaf tasks must have a unique `index_point`. This is similar to the first
+   *   prerequisite, in that it guarantees all rows of the matrix have the same number of
+   *   columns, because it says that for row `N`, it has `M` *unique* columns.
+   */
+  void select_streaming_tasks_to_map_(const Legion::Task& task,
+                                      const legate::detail::StreamingGeneration& stream_gen,
+                                      std::set<const Legion::Task*>* mapped_tasks);
+
+ public:
   // Mapping control and stealing
   void select_tasks_to_map(Legion::Mapping::MapperContext ctx,
                            const SelectMappingInput& input,
@@ -321,6 +398,11 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   LocalMachine local_machine_{};
 
   std::string mapper_name_{};
+
+  // Streaming transformation related objects
+  std::uint32_t streaming_current_gen_{};
+  std::optional<DomainPoint> streaming_target_column_{};
+  std::uint32_t streaming_rows_mapped_{};
 };
 
 }  // namespace legate::mapping::detail

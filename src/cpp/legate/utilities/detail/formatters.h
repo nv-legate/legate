@@ -39,6 +39,7 @@ class Storage;
 class VariantInfo;
 class TaskInfo;
 class Task;
+class LogicalStore;
 
 template <typename CharT, typename TraitsT>
 class BasicZStringView;
@@ -192,6 +193,12 @@ struct formatter<T, Char, std::enable_if_t<std::is_base_of_v<legate::detail::Tas
   {
     return formatter<legate::detail::Task, Char>::format(task, ctx);
   }
+};
+
+template <>
+struct formatter<legate::detail::LogicalStore> : formatter<std::string> {
+  format_context::iterator format(const legate::detail::LogicalStore& store,
+                                  format_context& ctx) const;
 };
 
 }  // namespace fmt

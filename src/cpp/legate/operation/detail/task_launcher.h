@@ -9,12 +9,14 @@
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/launcher_arg.h>
+#include <legate/runtime/detail/streaming.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/zstring_view.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace legate::detail {
@@ -91,11 +93,25 @@ class TaskLauncher {
   void can_elide_device_ctx_sync(bool can_elide_sync);
   void relax_interference_checks(bool relax);
 
+  /**
+   * @brief Set the streaming generation for this particular task launch.
+   *
+   * See `Task::set_streaming_generation()` for further discussion on this parameter.
+   *
+   * @param streaming_generation The streaming generation.
+   */
+  void set_streaming_generation(const std::optional<StreamingGeneration>& streaming_generation);
+
   Legion::FutureMap execute(const Legion::Domain& launch_domain);
   Legion::Future execute_single();
 
   [[nodiscard]] ZStringView provenance() const;
   [[nodiscard]] const ParallelPolicy& parallel_policy() const;
+
+  /**
+   * @return The streaming generation if this task is a streaming task, `std::nullopt` otherwise.
+   */
+  [[nodiscard]] const std::optional<StreamingGeneration>& streaming_generation() const;
 
  private:
   void analyze_arguments_(bool parallel, StoreAnalyzer* analyzer);
@@ -134,6 +150,7 @@ class TaskLauncher {
   bool can_throw_exception_{};
   bool can_elide_device_ctx_sync_{};
   bool relax_interference_checks_{};
+  std::optional<StreamingGeneration> streaming_gen_{};
   std::size_t future_size_{};
 
   std::vector<Analyzable> inputs_{};

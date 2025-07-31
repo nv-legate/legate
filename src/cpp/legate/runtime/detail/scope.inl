@@ -22,6 +22,8 @@ inline const InternalSharedPtr<Scope::Machine>& Scope::machine() const { return 
 
 inline const ParallelPolicy& Scope::parallel_policy() const { return parallel_policy_; }
 
+inline std::uint32_t Scope::scheduling_window_size() const { return scheduling_window_size_; }
+
 inline std::int32_t Scope::exchange_priority(std::int32_t priority)
 {
   return std::exchange(priority_, priority);
@@ -40,6 +42,11 @@ inline std::string Scope::exchange_provenance(std::string provenance)
 inline InternalSharedPtr<Scope::Machine> Scope::exchange_machine(InternalSharedPtr<Machine> machine)
 {
   return std::exchange(machine_, std::move(machine));
+}
+
+inline std::uint32_t Scope::exchange_scheduling_window_size(std::uint32_t window_size)
+{
+  return std::exchange(scheduling_window_size_, window_size);
 }
 
 }  // namespace legate::detail

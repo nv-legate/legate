@@ -1902,12 +1902,93 @@ void BaseMapper::map_dataflow_graph(Legion::Mapping::MapperContext /*ctx*/,
   LEGATE_ABORT("Should never get here");
 }
 
-void BaseMapper::select_tasks_to_map(Legion::Mapping::MapperContext /*ctx*/,
+void BaseMapper::select_streaming_tasks_to_map_(
+  const Legion::Task& task,
+  const legate::detail::StreamingGeneration& stream_gen,
+  std::set<const Legion::Task*>* mapped_tasks)
+{
+  if (stream_gen.generation != streaming_current_gen_) {
+    // We have encountered a new matrix of streaming tasks. We should reset all the
+    // information from the old streaming matrix. If streaming_rows_mapped_ != 0, this means
+    // we didn't finish mapping the previous matrix. Likely someone forgot to include a
+    // mapping fence before launching a new streaming run.
+    logger().debug() << "-- Switching generation " << streaming_current_gen_ << " -> "
+                     << stream_gen.generation;
+    LEGATE_CHECK(streaming_rows_mapped_ == 0);
+
+    streaming_target_column_.reset();
+    streaming_current_gen_ = stream_gen.generation;
+  }
+
+  LEGATE_CHECK(streaming_rows_mapped_ <= stream_gen.size);
+
+  const auto& task_column   = task.index_point;
+  const auto& target_column = [&]() -> const DomainPoint& {
+    if (!streaming_target_column_.has_value()) {
+      // Either we mapped all the points in a previous column (of the same matrix), or we
+      // switched to a new matrix. In any case, we arbitrarily pick the current column as our
+      // target column. We will now map all rows matching this column.
+      logger().debug() << "---- No selected index point, using current task index point "
+                       << task_column;
+      streaming_target_column_ = task_column;
+    }
+    return *streaming_target_column_;
+  }();
+
+  logger().debug() << "-- Using index point " << target_column;
+
+  if (task_column == target_column) {
+    // Found a task in our column, map it
+    logger().debug() << "---- Matches index point, mapping";
+    mapped_tasks->insert(&task);
+    if (++streaming_rows_mapped_ == stream_gen.size) {
+      streaming_rows_mapped_ = 0;
+      streaming_target_column_.reset();
+      logger().debug() << "------ Fully mapped row";
+    }
+  }
+}
+
+void BaseMapper::select_tasks_to_map(Legion::Mapping::MapperContext ctx,
                                      const SelectMappingInput& input,
                                      SelectMappingOutput& output)
 {
-  // Just map all the ready tasks
-  output.map_tasks.insert(input.ready_tasks.begin(), input.ready_tasks.end());
+  const auto want_debug = logger().want_debug();
+  auto&& map_tasks      = output.map_tasks;
+  auto&& ready_tasks    = input.ready_tasks;
+
+  logger().debug() << "SELECT_TASKS_TO_MAP: =============================================";
+  logger().debug() << "SELECT_TASKS_TO_MAP: Processing " << ready_tasks.size() << " task(s)";
+
+  for (auto&& task : ready_tasks) {
+    // Do want_debug() here because Legion::Mapping::Utilities::to_string() is eagerly
+    // evaluated and expensive. Everything else can be just passed to logger directly, as they
+    // just print basic types.
+    if (want_debug) {
+      logger().debug() << "SELECT_TASKS_TO_MAP: processing "
+                       << Legion::Mapping::Utilities::to_string(runtime, ctx, *task);
+    }
+
+    if (const auto stream_gen = Mappable::deserialize_only_streaming_generation(*task);
+        stream_gen.has_value()) {
+      logger().debug() << "-- IS a streaming task, generation " << stream_gen->generation
+                       << ", num_rows " << stream_gen->size;
+
+      select_streaming_tasks_to_map_(*task, *stream_gen, &map_tasks);
+      continue;
+    }
+
+    logger().debug() << "-- not a streaming task";
+    // Non-streaming tasks are always mapped immediately
+    map_tasks.insert(task);
+  }
+
+  if (map_tasks.empty()) {
+    // Legion requires us to return an event in the case the output.map_tasks is empty.
+    output.deferral_event = runtime->create_mapper_event(ctx);
+  }
+
+  logger().debug() << "SELECT_TASKS_TO_MAP: =============================================";
 }
 
 void BaseMapper::select_steal_targets(Legion::Mapping::MapperContext /*ctx*/,

@@ -7,19 +7,8 @@
 #pragma once
 
 #include <legate/operation/detail/task.h>
-#include <legate/runtime/detail/config.h>
 
 namespace legate::detail {
-
-inline TaskArrayArg::TaskArrayArg(InternalSharedPtr<LogicalArray> _array) : array{std::move(_array)}
-{
-}
-
-inline TaskArrayArg::TaskArrayArg(InternalSharedPtr<LogicalArray> _array,
-                                  std::optional<SymbolicPoint> _projection)
-  : array{std::move(_array)}, projection{std::move(_projection)}
-{
-}
 
 inline bool TaskArrayArg::needs_flush() const { return array->needs_flush(); }
 
@@ -30,6 +19,11 @@ inline bool Task::supports_replicated_write() const { return true; }
 inline bool Task::can_throw_exception() const { return can_throw_exception_; }
 
 inline bool Task::can_elide_device_ctx_sync() const { return can_elide_device_ctx_sync_; }
+
+inline const std::optional<StreamingGeneration>& Task::streaming_generation() const
+{
+  return streaming_gen_;
+}
 
 inline const Library& Task::library() const { return library_; }
 

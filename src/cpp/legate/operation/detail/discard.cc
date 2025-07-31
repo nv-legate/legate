@@ -12,9 +12,9 @@ namespace legate::detail {
 
 void Discard::launch()
 {
-  auto launcher = Legion::DiscardLauncher{region_, region_};
+  auto launcher = Legion::DiscardLauncher{region(), region()};
 
-  launcher.add_field(field_id_);
+  launcher.add_field(field_id());
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
   launcher.provenance = provenance().to_string();

@@ -9,6 +9,7 @@
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
+#include <optional>
 #include <vector>
 
 namespace legate::detail {
@@ -17,6 +18,17 @@ namespace legate::detail {
  * @addtogroup util
  * @{
  */
+
+class BufferBuilder;
+
+template <typename T, typename = void>
+struct has_pack_method : std::false_type {};
+
+template <typename T>
+struct has_pack_method<
+  T,
+  std::void_t<decltype(std::declval<T&>().pack(std::declval<BufferBuilder&>()))>> : std::true_type {
+};
 
 /**
  * @brief A helper class to serialize values into a contiguous buffer
@@ -33,8 +45,12 @@ class BufferBuilder {
    *
    * @param value Value to serialize
    */
-  template <typename T>
+  template <typename T, std::enable_if_t<!has_pack_method<T>::value>* = nullptr>
   void pack(const T& value);
+
+  template <typename T, std::enable_if_t<has_pack_method<T>::value>* = nullptr>
+  void pack(const T& value);
+
   /**
    * @brief Serializes multiple values
    *
@@ -42,6 +58,14 @@ class BufferBuilder {
    */
   template <typename T>
   void pack(Span<const T> values);
+
+  /**
+   * @brief Serializes an optional value.
+   *
+   * @param value The optional to serialize.
+   */
+  template <typename T>
+  void pack(const std::optional<T>& value);
 
   /**
    * @brief Serializes an arbitrary allocation

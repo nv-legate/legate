@@ -217,10 +217,13 @@ class Runtime {
 
  private:
   static void check_dimensionality_(std::uint32_t dim);
-  [[nodiscard]] std::uint64_t current_op_id_() const;
-  void increment_op_id_();
 
  public:
+  /**
+   * @return A new unique operation ID.
+   */
+  [[nodiscard]] std::uint64_t new_op_id();
+
   void raise_pending_exception();
   [[nodiscard]] std::optional<ReturnedException> check_pending_task_exception();
   void record_pending_exception(Legion::Future pending_exception);

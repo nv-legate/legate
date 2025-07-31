@@ -25,4 +25,8 @@ inline bool Discard::needs_flush() const { return false; }
 
 inline bool Discard::needs_partitioning() const { return false; }
 
+inline const Legion::LogicalRegion& Discard::region() const { return region_; }
+
+inline Legion::FieldID Discard::field_id() const { return field_id_; }
+
 }  // namespace legate::detail

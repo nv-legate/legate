@@ -264,6 +264,7 @@ set(with_runtime_SRC
     unit/dlpack/from_dlpack/versioned.cc
     unit/dlpack/from_dlpack/unversioned.cc
     unit/dlpack/to_dlpack/to_dlpack.cc
+    unit/streaming/process_streaming_run.cc
     # experimental
     experimental/stl/elementwise.cc
     experimental/stl/fill.cc
@@ -273,7 +274,6 @@ set(with_runtime_SRC
     experimental/stl/transform.cc
     experimental/stl/transform_reduce.cc
     experimental/stl/views.cc
-    experimental/streaming.cc
     experimental/tracing.cc)
 
 if(legate_USE_HDF5)
@@ -325,7 +325,8 @@ set(non_reentrant_wo_runtime_SRC
     non_reentrant/wo_runtime/exception/base.cc
     non_reentrant/wo_runtime/exception/traced_exception.cc
     non_reentrant/wo_runtime/exception/terminate_handler.cc
-    non_reentrant/wo_runtime/init/init.cc)
+    non_reentrant/wo_runtime/init/init.cc
+    non_reentrant/wo_runtime/streaming/streaming.cc)
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
                                                       ${with_runtime_SRC}

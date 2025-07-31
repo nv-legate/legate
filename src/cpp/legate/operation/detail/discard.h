@@ -41,6 +41,16 @@ class Discard final : public Operation {
    */
   [[nodiscard]] bool supports_streaming() const override;
 
+  /**
+   * @return The `LogicalRegion` that this discard will apply to.
+   */
+  [[nodiscard]] const Legion::LogicalRegion& region() const;
+
+  /**
+   * @return The specific field in the `LogicalRegion` that this discard will apply to.
+   */
+  [[nodiscard]] Legion::FieldID field_id() const;
+
  private:
   Legion::LogicalRegion region_{};
   Legion::FieldID field_id_{};

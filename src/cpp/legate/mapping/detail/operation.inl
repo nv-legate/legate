@@ -21,6 +21,12 @@ inline std::uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
 inline std::int32_t Mappable::priority() const { return priority_; }
 
+inline const std::optional<legate::detail::StreamingGeneration>& Mappable::streaming_generation()
+  const
+{
+  return streaming_gen_;
+}
+
 // ==========================================================================================
 
 inline legate::detail::Library& Task::library() { return *library_; }

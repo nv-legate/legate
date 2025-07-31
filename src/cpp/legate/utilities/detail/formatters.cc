@@ -200,4 +200,10 @@ format_context::iterator formatter<legate::detail::Task>::format(const legate::d
   return formatter<std::string>::format(task.to_string(/* show provenance */ false), ctx);
 }
 
+format_context::iterator formatter<legate::detail::LogicalStore>::format(
+  const legate::detail::LogicalStore& store, format_context& ctx) const
+{
+  return formatter<std::string>::format(store.to_string(), ctx);
+}
+
 }  // namespace fmt

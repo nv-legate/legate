@@ -12,6 +12,7 @@
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
+#include <legate/runtime/detail/streaming.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -37,10 +38,30 @@ class VariantInfo;
 
 class TaskArrayArg {
  public:
-  explicit TaskArrayArg(InternalSharedPtr<LogicalArray> _array);
-  TaskArrayArg(InternalSharedPtr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
+  /**
+   * @brief Construct a TaskArrayArg.
+   *
+   * `priv` should be initialized to the following values based on whether the argument as an
+   * input, output, or reduction:
+   *
+   * - input: `LEGION_READ_ONLY`
+   * - output: `LEGION_WRITE_ONLY`
+   * - reduction: `LEGION_REDUCE`
+   *
+   * If the owning task is a streaming task, then this privilege is further fixed up during
+   * scheduling window flush to include additional discard privileges. Therefore, the privilege
+   * member should *not* be considered stable until the task is sent to Legion.
+   *
+   * @param priv The access privilege for this task argument.
+   * @param _array The array for this argument.
+   * @param _projection An optional projection for the argument.
+   */
+  TaskArrayArg(Legion::PrivilegeMode priv,
+               InternalSharedPtr<LogicalArray> _array,
+               std::optional<SymbolicPoint> _projection = std::nullopt);
   [[nodiscard]] bool needs_flush() const;
 
+  Legion::PrivilegeMode privilege{Legion::PrivilegeMode::LEGION_NO_ACCESS};
   InternalSharedPtr<LogicalArray> array{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> mapping{};
   std::optional<SymbolicPoint> projection{};
@@ -61,6 +82,20 @@ class Task : public Operation {
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);
   void throws_exception(bool can_throw_exception);
+  /**
+   * @brief Set the streaming generation for this task.
+   *
+   * This marks a task as part of a set of streaming tasks. Among other effects, this informs
+   * the mapper that this task should be mapped "vertically", i.e. map each "column" of index
+   * points of a streaming generation at a time before mapping new tasks. See
+   * `BaseMapper::select_tasks_to_map()` for more information.
+   *
+   * If `streaming_gen` is `std::nullopt`, the task is no longer considered to be part of a
+   * streaming generation. It will be eagerly (i.e. horizontally) mapped by the mapper.
+   *
+   * @param streaming_gen The streaming generation.
+   */
+  void set_streaming_generation(std::optional<StreamingGeneration> streaming_gen);
   void add_communicator(std::string_view name, bool bypass_signature_check = false);
 
   void record_scalar_output(InternalSharedPtr<LogicalStore> store);
@@ -91,11 +126,39 @@ class Task : public Operation {
   [[nodiscard]] bool can_throw_exception() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const;
 
+  /**
+   * @return The streaming generation if the task is a streaming task, `std::nullopt` otherwise.
+   */
+  [[nodiscard]] const std::optional<StreamingGeneration>& streaming_generation() const;
+
+  /**
+   * @return The scalar arguments for the task.
+   */
   [[nodiscard]] Span<const InternalSharedPtr<Scalar>> scalars() const;
+
+  /**
+   * @return The input arguments for the task.
+   */
   [[nodiscard]] Span<const TaskArrayArg> inputs() const;
+
+  /**
+   * @return The output arguments for the task.
+   */
   [[nodiscard]] Span<const TaskArrayArg> outputs() const;
+
+  /**
+   * @return The reduction arguments for the task.
+   */
   [[nodiscard]] Span<const TaskArrayArg> reductions() const;
+
+  /**
+   * @return The scalar output arguments for the task.
+   */
   [[nodiscard]] Span<const InternalSharedPtr<LogicalStore>> scalar_outputs() const;
+
+  /**
+   * @return The scalar reductions for the task.
+   */
   [[nodiscard]] Span<const std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>
   scalar_reductions() const;
 
@@ -113,6 +176,7 @@ class Task : public Operation {
   bool has_side_effect_{};
   bool can_throw_exception_{};
   bool can_elide_device_ctx_sync_{};
+  std::optional<StreamingGeneration> streaming_gen_{};
   SmallVector<InternalSharedPtr<Scalar>> scalars_{};
 
  protected:
@@ -196,7 +260,18 @@ class ManualTask final : public Task {
                      std::optional<SymbolicPoint> projection);
 
  private:
-  void add_store_(SmallVector<TaskArrayArg>& store_args,
+  /**
+   * @brief Add a store as an argument to the `ManualTask`
+   *
+   * @param priv The privilege of the store to add. See `TaskArrayArg` for further discussion
+   * on this value.
+   * @param store_args The array of arguments to append to.
+   * @param store The store to add as an argument.
+   * @param partition The partitioning descriptor for the store.
+   * @param projection An optional projection to use on the partitioned store.
+   */
+  void add_store_(Legion::PrivilegeMode priv,
+                  SmallVector<TaskArrayArg>& store_args,
                   const InternalSharedPtr<LogicalStore>& store,
                   InternalSharedPtr<Partition> partition,
                   std::optional<SymbolicPoint> projection = {});

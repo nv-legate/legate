@@ -227,11 +227,14 @@ class AutoTask {
   AutoTask& operator=(const AutoTask&)     = default;
   ~AutoTask() noexcept;
 
+  // Purposefully not documented, it is only exposed for the tests
+  [[nodiscard]] const SharedPtr<detail::AutoTask>& impl_()  // NOLINT(readability-identifier-naming)
+    const;
+
  private:
   friend class Runtime;
   explicit AutoTask(InternalSharedPtr<detail::AutoTask> impl);
 
-  [[nodiscard]] const SharedPtr<detail::AutoTask>& impl_() const;
   [[nodiscard]] SharedPtr<detail::AutoTask> release_();
   [[nodiscard]] InternalSharedPtr<detail::LogicalArray> record_user_ref_(LogicalArray array);
   void clear_user_refs_();

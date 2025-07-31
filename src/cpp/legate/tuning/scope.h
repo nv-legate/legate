@@ -179,14 +179,16 @@ class Scope {
    * @throw std::invalid_argument If a parallel policy has already been set via this Scope object.
    *
    * @return Scope.
+   *
+   * @see set_parallel_policy()
    */
   Scope&& with_parallel_policy(ParallelPolicy parallel_policy) &&;
   /**
-   * @brief Sets a given task priority to the scope
+   * @brief Sets a given task priority to the scope.
    *
-   * @param priority Task priority to set to the scope
+   * @param priority Task priority to set to the scope.
    *
-   * @throw std::invalid_argument If a task priority has already been set via this Scope object
+   * @throw std::invalid_argument If a task priority has already been set via this Scope object.
    */
   void set_priority(std::int32_t priority);
   /**
@@ -223,6 +225,9 @@ class Scope {
   void set_machine(const mapping::Machine& machine);
   /**
    * @brief Sets a given parallel policy to the scope.
+   *
+   * If `parallel_policy` is streaming, the scheduling window size will be artificially
+   * inflated to allow for better streaming for the duration of the scope.
    *
    * @param parallel_policy Parallel policy to set to the scope.
    *

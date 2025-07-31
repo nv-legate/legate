@@ -31,6 +31,11 @@ class Scope {
    */
   [[nodiscard]] const ParallelPolicy& parallel_policy() const;
 
+  /**
+   * @return The scheduling window size of this Scope.
+   */
+  [[nodiscard]] std::uint32_t scheduling_window_size() const;
+
   [[nodiscard]] std::int32_t exchange_priority(std::int32_t priority);
   [[nodiscard]] ExceptionMode exchange_exception_mode(ExceptionMode exception_mode);
   [[nodiscard]] std::string exchange_provenance(std::string provenance);
@@ -38,12 +43,24 @@ class Scope {
   /*
    * @brief Exchange the new parallel_policy with the old one.
    *
-   * If the policies are different then we exchange it and flush the
-   * current scheduling window.
+   * If the policies are different then we exchange it and flush the current scheduling
+   * window. Additionally, if either current or previous parallel policy is streaming, a
+   * mapping fence is issued.
+   *
+   * @param parallel_policy The parallel policy.
    *
    * @return The old parallel_policy of this Scope.
    */
   [[nodiscard]] ParallelPolicy exchange_parallel_policy(ParallelPolicy parallel_policy);
+
+  /**
+   * @brief Exchange the new scheduling window size with the old one.
+   *
+   * @param window_size The new window size.
+   *
+   * @return The old window size.
+   */
+  [[nodiscard]] std::uint32_t exchange_scheduling_window_size(std::uint32_t window_size);
 
  private:
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
@@ -51,6 +68,7 @@ class Scope {
   std::string provenance_{};
   InternalSharedPtr<Machine> machine_{};
   ParallelPolicy parallel_policy_{};
+  std::uint32_t scheduling_window_size_{1};
 };
 
 }  // namespace legate::detail

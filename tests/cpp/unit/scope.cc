@@ -6,6 +6,8 @@
 
 #include <legate.h>
 
+#include <legate/runtime/detail/runtime.h>
+
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -348,6 +350,53 @@ TEST_F(ScopeTest, DuplicateMachine3)
   EXPECT_THROW(static_cast<void>(
                  legate::Scope{legate::Scope::machine()}.with_machine(legate::Scope::machine())),
                std::invalid_argument);
+}
+
+TEST_F(ScopeTest, StreamingSchedulingWindow)
+{
+  auto& runtime          = legate::detail::Runtime::get_runtime();
+  const auto window_size = runtime.scope().scheduling_window_size();
+
+  {
+    const auto _        = legate::Scope{legate::ParallelPolicy{}.with_streaming(true)};
+    const auto new_size = runtime.scope().scheduling_window_size();
+    // Big window size is the arbitrary large window size chosen in
+    // Scope::Impl::set_parallel_policy().
+    constexpr auto BIG_WINDOW = 1024U;
+
+    // Do GE because the tests may be run with a global window size that already exceeds our
+    // big window.
+    ASSERT_GE(new_size, BIG_WINDOW);
+  }
+  ASSERT_EQ(runtime.scope().scheduling_window_size(), window_size);
+}
+
+TEST_F(ScopeTest, StreamingSchedulingWindowNested)
+{
+  auto& runtime          = legate::detail::Runtime::get_runtime();
+  const auto window_size = runtime.scope().scheduling_window_size();
+
+  {
+    const auto _        = legate::Scope{legate::ParallelPolicy{}.with_streaming(true)};
+    const auto new_size = runtime.scope().scheduling_window_size();
+    // Big window size is the arbitrary large window size chosen in
+    // Scope::Impl::set_parallel_policy().
+    constexpr auto BIG_WINDOW = 1024U;
+
+    // Do GE because the tests may be run with a global window size that already exceeds our
+    // big window.
+    ASSERT_GE(new_size, BIG_WINDOW);
+    {
+      const auto _2 =
+        legate::Scope{}.with_parallel_policy(legate::ParallelPolicy{}.with_streaming(true));
+      const auto nested_new_size = runtime.scope().scheduling_window_size();
+
+      ASSERT_GE(nested_new_size, BIG_WINDOW);
+      ASSERT_EQ(nested_new_size, new_size);
+    }
+    ASSERT_EQ(runtime.scope().scheduling_window_size(), new_size);
+  }
+  ASSERT_EQ(runtime.scope().scheduling_window_size(), window_size);
 }
 
 }  // namespace scope_test

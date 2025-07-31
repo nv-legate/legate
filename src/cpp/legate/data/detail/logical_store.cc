@@ -24,6 +24,7 @@
 #include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
@@ -1087,6 +1088,9 @@ StoreAnalyzable LogicalStore::future_to_launcher_arg_(Legion::Future future,
                                                       Legion::PrivilegeMode privilege,
                                                       GlobalRedopID redop)
 {
+  // The code below has not been updated to take other flags into account.
+  LEGATE_CHECK(privilege == LEGION_REDUCE || privilege == LEGION_WRITE_ONLY ||
+               privilege == LEGION_READ_ONLY);
   if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
     privilege = LEGION_READ_WRITE;
   }
@@ -1133,6 +1137,9 @@ StoreAnalyzable LogicalStore::future_map_to_launcher_arg_(const Domain& launch_d
         return future_to_launcher_arg_(std::move(fut), launch_domain, privilege, redop);
       },
       [&](Legion::FutureMap map) -> StoreAnalyzable {
+        // The code below has not been updated to take other flags into account.
+        LEGATE_CHECK(privilege == LEGION_REDUCE || privilege == LEGION_WRITE_ONLY ||
+                     privilege == LEGION_READ_ONLY);
         // Scalar reductions don't need to pass the future or future map holding the current value
         // to the task, as the physical stores will be initialized with the reduction identity. They
         // are later passed to a future map reduction as an initial value in the task launch
@@ -1173,10 +1180,19 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
   store_proj.is_key = strategy.is_key_partition(*variable);
   store_proj.redop  = redop;
 
-  if (privilege == LEGION_REDUCE && store_partition->is_disjoint_for(launch_domain)) {
-    privilege = LEGION_READ_WRITE;
+  // We ignore LEGIION_DISCARD_OUTPUT_MASK below because it is "fake". This privilege is
+  // artificially added during streaming sections to allow early discards of the
+  // operands. Otherwise, operands should only have either:
+  //
+  // 1. LEGION_READ_ONLY.
+  // 2. LEGION_WRITE_ONLY.
+  // 3. LEGION_REDUCE.
+  if ((ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK) == LEGION_REDUCE) &&
+      store_partition->is_disjoint_for(launch_domain)) {
+    privilege |= LEGION_READ_WRITE;
   }
-  if ((privilege == LEGION_WRITE_ONLY || privilege == LEGION_READ_WRITE) &&
+  if (((ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK) == LEGION_WRITE_ONLY) ||
+       (ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK) == LEGION_READ_WRITE)) &&
       partition->has_launch_domain()) {
     const auto* op = variable->operation();
 

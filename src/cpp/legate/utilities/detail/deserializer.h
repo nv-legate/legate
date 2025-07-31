@@ -16,6 +16,7 @@
 #include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/store.h>
+#include <legate/runtime/detail/streaming.h>
 #include <legate/type/detail/types.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -26,6 +27,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -45,15 +47,29 @@ class BaseDeserializer {
   template <typename T, std::enable_if_t<type_code_of_v<T> != Type::Code::NIL>* = nullptr>
   void unpack_impl(T& value);
 
+  /**
+   * @brief Unpack an optional value.
+   *
+   * @param value The optional to pack into.
+   */
+  template <typename T>
+  void unpack_impl(std::optional<T>& value);
+
   template <typename T, std::uint32_t SIZE>
   void unpack_impl(SmallVector<T, SIZE>& values);
 
   template <typename T1, typename T2>
   void unpack_impl(std::pair<T1, T2>& values);
 
+  /**
+   * @brief Unpack a streaming generation.
+   *
+   * @param gen The streaming generation to unpack into.
+   */
+  void unpack_impl(StreamingGeneration& gen);
+
   [[nodiscard]] SmallVector<InternalSharedPtr<detail::Scalar>> unpack_scalars();
   [[nodiscard]] InternalSharedPtr<detail::Scalar> unpack_scalar();
-  void unpack_impl(mapping::TaskTarget& value);
   void unpack_impl(mapping::ProcessorRange& value);
   void unpack_impl(mapping::detail::Machine& value);
   void unpack_impl(Domain& domain);

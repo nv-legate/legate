@@ -25,8 +25,18 @@ struct has_hash_member<
 template <typename T>
 inline constexpr bool has_hash_member_v = has_hash_member<T>::value;
 
-template <typename T, typename = void>
+template <typename T = void, typename = void>
 struct hasher;
+
+template <>
+struct hasher<void> {
+  template <typename T>
+  [[nodiscard]] constexpr std::size_t operator()(const T& v) const noexcept
+  {
+    static_assert(!std::is_void_v<T>);  // otherwise we would get an infinite loop
+    return hasher<T>{}(v);
+  }
+};
 
 template <typename T>
 struct hasher<T, std::enable_if_t<std::is_constructible_v<std::hash<T>>>> {

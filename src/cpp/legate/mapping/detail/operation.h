@@ -11,6 +11,7 @@
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/mapping/mapping.h>
+#include <legate/runtime/detail/streaming.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/deserializer.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -18,7 +19,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
 namespace legate::detail {
 class Library;
@@ -30,13 +30,34 @@ class Mappable {
  public:
   explicit Mappable(const Legion::Mappable& mappable);
 
+  /**
+   * @brief Deserialize only the streaming generation from the Legion mappable.
+   *
+   * This is used as an optimization in `BaseMapper::select_tasks_to_map()` to avoid
+   * deserializing a bunch of other unrelated mapper information when determining whether to
+   * treat a task as a streaming task or not.
+   *
+   * @param mappable The legion mappable object to deserialize from.
+   *
+   * @return The streaming generation.
+   */
+  [[nodiscard]] static std::optional<legate::detail::StreamingGeneration>
+  deserialize_only_streaming_generation(const Legion::Mappable& mappable);
+
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] std::uint32_t sharding_id() const;
   [[nodiscard]] std::int32_t priority() const;
 
+  /**
+   * @return The streaming generation.
+   */
+  [[nodiscard]] const std::optional<legate::detail::StreamingGeneration>& streaming_generation()
+    const;
+
  protected:
   Mappable() = default;
 
+  std::optional<legate::detail::StreamingGeneration> streaming_gen_{};
   mapping::detail::Machine machine_{};
   std::uint32_t sharding_id_{};
   std::int32_t priority_{static_cast<std::int32_t>(legate::detail::TaskPriority::DEFAULT)};

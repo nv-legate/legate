@@ -58,6 +58,19 @@ void BaseDeserializer<Deserializer>::unpack_impl(T& value)
 }
 
 template <typename Deserializer>
+template <typename T>
+void BaseDeserializer<Deserializer>::unpack_impl(std::optional<T>& value)
+{
+  const auto has_value = unpack<bool>();
+
+  if (has_value) {
+    value.emplace(unpack<T>());
+  } else {
+    value = std::nullopt;
+  }
+}
+
+template <typename Deserializer>
 template <typename T, std::uint32_t SIZE>
 void BaseDeserializer<Deserializer>::unpack_impl(SmallVector<T, SIZE>& values)
 {
@@ -75,6 +88,13 @@ void BaseDeserializer<Deserializer>::unpack_impl(std::pair<T1, T2>& values)
 {
   values.first  = unpack<T1>();
   values.second = unpack<T2>();
+}
+
+template <typename Deserializer>
+void BaseDeserializer<Deserializer>::unpack_impl(StreamingGeneration& gen)
+{
+  gen.generation = unpack<decltype(gen.generation)>();
+  gen.size       = unpack<decltype(gen.size)>();
 }
 
 template <typename Deserializer>
@@ -152,12 +172,6 @@ InternalSharedPtr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar(
 
   args_ = args_.subspan(align_offset + result->size());
   return result;
-}
-
-template <typename Deserializer>
-void BaseDeserializer<Deserializer>::unpack_impl(mapping::TaskTarget& value)
-{
-  value = static_cast<mapping::TaskTarget>(unpack<std::int32_t>());
 }
 
 template <typename Deserializer>

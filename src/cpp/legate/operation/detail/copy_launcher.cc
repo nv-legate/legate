@@ -10,6 +10,7 @@
 #include <legate/operation/detail/store_projection.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/detail/streaming.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/zip.h>
 
@@ -129,6 +130,7 @@ void CopyLauncher::pack_sharding_functor_id(BufferBuilder& buffer)
 
 void CopyLauncher::pack_args(BufferBuilder& buffer)
 {
+  buffer.pack<StreamingGeneration>(std::nullopt);
   machine_.pack(buffer);
   pack_sharding_functor_id(buffer);
   buffer.pack(priority_);

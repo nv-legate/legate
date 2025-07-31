@@ -254,6 +254,7 @@ BufferBuilder TaskLauncher::pack_task_arg_(bool parallel, StoreAnalyzer* analyze
 
 void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
 {
+  buffer.pack(streaming_generation());
   machine_.pack(buffer);
 
   std::optional<Legion::ProjectionID> key_proj_id;

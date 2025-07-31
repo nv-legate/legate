@@ -146,12 +146,13 @@ std::vector<ReturnValue> LegionTaskContext::get_return_values_() const
 LegionTaskContext::LegionTaskContext(const Legion::Task& legion_task,
                                      VariantCode variant_kind,
                                      const std::vector<Legion::PhysicalRegion>& regions)
-  // WARNING: if the Machine is no longer the first thing to be deserialized, then this will break
-  : LegionTaskContext{
-      legion_task,
-      variant_kind,
-      regions,
-      mapping::detail::MapperDataDeserializer{legion_task}.unpack<mapping::detail::Machine>()}
+  // WARNING: if the Machine is no longer the second thing to be deserialized, then this will break
+  : LegionTaskContext{legion_task, variant_kind, regions, [&] {
+                        auto dez = mapping::detail::MapperDataDeserializer{legion_task};
+
+                        static_cast<void>(dez.unpack<std::optional<StreamingGeneration>>());
+                        return dez.unpack<mapping::detail::Machine>();
+                      }()}
 {
 }
 

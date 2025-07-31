@@ -7,9 +7,12 @@
 #include <legate/operation/detail/store_analyzer.h>
 
 #include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <stdexcept>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 namespace legate::detail {
 
@@ -21,24 +24,31 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege,
                            const StoreProjection& store_proj,
                            bool relax_interference_checks)
 {
-  if (store_projs.empty()) {
-    privilege = new_privilege;
-    // conflicting privileges are promoted to a single read-write privilege
-  } else if (privilege != new_privilege && privilege != NO_ACCESS && new_privilege != NO_ACCESS) {
-    privilege = LEGION_READ_WRITE;
+  // Pruning out the streaming discard mask makes the privilege coalescing code much
+  // simpler. Otherwise, we would need to handle double the amount of combinations, because now
+  // every combination of read, write, read-write also potentially has the output discard mask
+  // applied.
+  if (has_privilege(new_privilege, LEGION_DISCARD_OUTPUT_MASK)) {
+    had_streaming_discard_ = true;
+    new_privilege          = ignore_privilege(new_privilege, LEGION_DISCARD_OUTPUT_MASK);
   }
-  store_projs.emplace(store_proj);
-  is_key = is_key || store_proj.is_key;
+  if (store_projs_.empty()) {
+    privilege_ = new_privilege;
+  } else if (privilege_ != new_privilege && privilege_ != LEGION_NO_ACCESS &&
+             new_privilege != LEGION_NO_ACCESS) {
+    // conflicting privileges are promoted to a single read-write privilege
+    privilege_ = LEGION_READ_WRITE;
+  }
+  store_projs_.emplace(store_proj);
+  is_key_ = is_key_ || store_proj.is_key;
 
-  if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && store_projs.size() > 1 &&
+  if (privilege_ != LEGION_READ_ONLY && privilege_ != LEGION_NO_ACCESS && store_projs_.size() > 1 &&
       !relax_interference_checks) {
     throw TracedException<InterferingStoreError>{};
   }
 }
 
-///////////
-// FieldSet
-///////////
+// ==========================================================================================
 
 void FieldSet::insert(Legion::FieldID field_id,
                       Legion::PrivilegeMode privilege,
@@ -57,29 +67,56 @@ std::uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
                                               const StoreProjection& store_proj,
                                               Legion::FieldID field_id) const
 {
-  auto finder = req_indices_.find({{privilege, store_proj}, field_id});
-  if (req_indices_.end() == finder) {
-    finder = req_indices_.find({{LEGION_READ_WRITE, store_proj}, field_id});
+  // `ProjectionSet::insert()` strips out the discard-output mask from all incoming
+  // privileges. The mask is added back in `FieldSet::populate_launcher()`.
+  //
+  // The resulting (possibly promoted) privilege will then either be:
+  //
+  // 1. The privilege, unchanged, if all privileges were the same.
+  // 2. LEGION_READ_WRITE, if some of the privileges had a different type.
+  //
+  // So we must strip the privilege off here as well.
+  privilege = ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK);
+  for (auto priv : {privilege, LEGION_READ_WRITE}) {
+    if (const auto it = req_indices_.find({{priv, store_proj}, field_id});
+        it != req_indices_.end()) {
+      return it->second;
+    }
   }
-  LEGATE_ASSERT(finder != req_indices_.end());
-  return finder->second;
+  LEGATE_ABORT("Failed to find privilege ", privilege, " in coalesced requirement indices");
 }
 
 void FieldSet::coalesce()
 {
+  std::size_t num_fields = 0;
+
   for (const auto& [field_id, proj_set] : field_projs_) {
-    for (const auto& store_proj : proj_set.store_projs) {
-      auto& [fields, is_key] = coalesced_[{proj_set.privilege, store_proj}];
+    const auto priv            = proj_set.privilege();
+    const auto proj_set_is_key = proj_set.is_key();
+    const auto had_discard     = proj_set.had_streaming_discard();
+
+    for (const auto& store_proj : proj_set.store_projs()) {
+      auto& [fields, is_key, has_streaming_discard] = coalesced_[{priv, store_proj}];
+
       fields.emplace_back(field_id);
-      is_key = is_key || proj_set.is_key;
+      if (proj_set_is_key) {
+        is_key = true;
+      }
+      if (had_discard) {
+        has_streaming_discard = true;
+      }
+      ++num_fields;
     }
   }
-  std::uint32_t idx = 0;
-  for (const auto& [key, entry] : coalesced_) {
+
+  // This will over-reserve
+  req_indices_.reserve(num_fields);
+  for (auto&& [idx, values] : enumerate(coalesced_)) {
+    auto&& [key, entry] = values;
+
     for (const auto& field : entry.fields) {
-      req_indices_[{key, field}] = idx;
+      req_indices_[{key, field}] = static_cast<std::uint32_t>(idx);
     }
-    ++idx;
   }
 }
 
@@ -99,10 +136,13 @@ void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& re
 {
   task->region_requirements.reserve(coalesced_.size());
   for (auto&& [key, entry] : coalesced_) {
-    auto&& [fields, is_key]        = entry;
-    auto&& [privilege, store_proj] = key;
-    auto req                       = store_proj.template create_requirement<is_single_v<Launcher>>(
-      region, fields, privilege, is_key);
+    auto&& [fields, is_key, has_streaming_discard] = entry;
+    auto&& [privilege, store_proj]                 = key;
+    auto req = store_proj.template create_requirement<is_single_v<Launcher>>(
+      region,
+      fields,
+      has_streaming_discard ? privilege | LEGION_DISCARD_OUTPUT_MASK : privilege,
+      is_key);
 
     task->region_requirements.emplace_back(std::move(req));
   }

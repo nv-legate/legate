@@ -63,8 +63,19 @@ inline void TaskLauncher::relax_interference_checks(bool relax)
   relax_interference_checks_ = relax;
 }
 
+inline void TaskLauncher::set_streaming_generation(
+  const std::optional<StreamingGeneration>& streaming_generation)
+{
+  streaming_gen_ = streaming_generation;
+}
+
 inline ZStringView TaskLauncher::provenance() const { return provenance_; }
 
 inline const ParallelPolicy& TaskLauncher::parallel_policy() const { return parallel_policy_; }
+
+inline const std::optional<StreamingGeneration>& TaskLauncher::streaming_generation() const
+{
+  return streaming_gen_;
+}
 
 }  // namespace legate::detail

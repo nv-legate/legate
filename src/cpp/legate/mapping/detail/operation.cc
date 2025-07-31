@@ -14,10 +14,34 @@
 namespace legate::mapping::detail {
 
 Mappable::Mappable(private_tag, MapperDataDeserializer dez)
-  : machine_{dez.unpack<Machine>()},
+  // TODO(jfaibussowit):
+  // Streaming generation must come first. It is the only thing used in the hot-loop of
+  // select_tasks_to_map(), and we don't want to spend a bunch of time deserializing other
+  // stuff we won't use in that function.
+  //
+  // Another idea would be to implement a generic "deserialize only X, not Y or Z", but due to
+  // alignment handling this is not quite so simple as jumping over sizeof(Y) + sizeof(Z)
+  // bytes. It would also need to handle dynamic sizes, e.g. if we serialize a vector of
+  // stuff.
+  //
+  // We would need to fake-unpack everything in order to properly handle all of this, or create
+  // a better serialization format that includes all of this offset information in some kind of
+  // header.
+  //
+  // So as a workaround, streaming generation must come first, because at least then, we don't
+  // need to do any offset fiddling.
+  : streaming_gen_{dez.unpack<std::optional<legate::detail::StreamingGeneration>>()},
+    machine_{dez.unpack<Machine>()},
     sharding_id_{dez.unpack<std::uint32_t>()},
     priority_{dez.unpack<std::int32_t>()}
 {
+}
+
+/* static */ std::optional<legate::detail::StreamingGeneration>
+Mappable::deserialize_only_streaming_generation(const Legion::Mappable& mappable)
+{
+  return MapperDataDeserializer{mappable}
+    .unpack<std::optional<legate::detail::StreamingGeneration>>();
 }
 
 Task::Task(const Legion::Task& task,
@@ -71,9 +95,10 @@ Copy::Copy(const Legion::Copy& copy,
   // serdez buffer. So when Mappable() unpacks its stuff CopyDeserializer doesn't know that the
   // buffer should be advanced. And we cannot advance the pointer ourselves because the
   // incoming Legion::Copy is const.
-  machine_     = dez.unpack<Machine>();
-  sharding_id_ = dez.unpack<std::uint32_t>();
-  priority_    = dez.unpack<std::int32_t>();
+  streaming_gen_ = dez.unpack<std::optional<legate::detail::StreamingGeneration>>();
+  machine_       = dez.unpack<Machine>();
+  sharding_id_   = dez.unpack<std::uint32_t>();
+  priority_      = dez.unpack<std::int32_t>();
 
   // Copy
   inputs_ = dez.unpack<legate::detail::SmallVector<Store>>();

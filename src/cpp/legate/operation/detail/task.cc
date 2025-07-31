@@ -40,6 +40,20 @@
 
 namespace legate::detail {
 
+TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv,
+                           InternalSharedPtr<LogicalArray> _array,
+                           std::optional<SymbolicPoint> _projection)
+  : privilege{priv}, array{std::move(_array)}, projection{std::move(_projection)}
+{
+  // These objects should only be constructed from add_input(), add_output(), or
+  // add_reduction(), so the incoming privilege should only ever be these base privileges. The
+  // privilege coalescing code (and by extension streaming code) assumes this is the case, with
+  // the only addition being that these privileges are additionally fixed up with
+  // LEGION_DISCARD_OUTPUT_MASK.
+  LEGATE_ASSERT(privilege == LEGION_READ_ONLY || privilege == LEGION_WRITE_ONLY ||
+                privilege == LEGION_REDUCE);
+}
+
 ////////////////////////////////////////////////////
 // legate::Task
 ////////////////////////////////////////////////////
@@ -101,6 +115,11 @@ void Task::set_side_effect(bool has_side_effect) { has_side_effect_ = has_side_e
 void Task::throws_exception(bool can_throw_exception)
 {
   can_throw_exception_ = can_throw_exception;
+}
+
+void Task::set_streaming_generation(std::optional<StreamingGeneration> streaming_generation)
+{
+  streaming_gen_ = std::move(streaming_generation);
 }
 
 void Task::add_communicator(std::string_view name, bool bypass_signature_check)
@@ -176,23 +195,23 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   launcher.set_priority(priority());
 
   launcher.reserve_inputs(inputs_.size());
-  for (auto&& [arr, mapping, projection] : inputs_) {
+  for (auto&& [privilege, arr, mapping, projection] : inputs_) {
     launcher.add_input(variant_cast(arr->to_launcher_arg(
-      mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, GlobalRedopID{-1})));
+      mapping, strategy, launch_domain, projection, privilege, GlobalRedopID{-1})));
   }
 
   launcher.reserve_outputs(outputs_.size());
-  for (auto&& [arr, mapping, projection] : outputs_) {
+  for (auto&& [privilege, arr, mapping, projection] : outputs_) {
     launcher.add_output(variant_cast(arr->to_launcher_arg(
-      mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, GlobalRedopID{-1})));
+      mapping, strategy, launch_domain, projection, privilege, GlobalRedopID{-1})));
   }
 
   launcher.reserve_reductions(reductions_.size());
   for (auto&& [redop, rest] : legate::detail::zip_equal(reduction_ops_, reductions_)) {
-    auto&& [arr, mapping, projection] = rest;
+    auto&& [privilege, arr, mapping, projection] = rest;
 
     launcher.add_reduction(variant_cast(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_REDUCE, redop)));
+      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop)));
   }
 
   // Add by-value scalars
@@ -221,6 +240,7 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   launcher.throws_exception(can_throw_exception());
   launcher.can_elide_device_ctx_sync(can_elide_device_ctx_sync());
   launcher.set_future_size(calculate_future_size_());
+  launcher.set_streaming_generation(streaming_generation());
 
   // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
   // removed
@@ -379,7 +399,7 @@ std::size_t Task::calculate_future_size_() const
   auto layout = TaskReturnLayoutForUnpack{};
 
   for (auto&& array_args : {inputs(), outputs(), reductions()}) {
-    for (auto&& [arr, mapping, projection] : array_args) {
+    for (auto&& [priv, arr, mapping, projection] : array_args) {
       arr->calculate_pack_size(&layout);
     }
   }
@@ -455,7 +475,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
     throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used as input"};
   }
 
-  auto& arg = inputs_.emplace_back(std::move(array));
+  auto& arg = inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
@@ -470,7 +490,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
   if (array->kind() == ArrayKind::LIST && array->unbound()) {
     arrays_to_fixup_.push_back(array.get());
   }
-  auto& arg = outputs_.emplace_back(std::move(array));
+  auto& arg = outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
@@ -494,7 +514,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
   array->record_scalar_reductions(this, legion_redop_id);
   reduction_ops_.push_back(legion_redop_id);
 
-  auto& arg = reductions_.emplace_back(std::move(array));
+  auto& arg = reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
@@ -624,14 +644,17 @@ void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used as input"};
   }
 
-  add_store_(inputs_, store, create_no_partition());
+  add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY, inputs_, store, create_no_partition());
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                            std::optional<SymbolicPoint> projection)
 {
-  add_store_(
-    inputs_, store_partition->store(), store_partition->partition(), std::move(projection));
+  add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY,
+             inputs_,
+             store_partition->store(),
+             store_partition->partition(),
+             std::move(projection));
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
@@ -641,7 +664,7 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
   } else if (store->unbound()) {
     record_unbound_output(store);
   }
-  add_store_(outputs_, store, create_no_partition());
+  add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -652,8 +675,11 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_output(store_partition->store());
   }
-  add_store_(
-    outputs_, store_partition->store(), store_partition->partition(), std::move(projection));
+  add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY,
+             outputs_,
+             store_partition->store(),
+             store_partition->partition(),
+             std::move(projection));
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
@@ -667,7 +693,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
   if (store->has_scalar_storage()) {
     record_scalar_reduction(store, legion_redop_id);
   }
-  add_store_(reductions_, store, create_no_partition());
+  add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
   reduction_ops_.push_back(legion_redop_id);
 }
 
@@ -680,19 +706,23 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_reduction(store_partition->store(), legion_redop_id);
   }
-  add_store_(
-    reductions_, store_partition->store(), store_partition->partition(), std::move(projection));
+  add_store_(Legion::PrivilegeMode::LEGION_REDUCE,
+             reductions_,
+             store_partition->store(),
+             store_partition->partition(),
+             std::move(projection));
   reduction_ops_.push_back(legion_redop_id);
 }
 
-void ManualTask::add_store_(SmallVector<TaskArrayArg>& store_args,
+void ManualTask::add_store_(Legion::PrivilegeMode priv,
+                            SmallVector<TaskArrayArg>& store_args,
                             const InternalSharedPtr<LogicalStore>& store,
                             InternalSharedPtr<Partition> partition,
                             std::optional<SymbolicPoint> projection)
 {
   const auto* partition_symbol = declare_partition();
-  auto& arg =
-    store_args.emplace_back(make_internal_shared<BaseLogicalArray>(store), std::move(projection));
+  auto& arg                    = store_args.emplace_back(
+    priv, make_internal_shared<BaseLogicalArray>(store), std::move(projection));
   const auto unbound = store->unbound();
 
   arg.mapping.insert({store, partition_symbol});
