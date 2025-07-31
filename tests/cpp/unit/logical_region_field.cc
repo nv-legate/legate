@@ -182,10 +182,9 @@ TEST_F(LogicalRegionFieldUnit, AttachWithPhysicalRegion)
   std::vector<legate::InternalSharedPtr<legate::detail::ExternalAllocation>> allocations{
     allocation};
 
-  // TODO(joyshennv): issue #2364
-  // region_field->mark_attached();
+  ASSERT_NO_THROW(region_field->mark_pending_attach());
   ASSERT_NO_THROW(region_field->attach(std::move(external_resources), std::move(allocations)));
-  // ASSERT_TRUE(region_field->is_mapped());
+  ASSERT_TRUE(region_field->is_mapped());
   ASSERT_NO_THROW(region_field->allow_out_of_order_destruction());
 }
 
@@ -250,10 +249,9 @@ TEST_F(LogicalRegionFieldUnit, AttachWithExternalResources)
   std::vector<legate::InternalSharedPtr<legate::detail::ExternalAllocation>> allocations{
     allocation};
 
-  // TODO(joyshennv): issue #2364
-  region_field->mark_attached();
+  ASSERT_NO_THROW(region_field->mark_pending_attach());
   ASSERT_NO_THROW(region_field->attach(std::move(external_resources), std::move(allocations)));
-  // ASSERT_TRUE(region_field->is_mapped());
+  ASSERT_TRUE(region_field->is_mapped());
   ASSERT_NO_THROW(region_field->allow_out_of_order_destruction());
 }
 

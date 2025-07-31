@@ -77,6 +77,6 @@ inline const std::optional<InternalSharedPtr<LogicalRegionField>>& LogicalRegion
   return parent_;
 }
 
-inline void LogicalRegionField::mark_attached() { attached_ = true; }
+inline void LogicalRegionField::mark_pending_attach() { attached_ = true; }
 
 }  // namespace legate::detail

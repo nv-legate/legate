@@ -126,7 +126,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
               InternalSharedPtr<ExternalAllocation> allocation);
   void attach(Legion::ExternalResources external_resources,
               std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
-  void mark_attached();
+  void mark_pending_attach();
   void detach();
   void allow_out_of_order_destruction();
   void release_region_field() noexcept;

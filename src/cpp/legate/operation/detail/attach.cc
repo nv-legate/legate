@@ -21,7 +21,7 @@ Attach::Attach(std::uint64_t unique_id,
     allocation_{std::move(allocation)},
     ordering_{std::move(ordering)}
 {
-  region_field_->mark_attached();
+  region_field_->mark_pending_attach();
 }
 
 void Attach::launch()
