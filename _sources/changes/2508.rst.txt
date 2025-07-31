@@ -19,6 +19,27 @@ C++
 
 .. rubric:: General
 
+
+- Add experimental support for "streaming", a new execution model that tracks task
+  dependencies at a more granular level, allowing individual leaf task dependencies to be
+  immediately executed before waiting for the preceding task to be scheduled.
+
+  Tasks may be marked as streaming by enclosing them in a ``legate::Scope``:
+
+  .. code-block:: cpp
+
+     {
+       const auto scope = legate::Scope{legate::ParallelPolicy{}.with_streaming(true)};
+
+       launch_task_A();
+       launch_task_B();
+       launch_task_C();
+     }
+
+  This feature is experimental and does not yet support all use-cases. Invalid use may
+  lead to exceptions, hangs, or outright crashes. Users are invited to try out this
+  feature while development continues.
+
 .. rubric:: Data
 
 - Add ``PhysicalStore::span_read_accessor()``, ``PhysicalStore::span_write_accessor()``,

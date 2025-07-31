@@ -1,0 +1,4 @@
+legate::hasher< void >
+======================
+
+.. doxygenstruct:: legate::hasher< void >
