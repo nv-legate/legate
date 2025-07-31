@@ -18,7 +18,7 @@ except (ModuleNotFoundError, ImportError):
 
 def ensure_aedifix() -> None:
     # update pre-commit-config.yml as well in case this is changed
-    VERSION = Version("1.9.0")
+    VERSION = Version("1.10.0")
 
     try:
         mod_version = Version(version("aedifix"))
