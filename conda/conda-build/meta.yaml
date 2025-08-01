@@ -173,6 +173,7 @@ requirements:
     - rust
     - ninja
     - cmake {{ cmake_version }}
+    - {{ stdlib("c") }}
     - {{ compiler('c') }} ={{ compiler_version }}    # [linux]
     - {{ compiler('cxx') }} ={{ compiler_version }}  # [linux]
     - {{ compiler('c') }}         # [osx]
@@ -250,7 +251,6 @@ requirements:
 {% endif %}
 
   run_constrained:
-    - __glibc >=2.17  # [linux]
     - python >= 3.11
     - dask[distributed]
 
