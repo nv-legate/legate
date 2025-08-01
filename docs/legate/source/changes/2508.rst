@@ -81,6 +81,12 @@ C++
 - Add ``legate::Span::empty()`` to check whether a span's size is 0.
 - Add ``legate::Span::at()``, to access an element with bounds checking.
 - Add ``legate::Span::deep_equal()`` to do a "deep", pointwise equality comparison.
+- Remove ``legate::print_dense_array()``. This header used CUDA runtime symbols which
+  Legate no longer directly links against, and therefore could not reliably
+  provide. Downstream users should either use the span accessors of physical stores (which
+  support easy dimension-aware iteration for printing), or implement this utility
+  themselves.
+- Remove the ``legate/utilities/debug.h`` header.
 
 .. rubric:: I/O
 

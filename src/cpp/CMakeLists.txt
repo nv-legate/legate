@@ -498,7 +498,6 @@ target_sources(legate
                        legate/task/detail/task_config.cc
                        legate/type/types.cc
                        legate/type/detail/types.cc
-                       legate/utilities/debug.cc
                        legate/utilities/machine.cc
                        legate/utilities/internal_shared_ptr.cc
                        legate/utilities/compiler.cc
@@ -771,9 +770,7 @@ install(FILES legate/tuning/parallel_policy.h legate/tuning/parallel_policy.inl
 install(FILES legate/type/types.h legate/type/types.inl legate/type/type_traits.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/type)
 
-install(FILES legate/utilities/debug.h
-              legate/utilities/debug.inl
-              legate/utilities/dispatch.h
+install(FILES legate/utilities/dispatch.h
               legate/utilities/hash.h
               legate/utilities/machine.h
               legate/utilities/memory.h
