@@ -6,17 +6,10 @@
 
 #include <legate.h>
 
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/mapping.h>
-
-#include <utilities/utilities.h>
-
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include <legate/cuda/cuda.h>
-
-#include <cuda_runtime.h>
-#endif
 
 #include <fmt/format.h>
 
@@ -24,24 +17,10 @@
 
 #include <cstring>
 #include <stdexcept>
+#include <utilities/utilities.h>
 #include <vector>
 
 namespace index_attach {
-
-#define CHECK_CUDA(...)                                                               \
-  do {                                                                                \
-    const cudaError_t __result__ = __VA_ARGS__;                                       \
-    if (__result__ != cudaSuccess) {                                                  \
-      throw std::runtime_error{                                                       \
-        fmt::format("Internal CUDA failure with error {} ({}) in file {} at line {}", \
-                    cudaGetErrorString(__result__),                                   \
-                    cudaGetErrorName(__result__),                                     \
-                    __FILE__,                                                         \
-                    __LINE__)};                                                       \
-    }                                                                                 \
-  } while (0)
-
-// NOLINTBEGIN(readability-magic-numbers)
 
 namespace {
 
@@ -145,31 +124,36 @@ void do_test(T value)
 void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
 {
   if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) == 0) {
-    static_cast<void>(store_target);
     return;
   }
 
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::uint64_t);
   std::vector<std::uint64_t> h_alloc(TILE_SIZE, INIT_VALUE);
   void* d_alloc = nullptr;
-  auto deleter  = [](void* ptr) noexcept {
+
+  auto deleter = [](void* ptr) noexcept {
     auto h_buffer      = std::make_unique<std::uint64_t[]>(BYTES);
     void* raw_h_buffer = static_cast<void*>(h_buffer.get());
 
     ASSERT_NE(raw_h_buffer, nullptr);
     try {
-      CHECK_CUDA(cudaMemcpy(raw_h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
+      auto&& api   = legate::cuda::detail::get_cuda_driver_api();
+      const auto _ = legate::cuda::detail::AutoPrimaryContext{0};
+
+      api->mem_cpy_async(raw_h_buffer, ptr, BYTES, nullptr);
       // TODO(issue 464)
       // ASSERT_EQ(*(static_cast<std::uint64_t*>(raw_h_buffer)), INIT_VALUE - 1);
-      CHECK_CUDA(cudaFree(ptr));
+      api->mem_free_async(&ptr, nullptr);
     } catch (const std::exception& e) {
       LEGATE_ABORT(e.what());
     }
   };
 
-  CHECK_CUDA(cudaMalloc(&d_alloc, BYTES));
-  CHECK_CUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
+  auto&& api   = legate::cuda::detail::get_cuda_driver_api();
+  const auto _ = legate::cuda::detail::AutoPrimaryContext{0};
+
+  d_alloc = api->mem_alloc_async(BYTES, nullptr);
+  api->mem_cpy_async(d_alloc, h_alloc.data(), BYTES, nullptr);
 
   legate::ExternalAllocation ext_alloc;
   switch (store_target) {
@@ -187,7 +171,7 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
     case legate::mapping::StoreTarget::SOCKETMEM:
       LEGATE_ABORT("Unhandled store target: SYSMEM and SOCKETMEM");
     default: {
-      CHECK_CUDA(cudaFree(d_alloc));
+      api->mem_free_async(&d_alloc, nullptr);
       return;
     }
   }
@@ -216,7 +200,6 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
   }
 
   store.detach();
-#endif
 }
 
 }  // namespace
@@ -257,25 +240,24 @@ TEST_F(IndexAttach, GPU)
     return;
   }
 
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   constexpr std::int64_t VAL1 = 42;
   constexpr std::int64_t VAL2 = 84;
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::int64_t);
 
   std::vector<std::int64_t> h_alloc1(TILE_SIZE, VAL1), h_alloc2(TILE_SIZE, VAL2);
 
-  void* d_alloc1 = nullptr;
-  void* d_alloc2 = nullptr;
+  auto&& api     = legate::cuda::detail::get_cuda_driver_api();
+  const auto ctx = legate::cuda::detail::AutoPrimaryContext{0};
 
-  CHECK_CUDA(cudaMalloc(&d_alloc1, BYTES));
-  CHECK_CUDA(cudaMalloc(&d_alloc2, BYTES));
+  void* d_alloc1 = api->mem_alloc_async(BYTES, nullptr);
+  void* d_alloc2 = api->mem_alloc_async(BYTES, nullptr);
 
-  CHECK_CUDA(cudaMemcpy(d_alloc1, h_alloc1.data(), BYTES, cudaMemcpyHostToDevice));
-  CHECK_CUDA(cudaMemcpy(d_alloc2, h_alloc2.data(), BYTES, cudaMemcpyHostToDevice));
+  api->mem_cpy_async(d_alloc1, h_alloc1.data(), BYTES, nullptr);
+  api->mem_cpy_async(d_alloc2, h_alloc2.data(), BYTES, nullptr);
 
   auto deleter = [](void* ptr) noexcept {
     try {
-      CHECK_CUDA(cudaFree(ptr));
+      legate::cuda::detail::get_cuda_driver_api()->mem_free_async(&ptr, nullptr);
     } catch (const std::exception& e) {
       LEGATE_ABORT(e.what());
     }
@@ -305,7 +287,6 @@ TEST_F(IndexAttach, GPU)
   }
 
   store.detach();
-#endif
 }
 
 TEST_F(IndexAttach, NegativeAttachSmallerStore)
@@ -369,13 +350,15 @@ TEST_F(IndexAttach, NegativeAttachVariableStore)
 
 TEST_F(IndexAttach, SysmemAccessByTask)
 {
-  do_test<std::uint64_t>(10);
-  do_test<std::int16_t>(-10);
+  // NOLINTBEGIN(readability-magic-numbers)
+  do_test<std::uint64_t>(/* value */ 10);
+  do_test<std::int16_t>(/* value */ -10);
   do_test<float>(100.0F);
-  do_test<double>(10000.8);
-  do_test<__half>(static_cast<__half>(0.9F));
-  do_test<complex<float>>({15, 20});
-  do_test<complex<double>>({-3.9, 5.8});
+  do_test<double>(/* value */ 10000.8);
+  do_test<__half>(static_cast<__half>(/* value */ 0.9F));
+  do_test<complex<float>>(/* value */ {15, 20});
+  do_test<complex<double>>(/* value */ {-3.9, 5.8});
+  // NOLINTEND(readability-magic-numbers)
 }
 
 TEST_F(IndexAttach, MutuableSysmemAccessByTask)
@@ -428,7 +411,5 @@ TEST_F(IndexAttach, InvalidCreation)
                std::runtime_error);
 #endif
 }
-
-// NOLINTEND(readability-magic-numbers)
 
 }  // namespace index_attach

@@ -10,27 +10,10 @@
 
 #include <utilities/utilities.h>
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include <legate/cuda/cuda.h>
-
-#include <fmt/format.h>
-
-#include <cuda_runtime.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
 #endif
 
 namespace replicated_write_test {
-
-#define CHECK_CUDA(...)                                                               \
-  do {                                                                                \
-    const cudaError_t __result__ = __VA_ARGS__;                                       \
-    if (__result__ != cudaSuccess) {                                                  \
-      throw std::runtime_error{                                                       \
-        fmt::format("Internal CUDA failure with error {} ({}) in file {} at line {}", \
-                    cudaGetErrorString(__result__),                                   \
-                    cudaGetErrorName(__result__),                                     \
-                    __FILE__,                                                         \
-                    __LINE__)};                                                       \
-    }                                                                                 \
-  } while (0)
 
 // NOLINTBEGIN(readability-magic-numbers)
 
@@ -58,6 +41,8 @@ class WriterTask : public legate::LegateTask<WriterTask> {
   static void gpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
+    auto&& api   = legate::cuda::detail::get_cuda_driver_api();
+
     for (auto& output : outputs) {
       auto shape  = output.shape<2>();
       auto acc    = output.data().write_accessor<std::int64_t, 2>();
@@ -65,8 +50,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
       auto vals   = std::vector<std::int64_t>(shape.volume(), 42);
       auto* ptr   = acc.ptr(shape);
 
-      CHECK_CUDA(cudaMemcpyAsync(
-        ptr, vals.data(), sizeof(*ptr) * shape.volume(), cudaMemcpyHostToDevice, stream));
+      api->mem_cpy_async(ptr, vals.data(), sizeof(*ptr) * shape.volume(), stream);
     }
   }
 #endif
