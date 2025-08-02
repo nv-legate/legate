@@ -74,6 +74,9 @@ class TransposeFortranOrder : public DefaultFixture {
 
 TEST_F(TransposeFortranOrder, Test)
 {
+  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
+    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
+  }
   constexpr int ROWS = 10;
   constexpr int COLS = 100;
   auto runtime       = legate::Runtime::get_runtime();

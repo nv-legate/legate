@@ -579,7 +579,7 @@ TEST_F(StreamingUnit, NestedPolicy)
       launch_input_task(store, dep_store);
     }
     {
-      const auto _ =
+      const auto s =
         legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(
           static_cast<std::uint32_t>(shape.volume()))};
       const auto store = make_store(shape);
