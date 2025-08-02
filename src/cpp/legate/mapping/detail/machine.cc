@@ -58,7 +58,7 @@ const ProcessorRange& Machine::processor_range(TaskTarget target) const
   return finder->second;
 }
 
-const std::vector<TaskTarget>& Machine::valid_targets() const
+Span<const TaskTarget> Machine::valid_targets() const
 {
   if (!valid_targets_.has_value()) {
     auto& vec = valid_targets_.emplace();
@@ -76,9 +76,10 @@ const std::vector<TaskTarget>& Machine::valid_targets() const
   return *valid_targets_;
 }
 
-std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
+legate::detail::SmallVector<TaskTarget, NUM_TASK_TARGETS> Machine::valid_targets_except(
+  const std::set<TaskTarget>& to_exclude) const
 {
-  std::vector<TaskTarget> result;
+  legate::detail::SmallVector<TaskTarget, NUM_TASK_TARGETS> result;
 
   for (auto&& [target, _] : processor_ranges()) {
     if (to_exclude.find(target) == to_exclude.end()) {
@@ -106,9 +107,9 @@ void Machine::pack(legate::detail::BufferBuilder& buffer) const
   }
 }
 
-Machine Machine::only(TaskTarget target) const { return only(std::vector<TaskTarget>{target}); }
+Machine Machine::only(TaskTarget target) const { return only(Span<const TaskTarget>{target}); }
 
-Machine Machine::only(const std::vector<TaskTarget>& targets) const
+Machine Machine::only(Span<const TaskTarget> targets) const
 {
   std::map<TaskTarget, ProcessorRange> new_processor_ranges;
   for (auto&& t : targets) {
@@ -117,6 +118,10 @@ Machine Machine::only(const std::vector<TaskTarget>& targets) const
 
   return Machine{std::move(new_processor_ranges)};
 }
+
+Machine Machine::operator[](TaskTarget target) const { return only(target); }
+
+Machine Machine::operator[](Span<const TaskTarget> targets) const { return only(targets); }
 
 Machine Machine::slice(std::uint32_t from,
                        std::uint32_t to,

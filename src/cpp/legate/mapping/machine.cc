@@ -61,11 +61,13 @@ ProcessorRange Machine::processor_range(TaskTarget target) const
   return impl()->processor_range(target);
 }
 
-const std::vector<TaskTarget>& Machine::valid_targets() const { return impl()->valid_targets(); }
+Span<const TaskTarget> Machine::valid_targets() const { return impl()->valid_targets(); }
 
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
-  return impl()->valid_targets_except(to_exclude);
+  auto&& ret = impl()->valid_targets_except(to_exclude);
+
+  return {ret.begin(), ret.end()};
 }
 
 std::uint32_t Machine::count() const { return count(preferred_target()); }
@@ -74,9 +76,9 @@ std::uint32_t Machine::count(TaskTarget target) const { return impl()->count(tar
 
 std::string Machine::to_string() const { return impl()->to_string(); }
 
-Machine Machine::only(TaskTarget target) const { return only(std::vector<TaskTarget>{target}); }
+Machine Machine::only(TaskTarget target) const { return Machine{impl()->only(target)}; }
 
-Machine Machine::only(const std::vector<TaskTarget>& targets) const
+Machine Machine::only(Span<const TaskTarget> targets) const
 {
   return Machine{impl()->only(targets)};
 }
@@ -94,9 +96,12 @@ Machine Machine::slice(std::uint32_t from, std::uint32_t to, bool keep_others) c
   return slice(from, to, preferred_target(), keep_others);
 }
 
-Machine Machine::operator[](TaskTarget target) const { return only(target); }
+Machine Machine::operator[](TaskTarget target) const { return Machine{(*impl())[target]}; }
 
-Machine Machine::operator[](const std::vector<TaskTarget>& targets) const { return only(targets); }
+Machine Machine::operator[](Span<const TaskTarget> targets) const
+{
+  return Machine{(*impl())[targets]};
+}
 
 bool Machine::operator==(const Machine& other) const { return *impl() == *other.impl(); }
 

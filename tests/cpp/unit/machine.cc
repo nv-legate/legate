@@ -43,6 +43,12 @@ constexpr legate::mapping::ProcessorRange GPU_RANGE{3, 6, 3};
   return input == expect;
 }
 
+template <typename T>
+[[nodiscard]] std::vector<T> to_vector(legate::Span<const T> span)
+{
+  return {span.begin(), span.end()};
+}
+
 }  // namespace
 
 TEST_F(NodeRangeTest, ComparisonOperators)
@@ -254,7 +260,7 @@ TEST_F(MachineTest, ValidTargets)
   const legate::mapping::Machine machine1{{{legate::mapping::TaskTarget::CPU, CPU_RANGE},
                                            {legate::mapping::TaskTarget::OMP, OMP_RANGE},
                                            {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
-  const auto& valid_targets1 = machine1.valid_targets();
+  const auto valid_targets1 = to_vector(machine1.valid_targets());
   const auto targets1 = std::vector<legate::mapping::TaskTarget>{legate::mapping::TaskTarget::CPU,
                                                                  legate::mapping::TaskTarget::OMP,
                                                                  legate::mapping::TaskTarget::GPU};
@@ -262,7 +268,7 @@ TEST_F(MachineTest, ValidTargets)
 
   const legate::mapping::Machine machine2{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE}, {legate::mapping::TaskTarget::OMP, OMP_RANGE}}};
-  const auto& valid_targets2 = machine2.valid_targets();
+  const auto valid_targets2 = to_vector(machine2.valid_targets());
   const auto targets2 = std::vector<legate::mapping::TaskTarget>{legate::mapping::TaskTarget::CPU,
                                                                  legate::mapping::TaskTarget::OMP};
   ASSERT_TRUE(check_task_target_vec(valid_targets2, targets2));
@@ -311,8 +317,9 @@ TEST_F(MachineTest, Only)
 {
   const legate::mapping::Machine machine{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE}, {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
-  const auto machine1        = machine.only(legate::mapping::TaskTarget::CPU);
-  const auto& valid_targets1 = machine1.valid_targets();
+  const auto machine1       = machine.only(legate::mapping::TaskTarget::CPU);
+  const auto valid_targets1 = to_vector(machine1.valid_targets());
+
   ASSERT_EQ(valid_targets1,
             std::vector<legate::mapping::TaskTarget>{legate::mapping::TaskTarget::CPU});
   ASSERT_EQ(machine1.count(), 2);
@@ -335,7 +342,7 @@ TEST_F(MachineTest, OnlyIf)
 
   auto machine1 = machine.impl()->only_if(
     [](legate::mapping::TaskTarget t) { return t == legate::mapping::TaskTarget::CPU; });
-  ASSERT_EQ(machine1.valid_targets(),
+  ASSERT_EQ(to_vector(machine1.valid_targets()),
             std::vector<legate::mapping::TaskTarget>{legate::mapping::TaskTarget::CPU});
   ASSERT_EQ(machine1.preferred_target(), legate::mapping::TaskTarget::CPU);
 }
@@ -383,8 +390,8 @@ TEST_F(MachineTest, IndexOperator)
   const legate::mapping::Machine machine{{{legate::mapping::TaskTarget::CPU, CPU_RANGE},
                                           {legate::mapping::TaskTarget::OMP, OMP_RANGE},
                                           {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
-  const auto machine1        = machine[legate::mapping::TaskTarget::GPU];
-  const auto& valid_targets1 = machine1.valid_targets();
+  const auto machine1       = machine[legate::mapping::TaskTarget::GPU];
+  const auto valid_targets1 = to_vector(machine1.valid_targets());
 
   ASSERT_EQ(valid_targets1,
             std::vector<legate::mapping::TaskTarget>{legate::mapping::TaskTarget::GPU});
@@ -395,7 +402,7 @@ TEST_F(MachineTest, IndexOperator)
   const auto targets  = std::vector<legate::mapping::TaskTarget>{legate::mapping::TaskTarget::CPU,
                                                                  legate::mapping::TaskTarget::OMP};
   const auto machine2 = machine[targets];
-  const auto& valid_targets2 = machine2.valid_targets();
+  const auto valid_targets2 = to_vector(machine2.valid_targets());
 
   ASSERT_TRUE(check_task_target_vec(valid_targets2, targets));
   ASSERT_EQ(machine2.preferred_target(), legate::mapping::TaskTarget::OMP);

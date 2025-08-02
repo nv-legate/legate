@@ -64,6 +64,15 @@ enum class TaskTarget : std::uint8_t {
 static_assert(TaskTarget::GPU < TaskTarget::OMP);
 static_assert(TaskTarget::OMP < TaskTarget::CPU);
 
+namespace detail {
+
+/**
+ * @brief Number of TaskTarget's. Not for external use, so is not publicly documented.
+ */
+inline constexpr std::uint8_t NUM_TASK_TARGETS = 3;
+
+}  // namespace detail
+
 std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
 
 /**

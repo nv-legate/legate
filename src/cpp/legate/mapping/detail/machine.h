@@ -9,6 +9,7 @@
 #include <legate/mapping/machine.h>
 #include <legate/mapping/mapping.h>
 #include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
@@ -30,8 +31,8 @@ class Machine {
   [[nodiscard]] const ProcessorRange& processor_range() const;
   [[nodiscard]] const ProcessorRange& processor_range(TaskTarget target) const;
 
-  [[nodiscard]] const std::vector<TaskTarget>& valid_targets() const;
-  [[nodiscard]] std::vector<TaskTarget> valid_targets_except(
+  [[nodiscard]] Span<const TaskTarget> valid_targets() const;
+  [[nodiscard]] legate::detail::SmallVector<TaskTarget, NUM_TASK_TARGETS> valid_targets_except(
     const std::set<TaskTarget>& to_exclude) const;
 
   [[nodiscard]] std::uint32_t count() const;
@@ -45,7 +46,7 @@ class Machine {
   [[nodiscard]] Machine only_if(F&& pred) const;
 
   [[nodiscard]] Machine only(TaskTarget target) const;
-  [[nodiscard]] Machine only(const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] Machine only(Span<const TaskTarget> targets) const;
   [[nodiscard]] Machine slice(std::uint32_t from,
                               std::uint32_t to,
                               TaskTarget target,
@@ -53,7 +54,7 @@ class Machine {
   [[nodiscard]] Machine slice(std::uint32_t from, std::uint32_t to, bool keep_others = false) const;
 
   [[nodiscard]] Machine operator[](TaskTarget target) const;
-  [[nodiscard]] Machine operator[](const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] Machine operator[](Span<const TaskTarget> targets) const;
   bool operator==(const Machine& other) const;
   bool operator!=(const Machine& other) const;
   [[nodiscard]] Machine operator&(const Machine& other) const;
@@ -67,7 +68,7 @@ class Machine {
  private:
   TaskTarget preferred_target_{TaskTarget::CPU};
   std::map<TaskTarget, ProcessorRange> processor_ranges_{};
-  mutable std::optional<std::vector<TaskTarget>> valid_targets_{};
+  mutable std::optional<legate::detail::SmallVector<TaskTarget, NUM_TASK_TARGETS>> valid_targets_{};
 };
 
 std::ostream& operator<<(std::ostream& os, const Machine& machine);

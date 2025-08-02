@@ -44,8 +44,7 @@ class PartitionManager {
   PartitionManager(PartitionManager&&)                 = delete;
   PartitionManager& operator=(PartitionManager&&)      = delete;
 
-  [[nodiscard]] const std::vector<std::uint32_t>& get_factors(
-    const mapping::detail::Machine& machine);
+  [[nodiscard]] Span<const std::uint32_t> get_factors(const mapping::detail::Machine& machine);
 
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> compute_launch_shape(
     const mapping::detail::Machine& machine,

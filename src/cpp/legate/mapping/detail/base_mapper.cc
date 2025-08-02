@@ -1534,17 +1534,25 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     // If we're mapping an indirect copy and have data resident in GPU memory,
     // map everything to CPU memory, as indirect copies on GPUs are currently
     // extremely slow.
-    auto indirect =
+    const auto indirect =
       !copy.src_indirect_requirements.empty() || !copy.dst_indirect_requirements.empty();
-    auto&& valid_targets = indirect ? machine_desc.valid_targets_except({TaskTarget::GPU})
-                                      : machine_desc.valid_targets();
-    // However, if the machine in the scope doesn't have any CPU or OMP as a fallback for
-    // indirect copies, we have no choice but using GPUs
-    if (valid_targets.empty()) {
-      LEGATE_ASSERT(indirect);
-      return machine_desc.valid_targets().front();
+
+    const auto choose_target = [&](Span<const TaskTarget> valid_targets) {
+      // However, if the machine in the scope doesn't have any CPU or OMP as a fallback for
+      // indirect copies, we have no choice but using GPUs
+      if (valid_targets.empty()) {
+        LEGATE_ASSERT(indirect);
+        return machine_desc.valid_targets().front();
+      }
+      return valid_targets.front();
+    };
+
+    if (indirect) {
+      auto&& targets = machine_desc.valid_targets_except({TaskTarget::GPU});
+
+      return choose_target(targets);
     }
-    return valid_targets.front();
+    return choose_target(machine_desc.valid_targets());
   }();
 
   auto local_range = local_machine_.slice(copy_target, machine_desc, true);

@@ -283,10 +283,10 @@ void FutureAnalyzer::analyze_futures()
 
 namespace {
 
-template <typename T, typename U = T>
-void append_to_vec(std::vector<T>* dest, const std::vector<U>& src)
+template <typename T, typename U>
+void append_to_vec(std::vector<T>* dest, const U& span)
 {
-  dest->insert(dest->end(), src.begin(), src.end());
+  dest->insert(dest->end(), span.begin(), span.end());
 }
 
 }  // namespace

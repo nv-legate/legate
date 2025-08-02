@@ -172,7 +172,7 @@ class Machine {
    *
    * @return Task targets
    */
-  [[nodiscard]] const std::vector<TaskTarget>& valid_targets() const;
+  [[nodiscard]] Span<const TaskTarget> valid_targets() const;
   /**
    * @brief Returns the valid task targets excluding a given set of targets
    *
@@ -225,7 +225,7 @@ class Machine {
    *
    * @return Machine descriptor with the chosen processor ranges
    */
-  [[nodiscard]] Machine only(const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] Machine only(Span<const TaskTarget> targets) const;
   /**
    * @brief Slices the processor range for a given processor type
    *
@@ -271,7 +271,7 @@ class Machine {
    *
    * @return Machine descriptor with the chosen processor ranges
    */
-  [[nodiscard]] Machine operator[](const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] Machine operator[](Span<const TaskTarget> targets) const;
   [[nodiscard]] bool operator==(const Machine& other) const;
   [[nodiscard]] bool operator!=(const Machine& other) const;
   /**

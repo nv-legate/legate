@@ -51,7 +51,7 @@ class ConstraintSolver {
  private:
   ordered_set<const Variable*> partition_symbols_{};
   std::unordered_map<Variable, AccessMode> access_modes_{};
-  std::vector<InternalSharedPtr<Constraint>> constraints_{};
+  SmallVector<InternalSharedPtr<Constraint>> constraints_{};
 
   class UnionFindEntry;
 

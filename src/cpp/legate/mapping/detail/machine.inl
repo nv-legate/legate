@@ -10,13 +10,6 @@
 
 namespace legate::mapping::detail {
 
-inline Machine Machine::operator[](TaskTarget target) const { return only(target); }
-
-inline Machine Machine::operator[](const std::vector<TaskTarget>& targets) const
-{
-  return only(targets);
-}
-
 inline TaskTarget Machine::preferred_target() const { return preferred_target_; }
 
 inline const std::map<TaskTarget, ProcessorRange>& Machine::processor_ranges() const

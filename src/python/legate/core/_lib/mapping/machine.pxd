@@ -11,6 +11,7 @@ from libcpp.vector cimport vector as std_vector
 
 from ..tuning.scope cimport Scope
 from ..utilities.shared_ptr cimport _SharedPtr
+from ..utilities.span cimport _Span
 from .mapping cimport TaskTarget
 
 
@@ -44,7 +45,7 @@ cdef extern from "legate/mapping/machine.h" namespace "legate::mapping" nogil:
         TaskTarget preferred_target() except+
         _ProcessorRange processor_range() except+
         _ProcessorRange processor_range(TaskTarget target) except+
-        const std_vector[TaskTarget]& valid_targets() except+
+        _Span[const TaskTarget] valid_targets() except+
         std_vector[TaskTarget] valid_targets_except(
             const std_set[TaskTarget]&
         ) except+
@@ -53,6 +54,8 @@ cdef extern from "legate/mapping/machine.h" namespace "legate::mapping" nogil:
 
         std_string to_string() except+
         _Machine only(TaskTarget) except+
+        # This signature is a lie. It actually takes a Span<const TaskTarget>,
+        # but Cython doesn't know that std::vector automatically coerces to Span.
         _Machine only(const std_vector[TaskTarget]&) except+
         _Machine slice(uint32_t, uint32_t, TaskTarget, bool) except+
         _Machine slice(uint32_t, uint32_t, bool) except+

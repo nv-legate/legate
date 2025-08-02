@@ -43,42 +43,38 @@ namespace {
 
 PartitionManager::PartitionManager() : min_shard_volume_{min_shard_volume()}
 {
-  LEGATE_ASSERT(min_shard_volume_ > 0);
+  LEGATE_CHECK(min_shard_volume_ > 0);
 }
 
-const std::vector<std::uint32_t>& PartitionManager::get_factors(
-  const mapping::detail::Machine& machine)
+Span<const std::uint32_t> PartitionManager::get_factors(const mapping::detail::Machine& machine)
 {
   const auto curr_num_pieces = machine.count();
-  auto finder                = all_factors_.find(curr_num_pieces);
+  const auto [it, inserted]  = all_factors_.try_emplace(curr_num_pieces);
+  auto& factors              = it->second;
 
-  if (all_factors_.end() == finder) {
-    std::vector<std::uint32_t> factors;
-    auto remaining_pieces   = curr_num_pieces;
-    const auto push_factors = [&](std::uint32_t prime) {
+  if (inserted) {
+    auto remaining_pieces = curr_num_pieces;
+
+    for (auto prime : {11U, 7U, 5U, 3U, 2U}) {
       while (remaining_pieces % prime == 0) {
         factors.push_back(prime);
         remaining_pieces /= prime;
       }
-    };
-
-    for (auto factor : {11U, 7U, 5U, 3U, 2U}) {
-      push_factors(factor);
     }
-    all_factors_.insert({curr_num_pieces, std::move(factors)});
-    finder = all_factors_.find(curr_num_pieces);
   }
-  return finder->second;
+  return factors;
 }
 
 namespace {
 
-std::tuple<std::vector<std::size_t>, std::vector<std::uint32_t>, std::int64_t> prune_dimensions(
-  const Restrictions& restrictions, Span<const std::uint64_t> shape)
+[[nodiscard]] std::tuple<SmallVector<std::size_t, LEGATE_MAX_DIM>,
+                         SmallVector<std::uint32_t, LEGATE_MAX_DIM>,
+                         std::int64_t>
+prune_dimensions(const Restrictions& restrictions, Span<const std::uint64_t> shape)
 {
   // Prune out any dimensions that are 1
-  std::vector<std::size_t> temp_shape{};
-  std::vector<std::uint32_t> temp_dims{};
+  SmallVector<std::size_t, LEGATE_MAX_DIM> temp_shape{};
+  SmallVector<std::uint32_t, LEGATE_MAX_DIM> temp_dims{};
   std::int64_t volume = 1;
 
   temp_dims.reserve(shape.size());
@@ -97,35 +93,28 @@ std::tuple<std::vector<std::size_t>, std::vector<std::uint32_t>, std::int64_t> p
   return {std::move(temp_shape), std::move(temp_dims), volume};
 }
 
-std::vector<std::size_t> compute_shape_1d(std::int64_t max_pieces,
-                                          const std::vector<std::size_t>& shape)
+[[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_1d(
+  std::int64_t max_pieces, Span<const std::size_t> shape)
 {
-  std::vector<std::size_t> result;
+  SmallVector<std::size_t, LEGATE_MAX_DIM> result;
 
   result.push_back(std::min(shape.front(), static_cast<std::size_t>(max_pieces)));
   return result;
 }
 
-std::vector<std::size_t> compute_shape_2d(std::int64_t volume,
-                                          std::int64_t max_pieces,
-                                          std::vector<std::size_t>* shape)
+[[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_2d(
+  std::int64_t max_pieces, Span<const std::size_t> shape)
 {
-  std::vector<std::size_t> result;
-
-  if (volume < max_pieces) {
-    // TODO(wonchanl): Once the max_pieces heuristic is fixed, this should never happen
-    result = std::move(*shape);
-    return result;
-  }
-
   // Two dimensional so we can use square root to try and generate as square a pieces
   // as possible since most often we will be doing matrix operations with these
-  auto nx         = (*shape)[0];
-  auto ny         = (*shape)[1];
+  auto nx         = shape.front();
+  auto ny         = shape.back();
   const auto swap = nx > ny;
+
   if (swap) {
     std::swap(nx, ny);
   }
+
   const auto n = std::sqrt(static_cast<double>(max_pieces * nx) / static_cast<double>(ny));
 
   // Need to constraint n to be an integer with numpcs % n == 0
@@ -147,15 +136,15 @@ std::vector<std::size_t> compute_shape_2d(std::int64_t volume,
   const auto side2 = std::max(nx / n2, ny / (max_pieces / n2));
   const auto px    = static_cast<std::size_t>(side1 <= side2 ? n1 : n2);
   const auto py    = static_cast<std::size_t>(max_pieces / px);
+  auto result      = SmallVector<std::size_t, LEGATE_MAX_DIM>{};
 
-  // we need to trim launch space if it is larger than the
-  // original shape in one of the dimensions (can happen in
-  // testing)
+  // we need to trim launch space if it is larger than the original shape in one of the
+  // dimensions (can happen in testing)
   result.reserve(2);
   if (swap) {
     // If we swapped, then ny holds previous nx, and nx holds previous ny
-    LEGATE_ASSERT(ny == (*shape)[0]);
-    LEGATE_ASSERT(nx == (*shape)[1]);
+    LEGATE_ASSERT(ny == shape.front());
+    LEGATE_ASSERT(nx == shape.back());
     result.push_back(std::min(py, ny));
     result.push_back(std::min(px, nx));
   } else {
@@ -165,16 +154,17 @@ std::vector<std::size_t> compute_shape_2d(std::int64_t volume,
   return result;
 }
 
-std::vector<std::size_t> compute_shape_nd(const std::vector<std::uint32_t>& factors,
-                                          std::size_t ndim,
-                                          std::int64_t max_pieces,
-                                          const std::vector<std::size_t>& shape)
+[[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_nd(
+  Span<const std::uint32_t> factors,
+  std::size_t ndim,
+  std::int64_t max_pieces,
+  Span<const std::size_t> shape)
 {
   // For higher dimensions we care less about "square"-ness and more about evenly dividing
   // things, compute the prime factors for our number of pieces and then round-robin them
   // onto the shape, with the goal being to keep the last dimension >= 32 for good memory
   // performance on the GPU
-  std::vector<std::size_t> result(ndim, 1);
+  SmallVector<std::size_t, LEGATE_MAX_DIM> result{tags::size_tag, ndim, 1};
   std::size_t factor_prod = 1;
 
   for (auto&& factor : factors) {
@@ -185,7 +175,7 @@ std::vector<std::size_t> compute_shape_nd(const std::vector<std::uint32_t>& fact
 
     factor_prod *= factor;
 
-    std::vector<std::size_t> remaining;
+    SmallVector<std::size_t, LEGATE_MAX_DIM> remaining;
 
     remaining.reserve(shape.size());
     for (std::uint32_t idx = 0; idx < shape.size(); ++idx) {
@@ -264,11 +254,16 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   LEGATE_CHECK(ndim > 0);
   // Apparently captured structured bindings are only since C++20. Why on earth did the
   // committee not allow this in C++17????
-  static_assert(LEGATE_CPP_MIN_VERSION < 20);  // NOLINT(readability-magic-numbers)
-  auto temp_result = [&](std::vector<std::size_t>* shape_2, std::int64_t volume_2) {
+  LEGATE_CPP_VERSION_TODO(20, "Use captured structured bindings instead");
+  auto temp_result = [&](SmallVector<std::size_t, LEGATE_MAX_DIM>* shape_2, std::int64_t volume_2) {
     switch (ndim) {
       case 1: return compute_shape_1d(max_pieces, *shape_2);
-      case 2: return compute_shape_2d(volume_2, max_pieces, shape_2);
+      case 2: {
+        if (volume_2 < max_pieces) {
+          return std::move(*shape_2);
+        }
+        return compute_shape_2d(max_pieces, *shape_2);
+      }
       default: {  // legate-lint: no-switch-default
         return compute_shape_nd(get_factors(machine), ndim, max_pieces, *shape_2);
       }
@@ -278,9 +273,8 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   // Project back onto the original number of dimensions
   LEGATE_CHECK(temp_result.size() == ndim);
 
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> result;
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> result{tags::size_tag, shape.size(), 1};
 
-  result.assign(tags::size_tag, shape.size(), 1);
   for (std::uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
   }

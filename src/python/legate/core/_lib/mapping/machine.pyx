@@ -18,6 +18,7 @@ from .mapping cimport TaskTarget
 from .mapping import TaskTarget as PyTaskTarget
 
 from ..utilities.utils cimport is_iterable
+from ..utilities.span cimport _span_to_vector
 
 
 class EmptyMachineError(Exception):
@@ -374,11 +375,11 @@ cdef class Machine:
         :returns: Processor kinds
         :rtype: tuple[TaskTarget, ...]
         """
-        cdef const std_vector[TaskTarget] *v = NULL
+        cdef _Span[const TaskTarget] span
 
         with nogil:
-            v = &self._handle.valid_targets()
-        return tuple(v[0])
+            span = self._handle.valid_targets()
+        return tuple(_span_to_vector[TaskTarget](span))
 
     cpdef int count(
         self, target: object = None
@@ -444,6 +445,7 @@ cdef class Machine:
         if not is_iterable(targets):
             targets = (targets,)
         cdef std_vector[TaskTarget] cpp_targets = std_vector[TaskTarget]()
+        cdef TaskTarget target
 
         cpp_targets.reserve(len(targets))
         for target in targets:
@@ -452,7 +454,7 @@ cdef class Machine:
         cdef _Machine handle
 
         with nogil:
-            handle = self._handle.only(std_move(cpp_targets))
+            handle = self._handle.only(cpp_targets)
         return Machine.from_handle(std_move(handle))
 
     cpdef Machine slice(

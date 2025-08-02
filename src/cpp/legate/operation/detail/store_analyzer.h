@@ -9,6 +9,7 @@
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/utilities/detail/hash.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/hash.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -170,10 +171,10 @@ class FutureAnalyzer {
   // XXX: This could be a hash map, but Legion futures don't reveal IDs that we can hash
   std::unordered_map<Legion::Future, std::int32_t> future_indices_{};
   std::unordered_map<Legion::FutureMap, std::int32_t> future_map_indices_{};
-  std::vector<Legion::Future> coalesced_futures_{};
-  std::vector<Legion::FutureMap> coalesced_future_maps_{};
-  std::vector<Legion::Future> futures_{};
-  std::vector<Legion::FutureMap> future_maps_{};
+  SmallVector<Legion::Future> coalesced_futures_{};
+  SmallVector<Legion::FutureMap> coalesced_future_maps_{};
+  SmallVector<Legion::Future> futures_{};
+  SmallVector<Legion::FutureMap> future_maps_{};
 };
 
 class StoreAnalyzer {
