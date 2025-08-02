@@ -13,7 +13,7 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_DEBUG 1)
   endif()
 
-  if(Legion_USE_CUDA)
+  if(legate_USE_CUDA)
     set(LEGATE_USE_CUDA 1)
   endif()
 

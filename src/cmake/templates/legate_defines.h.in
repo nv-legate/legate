@@ -45,10 +45,6 @@
 
 #define LEGATE_CONFIGURE_OPTIONS "@LEGATE_CONFIGURE_OPTIONS@"
 
-#if !defined(LEGATE_USE_CUDA) && defined(LEGION_USE_CUDA)
-#define LEGATE_USE_CUDA 1
-#endif
-
 #if !defined(LEGATE_USE_OPENMP) && defined(REALM_USE_OPENMP)
 #define LEGATE_USE_OPENMP 1
 #endif

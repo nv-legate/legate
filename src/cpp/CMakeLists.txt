@@ -39,15 +39,10 @@ rapids_cpm_init(OVERRIDE "${LEGATE_CMAKE_DIR}/versions/versions.json")
 # ########################################################################################
 # * Default Flags -------------------------------------------------------------
 
-if(Legion_USE_CUDA)
+if(legate_USE_CUDA)
   # Must do this here since the debug symbols and default flags need to see if CUDA
-  # language support is needed. This isn't fool-proof, if someone has a pre-configured
-  # Legion then they might not pass this variable in, and hence we might not know that
-  # Legion has CUDA until after we find it (which must occur *before* we set our default
-  # flags).
+  # language support is needed.
   #
-  # But 9 times out of 10, people are passing this in, because they are using configure.
-
   # It is important to define CUDA architectures, as the current default of 52 is too old.
   # This must be populated before the enable_language call as that will set the default.
   if(NOT DEFINED ENV{CUDAARCHS})
@@ -61,6 +56,17 @@ if(Legion_USE_CUDA)
   # Needs to run before find_package(Legion)
   legate_set_default_cuda_arch(DEST_VAR CMAKE_CUDA_ARCHITECTURES)
   set(Legion_CUDA_ARCH "${CMAKE_CUDA_ARCHITECTURES}")
+  set(CMAKE_INCLUDE_SYSTEM_FLAG_CUDA "-isystem ")
+  # Find the CUDAToolkit
+  rapids_find_package(# Min version of CUDA is 11.8, but we want CMake to prefer the
+                      # highest version possible. It seems that it only does that if you
+                      # give it a range...
+                      #
+                      # So in 100 years time, if we ever get to CUDA version 100000000,
+                      # someone must remember to add another 9 below.
+                      CUDAToolkit 11.8...99999999.99 REQUIRED
+                      BUILD_EXPORT_SET legate-exports
+                      INSTALL_EXPORT_SET legate-exports)
 endif()
 
 include("${LEGATE_CMAKE_DIR}/Modules/default_flags.cmake")
@@ -146,24 +152,6 @@ legate_find_or_configure(PACKAGE Legion)
 # If Legion_USE_Python was toggled ON by find_package(Legion), find Python3
 if(Legion_USE_Python AND (NOT Python3_FOUND))
   _legate_find_python3()
-endif()
-
-if(Legion_USE_CUDA)
-  # Enable the CUDA language, if we didn't already
-  enable_language(CUDA)
-  # Must come after `enable_language(CUDA)` Use `-isystem <path>` instead of
-  # `-isystem=<path>` because the former works with clangd intellisense
-  set(CMAKE_INCLUDE_SYSTEM_FLAG_CUDA "-isystem ")
-  # Find the CUDAToolkit
-  rapids_find_package(# Min version of CUDA is 11.8, but we want CMake to prefer the
-                      # highest version possible. It seems that it only does that if you
-                      # give it a range...
-                      #
-                      # So in 100 years time, if we ever get to CUDA version 100000000,
-                      # someone must remember to add another 9 below.
-                      CUDAToolkit 11.8...99999999.99 REQUIRED
-                      BUILD_EXPORT_SET legate-exports
-                      INSTALL_EXPORT_SET legate-exports)
 endif()
 
 if(Legion_USE_OpenMP)
@@ -567,7 +555,7 @@ if(legate_USE_NCCL)
   target_sources(legate PRIVATE legate/comm/detail/comm_nccl.cc)
 endif()
 
-if(Legion_USE_CUDA)
+if(legate_USE_CUDA)
   target_sources(legate PRIVATE legate/data/detail/array_tasks_cuda.cc
                                 legate/partitioning/detail/partitioning_tasks_cuda.cc)
 
@@ -626,7 +614,7 @@ endif()
 # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
 foreach(target legate LegionRuntime ${REALM_TARGET})
   target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
-  if(Legion_USE_CUDA)
+  if(legate_USE_CUDA)
     # CCCL 2.7.0 (which is what we use) disables __half support if it detects that it
     # isn't being compiled with a CUDA compiler. I think this is probably a bug, because
     # we always have __half support if you #include <cuda_fp16.h>. So we need to lie to
@@ -1008,14 +996,15 @@ Imported Targets:
 # explicitly set(<the_variable> ... PARENT_SCOPE) in order for downstream to see it...
 if(NOT PROJECT_IS_TOP_LEVEL)
   # These must match the decls below BEGIN MUST MATCH
-  set(Legion_USE_CUDA "${Legion_USE_CUDA}" PARENT_SCOPE)
-  set(Legion_USE_OpenMP "${Legion_USE_OpenMP}" PARENT_SCOPE)
-  set(Legion_USE_Python "${Legion_USE_Python}" PARENT_SCOPE)
-  set(Legion_CUDA_ARCH "${Legion_CUDA_ARCH}" PARENT_SCOPE)
-  set(Legion_NETWORKS "${Legion_NETWORKS}" PARENT_SCOPE)
-  set(Legion_BOUNDS_CHECKS "${Legion_BOUNDS_CHECKS}" PARENT_SCOPE)
-  set(Legion_MAX_DIM "${Legion_MAX_DIM}" PARENT_SCOPE)
-  set(Legion_MAX_FIELDS "${Legion_MAX_FIELDS}" PARENT_SCOPE)
+  set_parent_scope(Legion_USE_CUDA)
+  set_parent_scope(legate_USE_CUDA)
+  set_parent_scope(Legion_USE_OpenMP)
+  set_parent_scope(Legion_USE_Python)
+  set_parent_scope(Legion_CUDA_ARCH)
+  set_parent_scope(Legion_NETWORKS)
+  set_parent_scope(Legion_BOUNDS_CHECKS)
+  set_parent_scope(Legion_MAX_DIM)
+  set_parent_scope(Legion_MAX_FIELDS)
   # END MUST MATCH
 endif()
 
@@ -1029,6 +1018,7 @@ endif()
 ]=]
        # These must match the decls above BEGIN MUST MATCH
        "set(Legion_USE_CUDA ${Legion_USE_CUDA})"
+       "set(legate_USE_CUDA ${legate_USE_CUDA})"
        "set(Legion_USE_OpenMP ${Legion_USE_OpenMP})"
        "set(Legion_USE_Python ${Legion_USE_Python})"
        "set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH})"

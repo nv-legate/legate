@@ -103,6 +103,10 @@ macro(set_ifndef variable value)
   endif()
 endmacro()
 
+macro(set_parent_scope variable)
+  set(${variable} ${${variable}} PARENT_SCOPE)
+endmacro()
+
 # For now we want the optimization flags to match on both normal make and cmake builds so
 # we override the cmake defaults here for release, this changes -O3 to -O2 and removes
 # -DNDEBUG
@@ -167,5 +171,3 @@ else()
 endif()
 
 add_subdirectory(${legate_project_suffix})
-
-list(POP_BACK CMAKE_MESSAGE_CONTEXT)

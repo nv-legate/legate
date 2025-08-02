@@ -89,6 +89,8 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   message(VERBOSE "legate: Legion git_branch: ${git_branch}")
   message(VERBOSE "legate: Legion exclude_from_all: ${exclude_from_all}")
 
+  set_ifndef(Legion_USE_CUDA "${legate_USE_CUDA}")
+
   rapids_cpm_find(Legion "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
@@ -129,12 +131,12 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   set(Legion_VERSION "${version}" PARENT_SCOPE)
   set(Legion_GIT_REPO "${git_repo}" PARENT_SCOPE)
   set(Legion_GIT_BRANCH "${git_branch}" PARENT_SCOPE)
-  set(Legion_USE_CUDA ${Legion_USE_CUDA} PARENT_SCOPE)
-  set(Legion_USE_OpenMP ${Legion_USE_OpenMP} PARENT_SCOPE)
-  set(Legion_USE_Python ${Legion_USE_Python} PARENT_SCOPE)
-  set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH} PARENT_SCOPE)
-  set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS} PARENT_SCOPE)
-  set(Legion_NETWORKS ${Legion_NETWORKS} PARENT_SCOPE)
+  set_parent_scope(Legion_USE_CUDA)
+  set_parent_scope(Legion_USE_OpenMP)
+  set_parent_scope(Legion_USE_Python)
+  set_parent_scope(Legion_CUDA_ARCH)
+  set_parent_scope(Legion_BOUNDS_CHECKS)
+  set_parent_scope(Legion_NETWORKS)
 endfunction()
 
 function(find_or_configure_legion)
@@ -219,7 +221,7 @@ calls into NCCL either directly or through some other Legate library.
       Legion_USE_Python Legion_CUDA_ARCH Legion_BOUNDS_CHECKS Legion_NETWORKS)
   foreach(var IN LISTS legion_vars)
     message(VERBOSE "${var}=${${var}}")
-    set(${var} "${${var}}" PARENT_SCOPE)
+    set_parent_scope(${var})
   endforeach()
   legate_export_variables(Legion)
 endfunction()

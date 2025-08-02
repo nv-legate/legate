@@ -31,7 +31,7 @@ function(legate_configure_benchmark)
 
   target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE legate::legate benchmark::benchmark)
 
-  if(Legion_USE_CUDA)
+  if(legate_USE_CUDA)
     target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE NCCL::NCCL)
   endif()
 

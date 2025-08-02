@@ -155,6 +155,7 @@ class Legate(MainPackage):
         cmake_var=CMAKE_VARIABLE("legate_USE_HDF5_VFD_GDS", CMakeBool),
     )
     legate_USE_NCCL: Final = CMAKE_VARIABLE("legate_USE_NCCL", CMakeBool)
+    legate_USE_CUDA: Final = CMAKE_VARIABLE("legate_USE_CUDA", CMakeBool)
 
     def __init__(
         self, manager: ConfigurationManager, argv: Sequence[str]
@@ -469,6 +470,14 @@ class Legate(MainPackage):
         elif state.explicitly_disabled():
             self.manager.set_cmake_variable(self.legate_USE_NCCL, False)
 
+    def configure_cuda(self) -> None:
+        r"""Configure CUDA variables."""
+        state = self.deps.CUDA.state
+        if state.enabled():
+            self.manager.set_cmake_variable(self.legate_USE_CUDA, True)
+        elif state.explicitly_disabled():
+            self.manager.set_cmake_variable(self.legate_USE_CUDA, False)
+
     def configure(self) -> None:
         r"""Configure Legate."""
         super().configure()
@@ -480,6 +489,7 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_cprofile)
         self.log_execute_func(self.configure_hdf5)
         self.log_execute_func(self.configure_nccl)
+        self.log_execute_func(self.configure_cuda)
 
     def _summarize_flags(self) -> list[tuple[str, Any]]:
         def make_summary(
@@ -521,6 +531,7 @@ class Legate(MainPackage):
                 m.get_cmake_variable(self.legate_USE_HDF5_VFD_GDS),
             ),
             ("NCCL", m.get_cmake_variable(self.legate_USE_NCCL)),
+            ("CUDA", m.get_cmake_variable(self.legate_USE_CUDA)),
         ]
 
     def summarize(self) -> str:

@@ -351,7 +351,7 @@ if(legate_USE_NCCL)
   list(APPEND gpu_TARGETS NCCL::NCCL)
 endif()
 
-if(Legion_USE_CUDA)
+if(legate_USE_CUDA)
   legate_configure_test(NAME tests_with_gpus
                         SOURCES main_with_runtime_init.cc ${with_runtime_SRC} ${gpu_SRC}
                         GPUS 1

@@ -991,6 +991,11 @@
                     "nargs": 2
                 }
             },
+            "set_parent_scope": {
+                "pargs": {
+                    "nargs": 1
+                }
+            },
             "unsupported_cuda_arch": {
                 "pargs": {
                     "nargs": 1
