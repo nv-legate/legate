@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 ---
 name: Lint
 
@@ -41,7 +44,7 @@ jobs:
             echo "shellcheck-py"
             echo "cmakelang"
             echo "rich"
-          } > requirements.txt
+          } > ${{ runner.temp }}/requirements.txt
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -51,7 +54,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r ${{ runner.temp }}/requirements.txt
 
       - name: Set LEGATE_DIR
         run: |

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 # dej2lint - remove jinja2 directives for lint checking
 # also should try to fix line nums in lint output
 # currently only runs on yaml files with yamllint

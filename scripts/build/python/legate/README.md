@@ -1,3 +1,6 @@
+[//]: # SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+[//]: # SPDX-License-Identifier: Apache-2.0
+
 # Python PyPi Binary Wheels
 
 This directory is the root of the Python PyPi binary pip wheels for the

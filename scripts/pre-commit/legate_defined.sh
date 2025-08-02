@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # TODO: The [^D] at the end of LEGATE_ is to not match LEGATE_DEFINED() itself. I would
 # have used negative lookahead: LEGATE_(?!DEFINED), but grep does not support this out of
 # the box. This requires PCRE2 regex (via -P) flag, but that is not supported on all

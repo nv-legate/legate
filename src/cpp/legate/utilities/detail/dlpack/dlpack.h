@@ -1,4 +1,14 @@
 // NOLINTBEGIN
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2017 by Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Note: This license specification was added by Legate in order to pacify the reuse license
+ * checker tool. It does not relicense this header under the terms of this project in any way,
+ * and is intended to be equal and equivalent to the original license provided below, and as
+ * specified in the attached copy of the DLPack license in the Legate documentation. All rights
+ * to the original header remain with its original author(s) and copyright holder(s).
+ */
 /*!
  *  Copyright (c) 2017 by Contributors
  * \file dlpack.h

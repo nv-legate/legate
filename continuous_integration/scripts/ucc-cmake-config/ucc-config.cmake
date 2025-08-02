@@ -1,6 +1,7 @@
-#
-# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
+#=============================================================================
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#=============================================================================
 
 include("${CMAKE_CURRENT_LIST_DIR}/ucc-targets.cmake")
 

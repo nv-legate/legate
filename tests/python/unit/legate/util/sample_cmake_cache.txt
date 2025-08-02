@@ -1,2 +1,5 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 Legion_SOURCE_DIR:STATIC="foo/bar"
 FIND_LEGATE_CORE_CPP:BOOL=OFF

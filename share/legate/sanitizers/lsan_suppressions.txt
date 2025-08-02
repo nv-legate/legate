@@ -1,4 +1,3 @@
-# The only true leaks in Legate
 leak:intentionally_leak*
 # Legion and Realm leak like faucets
 leak:liblegion.*

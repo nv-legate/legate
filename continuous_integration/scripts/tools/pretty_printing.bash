@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # begin_group: Start a named section of log output, possibly with color.
 # Usage: begin_group "Group Name" [Color]
 #   Group Name: A string specifying the name of the group.

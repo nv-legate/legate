@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 ---
 repos:
   - repo: https://github.com/adrienverge/yamllint
@@ -81,6 +84,10 @@ repos:
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
         exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
+  - repo: https://github.com/fsfe/reuse-tool
+    rev: v5.0.2
+    hooks:
+      - id: reuse
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.4
     hooks:

@@ -1,6 +1,7 @@
-#
-# Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
+#=============================================================================
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#=============================================================================
 
 set(prefix ${CMAKE_CURRENT_LIST_DIR}/../../..)
 set(exec_prefix "${prefix}")
