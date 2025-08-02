@@ -78,7 +78,6 @@ class CUDAConfig(SectionConfig):
 
         deps = (
             f"cuda-version={drop_patch(self.ctk_version)}",  # runtime
-            "cutensor>=2",  # runtime
             "nccl<2.27.0",  # runtime
             "pynvml",  # tests
         )
@@ -98,10 +97,12 @@ class CUDAConfig(SectionConfig):
             if self.cupynumeric:
                 deps += (
                     "cuda-cudart-static",
+                    "cutensor>=2",
                     "libcublas-dev",
                     "libcufft-dev",
                     "libcurand-dev",
                     "libcusolver-dev",
+                    "libcusolvermp-dev",
                     "libcusparse-dev",
                     "libnvjitlink-dev",
                 )
