@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 
 /**
@@ -31,7 +33,7 @@ class VariantOptions;
 /**
  * @brief A class describing the various properties of a task variant.
  */
-class VariantInfo {
+class LEGATE_EXPORT VariantInfo {
  public:
   VariantInfo() = delete;
 

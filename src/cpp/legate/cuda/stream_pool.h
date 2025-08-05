@@ -39,7 +39,7 @@ namespace legate::cuda {
  * When `LEGATE_SYNC_STREAM_VIEW` is set to 1, every `StreamView` synchronizes the CUDA stream
  * that it wraps when it is destroyed.
  */
-class LEGATE_STREAM_VIEW_DEPRECATED StreamView {
+class LEGATE_EXPORT LEGATE_STREAM_VIEW_DEPRECATED StreamView {
  public:
   /**
    * @brief Creates a `StreamView` with a raw CUDA stream
@@ -84,7 +84,7 @@ class LEGATE_STREAM_VIEW_DEPRECATED StreamView {
  * @brief A stream pool
  * @deprecated since 24.11: use legate::TaskContext::get_task_stream() instead
  */
-class LEGATE_STREAM_POOL_DEPRECATED StreamPool {
+class LEGATE_EXPORT LEGATE_STREAM_POOL_DEPRECATED StreamPool {
  public:
   /**
    * @brief Returns a `StreamView` in the pool

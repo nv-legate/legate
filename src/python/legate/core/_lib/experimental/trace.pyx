@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from ..runtime.runtime cimport Runtime, get_legate_runtime
+from ..runtime.runtime cimport get_legate_runtime
 
 
 cdef class Trace:
@@ -12,11 +12,7 @@ cdef class Trace:
         self._trace_id = trace_id
 
     def __enter__(self) -> None:
-        cdef Runtime runtime = get_legate_runtime()
-
-        runtime._handle.impl().begin_trace(self._trace_id)
+        get_legate_runtime().begin_trace(self._trace_id)
 
     def __exit__(self, _: Any, __: Any, ___: Any) -> None:
-        cdef Runtime runtime = get_legate_runtime()
-
-        runtime._handle.impl().end_trace(self._trace_id)
+        get_legate_runtime().end_trace(self._trace_id)

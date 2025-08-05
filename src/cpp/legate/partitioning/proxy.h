@@ -34,7 +34,7 @@ namespace legate {
 /**
  * @brief An object that models a specific array argument to a task.
  */
-class ProxyArrayArgument {
+class LEGATE_EXPORT ProxyArrayArgument {
  public:
   /**
    * @brief The kind of argument.
@@ -88,7 +88,7 @@ class TaskArgsBase {
 /**
  * @brief A class that models the input arguments to a task.
  */
-class ProxyInputArguments
+class LEGATE_EXPORT ProxyInputArguments
   : public proxy_detail::TaskArgsBase<ProxyInputArguments, ProxyArrayArgument::Kind::INPUT> {
  public:
   using TaskArgsBase::TaskArgsBase;
@@ -109,7 +109,7 @@ class ProxyInputArguments
 /**
  * @brief A class that models the output arguments to a task.
  */
-class ProxyOutputArguments
+class LEGATE_EXPORT ProxyOutputArguments
   : public proxy_detail::TaskArgsBase<ProxyOutputArguments, ProxyArrayArgument::Kind::OUTPUT> {
  public:
   using TaskArgsBase::TaskArgsBase;
@@ -130,7 +130,7 @@ class ProxyOutputArguments
 /**
  * @brief A class that models the reduction arguments to a task.
  */
-class ProxyReductionArguments
+class LEGATE_EXPORT ProxyReductionArguments
   : public proxy_detail::TaskArgsBase<ProxyReductionArguments,
                                       ProxyArrayArgument::Kind::REDUCTION> {
  public:
@@ -152,7 +152,7 @@ class ProxyReductionArguments
 /**
  * @brief The base proxy constraint class.
  */
-class ProxyConstraint {
+class LEGATE_EXPORT ProxyConstraint {
  public:
   ProxyConstraint()                                           = LEGATE_DEFAULT_WHEN_CYTHON;
   ProxyConstraint(const ProxyConstraint&) noexcept            = default;

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/macros.h>
@@ -219,7 +221,7 @@ class AutoPrimaryContext {
 
 // ==========================================================================================
 
-class CUDADriverError : public std::runtime_error {
+class LEGATE_EXPORT CUDADriverError : public std::runtime_error {
  public:
   CUDADriverError(const std::string& what, CUresult result);
 

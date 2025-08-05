@@ -10,6 +10,7 @@
 
 namespace legate {
 
-[[nodiscard]] Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible = true);
+[[nodiscard]] LEGATE_EXPORT Memory::Kind find_memory_kind_for_executing_processor(
+  bool host_accessible = true);
 
 }  // namespace legate

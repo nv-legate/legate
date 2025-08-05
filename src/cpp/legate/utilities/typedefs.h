@@ -400,9 +400,9 @@ using XorReduction = Legion::XorReduction<T>;
 
 namespace detail {
 
-[[nodiscard]] Logger& log_legate();
+[[nodiscard]] LEGATE_EXPORT Logger& log_legate();
 
-[[nodiscard]] Logger& log_legate_partitioner();
+[[nodiscard]] LEGATE_EXPORT Logger& log_legate_partitioner();
 
 }  // namespace detail
 

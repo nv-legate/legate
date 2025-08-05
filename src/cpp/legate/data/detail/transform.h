@@ -21,7 +21,7 @@
 
 namespace legate::detail {
 
-class NonInvertibleTransformation : public std::runtime_error {
+class LEGATE_EXPORT NonInvertibleTransformation : public std::runtime_error {
  public:
   explicit NonInvertibleTransformation(
     std::string_view error_message = "Non-invertible transformation");

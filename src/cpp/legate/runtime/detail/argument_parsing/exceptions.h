@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <stdexcept>
 #include <string_view>
 
@@ -23,7 +25,7 @@ namespace legate::detail {
  * CPU-only build of Legate). The caller should adjust the options specified in ``LEGATE_CONFIG``
  * before restarting the application and calling ``legate::start`` again.
  */
-class ConfigurationError : public std::runtime_error {
+class LEGATE_EXPORT ConfigurationError : public std::runtime_error {
  public:
   /**
    * @brief Create a `ConfigurationError` with the given explanatory message.
@@ -46,7 +48,7 @@ class ConfigurationError : public std::runtime_error {
  * and/or disable automatic configuration altogether with ``LEGATE_AUTO_CONFIG=0``, before
  * restarting the application and calling ``legate::start`` again.
  */
-class AutoConfigurationError : public std::runtime_error {
+class LEGATE_EXPORT AutoConfigurationError : public std::runtime_error {
  public:
   /**
    * @brief Create an `AutoConfigurationError` with the given explanatory message.

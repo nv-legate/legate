@@ -32,7 +32,7 @@ namespace legate {
  * destroyed, and can optionally be made alive until the task finishes by making the allocator
  * unscoped.
  */
-class ScopedAllocator {
+class LEGATE_EXPORT ScopedAllocator {
  public:
   static constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <cstddef>
 #include <exception>
 #include <memory>
@@ -34,7 +36,7 @@ namespace legate::detail {
  * This class exists to serve as a type-erased target in "catch" clauses aiming to only catch
  * traced exceptions.
  */
-class TracedExceptionBase {
+class LEGATE_EXPORT TracedExceptionBase {
   class Impl;
 
  public:
@@ -96,7 +98,7 @@ class TracedExceptionBase {
  * @tparam T The type of the exception to wrap, for example `std::runtime_error`.
  */
 template <typename T>
-class TracedException : public T, public TracedExceptionBase {
+class LEGATE_EXPORT TracedException : public T, public TracedExceptionBase {
  public:
   /**
    * @brief Construct a TracedException.

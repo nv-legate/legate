@@ -13,7 +13,6 @@ from ..type.types cimport _Type
 from ..utilities.shared_ptr cimport _SharedPtr
 from ..utilities.tuple cimport _tuple
 from ..utilities.unconstructable cimport Unconstructable
-from .detail.logical_store cimport _LogicalStoreImpl
 from .physical_store cimport PhysicalStore, _PhysicalStore
 from .shape cimport _Shape
 from .slice cimport _Slice
@@ -45,7 +44,7 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         void offload_to(StoreTarget) except+
         std_string to_string() except+
         bool equal_storage(const _LogicalStore&) except+
-        const _SharedPtr[_LogicalStoreImpl]& impl() except+
+        void allow_out_of_order_destruction() except+
 
     cdef cppclass _LogicalStorePartition "legate::LogicalStorePartition":
         _LogicalStorePartition() except+

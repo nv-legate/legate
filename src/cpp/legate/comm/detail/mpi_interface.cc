@@ -125,12 +125,12 @@ namespace {
   return ret;
 }
 
-class InvalidWrapperLocation : public std::invalid_argument {
+class LEGATE_EXPORT InvalidWrapperLocation : public std::invalid_argument {
  public:
   using std::invalid_argument::invalid_argument;
 };
 
-class HandleLoadError : public std::invalid_argument {
+class LEGATE_EXPORT HandleLoadError : public std::invalid_argument {
  public:
   using std::invalid_argument::invalid_argument;
 };

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstddef>
@@ -28,7 +30,7 @@ namespace legate {
 /**
  * @brief An object representing the raw memory and strides held by a `PhysicalStore`.
  */
-class InlineAllocation {
+class LEGATE_EXPORT InlineAllocation {
  public:
   InlineAllocation() = default;
   InlineAllocation(void* ptr_, std::vector<std::size_t> strides_, mapping::StoreTarget target_);

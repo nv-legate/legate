@@ -35,8 +35,12 @@ find_package(MPI REQUIRED COMPONENTS C)
 add_library(mpi_wrapper src/legate_mpi_wrapper/mpi_wrapper.c)
 add_library(legate::mpi_wrapper ALIAS mpi_wrapper)
 
+cmake_path(SET binary_include_dir NORMALIZE
+           "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper")
+
 target_include_directories(mpi_wrapper
-                           PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>)
+                           PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+                                  $<BUILD_INTERFACE:${binary_include_dir}>)
 
 if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
   # Only generate the interface include paths if we are installing the headers.
@@ -56,7 +60,18 @@ set_target_properties(mpi_wrapper
                                  ARCHIVE_OUTPUT_NAME "${LEGATE_MPI_WRAPPER_LIB_NAME}"
                                  POSITION_INDEPENDENT_CODE ON
                                  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
-                                 ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
+                                 ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
+                                 DEFINE_SYMBOL legate_mpi_wrapper_EXPORTS)
+
+include(GenerateExportHeader)
+
+# cmake-format: off
+generate_export_header(
+  mpi_wrapper
+    BASE_NAME        LEGATE_MPI_WRAPPER
+    EXPORT_FILE_NAME "${binary_include_dir}/legate_mpi_wrapper/legate_mpi_wrapper_exports.h"
+)
+# cmake-format: on
 
 # ==========================================================================================
 # Install rules
@@ -66,6 +81,9 @@ install(TARGETS mpi_wrapper DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
   install(FILES src/legate_mpi_wrapper/mpi_wrapper.h
                 src/legate_mpi_wrapper/mpi_wrapper_types.h
+          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper/legate_mpi_wrapper")
+
+  install(FILES "${binary_include_dir}/legate_mpi_wrapper/legate_mpi_wrapper_exports.h"
           DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper/legate_mpi_wrapper")
 
   set(cmake_install_base_dir "${CMAKE_INSTALL_LIBDIR}/cmake/legate_mpi_wrapper")

@@ -73,7 +73,7 @@ inline constexpr std::uint8_t NUM_TASK_TARGETS = 3;
 
 }  // namespace detail
 
-std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
 
 /**
  * @brief Enumerates the possible memory types a store may be mapped to.
@@ -97,7 +97,7 @@ enum class StoreTarget : std::uint8_t {
   SOCKETMEM,
 };
 
-std::ostream& operator<<(std::ostream& stream, const StoreTarget& target);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& stream, const StoreTarget& target);
 
 /**
  * @brief An enum class for instance allocation policies
@@ -116,7 +116,7 @@ enum class AllocPolicy : std::uint8_t {
 /**
  * @brief A descriptor for dimension ordering
  */
-class DimOrdering {
+class LEGATE_EXPORT DimOrdering {
  public:
   /**
    * @brief An enum class for kinds of dimension ordering
@@ -204,7 +204,7 @@ class DimOrdering {
 /**
  * @brief A descriptor for instance mapping policy
  */
-class InstanceMappingPolicy {
+class LEGATE_EXPORT InstanceMappingPolicy {
  public:
   /**
    * @brief Target memory type for the instance
@@ -322,14 +322,14 @@ class InstanceMappingPolicy {
    */
   void set_redundant(bool redundant);
 
-  bool operator==(const InstanceMappingPolicy&) const;
-  bool operator!=(const InstanceMappingPolicy&) const;
+  [[nodiscard]] bool operator==(const InstanceMappingPolicy&) const;
+  [[nodiscard]] bool operator!=(const InstanceMappingPolicy&) const;
 };
 
 /**
  * @brief A mapping policy for stores
  */
-class StoreMapping {
+class LEGATE_EXPORT StoreMapping {
  public:
   StoreMapping() noexcept;
   StoreMapping(StoreMapping&&) noexcept;
@@ -425,7 +425,7 @@ class StoreMapping {
 /**
  * @brief An abstract class that defines machine query APIs
  */
-class MachineQueryInterface {
+class LEGATE_EXPORT MachineQueryInterface {
  public:
   virtual ~MachineQueryInterface() = default;
   /**
@@ -459,7 +459,7 @@ class MachineQueryInterface {
  *
  * The APIs give Legate libraries high-level control on task and store mappings
  */
-class Mapper {
+class LEGATE_EXPORT Mapper {
  public:
   virtual ~Mapper() = default;
   /**

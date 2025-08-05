@@ -91,7 +91,7 @@ using Buffer = Legion::DeferredBuffer<VAL, DIM>;
  * safe to use it immediately, even if it used asynchronously (for example, in GPU kernel
  * launches) after the fact.
  */
-class TaskLocalBuffer {
+class LEGATE_EXPORT TaskLocalBuffer {
  public:
   TaskLocalBuffer() = LEGATE_DEFAULT_WHEN_CYTHON;
   TaskLocalBuffer(const TaskLocalBuffer&);

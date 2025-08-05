@@ -38,7 +38,7 @@ namespace legate::mapping {
  *
  * `NodeRange`s are half-open intervals of logical node IDs.
  */
-class NodeRange {
+class LEGATE_EXPORT NodeRange {
  public:
   [[nodiscard]] constexpr bool operator<(const NodeRange& other) const noexcept;
   [[nodiscard]] constexpr bool operator==(const NodeRange& other) const noexcept;
@@ -54,7 +54,7 @@ class NodeRange {
  *
  * `ProcessorRange`s are half-open intervals of logical processors IDs.
  */
-class ProcessorRange {
+class LEGATE_EXPORT ProcessorRange {
  public:
   /**
    * @brief Starting processor ID
@@ -128,7 +128,7 @@ class ProcessorRange {
   [[noreturn]] static void throw_illegal_invalid_intersection_();
 };
 
-std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
 
 namespace detail {
 class Machine;
@@ -143,7 +143,7 @@ class Machine;
  * and setting it for the scope using `MachineTracker`. Configuring the scope with an
  * empty machine raises a `std::runtime_error` exception.
  */
-class Machine {
+class LEGATE_EXPORT Machine {
  public:
   /**
    * @brief Preferred processor type of this machine descriptor
@@ -308,7 +308,7 @@ class Machine {
   SharedPtr<detail::Machine> impl_{};
 };
 
-std::ostream& operator<<(std::ostream& stream, const Machine& machine);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& stream, const Machine& machine);
 
 /** @} */
 

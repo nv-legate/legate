@@ -29,6 +29,7 @@ class ConstraintSolver;
 class ListLogicalArray;
 class TaskReturnLayoutForUnpack;
 class Variable;
+class BasePhysicalArray;
 
 class LogicalArray {
  public:

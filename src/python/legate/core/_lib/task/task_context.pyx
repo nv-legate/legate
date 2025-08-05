@@ -24,8 +24,6 @@ from ..._ext.cython_libcpp.string_view cimport (
     str_from_string_view
 )
 
-from .detail.returned_python_exception cimport _ReturnedPythonException
-
 import pickle
 import traceback
 
@@ -33,19 +31,31 @@ import traceback
 # const char* to it.
 cdef extern from *:
     """
+    #include <legate/task/detail/task_context.h>
+    #include <legate/task/detail/returned_python_exception.h>
+
     #include <cstddef>
     #include <string>
 
-    legate::detail::ReturnedPythonException make_python_exception(
+    namespace {
+
+    void set_python_exception(
+      const legate::TaskContext& ctx,
       const char *buf,
       std::size_t len,
       std::string msg)
     {
-      return {reinterpret_cast<const std::byte *>(buf), len, std::move(msg)};
+      ctx.impl()->set_exception(
+        legate::detail::ReturnedPythonException{
+          reinterpret_cast<const std::byte *>(buf), len, std::move(msg)
+        }
+      );
     }
+
+    } // namespace
     """
-    _ReturnedPythonException make_python_exception(
-        const char*, size_t, std_string
+    void set_python_exception(
+        const _TaskContext&, const char*, size_t, std_string
     )
 
 cdef class TaskContext(Unconstructable):
@@ -234,9 +244,7 @@ cdef class TaskContext(Unconstructable):
         cdef str exn_text = "".join(traceback.format_exception(excn))
 
         PyBytes_AsStringAndSize(exn_bytes, &buf, &length)
-        self._handle.impl().set_exception(
-            make_python_exception(buf, length, exn_text.encode())
-        )
+        set_python_exception(self._handle[0], buf, length, exn_text.encode())
 
     cpdef bool can_raise_exception(self):
         r"""

@@ -25,127 +25,11 @@ from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain, _LocalTaskID, VariantCode
 from ..utilities.unconstructable cimport Unconstructable
 from .detail.config cimport _Config
-from .detail.runtime cimport _RuntimeImpl
 from .library cimport Library, _Library
 from .resource cimport _ResourceConfig, ResourceConfig
 
-
 cdef extern from *:
-    """
-    #include <Python.h>
-    #include <stdexcept>
-    #include "legate/task/exception.h"
-    #include "legate/task/detail/exception.h"
-
-    PyObject* _LegateTaskException = nullptr;
-    PyObject* _LegatePyTaskException = nullptr;
-
-    void create_legate_task_exceptions()
-    {
-      _LegateTaskException =
-        PyErr_NewException("legate.LegateTaskException", NULL, NULL);
-      assert(_LegateTaskException);
-      _LegatePyTaskException =
-        PyErr_NewException("legate.LegatePyTaskException", NULL, NULL);
-      assert(_LegatePyTaskException);
-    }
-
-    void handle_legate_exception() {
-      try {
-        // Looks like passing through any Python exceptions is a standard
-        // procedure for a custom exception handler in Cython
-        if (!PyErr_Occurred()) throw;
-
-        // Re-raise a Legate task exception from C++ as a LegateTaskException
-        // so we can catch it in the outer context and rewrite it to the
-        // user-asked one.
-      } catch (const legate::detail::PythonTaskException& exn) {
-        PyObject* bytes = PyBytes_FromStringAndSize(
-          reinterpret_cast<const char*>(exn.data()), exn.size()
-        );
-
-        assert(bytes);
-        PyErr_SetObject(_LegatePyTaskException, bytes);
-      } catch (const legate::TaskException& exn) {
-        PyObject* args = nullptr;
-        PyObject* message = nullptr;
-        PyObject* index = nullptr;
-        int result = 0;
-
-        args = PyTuple_New(2);
-        if (!args) {
-          goto error;
-        }
-        message = PyUnicode_FromString(exn.what());
-        if (!message) {
-          goto error;
-        }
-        index = PyLong_FromLong(static_cast<long>(exn.index()));
-        if (!index) {
-          goto error;
-        }
-
-        result = PyTuple_SetItem(args, 0, message);
-        // PyTuple_SetItem() decrements item refcnt on error, so we don't want
-        // inadvertently decref it below
-        message = nullptr;
-        if (result) {
-          goto error;
-        }
-
-        result = PyTuple_SetItem(args, 1, index);
-        // PyTuple_SetItem() decrements item refcnt on error, so we don't want
-        // inadvertently decref it below
-        index = nullptr;
-        if (result) {
-          goto error;
-        }
-
-        PyErr_SetObject(_LegateTaskException, args);
-        return;
-
-      error:
-        Py_XDECREF(args);
-        Py_XDECREF(message);
-        Py_XDECREF(index);
-        assert(
-          (result == 0)
-          && "Error occurred setting values into Python tuple"
-        );
-        assert(
-          false
-          && "Error occurred during C++ to Python exception wrangling"
-        );
-      } catch (const std::bad_alloc& exn) {
-        PyErr_SetString(PyExc_MemoryError, exn.what());
-      } catch (const std::bad_cast& exn) {
-        PyErr_SetString(PyExc_TypeError, exn.what());
-      } catch (const std::domain_error& exn) {
-        PyErr_SetString(PyExc_ValueError, exn.what());
-      } catch (const std::invalid_argument& exn) {
-        PyErr_SetString(PyExc_ValueError, exn.what());
-      } catch (const std::ios_base::failure& exn) {
-        PyErr_SetString(PyExc_IOError, exn.what());
-      } catch (const std::out_of_range& exn) {
-        PyErr_SetString(PyExc_IndexError, exn.what());
-      } catch (const std::overflow_error& exn) {
-        PyErr_SetString(PyExc_OverflowError, exn.what());
-      } catch (const std::range_error& exn) {
-        PyErr_SetString(PyExc_ArithmeticError, exn.what());
-      } catch (const std::underflow_error& exn) {
-        PyErr_SetString(PyExc_ArithmeticError, exn.what());
-      } catch (const std::exception& exn) {
-        PyErr_SetString(PyExc_RuntimeError, exn.what());
-      } catch (...) {
-        PyErr_SetString(PyExc_RuntimeError, "Unknown exception");
-      }
-    }
-    """
-    cdef PyObject* _LegateTaskException
-    cdef PyObject* _LegatePyTaskException
-    cdef void create_legate_task_exceptions()
     cdef void handle_legate_exception()
-
 
 cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
@@ -215,7 +99,11 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         void start_profiling_range() except+
         void stop_profiling_range(std_string_view) except+
 
-        _RuntimeImpl* impl() except+
+        void* get_cuda_stream() except+
+        int32_t get_current_cuda_device() except+
+        void begin_trace(uint32_t) except+
+        void end_trace(uint32_t) except+
+        const _Config& config() except+
 
         @staticmethod
         _Runtime* get_runtime() except+
@@ -232,8 +120,6 @@ cdef class Runtime(Unconstructable):
 
     @staticmethod
     cdef Runtime from_handle(_Runtime*)
-
-    cdef const _Config* const config(self)
 
     cpdef Library find_library(self, str library_name)
     cdef tuple[Library, bool] find_or_create_library_mapper(
@@ -335,6 +221,11 @@ cdef class Runtime(Unconstructable):
     cpdef void add_shutdown_callback(self, object callback)
     cdef void start_profiling_range(self)
     cdef void stop_profiling_range(self, std_string_view provenance)
+    cdef void* get_cuda_stream(self)
+    cdef int32_t get_current_cuda_device(self)
+    cdef void begin_trace(self, uint32_t)
+    cdef void end_trace(self, uint32_t)
+    cdef const _Config* const config(self)
 
 cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()

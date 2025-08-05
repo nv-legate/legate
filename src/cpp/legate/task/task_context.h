@@ -37,7 +37,7 @@ namespace legate {
 /**
  * @brief A task context that contains task arguments and communicators
  */
-class TaskContext {
+class LEGATE_EXPORT TaskContext {
  public:
   /**
    * @brief Returns the global ID of the task

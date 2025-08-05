@@ -29,7 +29,7 @@ namespace legate::mapping {
  * @brief A metadata class that mirrors the structure of legate::PhysicalStore but contains only the
  * data relevant to mapping
  */
-class Store {
+class LEGATE_EXPORT Store {
  public:
   /**
    * @brief Indicates whether the store is backed by a future

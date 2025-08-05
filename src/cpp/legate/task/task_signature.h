@@ -56,7 +56,7 @@ class ProxyConstraint;
  * that predeclare their constraints are not allowed to add additional constraints during task
  * launch.
  */
-class TaskSignature {
+class LEGATE_EXPORT TaskSignature {
  public:
   /**
    * @brief Default-construct an empty TaskSignature.

@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/store_iterator_cache.h>

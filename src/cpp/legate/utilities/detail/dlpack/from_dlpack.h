@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/data/logical_store.h>
 
 struct DLManagedTensorVersioned;
@@ -27,7 +29,8 @@ namespace legate::detail {
  *
  * @return The logical store.
  */
-[[nodiscard]] legate::LogicalStore from_dlpack(DLManagedTensorVersioned** dlm_tensor);
+[[nodiscard]] LEGATE_PYTHON_EXPORT legate::LogicalStore from_dlpack(
+  DLManagedTensorVersioned** dlm_tensor);
 
 /**
  * @brief Construct a LogicalStore from a DLPack un-versioned tensor.
@@ -45,6 +48,6 @@ namespace legate::detail {
  *
  * @return The logical store.
  */
-[[nodiscard]] legate::LogicalStore from_dlpack(DLManagedTensor** dlm_tensor);
+[[nodiscard]] LEGATE_PYTHON_EXPORT legate::LogicalStore from_dlpack(DLManagedTensor** dlm_tensor);
 
 }  // namespace legate::detail

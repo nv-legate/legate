@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/env_defaults.h>
 
 #include <cstdint>
@@ -21,7 +23,7 @@ namespace legate::detail {
   void set_##__name__(__type__ value) noexcept { __name__##_ = value; }    \
   static_assert(true)
 
-class Config {
+class LEGATE_PYTHON_EXPORT Config {
  public:
   LEGATE_CONFIG_VAR(bool, auto_config, true);
   LEGATE_CONFIG_VAR(bool, show_config, false);

@@ -106,13 +106,13 @@ VAL Scalar::value() const
 
 // These are defined in the .cpp
 template <>
-std::string_view Scalar::value<std::string_view>() const;
+LEGATE_EXPORT std::string_view Scalar::value<std::string_view>() const;
 
 template <>
-std::string Scalar::value<std::string>() const;
+LEGATE_EXPORT std::string Scalar::value<std::string>() const;
 
 template <>
-Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const;
+LEGATE_EXPORT Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const;
 
 template <typename VAL>
 Span<const VAL> Scalar::values() const

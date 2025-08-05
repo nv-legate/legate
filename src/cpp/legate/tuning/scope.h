@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/mapping/machine.h>
 #include <legate/runtime/exception_mode.h>
 #include <legate/tuning/parallel_policy.h>
@@ -60,7 +62,7 @@ namespace legate {
  * Each parameter can be set only once via each Scope object. Multiple attempts to set the same
  * parameter would raise an exception.
  */
-class Scope {
+class LEGATE_EXPORT Scope {
  public:
   /**
    * @brief Constructs an empty Scope object

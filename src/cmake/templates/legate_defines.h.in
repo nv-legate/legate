@@ -10,6 +10,7 @@
 #include <legion_defines.h>
 #include <realm_defines.h>
 
+#include <legate/legate_exports.h>
 #include <legate/version.h>
 
 #ifndef LEGION_REDOP_HALF

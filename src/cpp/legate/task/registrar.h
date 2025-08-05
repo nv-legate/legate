@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
@@ -71,7 +73,7 @@ class Library;
  * }
  * @endcode
  */
-class TaskRegistrar {
+class LEGATE_EXPORT TaskRegistrar {
  public:
   TaskRegistrar();
   ~TaskRegistrar();

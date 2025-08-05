@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 
 #include <legion.h>
@@ -33,7 +35,7 @@ namespace legate::comm {
  *   - CPU communicator in Legate: legate::comm::coll::CollComm*
  *   - CAL: cal_comm_t
  */
-class Communicator {
+class LEGATE_EXPORT Communicator {
  public:
   Communicator() = default;
   explicit Communicator(Legion::Future future);

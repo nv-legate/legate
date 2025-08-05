@@ -27,6 +27,11 @@ void Scalar::clear_data_()
 
 Scalar::~Scalar() { clear_data_(); }
 
+Scalar::Scalar(InternalSharedPtr<Type> type)
+  : own_{true}, type_{std::move(type)}, data_{new char[type_->size()]{}}
+{
+}
+
 Scalar::Scalar(InternalSharedPtr<Type> type, const void* data, bool copy)
   : own_{data && copy}, type_{std::move(type)}, data_{data}
 {
@@ -54,6 +59,13 @@ Scalar::Scalar(std::string_view value) : own_{true}, type_{string_type()}
   std::memcpy(buffer, &vsize, sizeof(vsize));
   std::memcpy(buffer + sizeof(vsize), value.data(), data_size);
   data_ = buffer;
+}
+
+Scalar::Scalar(const Scalar& other)
+  : own_{other.own_},
+    type_{other.type_},
+    data_{other.own_ ? copy_data_(other.data_, other.size()) : other.data_}
+{
 }
 
 Scalar& Scalar::operator=(const Scalar& other)

@@ -18,7 +18,7 @@
 
 namespace legate::detail {
 
-class ReturnedPythonException {
+class LEGATE_PYTHON_EXPORT ReturnedPythonException {
  public:
   constexpr ReturnedPythonException() = default;
 

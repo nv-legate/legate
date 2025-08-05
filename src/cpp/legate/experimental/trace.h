@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <cstdint>
 #include <memory>
 
 namespace legate::experimental {
 
-class Trace {
+class LEGATE_EXPORT Trace {
  public:
   explicit Trace(std::uint32_t trace_id);
   ~Trace();

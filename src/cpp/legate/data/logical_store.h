@@ -93,7 +93,7 @@ class Runtime;
  * be non-blocking, as long as the operation requires no changes in the partitioning and mapping for
  * the `LogicalStore`.
  */
-class LogicalStore {
+class LEGATE_EXPORT LogicalStore {
   friend class Runtime;
   friend class LogicalArray;
   friend class LogicalStorePartition;
@@ -479,13 +479,16 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
   ~LogicalStore() noexcept;
 
+  // Purposefully not documented, it is only exposed for Python
+  LEGATE_PYTHON_EXPORT void allow_out_of_order_destruction();
+
  private:
   class Impl;
 
   SharedPtr<Impl> impl_{};
 };
 
-class LogicalStorePartition {
+class LEGATE_EXPORT LogicalStorePartition {
  public:
   explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition> impl);
 

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
@@ -33,7 +35,7 @@ namespace legate {
  * the launcher is responsible for enumerating a list of all exceptions that can be raised
  * and the integer ids are positions in that list.
  */
-class TaskException : public std::exception {
+class LEGATE_EXPORT TaskException : public std::exception {
  public:
   /**
    * @brief Constructs a `TaskException` object with an exception id and an error message.

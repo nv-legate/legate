@@ -59,7 +59,7 @@ enum class ReductionOpKind : std::int32_t {
 /**
  * @brief A base class for data type metadata
  */
-class Type {
+class LEGATE_EXPORT Type {
  public:
   // We silence performance-enum-size for the same reason we silence it for
   // ReductionOpKind. Also silence readability-enum-initial-value because we need the first few
@@ -211,8 +211,8 @@ class Type {
    * @return true Types are equal
    * @return false Types are different
    */
-  bool operator==(const Type& other) const;
-  bool operator!=(const Type& other) const;
+  [[nodiscard]] bool operator==(const Type& other) const;
+  [[nodiscard]] bool operator!=(const Type& other) const;
 
   Type() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -233,7 +233,7 @@ class Type {
 /**
  * @brief A class for fixed-size array data types
  */
-class FixedArrayType : public Type {
+class LEGATE_EXPORT FixedArrayType : public Type {
  public:
   FixedArrayType() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -256,7 +256,7 @@ class FixedArrayType : public Type {
 /**
  * @brief A class for struct data types
  */
-class StructType : public Type {
+class LEGATE_EXPORT StructType : public Type {
  public:
   StructType() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -294,7 +294,7 @@ class StructType : public Type {
 /**
  * @brief A class for list types
  */
-class ListType : public Type {
+class LEGATE_EXPORT ListType : public Type {
  public:
   ListType() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -315,14 +315,14 @@ class ListType : public Type {
  *
  * @return Type object
  */
-[[nodiscard]] Type primitive_type(Type::Code code);
+[[nodiscard]] LEGATE_EXPORT Type primitive_type(Type::Code code);
 
 /**
  * @brief Creates a metadata object for the string type
  *
  * @return Type object
  */
-[[nodiscard]] Type string_type();
+[[nodiscard]] LEGATE_EXPORT Type string_type();
 
 /**
  * @brief Creates an opaque binary type of a given size
@@ -331,7 +331,7 @@ class ListType : public Type {
  *
  * @return Type object
  */
-[[nodiscard]] Type binary_type(std::uint32_t size);
+[[nodiscard]] LEGATE_EXPORT Type binary_type(std::uint32_t size);
 
 /**
  * @brief Creates a metadata object for a fixed-size array type
@@ -341,7 +341,8 @@ class ListType : public Type {
  *
  * @return FixedArrayType object
  */
-[[nodiscard]] FixedArrayType fixed_array_type(const Type& element_type, std::uint32_t N);
+[[nodiscard]] LEGATE_EXPORT FixedArrayType fixed_array_type(const Type& element_type,
+                                                            std::uint32_t N);
 
 /**
  * @brief Creates a metadata object for a struct type
@@ -351,7 +352,8 @@ class ListType : public Type {
  *
  * @return StructType object
  */
-[[nodiscard]] StructType struct_type(const std::vector<Type>& field_types, bool align = true);
+[[nodiscard]] LEGATE_EXPORT StructType struct_type(const std::vector<Type>& field_types,
+                                                   bool align = true);
 
 /**
  * @brief Creates a metadata object for a list type
@@ -360,7 +362,7 @@ class ListType : public Type {
  *
  * @return ListType object
  */
-[[nodiscard]] ListType list_type(const Type& element_type);
+[[nodiscard]] LEGATE_EXPORT ListType list_type(const Type& element_type);
 
 /**
  * @brief Creates a metadata object for a struct type
@@ -371,111 +373,111 @@ class ListType : public Type {
  * @return StructType object
  */
 template <typename... Args>
-[[nodiscard]] std::enable_if_t<std::conjunction_v<std::is_convertible<std::decay_t<Args>, Type>...>,
-                               StructType>
+[[nodiscard]]
+std::enable_if_t<std::conjunction_v<std::is_convertible<std::decay_t<Args>, Type>...>, StructType>
 struct_type(bool align, Args&&... field_types);
 
-std::ostream& operator<<(std::ostream&, const Type::Code&);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream&, const Type::Code&);
 
-std::ostream& operator<<(std::ostream&, const Type&);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream&, const Type&);
 
 /**
  * @brief Creates a boolean type
  *
  * @return Type object
  */
-[[nodiscard]] Type bool_();  // NOLINT(readability-identifier-naming)
+[[nodiscard]] LEGATE_EXPORT Type bool_();  // NOLINT(readability-identifier-naming)
 
 /**
  * @brief Creates a 8-bit signed integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type int8();
+[[nodiscard]] LEGATE_EXPORT Type int8();
 
 /**
  * @brief Creates a 16-bit signed integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type int16();
+[[nodiscard]] LEGATE_EXPORT Type int16();
 
 /**
  * @brief Creates a 32-bit signed integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type int32();
+[[nodiscard]] LEGATE_EXPORT Type int32();
 
 /**
  * @brief Creates a 64-bit signed integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type int64();
+[[nodiscard]] LEGATE_EXPORT Type int64();
 
 /**
  * @brief Creates a 8-bit unsigned integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type uint8();
+[[nodiscard]] LEGATE_EXPORT Type uint8();
 
 /**
  * @brief Creates a 16-bit unsigned integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type uint16();
+[[nodiscard]] LEGATE_EXPORT Type uint16();
 
 /**
  * @brief Creates a 32-bit unsigned integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type uint32();
+[[nodiscard]] LEGATE_EXPORT Type uint32();
 
 /**
  * @brief Creates a 64-bit unsigned integer type
  *
  * @return Type object
  */
-[[nodiscard]] Type uint64();
+[[nodiscard]] LEGATE_EXPORT Type uint64();
 
 /**
  * @brief Creates a half-precision floating point type
  *
  * @return Type object
  */
-[[nodiscard]] Type float16();
+[[nodiscard]] LEGATE_EXPORT Type float16();
 
 /**
  * @brief Creates a single-precision floating point type
  *
  * @return Type object
  */
-[[nodiscard]] Type float32();
+[[nodiscard]] LEGATE_EXPORT Type float32();
 
 /**
  * @brief Creates a double-precision floating point type
  *
  * @return Type object
  */
-[[nodiscard]] Type float64();
+[[nodiscard]] LEGATE_EXPORT Type float64();
 
 /**
  * @brief Creates a single-precision complex number type
  *
  * @return Type object
  */
-[[nodiscard]] Type complex64();
+[[nodiscard]] LEGATE_EXPORT Type complex64();
 
 /**
  * @brief Creates a double-precision complex number type
  *
  * @return Type object
  */
-[[nodiscard]] Type complex128();
+[[nodiscard]] LEGATE_EXPORT Type complex128();
 
 /**
  * @brief Creates a point type
@@ -484,7 +486,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return FixedArrayType object
  */
-[[nodiscard]] FixedArrayType point_type(std::uint32_t ndim);
+[[nodiscard]] LEGATE_EXPORT FixedArrayType point_type(std::uint32_t ndim);
 
 /**
  * @brief Creates a rect type
@@ -493,14 +495,14 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return StructType object
  */
-[[nodiscard]] StructType rect_type(std::uint32_t ndim);
+[[nodiscard]] LEGATE_EXPORT StructType rect_type(std::uint32_t ndim);
 
 /**
  * @brief Creates a null type
  *
  * @return Type object
  */
-[[nodiscard]] Type null_type();
+[[nodiscard]] LEGATE_EXPORT Type null_type();
 
 /**
  * @brief Checks if the type is a point type
@@ -510,7 +512,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a point type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_point_type(const Type& type);
+[[nodiscard]] LEGATE_EXPORT bool is_point_type(const Type& type);
 
 /**
  * @brief Checks if the type is a point type of the given dimensionality
@@ -521,7 +523,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a point type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_point_type(const Type& type, std::uint32_t ndim);
+[[nodiscard]] LEGATE_EXPORT bool is_point_type(const Type& type, std::uint32_t ndim);
 
 /**
  * @brief Returns the number of dimensions of a given point type
@@ -532,7 +534,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @throw std::invalid_argument IF the type is not a point type
  */
-[[nodiscard]] std::int32_t ndim_point_type(const Type& type);
+[[nodiscard]] LEGATE_EXPORT std::int32_t ndim_point_type(const Type& type);
 
 /**
  * @brief Checks if the type is a rect type
@@ -542,7 +544,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a rect type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_rect_type(const Type& type);
+[[nodiscard]] LEGATE_EXPORT bool is_rect_type(const Type& type);
 
 /**
  * @brief Checks if the type is a rect type of the given dimensionality
@@ -553,7 +555,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a rect type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_rect_type(const Type& type, std::uint32_t ndim);
+[[nodiscard]] LEGATE_EXPORT bool is_rect_type(const Type& type, std::uint32_t ndim);
 
 /**
  * @brief Returns the number of dimensions of a given rect type
@@ -564,7 +566,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @throw std::invalid_argument IF the type is not a rect type
  */
-[[nodiscard]] std::int32_t ndim_rect_type(const Type& type);
+[[nodiscard]] LEGATE_EXPORT std::int32_t ndim_rect_type(const Type& type);
 
 /** @} */
 

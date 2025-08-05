@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/utilities/detail/dlpack/dlpack.h>
 
@@ -55,11 +57,12 @@ namespace legate::detail {
  *
  * @return The DLPack managed tensor.
  */
-[[nodiscard]] std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)>
-to_dlpack(const legate::PhysicalStore& store,
-          std::optional<bool> copy                 = std::nullopt,
-          std::optional<CUstream> stream           = std::nullopt,
-          std::optional<DLPackVersion> max_version = std::nullopt,
-          std::optional<DLDevice> device           = std::nullopt);
+[[nodiscard]] LEGATE_PYTHON_EXPORT
+  std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)>
+  to_dlpack(const legate::PhysicalStore& store,
+            std::optional<bool> copy                 = std::nullopt,
+            std::optional<CUstream> stream           = std::nullopt,
+            std::optional<DLPackVersion> max_version = std::nullopt,
+            std::optional<DLDevice> device           = std::nullopt);
 
 }  // namespace legate::detail

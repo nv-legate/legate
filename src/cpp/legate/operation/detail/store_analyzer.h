@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/utilities/detail/hash.h>
@@ -21,7 +23,7 @@
 
 namespace legate::detail {
 
-class InterferingStoreError : public std::exception {};
+class LEGATE_EXPORT InterferingStoreError : public std::exception {};
 
 class ProjectionSet {
  public:

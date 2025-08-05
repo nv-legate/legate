@@ -96,7 +96,11 @@ function(legate_create_cython_modules)
                                INSTALL_DIR "${_cython_install_dir}")
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
-    set_target_properties(${target} PROPERTIES LEGATE_INTERNAL_TARGET TRUE)
+    set_target_properties(${target}
+                          PROPERTIES LEGATE_INTERNAL_TARGET TRUE
+                                     VISIBILITY_INLINES_HIDDEN TRUE
+                                     C_VISIBILITY_PRESET "hidden"
+                                     CXX_VISIBILITY_PRESET "hidden")
     target_compile_features(${target} PRIVATE cxx_std_${CMAKE_CXX_STANDARD})
     # Mark python headers as system (in case user has added warning flags, we don't want
     # the python headers to trigger them)

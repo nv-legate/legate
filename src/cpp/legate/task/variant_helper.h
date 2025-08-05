@@ -29,14 +29,14 @@ namespace legate::detail {
 template <typename T>
 class LegionTask;
 
-void task_wrapper(VariantImpl,
-                  VariantCode,
-                  std::optional<std::string_view>,
-                  const void*,
-                  std::size_t,
-                  const void*,
-                  std::size_t,
-                  Legion::Processor);
+LEGATE_EXPORT void task_wrapper(VariantImpl,
+                                VariantCode,
+                                std::optional<std::string_view>,
+                                const void*,
+                                std::size_t,
+                                const void*,
+                                std::size_t,
+                                Legion::Processor);
 
 template <VariantImpl variant_fn, VariantCode variant_kind>
 inline void task_wrapper_dyn_name(const void* args,

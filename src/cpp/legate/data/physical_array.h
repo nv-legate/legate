@@ -45,7 +45,7 @@ class StringPhysicalArray;
  *
  * `PhysicalArray`s can be backed by one or more `PhysicalStore`s, depending on their types.
  */
-class PhysicalArray {
+class LEGATE_EXPORT PhysicalArray {
  public:
   /**
    * @brief Indicates if the array is nullable
@@ -175,7 +175,7 @@ class PhysicalArray {
 /**
  * @brief A multi-dimensional array abstraction for variable-size list of elements.
  */
-class ListPhysicalArray : public PhysicalArray {
+class LEGATE_EXPORT ListPhysicalArray : public PhysicalArray {
  public:
   /**
    * @brief Returns the sub-array for descriptors
@@ -201,7 +201,7 @@ class ListPhysicalArray : public PhysicalArray {
 /**
  * @brief A multi-dimensional array abstraction representing a string.
  */
-class StringPhysicalArray : public PhysicalArray {
+class LEGATE_EXPORT StringPhysicalArray : public PhysicalArray {
  public:
   /**
    * @brief Returns the sub-array for ranges

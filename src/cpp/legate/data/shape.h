@@ -58,7 +58,7 @@ class Shape;
  * unbound arrays or stores should be avoided. The blocking behavior of each API call can be found
  * in its reference (methods with no mention of blocking should exhibit no shape-related blocking).
  */
-class Shape {
+class LEGATE_EXPORT Shape {
  public:
   /**
    * @brief Constructs a 0D `Shape`

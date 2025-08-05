@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
@@ -29,7 +31,7 @@ namespace legate {
  * `Slice` behaves similarly to how the slice in Python does, and has different semantics
  * from `std::slice`.
  */
-class Slice {
+class LEGATE_EXPORT Slice {
  public:
   static constexpr std::nullopt_t OPEN = std::nullopt;
 

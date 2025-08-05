@@ -13,6 +13,6 @@
 
 namespace legate::detail {
 
-[[nodiscard]] std::string demangle_type(const std::type_info&);
+[[nodiscard]] LEGATE_EXPORT std::string demangle_type(const std::type_info&);
 
 }  // namespace legate::detail

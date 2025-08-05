@@ -19,7 +19,6 @@ from libcpp.optional cimport make_optional as std_make_optional
 cdef extern from * namespace "legate::detail":
     """
     #include "legate_defines.h"
-    #include "legate/data/detail/external_allocation.h"
     #include "legate/utilities/typedefs.h"
 
     namespace legate::detail {

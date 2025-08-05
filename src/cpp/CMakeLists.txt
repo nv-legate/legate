@@ -229,8 +229,15 @@ legate_find_or_configure(PACKAGE cpm_licenses)
 # ########################################################################################
 # * legate --------------------------------------------------------------
 
-add_library(legate)
-add_library(legate::legate ALIAS legate)
+add_library(legate_obj OBJECT)
+
+# cmake-format: off
+set_target_properties(legate_obj
+                      PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE
+                                 CXX_VISIBILITY_PRESET     "hidden"
+                                 CUDA_VISIBILITY_PRESET    "hidden"
+                                 DEFINE_SYMBOL             "legate_EXPORTS")
+# cmake-format: on
 
 # Define this property here because it directly relates to the legate target. Targets
 # linking against legate, which have this property defined, will also inherit the private
@@ -244,66 +251,6 @@ add_library(legate::legate ALIAS legate)
 define_property(TARGET PROPERTY LEGATE_INTERNAL_TARGET
                 BRIEF_DOCS "A boolean property indicating that a target is internal to "
                            "the legate build")
-
-# For whatever reason cmake-format craps out when formatting the below, so much so that
-# cmake-lint then ultimately complains with:
-#
-# cmake-format: off
-# src/cpp/CMakeLists.txt:480,80: [C0307] Bad indentation:
-#                                                              )
-# ^----BodyNode: 1:0->StatementNode: 477:0->TreeNode: 480:80
-# cmake-format: on
-# cmake-format: off
-set_target_properties(legate
-                        PROPERTIES
-                          EXPORT_NAME              legate
-                          LIBRARY_OUTPUT_NAME      legate
-                          LIBRARY_OUTPUT_DIRECTORY lib
-                          BUILD_RPATH_USE_ORIGIN   TRUE
-                          SOVERSION                ${PROJECT_VERSION})
-# cmake-format: on
-
-set(install_rpath
-    "${legate_PLATFORM_RPATH_ORIGIN}"
-    # The ../ is needed because
-    # ${legate_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
-    # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
-    # that case it would expand to lib/lib/legate/deps which does not exist. So we need to
-    # ../ once so that it expands to lib/../lib/legate/deps. A hack for sure, but it
-    # works.
-    "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
-
-set_property(TARGET legate APPEND PROPERTY INSTALL_RPATH "${install_rpath}")
-# export this so that install_info.py can properly locate the versioned and unversioned
-# library names
-set_property(TARGET legate APPEND PROPERTY EXPORT_PROPERTIES LIBRARY_OUTPUT_NAME)
-
-target_link_libraries(legate
-                      # Order is important here. We want conda includes to go last because
-                      # the conda env might contain other versions of the libraries below
-                      # (for example CCCL). We want the conda includes to go last so that
-                      # we ensure that compiler pick up the right headers.
-                      #
-                      # This is also why CCCL::Thrust comes *before* Legion, because
-                      # Legion may pick up headers from inside the conda environment.
-                      #
-                      # Similarly, we want the MPI wrapper to load as early as possible,
-                      # since it provides our MPI symbols.
-                      PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper> #
-                             CCCL::CCCL #
-                             Legion::Legion #
-                             $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
-                      PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
-                              # See
-                              # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
-                              $<TARGET_NAME_IF_EXISTS:CUDA::nvtx3>
-                              $<COMPILE_ONLY:fmt::fmt-header-only>
-                              $<COMPILE_ONLY:argparse::argparse>
-                              kvikio::kvikio
-                              $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
-                              $<TARGET_NAME_IF_EXISTS:HighFive::HighFive>
-                              cpptrace::cpptrace
-                              $<TARGET_NAME_IF_EXISTS:CAL::CAL>)
 
 include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
 
@@ -341,7 +288,7 @@ legate_generate_sanitizer_options(
   DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/tsan_default_options.h"
 )
 
-target_sources(legate
+target_sources(legate_obj
                PRIVATE # core
                        legate/comm/coll.cc
                        legate/comm/detail/coll.cc
@@ -520,44 +467,53 @@ target_sources(legate
                        legate/experimental/io/detail/mapper.cc)
 
 if(legate_USE_HDF5)
-  target_sources(legate
+  target_sources(legate_obj
                  PRIVATE legate/io/hdf5/detail/interface.cc legate/io/hdf5/detail/read.cc
                          legate/io/hdf5/detail/util.cc)
 endif()
 
 if(legate_ENABLE_SANITIZERS)
-  target_sources(legate PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
+  target_sources(legate_obj PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
 endif()
 
 if(Legion_NETWORKS)
-  target_sources(legate
+  target_sources(legate_obj
                  PRIVATE legate/comm/detail/mpi_network.cc
                          legate/comm/detail/mpi_interface.cc
                          legate/comm/detail/comm_mpi.cc)
   if(NOT TARGET legate::mpi_wrapper)
     # The MPI wrapper's headers are needed for some symbols, no link.
-    target_include_directories(legate
+    target_include_directories(legate_obj
                                PRIVATE "${legate_cpp_SOURCE_DIR}/../share/legate/mpi_wrapper/src"
     )
+    # This is needed to tell mpi_wrapper.h not to
+    #
+    # #include <legate_mpi_wrapper_exports.h>
+    #
+    # Normally, we need to ensure that the MPI wrappers symbols are publicly visible, but
+    # in this case when we just need the header to define the symbols for us (and never
+    # intend to actually load the wrapper), we don't care about visibility.
+    target_compile_definitions(legate_obj
+                               PRIVATE LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER=1)
   endif()
 endif()
 
 if(Legion_USE_OpenMP)
-  target_sources(legate PRIVATE legate/data/detail/array_tasks_omp.cc
-                                legate/partitioning/detail/partitioning_tasks_omp.cc)
+  target_sources(legate_obj PRIVATE legate/data/detail/array_tasks_omp.cc
+                                    legate/partitioning/detail/partitioning_tasks_omp.cc)
 endif()
 
 if(legate_USE_CAL)
-  target_sources(legate PRIVATE legate/comm/detail/comm_cal.cc)
+  target_sources(legate_obj PRIVATE legate/comm/detail/comm_cal.cc)
 endif()
 
 if(legate_USE_NCCL)
-  target_sources(legate PRIVATE legate/comm/detail/comm_nccl.cc)
+  target_sources(legate_obj PRIVATE legate/comm/detail/comm_nccl.cc)
 endif()
 
 if(legate_USE_CUDA)
-  target_sources(legate PRIVATE legate/data/detail/array_tasks_cuda.cc
-                                legate/partitioning/detail/partitioning_tasks_cuda.cc)
+  target_sources(legate_obj PRIVATE legate/data/detail/array_tasks_cuda.cc
+                                    legate/partitioning/detail/partitioning_tasks_cuda.cc)
 
   include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
 
@@ -569,7 +525,7 @@ if(legate_USE_CUDA)
                                          legate/partitioning/detail/partitioning_tasks_fatbin.cu
                                  EXTRA_FLAGS ${legate_CUDA_FLAGS})
 
-  target_sources(legate PRIVATE ${fatbin_src})
+  target_sources(legate_obj PRIVATE ${fatbin_src})
 endif()
 
 include("${LEGATE_CMAKE_DIR}/Modules/generate_git_revision_file.cmake")
@@ -578,28 +534,152 @@ legate_generate_git_revision_file(
   GENERATED_SRC_VAR git_revision_src EXTRA_TARGETS Legion::Legion
   EXTRA_TARGETS_PREFIX LEGION)
 
-target_sources(legate PRIVATE ${git_revision_src})
+target_sources(legate_obj PRIVATE ${git_revision_src})
+
+include(GenerateExportHeader)
+
+# cmake-format doesn't understand block() (because it hasn't been updated in over 4
+# years), and so doesn't indent these correctly.
+block()
+set(extra
+    [=[
+// For symbols that are only exported because they are used by the python bindings, not
+// because they otherwise need to be. If references to them are removed in the Python
+// bindings, these symbols should also be fixed up to be un-exported again.
+#define LEGATE_PYTHON_EXPORT LEGATE_EXPORT
+]=])
+set(export_header
+    "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/legate_exports.h"
+)
+
+# cmake-format: off
+generate_export_header(
+  legate_obj
+    BASE_NAME                   LEGATE
+    EXPORT_FILE_NAME            "${export_header}"
+    CUSTOM_CONTENT_FROM_VARIABLE extra
+)
+# cmake-format: on
+endblock()
+
+include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
+
+legate_add_tidy_diff_target()
+
+get_target_property(legate_src legate_obj SOURCES)
+foreach(src IN LISTS legate_src)
+  legate_add_tidy_target(SOURCE "${src}")
+endforeach()
+
+include("${LEGATE_CMAKE_DIR}/Modules/generate_legate_defines.cmake")
+
+legate_generate_legate_defines()
+
+# ########################################################################################
+# * Create the Legate target proper ------------------------------------------------------
+
+add_library(legate)
+add_library(legate::legate ALIAS legate)
+
+target_link_libraries(legate PRIVATE legate_obj)
+
+# For whatever reason cmake-format craps out when formatting the below, so much so that
+# cmake-lint then ultimately complains with:
+#
+# cmake-format: off
+# src/cpp/CMakeLists.txt:480,80: [C0307] Bad indentation:
+#                                                              )
+# ^----BodyNode: 1:0->StatementNode: 477:0->TreeNode: 480:80
+# cmake-format: on
+# cmake-format: off
+set_target_properties(legate
+                        PROPERTIES
+                          EXPORT_NAME               legate
+                          LIBRARY_OUTPUT_NAME       legate
+                          LIBRARY_OUTPUT_DIRECTORY  lib
+                          BUILD_RPATH_USE_ORIGIN    TRUE
+                          SOVERSION                 ${PROJECT_VERSION}
+                          VISIBILITY_INLINES_HIDDEN TRUE
+                          CXX_VISIBILITY_PRESET     "hidden"
+                          CUDA_VISIBILITY_PRESET    "hidden")
+# cmake-format: on
+
+set(install_rpath
+    "${legate_PLATFORM_RPATH_ORIGIN}"
+    # The ../ is needed because
+    # ${legate_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
+    # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
+    # that case it would expand to lib/lib/legate/deps which does not exist. So we need to
+    # ../ once so that it expands to lib/../lib/legate/deps. A hack for sure, but it
+    # works.
+    "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
+
+set_property(TARGET legate APPEND PROPERTY INSTALL_RPATH "${install_rpath}")
+# export this so that install_info.py can properly locate the versioned and unversioned
+# library names
+set_property(TARGET legate APPEND PROPERTY EXPORT_PROPERTIES LIBRARY_OUTPUT_NAME)
+
+# ########################################################################################
+# * Common Custom User Flags Applied to both legate and legate_obj -----------------------
 
 include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
 
 set_cpu_arch_flags(legate_CXX_FLAGS)
 
-# ########################################################################################
-# * Custom User Flags --------------------------------------------------------
+# The following flags, linked targets and other such "public" attributes need to be set
+# twice, both on the object library and legate itself. The reason for this is that legate
+# links to the object library privately, and so any transitive dependencies or flags don't
+# bubble up to any downstream libraries.
+foreach(target legate_obj legate)
+  target_link_libraries("${target}"
+                        # Order is important here. We want conda includes to go last
+                        # because the conda env might contain other versions of the
+                        # libraries below (for example CCCL). We want the conda includes
+                        # to go last so that we ensure that compiler pick up the right
+                        # headers.
+                        #
+                        # This is also why CCCL::Thrust comes *before* Legion, because
+                        # Legion may pick up headers from inside the conda environment.
+                        #
+                        # Similarly, we want the MPI wrapper to load as early as possible,
+                        # since it provides our MPI symbols.
+                        PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper> #
+                               CCCL::CCCL #
+                               Legion::Legion #
+                               $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+                        PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
+                                # See
+                                # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
+                                $<TARGET_NAME_IF_EXISTS:CUDA::nvtx3>
+                                $<COMPILE_ONLY:fmt::fmt-header-only>
+                                $<COMPILE_ONLY:argparse::argparse>
+                                kvikio::kvikio
+                                $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
+                                $<TARGET_NAME_IF_EXISTS:HighFive::HighFive>
+                                cpptrace::cpptrace
+                                $<TARGET_NAME_IF_EXISTS:CAL::CAL>)
+endforeach()
+
+target_compile_definitions(legate_obj PUBLIC $<BUILD_INTERFACE:legate_EXPORTS=1>)
+target_compile_definitions(legate PUBLIC $<BUILD_INTERFACE:legate_EXPORTS=1>)
 
 include("${LEGATE_CMAKE_DIR}/Modules/utilities.cmake")
 
+legate_add_target_compile_options(legate_obj CXX PRIVATE legate_CXX_FLAGS)
 legate_add_target_compile_options(legate CXX PRIVATE legate_CXX_FLAGS)
 # Legate has no direct CUDA files that it would compile (all CUDA sources are compiled
 # into fatbins and embedded in the library itself). But tests, benchmarks, or other
 # sources might. In that case, they would also have the LEGATE_INTERNAL_TARGET property
 # set, so let's populate these for that.
+legate_add_target_compile_options(legate_obj CUDA PRIVATE legate_CUDA_FLAGS)
 legate_add_target_compile_options(legate CUDA PRIVATE legate_CUDA_FLAGS)
 
+legate_add_target_link_options(legate_obj PUBLIC legate_LINKER_FLAGS)
 legate_add_target_link_options(legate PUBLIC legate_LINKER_FLAGS)
 
 if(APPLE)
   # See https://github.com/NVIDIA/cccl/pull/2444
+  target_compile_definitions(legate_obj PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
   target_compile_definitions(legate PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
 endif()
 
@@ -612,7 +692,7 @@ if(aliased_target)
 endif()
 
 # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
-foreach(target legate LegionRuntime ${REALM_TARGET})
+foreach(target legate_obj legate LegionRuntime ${REALM_TARGET})
   target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
   if(legate_USE_CUDA)
     # CCCL 2.7.0 (which is what we use) disables __half support if it detects that it
@@ -640,26 +720,15 @@ foreach(target legate LegionRuntime ${REALM_TARGET})
   endif()
 endforeach()
 
-include("${LEGATE_CMAKE_DIR}/Modules/generate_legate_defines.cmake")
-
-legate_generate_legate_defines()
-
 set(legate_LOCAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_include_directories(legate
-                           PUBLIC $<BUILD_INTERFACE:${legate_LOCAL_INCLUDE_DIR}>
-                                  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate>
-                           INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate>
-                                     $<INSTALL_INTERFACE:${legate_DEP_INSTALL_INCLUDEDIR}>
-)
-
-include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
-
-legate_add_tidy_diff_target()
-
-get_target_property(legate_src legate SOURCES)
-foreach(src IN LISTS legate_src)
-  legate_add_tidy_target(SOURCE "${src}")
+foreach(target legate_obj legate)
+  target_include_directories("${target}"
+                             PUBLIC $<BUILD_INTERFACE:${legate_LOCAL_INCLUDE_DIR}>
+                                    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate>
+                             INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate>
+                                       $<INSTALL_INTERFACE:${legate_DEP_INSTALL_INCLUDEDIR}>
+  )
 endforeach()
 
 # ########################################################################################
@@ -674,6 +743,7 @@ install(FILES legate.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
+              ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/legate_exports.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate)
 
 install(FILES legate/comm/coll_comm.h legate/comm/coll.h legate/comm/communicator.h

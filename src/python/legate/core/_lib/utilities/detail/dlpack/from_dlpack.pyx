@@ -8,6 +8,7 @@ from libc.stdint cimport uintptr_t
 
 from cpython cimport PyCapsule_IsValid, PyCapsule_GetPointer, PyCapsule_SetName
 
+from ....runtime.runtime cimport get_legate_runtime
 from ....data.logical_store cimport LogicalStore
 
 from .dlpack cimport (
@@ -19,22 +20,6 @@ from .dlpack cimport (
     DLPACK_MAJOR_VERSION,
     DLPACK_MINOR_VERSION
 )
-
-cdef extern from * nogil:
-    r"""
-    #include <legate/runtime/detail/runtime.h>
-
-    namespace {
-
-    void *_get_cuda_stream()
-    {
-      return legate::detail::Runtime::get_runtime().get_cuda_stream();
-    }
-
-    } // namespace
-    """
-    void *_get_cuda_stream() except+
-
 
 cdef (void *, bool) get_dlpack_tensor(object capsule):
     cdef void *ret = NULL
@@ -77,7 +62,7 @@ cdef object get_stream(object device):
     )
 
     if device_type in CUDA_TYPES:
-        cu_stream = _get_cuda_stream()
+        cu_stream = get_legate_runtime().get_cuda_stream()
         if cu_stream == NULL:
             return None  # legacy default stream
         return <uintptr_t>cu_stream

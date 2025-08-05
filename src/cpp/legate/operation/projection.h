@@ -35,7 +35,7 @@ namespace legate {
  * special case is when @f$i@f$ is @f$-1@f$, which means the expression denotes a constant
  * @f$c@f$.
  */
-class SymbolicExpr {
+class LEGATE_EXPORT SymbolicExpr {
  public:
   static constexpr std::uint32_t UNSET = -1U;
 
@@ -81,11 +81,11 @@ class SymbolicExpr {
    */
   [[nodiscard]] bool is_constant() const;
 
-  bool operator==(const SymbolicExpr& other) const;
-  bool operator<(const SymbolicExpr& other) const;
+  [[nodiscard]] bool operator==(const SymbolicExpr& other) const;
+  [[nodiscard]] bool operator<(const SymbolicExpr& other) const;
 
-  SymbolicExpr operator*(std::int32_t other) const;
-  SymbolicExpr operator+(std::int32_t other) const;
+  [[nodiscard]] SymbolicExpr operator*(std::int32_t other) const;
+  [[nodiscard]] SymbolicExpr operator+(std::int32_t other) const;
 
   [[nodiscard]] std::string to_string() const;
 
@@ -97,7 +97,7 @@ class SymbolicExpr {
   std::int32_t offset_{};
 };
 
-std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
 
 /**
  * @brief A symbolic representation of points
@@ -118,7 +118,7 @@ using SymbolicPoint = tuple<SymbolicExpr>;
  *
  * @return A symbolic expression for the given dimension
  */
-[[nodiscard]] SymbolicExpr dimension(std::uint32_t dim);
+[[nodiscard]] LEGATE_EXPORT SymbolicExpr dimension(std::uint32_t dim);
 
 /**
  * @brief Constructs a `SymbolicExpr` representing a constant value.
@@ -127,7 +127,7 @@ using SymbolicPoint = tuple<SymbolicExpr>;
  *
  * @return A symbolic expression for the given constant
  */
-[[nodiscard]] SymbolicExpr constant(std::int32_t value);
+[[nodiscard]] LEGATE_EXPORT SymbolicExpr constant(std::int32_t value);
 
 /** @} */
 

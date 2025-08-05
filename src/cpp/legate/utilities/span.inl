@@ -99,7 +99,7 @@ constexpr typename Span<T>::reference Span<T>::operator[](size_type pos) const
 
 namespace detail {
 
-void assert_in_range(std::size_t container_size, std::int64_t pos);
+LEGATE_EXPORT void assert_in_range(std::size_t container_size, std::int64_t pos);
 
 }  // namespace detail
 

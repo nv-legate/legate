@@ -48,7 +48,7 @@ class Runtime;
  * shared. If a `Scalar` is owned, it owns the backing allocation and releases it upon
  * destruction. Any copy of an owned `Scalar` is owned as well.
  */
-class Scalar {
+class LEGATE_EXPORT Scalar {
  public:
   explicit Scalar(InternalSharedPtr<detail::Scalar> impl);
   explicit Scalar(std::unique_ptr<detail::Scalar> impl);
@@ -288,7 +288,7 @@ class Scalar {
  * `Scalar::ptr()` is called on them. They are useful as tombstone values, or to represent
  * invalid data.
  */
-[[nodiscard]] Scalar null();
+[[nodiscard]] LEGATE_EXPORT Scalar null();
 
 /** @} */
 

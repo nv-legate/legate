@@ -62,7 +62,7 @@ class StringLogicalArray;
 /**
  * @brief A multi-dimensional array
  */
-class LogicalArray {
+class LEGATE_EXPORT LogicalArray {
  public:
   /**
    * @brief Returns the number of dimensions of the array.
@@ -376,7 +376,7 @@ class LogicalArray {
  * `LogicalArray`s when passing them to a task. In that case `descriptor` would be
  * `var_function` while `vardata` would be `var_range`.
  */
-class ListLogicalArray : public LogicalArray {
+class LEGATE_EXPORT ListLogicalArray : public LogicalArray {
  public:
   /**
    * @brief Returns the sub-array for descriptors. Each element is a `Rect<1>` of start and end
@@ -411,7 +411,7 @@ class ListLogicalArray : public LogicalArray {
  *
  * @see ListLogicalArray
  */
-class StringLogicalArray : public LogicalArray {
+class LEGATE_EXPORT StringLogicalArray : public LogicalArray {
  public:
   /**
    * @brief Returns the sub-array for offsets giving the bounds of each string.

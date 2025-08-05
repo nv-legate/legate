@@ -7,6 +7,8 @@
 #pragma once
 
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/shape.h>
+#include <legate/data/detail/transform.h>
 
 #include <utility>
 

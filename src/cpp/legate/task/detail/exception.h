@@ -30,7 +30,7 @@ namespace legate::detail {
  *
  * @see TaskException
  */
-class PythonTaskException : public TaskException {
+class LEGATE_EXPORT PythonTaskException : public TaskException {
   using base_type = TaskException;
 
  public:

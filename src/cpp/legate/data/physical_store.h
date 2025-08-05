@@ -54,7 +54,7 @@ class PhysicalArray;
 /**
  * @brief A multi-dimensional data container storing task data
  */
-class PhysicalStore {
+class LEGATE_EXPORT PhysicalStore {
  public:
   template <typename T,
             std::uint32_t DIM,

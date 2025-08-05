@@ -27,7 +27,7 @@ namespace legate::io::hdf5 {
 /**
  * @brief An exception thrown when a HDF5 datatype could not be converted to a Type.
  */
-class UnsupportedHDF5DataTypeError : public std::invalid_argument {
+class LEGATE_EXPORT UnsupportedHDF5DataTypeError : public std::invalid_argument {
  public:
   using std::invalid_argument::invalid_argument;
 };
@@ -35,7 +35,7 @@ class UnsupportedHDF5DataTypeError : public std::invalid_argument {
 /**
  * @brief An exception thrown when an invalid dataset is encountered in an HDF5 file.
  */
-class InvalidDataSetError : public std::invalid_argument {
+class LEGATE_EXPORT InvalidDataSetError : public std::invalid_argument {
  public:
   /**
    * @brief Construct an InvalidDataSetError
@@ -79,8 +79,8 @@ class InvalidDataSetError : public std::invalid_argument {
  * @throws UnusupportedHDF5DataType If the data type cannot be converted to a Type.
  * @throws InvalidDataSetError If the dataset is invalid, or is not found.
  */
-[[nodiscard]] LogicalArray from_file(const std::filesystem::path& file_path,
-                                     std::string_view dataset_name);
+[[nodiscard]] LEGATE_EXPORT LogicalArray from_file(const std::filesystem::path& file_path,
+                                                   std::string_view dataset_name);
 
 /** @} */
 

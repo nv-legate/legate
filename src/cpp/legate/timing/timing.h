@@ -28,7 +28,7 @@ namespace legate::timing {
 /**
  * @brief Deferred timestamp class
  */
-class Time {
+class LEGATE_EXPORT Time {
  public:
   /**
    * @brief Returns the timestamp value in this `Time` object
@@ -66,7 +66,7 @@ class Time {
  *
  * @return A `Time` object
  */
-[[nodiscard]] Time measure_microseconds();
+[[nodiscard]] LEGATE_EXPORT Time measure_microseconds();
 
 /**
  * @brief Returns a timestamp at the resolution of nanoseconds
@@ -77,7 +77,7 @@ class Time {
  *
  * @return A `Time` object
  */
-[[nodiscard]] Time measure_nanoseconds();
+[[nodiscard]] LEGATE_EXPORT Time measure_nanoseconds();
 
 /** @} */
 

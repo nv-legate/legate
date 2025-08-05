@@ -17,7 +17,7 @@ namespace legate {
 
 namespace untyped_buffer_detail {
 
-void check_type(const Type& ty, std::size_t size_of, std::size_t align_of);
+LEGATE_EXPORT void check_type(const Type& ty, std::size_t size_of, std::size_t align_of);
 
 }  // namespace untyped_buffer_detail
 
@@ -50,7 +50,7 @@ inline const SharedPtr<detail::TaskLocalBuffer>& TaskLocalBuffer::impl() const {
 
 namespace detail {
 
-void check_alignment(std::size_t alignment);
+LEGATE_EXPORT void check_alignment(std::size_t alignment);
 
 }  // namespace detail
 

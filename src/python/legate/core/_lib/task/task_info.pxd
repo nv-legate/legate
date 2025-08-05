@@ -21,9 +21,10 @@ from .variant_options cimport _VariantOptions
 from .variant_info cimport _VariantInfo
 from .task_config cimport TaskConfig
 
-from .detail.task_info cimport _TaskInfo as _DetailTaskInfo
-
 cdef extern from "legate/task/task_info.h" namespace "legate" nogil:
+    cdef cppclass _TaskInfoImpl "legate::detail::TaskInfo":
+        pass
+
     cdef cppclass _TaskInfo "legate::TaskInfo":
         _TaskInfo() except+
         _TaskInfo(std_string) except+
@@ -39,7 +40,7 @@ cdef extern from "legate/task/task_info.h" namespace "legate" nogil:
             TaskFuncPtr,
             const std_map[VariantCode, _VariantOptions]&
         ) except +
-        const _SharedPtr[_DetailTaskInfo]& impl() except+
+        const _SharedPtr[_TaskInfoImpl]& impl() except+
 
 cdef class TaskInfo(Unconstructable):
     cdef:

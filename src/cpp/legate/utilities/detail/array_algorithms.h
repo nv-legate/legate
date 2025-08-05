@@ -34,7 +34,8 @@ template <typename T>
  * contains indices outside of [0, container_size).
  * @throws std::invalid_argument If the mapping contains duplicate elements.
  */
-void assert_valid_mapping(std::size_t container_size, Span<const std::int32_t> mapping);
+LEGATE_EXPORT void assert_valid_mapping(std::size_t container_size,
+                                        Span<const std::int32_t> mapping);
 // NOLINTEND(readability-redundant-declaration)
 
 /**
@@ -83,8 +84,9 @@ template <typename F, typename T, typename... Tn>
  *
  * @throws std::out_of_range If the position is not in the array.
  */
-void assert_in_range(std::size_t container_size,  // NOLINT(readability-redundant-declaration)
-                     std::int64_t pos);
+LEGATE_EXPORT void assert_in_range(  // NOLINT(readability-redundant-declaration)
+  std::size_t container_size,
+  std::int64_t pos);
 
 }  // namespace legate::detail
 

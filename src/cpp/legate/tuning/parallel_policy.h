@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
@@ -42,7 +44,7 @@ namespace legate {
  *   auto-partitioner creates `N` chunks in a store partition when there are `N` processors, but if
  *   the `overdecompose_factor()` is `k` in the scope, it would create `kN` chunks in the partition.
  */
-class ParallelPolicy {
+class LEGATE_EXPORT ParallelPolicy {
  public:
   /**
    * @brief Sets the flag that indicates whether tasks in a given scope should be streamed.

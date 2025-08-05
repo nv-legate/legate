@@ -58,7 +58,7 @@ namespace legate {
 /**
  * @brief An object describing a Legate task registration info.
  */
-class TaskInfo {
+class LEGATE_EXPORT TaskInfo {
  public:
   TaskInfo() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -121,14 +121,15 @@ class TaskInfo {
    * none were found.
    * @param registration_options Variant options specified at task registration time.
    */
-  void add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
-                    const Library& library,
-                    VariantCode vid,
-                    VariantImpl body,
-                    Processor::TaskFuncPtr entry,
-                    const TaskConfig& task_config,
-                    const VariantOptions* decl_options,
-                    const std::map<VariantCode, VariantOptions>& registration_options = {});
+  void add_variant_(  // NOLINT(readability-identifier-naming)
+    AddVariantKey,
+    const Library& library,
+    VariantCode vid,
+    VariantImpl body,
+    Processor::TaskFuncPtr entry,
+    const TaskConfig& task_config,
+    const VariantOptions* decl_options,
+    const std::map<VariantCode, VariantOptions>& registration_options = {});
 
   // These are "private" insofar that the access key is private
   /**
@@ -144,14 +145,15 @@ class TaskInfo {
    * @param registration_options Variant options specified at task registration time.
    */
   template <typename T>
-  void add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
-                    const Library& library,
-                    VariantCode vid,
-                    LegionVariantImpl<T> body,
-                    Processor::TaskFuncPtr entry,
-                    const TaskConfig& task_config,
-                    const VariantOptions* decl_options,
-                    const std::map<VariantCode, VariantOptions>& registration_options = {});
+  void add_variant_(  // NOLINT(readability-identifier-naming)
+    AddVariantKey,
+    const Library& library,
+    VariantCode vid,
+    LegionVariantImpl<T> body,
+    Processor::TaskFuncPtr entry,
+    const TaskConfig& task_config,
+    const VariantOptions* decl_options,
+    const std::map<VariantCode, VariantOptions>& registration_options = {});
 
   /**
    * @return A human-readable representation of the Task.

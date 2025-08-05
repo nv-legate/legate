@@ -18,13 +18,11 @@ from ..utilities.typedefs cimport (
 from ..utilities.unconstructable cimport Unconstructable
 from ..mapping.machine cimport _Machine
 from ..mapping.mapping cimport TaskTarget
-from .detail.task_context cimport _TaskContextImpl
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
 
 cdef extern from "legate/task/task_context.h" namespace "legate" nogil:
     cdef cppclass _TaskContext "legate::TaskContext":
-        _TaskContextImpl* impl() except+
         _GlobalTaskID task_id() except+
         VariantCode variant_kind() except+
 

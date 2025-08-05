@@ -14,8 +14,12 @@
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
-#include <fmt/core.h>
+#include <realm/cuda/cuda_module.h>
 
+#include <fmt/core.h>
+#include <fmt/ostream.h>
+
+#include <cstdint>
 #include <optional>
 #include <stdexcept>
 
@@ -349,6 +353,53 @@ void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
 
 Processor Runtime::get_executing_processor() const { return impl()->get_executing_processor(); }
+
+void* Runtime::get_cuda_stream() const { return impl()->get_cuda_stream(); }
+
+CUdevice Runtime::get_current_cuda_device() const
+{
+  if (is_running_in_task()) {
+    return cuda::detail::get_cuda_driver_api()->ctx_get_device();
+  }
+
+  // If we are in the top-level task, then ctx_get_device() may not be accurate, because the
+  // current device might not be where the PhysicalStore ends up.
+  //
+  // Rather, Realm will copy the data to the first GPU that was assigned to the top-level task
+  // on the local node.
+  auto&& proc = impl()->local_machine().gpus().at(0);
+
+  std::int32_t device_id = -1;
+  // The symbols for get_cuda_device_id() exist regardless of whether Realm has CUDA support,
+  // but if it doesn't we get linker errors are runtime because the CUDA module was never
+  // compiled.
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+    const auto success = Realm::Cuda::get_cuda_device_id(proc, &device_id);
+
+    if (!success) {
+      throw detail::TracedException<std::invalid_argument>{
+        fmt::format("Current Processor {} is not GPU", fmt::streamed(proc))};
+    }
+  } else {
+    throw detail::TracedException<std::runtime_error>{
+      "Legate was not compiled for CUDA support, although a GPU memory "
+      "PhysicalStore was requested. This should not happen."};
+  }
+
+  return static_cast<CUdevice>(device_id);
+}
+
+const detail::Config& Runtime::config() const { return impl()->config(); }
+
+void Runtime::begin_trace(std::uint32_t trace_id)  // NOLINT(readability-make-member-function-const)
+{
+  impl()->begin_trace(trace_id);
+}
+
+void Runtime::end_trace(std::uint32_t trace_id)  // NOLINT(readability-make-member-function-const)
+{
+  impl()->end_trace(trace_id);
+}
 
 namespace {
 

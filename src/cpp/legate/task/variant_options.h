@@ -40,7 +40,7 @@ void set_new_comms(std::vector<std::string> comms, legate::VariantOptions* optio
 /**
  * @brief A helper class for specifying variant options
  */
-class VariantOptions {
+class LEGATE_EXPORT VariantOptions {
  public:
   /**
    * @brief Whether the variant needs a concurrent task launch. `false` by default.
@@ -141,8 +141,8 @@ class VariantOptions {
    * @brief Whether this variant may throw an exception.
    *
    * Tasks that throw exception must be handled specially by the runtime in order to safely and
-   * correctly propagate the thrown exceptions. For this reason, tasks must explicitly declare
-   * whether they throw an exception.
+   * correctly propagate the thrown exceptions. For this reason, tasks must explicitly
+   * declare whether they throw an exception.
    *
    * @warning This special handling usually comes with severe performance penalties. For
    * example, the runtime may block the calling thread (i.e. the main thread) on the completion
@@ -279,7 +279,7 @@ class VariantOptions {
 // below is the definition.
 inline constexpr VariantOptions VariantOptions::DEFAULT_OPTIONS{};
 
-std::ostream& operator<<(std::ostream& os, const VariantOptions& options);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& os, const VariantOptions& options);
 
 /** @} */
 

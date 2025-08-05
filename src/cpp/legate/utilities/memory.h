@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <memory>
 
 namespace legate {
@@ -23,7 +25,7 @@ namespace legate {
 ///  template class legate::DefaultDelete<Foo>;        // Explicit instantiation
 /// @endcode
 template <typename T>
-class DefaultDelete {
+class LEGATE_EXPORT DefaultDelete {
  public:
   void operator()(T*) const noexcept;
 };

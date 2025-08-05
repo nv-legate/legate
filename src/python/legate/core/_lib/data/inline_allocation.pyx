@@ -14,22 +14,7 @@ from cpython cimport Py_buffer, PyObject_GetBuffer
 from ..type.types cimport Type
 from ..utilities.typedefs cimport _Domain, _DomainPoint
 from ..mapping.mapping cimport StoreTarget
-
-cdef extern from * nogil:
-    r"""
-    #include <legate/runtime/detail/runtime.h>
-
-    namespace {
-
-    void *_get_cuda_stream()
-    {
-      return legate::detail::Runtime::get_runtime().get_cuda_stream();
-    }
-
-    } // namespace
-    """
-    void *_get_cuda_stream() except+
-
+from ..runtime.runtime cimport get_legate_runtime
 
 # This object exists purely to circumvent numpy. When you do
 #
@@ -82,7 +67,7 @@ cdef dict _compute_array_interface(
         "strides": strides,
     }
 
-    cdef void *cu_stream = _get_cuda_stream()
+    cdef void *cu_stream = get_legate_runtime().get_cuda_stream()
 
     if cu_stream != NULL:
         # This entry is used by __cuda_array_interface__, and is ignored by

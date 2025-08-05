@@ -54,7 +54,8 @@ namespace legate::experimental::io::kvikio {
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-[[nodiscard]] LogicalArray from_file(const std::filesystem::path& file_path, const Type& type);
+[[nodiscard]] LEGATE_EXPORT LogicalArray from_file(const std::filesystem::path& file_path,
+                                                   const Type& type);
 
 /**
  * @brief Write a LogicalArray to a file.
@@ -70,7 +71,7 @@ namespace legate::experimental::io::kvikio {
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-void to_file(const std::filesystem::path& file_path, const LogicalArray& array);
+LEGATE_EXPORT void to_file(const std::filesystem::path& file_path, const LogicalArray& array);
 
 // ==========================================================================================
 
@@ -135,11 +136,12 @@ void to_file(const std::filesystem::path& file_path, const LogicalArray& array);
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-[[nodiscard]] LogicalArray from_file(const std::filesystem::path& file_path,
-                                     const Shape& shape,
-                                     const Type& type,
-                                     const std::vector<std::uint64_t>& tile_shape,
-                                     std::optional<std::vector<std::uint64_t>> tile_start = {});
+[[nodiscard]] LEGATE_EXPORT LogicalArray
+from_file(const std::filesystem::path& file_path,
+          const Shape& shape,
+          const Type& type,
+          const std::vector<std::uint64_t>& tile_shape,
+          std::optional<std::vector<std::uint64_t>> tile_start = {});
 
 /**
  * @brief Write a LogicalArray to file in tiles.
@@ -168,10 +170,10 @@ void to_file(const std::filesystem::path& file_path, const LogicalArray& array);
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-void to_file(const std::filesystem::path& file_path,
-             const LogicalArray& array,
-             const std::vector<std::uint64_t>& tile_shape,
-             std::optional<std::vector<std::uint64_t>> tile_start = {});
+LEGATE_EXPORT void to_file(const std::filesystem::path& file_path,
+                           const LogicalArray& array,
+                           const std::vector<std::uint64_t>& tile_shape,
+                           std::optional<std::vector<std::uint64_t>> tile_start = {});
 
 // ==========================================================================================
 
@@ -252,11 +254,12 @@ void to_file(const std::filesystem::path& file_path,
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-[[nodiscard]] LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
-                                                const Shape& shape,
-                                                const Type& type,
-                                                const std::vector<std::uint64_t>& offsets,
-                                                const std::vector<std::uint64_t>& tile_shape);
+[[nodiscard]] LEGATE_EXPORT LogicalArray
+from_file_by_offsets(const std::filesystem::path& file_path,
+                     const Shape& shape,
+                     const Type& type,
+                     const std::vector<std::uint64_t>& offsets,
+                     const std::vector<std::uint64_t>& tile_shape);
 
 /** @} */
 

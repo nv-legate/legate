@@ -57,7 +57,7 @@ function(legate_configure_test)
   target_include_directories(${_LEGATE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
 
   target_link_libraries(${_LEGATE_TEST_NAME}
-                        PRIVATE legate::legate
+                        PRIVATE legate_obj
                                 GTest::gtest
                                 GTest::gmock
                                 # Some test modules require delving into the private

@@ -42,7 +42,7 @@ class ProxyConstraint;
 /**
  * @brief Class for partition symbols
  */
-class Variable {
+class LEGATE_EXPORT Variable {
  public:
   Variable() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -59,7 +59,7 @@ class Variable {
 /**
  * @brief A base class for partitioning constraints
  */
-class Constraint {
+class LEGATE_EXPORT Constraint {
  public:
   Constraint() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -92,7 +92,7 @@ class Constraint {
  *
  * @return Alignment constraint
  */
-[[nodiscard]] Constraint align(Variable lhs, Variable rhs);
+[[nodiscard]] LEGATE_EXPORT Constraint align(Variable lhs, Variable rhs);
 
 /**
  * @brief Construct an alignment constraint descriptor from a pair of proxy objects.
@@ -115,7 +115,7 @@ class Constraint {
  *
  * @see align(Variable, Variable)
  */
-[[nodiscard]] ProxyConstraint align(
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint align(
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       left,
@@ -132,7 +132,7 @@ class Constraint {
  *
  * @return The alignment descriptor.
  */
-[[nodiscard]] ProxyConstraint align(ProxyInputArguments proxies);
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint align(ProxyInputArguments proxies);
 
 /**
  * @brief Construct an alignment constraint descriptor for all output arguments.
@@ -143,7 +143,7 @@ class Constraint {
  *
  * @return The alignment descriptor.
  */
-[[nodiscard]] ProxyConstraint align(ProxyOutputArguments proxies);
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint align(ProxyOutputArguments proxies);
 
 /**
  * @brief Creates a broadcast constraint on a variable.
@@ -158,7 +158,7 @@ class Constraint {
  *
  * @return Broadcast constraint
  */
-[[nodiscard]] Constraint broadcast(Variable variable);
+[[nodiscard]] LEGATE_EXPORT Constraint broadcast(Variable variable);
 
 /**
  * @brief Creates a broadcast constraint on a variable.
@@ -173,7 +173,7 @@ class Constraint {
  *
  * @throw std::invalid_argument If the list of axes is empty
  */
-[[nodiscard]] Constraint broadcast(Variable variable, Span<const std::uint32_t> axes);
+[[nodiscard]] LEGATE_EXPORT Constraint broadcast(Variable variable, Span<const std::uint32_t> axes);
 
 /**
  * @brief Construct a broadcast constraint descriptor.
@@ -199,7 +199,7 @@ class Constraint {
  *
  * @see broadcast(Variable, tuple<std::uint32_t>)
  */
-[[nodiscard]] ProxyConstraint broadcast(
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint broadcast(
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       value,
@@ -242,9 +242,10 @@ enum class ImageComputationHint : std::uint8_t {
  * The approximate image computation has no such issue and is fully GPU accelerated.
  *
  */
-[[nodiscard]] Constraint image(Variable var_function,
-                               Variable var_range,
-                               ImageComputationHint hint = ImageComputationHint::NO_HINT);
+[[nodiscard]] LEGATE_EXPORT Constraint
+image(Variable var_function,
+      Variable var_range,
+      ImageComputationHint hint = ImageComputationHint::NO_HINT);
 
 /**
  * @brief Construct an image constraint descriptor.
@@ -263,7 +264,7 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @see image(Variable, Variable, ImageComputationHint)
  */
-[[nodiscard]] ProxyConstraint image(
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint image(
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_function,
@@ -300,9 +301,9 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @return Scaling constraint
  */
-[[nodiscard]] Constraint scale(Span<const std::uint64_t> factors,
-                               Variable var_smaller,
-                               Variable var_bigger);
+[[nodiscard]] LEGATE_EXPORT Constraint scale(Span<const std::uint64_t> factors,
+                                             Variable var_smaller,
+                                             Variable var_bigger);
 
 /**
  * @brief Construct a scaling constraint descriptor.
@@ -320,7 +321,7 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @see scale(tuple<std::uint64_t>, Variable, Variable)
  */
-[[nodiscard]] ProxyConstraint scale(
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint scale(
   Span<const std::uint64_t> factors,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
@@ -357,10 +358,10 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @return Bloating constraint
  */
-[[nodiscard]] Constraint bloat(Variable var_source,
-                               Variable var_bloat,
-                               Span<const std::uint64_t> low_offsets,
-                               Span<const std::uint64_t> high_offsets);
+[[nodiscard]] LEGATE_EXPORT Constraint bloat(Variable var_source,
+                                             Variable var_bloat,
+                                             Span<const std::uint64_t> low_offsets,
+                                             Span<const std::uint64_t> high_offsets);
 
 /**
  * @brief Construct a bloat constraint descriptor.
@@ -379,7 +380,7 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @see bloat(Variable, Variable, tuple<std::uint64_t>, tuple<std::uint64_t>)
  */
-[[nodiscard]] ProxyConstraint bloat(
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint bloat(
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_source,

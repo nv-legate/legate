@@ -9,7 +9,9 @@
 #include <legate_defines.h>
 
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/shape.h>
 #include <legate/data/detail/transform.h>
+#include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/operation/detail/store_projection.h>
@@ -22,6 +24,7 @@
 #include <legate/tuning/parallel_policy.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/array_algorithms.h>
+#include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/legion_utilities.h>

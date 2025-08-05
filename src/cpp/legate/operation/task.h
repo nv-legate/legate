@@ -40,7 +40,7 @@ namespace legate {
 /**
  * @brief A class for auto-parallelized task descriptors
  */
-class AutoTask {
+class LEGATE_EXPORT AutoTask {
  public:
   /**
    * @brief Adds an array to the task as input
@@ -246,7 +246,7 @@ class AutoTask {
 /**
  * @brief A class for manually parallelized task descriptors
  */
-class ManualTask {
+class LEGATE_EXPORT ManualTask {
  public:
   /**
    * @brief Adds a store to the task as input

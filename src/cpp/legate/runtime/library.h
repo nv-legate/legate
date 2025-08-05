@@ -39,7 +39,7 @@ class Runtime;
 /**
  * @brief A library class that provides APIs for registering components
  */
-class Library {
+class LEGATE_EXPORT Library {
  public:
   /**
    * @brief Returns the name of the library
@@ -183,8 +183,8 @@ class Library {
   Library(Library&&)                 = default;
   Library& operator=(Library&&)      = default;
 
-  bool operator==(const Library& other) const;
-  bool operator!=(const Library& other) const;
+  [[nodiscard]] bool operator==(const Library& other) const;
+  [[nodiscard]] bool operator!=(const Library& other) const;
 
   [[nodiscard]] const detail::Library* impl() const;
   [[nodiscard]] detail::Library* impl();

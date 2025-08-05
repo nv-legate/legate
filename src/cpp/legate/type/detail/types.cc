@@ -30,7 +30,7 @@ namespace legate::detail {
 
 namespace {
 
-class StaticDeterminationError : public std::invalid_argument {
+class LEGATE_EXPORT StaticDeterminationError : public std::invalid_argument {
  public:
   using std::invalid_argument::invalid_argument;
 };

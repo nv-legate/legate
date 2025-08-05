@@ -66,7 +66,7 @@ namespace legate {
  * are not allowed to be created on null pointers. Each deleter is responsible for deallocating
  * only the allocation it is associated with and no other allocations.
  */
-class ExternalAllocation {
+class LEGATE_EXPORT ExternalAllocation {
  public:
   /**
    * @brief Signature for user-supplied deletion function.

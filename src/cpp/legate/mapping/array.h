@@ -15,7 +15,7 @@ class Array;
 
 namespace legate::mapping {
 
-class Array {
+class LEGATE_EXPORT Array {
  public:
   /**
    * @brief Indicates if the array is nullable

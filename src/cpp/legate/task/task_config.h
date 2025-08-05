@@ -39,7 +39,7 @@ class VariantOptions;
  * This class provides methods for constructing a task configuration, setting various task
  * options, and retrieving information about the task configuration.
  */
-class TaskConfig {
+class LEGATE_EXPORT TaskConfig {
  public:
   /**
    * @brief Deleted default constructor.

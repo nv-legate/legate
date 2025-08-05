@@ -22,8 +22,8 @@ namespace legate {
 
 namespace detail {
 
-[[noreturn]] void throw_unsupported_dim(std::int32_t dim);
-[[noreturn]] void throw_unsupported_type_code(legate::Type::Code code);
+[[noreturn]] LEGATE_EXPORT void throw_unsupported_dim(std::int32_t dim);
+[[noreturn]] LEGATE_EXPORT void throw_unsupported_type_code(legate::Type::Code code);
 
 template <int DIM>
 class InnerTypeDispatchFn {

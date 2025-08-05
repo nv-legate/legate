@@ -17,10 +17,10 @@
 
 namespace legate::detail {
 
-[[noreturn]] void abort_handler(std::string_view file,
-                                std::string_view func,
-                                int line,
-                                std::stringstream* ss);
+[[noreturn]] LEGATE_EXPORT void abort_handler(std::string_view file,
+                                              std::string_view func,
+                                              int line,
+                                              std::stringstream* ss);
 
 #ifndef __has_cpp_attribute
 #define __has_cpp_attribute(x) 0

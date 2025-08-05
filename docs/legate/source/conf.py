@@ -72,6 +72,12 @@ exclude_patterns = [
 ]
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
+cpp_id_attributes = [
+    "LEGATE_EXPORT",
+    "LEGATE_PYTHON_EXPORT",
+    "LEGATE_NO_EXPORT",
+]
+
 # -- Options for HTML output -------------------------------------------------
 
 html_static_path = ["_static"]

@@ -38,6 +38,8 @@ class Mapper;
 
 namespace legate {
 
+using CUdevice = int;
+
 /**
  * @addtogroup runtime
  * @{
@@ -47,7 +49,10 @@ class Scalar;
 class Type;
 
 namespace detail {
+
 class Runtime;
+class Config;
+
 }  // namespace detail
 
 /**
@@ -58,7 +63,7 @@ class Runtime;
  * and communicator management. Legate libraries are free of all these details about
  * distribute programming and can focus on their domain logics.
  */
-class Runtime {
+class LEGATE_EXPORT Runtime {
  public:
   /**
    * @brief Creates a library
@@ -689,6 +694,13 @@ class Runtime {
 
   [[nodiscard]] const detail::Runtime* impl() const;
 
+  // Intentionally not documented, these are only exposed for the python bindings.
+  [[nodiscard]] LEGATE_PYTHON_EXPORT void* get_cuda_stream() const;
+  [[nodiscard]] LEGATE_PYTHON_EXPORT CUdevice get_current_cuda_device() const;
+  LEGATE_PYTHON_EXPORT void begin_trace(std::uint32_t trace_id);
+  LEGATE_PYTHON_EXPORT void end_trace(std::uint32_t trace_id);
+  [[nodiscard]] LEGATE_PYTHON_EXPORT const detail::Config& config() const;
+
  private:
   explicit Runtime(detail::Runtime& runtime);
   void register_shutdown_callback_(ShutdownCallback callback);
@@ -708,8 +720,9 @@ class Runtime {
  *
  * @see start()
  */
-[[deprecated("since 25.01; Use the argument-less version of this function instead")]] std::int32_t
-start(std::int32_t argc, char* argv[]);
+[[deprecated("since 25.01; Use the argument-less version of this function instead")]] LEGATE_EXPORT
+  std::int32_t
+  start(std::int32_t argc, char* argv[]);
 
 /**
  * @ingroup runtime
@@ -722,7 +735,7 @@ start(std::int32_t argc, char* argv[]);
  * @throw ConfigurationError If runtime configuration fails.
  * @throw AutoConfigurationError If the automatic configuration heuristics fail.
  */
-void start();
+LEGATE_EXPORT void start();
 
 /**
  * @brief Checks if the runtime has started.
@@ -730,14 +743,14 @@ void start();
  * @return `true` if the runtime has started, `false` if the runtime has not started yet or
  * after `finish()` is called.
  */
-[[nodiscard]] bool has_started();
+[[nodiscard]] LEGATE_EXPORT bool has_started();
 
 /**
  * @brief Checks if the runtime has finished.
  *
  * @return `true` if `finish()` has been called, `false` otherwise.
  */
-[[nodiscard]] bool has_finished();
+[[nodiscard]] LEGATE_EXPORT bool has_finished();
 
 /**
  * @brief Waits for the runtime to finish
@@ -746,9 +759,9 @@ void start();
  *
  * @return Non-zero value when the runtime encountered a failure, 0 otherwise
  */
-[[nodiscard]] std::int32_t finish();
+[[nodiscard]] LEGATE_EXPORT std::int32_t finish();
 
-[[deprecated("since 24.11: use legate::finish() instead")]] void destroy();
+[[deprecated("since 24.11: use legate::finish() instead")]] LEGATE_EXPORT void destroy();
 
 /**
  * @brief Registers a callback that should be invoked during the runtime shutdown
@@ -764,14 +777,14 @@ void start();
  * @param callback A shutdown callback
  */
 template <typename T>
-void register_shutdown_callback(T&& callback);
+LEGATE_EXPORT void register_shutdown_callback(T&& callback);
 
 /**
  * @brief Returns the machine for the current scope
  *
  * @return Machine object
  */
-[[nodiscard]] mapping::Machine get_machine();
+[[nodiscard]] LEGATE_EXPORT mapping::Machine get_machine();
 
 /**
  * @brief Checks if the code is running in a task
@@ -779,7 +792,7 @@ void register_shutdown_callback(T&& callback);
  * @return true If the code is running in a task
  * @return false If the code is not running in a task
  */
-[[nodiscard]] bool is_running_in_task();
+[[nodiscard]] LEGATE_EXPORT bool is_running_in_task();
 
 /** @} */
 

@@ -31,7 +31,7 @@ class Task;
 /**
  * @brief A metadata class for tasks
  */
-class Task {
+class LEGATE_EXPORT Task {
  public:
   /**
    * @brief Returns the task id

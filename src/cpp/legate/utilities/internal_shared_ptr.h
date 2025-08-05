@@ -434,7 +434,7 @@ inline constexpr bool shared_from_this_enabled_v = is_detected_v<has_shared_from
 
 // ==========================================================================================
 
-class BadInternalWeakPtr : public std::bad_weak_ptr {
+class LEGATE_EXPORT BadInternalWeakPtr : public std::bad_weak_ptr {
  public:
   BadInternalWeakPtr() = default;
 
