@@ -178,6 +178,18 @@ if(legate_USE_NCCL)
 endif()
 
 # ########################################################################################
+# * UCX ----------------------------------------------------------------
+
+if(legate_USE_UCX)
+  # UCX is not supported on macOS.
+  if(APPLE)
+    message(FATAL_ERROR "UCX is not supported on macOS. Please disable UCX support.")
+  endif()
+  legate_find_or_configure(PACKAGE ucx)
+  legate_find_or_configure(PACKAGE ucc)
+endif()
+
+# ########################################################################################
 # * CAL ----------------------------------------------------------------
 
 if(legate_USE_CAL)
@@ -658,6 +670,9 @@ foreach(target legate_obj legate)
                                 $<TARGET_NAME_IF_EXISTS:HighFive::HighFive>
                                 cpptrace::cpptrace
                                 $<TARGET_NAME_IF_EXISTS:CAL::CAL>)
+  if(legate_USE_UCX)
+    target_link_libraries("${target}" PRIVATE ucx::ucp ucx::ucs ucc::ucc)
+  endif()
 endforeach()
 
 target_compile_definitions(legate_obj PUBLIC $<BUILD_INTERFACE:legate_EXPORTS=1>)

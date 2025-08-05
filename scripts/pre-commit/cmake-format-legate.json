@@ -112,6 +112,16 @@
                     "nargs": 0
                 }
             },
+            "find_or_configure_ucc": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_ucx": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "get_cpm_git_args": {
                 "kwargs": {
                     "BRANCH": 1,

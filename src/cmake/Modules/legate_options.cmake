@@ -94,6 +94,7 @@ legate_option(legate_BUILD_BENCHMARKS LEGATE_BUILD_BENCHMARKS "Build legate benc
               OFF)
 legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate" OFF)
 legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" OFF)
+legate_option(legate_USE_UCX LEGATE_USE_UCX "Enable UCX support" OFF)
 
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)

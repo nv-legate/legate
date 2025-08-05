@@ -33,6 +33,8 @@
 
 #cmakedefine LEGATE_USE_NCCL @LEGATE_USE_NCCL@
 
+#cmakedefine LEGATE_USE_UCX @LEGATE_USE_UCX@
+
 /*
  * TODO(amberhassaan): Remove this flag when
  * https://github.com/nv-legate/cupynumeric.internal/issues/703

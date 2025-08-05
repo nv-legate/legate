@@ -28,6 +28,7 @@ from .packages.cal import CAL
 from .packages.hdf5 import HDF5
 from .packages.legion import Legion
 from .packages.nccl import NCCL
+from .packages.ucx import UCX
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -36,7 +37,7 @@ if TYPE_CHECKING:
 class Legate(MainPackage):
     name = "Legate"
 
-    dependencies = (CMake, Legion, Python, CAL, HDF5, NCCL, CUDA)
+    dependencies = (CMake, Legion, Python, CAL, HDF5, NCCL, UCX, CUDA)
 
     legate_BUILD_DOCS: Final = ConfigArgument(
         name="--with-docs",
@@ -155,6 +156,7 @@ class Legate(MainPackage):
         cmake_var=CMAKE_VARIABLE("legate_USE_HDF5_VFD_GDS", CMakeBool),
     )
     legate_USE_NCCL: Final = CMAKE_VARIABLE("legate_USE_NCCL", CMakeBool)
+    legate_USE_UCX: Final = CMAKE_VARIABLE("legate_USE_UCX", CMakeBool)
     legate_USE_CUDA: Final = CMAKE_VARIABLE("legate_USE_CUDA", CMakeBool)
 
     def __init__(
@@ -470,6 +472,14 @@ class Legate(MainPackage):
         elif state.explicitly_disabled():
             self.manager.set_cmake_variable(self.legate_USE_NCCL, False)
 
+    def configure_ucx(self) -> None:
+        r"""Configure UCX variables."""
+        state = self.deps.UCX.state
+        if state.enabled():
+            self.manager.set_cmake_variable(self.legate_USE_UCX, True)
+        elif state.explicitly_disabled():
+            self.manager.set_cmake_variable(self.legate_USE_UCX, False)
+
     def configure_cuda(self) -> None:
         r"""Configure CUDA variables."""
         state = self.deps.CUDA.state
@@ -489,6 +499,7 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_cprofile)
         self.log_execute_func(self.configure_hdf5)
         self.log_execute_func(self.configure_nccl)
+        self.log_execute_func(self.configure_ucx)
         self.log_execute_func(self.configure_cuda)
 
     def _summarize_flags(self) -> list[tuple[str, Any]]:
@@ -531,6 +542,7 @@ class Legate(MainPackage):
                 m.get_cmake_variable(self.legate_USE_HDF5_VFD_GDS),
             ),
             ("NCCL", m.get_cmake_variable(self.legate_USE_NCCL)),
+            ("UCX", m.get_cmake_variable(self.legate_USE_UCX)),
             ("CUDA", m.get_cmake_variable(self.legate_USE_CUDA)),
         ]
 
