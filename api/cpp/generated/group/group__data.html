@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>data &#8212; NVIDIA legate (25.09.00.dev0)</title>
+    <title>data &#8212; NVIDIA legate (25.09.00.dev4+gbdfba431)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=915965b9"></script>
+    <script src="../../../../_static/documentation_options.js?v=056fbd9a"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,11 +134,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
   
 </a></div>
     
@@ -245,11 +245,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
   
 </a>
 
@@ -742,7 +742,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv44nullv">
-<span id="_CPPv34nullv"></span><span id="_CPPv24nullv"></span><span id="null"></span><span class="target" id="group__data_1gabedc5f70e93db51bde5d66063eeedf8e"></span><span class="n"><span class="pre">Scalar</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">null</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv44nullv" title="Link to this definition">#</a><br /></dt>
+<span id="_CPPv34nullv"></span><span id="_CPPv24nullv"></span><span id="null"></span><span class="target" id="group__data_1gaa1258d604ac3594f70eab7e8bd6e9e1a"></span><span class="n"><span class="pre">Scalar</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">null</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv44nullv" title="Link to this definition">#</a><br /></dt>
 <dd><p>Creates a null <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code></p>
 <p>
 Null scalars hold a copy of the singleton “Null” <code class="docutils literal notranslate"><a class="reference internal" href="group__types.html#classlegate_1_1Type"><span class="std std-ref"><span class="pre">Type</span></span></a></code> but hold no physical data or allocation. Their <code class="docutils literal notranslate"><a class="reference internal" href="group__types.html#classlegate_1_1Type"><span class="std std-ref"><span class="pre">Type</span></span></a></code> may be queried, but they have zero size, and return <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> when <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar_1a2356320d615f945b363586de4f79de6e"><span class="std std-ref"><span class="pre">Scalar::ptr()</span></span></a></code> is called on them. They are useful as tombstone values, or to represent invalid data. </p>
@@ -1765,7 +1765,7 @@ Copies the array to the specified memory, if necessary, and marks it as the most
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The user can achieve the same effects of a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ListLogicalArray"><span class="std std-ref"><span class="pre">ListLogicalArray</span></span></a></code> themselves by applying an image constraint (<code class="docutils literal notranslate"><a class="reference internal" href="group__partitioning.html#group__partitioning_1gabec27816bfd824ddb04947990b9efb23"><span class="std std-ref"><span class="pre">image(Variable,</span> <span class="pre">Variable,</span> <span class="pre">ImageComputationHint)</span></span></a></code>) to two <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalArray"><span class="std std-ref"><span class="pre">LogicalArray</span></span></a></code>s when passing them to a task. In that case <code class="docutils literal notranslate"><span class="pre">descriptor</span></code> would be <code class="docutils literal notranslate"><span class="pre">var_function</span></code> while <code class="docutils literal notranslate"><span class="pre">vardata</span></code> would be <code class="docutils literal notranslate"><span class="pre">var_range</span></code>. </p>
+<p>The user can achieve the same effects of a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ListLogicalArray"><span class="std std-ref"><span class="pre">ListLogicalArray</span></span></a></code> themselves by applying an image constraint (<code class="docutils literal notranslate"><a class="reference internal" href="group__partitioning.html#group__partitioning_1ga2c023e19fda7398df2ab8e4867cc1744"><span class="std std-ref"><span class="pre">image(Variable,</span> <span class="pre">Variable,</span> <span class="pre">ImageComputationHint)</span></span></a></code>) to two <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalArray"><span class="std std-ref"><span class="pre">LogicalArray</span></span></a></code>s when passing them to a task. In that case <code class="docutils literal notranslate"><span class="pre">descriptor</span></code> would be <code class="docutils literal notranslate"><span class="pre">var_function</span></code> while <code class="docutils literal notranslate"><span class="pre">vardata</span></code> would be <code class="docutils literal notranslate"><span class="pre">var_range</span></code>. </p>
 </div>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
@@ -3425,7 +3425,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <dd><p>Creates a null scalar. </p>
 <p><div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><code class="docutils literal notranslate"><a class="reference internal" href="#group__data_1gabedc5f70e93db51bde5d66063eeedf8e"><span class="std std-ref"><span class="pre">null()</span></span></a></code></p>
+<p><code class="docutils literal notranslate"><a class="reference internal" href="#group__data_1gaa1258d604ac3594f70eab7e8bd6e9e1a"><span class="std std-ref"><span class="pre">null()</span></span></a></code></p>
 </div>
 </p>
 </dd></dl>
