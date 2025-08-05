@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -396,6 +397,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   std::uint32_t streaming_current_gen_{};
   std::optional<DomainPoint> streaming_target_column_{};
   std::uint32_t streaming_rows_mapped_{};
+  std::queue<Legion::Mapping::MapperEvent> deferral_events_{};
 };
 
 }  // namespace legate::mapping::detail

@@ -656,6 +656,19 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
       target_proc,
       target_proc.kind() == Processor::Kind::TOC_PROC ? StoreTarget::ZCMEM : StoreTarget::SYSMEM));
   }
+
+  // select_tasks_to_map() will add deferral events in case it isn't able to select any tasks
+  // to map. This usually only happens if we are in a streaming section -- normal tasks should
+  // all immediately be mapped and therefore shouldn't need a deferral event.
+  //
+  // In any case, Legion requires us to trigger these events in finite time, so, since we
+  // mapped a task trigger one of these events. We could be smart here and try to figure out
+  // the right event to trigger (the event corresponding to direct dependencies of this mapped
+  // task), but triggering any one of these should be enough to cause Legion to call
+  // select_tasks_to_map() again.
+  for (; !deferral_events_.empty(); deferral_events_.pop()) {
+    runtime->trigger_mapper_event(ctx, std::move(deferral_events_.front()));
+  }
 }
 
 void BaseMapper::replicate_task(Legion::Mapping::MapperContext /*ctx*/,
@@ -1985,7 +1998,7 @@ void BaseMapper::select_tasks_to_map(Legion::Mapping::MapperContext ctx,
 
   if (map_tasks.empty()) {
     // Legion requires us to return an event in the case the output.map_tasks is empty.
-    output.deferral_event = runtime->create_mapper_event(ctx);
+    output.deferral_event = deferral_events_.emplace(runtime->create_mapper_event(ctx));
   }
 
   logger().debug() << "SELECT_TASKS_TO_MAP: =============================================";
