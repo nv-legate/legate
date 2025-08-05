@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.26.4)
 
-project(legate-python VERSION 25.08.00 LANGUAGES CXX)
+project(legate-python VERSION 25.09.00 LANGUAGES CXX)
 
 set(CMAKE_CUDA_RUNTIME_LIBRARY "STATIC")
 set(CMAKE_CUDA_ARCHITECTURES all-major)
