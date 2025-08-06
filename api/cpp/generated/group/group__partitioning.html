@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>partitioning &#8212; NVIDIA legate (25.09.00.dev4+gbdfba431)</title>
+    <title>partitioning &#8212; NVIDIA legate (25.09.00.dev8+gab908efe)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=056fbd9a"></script>
+    <script src="../../../../_static/documentation_options.js?v=d977f3b8"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,11 +134,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a></div>
     
@@ -245,11 +245,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a>
 
@@ -715,6 +715,38 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv45align4SpanIK8VariableE">
+<span id="_CPPv35align4SpanIK8VariableE"></span><span id="_CPPv25align4SpanIK8VariableE"></span><span id="align__Span:VariableC:"></span><span class="target" id="group__partitioning_1ga2bcd561e3b52ce0478aeb810424cd139"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Constraint</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">align</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Variable</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv45align4SpanIK8VariableE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create an alignment constraint among multiple variables. </p>
+<p>This function is a convenience when adding multiple alignment constraints.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cstr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">align</span><span class="p">({</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="n">vn</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Is functionally equivalent to:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">align</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">c2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">align</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v3</span><span class="p">);</span><span class="w">  </span><span class="c1">// equivalently, align(v2, v3)</span>
+<span class="p">...</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">align</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">vn</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>See <code class="docutils literal notranslate"><a class="reference internal" href="#group__partitioning_1ga1985d0ff30abe4a4a0ae9fbd5ccfb7b7"><span class="std std-ref"><span class="pre">align(Variable,</span> <span class="pre">Variable)</span></span></a></code> for further discussion on the semantics of alignment constraints.</p>
+<p>An alignment among zero or one variable is a no-op, so if <code class="docutils literal notranslate"><span class="pre">variables</span></code> contains one or zero elements, the returned vector is empty.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__partitioning_1ga1985d0ff30abe4a4a0ae9fbd5ccfb7b7"><span class="std std-ref">align(Variable, Variable)</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>variables</strong> – The variables to align.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The alignment constraints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv45alignNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE">
 <span id="_CPPv35alignNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE"></span><span id="_CPPv25alignNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE"></span><span id="align__std::variant:ProxyArrayArgument.ProxyInputArguments.ProxyOutputArguments.ProxyReductionArguments:.std::variant:ProxyArrayArgument.ProxyInputArguments.ProxyOutputArguments.ProxyReductionArguments:"></span><span class="target" id="group__partitioning_1gaf91fb44a5d9866df11f89ef07af5c666"></span><span class="n"><span class="pre">ProxyConstraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">align</span></span></span><span class="sig-paren">(</span>
 
@@ -799,6 +831,37 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49broadcast4SpanIK8VariableE">
+<span id="_CPPv39broadcast4SpanIK8VariableE"></span><span id="_CPPv29broadcast4SpanIK8VariableE"></span><span id="broadcast__Span:VariableC:"></span><span class="target" id="group__partitioning_1gad8b45680787a4a8dd75dbd3a73bdf26f"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Constraint</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Variable</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49broadcast4SpanIK8VariableE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create a broadcast constraint among multiple variables. </p>
+<p>This function is a convenience when adding multiple broadcast constraints.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cstr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">({</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="n">vn</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Is functionally equivalent to:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">(</span><span class="n">v1</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">c2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">(</span><span class="n">v2</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">(</span><span class="n">vn</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>See <code class="docutils literal notranslate"><a class="reference internal" href="#group__partitioning_1gaeca3a6f726a461867dfd6f4caefb5994"><span class="std std-ref"><span class="pre">broadcast(Variable)</span></span></a></code> for further discussion on the semantics of broadcast constraints.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__partitioning_1gaeca3a6f726a461867dfd6f4caefb5994"><span class="std std-ref">broadcast(Variable)</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>variables</strong> – The variables to broadcast.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The broadcast constraints.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv49broadcast8Variable4SpanIKNSt8uint32_tEE">
 <span id="_CPPv39broadcast8Variable4SpanIKNSt8uint32_tEE"></span><span id="_CPPv29broadcast8Variable4SpanIKNSt8uint32_tEE"></span><span id="broadcast__Variable.Span:std::uint32_tC:"></span><span class="target" id="group__partitioning_1gad5903cd200a9e0a0644d4f937c02e97c"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span>
 
@@ -822,6 +885,43 @@ SPDX-License-Identifier: Apache-2.0
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Broadcast constraint</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49broadcast4SpanIKNSt4pairI8Variable4SpanIKNSt8uint32_tEEEEE">
+<span id="_CPPv39broadcast4SpanIKNSt4pairI8Variable4SpanIKNSt8uint32_tEEEEE"></span><span id="_CPPv29broadcast4SpanIKNSt4pairI8Variable4SpanIKNSt8uint32_tEEEEE"></span><span id="broadcast__Span:std::pair:Variable.Span:std::uint32_tC::C:"></span><span class="target" id="group__partitioning_1ga386434bf8876e7a61027d6ad6cd7faab"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Constraint</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">Span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">pair</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Variable</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">Span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">variables</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49broadcast4SpanIKNSt4pairI8Variable4SpanIKNSt8uint32_tEEEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create a broadcast constraint whilst also specifying the axes among multiple variables. </p>
+<p>This function is a convenience when adding multiple broadcast constraints.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cstr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">({{</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="p">{...}},</span><span class="w"> </span><span class="p">{</span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="p">{...}},</span><span class="w"> </span><span class="p">...,</span><span class="w"> </span><span class="p">{</span><span class="n">vn</span><span class="p">,</span><span class="w"> </span><span class="p">{...}}});</span>
+</pre></div>
+</div>
+<p>Is functionally equivalent to:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">c1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span><span class="w"> </span><span class="p">{...});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">c2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">(</span><span class="n">v2</span><span class="p">,</span><span class="w"> </span><span class="p">{...});</span>
+<span class="p">...</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">(</span><span class="n">vn</span><span class="p">,</span><span class="w"> </span><span class="p">{...});</span>
+</pre></div>
+</div>
+<p>See <code class="docutils literal notranslate"><span class="pre">broadcast(</span><a class="reference internal" href="#classlegate_1_1Variable"><span class="std std-ref"><span class="pre">Variable</span></span></a><span class="pre">,</span> <a class="reference internal" href="group__data.html#classlegate_1_1Span"><span class="std std-ref"><span class="pre">Span</span></span></a><span class="pre">&lt;const</span> <span class="pre">std::uint32_t&gt;)</span></code> for further discussion on the semantics of broadcast constraints with axes.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__partitioning_1gad5903cd200a9e0a0644d4f937c02e97c"><span class="std std-ref">broadcast(Variable, Span&lt;const std::uint32_t&gt;)</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>variables</strong> – The pairs of variables and axes to broadcast.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The broadcast constraints.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1513,15 +1613,16 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <dd></dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME">
-<span id="_CPPv3N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME"></span><span id="_CPPv2N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME"></span><span id="legate::detail::partition_store_by_tiling__InternalSharedPtr:LogicalStore:CR.SmallVector:std::uint64_t.LEGATE_MAX_DIM:"></span><span class="target" id="detail_2logical__store_8h_1a42edee865baf44a08866bd10f8807f19"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1InternalSharedPtr.html#_CPPv4I0EN6legate17InternalSharedPtrE" title="legate::InternalSharedPtr"><span class="n"><span class="pre">InternalSharedPtr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1LogicalStorePartition.html#_CPPv4N6legate21LogicalStorePartitionE" title="legate::LogicalStorePartition"><span class="n"><span class="pre">LogicalStorePartition</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">partition_store_by_tiling</span></span></span><span class="sig-paren">(</span>
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMENSt8optionalI11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMEEE">
+<span id="_CPPv3N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMENSt8optionalI11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMEEE"></span><span id="_CPPv2N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMENSt8optionalI11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMEEE"></span><span id="legate::detail::partition_store_by_tiling__InternalSharedPtr:LogicalStore:CR.SmallVector:std::uint64_t.LEGATE_MAX_DIM:.std::optional:SmallVector:std::uint64_t.LEGATE_MAX_DIM::"></span><span class="target" id="detail_2logical__store_8h_1a62eb1725254ae18892b47576b4590d9b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1InternalSharedPtr.html#_CPPv4I0EN6legate17InternalSharedPtrE" title="legate::InternalSharedPtr"><span class="n"><span class="pre">InternalSharedPtr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1LogicalStorePartition.html#_CPPv4N6legate21LogicalStorePartitionE" title="legate::LogicalStorePartition"><span class="n"><span class="pre">LogicalStorePartition</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">partition_store_by_tiling</span></span></span><span class="sig-paren">(</span>
 
 <dl>
 <dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1InternalSharedPtr.html#_CPPv4I0EN6legate17InternalSharedPtrE" title="legate::InternalSharedPtr"><span class="n"><span class="pre">InternalSharedPtr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1LogicalStore.html#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">self</span></span></em>,</dd>
-<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0EN6legate6detail11SmallVectorE11SmallVectorI1TEN4tags10size_tag_tENSt6size_tERK1T" title="legate::detail::SmallVector"><span class="n"><span class="pre">SmallVector</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">LEGATE_MAX_DIM</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tile_shape</span></span></em></dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0EN6legate6detail11SmallVectorE11SmallVectorI1TEN4tags10size_tag_tENSt6size_tERK1T" title="legate::detail::SmallVector"><span class="n"><span class="pre">SmallVector</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">LEGATE_MAX_DIM</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tile_shape</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6legate6detail11SmallVectorE11SmallVectorI1TEN4tags10size_tag_tENSt6size_tERK1T" title="legate::detail::SmallVector"><span class="n"><span class="pre">SmallVector</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">LEGATE_MAX_DIM</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">color_shape</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em></dd>
 </dl>
 
-<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME" title="Link to this definition">#</a><br /></dt>
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMENSt8optionalI11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMEEE" title="Link to this definition">#</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp function">
@@ -3902,11 +4003,14 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45align8Variable8Variable"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45align4SpanIK8VariableE"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45alignNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45align19ProxyInputArguments"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45align20ProxyOutputArguments"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast8Variable"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast4SpanIK8VariableE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast8Variable4SpanIKNSt8uint32_tEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast4SpanIKNSt4pairI8Variable4SpanIKNSt8uint32_tEEEEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcastNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEERKNSt8optionalI5tupleINSt8uint32_tEEEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45image8Variable8Variable20ImageComputationHint"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45imageNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt8optionalI20ImageComputationHintEE"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
@@ -4002,7 +4106,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail24create_storage_partitionERK17InternalSharedPtrI7StorageE17InternalSharedPtrI9PartitionENSt8optionalIbEE"><code class="docutils literal notranslate"><span class="pre">create_storage_partition()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13slice_storageERK17InternalSharedPtrI7StorageE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME11SmallVectorINSt7int64_tE14LEGATE_MAX_DIME"><code class="docutils literal notranslate"><span class="pre">slice_storage()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11slice_storeERK17InternalSharedPtrI12LogicalStoreENSt7int32_tE5Slice"><code class="docutils literal notranslate"><span class="pre">slice_store()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME"><code class="docutils literal notranslate"><span class="pre">partition_store_by_tiling()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMENSt8optionalI11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMEEE"><code class="docutils literal notranslate"><span class="pre">partition_store_by_tiling()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail22create_store_partitionERK17InternalSharedPtrI12LogicalStoreE17InternalSharedPtrI9PartitionENSt8optionalIbEE"><code class="docutils literal notranslate"><span class="pre">create_store_partition()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail21store_to_launcher_argERK17InternalSharedPtrI12LogicalStoreEPK8VariableRK8StrategyRK6DomainRKNSt8optionalI13SymbolicPointEEN6Legion13PrivilegeModeE13GlobalRedopID"><code class="docutils literal notranslate"><span class="pre">store_to_launcher_arg()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail31store_to_launcher_arg_for_fixupERK17InternalSharedPtrI12LogicalStoreERK6DomainN6Legion13PrivilegeModeE"><code class="docutils literal notranslate"><span class="pre">store_to_launcher_arg_for_fixup()</span></code></a></li>

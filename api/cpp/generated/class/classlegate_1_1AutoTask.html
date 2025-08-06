@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::AutoTask &#8212; NVIDIA legate (25.09.00.dev4+gbdfba431)</title>
+    <title>legate::AutoTask &#8212; NVIDIA legate (25.09.00.dev8+gab908efe)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=056fbd9a"></script>
+    <script src="../../../../_static/documentation_options.js?v=d977f3b8"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a>
 
@@ -873,6 +873,42 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate8AutoTask15add_constraintsE4SpanIK10ConstraintE">
+<span id="_CPPv3N6legate8AutoTask15add_constraintsE4SpanIK10ConstraintE"></span><span id="_CPPv2N6legate8AutoTask15add_constraintsE4SpanIK10ConstraintE"></span><span id="legate::AutoTask::add_constraints__Span:ConstraintC:"></span><span class="target" id="classlegate_1_1AutoTask_1ae90e65e6a13a4079ff39e60b893fddd6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">add_constraints</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="classlegate_1_1Constraint.html#_CPPv4N6legate10ConstraintE" title="legate::Constraint"><span class="n"><span class="pre">Constraint</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">constraints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate8AutoTask15add_constraintsE4SpanIK10ConstraintE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Adds multiple partitioning constraints to the task. </p>
+<p>This function is a convenience when adding multiple constraints simultaneously.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">task</span><span class="p">.</span><span class="n">add_constraints</span><span class="p">({</span><span class="n">c1</span><span class="p">,</span><span class="w"> </span><span class="n">c2</span><span class="p">,</span><span class="w"> </span><span class="n">c3</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Is functionally equivalent to:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">task</span><span class="p">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="n">c1</span><span class="p">);</span>
+<span class="n">task</span><span class="p">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="n">c2</span><span class="p">);</span>
+<span class="n">task</span><span class="p">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="n">c3</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This routine is most commonly used with the overloads of partitioning routines that return multiple constraints:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">cstrnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">align</span><span class="p">({</span><span class="n">part1</span><span class="p">,</span><span class="w"> </span><span class="n">part2</span><span class="p">,</span><span class="w"> </span><span class="n">part3</span><span class="p">});</span>
+
+<span class="n">task</span><span class="p">.</span><span class="n">add_constraints</span><span class="p">(</span><span class="n">cstrnt</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">task</span><span class="p">.</span><span class="n">add_constraints</span><span class="p">(</span>
+<span class="w">  </span><span class="p">{</span><span class="n">legate</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="n">part1</span><span class="p">,</span><span class="w"> </span><span class="n">part2</span><span class="p">),</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">broadcast</span><span class="p">(</span><span class="n">part1</span><span class="p">,</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">0</span><span class="p">})});</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../group/group__task.html#classlegate_1_1AutoTask_1a2572f015cf9efe0a2cbd8bd8189b3fe7"><span class="std std-ref">add_constraint(const Constraint&amp;)</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>constraints</strong> – The constraints to add.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate8AutoTask25find_or_declare_partitionERK12LogicalArray">
 <span id="_CPPv3N6legate8AutoTask25find_or_declare_partitionERK12LogicalArray"></span><span id="_CPPv2N6legate8AutoTask25find_or_declare_partitionERK12LogicalArray"></span><span id="legate::AutoTask::find_or_declare_partition__LogicalArrayCR"></span><span class="target" id="classlegate_1_1AutoTask_1a77765f7e9bd50eb27fe014b597f22400"></span><a class="reference internal" href="classlegate_1_1Variable.html#_CPPv4N6legate8VariableE" title="legate::Variable"><span class="n"><span class="pre">Variable</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">find_or_declare_partition</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="classlegate_1_1LogicalArray.html#_CPPv4N6legate12LogicalArrayE" title="legate::LogicalArray"><span class="n"><span class="pre">LogicalArray</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate8AutoTask25find_or_declare_partitionERK12LogicalArray" title="Link to this definition">#</a><br /></dt>
 <dd><p>Finds or creates a partition symbol for the given array. </p>
@@ -1025,6 +1061,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask14add_scalar_argERK6Scalar"><code class="docutils literal notranslate"><span class="pre">add_scalar_arg()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00EN6legate8AutoTask14add_scalar_argEvRR1T"><code class="docutils literal notranslate"><span class="pre">add_scalar_arg()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask14add_constraintERK10Constraint"><code class="docutils literal notranslate"><span class="pre">add_constraint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask15add_constraintsE4SpanIK10ConstraintE"><code class="docutils literal notranslate"><span class="pre">add_constraints()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask25find_or_declare_partitionERK12LogicalArray"><code class="docutils literal notranslate"><span class="pre">find_or_declare_partition()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask17declare_partitionEv"><code class="docutils literal notranslate"><span class="pre">declare_partition()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate8AutoTask10provenanceEv"><code class="docutils literal notranslate"><span class="pre">provenance()</span></code></a></li>

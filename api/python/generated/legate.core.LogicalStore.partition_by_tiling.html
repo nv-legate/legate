@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.LogicalStore.partition_by_tiling &#8212; NVIDIA legate (25.09.00.dev4+gbdfba431)</title>
+    <title>legate.core.LogicalStore.partition_by_tiling &#8212; NVIDIA legate (25.09.00.dev8+gab908efe)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=056fbd9a"></script>
+    <script src="../../../_static/documentation_options.js?v=d977f3b8"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a>
 
@@ -666,11 +666,22 @@ SPDX-License-Identifier: Apache-2.0
 <h1>legate.core.LogicalStore.partition_by_tiling<a class="headerlink" href="#legate-core-logicalstore-partition-by-tiling" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="legate.core.LogicalStore.partition_by_tiling">
-<span class="sig-prename descclassname"><span class="pre">LogicalStore.</span></span><span class="sig-name descname"><span class="pre">partition_by_tiling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LogicalStorePartition</span></span></span><a class="headerlink" href="#legate.core.LogicalStore.partition_by_tiling" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">LogicalStore.</span></span><span class="sig-name descname"><span class="pre">partition_by_tiling</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tile_shape</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">color_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LogicalStorePartition</span></span></span><a class="headerlink" href="#legate.core.LogicalStore.partition_by_tiling" title="Link to this definition">#</a></dt>
 <dd><p>Creates a tiled partition of the store</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>tile_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>]</em>) – Shape of tiles</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tile_shape</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>]</em>) – Shape of tiles</p></li>
+<li><p><strong>color_shape</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – The color shape to force the tiling into.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="docutils literal notranslate"><span class="pre">LogicalStorePartition</span></code> object</p>

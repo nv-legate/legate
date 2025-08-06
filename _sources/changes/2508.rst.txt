@@ -68,6 +68,8 @@ C++
 
 .. rubric:: Tasks
 
+- Add ``legate::AutoTask::add_constraints()`` to add multiple constraints to a task.
+
 .. rubric:: Tuning
 
 .. rubric:: Types

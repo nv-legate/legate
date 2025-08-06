@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.09 &#8212; NVIDIA legate (25.09.00.dev4+gbdfba431)</title>
+    <title>Changes: 25.09 &#8212; NVIDIA legate (25.09.00.dev8+gab908efe)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=056fbd9a"></script>
+    <script src="../_static/documentation_options.js?v=d977f3b8"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev4+gbdfba431) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev8+gab908efe) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev4+gbdfba431)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev8+gab908efe)</p>
   
 </a>
 
@@ -662,6 +662,14 @@ SPDX-License-Identifier: Apache-2.0
 <p class="rubric">Data</p>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
+<ul class="simple">
+<li><p>Add overload of <code class="docutils literal notranslate"><span class="pre">legate::align()</span></code> that takes a span of variables to align as a
+convenience for aligning multiple task arguments.</p></li>
+<li><p>Add overload of <code class="docutils literal notranslate"><span class="pre">legate::broadcast()</span></code> that takes a span of variables to broadcast as a
+convenience for broadcasting multiple task arguments.</p></li>
+<li><p>Add overload of <code class="docutils literal notranslate"><span class="pre">legate::broadcast()</span></code> that takes a span of pairs of variables and axes
+to broadcast as a convenience for broadcasting multiple task arguments.</p></li>
+</ul>
 <p class="rubric">Tasks</p>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
@@ -674,6 +682,12 @@ SPDX-License-Identifier: Apache-2.0
 <p class="rubric">Data</p>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
+<ul class="simple">
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate.core.align()</span></code> to return an iterable of constraints instead of a single
+value.</p></li>
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate.core.broadcast()</span></code> to return an iterable of constraints instead of a
+single value.</p></li>
+</ul>
 <p class="rubric">Tasks</p>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
