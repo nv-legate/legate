@@ -138,8 +138,7 @@ def copy_store_with_empty_task(
 
 
 @task(
-    variants=tuple(VariantCode),
-    constraints=(broadcast("arg1"), broadcast("arg2"), broadcast("out")),
+    variants=tuple(VariantCode), constraints=broadcast("arg1", "arg2", "out")
 )
 def mixed_sum_task(
     arg1: InputArray, arg2: InputStore, out: OutputArray

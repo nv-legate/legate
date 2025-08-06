@@ -245,17 +245,26 @@ cdef class AutoTask(Unconstructable):
         with nogil:
             self._handle.add_scalar_arg(scalar._handle)
 
-    cpdef void add_constraint(self, Constraint constraint):
+    cpdef void add_constraint(self, object constraint):
         r"""
         Add a partitioning constraint to the task.
 
         Parameters
         ----------
-        constraint : Constraint
-            The partitioning constraint to add.
+        constraint : Constraint | Iterable[Constraint]
+            The partitioning constraint(s) to add.
         """
-        with nogil:
-            self._handle.add_constraint(constraint._handle)
+        if isinstance(constraint, Constraint):
+            with nogil:
+                self._handle.add_constraint((<Constraint> constraint)._handle)
+            return
+
+        for sub in constraint:
+            if not isinstance(sub, Constraint):
+                raise TypeError(type(sub))
+
+            with nogil:
+                self._handle.add_constraint((<Constraint> sub)._handle)
 
     cpdef Variable find_or_declare_partition(self, LogicalArray array):
         r"""

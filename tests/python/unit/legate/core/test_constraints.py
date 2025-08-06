@@ -81,33 +81,51 @@ class TestVariable:
 class TestAlign:
     def test_create_from_str(self) -> None:
         constraint = lg.align("x", "y")
-        assert isinstance(constraint, DeferredConstraint)
-        assert hasattr(constraint, "args")
-        assert constraint.args == ("x", "y")
+        assert len(constraint) == 1
+        assert isinstance(constraint[0], DeferredConstraint)
+        assert hasattr(constraint[0], "args")
+        assert constraint[0].args == ("x", "y")
+
+    def test_create_many_from_str(self) -> None:
+        variables = ("x", "y", "z", "w")
+        constraint = lg.align(*variables)
+        assert len(constraint) == len(variables) - 1
+        for v, c in zip(variables[1:], constraint, strict=True):
+            assert isinstance(c, DeferredConstraint)
+            assert hasattr(c, "args")
+            assert c.args == (variables[0], v)
 
     def test_create_from_variable(
         self, variable_x: Variable, variable_y: Variable
     ) -> None:
         constraint = lg.align(variable_x, variable_y)
-        assert isinstance(constraint, Constraint)
+        assert len(constraint) == 1
+        assert isinstance(constraint[0], Constraint)
         # Currently the only exposed python methods to check...
         expected_re = re.compile(
             r"Align\(X0{dummy_task\.<locals>\.foo:\d+}, "
             r"X1{dummy_task\.<locals>\.foo:\d+}\)"
         )
-        assert expected_re.match(str(constraint)) is not None
-        assert repr(constraint) == str(constraint)
+        assert expected_re.match(str(constraint[0])) is not None
+        assert repr(constraint[0]) == str(constraint[0])
+
+    def test_create_many_from_variable(
+        self, variable_x: Variable, variable_y: Variable
+    ) -> None:
+        variables = (variable_x, variable_y, variable_x, variable_y)
+        constraint = lg.align(*variables)
+        assert len(constraint) == len(variables) - 1
+        for v, c in zip(variables[1:], constraint, strict=True):
+            expected_re = re.escape(rf"Align({variable_x}, {v})")
+            assert re.match(expected_re, str(c)) is not None
+            assert repr(c) == str(c)
 
     def test_create_bad(self, variable_x: Variable) -> None:
-        # repr(Variable) -> "<class 'legate.asdasd.Variable'>"
-        #
-        # We just want "legate.asdasd.Variable"
-        type_str = repr_type_without_class(Variable)
         with pytest.raises(
             TypeError,
             match=re.escape(
-                "Argument 'rhs' has incorrect type (expected "
-                f"{type_str}, got str)"
+                "All variables for alignment must be variables, not strings, "
+                f"have ({variable_x}, 'asdasd')"
             ),
         ):
             lg.align(variable_x, "asdasd")  # type: ignore[call-overload]
@@ -115,8 +133,8 @@ class TestAlign:
         with pytest.raises(
             TypeError,
             match=re.escape(
-                "Argument 'rhs' has incorrect type (expected str, got "
-                f"{type_str})"
+                "All variables for alignment must be strings, not variables, "
+                f"have ('asdasd', {variable_x})"
             ),
         ):
             lg.align("asdasd", variable_x)  # type: ignore[call-overload]
@@ -128,17 +146,44 @@ AXES: tuple[Collection[int], ...] = ((), [], (1,), [1], (1, 2, 3), [3, 4, 5])
 class TestBroadcast:
     @pytest.mark.parametrize("axes", AXES)
     def test_create_from_str(self, axes: Collection[int]) -> None:
-        constraint = lg.broadcast("x", axes=axes)
-        assert isinstance(constraint, DeferredConstraint)
-        assert hasattr(constraint, "args")
-        assert constraint.args == ("x", axes)
+        constraint = lg.broadcast("x", axes)
+        assert isinstance(constraint, list)
+        assert len(constraint) == 1
+        assert isinstance(constraint[0], DeferredConstraint)
+        assert hasattr(constraint[0], "args")
+        assert constraint[0].args == ("x", axes)
+
+    def test_create_many_from_str(self) -> None:
+        variables = ("x", "y", "z", "w")
+        constraint = lg.broadcast(*variables)
+        assert isinstance(constraint, list)
+        assert len(constraint) == len(variables)
+        for v, c in zip(variables, constraint, strict=True):
+            assert isinstance(c, DeferredConstraint)
+            assert hasattr(c, "args")
+            assert c.args == (v, ())
+
+    def test_create_many_from_str_and_axes(self) -> None:
+        variables = ("x", ("y", [1, 2, 3]), "z", ("w", [4, 5, 6]), "a")
+        constraint = lg.broadcast(*variables)
+        assert isinstance(constraint, list)
+        assert len(constraint) == len(variables)
+        for v, c in zip(variables, constraint, strict=True):
+            assert isinstance(c, DeferredConstraint)
+            assert hasattr(c, "args")
+            if isinstance(v, tuple):
+                assert c.args == v
+            else:
+                assert c.args == (v, ())
 
     @pytest.mark.parametrize("axes", AXES)
     def test_create_from_variable(
         self, variable_x: Variable, axes: Collection[int]
     ) -> None:
-        constraint = lg.broadcast(variable_x, axes=axes)
-        assert isinstance(constraint, Constraint)
+        constraint = lg.broadcast(variable_x, axes)
+        assert isinstance(constraint, list)
+        assert len(constraint) == 1
+        assert isinstance(constraint[0], Constraint)
         # Currently the only exposed python methods to check...
         if axes is None or not len(axes):
             expected_re = r"Broadcast\(X0{dummy_task\.<locals>\.foo:\d+}\)"
@@ -148,7 +193,19 @@ class TestBroadcast:
                 r"Broadcast\(X0{dummy_task\.<locals>\.foo:\d+}, "
                 rf"\[{ax_str}\]\)"
             )
-        assert re.match(expected_re, str(constraint)) is not None
+        assert re.match(expected_re, str(constraint[0])) is not None
+
+    def test_create_many_from_variable(
+        self, variable_x: Variable, variable_y: Variable
+    ) -> None:
+        variables = (variable_x, variable_y, variable_x, variable_y)
+        constraint = lg.broadcast(*variables)
+        assert isinstance(constraint, list)
+        assert len(constraint) == len(variables)
+        for v, c in zip(variables, constraint, strict=True):
+            assert isinstance(c, Constraint)
+            expected_re = re.escape(f"Broadcast({v})")
+            assert re.match(expected_re, str(c)) is not None
 
     def test_create_bad(self, variable_x: Variable) -> None:
         with pytest.raises(

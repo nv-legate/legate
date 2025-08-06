@@ -41,7 +41,7 @@ cdef class PyTask:
         *,
         func: UserFunction,
         variants: Sequence[VariantCode],
-        constraints: Sequence[ConstraintProxy] | None = None,
+        constraints: Sequence[DeferredConstraint] | None = None,
         options: TaskConfig | VariantOptions | None = None,
         invoker: object = None,
         library: object = None,

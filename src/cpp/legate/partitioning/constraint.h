@@ -95,6 +95,38 @@ class LEGATE_EXPORT Constraint {
 [[nodiscard]] LEGATE_EXPORT Constraint align(Variable lhs, Variable rhs);
 
 /**
+ * @brief Create an alignment constraint among multiple variables.
+ *
+ * This function is a convenience when adding multiple alignment constraints.
+ *
+ * ```cpp
+ * auto cstr = align({v1, v2, ..., vn});
+ * ```
+ *
+ * Is functionally equivalent to:
+ *
+ * ```cpp
+ * auto c1 = align(v1, v2);
+ * auto c2 = align(v1, v3);  // equivalently, align(v2, v3)
+ * ...
+ * auto cn = align(v1, vn);
+ * ```
+ *
+ * See `align(Variable, Variable)` for further discussion on the semantics of alignment
+ * constraints.
+ *
+ * An alignment among zero or one variable is a no-op, so if `variables` contains one or zero
+ * elements, the returned vector is empty.
+ *
+ * @param variables The variables to align.
+ *
+ * @return The alignment constraints.
+ *
+ * @see align(Variable, Variable)
+ */
+[[nodiscard]] std::vector<Constraint> align(Span<const Variable> variables);
+
+/**
  * @brief Construct an alignment constraint descriptor from a pair of proxy objects.
  *
  * This routine may be used to describe an alignment constraint between prospective arguments
@@ -161,6 +193,34 @@ class LEGATE_EXPORT Constraint {
 [[nodiscard]] LEGATE_EXPORT Constraint broadcast(Variable variable);
 
 /**
+ * @brief Create a broadcast constraint among multiple variables.
+ *
+ * This function is a convenience when adding multiple broadcast constraints.
+ *
+ * ```cpp
+ * auto cstr = broadcast({v1, v2, ..., vn});
+ * ```
+ *
+ * Is functionally equivalent to:
+ *
+ * ```cpp
+ * auto c1 = broadcast(v1);
+ * auto c2 = broadcast(v2);
+ * ...
+ * auto cn = broadcast(vn);
+ * ```
+ *
+ * See `broadcast(Variable)` for further discussion on the semantics of broadcast constraints.
+ *
+ * @param variables The variables to broadcast.
+ *
+ * @return The broadcast constraints.
+ *
+ * @see broadcast(Variable)
+ */
+[[nodiscard]] std::vector<Constraint> broadcast(Span<const Variable> variables);
+
+/**
  * @brief Creates a broadcast constraint on a variable.
  *
  * A modified form of broadcast constraint which applies the broadcast to a subset of the axes of
@@ -174,6 +234,37 @@ class LEGATE_EXPORT Constraint {
  * @throw std::invalid_argument If the list of axes is empty
  */
 [[nodiscard]] LEGATE_EXPORT Constraint broadcast(Variable variable, Span<const std::uint32_t> axes);
+
+/**
+ * @brief Create a broadcast constraint whilst also specifying the axes among multiple
+ * variables.
+ *
+ * This function is a convenience when adding multiple broadcast constraints.
+ *
+ * ```cpp
+ * auto cstr = broadcast({{v1, {...}}, {v2, {...}}, ..., {vn, {...}}});
+ * ```
+ *
+ * Is functionally equivalent to:
+ *
+ * ```cpp
+ * auto c1 = broadcast(v1, {...});
+ * auto c2 = broadcast(v2, {...});
+ * ...
+ * auto cn = broadcast(vn, {...});
+ * ```
+ *
+ * See `broadcast(Variable, Span<const std::uint32_t>)` for further discussion on the semantics of
+ * broadcast constraints with axes.
+ *
+ * @param variables The pairs of variables and axes to broadcast.
+ *
+ * @return The broadcast constraints.
+ *
+ * @see broadcast(Variable, Span<const std::uint32_t>)
+ */
+[[nodiscard]] std::vector<Constraint> broadcast(
+  Span<const std::pair<Variable, Span<const std::uint32_t>>> variables);
 
 /**
  * @brief Construct a broadcast constraint descriptor.

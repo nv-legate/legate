@@ -93,7 +93,7 @@ cdef class AutoTask(Unconstructable):
         self, object array_or_store, int32_t redop, object partition = *
     )
     cpdef void add_scalar_arg(self, object value, object dtype = *)
-    cpdef void add_constraint(self, Constraint constraint)
+    cpdef void add_constraint(self, object constraint)
     cpdef Variable find_or_declare_partition(self, LogicalArray array)
     cpdef Variable declare_partition(self)
     cpdef str provenance(self)

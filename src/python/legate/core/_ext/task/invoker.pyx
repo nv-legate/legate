@@ -347,6 +347,8 @@ cdef class VariantInvoker:
         """
         if constraints is None:
             constraints = tuple()
+        else:
+            constraints = tuple(constraints)
 
         signature = VariantInvoker._get_signature(func)
 

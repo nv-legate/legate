@@ -94,9 +94,8 @@ ctypedef fused VariableOrStr:
     Variable
     str
 
-
-cpdef object align(VariableOrStr lhs, VariableOrStr rhs)
-cpdef object broadcast(VariableOrStr variable, axes: Iterable[int] =*)
+# def object align(object *variables)
+# def object broadcast(VariableOrStr variable, *rest)
 cpdef object image(
     VariableOrStr var_function,
     VariableOrStr var_range,

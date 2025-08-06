@@ -111,8 +111,11 @@ void test_alignment()
     auto part2 = task.add_output(store2);
     auto part3 = task.add_output(store3);
 
-    task.add_constraint(legate::align(part1, part2));
-    task.add_constraint(legate::align(part2, part3));
+    /// [adding-multiple-constraints]
+    const auto cstrnt = legate::align({part1, part2, part3});
+
+    task.add_constraints(cstrnt);
+    /// [adding-multiple-constraints]
 
     runtime->submit(std::move(task));
   };
@@ -139,8 +142,10 @@ void test_alignment_and_broadcast()
 
     task.add_scalar_arg(legate::Scalar(extents[0]));
 
-    task.add_constraint(legate::align(part1, part2));
-    task.add_constraint(legate::broadcast(part1, legate::tuple<std::uint32_t>{0}));
+    /// [adding-mixed-constraints]
+    task.add_constraints(
+      {legate::align(part1, part2), legate::broadcast(part1, legate::tuple<std::uint32_t>{0})});
+    /// [adding-mixed-constraints]
 
     runtime->submit(std::move(task));
   };

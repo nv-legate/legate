@@ -30,12 +30,25 @@ from .util import dynamic_docstring
 cdef tuple[VariantCode, ...] DEFAULT_VARIANT_LIST = (VariantCode.CPU,)
 
 
+cdef void flatten_constraints(
+    clist: Sequence[DeferredConstraint | Sequence[DeferredConstraint]],
+    ret: list[DeferredConstraint]
+):
+    for sub in clist:
+        if isinstance(sub, DeferredConstraint):
+            ret.append(sub)
+        else:
+            flatten_constraints(clist=sub, ret=ret)
+
+
 @dynamic_docstring(DEFAULT_VARIANT_LIST=DEFAULT_VARIANT_LIST)
 def task(
     func: object = None,
     *,
     variants: tuple[VariantCode, ...] = DEFAULT_VARIANT_LIST,
-    constraints: Sequence[DeferredConstraint] | None = None,
+    constraints: Sequence[
+        DeferredConstraint | Sequence[DeferredConstraint]
+    ] | None = None,
     options: TaskConfig | VariantOptions | None = None,
     register: bool = True,
 ) -> Callable[[UserFunction], PyTask] | PyTask:
@@ -59,7 +72,7 @@ def task(
     variants : tuple[VariantCode, ...], optional
         The list of variants for which ``func`` is applicable. Defaults
         to ``{DEFAULT_VARIANT_LIST}``.
-    constraints : Sequence[DeferredConstraint], optional
+    constraints : Sequence[DeferredConstraint | Sequence[DeferredConstraint]], optional
         The list of constraints which are to be applied to the arguments of
         ``func``, if any. Defaults to no constraints.
     options : TaskConfig | VariantOptions, optional
@@ -108,13 +121,24 @@ def task(
     See Also
     --------
     legate.core.task.task.PyTask.__init__
-    """
+    """  # noqa: E501
 
     def decorator(f: UserFunction) -> PyTask:
+        cdef list flat
+
+        if constraints is None:
+            # Preserve None-ness of the constraints. It means different things
+            # to say "This task has None as constraints" vs "This task has
+            # exactly zero constraints".
+            flat = None
+        else:
+            flat = []
+            flatten_constraints(clist=constraints, ret=flat)
+
         return PyTask(
             func=f,
             variants=variants,
-            constraints=constraints,
+            constraints=flat,
             options=options,
             register=register,
         )

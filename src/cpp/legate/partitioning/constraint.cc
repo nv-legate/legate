@@ -30,6 +30,25 @@ Constraint align(Variable lhs, Variable rhs)
   return Constraint{detail::align(lhs.impl(), rhs.impl())};
 }
 
+std::vector<Constraint> align(Span<const Variable> variables)
+{
+  std::vector<Constraint> ret;
+
+  if (variables.size() < 2) {
+    // No variables, or a variable aligned with itself is a no-op.
+    return ret;
+  }
+
+  auto&& first = variables.front();
+
+  ret.reserve(variables.size() - 1);
+  std::transform(std::next(variables.begin()),
+                 variables.end(),
+                 std::back_inserter(ret),
+                 [&](const Variable& var) { return align(first, var); });
+  return ret;
+}
+
 // ------------------------------------------------------------------------------------------
 
 ProxyConstraint align(
@@ -52,10 +71,37 @@ ProxyConstraint align(ProxyOutputArguments proxies) { return align(proxies[0], p
 
 Constraint broadcast(Variable variable) { return Constraint{detail::broadcast(variable.impl())}; }
 
+std::vector<Constraint> broadcast(Span<const Variable> variables)
+{
+  std::vector<Constraint> ret;
+
+  ret.reserve(variables.size());
+  std::transform(variables.begin(),
+                 variables.end(),
+                 std::back_inserter(ret),
+                 static_cast<Constraint (*)(Variable)>(broadcast));
+  return ret;
+}
+
 Constraint broadcast(Variable variable, Span<const std::uint32_t> axes)
 {
   return Constraint{
     detail::broadcast(variable.impl(), detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>{axes})};
+}
+
+std::vector<Constraint> broadcast(
+  Span<const std::pair<Variable, Span<const std::uint32_t>>> variables)
+{
+  std::vector<Constraint> ret;
+
+  ret.reserve(variables.size());
+  std::transform(variables.begin(),
+                 variables.end(),
+                 std::back_inserter(ret),
+                 [](const std::pair<Variable, Span<const std::uint32_t>>& pair) {
+                   return broadcast(pair.first, pair.second);
+                 });
+  return ret;
 }
 
 // ------------------------------------------------------------------------------------------

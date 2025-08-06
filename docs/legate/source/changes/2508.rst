@@ -66,7 +66,16 @@ C++
 
 .. rubric:: Partitioning
 
+- Add overload of ``legate::align()`` that takes a span of variables to align as a
+  convenience for aligning multiple task arguments.
+- Add overload of ``legate::broadcast()`` that takes a span of variables to broadcast as a
+  convenience for broadcasting multiple task arguments.
+- Add overload of ``legate::broadcast()`` that takes a span of pairs of variables and axes
+  to broadcast as a convenience for broadcasting multiple task arguments.
+
 .. rubric:: Tasks
+
+- Add ``legate::AutoTask::add_constraints()`` to add multiple constraints to a task.
 
 .. rubric:: Tuning
 
@@ -112,6 +121,11 @@ Python
 .. rubric:: Mapping
 
 .. rubric:: Partitioning
+
+- Change ``legate.core.align()`` to return an iterable of constraints instead of a single
+  value.
+- Change ``legate.core.broadcast()`` to return an iterable of constraints instead of a
+  single value.
 
 .. rubric:: Tasks
 

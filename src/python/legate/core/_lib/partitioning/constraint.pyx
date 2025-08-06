@@ -159,11 +159,48 @@ cdef _ProxyConstraint _handle_align(
     return _proxy_align(lhs_ret, rhs_ret)
 
 
-# Cython complains that the DeferredConstraint() path is unreachable if
-# VariableOrStr is Variable. That is... obviously the point, so we silence the
-# warning here.
-@cython.warn.unreachable(False)
-cpdef object align(VariableOrStr lhs, VariableOrStr rhs):
+cdef object iter_skip_first(tuple iterable):
+    it = iter(iterable)
+    next(it)
+    return it
+
+
+cdef list align_handle_variables(Variable first, tuple[Variable, ...] variables):
+    cdef list ret = []
+    cdef _Constraint handle
+
+    for var in iter_skip_first(variables):
+        if not isinstance(var, Variable):
+            m = (
+                "All variables for alignment must be variables, "
+                f"not strings, have {variables}"
+            )
+            raise TypeError(m)
+
+        with nogil:
+            handle = _align(first._handle, (<Variable> var)._handle)
+
+        ret.append(Constraint.from_handle(std_move(handle)))
+
+    return ret
+
+cdef list align_handle_strings(str first, tuple[Variable, ...] variables):
+    cdef list ret = []
+
+    for var in iter_skip_first(variables):
+        if not isinstance(var, str):
+            m = (
+                "All variables for alignment must be strings, "
+                f"not variables, have {variables}"
+            )
+            raise TypeError(m)
+
+        ret.append(DeferredConstraint.construct(_handle_align, (first, var)))
+
+    return ret
+
+
+def align(*variables: Variable | str) -> list[Constraint | DeferredConstraint]:
     r"""
     Create an alignment constraint between two variables.
 
@@ -182,24 +219,27 @@ cpdef object align(VariableOrStr lhs, VariableOrStr rhs):
 
     Parameters
     ----------
-    lhs : Variable
-        The first variable to align.
-    rhs : Variable
-        The other variable to align.
+    *variables: Variable
+        The set of variables to align.
 
     Returns
     -------
-    Constraint
-        The alignment constraint.
+    list[Constraint]
+        The alignment constraint(s).
     """
-    cdef _Constraint handle
+    if len(variables) < 2:
+        return []
 
-    if VariableOrStr is Variable:
-        with nogil:
-            handle = _align(lhs._handle, rhs._handle)
-        return Constraint.from_handle(std_move(handle))
+    first = variables[0]
 
-    return DeferredConstraint.construct(_handle_align, (lhs, rhs))
+    if isinstance(first, str):
+        return align_handle_strings(first, variables)
+
+    if isinstance(first, Variable):
+        return align_handle_variables(first, variables)
+
+    raise TypeError(type(first))
+
 
 cdef _ProxyConstraint _handle_bcast(
     tuple[str, tuple[int, ...]] args,
@@ -223,37 +263,9 @@ cdef _ProxyConstraint _handle_bcast(
 # VariableOrStr is Variable. That is... obviously the point, so we silence the
 # warning here.
 @cython.warn.unreachable(False)
-cpdef object broadcast(
+def _broadcast_impl(
     VariableOrStr variable, axes: Collection[int] = tuple()
-):
-    r"""
-    Create a broadcast constraint on a variable.
-
-    A broadcast constraint informs the runtime that the variable should not be
-    split among the leaf tasks, instead, each leaf task should get a full copy
-    of the underlying store. In other words, the store should be "broadcast"
-    in its entirety to all leaf tasks in a task launch.
-
-    In effect, this constraint prevents all dimensions of the store from being
-    partitioned.
-
-    Parameters
-    ----------
-    variable : Variable
-        The variable to broadcast.
-    axes : Collection[int] (optional)
-        An optional set of axes which denotes a subset of the axes of
-        `variable` which to broadcast. If given, only the specified axes of
-        variable will be broadcast, all other axes will be partitioned
-        (subject to any other constraints). If not given (or if empty), all
-        axes will be broadcast.
-
-    Returns
-    -------
-    Constraint
-        The broadcast constraint.
-
-    """
+) -> Constraint | DeferredConstraint:
     if not is_iterable(axes):
         raise ValueError("axes must be iterable")
 
@@ -278,6 +290,80 @@ cpdef object broadcast(
     with nogil:
         handle = _broadcast(variable._handle, std_move(cpp_axes))
     return Constraint.from_handle(std_move(handle))
+
+
+def broadcast(
+    VariableOrStr variable,
+    *rest: Variable | str | Collection[int] |
+    tuple[Variable | str, Collection[int]]
+) -> list[Constraint | DeferredConstraint]:
+    r"""
+    Create a broadcast constraint on a variable.
+
+    A broadcast constraint informs the runtime that the variable should not be
+    split among the leaf tasks, instead, each leaf task should get a full copy
+    of the underlying store. In other words, the store should be "broadcast"
+    in its entirety to all leaf tasks in a task launch.
+
+    In effect, this constraint prevents all dimensions of the store from being
+    partitioned.
+
+    Parameters
+    ----------
+    variable : Variable
+        The variable to broadcast.
+    *rest : Variable | Collection[int] | tuple[Variable | Collection[int]]
+            (optional)
+        Either an axes (denoted by a single collection of integer values), or
+        additional variable/axes pairs to broadcast.
+
+        If an axes, this denotes a subset of the axes of `variable` which to
+        broadcast. If given, only the specified axes of variable will be
+        broadcast, all other axes will be partitioned (subject to any other
+        constraints). If not given (or if empty), all axes will be broadcast.
+
+    Returns
+    -------
+    list[Constraint]
+        The broadcast constraint(s).
+
+
+    Notes
+    -----
+    This routine may be used to generate multiple broadcast constraints in a
+    single call, depending on the calling signature. For example:
+
+    >>> broadcast(x, y, z)
+    [Broadcast(x), Broadcast(y), Broadcast(z)]
+    >>> broadcast(x, (1, 2, 3))
+    [Broadcast(x, (1, 2, 3))]
+    >>> broadcast(x, y, (z, (1, 2, 3)), (w, (4, 5, 6)))
+    [Broadcast(x), Broadcast(y), Broadcast(z, (1, 2, 3)), Broadcast(w, (4, 5, 6))]
+    """
+    cdef int num_rest = len(rest)
+
+    # Handle the original signature, broadcast(var, [optional axes])
+    if num_rest == 0:
+        return [_broadcast_impl(variable)]
+
+    # Need to check that rest[0] isn't a variable or str, because user might be
+    # doing broadcast(var_x, var_y), which would fall under the new variadic
+    # signature.
+    if num_rest == 1 and not isinstance(rest[0], (Variable, str)):
+        return [_broadcast_impl(variable, rest[0])]
+
+    # If we are here, then we have a case of the new variadic signature.
+    cdef list ret = [_broadcast_impl(variable)]
+
+    for obj in rest:
+        if isinstance(obj, (Variable, str)):
+            ret.append(_broadcast_impl(obj))
+        elif isinstance(obj, (tuple, list)):
+            ret.append(_broadcast_impl(*obj))
+        else:
+            raise TypeError(type(obj))
+
+    return ret
 
 
 cdef _ProxyConstraint _handle_image(

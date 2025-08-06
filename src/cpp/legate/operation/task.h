@@ -168,6 +168,36 @@ class LEGATE_EXPORT AutoTask {
   void add_constraint(const Constraint& constraint);
 
   /**
+   * @brief Adds multiple partitioning constraints to the task.
+   *
+   * This function is a convenience when adding multiple constraints simultaneously.
+   *
+   * ```cpp
+   * task.add_constraints({c1, c2, c3});
+   * ```
+   *
+   * Is functionally equivalent to:
+   *
+   * ```cpp
+   * task.add_constraint(c1);
+   * task.add_constraint(c2);
+   * task.add_constraint(c3);
+   * ```
+   *
+   * This routine is most commonly used with the overloads of partitioning routines that return
+   * multiple constraints:
+   *
+   * @snippet{trimleft} integration/alignment_constraints.cc adding-multiple-constraints
+   *
+   * @snippet{trimleft} integration/alignment_constraints.cc adding-mixed-constraints
+   *
+   * @param constraints The constraints to add.
+   *
+   * @see add_constraint(const Constraint&)
+   */
+  void add_constraints(Span<const Constraint> constraints);
+
+  /**
    * @brief Finds or creates a partition symbol for the given array
    *
    * @param array Array for which the partition symbol is queried

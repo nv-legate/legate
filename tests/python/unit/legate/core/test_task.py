@@ -68,6 +68,13 @@ if TYPE_CHECKING:
 _P = ParamSpec("_P")
 
 
+def repr_type_without_class(obj: type) -> str:
+    # repr(SomeType) -> "<class 'legate.asdasd.SomeType'>"
+    #
+    # We just want "legate.asdasd.SomeType"
+    return repr(obj).removeprefix("<class '").removesuffix("'>")
+
+
 @pytest.fixture
 def fake_auto_task() -> FakeAutoTask:
     return FakeAutoTask()
@@ -140,7 +147,7 @@ class TestTask(BaseTest):
         task = PyTask(
             func=foo,
             variants=variants,
-            constraints=(lg.broadcast("x"),),
+            constraints=lg.broadcast("x"),
             options=VariantOptions(
                 may_throw_exception=True, has_side_effect=True
             ),
@@ -485,9 +492,8 @@ class TestTask(BaseTest):
         x = 1
         with pytest.raises(
             TypeError,
-            match=(
-                "Constraint #1 of unexpected type. Found "
-                f"{type(x)}, expected.*"
+            match=re.escape(
+                f"'{repr_type_without_class(type(x))}' object is not iterable"
             ),
         ):
             lct.task(constraints=(x,))(foo)  # type: ignore[arg-type]
@@ -988,7 +994,7 @@ class TestVariantInvoker(BaseTest):
         variable = auto_task.declare_partition()
         constraints = lg.broadcast(variable)
         invoker.prepare_call(
-            auto_task, (arg,), kwargs={}, constraints=(constraints,)
+            auto_task, (arg,), kwargs={}, constraints=tuple(constraints)
         )
 
     def test_prepare_call_bad(self, fake_auto_task: FakeAutoTask) -> None:

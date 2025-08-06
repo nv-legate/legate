@@ -18,7 +18,8 @@ def task(func: UserFunction) -> PyTask: ...
 def task(
     *,
     variants: tuple[VariantCode, ...] = ...,
-    constraints: Sequence[DeferredConstraint] | None = None,
+    constraints: Sequence[DeferredConstraint | Sequence[DeferredConstraint]]
+    | None = None,
     options: TaskConfig | VariantOptions | None = None,
     register: bool = True,
 ) -> Callable[[UserFunction], PyTask]: ...

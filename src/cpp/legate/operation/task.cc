@@ -124,6 +124,13 @@ void AutoTask::add_constraint(  // NOLINT(readability-make-member-function-const
   impl_()->add_constraint(constraint.impl());
 }
 
+void AutoTask::add_constraints(Span<const Constraint> constraints)
+{
+  for (auto&& c : constraints) {
+    add_constraint(c);
+  }
+}
+
 Variable AutoTask::find_or_declare_partition(  // NOLINT(readability-make-member-function-const)
   const LogicalArray& array)
 {
