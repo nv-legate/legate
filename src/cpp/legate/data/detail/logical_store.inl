@@ -170,9 +170,10 @@ inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<Logic
 
 inline InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
   const InternalSharedPtr<LogicalStore>& self,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape)
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape)
 {
-  return self->partition_by_tiling_(self, std::move(tile_shape));
+  return self->partition_by_tiling_(self, std::move(tile_shape), std::move(color_shape));
 }
 
 inline InternalSharedPtr<LogicalStorePartition> create_store_partition(

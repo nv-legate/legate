@@ -31,11 +31,23 @@ class NegativePartitionVolumeTest : public NegativePartitionTest {};
 
 class UnboundStorePartitionTest : public NegativePartitionTest {};
 
+class ColorShapeDimensionSizeTest
+  : public LogicalStorePartitionUnit,
+    public ::testing::WithParamInterface<std::vector<std::uint64_t>> {};
+
 class ChildStoreTest : public LogicalStorePartitionUnit,
                        public ::testing::WithParamInterface<
                          std::tuple<legate::Shape,
                                     std::vector<std::uint64_t>,
                                     std::tuple<legate::tuple<std::uint64_t>, legate::Shape>>> {};
+
+class ForcedColorChildStoreTest
+  : public LogicalStorePartitionUnit,
+    public ::testing::WithParamInterface<
+      std::tuple<legate::Shape,
+                 std::vector<std::uint64_t>,
+                 std::vector<std::uint64_t>,
+                 std::tuple<legate::tuple<std::uint64_t>, legate::Shape>>> {};
 
 class NegativeColorTest
   : public LogicalStorePartitionUnit,
@@ -73,6 +85,11 @@ INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                          ::testing::Values(std::vector<std::uint64_t>({}),
                                            std::vector<std::uint64_t>({0})));
 
+INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
+                         ColorShapeDimensionSizeTest,
+                         ::testing::Values(std::vector<std::uint64_t>({}),
+                                           std::vector<std::uint64_t>({1, 2, 3})));
+
 INSTANTIATE_TEST_SUITE_P(
   LogicalStorePartitionUnit,
   ChildStoreTest,
@@ -82,6 +99,18 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>({0, 0}), legate::Shape{2, 4}),
                       std::make_tuple(legate::tuple<std::uint64_t>({2, 1}), legate::Shape{2, 4}),
                       std::make_tuple(legate::tuple<std::uint64_t>({4, 1}), legate::Shape{1, 4}))));
+
+INSTANTIATE_TEST_SUITE_P(
+  LogicalStorePartitionUnit,
+  ForcedColorChildStoreTest,
+  ::testing::Combine(
+    ::testing::Values(legate::Shape{6, 9}),
+    ::testing::Values(std::vector<std::uint64_t>({2, 4})),
+    ::testing::Values(std::vector<std::uint64_t>({2, 5})),
+    ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>({0, 0}), legate::Shape{2, 4}),
+                      std::make_tuple(legate::tuple<std::uint64_t>({1, 2}), legate::Shape{2, 1}),
+                      std::make_tuple(legate::tuple<std::uint64_t>({0, 4}), legate::Shape{2, 0}),
+                      std::make_tuple(legate::tuple<std::uint64_t>({1, 3}), legate::Shape{2, 0}))));
 
 INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                          NegativeColorTest,
@@ -101,6 +130,17 @@ TEST_P(PartitionTest, BoundStore)
   auto runtime                         = legate::Runtime::get_runtime();
   auto store                           = runtime->create_store(shape, legate::int64());
   auto partition                       = store.partition_by_tiling(tile_shape);
+
+  ASSERT_EQ(partition.color_shape().data(), color_shape);
+}
+
+TEST_P(PartitionTest, ForcedColor)
+{
+  const auto [shape, params]           = GetParam();
+  const auto [tile_shape, color_shape] = params;
+  auto runtime                         = legate::Runtime::get_runtime();
+  auto store                           = runtime->create_store(shape, legate::int64());
+  auto partition                       = store.partition_by_tiling(tile_shape, color_shape);
 
   ASSERT_EQ(partition.color_shape().data(), color_shape);
 }
@@ -133,6 +173,19 @@ TEST_P(NegativePartitionVolumeTest, BoundStore)
   ASSERT_THROW(static_cast<void>(store.partition_by_tiling(GetParam())), std::invalid_argument);
 }
 
+TEST_P(ColorShapeDimensionSizeTest, BoundStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{4, 4}, legate::int64());
+  std::vector<std::uint64_t> tile_shape{2, 2};
+  const auto& color_shape = GetParam();
+
+  // shape size mismatch
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(tile_shape, color_shape)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Incompatible color shape: expected a 2-tuple, got a")));
+}
+
 TEST_P(NegativePartitionSizeTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -151,6 +204,19 @@ TEST_P(NegativePartitionVolumeTest, ScalarStore)
   ASSERT_THROW(static_cast<void>(store.partition_by_tiling(GetParam())), std::invalid_argument);
 }
 
+TEST_P(ColorShapeDimensionSizeTest, ScalarStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
+  std::vector<std::uint64_t> tile_shape{1};
+  const auto& color_shape = GetParam();
+
+  // shape size mismatch
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(tile_shape, color_shape)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Incompatible color shape: expected a 1-tuple, got a")));
+}
+
 TEST_P(UnboundStorePartitionTest, Basic)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -167,6 +233,19 @@ TEST_P(ChildStoreTest, Basic)
   auto store                             = runtime->create_store(shape, legate::int64());
   auto partition                         = store.partition_by_tiling(tile_shape);
 
+  ASSERT_EQ(partition.store().shape(), store.shape());
+  ASSERT_EQ(partition.get_child_store(color).shape(), color_shape);
+}
+
+TEST_P(ForcedColorChildStoreTest, Basic)
+{
+  const auto [shape, tile_shape, forced_color, params] = GetParam();
+  const auto [color, color_shape]                      = params;
+  auto runtime                                         = legate::Runtime::get_runtime();
+  auto store     = runtime->create_store(shape, legate::int64());
+  auto partition = store.partition_by_tiling(tile_shape, forced_color);
+
+  ASSERT_EQ(partition.color_shape().data(), forced_color);
   ASSERT_EQ(partition.store().shape(), store.shape());
   ASSERT_EQ(partition.get_child_store(color).shape(), color_shape);
 }

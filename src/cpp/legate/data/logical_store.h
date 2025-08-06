@@ -392,12 +392,61 @@ class LEGATE_EXPORT LogicalStore {
    *
    * The call can block if the store is unbound
    *
+   * The function returns a partition created by tiling with a given tile shape. As a default
+   * with no color shape being provided, the partition will be created by splitting the store
+   * dimensions by the tile shape:
+   *
+   * For example, a 2D store `A` of shape `(3, 4)` partitioned with a tile shape of `(2, 2)`
+   * would be partitioned in 4 chunks with corresponding to the color shape of `(2, 2)`.
+   *
+   * Overriding a color shape will allow for either truncating or extending the partition in
+   * each dimension, independent of the actual extents of the store shape.
+   * This behavior can be desired for aligning partitions for stores with different shapes.
+   *
+   * For example, a task working on a 2D store `A` of shape `(4, 2)` with a tile shape of `(2, 2)`
+   * has a native coloring of `(2, 1)`. If the task also requires access to a 2D store `B` of
+   * shape `(2, 2)` with the same tile shape, that store would have a native coloring of `(1, 1)`.
+   * Forcing the desired color shape of `(2, 1)` to `B` during tiling creates a partition
+   * containing the same amount of tiles as the partition for `A` allowing for alignment.
+   *
+   * Running the task with `A`:
+   * @code{.unparsed}
+   * [[a, b],
+   *  [c, d],
+   *  [e, f],
+   *  [g, g]]
+   * @endcode*
+   *
+   * and `B`:
+   * @code{.unparsed}
+   * [[x, y],
+   *  [z, w]]
+   * @endcode
+   *
+   * and a tilesize of `(2, 2)` would then allow for a shared coloring of `(2, 1)`, with
+   * one point task running on
+   * @code{.unparsed}
+   * [[a, b],  [[x, y],
+   *  [c, d]]   [z, w]]
+   * @endcode
+   *
+   * and the other on
+   * @code{.unparsed}
+   * [[a, b],  [[],
+   *  [c, d]]   []]
+   * @endcode
+   *
    * @param tile_shape Shape of tiles
+   * @param color_shape (optional) color shape to satisfy during partition creation.
    *
    * @return A store partition
+   *
+   * @throw std::invalid_argument If dimension of input shapes don't match the store dimension or
+   * the volume defined by any of the input shapes is 0.
    */
   [[nodiscard]] LogicalStorePartition partition_by_tiling(
-    Span<const std::uint64_t> tile_shape) const;
+    Span<const std::uint64_t> tile_shape,
+    std::optional<Span<const std::uint64_t>> color_shape = std::nullopt) const;
 
   /**
    * @brief Creates a `PhysicalStore` for this `LogicalStore`

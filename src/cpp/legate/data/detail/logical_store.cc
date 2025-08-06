@@ -785,7 +785,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
 
 InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   const InternalSharedPtr<LogicalStore>& self,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape)
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape)
 {
   LEGATE_ASSERT(self.get() == this);
   if (tile_shape.size() != dim()) {
@@ -797,18 +798,34 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   if (array_volume(tile_shape) == 0) {
     throw TracedException<std::invalid_argument>{"Tile shape must have a volume greater than 0"};
   }
+  if (color_shape.has_value()) {
+    if (color_shape->size() != dim()) {
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Incompatible color shape: expected a {}-tuple, got a {}-tuple",
+                    extents().size(),
+                    (*color_shape).size())};
+    }
+    if (array_volume(*color_shape) == 0) {
+      throw TracedException<std::invalid_argument>{"Color shape must have a volume greater than 0"};
+    }
+  }
 
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape;
+  auto partition = [&] {
+    if (color_shape.has_value()) {
+      return create_tiling(std::move(tile_shape), std::move(*color_shape));
+    }
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tmp_color_shape;
 
-  color_shape.reserve(extents().size());
-  std::transform(extents().begin(),
-                 extents().end(),
-                 tile_shape.begin(),
-                 std::back_inserter(color_shape),
-                 [](std::uint64_t c, std::uint64_t t) { return (c + t - 1) / t; });
+    tmp_color_shape.reserve(extents().size());
+    std::transform(extents().begin(),
+                   extents().end(),
+                   tile_shape.begin(),
+                   std::back_inserter(tmp_color_shape),
+                   [](std::uint64_t c, std::uint64_t t) { return (c + t - 1) / t; });
+    return create_tiling(std::move(tile_shape), std::move(tmp_color_shape));
+  }();
 
-  auto partition = create_tiling(std::move(tile_shape), std::move(color_shape));
-  return create_partition_(self, std::move(partition), true);
+  return create_partition_(self, std::move(partition), /* complete */ true);
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(

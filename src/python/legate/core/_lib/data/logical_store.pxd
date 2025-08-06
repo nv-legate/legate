@@ -37,7 +37,8 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore transpose(std_vector[int32_t]) except+
         _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
         _LogicalStorePartition partition_by_tiling(
-            std_vector[uint64_t] tile_shape
+            std_vector[uint64_t] tile_shape,
+            std_optional[std_vector[uint64_t]] color_shape
         ) except+
         _PhysicalStore get_physical_store(std_optional[StoreTarget]) except+
         void detach() except+
@@ -68,7 +69,11 @@ cdef class LogicalStore(Unconstructable):
     cpdef LogicalStore transpose(self, object axes)
     cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)
     cpdef void fill(self, object value)
-    cpdef LogicalStorePartition partition_by_tiling(self, object shape)
+    cpdef LogicalStorePartition partition_by_tiling(
+        self,
+        object tile_shape,
+        object color_shape = *
+    )
     cpdef PhysicalStore get_physical_store(self, target: object=*)
     cpdef void detach(self)
     cpdef void offload_to(self, StoreTarget target_mem)

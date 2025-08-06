@@ -284,6 +284,38 @@ class TestManualTask:
             out_arr[:2, :2, :2, :2], arr[:2, :2, :2, :2]
         )
 
+    @pytest.mark.parametrize("shape", [(3, 7), (13, 4)], ids=str)
+    def test_copy_store_empty_partition(self, shape: tuple[int, ...]) -> None:
+        tile = (2, 2)
+        color = tuple(
+            (lh + rh - 1) // rh for (lh, rh) in zip(shape, tile, strict=False)
+        )
+        runtime = get_legate_runtime()
+        manual_task = runtime.create_manual_task(
+            tasks.copy_store_with_empty_task.library,
+            tasks.copy_store_with_empty_task.task_id,
+            color,
+        )
+        arr = np.random.random(shape)
+        in_store = runtime.create_store_from_buffer(
+            ty.float64, arr.shape, arr, False
+        )
+        shape_reduced = (min(shape), min(shape))
+
+        out_arr = np.zeros(shape_reduced, dtype=np.float64)
+        out_store = runtime.create_store_from_buffer(
+            ty.float64, out_arr.shape, out_arr, False
+        )
+        in_partition = in_store.partition_by_tiling(tile)
+        out_partition = out_store.partition_by_tiling(tile, color)
+        manual_task.add_input(in_partition)
+        manual_task.add_output(out_partition)
+        manual_task.execute()
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(
+            out_arr[:, :], arr[: shape_reduced[0], : shape_reduced[1]]
+        )
+
     def test_add_reduction(self) -> None:
         runtime = get_legate_runtime()
         in_arr = np.arange(10, dtype=np.float64)

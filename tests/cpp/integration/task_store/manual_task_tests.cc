@@ -13,7 +13,7 @@ namespace {
 [[nodiscard]] const std::map<TaskDataMode, std::int32_t>& manual_task_method_count()
 {
   static const std::map<TaskDataMode, std::int32_t> map = {
-    {TaskDataMode::INPUT, 2}, {TaskDataMode::OUTPUT, 2}, {TaskDataMode::REDUCTION, 4}};
+    {TaskDataMode::INPUT, 3}, {TaskDataMode::OUTPUT, 3}, {TaskDataMode::REDUCTION, 5}};
   return map;
 }
 
@@ -79,6 +79,14 @@ void manual_task_normal_input(const legate::LogicalStore& store,
   switch (index) {
     case 0: task.add_input(store); break;
     case 1: {
+      if (launch_shape.size() == tile_shape.size()) {
+        auto part = store.partition_by_tiling(tile_shape, launch_shape);
+        task.add_input(part);
+        break;
+      }
+    }
+      [[fallthrough]];
+    case 2: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_input(part);
     } break;
@@ -108,6 +116,14 @@ void manual_task_normal_output(const legate::LogicalStore& store,
   switch (index) {
     case 0: task.add_output(store); break;
     case 1: {
+      if (launch_shape.size() == tile_shape.size()) {
+        auto part = store.partition_by_tiling(tile_shape, launch_shape);
+        task.add_output(part);
+        break;
+      }
+    }
+      [[fallthrough]];
+    case 2: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_output(part);
     } break;
@@ -146,11 +162,20 @@ void manual_task_normal_reduction(const legate::LogicalStore& store,
     case 0: task.add_reduction(store, red_op); break;
     case 1: task.add_reduction(store, static_cast<std::int32_t>(red_op)); break;
     case 2: {
+      if (launch_shape.size() == tile_shape.size()) {
+        auto part = store.partition_by_tiling(tile_shape);
+        task.add_reduction(part, red_op);
+        red_part_flag = true;
+        break;
+      }
+    }
+      [[fallthrough]];
+    case 3: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_reduction(part, red_op);
       red_part_flag = true;
     } break;
-    case 3: {
+    case 4: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_reduction(part, static_cast<std::int32_t>(red_op));
       red_part_flag = true;
@@ -253,6 +278,14 @@ void manual_task_scalar_input(const legate::LogicalStore& store,
   switch (index) {
     case 0: task.add_input(store); break;
     case 1: {
+      if (launch_shape.size() == tile_shape.size()) {
+        auto part = store.partition_by_tiling(tile_shape, launch_shape);
+        task.add_input(part);
+        break;
+      }
+    }
+      [[fallthrough]];
+    case 2: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_input(part);
     } break;
@@ -282,6 +315,14 @@ void manual_task_scalar_output(const legate::LogicalStore& store,
   switch (index) {
     case 0: task.add_output(store); break;
     case 1: {
+      if (launch_shape.size() == tile_shape.size()) {
+        auto part = store.partition_by_tiling(tile_shape, launch_shape);
+        task.add_output(part);
+        break;
+      }
+    }
+      [[fallthrough]];
+    case 2: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_output(part);
     } break;
@@ -318,10 +359,18 @@ void manual_task_scalar_reduction(const legate::LogicalStore& store,
     case 0: task.add_reduction(store, red_op); break;
     case 1: task.add_reduction(store, static_cast<std::int32_t>(red_op)); break;
     case 2: {
+      if (launch_shape.size() == tile_shape.size()) {
+        auto part = store.partition_by_tiling(tile_shape, launch_shape);
+        task.add_reduction(part, red_op);
+        break;
+      }
+    }
+      [[fallthrough]];
+    case 3: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_reduction(part, red_op);
     } break;
-    case 3: {
+    case 4: {
       auto part = store.partition_by_tiling(tile_shape);
       task.add_reduction(part, static_cast<std::int32_t>(red_op));
     } break;

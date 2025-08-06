@@ -73,10 +73,17 @@ LogicalStore LogicalStore::project(std::int32_t dim, std::int64_t index) const
   return LogicalStore{impl()->project(dim, index)};
 }
 
-LogicalStorePartition LogicalStore::partition_by_tiling(Span<const std::uint64_t> tile_shape) const
+LogicalStorePartition LogicalStore::partition_by_tiling(
+  Span<const std::uint64_t> tile_shape, std::optional<Span<const std::uint64_t>> color_shape) const
 {
+  std::optional<detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape_opt =
+    color_shape.has_value()
+      ? std::make_optional<detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>>(*color_shape)
+      : std::nullopt;
   return LogicalStorePartition{detail::partition_store_by_tiling(
-    impl(), {detail::tags::iterator_tag, tile_shape.begin(), tile_shape.end()})};
+    impl(),
+    {detail::tags::iterator_tag, tile_shape.begin(), tile_shape.end()},
+    std::move(color_shape_opt))};
 }
 
 LogicalStore LogicalStore::slice(std::int32_t dim, Slice sl) const

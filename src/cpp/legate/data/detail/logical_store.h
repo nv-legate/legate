@@ -243,10 +243,12 @@ class LogicalStore {
  private:
   friend InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
     const InternalSharedPtr<LogicalStore>& self,
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape);
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+    std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape);
   [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_by_tiling_(
     const InternalSharedPtr<LogicalStore>& self,
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape);
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+    std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape);
 
  public:
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
@@ -397,7 +399,8 @@ class LogicalStorePartition {
 
 [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
   const InternalSharedPtr<LogicalStore>& self,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape);
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape = std::nullopt);
 
 [[nodiscard]] InternalSharedPtr<LogicalStorePartition> create_store_partition(
   const InternalSharedPtr<LogicalStore>& self,

@@ -118,6 +118,25 @@ def partition_to_store_task(partition: InputStore, out: OutputStore) -> None:
     out_arr[:] = out_arr + arr
 
 
+@task(variants=tuple(VariantCode))
+def copy_store_with_empty_task(
+    partition: InputStore, out: OutputStore
+) -> None:
+    arr = asarray(partition.get_inline_allocation())
+    out_empty = (
+        out.domain.hi[0] < out.domain.lo[0]
+        or out.domain.hi[1] < out.domain.lo[1]
+    )
+    if out_empty:
+        return
+
+    out_arr = asarray(out.get_inline_allocation())
+    if arr.shape != out_arr.shape:
+        out_arr[:] = out_arr[:] + arr[: out_arr.shape[0], : out_arr.shape[1]]
+    else:
+        out_arr[:] = out_arr[:] + arr[:]
+
+
 @task(
     variants=tuple(VariantCode),
     constraints=(broadcast("arg1"), broadcast("arg2"), broadcast("out")),

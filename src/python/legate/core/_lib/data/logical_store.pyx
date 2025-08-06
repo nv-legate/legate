@@ -6,6 +6,10 @@ from libc.stdint cimport int32_t, int64_t, uint64_t, uintptr_t
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
+from libcpp.optional cimport (
+    make_optional as std_make_optional,
+    optional as std_optional,
+)
 
 from ...data_interface import Field, LegateDataInterfaceItem
 
@@ -20,6 +24,22 @@ from .shape cimport Shape
 from .slice cimport from_python_slice
 
 from operator import index as operator_index
+
+
+cdef std_optional[std_vector[uint64_t]] to_cpp_color_shape(object color_shape):
+    if color_shape is None:
+        return std_optional[std_vector[uint64_t]]()
+    if not is_iterable(color_shape):
+        raise ValueError(f"Expected an iterable but got {type(color_shape)}")
+
+    cdef std_vector[uint64_t] result
+
+    result.reserve(len(color_shape))
+    for value in color_shape:
+        result.push_back(value)
+
+    return std_make_optional[std_vector[uint64_t]](std_move(result))
+
 
 cdef class LogicalStore(Unconstructable):
     @staticmethod
@@ -561,32 +581,43 @@ cdef class LogicalStore(Unconstructable):
     cpdef void fill(self, object value):
         get_legate_runtime().issue_fill(self, value)
 
-    cpdef LogicalStorePartition partition_by_tiling(self, object shape):
+    cpdef LogicalStorePartition partition_by_tiling(
+        self, object tile_shape, object color_shape = None
+    ):
         r"""
         Creates a tiled partition of the store
 
         Parameters
         ----------
-        tile_shape : tuple[int]
+        tile_shape : Sequence[int]
             Shape of tiles
+        color_shape : Sequence[int] | None
+            The color shape to force the tiling into.
 
         Returns
         -------
         LogicalStorePartition
             A ``LogicalStorePartition`` object
         """
-        if not is_iterable(shape):
-            raise ValueError(f"Expected an iterable but got {type(shape)}")
-        cdef std_vector[uint64_t] tile_shape = std_vector[uint64_t]()
+        if not is_iterable(tile_shape):
+            raise ValueError(f"Expected an iterable but got {type(tile_shape)}")
 
-        tile_shape.reserve(len(shape))
-        for value in shape:
-            tile_shape.push_back(value)
+        cdef std_vector[uint64_t] tile_shape_c
+
+        tile_shape_c.reserve(len(tile_shape))
+        for value in tile_shape:
+            tile_shape_c.push_back(value)
+
+        cdef std_optional[std_vector[uint64_t]] color_shape_c
+
+        color_shape_c = to_cpp_color_shape(color_shape)
 
         cdef _LogicalStorePartition handle
 
         with nogil:
-            handle = self._handle.partition_by_tiling(tile_shape)
+            handle = self._handle.partition_by_tiling(
+                tile_shape_c, color_shape_c
+            )
 
         return LogicalStorePartition.from_handle(std_move(handle))
 
