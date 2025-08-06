@@ -84,6 +84,7 @@ function preamble()
     configure_args+=(--with-cuda=0)
   fi
 
+  # shellcheck disable=SC2154
   configure_args+=(--build-type="${LEGATE_BUILD_MODE}")
 
 # shellcheck disable=SC2154

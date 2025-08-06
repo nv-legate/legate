@@ -4,22 +4,7 @@
 ---
 {% set name = "legate" %}
 
-{% set default_env_var = '' %}
-{% set legate_version = '' %}
-{% if LEGATE_GIT_DESCRIBE_TAG is defined %}
-    {% if 'dev' in environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var) %}
-        {% set legate_version = (environ.get('LEGATE_GIT_DESCRIBE_TAG') ~ environ.get('LEGATE_GIT_DESCRIBE_NUMBER', default_env_var)).lstrip('v') %}
-    {% else %}
-        {% set legate_version = environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var).lstrip('v') %}
-    {% endif %}
-{% else %}
-    {% set legate_version = '25.09.00' %}
-{% endif %}
-
-{% set major_version = (legate_version|string).split(".")[0] %}
-{% set minor_version = (legate_version|string).split(".")[1] %}
-{% set patch_version = (legate_version|string).split(".")[2] %}
-
+{% set legate_version = environ.get('LEGATE_VERSION') %}
 {% set git_describe_hash = environ.get('GIT_DESCRIBE_HASH', '0') %}
 
 package:

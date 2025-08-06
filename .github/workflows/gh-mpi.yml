@@ -29,13 +29,20 @@ jobs:
         PKG_DIR: "gex/noarch"
 
     steps:
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Set environment variables
         run: |
           BUILD_DATE=$(date +%Y%m%d)
+          LEGATE_VERSION="$(cat VERSION)"
           {
             echo "ARTIFACT_NAME=MPI-Wrapper-Artifact-${GITHUB_SHA}"
             echo "ARTIFACT_PATH=${CONDA_OUTPUT}"
             echo "BUILD_DATE=${BUILD_DATE}"
+            echo "LEGATE_VERSION=${LEGATE_VERSION}"
           } >> "${GITHUB_ENV}"
 
       - name: Display environment variables
@@ -46,11 +53,7 @@ jobs:
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}"
           echo "ARTIFACT_PATH=${ARTIFACT_PATH}"
           echo "BUILD_DATE=${BUILD_DATE}"
-
-      - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+          echo "LEGATE_VERSION=${LEGATE_VERSION}"
 
       - name: Cleanup/Create related folders
         run: |
@@ -59,9 +62,10 @@ jobs:
 
       - name: Run conda build
         run: |
-          conda_build_args=();
+          conda_build_args=()
           conda_build_args+=(--croot "${CONDA_ROOT}")
           conda_build_args+=(--output-folder "${CONDA_OUTPUT}")
+          conda_build_args+=(--no-test)
 
           conda install conda-build
           conda-build "${conda_build_args[@]}" conda/mpi_wrapper

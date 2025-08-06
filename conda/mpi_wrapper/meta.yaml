@@ -3,13 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
 {% set name = "legate-mpi-wrapper" %}
-{% set major_version = (version|string).split(".")[0] %}
-{% set minor_version = (version|string).split(".")[1] %}
-{% set patch_version = (version|string).split(".")[2] %}
+
+{% set legate_version = environ.get('LEGATE_VERSION') %}
 
 package:
   name: {{ name|lower }}
-  version: {{ version }}
+  version: {{ legate_version }}
 
 source:
   git_url: ../../
@@ -21,6 +20,10 @@ build:
   noarch: generic
   script_env:
     - PKG_NAME={{ name }}
+
+requirements:
+  run:
+    - legate ={{ legate_version }}
 
 extra:
   recipe-maintainers:

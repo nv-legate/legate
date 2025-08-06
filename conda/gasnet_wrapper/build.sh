@@ -15,7 +15,12 @@ mkdir "${PREFIX}/gex-wrapper/src"
 cp -rv "${SRC_DIR}/cmake" "${PREFIX}/gex-wrapper"
 # shellcheck disable=SC2154
 cp -rv "${RECIPE_DIR}/build-gex-wrapper.sh" "${PREFIX}/gex-wrapper"
-cp -rv "${SRC_DIR}"/runtime/realm/gasnetex/gasnetex_wrapper/* "${PREFIX}/gex-wrapper/src"
+# Account for the move of the realm source.
+if [[ -d "${SRC_DIR}"/runtime/realm/gasnetex/gasnetex_wrapper/ ]]; then
+  cp -rv "${SRC_DIR}"/runtime/realm/gasnetex/gasnetex_wrapper/* "${PREFIX}/gex-wrapper/src"
+else
+  cp -rv "${SRC_DIR}/realm/src/realm/gasnetex/gasnetex_wrapper"/* "${PREFIX}/gex-wrapper/src"
+fi
 
 # Copy the [de]activate scripts to ${PREFIX}/etc/conda/[de]activate.d.
 # This will allow them to be run on environment activation.

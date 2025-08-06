@@ -1,0 +1,9 @@
+version = 1
+
+# Simple data file containing version metadata.
+[[annotations]]
+path = [
+    "VERSION"
+]
+SPDX-FileCopyrightText = "Copyright (c) 2025-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-License-Identifier = "Apache-2.0"

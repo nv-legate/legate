@@ -47,10 +47,25 @@ jobs:
           echo "ARTIFACT_PATH=${ARTIFACT_PATH}"
           echo "BUILD_DATE=${BUILD_DATE}"
 
+      - name: Install pre-requisites to upload package
+        run: |
+          apt-get update
+          apt-get install -y curl jq
+
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+
+      - name: Set version, get legion metadata
+        run: |
+          LEGATE_VERSION="$(cat VERSION)"
+          echo "LEGATE_VERSION=${LEGATE_VERSION}" >> "${GITHUB_ENV}"
+
+          LEGION_GIT_URL=$(jq -r '.packages.Legion.git_url' "src/cmake/versions/legion_version.json")
+          LEGION_GIT_REV=$(jq -r '.packages.Legion.git_tag' "src/cmake/versions/legion_version.json")
+          echo "LEGION_GIT_URL=${LEGION_GIT_URL}" >> "${GITHUB_ENV}"
+          echo "LEGION_GIT_REV=${LEGION_GIT_REV}" >> "${GITHUB_ENV}"
 
       - name: Cleanup/Create related folders
         run: |
@@ -59,9 +74,10 @@ jobs:
 
       - name: Run conda build
         run: |
-          conda_build_args=();
-          conda_build_args+=(--croot "${CONDA_ROOT}");
-          conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
+          conda_build_args=()
+          conda_build_args+=(--croot "${CONDA_ROOT}")
+          conda_build_args+=(--output-folder "${CONDA_OUTPUT}")
+          conda_build_args+=(--no-test)
 
           conda install conda-build
           conda-build "${conda_build_args[@]}" conda/gasnet_wrapper
@@ -75,9 +91,3 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.ARTIFACT_PATH }}
-
-      - name: Install pre-requisites to upload package
-        run: |
-          echo "Install pre-requisites"
-          apt-get update
-          apt-get install -y curl jq

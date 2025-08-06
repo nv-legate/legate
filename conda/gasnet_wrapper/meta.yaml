@@ -3,16 +3,19 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
 {% set name = "realm-gex-wrapper" %}
-{% set major_version = (version|string).split(".")[0] %}
-{% set minor_version = (version|string).split(".")[1] %}
-{% set patch_version = (version|string).split(".")[2] %}
+
+{% set legate_version = environ.get('LEGATE_VERSION') %}
+
+{% set legion_sha = environ.get('LEGION_GIT_REV', 'master') %}
+{% set git_url = environ.get('LEGION_GIT_URL', 'https://gitlab.com/StanfordLegion/legion.git') %}
 
 package:
   name: {{ name|lower }}
-  version: {{ version }}
+  version: {{ legate_version }}
 
 source:
-  git_url: https://gitlab.com/StanfordLegion/legion.git
+  git_url: {{ git_url }}
+  git_rev: {{ legion_sha }}
 
 build:
   include_recipe: false
@@ -21,6 +24,10 @@ build:
   noarch: generic
   script_env:
     - PKG_NAME={{ name }}
+
+requirements:
+  run:
+    - legate ={{ legate_version }}
 
 extra:
   recipe-maintainers:
