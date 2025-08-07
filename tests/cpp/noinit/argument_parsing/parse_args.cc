@@ -456,12 +456,26 @@ TEST_F(ParseArgsUnit, CPUs)
   ASSERT_THAT(parsed.cpus, ArgumentMatches(MAGIC));
 }
 
+TEST_F(ParseArgsUnit, CPUsInvalid)
+{
+  ASSERT_THAT([] { static_cast<void>(legate::detail::parse_args({"dummy", "--cpus", "-1"})); },
+              ::testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("Number of CPU cores must be >=0, have -1")));
+}
+
 TEST_F(ParseArgsUnit, GPUs)
 {
   constexpr auto MAGIC = 42;
   const auto parsed    = legate::detail::parse_args({"dummy", "--gpus", std::to_string(MAGIC)});
 
   ASSERT_THAT(parsed.gpus, ArgumentMatches(MAGIC));
+}
+
+TEST_F(ParseArgsUnit, GPUsInvalid)
+{
+  ASSERT_THAT([] { static_cast<void>(legate::detail::parse_args({"dummy", "--gpus", "-1"})); },
+              ::testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("Number of GPUs must be >=0, have -1")));
 }
 
 TEST_F(ParseArgsUnit, OMPs)
@@ -472,12 +486,27 @@ TEST_F(ParseArgsUnit, OMPs)
   ASSERT_THAT(parsed.omps, ArgumentMatches(MAGIC));
 }
 
+TEST_F(ParseArgsUnit, OMPsInvalid)
+{
+  ASSERT_THAT([] { static_cast<void>(legate::detail::parse_args({"dummy", "--omps", "-1"})); },
+              ::testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("Number of OpenMP groups must be >=0, have -1")));
+}
+
 TEST_F(ParseArgsUnit, OMPThreads)
 {
   constexpr auto MAGIC = 42;
   const auto parsed = legate::detail::parse_args({"dummy", "--ompthreads", std::to_string(MAGIC)});
 
   ASSERT_THAT(parsed.ompthreads, ArgumentMatches(MAGIC));
+}
+
+TEST_F(ParseArgsUnit, OMPThreadsInvalid)
+{
+  ASSERT_THAT(
+    [] { static_cast<void>(legate::detail::parse_args({"dummy", "--ompthreads", "-1"})); },
+    ::testing::ThrowsMessage<std::out_of_range>(
+      ::testing::HasSubstr("Number of threads per OpenMP group must be >=0, have -1")));
 }
 
 TEST_F(ParseArgsUnit, Util)

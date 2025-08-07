@@ -335,14 +335,48 @@ ParsedArgs parse_args(std::vector<std::string> args)
 
   auto cpus = parser.add_argument(
     "--cpus", "Number of standalone CPU cores to reserve, must be >=0", DEFAULT_CPUS);
+
+  cpus.action([](std::string_view, const Argument<std::int32_t>* cpus_arg) {
+    if (cpus_arg->value() < 0) {
+      throw TracedException<std::out_of_range>{
+        fmt::format("Number of CPU cores must be >=0, have {}", cpus_arg->value())};
+    }
+    return cpus_arg->value();
+  });
+
   auto gpus = parser.add_argument("--gpus", "Number of GPUs to reserve, must be >=0", DEFAULT_GPUS);
+
+  gpus.action([](std::string_view, const Argument<std::int32_t>* gpus_arg) {
+    if (gpus_arg->value() < 0) {
+      throw TracedException<std::out_of_range>{
+        fmt::format("Number of GPUs must be >=0, have {}", gpus_arg->value())};
+    }
+    return gpus_arg->value();
+  });
+
   auto omps =
     parser.add_argument("--omps", "Number of OpenMP groups to use, must be >=0", DEFAULT_OMPS);
+
+  omps.action([](std::string_view, const Argument<std::int32_t>* omps_arg) {
+    if (omps_arg->value() < 0) {
+      throw TracedException<std::out_of_range>{
+        fmt::format("Number of OpenMP groups must be >=0, have {}", omps_arg->value())};
+    }
+    return omps_arg->value();
+  });
 
   auto ompthreads =
     parser.add_argument("--ompthreads",
                         "Number of threads / reserved CPU cores per OpenMP group, must be >=0",
                         DEFAULT_OMPTHREADS);
+
+  ompthreads.action([](std::string_view, const Argument<std::int32_t>* ompthreads_arg) {
+    if (ompthreads_arg->value() < 0) {
+      throw TracedException<std::out_of_range>{fmt::format(
+        "Number of threads per OpenMP group must be >=0, have {}", ompthreads_arg->value())};
+    }
+    return ompthreads_arg->value();
+  });
 
   auto util = parser.add_argument(
     "--utility", "Number of threads to use for runtime meta-work, must be >0", DEFAULT_UTILITY);
