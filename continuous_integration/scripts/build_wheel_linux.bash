@@ -46,6 +46,7 @@ rapids-pip-retry install -v --prefer-binary -r continuous_integration/requiremen
 sitepkgs=$(python -c 'import site; print(site.getsitepackages()[0], end="")')
 ln -fs "${sitepkgs}"/nvidia/libcal/cu12/lib/libcal.so.0 "${sitepkgs}"/nvidia/libcal/cu12/lib/libcal.so
 ln -fs "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so.1 "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so
+ln -fs "${sitepkgs}"/nvidia/nccl/lib/libnccl.so.2 "${sitepkgs}"/nvidia/nccl/lib/libnccl.so
 if [[ ! -d "${sitepkgs}/nvidia/libcal/cu12/lib/cmake" ]]; then
   mkdir -p "${sitepkgs}/nvidia/libcal/cu12/lib/cmake"
   cp -r "${LEGATE_DIR}/continuous_integration/scripts/ucc-cmake-config" "${sitepkgs}/nvidia/libcal/cu12/lib/cmake/ucc"
@@ -88,7 +89,7 @@ fi
 # TODO(cryos): https://github.com/nv-legate/legate.internal/issues/1894
 # Improve the use of CMAKE_PREFIX_PATH to find legate and cutensor once
 # scikit-build supports it.
-CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;${sitepkgs}/libucx;${sitepkgs}/nvidia/libcal/cu12"
+CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;${sitepkgs}/libucx;${sitepkgs}/nvidia/libcal/cu12;${sitepkgs}/nvidia/nccl"
 export CMAKE_ARGS
 SKBUILD_CMAKE_ARGS="-DLEGATE_WRAPPER_DIR=${LEGATE_DIR}/wrapper-prefix"
 export SKBUILD_CMAKE_ARGS
