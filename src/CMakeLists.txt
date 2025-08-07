@@ -21,8 +21,11 @@ else()
   set(legate_project_suffix cpp)
 endif()
 
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../VERSION" LEGATE_VERSION)
+string(STRIP "${LEGATE_VERSION}" LEGATE_VERSION)
+
 project(legate_${legate_project_suffix}
-        VERSION 25.09.00
+        VERSION ${LEGATE_VERSION}
         LANGUAGES CXX
         DESCRIPTION "Multi-node, Multi-GPU Parallel Runtime Library"
         HOMEPAGE_URL https://docs.nvidia.com/legate/latest/)
