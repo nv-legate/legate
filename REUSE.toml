@@ -1,9 +1,40 @@
 version = 1
 
-# Simple data file containing version metadata.
+# Simple data files containing metadata, settings, etc.
 [[annotations]]
 path = [
-    "VERSION"
+    "VERSION",
+    "continuous_integration/requirements-build.txt",
+    "scripts/pre-commit/cmake_config_format.json",
+    "scripts/pre-commit/cmake_config_lint.json",
+    "scripts/pre-commit/shellcheckrc",
+    "scripts/pre-commit/cmake-format-legate.json",
+    "docs/legate/switcher.json",
+    "share/legate/sanitizers/lsan_suppressions.txt",
+    "share/legate/sanitizers/ubsan_suppressions.txt",
+    "share/legate/sanitizers/tsan_default_options.txt",
+    "share/legate/sanitizers/ubsan_default_options.txt",
+    "share/legate/sanitizers/asan_default_options.txt",
+    "share/legate/sanitizers/tsan_suppressions.txt",
+    "src/cmake/versions/versions.json",
+    "src/cmake/versions/legion_version.json",
+    "src/python/legate/legate_jupyter.json"
 ]
-SPDX-FileCopyrightText = "Copyright (c) 2025-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-FileCopyrightText = "Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-License-Identifier = "Apache-2.0"
+
+# Patches for other projects we build.
+[[annotations]]
+path = [
+    "src/cmake/patches/**"
+]
+SPDX-FileCopyrightText = "Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-License-Identifier = "Apache-2.0"
+
+# Image files.
+[[annotations]]
+path = [
+    "docs/figures/developer-build.png"
+]
+SPDX-FileCopyrightText = "Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
