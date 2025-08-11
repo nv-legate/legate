@@ -116,9 +116,11 @@ class CUDAConfig(SectionConfig):
 
             # gcc 11.3 is incompatible with nvcc < 11.6.
             if V(self.ctk_version) < (11, 6, 0):
-                deps += ("gcc<=11.2", "gxx<=11.2")
+                # For older CUDA, limit to GCC 10-11.2 (avoid 11.3+)
+                deps += ("gcc>=10,<=11.2", "gxx>=10,<=11.2")
             else:
-                deps += ("gcc=11.*", "gxx=11.*")
+                # For newer CUDA, support GCC 10-14
+                deps += ("gcc>=10,<=14", "gxx>=10,<=14")
 
         return deps
 

@@ -31,6 +31,19 @@ project(legate_${legate_project_suffix}
         HOMEPAGE_URL https://docs.nvidia.com/legate/latest/)
 
 # ########################################################################################
+# * Compiler Version Checks --------------------------------------------------------
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10.0")
+    message(FATAL_ERROR "GCC version ${CMAKE_CXX_COMPILER_VERSION} is not supported. Minimum required version is 10.0. Please upgrade your compiler."
+    )
+  endif()
+else()
+  message(STATUS "Using ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} - "
+                 "compiler support not explicitly validated")
+endif()
+
+# ########################################################################################
 # * Common Core --------------------------------------------------------
 
 # ########################################################################################
