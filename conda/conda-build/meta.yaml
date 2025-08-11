@@ -71,9 +71,7 @@ invalid_yaml: {{ network }}
 {% endif %}
 {% set network_tag='_'+network %}
 
-# This is necessary because of #2451
-# Should be removed once we have a working version of UCX
-{% set ucx_build = "h8887438_3" if target_platform == "linux-64" else "h0fd4fdb_3" %}
+# UCX build constraint removed - using conda-forge version
 
 package:
   name: {{ name|lower }}
@@ -218,8 +216,7 @@ requirements:
     - libcal-dev
 {% endif %}
 {% if network == 'ucx' %}
-    # UCX version is pinned exactly for now. See #2451.
-    - ucx 1.18.0 {{ ucx_build }}
+    - ucx
     - ucc
 {% endif %}
     - openmpi <5
@@ -248,9 +245,8 @@ requirements:
     - nccl           >=2.0,<2.27.0
 {% endif %}
     - rich
-    # The UCX run requirement is only needed because of #2451 and should be removed in the future.
 {% if network == 'ucx' %}
-    - ucx 1.18.0 {{ ucx_build }}
+    - ucx
 {% endif %}
 
   run_constrained:
