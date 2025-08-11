@@ -7,12 +7,14 @@ from pathlib import Path
 from typing import Final
 
 from aedifix.cmake import CMAKE_VARIABLE, CMakePath, CMakeString
-from aedifix.package import Package
 from aedifix.util.argument_parser import ArgSpec, ConfigArgument
 
+from ..network_package import NetworkPackage
 
-class GASNet(Package):
+
+class GASNet(NetworkPackage):
     name = "GASNet"
+    network_name = "gasnetex"
 
     With_GASNET: Final = ConfigArgument(
         name="--with-gasnet",

@@ -12,7 +12,7 @@ from aedifix.cmake import (
     CMakeInt,
     CMakeList,
     CMakePath,
-    CMakeString,
+    CMakeSemiColonList,
 )
 from aedifix.package import Package
 from aedifix.packages.cuda import CUDA
@@ -25,6 +25,7 @@ from aedifix.util.argument_parser import (
 from aedifix.util.exception import UnsatisfiableConfigurationError
 from aedifix.util.utility import dest_to_flag
 
+from ..network_package import NetworkPackage
 from .gasnet import GASNet
 from .mpi import MPI
 from .openmp import OpenMP
@@ -138,7 +139,9 @@ class Legion(Package):
     Legion_USE_OpenMP: Final = CMAKE_VARIABLE("Legion_USE_OpenMP", CMakeBool)
     Legion_USE_Python: Final = CMAKE_VARIABLE("Legion_USE_Python", CMakeBool)
     Legion_USE_ZLIB: Final = CMAKE_VARIABLE("Legion_USE_ZLIB", CMakeBool)
-    Legion_NETWORKS: Final = CMAKE_VARIABLE("Legion_NETWORKS", CMakeString)
+    Legion_NETWORKS: Final = CMAKE_VARIABLE(
+        "Legion_NETWORKS", CMakeSemiColonList
+    )
     Legion_BUILD_JUPYTER: Final = CMAKE_VARIABLE(
         "Legion_BUILD_JUPYTER", CMakeBool
     )
@@ -289,11 +292,12 @@ class Legion(Package):
         r"""Configure all of the collected networks, and enable them."""
         networks = []
         explicit_disable = False
-        network_map = {"GASNet": "gasnetex", "UCX": "ucx", "MPI": "mpi"}
-        for py_attr, net_name in network_map.items():
-            state = getattr(self.deps, py_attr).state
+
+        for network in (self.deps.GASNet, self.deps.UCX, self.deps.MPI):
+            assert isinstance(network, NetworkPackage)
+            state = network.state
             if state.enabled():
-                networks.append(net_name)
+                networks.append(network.network_name)
             elif state.explicit:
                 # explicitly disabled
                 explicit_disable = True
@@ -304,12 +308,10 @@ class Legion(Package):
                 f"({', '.join(networks)}) is not fully supported currently."
             )
         if networks:
-            self.manager.set_cmake_variable(
-                self.Legion_NETWORKS, ";".join(networks)
-            )
+            self.manager.append_cmake_variable(self.Legion_NETWORKS, networks)
         elif explicit_disable:
             # ensure that it is properly cleared
-            self.manager.set_cmake_variable(self.Legion_NETWORKS, "")
+            self.manager.set_cmake_variable(self.Legion_NETWORKS, [])
 
     def configure(self) -> None:
         r"""Configure Legion."""
@@ -373,9 +375,8 @@ class Legion(Package):
         if cuda_flags := m.get_cmake_variable(self.Legion_CUDA_FLAGS):
             lines.append(("CUDA flags", cuda_flags))
 
-        if networks := m.get_cmake_variable(self.Legion_NETWORKS):
-            pass
-        else:
+        networks = m.get_cmake_variable(self.Legion_NETWORKS)
+        if not networks:
             networks = "None"
         lines.append(("Networks", networks))
         lines.append(

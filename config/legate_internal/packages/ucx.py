@@ -7,12 +7,14 @@ from pathlib import Path
 from typing import Final
 
 from aedifix.cmake import CMAKE_VARIABLE, CMakePath, CMakeString
-from aedifix.package import Package
 from aedifix.util.argument_parser import ArgSpec, ConfigArgument
 
+from ..network_package import NetworkPackage
 
-class UCX(Package):
+
+class UCX(NetworkPackage):
     name = "UCX"
+    network_name = "ucx"
 
     With_UCX: Final = ConfigArgument(
         name="--with-ucx",
