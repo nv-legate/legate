@@ -5,10 +5,59 @@
 
 include_guard(GLOBAL)
 
+function(validate_nccl_version)
+  if(NOT legate_nccl_include_dir)
+    get_target_property(nccl_include_dirs NCCL::NCCL INTERFACE_INCLUDE_DIRECTORIES)
+
+    set(candidate_incdirs)
+    foreach(potential_dir IN LISTS nccl_include_dirs)
+      string(GENEX_STRIP "${potential_dir}" stripped_dir)
+      list(APPEND candidate_incdirs "${stripped_dir}")
+    endforeach()
+
+    find_path(legate_nccl_include_dir
+              NAMES nccl.h
+              PATH_SUFFIXES nccl
+              HINTS ${candidate_incdirs}
+              DOC "Path containing nccl.h")
+  endif()
+
+  if(NOT legate_nccl_include_dir)
+    message(FATAL_ERROR "Could not find nccl.h in any include directory for "
+                        "NCCL version validation. Searched: ${candidate_incdirs}")
+  endif()
+
+  set(nccl_header_path "${legate_nccl_include_dir}/nccl.h")
+
+  file(STRINGS "${nccl_header_path}" maj_line LIMIT_COUNT 1
+       REGEX [=[^#define[ \t]+NCCL_MAJOR[ \t]+[0-9]+]=])
+  file(STRINGS "${nccl_header_path}" min_line LIMIT_COUNT 1
+       REGEX [=[^#define[ \t]+NCCL_MINOR[ \t]+[0-9]+]=])
+
+  string(REGEX MATCH [=[[0-9]+]=] nccl_major "${maj_line}")
+  string(REGEX MATCH [=[[0-9]+]=] nccl_minor "${min_line}")
+
+  if(nccl_major STREQUAL "" OR nccl_minor STREQUAL "")
+    message(FATAL_ERROR "Could not read NCCL version from ${nccl_header_path}")
+  endif()
+
+  set(nccl_version "${nccl_major}.${nccl_minor}")
+  set(required_nccl_version 2.26)
+
+  if("${required_nccl_version}" VERSION_LESS "${nccl_version}")
+    message(FATAL_ERROR "Detected NCCL version ${nccl_version}, but "
+                        "version ${required_nccl_version} or lower is required.")
+  endif()
+
+  message(STATUS "NCCL version ${nccl_version} meets requirement <= ${required_nccl_version}"
+  )
+endfunction()
+
 function(find_or_configure_nccl)
   list(APPEND CMAKE_MESSAGE_CONTEXT "nccl")
 
   if(TARGET NCCL::NCCL)
+    validate_nccl_version()
     return()
   endif()
 
@@ -17,6 +66,7 @@ function(find_or_configure_nccl)
   # machine already
   rapids_find_package(NCCL)
   if(TARGET NCCL::NCCL)
+    validate_nccl_version()
     return()
   endif()
 
@@ -50,4 +100,5 @@ function(find_or_configure_nccl)
 
   message(VERBOSE "CMAKE_LIBRARY_ARCHITECTURE is set: ${CMAKE_LIBRARY_ARCHITECTURE}")
   rapids_find_package(NCCL REQUIRED)
+  validate_nccl_version()
 endfunction()

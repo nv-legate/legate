@@ -1010,6 +1010,11 @@
                 "pargs": {
                     "nargs": 1
                 }
+            },
+            "validate_nccl_version": {
+                "pargs": {
+                    "nargs": 0
+                }
             }
         }
     }
