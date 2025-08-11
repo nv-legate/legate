@@ -49,7 +49,7 @@ jobs:
       default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit
 
-  tests-pass:
+  profiler-tests-pass:
     if: always()
     needs:
       - build-and-test-legate-profiler
