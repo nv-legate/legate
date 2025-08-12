@@ -161,7 +161,7 @@ endif()
 # ########################################################################################
 # * MPI wrapper --------------------------------------------------------------
 
-if(Legion_NETWORKS AND NOT LEGATE_BUILD_PIP_WHEELS)
+if(legate_BUILD_MPI_WRAPPER)
   # The wrapper we build should not install anything but the library object itself,
   # because we want to install the sources (and cmake files) to a different location
   # ourselves.
@@ -635,6 +635,7 @@ set_property(TARGET legate APPEND PROPERTY EXPORT_PROPERTIES LIBRARY_OUTPUT_NAME
 # * Common Custom User Flags Applied to both legate and legate_obj -----------------------
 
 include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
+include("${LEGATE_CMAKE_DIR}/Modules/utilities.cmake")
 
 set_cpu_arch_flags(legate_CXX_FLAGS)
 
@@ -643,60 +644,75 @@ set_cpu_arch_flags(legate_CXX_FLAGS)
 # links to the object library privately, and so any transitive dependencies or flags don't
 # bubble up to any downstream libraries.
 foreach(target legate_obj legate)
+  # Order is important here. We want conda includes to go last because the conda env might
+  # contain other versions of the libraries below (for example CCCL). This is why
+  # CCCL::CCCL comes *before* Legion, because Legion may pick up headers from inside the
+  # conda environment.
+  #
+  # Similarly, we want the MPI wrapper to load as early as possible, since it provides our
+  # MPI symbols.
+  #
+  # Use TARGET_NAME_IF_EXISTS here because it does not add the MPI wrapper as a strict
+  # dependency of Legate. We want this because:
+  #
+  # 1. We want to install the MPI wrapper library .so and *only* the MPI wrapper .so.
+  # 2. Adding it as a strict target-level dependency would mean that we would also need to
+  #    install the cmake export files alongside Legate, which we don't want because we want
+  #    them to be able to override it with their own install/build of it.
+  target_link_libraries("${target}" PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>)
+
   target_link_libraries("${target}"
-                        # Order is important here. We want conda includes to go last
-                        # because the conda env might contain other versions of the
-                        # libraries below (for example CCCL). We want the conda includes
-                        # to go last so that we ensure that compiler pick up the right
-                        # headers.
-                        #
-                        # This is also why CCCL::Thrust comes *before* Legion, because
-                        # Legion may pick up headers from inside the conda environment.
-                        #
-                        # Similarly, we want the MPI wrapper to load as early as possible,
-                        # since it provides our MPI symbols.
-                        PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper> #
-                               CCCL::CCCL #
-                               Legion::Legion #
-                               $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
-                        PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
-                                # See
-                                # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
-                                $<TARGET_NAME_IF_EXISTS:CUDA::nvtx3>
-                                $<COMPILE_ONLY:fmt::fmt-header-only>
-                                $<COMPILE_ONLY:argparse::argparse>
-                                kvikio::kvikio
-                                $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
-                                $<TARGET_NAME_IF_EXISTS:HighFive::HighFive>
-                                cpptrace::cpptrace
-                                $<TARGET_NAME_IF_EXISTS:CAL::CAL>)
+                        PUBLIC CCCL::CCCL Legion::Legion
+                        PRIVATE $<COMPILE_ONLY:fmt::fmt-header-only>
+                                $<COMPILE_ONLY:argparse::argparse> kvikio::kvikio
+                                cpptrace::cpptrace)
+
+  if(Legion_USE_OpenMP)
+    target_link_libraries("${target}" PUBLIC OpenMP::OpenMP_CXX)
+  endif()
+
+  if(legate_USE_NCCL)
+    target_link_libraries("${target}" PRIVATE NCCL::NCCL)
+  endif()
+
+  if(legate_USE_CUDA)
+    target_link_libraries("${target}" PRIVATE CUDA::nvtx3)
+  endif()
+
+  if(legate_USE_HDF5_VFD_GDS)
+    target_link_libraries("${target}" PRIVATE hdf5_vfd_gds)
+  endif()
+
+  if(legate_USE_HDF5)
+    target_link_libraries("${target}" PRIVATE HighFive::HighFive)
+  endif()
+
+  if(legate_USE_CAL)
+    target_link_libraries("${target}" PRIVATE CAL::CAL)
+  endif()
+
   if(legate_USE_UCX)
     target_link_libraries("${target}" PRIVATE ucx::ucp ucx::ucs ucc::ucc)
   endif()
+
+  target_compile_definitions("${target}" PUBLIC $<BUILD_INTERFACE:legate_EXPORTS=1>)
+
+  legate_add_target_compile_options("${target}" CXX PRIVATE legate_CXX_FLAGS)
+
+  # Legate has no direct CUDA files that it would compile (all CUDA sources are compiled
+  # into fatbins and embedded in the library itself). But tests, benchmarks, or other
+  # sources might. In that case, they would also have the LEGATE_INTERNAL_TARGET property
+  # set, so let's populate these for that.
+  legate_add_target_compile_options("${target}" CUDA PRIVATE legate_CUDA_FLAGS)
+
+  legate_add_target_link_options("${target}" PUBLIC legate_LINKER_FLAGS)
+
+  if(APPLE)
+    # See https://github.com/NVIDIA/cccl/pull/2444
+    target_compile_definitions("${target}"
+                               PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
+  endif()
 endforeach()
-
-target_compile_definitions(legate_obj PUBLIC $<BUILD_INTERFACE:legate_EXPORTS=1>)
-target_compile_definitions(legate PUBLIC $<BUILD_INTERFACE:legate_EXPORTS=1>)
-
-include("${LEGATE_CMAKE_DIR}/Modules/utilities.cmake")
-
-legate_add_target_compile_options(legate_obj CXX PRIVATE legate_CXX_FLAGS)
-legate_add_target_compile_options(legate CXX PRIVATE legate_CXX_FLAGS)
-# Legate has no direct CUDA files that it would compile (all CUDA sources are compiled
-# into fatbins and embedded in the library itself). But tests, benchmarks, or other
-# sources might. In that case, they would also have the LEGATE_INTERNAL_TARGET property
-# set, so let's populate these for that.
-legate_add_target_compile_options(legate_obj CUDA PRIVATE legate_CUDA_FLAGS)
-legate_add_target_compile_options(legate CUDA PRIVATE legate_CUDA_FLAGS)
-
-legate_add_target_link_options(legate_obj PUBLIC legate_LINKER_FLAGS)
-legate_add_target_link_options(legate PUBLIC legate_LINKER_FLAGS)
-
-if(APPLE)
-  # See https://github.com/NVIDIA/cccl/pull/2444
-  target_compile_definitions(legate_obj PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
-  target_compile_definitions(legate PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
-endif()
 
 # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
 foreach(target legate_obj legate LegionRuntime)

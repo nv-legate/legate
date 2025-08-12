@@ -75,6 +75,7 @@ else()
 endif()
 legate_option(legate_USE_HDF5_VFD_GDS LEGATE_USE_HDF5_VFD_GDS
               "Enable VFD GDS support in HDF5" ${use_hdf5_vfd_gds})
+unset(use_hdf5_vfd_gds)
 legate_setting(Legion_NETWORKS NETWORKS
                "Networking backends to use (semicolon-separated)" SET_BUT_EMPTY)
 legate_option(Legion_USE_OpenMP USE_OPENMP "Use OpenMP" OFF)
@@ -137,3 +138,16 @@ legate_setting(Legion_CXX_FLAGS LEGION_CXX_FLAGS "C++ flags for Legion" SET_BUT_
 legate_setting(Legion_CUDA_FLAGS LEGION_CUDA_FLAGS "CUDA flags for Legion" SET_BUT_EMPTY)
 legate_setting(Legion_LINKER_FLAGS LEGION_LD_FLAGS "Linker flags for Legion"
                SET_BUT_EMPTY)
+
+legate_option(LEGATE_BUILD_PIP_WHEELS LEGATE_BUILD_PIP_WHEELS
+              "Set a number of options better suited for standalone pip wheel builds" OFF)
+
+if(Legion_NETWORKS AND NOT LEGATE_BUILD_PIP_WHEELS)
+  set(build_mpi_wrapper ON)
+else()
+  set(build_mpi_wrapper OFF)
+endif()
+
+legate_option(legate_BUILD_MPI_WRAPPER LEGATE_BUILD_MPI_WRAPPER
+              "Build the Legate MPI shim library" ${build_mpi_wrapper})
+unset(build_mpi_wrapper)
