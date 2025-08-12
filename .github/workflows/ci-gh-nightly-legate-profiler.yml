@@ -4,10 +4,6 @@
 ---
 name: Build and test the legate profiler
 
-concurrency:
-  group: ${{ startsWith(github.ref_name, 'main') && format('unique-{0}', github.run_id) || format('ci-legate-profiler-{0}-from-{1}', github.event_name, github.ref_name) }}
-  cancel-in-progress: true
-
 on:
   workflow_dispatch:
     inputs:
