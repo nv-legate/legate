@@ -123,26 +123,11 @@ macro(set_parent_scope variable)
   set(${variable} ${${variable}} PARENT_SCOPE)
 endmacro()
 
-# For now we want the optimization flags to match on both normal make and cmake builds so
-# we override the cmake defaults here for release, this changes -O3 to -O2 and removes
-# -DNDEBUG
-set_ifndef(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set_ifndef(CMAKE_CUDA_FLAGS_DEBUG "-O0 -g")
-set_ifndef(CMAKE_CXX_FLAGS_RELEASE "-O3")
-set_ifndef(CMAKE_CUDA_FLAGS_RELEASE "-O3")
-set_ifndef(CMAKE_CXX_FLAGS_MINSIZEREL "-Os")
-set_ifndef(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os")
-# Order is important, we want the release flags *last*. We want the enable-optimization
-# flags to supersede any disable-optimization flags set by the debug flags.
-set_ifndef(CMAKE_CXX_FLAGS_RELWITHDEBINFO
-           "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_RELEASE} -g")
-set_ifndef(CMAKE_CUDA_FLAGS_RELWITHDEBINFO
-           "${CMAKE_CUDA_FLAGS_DEBUG} ${CMAKE_CUDA_FLAGS_RELEASE} -g")
-set_ifndef(BUILD_MARCH OFF)
-set_ifndef(BUILD_MCPU OFF)
-set_ifndef(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set_ifndef(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set_ifndef(BUILD_SHARED_LIBS ON)
+option(BUILD_MARCH "Target a specific CPU architecture" OFF)
+option(BUILD_MCPU "Tune for a specific CPU architecture" OFF)
+option(CMAKE_EXPORT_COMPILE_COMMANDS "Export CMake compile commands" ON)
+option(CMAKE_POSITION_INDEPENDENT_CODE "Build position independent code" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 # ########################################################################################
 # * rapids-cmake --------------------------------------------------------
