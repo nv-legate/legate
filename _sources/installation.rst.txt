@@ -144,7 +144,7 @@ our downloadable packages.
         * WSL
    * - Compilers
      -
-        * GCC (11-14)
+        * GCC (10-14)
    * - GPU architecture
      - Volta and later
    * - CUDA toolkit
