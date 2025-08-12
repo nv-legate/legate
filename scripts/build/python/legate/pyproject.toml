@@ -90,6 +90,7 @@ exclude = ["**.pyx", "**.pxd"]
 install-dir = "legate"
 
 [tool.scikit-build]
+ninja.version = ">=1.11"
 build-dir = "buildwheel"
 
 [tool.scikit-build.wheel.packages]

@@ -96,6 +96,7 @@ platlib = true
 install-dir = "/data"
 
 [tool.scikit-build]
+ninja.version = ">=1.11"
 experimental = true  # needed for install-dir = "/data"
 
 [tool.scikit-build.wheel.packages]
