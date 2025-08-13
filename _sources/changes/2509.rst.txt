@@ -24,6 +24,9 @@ C++
 
 .. rubric:: General
 
+- Add config option ``--profile-name`` to customize the base filename for profiling
+  output.
+
 .. rubric:: Data
 
 .. rubric:: Mapping
@@ -44,6 +47,9 @@ C++
 .. rubric:: Runtime
 
 .. rubric:: Utilities
+
+- Remove previously deprecated classes ``legate::cuda::StreamPool`` and
+  ``legate::cuda::StreamView``.
 
 .. rubric:: I/O
 

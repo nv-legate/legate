@@ -1,4 +1,0 @@
-legate::cuda::StreamPool
-========================
-
-.. doxygenclass:: legate::cuda::StreamPool
