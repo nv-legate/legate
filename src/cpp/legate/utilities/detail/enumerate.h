@@ -12,24 +12,67 @@
 #include <legate/utilities/detail/zip.h>
 
 #include <cstddef>
+#include <iterator>
+#include <type_traits>
 
-// As of 3/14/2024, this include causes shadow warnings in GPU debug mode compilation
-LEGATE_PRAGMA_PUSH();
-LEGATE_PRAGMA_GNU_IGNORE("-Wshadow");
-#include <thrust/iterator/counting_iterator.h>
-LEGATE_PRAGMA_POP();
-
-static_assert(LEGATE_CPP_MIN_VERSION <
-                23,  // NOLINT(readability-magic-numbers) std::enumerate since C++23
-              "Can remove this module in favor of std::ranges::views::enumerate and/or "
-              "std::ranges::enumerate_view");
+LEGATE_CPP_VERSION_TODO(23,
+                        "Can remove this module in favor of std::ranges::views::enumerate and/or "
+                        "std::ranges::enumerate_view");
 
 namespace legate::detail {
 
+template <typename T>
+class CountingIterator {
+ public:
+  using value_type        = std::remove_cv_t<T>;
+  using reference         = value_type;
+  using pointer           = void;
+  using difference_type   = std::ptrdiff_t;
+  using iterator_category = std::random_access_iterator_tag;
+
+  constexpr CountingIterator() noexcept = default;
+  explicit constexpr CountingIterator(T v) noexcept;
+
+  [[nodiscard]] constexpr value_type operator*() const noexcept;
+
+  constexpr CountingIterator& operator++() noexcept;
+  constexpr CountingIterator operator++(int) noexcept;
+
+  constexpr CountingIterator& operator--() noexcept;
+  constexpr CountingIterator operator--(int) noexcept;
+
+  constexpr CountingIterator& operator+=(difference_type n) noexcept;
+  constexpr CountingIterator& operator-=(difference_type n) noexcept;
+  constexpr CountingIterator operator+(difference_type n) const noexcept;
+  constexpr CountingIterator operator-(difference_type n) const noexcept;
+
+  friend constexpr CountingIterator operator+(difference_type n, CountingIterator it) noexcept
+  {
+    return it + n;
+  }
+
+  [[nodiscard]] constexpr difference_type operator-(const CountingIterator& other) const noexcept;
+  [[nodiscard]] constexpr value_type operator[](difference_type n) const noexcept;
+
+  [[nodiscard]] constexpr bool operator==(const CountingIterator& o) const noexcept;
+  [[nodiscard]] constexpr bool operator!=(const CountingIterator& o) const noexcept;
+  [[nodiscard]] constexpr bool operator<(const CountingIterator& o) const noexcept;
+  [[nodiscard]] constexpr bool operator>(const CountingIterator& o) const noexcept;
+  [[nodiscard]] constexpr bool operator<=(const CountingIterator& o) const noexcept;
+  [[nodiscard]] constexpr bool operator>=(const CountingIterator& o) const noexcept;
+
+  [[nodiscard]] constexpr T base() const noexcept;
+
+ private:
+  T v_{};
+};
+
+// ==========================================================================================
+
 class Enumerator {
  public:
-  using iterator          = thrust::counting_iterator<std::ptrdiff_t>;
-  using const_iterator    = thrust::counting_iterator<std::ptrdiff_t>;
+  using iterator          = CountingIterator<std::ptrdiff_t>;
+  using const_iterator    = CountingIterator<std::ptrdiff_t>;
   using value_type        = typename iterator::value_type;
   using iterator_category = typename iterator::iterator_category;
   using difference_type   = typename iterator::difference_type;

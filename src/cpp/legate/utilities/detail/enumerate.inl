@@ -12,6 +12,133 @@
 
 namespace legate::detail {
 
+template <typename T>
+constexpr CountingIterator<T>::CountingIterator(T v) noexcept : v_{v}
+{
+}
+
+template <typename T>
+constexpr typename CountingIterator<T>::value_type CountingIterator<T>::operator*() const noexcept
+{
+  return base();
+}
+
+template <typename T>
+constexpr CountingIterator<T>& CountingIterator<T>::operator++() noexcept
+{
+  ++v_;
+  return *this;
+}
+
+template <typename T>
+constexpr CountingIterator<T> CountingIterator<T>::operator++(int) noexcept
+{
+  CountingIterator tmp = *this;
+
+  ++v_;
+  return tmp;
+}
+
+template <typename T>
+constexpr CountingIterator<T>& CountingIterator<T>::operator--() noexcept
+{
+  --v_;
+  return *this;
+}
+
+template <typename T>
+constexpr CountingIterator<T> CountingIterator<T>::operator--(int) noexcept
+{
+  CountingIterator tmp = *this;
+
+  --v_;
+  return tmp;
+}
+
+template <typename T>
+constexpr CountingIterator<T>& CountingIterator<T>::operator+=(difference_type n) noexcept
+{
+  v_ += static_cast<T>(n);
+  return *this;
+}
+
+template <typename T>
+constexpr CountingIterator<T>& CountingIterator<T>::operator-=(difference_type n) noexcept
+{
+  v_ -= static_cast<T>(n);
+  return *this;
+}
+
+template <typename T>
+constexpr CountingIterator<T> CountingIterator<T>::operator+(difference_type n) const noexcept
+{
+  return CountingIterator{base() + static_cast<T>(n)};
+}
+
+template <typename T>
+constexpr CountingIterator<T> CountingIterator<T>::operator-(difference_type n) const noexcept
+{
+  return CountingIterator{base() - static_cast<T>(n)};
+}
+
+template <typename T>
+constexpr typename CountingIterator<T>::difference_type CountingIterator<T>::operator-(
+  const CountingIterator& other) const noexcept
+{
+  return static_cast<difference_type>(base() - other.base());
+}
+
+template <typename T>
+constexpr typename CountingIterator<T>::value_type CountingIterator<T>::operator[](
+  difference_type n) const noexcept
+{
+  return base() + static_cast<T>(n);
+}
+
+template <typename T>
+constexpr bool CountingIterator<T>::operator==(const CountingIterator& o) const noexcept
+{
+  return base() == o.base();
+}
+
+template <typename T>
+constexpr bool CountingIterator<T>::operator!=(const CountingIterator& o) const noexcept
+{
+  return base() != o.base();
+}
+
+template <typename T>
+constexpr bool CountingIterator<T>::operator<(const CountingIterator& o) const noexcept
+{
+  return base() < o.base();
+}
+
+template <typename T>
+constexpr bool CountingIterator<T>::operator>(const CountingIterator& o) const noexcept
+{
+  return base() > o.base();
+}
+
+template <typename T>
+constexpr bool CountingIterator<T>::operator<=(const CountingIterator& o) const noexcept
+{
+  return base() <= o.base();
+}
+
+template <typename T>
+constexpr bool CountingIterator<T>::operator>=(const CountingIterator& o) const noexcept
+{
+  return base() >= o.base();
+}
+
+template <typename T>
+constexpr T CountingIterator<T>::base() const noexcept
+{
+  return v_;
+}
+
+// ==========================================================================================
+
 // NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline constexpr Enumerator::Enumerator(value_type start) noexcept : start_{start} {}
 
