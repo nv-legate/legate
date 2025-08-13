@@ -329,6 +329,17 @@ profiling.add_argument(
     help="Whether to collect profiling logs",
 )
 
+
+profiling.add_argument(
+    "--profile-name",
+    dest="profile_name",
+    action="store",
+    required=False,
+    default=None,
+    help="Base filename fore profiling logs",
+)
+
+
 profiling.add_argument(
     "--provenance",
     dest="provenance",

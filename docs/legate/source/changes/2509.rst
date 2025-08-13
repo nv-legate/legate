@@ -24,6 +24,9 @@ C++
 
 .. rubric:: General
 
+- Add config option ``--profile-name`` to customize the base filename for profiling
+  output.
+
 .. rubric:: Data
 
 .. rubric:: Mapping

@@ -128,6 +128,7 @@ class TestProfiling:
     def test_fields(self) -> None:
         assert set(m.Profiling.__dataclass_fields__) == {
             "profile",
+            "profile_name",
             "provenance",
             "cprofile",
             "nvprof",
@@ -145,6 +146,7 @@ class TestProfiling:
     def test_nsys_extra_fixup_basic(self, extra: list[str]) -> None:
         p = m.Profiling(
             profile=True,
+            profile_name=None,
             provenance=None,
             cprofile=True,
             nvprof=True,
@@ -158,6 +160,7 @@ class TestProfiling:
     def test_nsys_extra_fixup_complex(self) -> None:
         p = m.Profiling(
             profile=True,
+            profile_name="foo",
             provenance=None,
             cprofile=True,
             nvprof=True,
@@ -177,6 +180,7 @@ class TestProfiling:
     def test_nsys_extra_fixup_quoted(self) -> None:
         p = m.Profiling(
             profile=True,
+            profile_name=None,
             provenance=None,
             cprofile=True,
             nvprof=True,
@@ -283,6 +287,7 @@ class TestConfig:
 
         assert c.profiling == m.Profiling(
             profile=False,
+            profile_name=None,
             provenance=None,
             cprofile=False,
             nvprof=False,

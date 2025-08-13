@@ -539,7 +539,13 @@ ParsedArgs parse_args(std::vector<std::string> args)
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Profiling and logging");
 
-  auto profile    = parser.add_argument("--profile", "Whether to collect profiling logs", false);
+  auto profile      = parser.add_argument("--profile", "Whether to collect profiling logs", false);
+  auto profile_name = parser.add_argument(
+    "--profile-name",
+    "Base filename for profiling logs\n"
+    "\n"
+    "Will create one file per rank (<profile-name>_<rank>.prof) relative to the log directory.",
+    std::string{"legate"});
   auto provenance = parser.add_argument(
     "--provenance",
     "Whether to record call provenance. \n"
@@ -659,6 +665,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
           /* zcmem */ std::move(zcmem),
           /* regmem */ std::move(regmem),
           /* profile */ std::move(profile),
+          /* profile_name */ std::move(profile_name),
           /* provenance */ std::move(provenance),
           /* log_levels */ std::move(log_levels),
           /* log_dir */ std::move(log_dir),

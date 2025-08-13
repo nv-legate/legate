@@ -154,6 +154,7 @@ TEST_F(ConfigureLegionUnit, WithFlags)
                                                   "--numamem",
                                                   "0",
                                                   "--profile",
+                                                  "--profile-name=foo",
                                                   "--logging",
                                                   "foo=info,baz=debug",
                                                   "--log-to-file",
@@ -170,7 +171,7 @@ TEST_F(ConfigureLegionUnit, WithFlags)
     "-logfile \"{}\" "
     "-errlevel 4 "
     "-ll:force_kthreads ",
-    std::filesystem::current_path() / "legate_%.prof",
+    std::filesystem::current_path() / "foo_%.prof",
     std::filesystem::current_path() / "legate_%.log");
 
   const auto value = legate::detail::LEGION_DEFAULT_ARGS.get();

@@ -112,9 +112,9 @@ constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
 
 }  // namespace
 
-Runtime::Runtime(const Config& config)
+Runtime::Runtime(Config config)
   : legion_runtime_{Legion::Runtime::get_runtime()},
-    config_{config},
+    config_{std::move(config)},
     field_reuse_size_{local_machine().calculate_field_reuse_size(this->config().field_reuse_frac())}
 {
   static_cast<void>(scope_.exchange_scheduling_window_size(this->config().window_size()));
@@ -1833,11 +1833,20 @@ void set_env_vars()
 
   Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
 
-  const auto config = handle_legate_args();
+  {
+    auto* const config = new Config{handle_legate_args()};
+    // Need to transport `Config` via raw pointer (which, if the below call fails, will simply
+    // leak) because `Config` is not a POD. Legion expects to `memcpy()` the pointer given to
+    // UntypedBuffer, so can't even use `std::unique_ptr` or something like that.
+    static_assert(!std::is_trivially_copyable_v<Config>);
+    const auto buf = Legion::UntypedBuffer{
+      static_cast<const void*>(&config),
+      sizeof(config)  // NOLINT(bugprone-sizeof-expression)
+    };
 
-  Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
-                                                 Legion::UntypedBuffer{&config, sizeof(config)},
-                                                 true /*global*/);
+    Legion::Runtime::perform_registration_callback(
+      initialize_core_library_callback_, buf, true /*global*/);
+  }
 
   if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true)) {
     throw TracedException<std::runtime_error>{
@@ -1880,7 +1889,7 @@ class RuntimeManager {
    *
    * @throw std::runtime_error If the runtime has already been constructed.
    */
-  [[nodiscard]] Runtime& construct_runtime(const Config& config);
+  [[nodiscard]] Runtime& construct_runtime(Config config);
 
   [[nodiscard]] Runtime& get();
   [[nodiscard]] State state() const noexcept;
@@ -1891,7 +1900,7 @@ class RuntimeManager {
   std::optional<Runtime> rt_{};
 };
 
-Runtime& RuntimeManager::construct_runtime(const Config& config)
+Runtime& RuntimeManager::construct_runtime(Config config)
 {
   if (state() != State::UNINITIALIZED) {
     throw TracedException<std::runtime_error>{
@@ -1899,7 +1908,7 @@ Runtime& RuntimeManager::construct_runtime(const Config& config)
       "without restarting the program."};
   }
   LEGATE_CHECK(!rt_.has_value());
-  rt_.emplace(config);
+  rt_.emplace(std::move(config));
   state_ = State::INITIALIZED;
   return *rt_;
 }
@@ -2220,15 +2229,13 @@ extern void register_exception_reduction_op(const Library& context);
 /*static*/ void Runtime::initialize_core_library_callback_(
   const Legion::RegistrationCallbackArgs& args)
 {
-  const auto& legate_config = [&]() -> const Config& {
-    auto* const ptr = static_cast<Config*>(args.buffer.get_ptr());
+  auto& runtime = [&]() -> Runtime& {
+    auto ptr = std::unique_ptr<Config>{*static_cast<Config**>(args.buffer.get_ptr())};
 
-    LEGATE_CHECK(args.buffer.get_size() == sizeof(Config));
+    LEGATE_CHECK(args.buffer.get_size() == sizeof(Config*));
     LEGATE_CHECK(ptr);
-    return *ptr;
+    return the_runtime.construct_runtime(std::move(*ptr));
   }();
-
-  auto& runtime = the_runtime.construct_runtime(legate_config);
 
   ResourceConfig config;
   config.max_tasks       = CoreTask::MAX_TASK;

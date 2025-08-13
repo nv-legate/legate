@@ -44,8 +44,8 @@ std::string compose_legion_default_args(const ParsedArgs& parsed)
   if (parsed.profile.value()) {
     fmt::format_to(std::back_inserter(ret),
                    "-lg:prof 1 "
-                   "-lg:prof_logfile \"{}\" ",
-                   parsed.log_dir.value() / "legate_%.prof");
+                   "-lg:prof_logfile \"{}_%.prof\" ",
+                   parsed.log_dir.value() / parsed.profile_name.value());
   }
 
   if (auto&& log_levels = parsed.log_levels.value(); !log_levels.empty()) {

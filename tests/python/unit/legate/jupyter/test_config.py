@@ -70,6 +70,7 @@ class TestConfig:
 
         assert c.profiling == m.Profiling(
             profile=False,
+            profile_name=None,
             provenance=None,
             cprofile=False,
             nvprof=False,

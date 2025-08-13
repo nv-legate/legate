@@ -136,6 +136,7 @@ TEST_F(ParseArgsUnit, NoArgs)
   ASSERT_THAT(parsed.zcmem, ScaledArgumentMatches(128));
   ASSERT_THAT(parsed.regmem, ScaledArgumentMatches(0));
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsFalse()));
+  ASSERT_THAT(parsed.profile_name, ArgumentMatches(std::string{"legate"}));
   ASSERT_THAT(parsed.provenance, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{}));
   ASSERT_THAT(parsed.log_dir, ArgumentMatches(std::filesystem::current_path()));
@@ -203,6 +204,7 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   ASSERT_THAT(parsed.zcmem, ScaledArgumentMatches(128));
   ASSERT_THAT(parsed.regmem, ScaledArgumentMatches(0));
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsFalse()));
+  ASSERT_THAT(parsed.profile_name, ArgumentMatches(std::string{"legate"}));
   ASSERT_THAT(parsed.provenance, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.log_levels,
               ArgumentMatches(std::string{"legate.mapper=info,legate.partitioner=debug"}));
@@ -577,6 +579,17 @@ TEST_F(ParseArgsUnit, ProfileEnabled)
   const auto parsed = legate::detail::parse_args({"dummy", "--profile", "t"});
 
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsTrue()));
+  ASSERT_THAT(parsed.profile_name, ArgumentMatches(std::string{"legate"}));
+  ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{"legion_prof=info"}));
+}
+
+TEST_F(ParseArgsUnit, ProfileEnabledWithFilename)
+{
+  const auto parsed =
+    legate::detail::parse_args({"dummy", "--profile", "t", "--profile-name", "foo"});
+
+  ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsTrue()));
+  ASSERT_THAT(parsed.profile_name, ArgumentMatches(std::string{"foo"}));
   ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{"legion_prof=info"}));
 }
 

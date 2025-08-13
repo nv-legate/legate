@@ -11,16 +11,17 @@
 #include <legate/utilities/detail/env_defaults.h>
 
 #include <cstdint>
+#include <string>
 
 namespace legate::detail {
 
-#define LEGATE_CONFIG_VAR(__type__, __name__, __initial_value__)           \
- private:                                                                  \
-  __type__ __name__##_ = __initial_value__;                                \
-                                                                           \
- public:                                                                   \
-  [[nodiscard]] __type__ __name__() const noexcept { return __name__##_; } \
-  void set_##__name__(__type__ value) noexcept { __name__##_ = value; }    \
+#define LEGATE_CONFIG_VAR(__type__, __name__, __initial_value__)                   \
+ private:                                                                          \
+  __type__ __name__##_ = __initial_value__;                                        \
+                                                                                   \
+ public:                                                                           \
+  [[nodiscard]] const __type__& __name__() const noexcept { return __name__##_; }  \
+  void set_##__name__(__type__ value) noexcept { __name__##_ = std::move(value); } \
   static_assert(true)
 
 class LEGATE_PYTHON_EXPORT Config {
@@ -47,6 +48,7 @@ class LEGATE_PYTHON_EXPORT Config {
   LEGATE_CONFIG_VAR(bool, need_openmp, false);
   LEGATE_CONFIG_VAR(bool, need_network, false);
   LEGATE_CONFIG_VAR(bool, profile, false);
+  LEGATE_CONFIG_VAR(std::string, profile_name, std::string{"legate"});
   LEGATE_CONFIG_VAR(bool, provenance, false);
 };
 

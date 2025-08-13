@@ -86,7 +86,7 @@ class Runtime {
    *
    * @param config The configuration for the runtime.
    */
-  explicit Runtime(const Config& config);
+  explicit Runtime(Config config);
   // The runtime is a singleton and is not copyable in any way
   Runtime(const Runtime&)            = delete;
   Runtime& operator=(const Runtime&) = delete;
