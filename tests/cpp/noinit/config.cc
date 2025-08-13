@@ -25,7 +25,6 @@ TEST_F(ConfigTest, DefaultValues)
   ASSERT_FALSE(config.show_config());
   ASSERT_FALSE(config.show_progress_requested());
   ASSERT_FALSE(config.use_empty_task());
-  ASSERT_FALSE(config.synchronize_stream_view());
   ASSERT_FALSE(config.warmup_nccl());
   ASSERT_FALSE(config.enable_inline_task_launch());
   ASSERT_FALSE(config.profile());
@@ -77,14 +76,6 @@ TEST_F(ConfigTest, SetUseEmptyTask)
 
   config.set_use_empty_task(true);
   ASSERT_TRUE(config.use_empty_task());
-}
-
-TEST_F(ConfigTest, SetSynchronizeStreamView)
-{
-  legate::detail::Config config;
-
-  config.set_synchronize_stream_view(true);
-  ASSERT_TRUE(config.synchronize_stream_view());
 }
 
 TEST_F(ConfigTest, SetWarmupNccl)

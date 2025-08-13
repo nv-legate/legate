@@ -311,7 +311,6 @@ target_sources(legate_obj
                        legate/comm/detail/local_network.cc
                        legate/comm/detail/logger.cc
                        legate/comm/detail/thread_comm.cc
-                       legate/cuda/stream_pool.cc
                        legate/cuda/detail/cuda_driver_api.cc
                        legate/cuda/detail/module_manager.cc
                        legate/data/allocator.cc
@@ -772,9 +771,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/leg
 install(FILES legate/comm/coll_comm.h legate/comm/coll.h legate/comm/communicator.h
               legate/comm/communicator.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/comm)
-
-install(FILES legate/cuda/cuda.h legate/cuda/stream_pool.h legate/cuda/stream_pool.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/cuda)
 
 install(FILES legate/data/allocator.h
               legate/data/buffer.h

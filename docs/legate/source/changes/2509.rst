@@ -45,6 +45,9 @@ C++
 
 .. rubric:: Utilities
 
+- Remove previously deprecated classes ``legate::cuda::StreamPool`` and
+  ``legate::cuda::StreamView``.
+
 .. rubric:: I/O
 
 

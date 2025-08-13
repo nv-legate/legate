@@ -42,7 +42,6 @@ class LEGATE_PYTHON_EXPORT Config {
   LEGATE_CONFIG_VAR(bool, consensus, LEGATE_CONSENSUS_DEFAULT);
   LEGATE_CONFIG_VAR(bool, disable_mpi, LEGATE_DISABLE_MPI_DEFAULT);
   LEGATE_CONFIG_VAR(bool, io_use_vfd_gds, false);
-  LEGATE_CONFIG_VAR(bool, synchronize_stream_view, false);
   LEGATE_CONFIG_VAR(std::int64_t, num_omp_threads, 0);
   LEGATE_CONFIG_VAR(bool, need_cuda, false);
   LEGATE_CONFIG_VAR(bool, need_openmp, false);
