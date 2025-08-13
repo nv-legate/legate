@@ -46,6 +46,8 @@ endif()
 # ########################################################################################
 # * Common Core --------------------------------------------------------
 
+option(AEDIFIX "Whether this configuration is being driven by aedifix" OFF)
+
 # ########################################################################################
 # * Setup LEGATE_DIR and LEGATE_ARCH
 
@@ -55,6 +57,12 @@ if(NOT DEFINED LEGATE_DIR)
 endif()
 
 cmake_path(SET LEGATE_DIR NORMALIZE "${LEGATE_DIR}")
+
+set(LEGATE_DIR
+    "${LEGATE_DIR}"
+    CACHE PATH
+          "Path to root legate source directory (not to be confused with legate_DIR which points to the root install directory)"
+          FORCE)
 
 if(NOT DEFINED LEGATE_ARCH)
   set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})

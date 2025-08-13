@@ -5,6 +5,9 @@
 
 include_guard(GLOBAL)
 
+include(CMakePushCheckState)
+include(CheckCompilerFlag)
+
 macro(legate_string_escape_re_chars output_var input_var)
   # Escapes all special regex characters detailed at
   # https://cmake.org/cmake/help/latest/command/string.html#regex-specification
@@ -193,4 +196,23 @@ function(legate_add_target_link_options TARGET_NAME VIS OPTION_NAME)
   if(${OPTION_NAME})
     target_link_options("${TARGET_NAME}" "${VIS}" "${${OPTION_NAME}}")
   endif()
+endfunction()
+
+function(legate_check_compiler_flag lang flag success_var)
+  string(MAKE_C_IDENTIFIER "${flag}" flag_sanitized)
+  message(CHECK_START "${lang} compiler supports ${flag}")
+
+  cmake_push_check_state()
+  set(CMAKE_REQUIRED_QUIET ON)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
+  check_compiler_flag(${lang} "${flag}" ${flag_sanitized}_supported)
+  cmake_pop_check_state()
+
+  if(${flag_sanitized}_supported)
+    message(CHECK_PASS "yes")
+  else()
+    message(CHECK_FAIL "no")
+  endif()
+
+  set(${success_var} "${${flag_sanitized}_supported}" PARENT_SCOPE)
 endfunction()

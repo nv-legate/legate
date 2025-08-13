@@ -103,7 +103,7 @@ function(legate_generate_fatbin_modules)
                                "-DIN_FILE=$<TARGET_OBJECTS:${fatbin_target_name}>"
                                "-DOUT_CC_FILE=${fatbin_cc}" "-DOUT_H_FILE=${fatbin_h}"
                                "-DLEGATE_CMAKE_DIR=${LEGATE_CMAKE_DIR}" -P
-                               "${LEGATE_CMAKE_DIR}/Modules/bin2c.cmake"
+                               "${LEGATE_CMAKE_DIR}/scripts/bin2c.cmake"
                        VERBATIM
                        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
                        DEPENDS "${fatbin_target_name}"

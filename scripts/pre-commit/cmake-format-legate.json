@@ -201,6 +201,11 @@
                     "nargs": "*"
                 }
             },
+            "legate_check_compiler_flag": {
+                "pargs": {
+                    "nargs": 3
+                }
+            },
             "legate_configure_benchmark": {
                 "kwargs": {
                     "SOURCES": "+",

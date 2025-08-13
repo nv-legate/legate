@@ -8,6 +8,11 @@ include_guard(GLOBAL)
 function(_legate_get_supported_arch_list_nvcc dest_var var_name)
   list(APPEND CMAKE_MESSAGE_CONTEXT "nvcc")
 
+  if(legate_NVCC_SUPPORTED_ARCH_LIST)
+    set(${dest_var} "${legate_NVCC_SUPPORTED_ARCH_LIST}" PARENT_SCOPE)
+    return()
+  endif()
+
   set(cmd "${CMAKE_CUDA_COMPILER}" "-arch-ls")
   execute_process(COMMAND ${cmd}
                   OUTPUT_VARIABLE arch_list
@@ -30,6 +35,8 @@ function(_legate_get_supported_arch_list_nvcc dest_var var_name)
   # Use natural comparison, so that 100 does not end up before 90 etc.
   list(SORT arch_list COMPARE NATURAL)
 
+  set(legate_NVCC_SUPPORTED_ARCH_LIST "${arch_list}"
+      CACHE INTERNAL "List of supported CUDA arch values")
   set(${dest_var} "${arch_list}" PARENT_SCOPE)
 endfunction()
 

@@ -118,5 +118,3 @@ rapids_export(BUILD legate_python
               NAMESPACE legate::
               DOCUMENTATION doc_string
               FINAL_CODE_BLOCK code_string)
-
-list(POP_BACK CMAKE_MESSAGE_CONTEXT)
