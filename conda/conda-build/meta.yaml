@@ -3,26 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
 {% set name = "legate" %}
-{% if gpu_enabled == "true" %}
-  {% set gpu_enabled_bool = true %}
-{% elif gpu_enabled == "false" %}
-  {% set gpu_enabled_bool = false %}
-{% else %}
-  {# We need to have a default value for the initial pass over the recipe #}
-  {% set gpu_enabled_bool = false %}
-{% endif %}
-{% if build_tests == "true" %}
-  {% set build_tests_bool = true %}
-{% elif build_tests == "false" %}
-  {% set build_tests_bool = false %}
-{% else %}
-  {# We need to have a default value for the initial pass over the recipe #}
-  {% set build_tests_bool = false %}
-{% endif %}
+{% set gpu_enabled_bool = gpu_enabled == 'true' %}
+{% set build_tests_bool = build_tests == 'true' %}
 {% set default_env_var = '' %}
-{% if build_number is defined %}
-    {# do nothing if defined #}
-{% else %}
+{% if build_number is not defined %}
     {% set build_number = environ.get('GIT_DESCRIBE_NUMBER', '0') %}
 {% endif %}
 {% if package_version is defined %}
@@ -39,11 +23,7 @@
 {% set cuda_major=cuda_version.split('.')[0]|int %}
 {% set py_version=environ.get('CONDA_PY', 36) %}
 
-{% if use_local_path is not defined %}
-{% set git_describe_hash='_' + environ.get('GIT_DESCRIBE_HASH', '0')%}
-{% else %}
-{% set git_describe_hash=''%}
-{% endif %}
+{% set git_describe_hash='_' + environ.get('GIT_DESCRIBE_HASH', '0') if use_local_path is not defined else '' %}
 
 {% if not gpu_enabled_bool %}
 {% set cpu_gpu_tag='_cpu' %}
@@ -58,10 +38,7 @@
 {% set debug_tag='_' + sanitized_build_mode_str %}
 {% endif %}
 
-{% set sanitizer_build_bool = false %}  # Default to false
-{% if 'sanitizer' in build_mode_str %}
-   {% set sanitizer_build_bool = true %}
-{% endif %}
+{% set sanitizer_build_bool = 'sanitizer' in build_mode_str %}
 
 {% set upload_tag='_with_tests' if build_tests_bool else '' %}
 
