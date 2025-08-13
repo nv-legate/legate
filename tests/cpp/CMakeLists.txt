@@ -182,7 +182,6 @@ set(with_runtime_SRC
     unit/library.cc
     unit/logical_region_field.cc
     unit/machine.cc
-    unit/mapping.cc
     unit/registration.cc
     unit/runtime.cc
     unit/scope.cc
@@ -211,6 +210,10 @@ set(with_runtime_SRC
     unit/logical_store/slice.cc
     unit/logical_store/transpose.cc
     unit/logical_store/reinterpret_as.cc
+    unit/mapping/common_api.cc
+    unit/mapping/dim_ordering.cc
+    unit/mapping/instance_mapping_policy.cc
+    unit/mapping/store_mapping.cc
     unit/partition/image.cc
     unit/partition/nopartition.cc
     unit/partition/tiling.cc

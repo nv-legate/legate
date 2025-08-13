@@ -331,7 +331,13 @@ class LEGATE_EXPORT InstanceMappingPolicy {
  */
 class LEGATE_EXPORT StoreMapping {
  public:
-  StoreMapping() noexcept;
+  /**
+   * @brief Deleted default constructor.
+   *
+   * The default constructor is deleted to prevent creating a `StoreMapping` object without
+   * specifying a target store.
+   */
+  StoreMapping() noexcept = LEGATE_DEFAULT_WHEN_CYTHON;
   StoreMapping(StoreMapping&&) noexcept;
   StoreMapping& operator=(StoreMapping&&) noexcept;
   ~StoreMapping();
