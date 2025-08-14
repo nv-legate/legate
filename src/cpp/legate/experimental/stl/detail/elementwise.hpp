@@ -124,8 +124,7 @@ class Elementwise : private Function {
  *
  * @note The Legate.STL algorithms recognize the return type of
  * @f$\mathtt{elementwise(fn)(}A^1,A^2\cdots,A^n\mathtt{)}@f$ such that assigning its result
- * to an `mdspan` object will perform an element-wise assignment. The element-wise assignment
- * is done with `thrust::copy` and will be accelerated if CUDA support is enabled.
+ * to an `mdspan` object will perform an element-wise assignment.
  *
  * @par Example:
  * @snippet{trimleft} experimental/stl/elementwise.cc elementwise example

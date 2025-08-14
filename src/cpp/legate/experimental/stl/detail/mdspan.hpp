@@ -21,12 +21,8 @@
 #include <legate/experimental/stl/detail/meta.hpp>
 #include <legate/experimental/stl/detail/type_traits.hpp>
 
-// NVIDIA includes:
-#include <nv/target>
-#include <thrust/copy.h>
-#include <thrust/execution_policy.h>
-
 // Standard includes:
+#include <algorithm>
 #include <cstdint>
 #include <type_traits>
 
@@ -300,12 +296,7 @@ LEGATE_HOST_DEVICE void assign(
   const auto lhs_view = flatten(std::move(lhs));
   const auto rhs_view = flatten(std::move(rhs));
 
-  LEGATE_PRAGMA_PUSH();
-  LEGATE_PRAGMA_CLANG_IGNORE("-Wgnu-zero-variadic-macro-arguments");
-  NV_IF_TARGET(NV_IS_HOST,
-               (thrust::copy(thrust::host, rhs_view.begin(), rhs_view.end(), lhs_view.begin());),
-               (thrust::copy(thrust::device, rhs_view.begin(), rhs_view.end(), lhs_view.begin());))
-  LEGATE_PRAGMA_POP();
+  std::copy(rhs_view.begin(), rhs_view.end(), lhs_view.begin());
 }
 
 }  // namespace legate::experimental::stl
