@@ -21,18 +21,25 @@ from .dlpack cimport (
     DLPACK_MINOR_VERSION
 )
 
-cdef (void *, bool) get_dlpack_tensor(object capsule):
-    cdef void *ret = NULL
+cdef struct DLPackTensor:
+    void* tensor
+    bool is_versioned
+
+
+cdef DLPackTensor get_dlpack_tensor(object capsule):
+    cdef DLPackTensor ret
 
     if PyCapsule_IsValid(capsule, VERSIONED_CAPSULE_NAME):
-        ret = PyCapsule_GetPointer(capsule, VERSIONED_CAPSULE_NAME)
+        ret.tensor = PyCapsule_GetPointer(capsule, VERSIONED_CAPSULE_NAME)
+        ret.is_versioned = True
         PyCapsule_SetName(capsule, VERSIONED_CAPSULE_NAME_USED)
-        return ret, True
+        return ret
 
     if PyCapsule_IsValid(capsule, CAPSULE_NAME):
-        ret = PyCapsule_GetPointer(capsule, CAPSULE_NAME)
+        ret.tensor = PyCapsule_GetPointer(capsule, CAPSULE_NAME)
+        ret.is_versioned = False
         PyCapsule_SetName(capsule, CAPSULE_NAME_USED)
-        return ret, False
+        return ret
 
     m = (
         "A DLPack tensor object cannot be consumed multiple times "
@@ -103,19 +110,18 @@ def from_dlpack(
         # us so that they can correct the error on their end.
         capsule = x.__dlpack__(dl_device=device, copy=copy)
 
-    cdef void *tensor = NULL
-    cdef bool  is_versioned = False
+    cdef DLPackTensor dl_tensor
 
-    tensor, is_versioned = get_dlpack_tensor(capsule)
+    dl_tensor = get_dlpack_tensor(capsule)
 
     cdef _LogicalStore store
 
     with nogil:
-        if is_versioned:
-            ver_ptr = <_DLManagedTensorVersioned *>tensor
+        if dl_tensor.is_versioned:
+            ver_ptr = <_DLManagedTensorVersioned *>dl_tensor.tensor
             store = _from_dlpack(&ver_ptr)
         else:
-            unver_ptr = <_DLManagedTensor *>tensor
+            unver_ptr = <_DLManagedTensor *>dl_tensor.tensor
             store = _from_dlpack(&unver_ptr)
 
     return LogicalStore.from_handle(std_move(store))
