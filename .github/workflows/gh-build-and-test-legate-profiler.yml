@@ -54,6 +54,7 @@ jobs:
     secrets: inherit
 
   upload-profiler:
+    if: contains(inputs.refname, 'pull-request') == false
     needs: build-profiler
     name: Upload Legate Profiler
     uses:
