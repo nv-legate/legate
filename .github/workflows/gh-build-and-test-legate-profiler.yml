@@ -24,6 +24,9 @@ on:
       network:
         type: string
         required: true
+      event_name:
+        required: true
+        type: string
       refname:
         required: true
         type: string
@@ -54,7 +57,8 @@ jobs:
     secrets: inherit
 
   upload-profiler:
-    if: contains(inputs.refname, 'pull-request') == false
+    # Only upload when triggered by nightly schedule
+    if: ${{ inputs.event_name == 'schedule' }}
     needs: build-profiler
     name: Upload Legate Profiler
     uses:

@@ -42,6 +42,7 @@ jobs:
       target-device: ${{ matrix.target-device }}
       network: "ucx"
       refname: ${{ github.ref_name }}
+      event_name: ${{ github.event_name }}
       default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit
 
