@@ -592,7 +592,7 @@ legate_generate_legate_defines()
 add_library(legate)
 add_library(legate::legate ALIAS legate)
 
-target_link_libraries(legate PRIVATE legate_obj)
+target_link_libraries(legate PRIVATE $<BUILD_LOCAL_INTERFACE:legate_obj>)
 
 # For whatever reason cmake-format craps out when formatting the below, so much so that
 # cmake-lint then ultimately complains with:
@@ -661,7 +661,7 @@ foreach(target legate_obj legate)
   target_link_libraries("${target}" PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>)
 
   target_link_libraries("${target}"
-                        PUBLIC CCCL::CCCL Legion::Legion
+                        PUBLIC libcudacxx::libcudacxx Legion::Legion
                         PRIVATE $<COMPILE_ONLY:fmt::fmt-header-only>
                                 $<COMPILE_ONLY:argparse::argparse> kvikio::kvikio
                                 cpptrace::cpptrace)
