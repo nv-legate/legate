@@ -28,6 +28,9 @@ std::string compose_legion_default_args(const ParsedArgs& parsed)
 {
   std::string ret = "-lg:local 0 ";
 
+  // Turn point-wise analysis ON in Legion by default
+  ret += "-lg:enable_pointwise_analysis ";
+
   // If these are negative, then we forgot to configure them
   LEGATE_CHECK(parsed.omps.value() >= 0);
   LEGATE_CHECK(parsed.numamem.value().unscaled_value() >= 0);

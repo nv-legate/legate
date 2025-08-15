@@ -32,7 +32,7 @@ TEST_F(ComposeLegionDefaultArgsUnit, Basic)
 
   const auto parsed = legate::detail::parse_args({"parsed", "--omps", "0", "--numamem", "0"});
   const auto legion_default_args = legate::detail::compose_legion_default_args(parsed);
-  std::string expected           = "-lg:local 0 ";
+  std::string expected           = "-lg:local 0 -lg:enable_pointwise_analysis ";
 
   if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
     expected += "-ll:force_kthreads ";
@@ -62,6 +62,7 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlags)
 
   const auto expected = fmt::format(
     "-lg:local 0 "
+    "-lg:enable_pointwise_analysis "
     "-ll:onuma 0 "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "
@@ -98,6 +99,7 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlagsAndDefaultArgs)
 
   const auto expected = fmt::format(
     "-lg:local 0 "
+    "-lg:enable_pointwise_analysis "
     "-ll:onuma 0 "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "
@@ -125,7 +127,7 @@ TEST_F(ConfigureLegionUnit, Basic)
 
   legate::detail::configure_legion(parsed);
 
-  std::string expected = "-lg:local 0 ";
+  std::string expected = "-lg:local 0 -lg:enable_pointwise_analysis ";
 
   if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
     expected += "-ll:force_kthreads ";
@@ -164,6 +166,7 @@ TEST_F(ConfigureLegionUnit, WithFlags)
 
   const auto expected = fmt::format(
     "-lg:local 0 "
+    "-lg:enable_pointwise_analysis "
     "-ll:onuma 0 "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "
@@ -208,6 +211,7 @@ TEST_F(ConfigureLegionUnit, WithFlagsAndDefaultArgs)
 
   const auto expected = fmt::format(
     "-lg:local 0 "
+    "-lg:enable_pointwise_analysis "
     "-ll:onuma 0 "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "

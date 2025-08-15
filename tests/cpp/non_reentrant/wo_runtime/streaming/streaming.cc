@@ -251,9 +251,6 @@ class StreamingUnit : public RegisterOnceFixture<Config> {
   }
 
  private:
-  legate::test::Environment::TemporaryEnvVar legion_default_args_{"LEGION_DEFAULT_ARGS",
-                                                                  "-lg:enable_pointwise_analysis",
-                                                                  /* overwrite */ true};
   legate::test::Environment::TemporaryEnvVar legate_config_{
     "LEGATE_CONFIG",
     // We need to make sure Legion is constrained enough to want to vertically execute. Even
