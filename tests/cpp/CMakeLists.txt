@@ -321,7 +321,7 @@ set(wo_runtime_SRC
 
 set(non_reentrant_with_runtime_SRC
     non_reentrant/death_example.cc non_reentrant/oom_message.cc non_reentrant/runtime.cc
-    non_reentrant/shutdown_callback.cc)
+    non_reentrant/shutdown_callback.cc non_reentrant/sharding.cc)
 
 set(non_reentrant_wo_runtime_SRC
     non_reentrant/wo_runtime/exception/base.cc
