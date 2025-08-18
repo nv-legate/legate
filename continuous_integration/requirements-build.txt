@@ -2,7 +2,7 @@
 --extra-index-url=https://pypi.nvidia.com
 cmake>=3.26.4,!=3.30.0
 ninja
-nvidia-nccl-cu12<2.27.0
+nvidia-nccl-cu12
 libucx-cu12
 nvidia-libcal-cu12
 scikit-build-core[pyproject]>=0.10.0

@@ -78,7 +78,7 @@ class CUDAConfig(SectionConfig):
 
         deps = (
             f"cuda-version={drop_patch(self.ctk_version)}",  # runtime
-            "nccl<2.27.0",  # runtime
+            "nccl",  # runtime
             "pynvml",  # tests
         )
 

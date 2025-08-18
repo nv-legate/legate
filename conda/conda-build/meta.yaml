@@ -184,7 +184,7 @@ requirements:
 {% if gpu_enabled_bool %}
     - cuda-version ={{ cuda_version }}
     # these are all constrained by cuda-version
-    - nccl<2.27.0
+    - nccl
     - cuda-cudart-dev
     - cuda-nvtx-dev
     - cuda-nvml-dev
@@ -219,7 +219,7 @@ requirements:
     - {{ pin_compatible('cuda-cudart',  min_pin='x', max_pin='x') }}
     - {{ pin_compatible('cuda-nvtx',    min_pin='x', max_pin='x') }}
     - libcufile      >=1.0,<2
-    - nccl           >=2.0,<2.27.0
+    - nccl           >=2.0
 {% endif %}
     - rich
 {% if network == 'ucx' %}
