@@ -219,24 +219,12 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              # Build optional extra gtest flags at the call-site of the binary
-              local -a extra_args=()
-              # Only skip NCCL gtests on x86_64 with 2+ GPUs and when running GPU gtests
-              local arch
-              arch="$(uname -m 2>/dev/null || true)"
-              if [[ "${proc_type}" == "gpus" ]]; then
-                if [[ "${GPUS_COUNT}" -ge 2 && "${arch}" == "x86_64" ]]; then
-                  rapids-logger "x86_64 2-GPU runner: skipping NCCL gtests (--gtest_filter=-NCCL.*)"
-                  extra_args+=(--gtest_filter=-NCCL.*)
-                fi
-              fi
               LD_PRELOAD="${LEGATE_LD_PRELOAD}" \
                 LEGATE_TEST=1 \
                 LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 4000 --fbmem 1000 --auto-config=0" \
                 "${gtest_file}" \
                 --gtest_shuffle \
-                --gtest_color=yes \
-                "${extra_args[@]}"
+                --gtest_color=yes
             }
 
             function run_legate_tests_with_driver()
