@@ -76,8 +76,7 @@ endif()
 legate_option(legate_USE_HDF5_VFD_GDS LEGATE_USE_HDF5_VFD_GDS
               "Enable VFD GDS support in HDF5" ${use_hdf5_vfd_gds})
 unset(use_hdf5_vfd_gds)
-legate_setting(Legion_NETWORKS NETWORKS
-               "Networking backends to use (semicolon-separated)" SET_BUT_EMPTY)
+
 legate_option(Legion_USE_OpenMP USE_OPENMP "Use OpenMP" OFF)
 legate_option(Legion_USE_Python LEGION_USE_PYTHON "Use Python" OFF)
 legate_option(Legion_BOUNDS_CHECKS CHECK_BOUNDS
@@ -96,6 +95,21 @@ legate_option(legate_BUILD_BENCHMARKS LEGATE_BUILD_BENCHMARKS "Build legate benc
 legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate" OFF)
 legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" OFF)
 legate_option(legate_USE_UCX LEGATE_USE_UCX "Enable UCX support" OFF)
+legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" OFF)
+
+set(legion_networks)
+
+if(legate_USE_UCX)
+  list(APPEND legion_networks "ucx")
+endif()
+if(legate_USE_MPI)
+  list(APPEND legion_networks "mpi")
+endif()
+
+legate_setting(Legion_NETWORKS NETWORKS
+               "Networking backends to use (semicolon-separated)" "${legion_networks}")
+
+unset(legion_networks)
 
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)

@@ -36,7 +36,7 @@ enum class CollCommType : std::uint8_t { CollMPI, CollLocal };
 
 // TODO(jfaibussowit)
 // Decouple these
-#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_MPI)
 class RankMappingTable {
  public:
   int* mpi_rank{};
@@ -48,7 +48,7 @@ class Coll_Comm {
  public:
   // TODO(jfaibussowit)
   // Decouple these
-#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_MPI)
   std::ptrdiff_t mpi_comm{};
   RankMappingTable mapping_table{};
 #endif

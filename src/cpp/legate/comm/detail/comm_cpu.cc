@@ -29,7 +29,7 @@ void register_tasks(detail::Library& core_library)
 
   switch (coll::BackendNetwork::guess_comm_type_()) {
     case CollCommType::CollMPI:
-      if constexpr (LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
+      if constexpr (LEGATE_DEFINED(LEGATE_USE_MPI)) {
         mpi::register_tasks(lib);
       } else {
         throw legate::detail::TracedException<std::runtime_error>{
@@ -47,7 +47,7 @@ void register_factory(const detail::Library& library)
 
     switch (coll::BackendNetwork::guess_comm_type_()) {
       case CollCommType::CollMPI:
-        if constexpr (LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
+        if constexpr (LEGATE_DEFINED(LEGATE_USE_MPI)) {
           return mpi::make_factory(library);
         }
         throw legate::detail::TracedException<std::runtime_error>{

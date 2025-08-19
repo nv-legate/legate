@@ -6,15 +6,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from aedifix import Package
 from aedifix.cmake import CMAKE_VARIABLE, CMakePath, CMakeString
 from aedifix.util.argument_parser import ArgSpec, ConfigArgument
 
-from ..network_package import NetworkPackage
 
-
-class GASNet(NetworkPackage):
+class GASNet(Package):
     name = "GASNet"
-    network_name = "gasnetex"
 
     With_GASNET: Final = ConfigArgument(
         name="--with-gasnet",

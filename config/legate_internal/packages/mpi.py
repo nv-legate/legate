@@ -7,10 +7,9 @@ import shutil
 from pathlib import Path
 from typing import Final
 
+from aedifix import Package
 from aedifix.cmake import CMAKE_VARIABLE, CMakeExecutable, CMakePath
 from aedifix.util.argument_parser import ArgSpec, ConfigArgument
-
-from ..network_package import NetworkPackage
 
 
 def _gen_mpiexec_guesses() -> str | None:
@@ -20,9 +19,8 @@ def _gen_mpiexec_guesses() -> str | None:
     return None
 
 
-class MPI(NetworkPackage):
+class MPI(Package):
     name = "MPI"
-    network_name = "mpi"
 
     With_MPI: Final = ConfigArgument(
         name="--with-mpi",

@@ -45,6 +45,10 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_UCX 1)
   endif()
 
+  if(legate_USE_MPI)
+    set(LEGATE_USE_MPI 1)
+  endif()
+
   if(NOT LEGATE_CONFIGURE_OPTIONS)
     set(LEGATE_CONFIGURE_OPTIONS "<unknown configure options>")
   endif()

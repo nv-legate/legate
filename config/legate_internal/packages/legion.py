@@ -25,7 +25,6 @@ from aedifix.util.argument_parser import (
 from aedifix.util.exception import UnsatisfiableConfigurationError
 from aedifix.util.utility import dest_to_flag
 
-from ..network_package import NetworkPackage
 from .gasnet import GASNet
 from .mpi import MPI
 from .openmp import OpenMP
@@ -288,31 +287,6 @@ class Legion(Package):
         elif zlib_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_ZLIB, False)
 
-    def configure_networks(self) -> None:
-        r"""Configure all of the collected networks, and enable them."""
-        networks = []
-        explicit_disable = False
-
-        for network in (self.deps.GASNet, self.deps.UCX, self.deps.MPI):
-            assert isinstance(network, NetworkPackage)
-            state = network.state
-            if state.enabled():
-                networks.append(network.network_name)
-            elif state.explicit:
-                # explicitly disabled
-                explicit_disable = True
-
-        if len(networks) > 1:
-            self.log_warning(
-                "Building Realm with multiple networking backends "
-                f"({', '.join(networks)}) is not fully supported currently."
-            )
-        if networks:
-            self.manager.append_cmake_variable(self.Legion_NETWORKS, networks)
-        elif explicit_disable:
-            # ensure that it is properly cleared
-            self.manager.set_cmake_variable(self.Legion_NETWORKS, [])
-
     def configure(self) -> None:
         r"""Configure Legion."""
         super().configure()
@@ -324,7 +298,6 @@ class Legion(Package):
         self.log_execute_func(self.configure_openmp)
         self.log_execute_func(self.configure_python)
         self.log_execute_func(self.configure_zlib)
-        self.log_execute_func(self.configure_networks)
 
     def summarize(self) -> str:
         r"""Summarize Legion.

@@ -21,8 +21,6 @@
 
 #cmakedefine LEGATE_USE_CUDA @LEGATE_USE_CUDA@
 
-#cmakedefine LEGATE_USE_NETWORK @LEGATE_USE_NETWORK@
-
 #cmakedefine LEGATE_USE_OPENMP @LEGATE_USE_OPENMP@
 
 #cmakedefine LEGATE_USE_CAL @LEGATE_USE_CAL@
@@ -34,6 +32,8 @@
 #cmakedefine LEGATE_USE_NCCL @LEGATE_USE_NCCL@
 
 #cmakedefine LEGATE_USE_UCX @LEGATE_USE_UCX@
+
+#cmakedefine LEGATE_USE_MPI @LEGATE_USE_MPI@
 
 /*
  * TODO(amberhassaan): Remove this flag when
@@ -52,11 +52,13 @@
 #define LEGATE_USE_OPENMP 1
 #endif
 
-#ifndef LEGATE_USE_NETWORK
-#if defined(REALM_USE_GASNET1) || defined(REALM_USE_GASNETEX) || defined(REALM_USE_MPI) || \
-  defined(REALM_USE_UCX)
+#if (defined(LEGATE_USE_NCCL) && (LEGATE_USE_NCCL == 1)) || \
+    (defined(LEGATE_USE_UCX) && (LEGATE_USE_UCX == 1)) || \
+    (defined(LEGATE_USE_MPI) && (LEGATE_USE_MPI == 1)) || \
+    defined(REALM_USE_GASNET1) || defined(REALM_USE_GASNETEX)
 #define LEGATE_USE_NETWORK 1
-#endif
+#else
+#define LEGATE_USE_NETWORK 0
 #endif
 
 #ifdef LEGATE_USE_DEBUG

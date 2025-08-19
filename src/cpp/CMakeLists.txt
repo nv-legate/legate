@@ -138,15 +138,9 @@ if(Legion_USE_Python)
   endif()
 endif()
 
-#
 # If we find Legion already configured on the system, it will report whether it was
 # compiled with Python (Legion_USE_PYTHON), CUDA (Legion_USE_CUDA), OpenMP
 # (Legion_USE_OpenMP), and networking (Legion_NETWORKS).
-#
-# We use the same variables as Legion because we want to enable/disable each of these
-# features based on how Legion was configured (it doesn't make sense to build legate's
-# Python bindings if Legion's bindings weren't compiled).
-#
 legate_find_or_configure(PACKAGE Legion)
 
 # If Legion_USE_Python was toggled ON by find_package(Legion), find Python3
@@ -487,7 +481,7 @@ if(legate_ENABLE_SANITIZERS)
   target_sources(legate_obj PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
 endif()
 
-if(Legion_NETWORKS)
+if(legate_USE_MPI)
   target_sources(legate_obj
                  PRIVATE legate/comm/detail/mpi_network.cc
                          legate/comm/detail/mpi_interface.cc

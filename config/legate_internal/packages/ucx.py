@@ -6,15 +6,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
+from aedifix import Package
 from aedifix.cmake import CMAKE_VARIABLE, CMakePath, CMakeString
 from aedifix.util.argument_parser import ArgSpec, ConfigArgument
 
-from ..network_package import NetworkPackage
 
-
-class UCX(NetworkPackage):
+class UCX(Package):
     name = "UCX"
-    network_name = "ucx"
 
     With_UCX: Final = ConfigArgument(
         name="--with-ucx",

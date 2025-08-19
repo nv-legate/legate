@@ -56,7 +56,7 @@ std::unique_ptr<BackendNetwork> the_backend_network{};
   // we do get around to comm:coll::init(), we can check that the actually created communicator
   // is of the same type that we guessed it would be previously.
   static const auto guessed_comm_type = [] {
-    if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && Runtime::get_runtime().config().need_network()) {
+    if (LEGATE_DEFINED(LEGATE_USE_MPI) && Runtime::get_runtime().config().need_network()) {
       return legate::comm::coll::CollCommType::CollMPI;
     }
     return legate::comm::coll::CollCommType::CollLocal;
