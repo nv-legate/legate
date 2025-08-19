@@ -287,6 +287,15 @@ class LogicalStore {
   void reset_key_partition();
 
  private:
+  /**
+   * @brief Immediately reset the key partition of this store if it matches with `to_match`.
+   *
+   * Unlike the public `reset_key_partition` method, this method doesn't flush the scheduling
+   * window, as it is meant to be used exclusively by invalidation callbacks, which are invoked
+   * during scheduling.
+   */
+  void maybe_reset_key_partition_(const Partition* to_match) noexcept;
+
   friend InternalSharedPtr<LogicalStorePartition> create_store_partition(
     const InternalSharedPtr<LogicalStore>& self,
     InternalSharedPtr<Partition> partition,

@@ -1042,6 +1042,15 @@ void LogicalStore::reset_key_partition()
   get_storage()->reset_key_partition();
 }
 
+void LogicalStore::maybe_reset_key_partition_(const Partition* to_match) noexcept
+{
+  if (!key_partition_.has_value() || key_partition_->get() != to_match) {
+    return;
+  }
+  key_partition_.reset();
+  get_storage()->reset_key_partition();
+}
+
 InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
   const InternalSharedPtr<LogicalStore>& self,
   InternalSharedPtr<Partition> partition,
@@ -1217,6 +1226,18 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
     const auto* op = variable->operation();
 
     set_key_partition(op->machine(), op->parallel_policy(), partition);
+
+    // If the cached key partition is an image partition, we need to make sure that the cache
+    // doesn't outlive the store used to derive the partition (otherwise the image operation sees an
+    // uninitialized store).
+    if (auto* const image = dynamic_cast<Image*>(partition.get()); image) {
+      image->func()->get_region_field()->add_invalidation_callback(
+        [weak_self = InternalWeakPtr<LogicalStore>{self}, to_match = partition.get()]() noexcept {
+          if (auto maybe_self = weak_self.lock(); maybe_self) {
+            maybe_self->maybe_reset_key_partition_(to_match);
+          }
+        });
+    }
   }
 
   return RegionFieldArg{this, privilege, std::move(store_proj)};

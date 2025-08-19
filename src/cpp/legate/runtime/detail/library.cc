@@ -16,6 +16,7 @@
 #include <fmt/format.h>
 
 #include <exception>
+#include <mutex>
 #include <stdexcept>
 
 namespace legate::detail {
@@ -171,6 +172,8 @@ void Library::register_task(
                          << legate::TaskInfo{task_info};
   }
 
+  const std::lock_guard<std::mutex> guard{task_table_lock_};
+
   const auto [it, inserted] = tasks_.try_emplace(local_task_id, std::move(task_info));
 
   if (!inserted) {
@@ -188,6 +191,8 @@ void Library::register_task(
 
 const InternalSharedPtr<TaskInfo>& Library::find_task(LocalTaskID local_task_id) const
 {
+  const std::lock_guard<std::mutex> guard{task_table_lock_};
+
   const auto it = tasks_.find(local_task_id);
 
   if (tasks_.end() == it) {

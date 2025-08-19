@@ -113,6 +113,7 @@ set(with_runtime_SRC
     bug/alias_via_promote.cc
     bug/aligned_unpack.cc
     bug/dangling_store_partition.cc
+    bug/key_partition_invalidation.cc
     bug/logical_store_transform.cc
     bug/nullable_arrays.cc
     bug/premature_free.cc

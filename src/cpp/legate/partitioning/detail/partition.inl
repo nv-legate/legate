@@ -89,4 +89,6 @@ inline bool Image::is_complete_for(const detail::Storage& /*storage*/) const
   return false;
 }
 
+inline const InternalSharedPtr<detail::LogicalStore>& Image::func() const { return func_; }
+
 }  // namespace legate::detail

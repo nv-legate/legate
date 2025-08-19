@@ -266,6 +266,51 @@ class Weighted : public Partition {
 
 class Image : public Partition {
  public:
+  /**
+   * @brief Construct an `Image` partition.
+   *
+   * An Image partition of store A is derived from a partition of store B by interpreting indices
+   * contained in B as a function from B's domain to A's domain (hence the name "image"); store B is
+   * called the @a function store of the image partition. The function store may contain rectangles
+   * instead of indices, in which case the rectangles are logically expanded to individual points
+   * they contain.
+   *
+   * The following show two examples of Image partitions, one where the function store has indices
+   * and one with rectangles.
+   *
+   * With indices:
+   * @code
+   *                     color
+   *               (0)         (1)
+   * function: [0,1,3,4,5], [2,6,7,8]
+   *
+   * indices:                  0  1  2  3  4  5  6  7  8
+   * sub-store for color (0)   *  *     *  *  *
+   * sub-store for color (1)         *           *  *  *
+   * @endcode
+   *
+   * With rectangles:
+   * @code
+   *                          color
+   *                  (0)               (1)
+   * function: [ [0,1], [3,5] ], [ [2,2], [6,8] ]
+   *
+   * indices:                  0  1  2  3  4  5  6  7  8
+   * sub-store for color (0)   *  *     *  *  *
+   * sub-store for color (1)         *           *  *  *
+   * @endcode
+   *
+   * Image partitions are neither disjoint nor complete (i.e., cover the entire store).
+   *
+   * The image computation is done precisely when the `hint` is
+   * legate::ImageComputationHint::NO_HINT, or approximate with the other two values (see
+   * legate::ImageComputationHint).
+   *
+   * @param func The function store
+   * @param func_partition the function store's partition to use in image computation
+   * @param machine the machine on which the image computation tasks are launched
+   * @param hint a hint to the image computation (precise vs. approximate)
+   */
   Image(InternalSharedPtr<detail::LogicalStore> func,
         InternalSharedPtr<Partition> func_partition,
         mapping::detail::Machine machine,
@@ -301,6 +346,15 @@ class Image : public Partition {
   [[nodiscard]] InternalSharedPtr<Partition> invert(
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const override;
+
+  /**
+   * @brief Return the function store of this image partition.
+   *
+   * See legate::detail::Image::Image to learn about the role of function store.
+   *
+   * @return The function store of this `Image` partition
+   */
+  [[nodiscard]] const InternalSharedPtr<detail::LogicalStore>& func() const;
 
  private:
   InternalSharedPtr<detail::LogicalStore> func_;
