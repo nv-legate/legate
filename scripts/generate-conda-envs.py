@@ -119,8 +119,8 @@ class CUDAConfig(SectionConfig):
                 # For older CUDA, limit to GCC 10-11.2 (avoid 11.3+)
                 deps += ("gcc>=10,<=11.2", "gxx>=10,<=11.2")
             else:
-                # For newer CUDA, support GCC 10-14
-                deps += ("gcc>=10,<=14", "gxx>=10,<=14")
+                # For newer CUDA fix to GCC 11.x to support cupynumeric builds.
+                deps += ("gcc=11.*", "gxx=11.*")
 
         return deps
 
