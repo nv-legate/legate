@@ -55,13 +55,16 @@ function(set_cpu_arch_flags out_var)
     set_cpu_arch_flags_impl(MCPU flags success)
   endif()
 
-  # Add flags for Power architectures
-  foreach(flag "-maltivec" "-mabi=altivec" "-mvsx")
-    legate_check_compiler_flag(CXX "${flag}" success)
-    if(success)
-      list(APPEND flags "${flag}")
-    endif()
-  endforeach()
+  # Add flags for Power architectures - only check on appropriate platforms
+  # CMAKE_SYSTEM_PROCESSOR might be ppc64le, powerpc64le, etc. for PowerPC
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(ppc|powerpc|power)")
+    foreach(flag "-maltivec" "-mabi=altivec" "-mvsx")
+      legate_check_compiler_flag(CXX "${flag}" success)
+      if(success)
+        list(APPEND flags "${flag}")
+      endif()
+    endforeach()
+  endif()
 
   list(APPEND ${out_var} ${flags})
   set_parent_scope(${out_var})
