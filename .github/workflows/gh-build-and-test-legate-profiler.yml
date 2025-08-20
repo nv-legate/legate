@@ -58,7 +58,7 @@ jobs:
 
   upload-profiler:
     # Only upload when triggered by nightly schedule
-    if: ${{ inputs.event_name == 'schedule' }}
+    if: ${{ github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' }}
     needs: build-profiler
     name: Upload Legate Profiler
     uses:

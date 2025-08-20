@@ -2,17 +2,14 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 ---
-name: Build and test the nightly legate profiler
+name: Build and test the legate profiler
 
 on:
-  workflow_dispatch:
-    inputs:
-      ref-sha:
-        description: 'The Full-commit SHA to checkout. Default=HEAD'
-        required: false
-        default: ''
-  schedule:
-    - cron: '0 22 * * 0'  # Weekly Monday at 10:00 PM
+  push:
+    branches:
+      - "pull-request/[0-9]+"
+      - "branch-*"
+      - "main"
 
 jobs:
   build-and-test-legate-profiler:
@@ -32,7 +29,7 @@ jobs:
     with:
       platform: ${{ matrix.platform }}
       ref-sha: ${{ github.event.inputs.ref-sha }}
-      build-type: nightly
+      build-type: ci
       python-version: ${{ matrix.python-version }}
       target-device: ${{ matrix.target-device }}
       network: "ucx"
