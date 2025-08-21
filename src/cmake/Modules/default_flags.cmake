@@ -5,8 +5,7 @@
 
 include_guard(GLOBAL)
 
-include(CheckCompilerFlag)
-include(CheckLinkerFlag)
+include(CMakePushCheckState)
 
 include(${CMAKE_CURRENT_LIST_DIR}/utilities.cmake)
 
@@ -29,37 +28,38 @@ function(legate_set_default_flags_impl)
   endif()
 
   if(NOT _FLAGS_FLAGS)
-    message(STATUS "No flags to add to ${_FLAGS_DEST_VAR}, bailing")
+    message(VERBOSE "No flags to add to ${_FLAGS_DEST_VAR}")
     return() # nothing to do
   endif()
 
   get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
   if(NOT ("${_FLAGS_LANG}" IN_LIST languages))
-    message(STATUS "Language '${_FLAGS_LANG}' not enabled, bailing")
+    message(VERBOSE "Language '${_FLAGS_LANG}' not enabled to add flags")
     return()
   endif()
 
   set(dest)
-  set(cmake_req_link_backup "${CMAKE_REQUIRED_LINK_OPTIONS}")
   foreach(flag IN LISTS _FLAGS_FLAGS)
-    string(MAKE_C_IDENTIFIER "${flag}" flag_sanitized)
+    set(success FALSE)
 
+    cmake_push_check_state()
     # The sanitizers need to also have the flag passed to the linker. This is kind of a
     # hack, but oh well.
     if(flag MATCHES "sanitize=.*")
-      set(CMAKE_REQUIRED_LINK_OPTIONS "${CMAKE_REQUIRED_LINK_OPTIONS};${flag}")
+      list(APPEND CMAKE_REQUIRED_LINK_OPTIONS "${flag}")
     endif()
 
     if(_FLAGS_IS_LINKER)
-      check_linker_flag(${_FLAGS_LANG} "${flag}" ${flag_sanitized}_supported)
+      legate_check_linker_flag(${_FLAGS_LANG} "${flag}" success)
     else()
-      check_compiler_flag(${_FLAGS_LANG} "${flag}" ${flag_sanitized}_supported)
+      legate_check_compiler_flag(${_FLAGS_LANG} "${flag}" success)
     endif()
-    if(${flag_sanitized}_supported)
-      message(STATUS "${flag} supported, adding to ${_FLAGS_DEST_VAR}")
+
+    cmake_pop_check_state()
+
+    if(success)
       list(APPEND dest "${flag}")
     endif()
-    set(CMAKE_REQUIRED_LINK_OPTIONS "${cmake_req_link_backup}")
   endforeach()
 
   set(${_FLAGS_DEST_VAR} "${dest}" PARENT_SCOPE)
@@ -128,13 +128,14 @@ function(legate_configure_default_compiler_flags)
   set(default_cxx_flags_relwithdebinfo ${default_cxx_flags_debug}
                                        ${default_cxx_flags_release})
 
-  set(default_cxx_flags)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND default_cxx_flags "${default_cxx_flags_debug}")
+    set(default_cxx_flags ${default_cxx_flags_debug})
   elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    list(APPEND default_cxx_flags "${default_cxx_flags_release}")
+    set(default_cxx_flags ${default_cxx_flags_release})
   elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    list(APPEND default_cxx_flags "${default_cxx_flags_relwithdebinfo}")
+    set(default_cxx_flags ${default_cxx_flags_relwithdebinfo})
+  else()
+    set(default_cxx_flags)
   endif()
 
   if(legate_ENABLE_SANITIZERS)
@@ -144,18 +145,25 @@ function(legate_configure_default_compiler_flags)
   if(NOT legate_CXX_FLAGS)
     legate_set_default_flags_impl(LANG CXX DEST_VAR legate_CXX_FLAGS
                                   FLAGS ${default_cxx_flags})
-    set(legate_CXX_FLAGS "${legate_CXX_FLAGS}" PARENT_SCOPE)
+    message(VERBOSE "Set legate_CXX_FLAGS to: ${legate_CXX_FLAGS}")
+    set_parent_scope(legate_CXX_FLAGS)
   endif()
 
   if(legate_ENABLE_SANITIZERS)
-    set(cmake_cxx_flags_tmp)
-    # Don't set cache because we still need to de-listify the result first
-    legate_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp
-                                  FLAGS ${default_cxx_flags_sanitizer})
+    # Legate itself does not use C, but downstream projects might. In this case we want to
+    # set the sanitizer flags for them as well, otherwise we get false positives if we
+    # work with pointers that they create/destroy.
+    foreach(lang CXX C)
+      set(flags_tmp)
+      # Don't set cache because we still need to de-listify the result first
+      legate_set_default_flags_impl(LANG "${lang}" DEST_VAR flags_tmp
+                                    FLAGS ${default_cxx_flags_sanitizer})
 
-    list(JOIN cmake_cxx_flags_tmp " " cmake_cxx_flags_tmp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
+      list(JOIN flags_tmp " " flags_tmp)
+      set(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} ${flags_tmp}")
+      message(VERBOSE "Set CMAKE_${lang}_FLAGS to: ${CMAKE_${lang}_FLAGS}")
+      set_parent_scope(CMAKE_${lang}_FLAGS)
+    endforeach()
   endif()
 
   if(NOT legate_CUDA_FLAGS)
@@ -184,7 +192,8 @@ function(legate_configure_default_compiler_flags)
 
     legate_set_default_flags_impl(LANG CUDA DEST_VAR legate_CUDA_FLAGS
                                   FLAGS ${default_cuda_flags})
-    set(legate_CUDA_FLAGS "${legate_CUDA_FLAGS}" PARENT_SCOPE)
+    message(VERBOSE "Set legate_CUDA_FLAGS to: ${legate_CUDA_FLAGS}")
+    set_parent_scope(legate_CUDA_FLAGS)
   endif()
 endfunction()
 
@@ -199,6 +208,7 @@ function(legate_configure_default_linker_flags)
   if(NOT legate_LINKER_FLAGS)
     legate_set_default_flags_impl(IS_LINKER LANG CXX DEST_VAR legate_LINKER_FLAGS
                                   FLAGS ${default_linker_flags})
-    set(legate_LINKER_FLAGS "${legate_LINKER_FLAGS}" PARENT_SCOPE)
+    message(VERBOSE "Set legate_LINKER_FLAGS to: ${legate_LINKER_FLAGS}")
+    set_parent_scope(legate_LINKER_FLAGS)
   endif()
 endfunction()

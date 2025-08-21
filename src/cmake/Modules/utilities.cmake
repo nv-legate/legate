@@ -7,6 +7,7 @@ include_guard(GLOBAL)
 
 include(CMakePushCheckState)
 include(CheckCompilerFlag)
+include(CheckLinkerFlag)
 
 macro(legate_string_escape_re_chars output_var input_var)
   # Escapes all special regex characters detailed at
@@ -205,7 +206,26 @@ function(legate_check_compiler_flag lang flag success_var)
   cmake_push_check_state()
   set(CMAKE_REQUIRED_QUIET ON)
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
-  check_compiler_flag(${lang} "${flag}" ${flag_sanitized}_supported)
+  check_compiler_flag("${lang}" "${flag}" ${flag_sanitized}_supported)
+  cmake_pop_check_state()
+
+  if(${flag_sanitized}_supported)
+    message(CHECK_PASS "yes")
+  else()
+    message(CHECK_FAIL "no")
+  endif()
+
+  set(${success_var} "${${flag_sanitized}_supported}" PARENT_SCOPE)
+endfunction()
+
+function(legate_check_linker_flag lang flag success_var)
+  string(MAKE_C_IDENTIFIER "${flag}" flag_sanitized)
+  message(CHECK_START "${lang} linker supports ${flag}")
+
+  cmake_push_check_state()
+  set(CMAKE_REQUIRED_QUIET ON)
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror")
+  check_linker_flag("${lang}" "${flag}" ${flag_sanitized}_supported)
   cmake_pop_check_state()
 
   if(${flag_sanitized}_supported)

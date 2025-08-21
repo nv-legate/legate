@@ -206,6 +206,11 @@
                     "nargs": 3
                 }
             },
+            "legate_check_linker_flag": {
+                "pargs": {
+                    "nargs": 3
+                }
+            },
             "legate_configure_benchmark": {
                 "kwargs": {
                     "SOURCES": "+",
