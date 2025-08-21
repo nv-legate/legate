@@ -208,9 +208,9 @@ void MPINetwork::all_to_all_v(const void* sendbuf,
     // How else are we supposed to make a char* out of const void*?????????????????????????
     // NOLINTNEXTLINE(bugprone-casting-through-void)
     const auto src = static_cast<char*>(const_cast<void*>(sendbuf)) +
-                     static_cast<std::ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent;
+                     (static_cast<std::ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent);
     const auto dst = static_cast<char*>(recvbuf) +
-                     static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
+                     (static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent);
     const int scount             = sendcounts[sendto_global_rank];
     const int rcount             = recvcounts[recvfrom_global_rank];
     const auto sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
@@ -271,9 +271,9 @@ void MPINetwork::all_to_all(const void* sendbuf,
     // How else are we supposed to make a char* out of const void*?????????????????????????
     // NOLINTNEXTLINE(bugprone-casting-through-void)
     const auto src = static_cast<char*>(const_cast<void*>(sendbuf)) +
-                     static_cast<std::ptrdiff_t>(sendto_global_rank) * type_extent * count;
+                     (static_cast<std::ptrdiff_t>(sendto_global_rank) * type_extent * count);
     const auto dst = static_cast<char*>(recvbuf) +
-                     static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
+                     (static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count);
     const auto sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
     const auto recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[recvfrom_global_rank];
 
@@ -543,7 +543,7 @@ int MPINetwork::generate_alltoall_tag_(int rank1,
                                        legate::comm::coll::CollComm global_comm) const
 {
   const int tag =
-    match_to_ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG + CollTag::ALLTOALL_TAG;
+    (match_to_ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG) + CollTag::ALLTOALL_TAG;
   LEGATE_CHECK(tag <= mpi_tag_ub_ && tag > 0);
   return tag;
 }  // namespace
@@ -553,21 +553,21 @@ int MPINetwork::generate_alltoallv_tag_(int rank1,
                                         legate::comm::coll::CollComm global_comm) const
 {
   const int tag =
-    match_to_ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG + CollTag::ALLTOALLV_TAG;
+    (match_to_ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG) + CollTag::ALLTOALLV_TAG;
   LEGATE_CHECK(tag <= mpi_tag_ub_ && tag > 0);
   return tag;
 }
 
 int MPINetwork::generate_bcast_tag_(int rank, legate::comm::coll::CollComm /*global_comm*/) const
 {
-  const int tag = rank * CollTag::MAX_TAG + CollTag::BCAST_TAG;
+  const int tag = (rank * CollTag::MAX_TAG) + CollTag::BCAST_TAG;
   LEGATE_CHECK(tag <= mpi_tag_ub_ && tag >= 0);
   return tag;
 }
 
 int MPINetwork::generate_gather_tag_(int rank, legate::comm::coll::CollComm /*global_comm*/) const
 {
-  const int tag = rank * CollTag::MAX_TAG + CollTag::GATHER_TAG;
+  const int tag = (rank * CollTag::MAX_TAG) + CollTag::GATHER_TAG;
   LEGATE_CHECK(tag <= mpi_tag_ub_ && tag > 0);
   return tag;
 }

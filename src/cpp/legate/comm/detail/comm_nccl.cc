@@ -76,7 +76,7 @@ class InitId : public detail::LegionTask<InitId> {
                                   Legion::Context context,
                                   Legion::Runtime* runtime)
   {
-    nvtx3::scoped_range auto_range{task_name_().data()};
+    const nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 
@@ -98,7 +98,7 @@ class Init : public detail::LegionTask<Init> {
                                  Legion::Context context,
                                  Legion::Runtime* runtime)
   {
-    nvtx3::scoped_range auto_range{task_name_().data()};
+    const nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 
@@ -116,7 +116,8 @@ class Init : public detail::LegionTask<Init> {
     LEGATE_CHECK_NCCL(ncclGroupEnd());
     auto ts_init_stop = std::chrono::high_resolution_clock::now();
 
-    auto time_init = std::chrono::duration<double>(ts_init_stop - ts_init_start).count() * 1000.0;
+    constexpr double MILLI = 1000.0;
+    auto time_init = std::chrono::duration<double>(ts_init_stop - ts_init_start).count() * MILLI;
 
     if (0 == rank_id) {
       legate::detail::log_legate().debug() << "NCCL initialization took " << time_init << " ms";
@@ -188,7 +189,7 @@ class Finalize : public detail::LegionTask<Finalize> {
                           Legion::Context context,
                           Legion::Runtime* runtime)
   {
-    nvtx3::scoped_range auto_range{task_name_().data()};
+    const nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 
@@ -234,7 +235,8 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
 Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                        std::uint32_t num_tasks)
 {
-  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
+  const Domain launch_domain{
+    Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   // Create a communicator ID
   //
@@ -274,7 +276,8 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
                         std::uint32_t num_tasks,
                         const Legion::FutureMap& communicator)
 {
-  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
+  const Domain launch_domain{
+    Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   // Use the default parallel policy here for two reasons: first, tasks using communicators are not
   // admissible to streaming; second, the over-decomposition factor is already factored in the
@@ -288,10 +291,6 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
 }
-
-namespace {
-
-}  // namespace
 
 void register_tasks(detail::Library& core_library)
 {

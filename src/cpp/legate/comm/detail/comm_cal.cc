@@ -116,8 +116,8 @@ class Init : public detail::LegionTask<Init> {
     params.req_test     = [](void*) { return CAL_OK; };
     params.req_free     = [](void*) { return CAL_OK; };
     params.data         = static_cast<void*>(cpu_comm);
-    params.rank         = task->index_point[0];
-    params.nranks       = task->index_domain.get_volume();
+    params.rank         = static_cast<int>(task->index_point[0]);
+    params.nranks       = static_cast<int>(task->index_domain.get_volume());
     params.local_device = cuda::detail::get_cuda_driver_api()->ctx_get_device();
 
     CHECK_CAL(cal_comm_create(params, &cal_comm));

@@ -19,7 +19,7 @@ OMPThreadLocalStorage<VAL>::OMPThreadLocalStorage(std::uint32_t num_threads)
 template <typename VAL>
 VAL& OMPThreadLocalStorage<VAL>::operator[](std::uint32_t idx)
 {
-  return *reinterpret_cast<VAL*>(storage_.data() + PER_THREAD_SIZE * idx);
+  return *reinterpret_cast<VAL*>(storage_.data() + (PER_THREAD_SIZE * idx));
 }
 
 }  // namespace legate::detail
