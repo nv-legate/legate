@@ -5,7 +5,9 @@
 
 set -euo pipefail
 
-export RAPIDS_SCRIPT_NAME="test_sheel_linux.bash"
+pwd
+
+export RAPIDS_SCRIPT_NAME="test_wheel_linux.bash"
 
 rapids-logger "Are my wheels there???"
 
@@ -21,3 +23,21 @@ export LEGATE_CONFIG="--fbmem 512"
 export LEGION_DEFAULT_ARGS="-ll:show_rsrv"
 python -c 'import legate.core'
 rapids-logger "Maybe that worked"
+
+
+rapids-logger "legate-issue"
+python -c "from legate.issue import main; main()"
+
+# Attempt to run the tests...
+rapids-pip-retry install psutil pytest pytest-mock ipython jupyter_client cupy openmpi
+
+# pytest doesn't truncate output if "CI" is defined in the env:
+# https://doc.pytest.org/en/latest/explanation/ci.html
+export CI=1
+
+rapids-logger "Running python tests on 1 GPU machine ..."
+LEGATE_CONFIG="--fbmem 4000 --gpus 1 --auto-config 0" \
+    python -m pytest \
+    --color=yes \
+    tests/python \
+    -s

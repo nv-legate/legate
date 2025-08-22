@@ -51,6 +51,7 @@ test = [
     "pytest",
     "pytest-mock",
     "jupyter_client",
+    "openmpi",
 ]
 
 [project.urls]

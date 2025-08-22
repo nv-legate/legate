@@ -99,6 +99,7 @@ jobs:
         run: |
           sha="$(echo ${{github.sha}} | head -c 10)"
           echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
+
       - if: github.repository_owner == 'nv-legate'
         name: Get AWS credentials for sccache bucket
         uses: aws-actions/configure-aws-credentials@v4
@@ -106,30 +107,36 @@ jobs:
           aws-region: us-east-2
           role-duration-seconds: 28800 # 8 hours
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
+
       - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.sha }}
           fetch-depth: 0
+
       - name: Add default paths to the env
         run: |
           # The || true is to satisfy the linting check, seems less readable to me.
           echo "$(pwd)/continuous_integration/scripts/tools" >> "${GITHUB_PATH}" || true
+
       - uses: actions/checkout@v4
         with:
           repository: rapidsai/gha-tools
           path: gha-tools
           fetch-depth: 0
+
       # actions/checkout puts the downloaded repository under
       # $GITHUB_WORKSPACE/${{ inputs. path }}
       - name: Add rapids GHA tools to path
         run: |
           echo "${GITHUB_WORKSPACE}/gha-tools/tools" >> "${GITHUB_PATH}"
+
       - name: C++ wheel build
         run: ${{ inputs.script }}
         env:
           STEP_NAME: "C++ build"
           GH_TOKEN: ${{ github.token }}
+
       - name: C++ wheel upload
         env:
           BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12-py${{ matrix.PY_VER }}

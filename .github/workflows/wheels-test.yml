@@ -76,10 +76,10 @@ jobs:
           )"
 
           echo "MATRIX=${MATRIX}" | tee --append "${GITHUB_OUTPUT}"
-  build:
-    name: ${{ matrix.ARCH }}, py${{ matrix.PY_VER }}, ${{ matrix.CUDA_VER }} ${{ matrix.LINUX_VER }}, ${{ matrix.GPU }}
+  test:
+    name: ${{ matrix.ARCH }}, py${{ matrix.PY_VER }}, ${{ matrix.CUDA_VER }}, ${{ matrix.LINUX_VER }}, ${{ matrix.GPU }}
     needs: compute-matrix
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.compute-matrix.outputs.MATRIX) }}
@@ -94,22 +94,27 @@ jobs:
         run: |
           sha="$(echo ${{github.sha}} | head -c 10)"
           echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
+
       - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.sha }}
           fetch-depth: 0
+
       - name: Add default paths to the env
         run: |
           # The || true is to satisfy the linting check, seems less readable to me.
           echo "$(pwd)/continuous_integration/scripts/tools" >> "${GITHUB_PATH}" || true
+
       - name: Run nvidia-smi to make sure GPU is working
         run: nvidia-smi
+
       - name: Setup proxy cache
         uses: nv-gha-runners/setup-proxy-cache@main
         continue-on-error: true
         # Skip the cache on RDS Lab nodes
         if: ${{ matrix.GPU != 'v100' && matrix.GPU != 'a100' }}
+
       - name: Download wheels from the build job
         uses: actions/download-artifact@v4
         env:
