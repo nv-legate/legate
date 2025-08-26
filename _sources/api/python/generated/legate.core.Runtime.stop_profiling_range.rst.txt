@@ -1,0 +1,6 @@
+legate.core.Runtime.stop\_profiling\_range
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.stop_profiling_range
