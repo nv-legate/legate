@@ -173,7 +173,7 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
     return {get_buffer_(), bounds, sizeof(T), false};
   }
 
-  return create_field_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds);
+  return create_field_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
@@ -191,7 +191,7 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
     return {get_buffer_(), bounds, sizeof(T), false};
   }
 
-  return create_field_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds);
+  return create_field_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
@@ -209,7 +209,7 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) c
     return {get_buffer_(), bounds, sizeof(T), false};
   }
 
-  return create_field_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds);
+  return create_field_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
@@ -228,7 +228,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
     return {get_buffer_(), bounds, false, nullptr, 0, sizeof(T), false};
   }
 
-  return create_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(bounds);
+  return create_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, std::int32_t DIM>
@@ -306,7 +306,7 @@ void PhysicalStore::check_accessor_type_() const
 }
 
 template <typename ACC, typename T, std::int32_t DIM>
-ACC PhysicalStore::create_field_accessor_(const Rect<DIM>& bounds) const
+ACC PhysicalStore::create_field_accessor_(const Rect<DIM>& bounds, bool validate_type) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
 
@@ -321,11 +321,11 @@ ACC PhysicalStore::create_field_accessor_(const Rect<DIM>& bounds) const
                         transform,
                         bounds);
   }
-  return {std::move(pr), fid, bounds};
+  return {std::move(pr), fid, bounds, /* actual_field_size */ sizeof(T), validate_type};
 }
 
 template <typename ACC, typename T, std::int32_t DIM>
-ACC PhysicalStore::create_reduction_accessor_(const Rect<DIM>& bounds) const
+ACC PhysicalStore::create_reduction_accessor_(const Rect<DIM>& bounds, bool validate_type) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
 
@@ -341,7 +341,15 @@ ACC PhysicalStore::create_reduction_accessor_(const Rect<DIM>& bounds) const
                         transform,
                         bounds);
   }
-  return {std::move(pr), fid, static_cast<Legion::ReductionOpID>(get_redop_id_()), bounds};
+  return {std::move(pr),
+          fid,
+          static_cast<Legion::ReductionOpID>(get_redop_id_()),
+          bounds,
+          /* silence_warnings */ false,
+          /* warning_string */ nullptr,
+          /* subfield_offset */ 0,
+          /* actual_field_size */ sizeof(T),
+          /* check_field_size */ validate_type};
 }
 
 inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }

@@ -698,10 +698,51 @@ class LEGATE_EXPORT PhysicalStore {
 
   [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field_() const;
   [[nodiscard]] GlobalRedopID get_redop_id_() const;
+
+  /**
+   * @brief Create a standard read/read-write/write-only field accessor over the underlying
+   * data of the store.
+   *
+   * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
+   * be useful to disable it wholesale, for example when punning the underlying buffer as some
+   * other data-type. In this case, the user must take care to pass the right field sizes and
+   * shapes to the accessor, but is otherwise free to recast the data as they see fit.
+   *
+   * @tparam ACC The accessor type to create.
+   * @tparam T The value type of the accessor (since Legion accessors don't expose this
+   * directly).
+   * @tparam DIM The dimension of the accessor (and therefore the shape).
+   *
+   * @param bounds The bounds over which the accessor should provide access. Must be within the
+   * bounds of the store's shape.
+   * @param validate_type Whether to perform type size verification.
+   *
+   * @return The accessor.
+   */
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds) const;
+  [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
+
+  /**
+   * @brief Create a reduction field accessor over the underlying data.
+   *
+   * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
+   * be useful to disable it wholesale, for example when punning the underlying buffer as some
+   * other data-type. In this case, the user must take care to pass the right field sizes and
+   * shapes to the accessor, but is otherwise free to recast the data as they see fit.
+   *
+   * @tparam ACC The accessor type to create.
+   * @tparam T The value type of the accessor (since Legion accessors don't expose this
+   * directly).
+   * @tparam DIM The dimension of the accessor (and therefore the shape).
+   *
+   * @param bounds The bounds over which the accessor should provide access. Must be within the
+   * bounds of the store's shape.
+   * @param validate_type Whether to perform type size verification.
+   *
+   * @return The accessor.
+   */
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds) const;
+  [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
 
   [[nodiscard]] bool is_read_only_future_() const;
   [[nodiscard]] std::size_t get_field_offset_() const;
