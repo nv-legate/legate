@@ -345,7 +345,15 @@ void StoreMapping::populate_layout_constraints(
     LEGATE_CHECK(field_set.size() == 1);
   }
 
-  layout_constraints.field_constraint.field_set  = {first_region_field.field_id()};
+  // To silence gcc 12 error:
+  //
+  // c++/bits/stl_algobase.h:434:30: error: 'void* __builtin_memcpy(void*, const void*, long
+  // unsigned int)' forming offset 4 is out of the bounds [0, 4] of object '<anonymous>' with
+  // type 'const unsigned int [1]' [-Werror=array-bounds]
+  // when implementing it like:
+  // layout_constraints.field_constraint.field_set  = {first_region_field.field_id()};
+  layout_constraints.field_constraint.field_set.clear();
+  layout_constraints.field_constraint.field_set.push_back(first_region_field.field_id());
   layout_constraints.field_constraint.contiguous = false;
   layout_constraints.field_constraint.inorder    = false;
 }
