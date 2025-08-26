@@ -108,7 +108,7 @@ namespace {
 // This is the unique string name for our library which can be used from both C++ and Python to
 // generate IDs
 constexpr std::string_view CORE_LIBRARY_NAME = "legate.core";
-constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
+constexpr const char* const TOPLEVEL_NAME    = "Toplevel Task";
 
 }  // namespace
 

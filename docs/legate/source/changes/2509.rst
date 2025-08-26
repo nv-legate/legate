@@ -76,6 +76,9 @@ Python
 
 .. rubric:: Runtime
 
+- Expose profiling range functions to Python: ``legate.core.start_profiling_range()`` and
+  ``legate.core.stop_profiling_range()``.
+
 .. rubric:: Utilities
 
 .. rubric:: I/O

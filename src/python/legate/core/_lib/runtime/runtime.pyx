@@ -1278,11 +1278,20 @@ cdef class Runtime(Unconstructable):
         global _shutdown_manager
         _shutdown_manager.add_shutdown_callback(callback)
 
-    cdef void start_profiling_range(self):
+    cpdef void start_profiling_range(self):
+        r"""Start a Legion profiling range."""
         self._handle.start_profiling_range()
 
-    cdef void stop_profiling_range(self, std_string_view provenance):
-        self._handle.stop_profiling_range(provenance)
+    cpdef void stop_profiling_range(self, str provenance):
+        r"""Stop a Legion profiling range.
+
+        Parameters
+        ----------
+        provenance : str
+            Title that will be given to the range on the profiling output
+        """
+        cdef std_string_view _provenance = std_string_view_from_py(provenance)
+        self._handle.stop_profiling_range(_provenance)
 
     cdef void* get_cuda_stream(self):
         return self._handle.get_cuda_stream()
@@ -1529,14 +1538,11 @@ def ProfileRange(provenance: str) -> Iterator[None]:
             # do stuff
 
     """
-    cdef std_string_view _provenance = std_string_view_from_py(
-        provenance
-    )
     get_legate_runtime().start_profiling_range()
     try:
         yield
     finally:
-        get_legate_runtime().stop_profiling_range(_provenance)
+        get_legate_runtime().stop_profiling_range(provenance)
 
 
 atexit.register(_cleanup_legate_runtime)
