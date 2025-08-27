@@ -24,7 +24,7 @@ from ..type.types cimport Type, _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain, _LocalTaskID, VariantCode
 from ..utilities.unconstructable cimport Unconstructable
-from .detail.config cimport _Config
+from .detail.config cimport _Config, Config
 from .library cimport Library, _Library
 from .resource cimport _ResourceConfig, ResourceConfig
 
@@ -225,7 +225,7 @@ cdef class Runtime(Unconstructable):
     cdef int32_t get_current_cuda_device(self)
     cdef void begin_trace(self, uint32_t)
     cdef void end_trace(self, uint32_t)
-    cdef const _Config* const config(self)
+    cpdef Config config(self)
 
 cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()

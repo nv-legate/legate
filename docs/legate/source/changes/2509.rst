@@ -81,6 +81,8 @@ Python
 
 - Expose profiling range functions to Python: ``legate.core.start_profiling_range()`` and
   ``legate.core.stop_profiling_range()``.
+- Add ``legate.core.runtime.config`` property to access runtime configuration. Note that this
+  API is considered an implementation detail and has no guarantee of stability.
 
 .. rubric:: Utilities
 

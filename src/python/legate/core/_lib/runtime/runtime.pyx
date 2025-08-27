@@ -44,6 +44,7 @@ from ..utilities.utils cimport (
     uint64_tuple_from_iterable,
 )
 from .library cimport Library, _Library
+from .detail.config cimport Config
 
 from ....settings import settings
 from ...utils import AnyCallable, ShutdownCallback
@@ -1305,8 +1306,16 @@ cdef class Runtime(Unconstructable):
     cdef void end_trace(self, uint32_t trace_id):
         self._handle.end_trace(trace_id)
 
-    cdef const _Config* const config(self):
-        return &self._handle.config()
+    cpdef Config config(self):
+        r"""
+        Get the runtime configuration.
+
+        Returns
+        -------
+        Config
+            The runtime configuration object.
+        """
+        return Config.from_handle(&self._handle.config())
 
 
 cdef tuple[bool, bool] _set_realm_backtrace(str value):
@@ -1433,7 +1442,7 @@ cdef str _provenance_from_frameinfo(info: tuple[str, int]):
 class _Provenance:
     @staticmethod
     def config_value() -> bool:
-        return get_legate_runtime().config().provenance()
+        return get_legate_runtime().config().provenance
 
 
 def track_provenance(
