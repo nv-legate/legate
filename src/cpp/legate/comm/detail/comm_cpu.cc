@@ -12,6 +12,7 @@
 #include <legate/comm/detail/backend_network.h>
 #include <legate/comm/detail/comm_local.h>
 #include <legate/comm/detail/comm_mpi.h>
+#include <legate/comm/detail/comm_ucc.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/library.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -37,6 +38,14 @@ void register_tasks(detail::Library& core_library)
       }
       break;
     case CollCommType::CollLocal: local::register_tasks(lib); break;
+    case CollCommType::CollUCC:
+      if constexpr (LEGATE_DEFINED(LEGATE_USE_UCX)) {
+        legate::detail::comm::ucc::register_tasks(lib);
+      } else {
+        throw legate::detail::TracedException<std::runtime_error>{
+          "cannot register UCC tasks, legate was not configured with UCC support"};
+      }
+      break;
   }
 }
 
@@ -53,6 +62,12 @@ void register_factory(const detail::Library& library)
         throw legate::detail::TracedException<std::runtime_error>{
           "cannot create MPI factory, legate was not configured with MPI support"};
       case CollCommType::CollLocal: return local::make_factory(library);
+      case CollCommType::CollUCC:
+        if constexpr (LEGATE_DEFINED(LEGATE_USE_UCX)) {
+          return legate::detail::comm::ucc::make_factory(library);
+        }
+        throw legate::detail::TracedException<std::runtime_error>{
+          "cannot create UCC factory, legate was not configured with UCC support"};
     }
     LEGATE_UNREACHABLE();
     return nullptr;

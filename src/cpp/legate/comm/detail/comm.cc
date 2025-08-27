@@ -24,7 +24,13 @@ void register_tasks(Library& library)
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
-  if (!Runtime::get_runtime().config().disable_mpi()) {
+
+  // Register CPU communication tasks based on network backend availability
+  const bool mpi_disabled = Runtime::get_runtime().config().disable_mpi();
+  const bool use_mpi      = LEGATE_DEFINED(LEGATE_USE_MPI) && !mpi_disabled;
+  const bool use_ucx      = LEGATE_DEFINED(LEGATE_USE_UCX) && mpi_disabled;
+
+  if (use_mpi || use_ucx) {
     cpu::register_tasks(library);
   }
 }

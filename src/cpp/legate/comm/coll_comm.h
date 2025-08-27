@@ -32,7 +32,7 @@ enum class CollDataType : std::uint8_t {
   CollDouble,
 };
 
-enum class CollCommType : std::uint8_t { CollMPI, CollLocal };
+enum class CollCommType : std::uint8_t { CollMPI, CollLocal, CollUCC };
 
 // TODO(jfaibussowit)
 // Decouple these

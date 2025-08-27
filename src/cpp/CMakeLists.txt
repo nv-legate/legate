@@ -175,6 +175,10 @@ endif()
 # * UCX ----------------------------------------------------------------
 
 if(legate_USE_UCX)
+  if(NOT legate_USE_MPI)
+    message(FATAL_ERROR "UCX is not supported without MPI. Please enable MPI support.")
+  endif()
+
   # UCX is not supported on macOS.
   if(APPLE)
     message(FATAL_ERROR "UCX is not supported on macOS. Please disable UCX support.")
@@ -501,6 +505,13 @@ if(legate_USE_MPI)
     target_compile_definitions(legate_obj
                                PRIVATE LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER=1)
   endif()
+endif()
+
+if(legate_USE_UCX)
+  target_sources(legate_obj
+                 PRIVATE legate/comm/detail/oob_allgather.cc
+                         legate/comm/detail/ucc_network.cc legate/comm/detail/comm_ucc.cc
+                         legate/comm/detail/mpi_oob_allgather.cc)
 endif()
 
 if(Legion_USE_OpenMP)

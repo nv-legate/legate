@@ -9,6 +9,7 @@
 #include <legate/comm/detail/backend_network.h>
 #include <legate/comm/detail/logger.h>
 #include <legate/utilities/abort.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 namespace coll_detail = legate::detail::comm::coll;
 
@@ -38,9 +39,28 @@ void collAlltoallv(const void* sendbuf,
                    CollDataType type,
                    CollComm global_comm)
 {
-  // IN_PLACE
+  if (sendbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid sendbuf: nullptr"};
+  }
+  if (recvbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid recvbuf: nullptr"};
+  }
+  if (sendcounts == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid sendcounts: nullptr"};
+  }
+  if (sdispls == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid sdispls: nullptr"};
+  }
+  if (recvcounts == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid recvcounts: nullptr"};
+  }
+  if (rdispls == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid rdispls: nullptr"};
+  }
+  // IN_PLACE is not supported
   if (sendbuf == recvbuf) {
-    LEGATE_ABORT("Do not support inplace Alltoallv");
+    throw legate::detail::TracedException<std::invalid_argument>{
+      "Inplace Alltoallv not yet supported"};
   }
   coll_detail::logger().debug() << "Alltoallv: global_rank " << global_comm->global_rank
                                 << ", mpi_rank " << global_comm->mpi_rank << ", unique_id "
@@ -57,9 +77,19 @@ void collAlltoallv(const void* sendbuf,
 void collAlltoall(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
-  // IN_PLACE
+  if (sendbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid sendbuf: nullptr"};
+  }
+  if (recvbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid recvbuf: nullptr"};
+  }
+  if (count <= 0) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid count: <= 0"};
+  }
+  // IN_PLACE is not supported
   if (sendbuf == recvbuf) {
-    LEGATE_ABORT("Do not support inplace Alltoall");
+    throw legate::detail::TracedException<std::invalid_argument>{
+      "Inplace Alltoall not yet supported"};
   }
   coll_detail::logger().debug() << "Alltoall: global_rank " << global_comm->global_rank
                                 << ", mpi_rank " << global_comm->mpi_rank << ", unique_id "
@@ -76,6 +106,16 @@ void collAlltoall(
 void collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
+  if (sendbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid sendbuf: nullptr"};
+  }
+  if (recvbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid recvbuf: nullptr"};
+  }
+  if (count <= 0) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid count: <= 0"};
+  }
+
   coll_detail::logger().debug() << "Allgather: global_rank " << global_comm->global_rank
                                 << ", mpi_rank " << global_comm->mpi_rank << ", unique_id "
                                 << global_comm->unique_id << ", comm_size "

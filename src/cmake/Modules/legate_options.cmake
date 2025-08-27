@@ -95,7 +95,7 @@ legate_option(legate_BUILD_BENCHMARKS LEGATE_BUILD_BENCHMARKS "Build legate benc
 legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate" OFF)
 legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" OFF)
 legate_option(legate_USE_UCX LEGATE_USE_UCX "Enable UCX support" OFF)
-legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" OFF)
+legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" ${legate_USE_UCX})
 
 set(legion_networks)
 

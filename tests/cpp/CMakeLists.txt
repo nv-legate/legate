@@ -320,6 +320,14 @@ set(wo_runtime_SRC
     noinit/argument_parsing/scaled.cc
     noinit/argument_parsing/cuda_driver_path.cc)
 
+set(wo_runtime_EXTRA_TARGETS argparse::argparse)
+
+if(legate_USE_UCX)
+  list(APPEND wo_runtime_SRC integration/comm/ucc_integration.cc unit/comm/ucc_network.cc
+       unit/comm/oob_allgather.cc)
+  list(APPEND wo_runtime_EXTRA_TARGETS ucx::ucp ucx::ucs ucc::ucc)
+endif()
+
 set(non_reentrant_with_runtime_SRC
     non_reentrant/death_example.cc non_reentrant/oom_message.cc non_reentrant/runtime.cc
     non_reentrant/shutdown_callback.cc non_reentrant/sharding.cc)
@@ -336,7 +344,7 @@ legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
                       ADDITIONAL_TARGETS ${with_runtime_TARGETS})
 legate_configure_test(NAME tests_wo_runtime SOURCES main_wo_runtime_init.cc
                                                     ${wo_runtime_SRC}
-                      ADDITIONAL_TARGETS argparse::argparse)
+                      ADDITIONAL_TARGETS ${wo_runtime_EXTRA_TARGETS})
 legate_configure_test(NAME tests_non_reentrant_with_runtime
                       SOURCES main_with_runtime_init.cc ${non_reentrant_with_runtime_SRC})
 legate_configure_test(NAME tests_non_reentrant_wo_runtime
