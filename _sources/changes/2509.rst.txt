@@ -26,6 +26,9 @@ C++
 
 - Add config option ``--profile-name`` to customize the base filename for profiling
   output.
+- Add new UCX networking backend. On supporting builds (``LEGATE_DEFINED(LEGATE_USE_UCX)``
+  being ``1``), CPU collectives can be routed through UCX by disabling
+  MPI (``LEGATE_CONFIG=--disable-mpi``).
 
 .. rubric:: Data
 
