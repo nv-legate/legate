@@ -152,11 +152,17 @@ InternalSharedPtr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar(
       case Type::Code::STRUCT:
         return align_for_unpack<std::byte>(ptr, capacity, ty->size(), ty->alignment());
       case Type::Code::STRING:
-        // The size is an approximation here. We cannot know the true size of the string until
-        // we have aligned the pointer, but we cannot align the pointer without knowing the
-        // true size of the string... so we give a lower bound
-        return align_for_unpack<std::byte>(
-          ptr, capacity, sizeof(std::uint32_t) + sizeof(char), alignof(std::max_align_t));
+        // Strings are stored as follows in memory:
+        //
+        // [size (as some type), chars...]
+        //
+        // So we should align ourselves to be able to unpack the size, since the chars will all
+        // have alignment = 1
+        return align_for_unpack<Scalar::string_storage_size_type>(
+          ptr,
+          capacity,
+          sizeof(Scalar::string_storage_size_type),
+          alignof(Scalar::string_storage_size_type));
       case Type::Code::LIST:
         // don't know how to handle these yet
         break;
@@ -346,7 +352,7 @@ InternalSharedPtr<Type> BaseDeserializer<Deserializer>::unpack_type_()
       return binary_type(size);
     }
     case Type::Code::STRING: {
-      return make_internal_shared<StringType>();
+      return string_type();
     }
   }
   LEGATE_ABORT("unhandled type code: ", to_underlying(code));

@@ -7,12 +7,13 @@
 #include <legate/data/detail/scalar.h>
 
 #include <legate/type/detail/types.h>
+#include <legate/utilities/detail/pack.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <type_traits>
+#include <memory>
 #include <utility>
 
 namespace legate::detail {
@@ -49,16 +50,23 @@ Scalar::Scalar(InternalSharedPtr<Type> type, const void* data, bool copy)
 
 Scalar::Scalar(std::string_view value) : own_{true}, type_{string_type()}
 {
-  const auto vsize     = static_cast<std::uint32_t>(value.size());
-  const auto data_size = sizeof(std::decay_t<decltype(value)>::value_type) * vsize;
+  const auto vsize     = static_cast<string_storage_size_type>(value.size());
+  const auto data_size = sizeof(decltype(value)::value_type) * vsize;
   // If you change this, you must also change the pack() function below! The packed buffer must
   // be aligned the same way as it was allocated here, and new char[] aligns to
   // alignof(std::max_align_t)
-  const auto buffer = new char[sizeof(vsize) + data_size];
+  std::size_t capacity = sizeof(vsize) + data_size;
+  auto orig_buffer     = std::unique_ptr<char[]>{new char[capacity]};
+  void* buffer         = orig_buffer.get();
 
-  std::memcpy(buffer, &vsize, sizeof(vsize));
-  std::memcpy(buffer + sizeof(vsize), value.data(), data_size);
-  data_ = buffer;
+  std::tie(buffer, capacity) = pack_buffer(buffer, capacity, vsize);
+  std::ignore                = pack_buffer(buffer,
+                            capacity,
+                            value.size(),
+                            value.data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+  );
+
+  data_ = orig_buffer.release();
 }
 
 Scalar::Scalar(const Scalar& other)
@@ -71,9 +79,9 @@ Scalar::Scalar(const Scalar& other)
 Scalar& Scalar::operator=(const Scalar& other)
 {
   if (this != &other) {
+    clear_data_();
     own_  = other.own_;
     type_ = other.type_;
-    clear_data_();
     if (other.own_) {
       data_ = copy_data_(other.data_, other.size());
     } else {
@@ -86,9 +94,9 @@ Scalar& Scalar::operator=(const Scalar& other)
 Scalar& Scalar::operator=(Scalar&& other) noexcept
 {
   if (this != &other) {
+    clear_data_();
     own_  = std::exchange(other.own_, false);
     type_ = std::move(other.type_);
-    clear_data_();
     data_ = std::exchange(other.data_, nullptr);
   }
   return *this;
@@ -108,15 +116,28 @@ const void* Scalar::copy_data_(const void* data, std::size_t size)
 std::size_t Scalar::size() const
 {
   if (type()->code == Type::Code::STRING) {
-    return *static_cast<const std::uint32_t*>(data()) + sizeof(std::uint32_t);
+    return *static_cast<const string_storage_size_type*>(data()) + sizeof(string_storage_size_type);
   }
   return type()->size();
 }
 
 void Scalar::pack(BufferBuilder& buffer) const
 {
+  const auto align = [&] {
+    if (type()->code == Type::Code::STRING) {
+      // Strings are stored as follows in memory:
+      //
+      // [size (as some type), chars...]
+      //
+      // So the overall alignment of our pack_buffer() should match the size type since the
+      // chars will all have alignment = 1
+      return static_cast<std::uint32_t>(alignof(string_storage_size_type));
+    }
+    return type()->alignment();
+  }();
+
   type()->pack(buffer);
-  buffer.pack_buffer(data(), size(), type()->alignment());
+  buffer.pack_buffer(data(), size(), align);
 }
 
 }  // namespace legate::detail

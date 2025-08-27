@@ -122,6 +122,7 @@ set(with_runtime_SRC
     bug/transpose_fortran_order.cc
     bug/temporary_logical_store.cc
     bug/string_physical_array_owner.cc
+    bug/private_scalar_copy.cc
     # integration
     integration/aligned_unbound_stores.cc
     integration/alignment_constraints.cc

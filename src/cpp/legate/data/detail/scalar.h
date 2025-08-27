@@ -9,6 +9,7 @@
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
+#include <cstdint>
 #include <string_view>
 
 namespace legate::detail {
@@ -32,6 +33,8 @@ class Scalar {
 
   Scalar& operator=(const Scalar& other);
   Scalar& operator=(Scalar&& other) noexcept;
+
+  using string_storage_size_type = std::uint32_t;
 
  private:
   [[nodiscard]] static const void* copy_data_(const void* data, std::size_t size);
