@@ -133,13 +133,13 @@ TEST_F(UCCNetworkTest, OOBOneThread)
 {
   const std::shared_ptr<SharedMemoryAllgather> shared_memory_allgather =
     std::make_shared<SharedMemoryAllgather>(1);
-  UCCNetwork network(
-    {[shared_memory_allgather](int global_rank,
-                               int global_size,
-                               const std::vector<int>& table) -> std::unique_ptr<OOBAllgather> {
+  UCCNetwork network{
+    [shared_memory_allgather](int global_rank,
+                              int global_size,
+                              const std::vector<int>& table) -> std::unique_ptr<OOBAllgather> {
       return std::make_unique<MockOOBForUCC>(
         global_rank, global_size, table, shared_memory_allgather);
-    }});
+    }};
 
   EXPECT_EQ(network.init_comm(), 0);
 
@@ -160,13 +160,13 @@ TEST_F(UCCNetworkTest, OOBTwoThreads)
   const int num_threads = 2;
   const std::shared_ptr<SharedMemoryAllgather> shared_memory_allgather =
     std::make_shared<SharedMemoryAllgather>(num_threads);
-  UCCNetwork network(
-    {[shared_memory_allgather](int global_rank,
-                               int global_size,
-                               const std::vector<int>& table) -> std::unique_ptr<OOBAllgather> {
+  UCCNetwork network{
+    [shared_memory_allgather](int global_rank,
+                              int global_size,
+                              const std::vector<int>& table) -> std::unique_ptr<OOBAllgather> {
       return std::make_unique<MockOOBForUCC>(
         global_rank, global_size, table, shared_memory_allgather, false);
-    }});
+    }};
 
   EXPECT_EQ(network.init_comm(), 0);
 
