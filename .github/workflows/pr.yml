@@ -24,6 +24,17 @@ defaults:
     shell: bash
 
 jobs:
+  source-build:
+    secrets: inherit
+    uses: ./.github/workflows/source-build.yml
+    with:
+      build-type: pull-request
+  source-test:
+    needs: source-build
+    secrets: inherit
+    uses: ./.github/workflows/source-test.yml
+    with:
+      build-type: pull-request
   wheels-build:
     secrets: inherit
     uses: ./.github/workflows/wheels-build.yml

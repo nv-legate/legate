@@ -398,8 +398,7 @@ function(legate_create_dummy_cuda_driver)
   # As an added bonus, CMake will also ensure this rpath gets updated when both of these
   # get installed.
   set_property(TARGET tests_wo_runtime APPEND
-               PROPERTY BUILD_RPATH
-                        "${legate_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR}")
+               PROPERTY BUILD_RPATH "${legate_PLATFORM_RPATH_ORIGIN}/../lib")
   install(TARGETS legate_dummy_cuda_driver DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endfunction()
 legate_create_dummy_cuda_driver()
