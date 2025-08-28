@@ -1,0 +1,6 @@
+legate.core.Runtime.config
+==========================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.config

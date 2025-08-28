@@ -33,6 +33,7 @@ legate.core.Runtime
       :toctree: .
    
       ~Runtime.add_shutdown_callback
+      ~Runtime.config
       ~Runtime.create_array
       ~Runtime.create_array_like
       ~Runtime.create_auto_task
