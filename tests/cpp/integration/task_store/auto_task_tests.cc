@@ -63,6 +63,7 @@ legate::LogicalArray create_normal_array(std::uint32_t index, const legate::Shap
   }
   return array;
 }
+
 // NOLINTEND(readability-magic-numbers)
 
 legate::LogicalArray create_unbound_array(std::uint32_t index, std::uint32_t ndim)
@@ -244,15 +245,21 @@ void auto_task_unbound_reduction(const legate::LogicalArray& array, std::uint32_
 class AutoTaskNormal
   : public TaskStoreTests,
     public ::testing::WithParamInterface<std::tuple<std::int32_t, std::int32_t, legate::Shape>> {};
+
 class AutoTaskNormalInput : public AutoTaskNormal {};
+
 class AutoTaskNormalOutput : public AutoTaskNormal {};
+
 class AutoTaskNormalReduction : public AutoTaskNormal {};
 
 class AutoTaskUnbound
   : public TaskStoreTests,
     public ::testing::WithParamInterface<std::tuple<std::int32_t, std::int32_t, std::uint32_t>> {};
+
 class AutoTaskUnboundInput : public AutoTaskUnbound {};
+
 class AutoTaskUnboundOutput : public AutoTaskUnbound {};
+
 class AutoTaskUnboundReduction : public AutoTaskUnbound {};
 
 // Test instantiations

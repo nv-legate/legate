@@ -25,6 +25,7 @@ class DummyTask : public legate::LegateTask<DummyTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_premature_free";
+
   static void registration_callback(legate::Library library)
   {
     DummyTask::register_variants(library);
@@ -39,7 +40,9 @@ constexpr std::uint64_t EXT = 17;
 
 struct Deleter {
   explicit Deleter(bool* target) : deleted{target} {}
+
   void operator()(void* /*ptr*/) const { *deleted = true; }
+
   bool* deleted{};
 };
 

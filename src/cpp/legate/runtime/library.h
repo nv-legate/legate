@@ -24,7 +24,9 @@
  */
 
 namespace legate::detail {
+
 class Library;
+
 }  // namespace legate::detail
 
 namespace legate {

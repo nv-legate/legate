@@ -131,7 +131,9 @@ class LEGATE_EXPORT ProcessorRange {
 LEGATE_EXPORT std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
 
 namespace detail {
+
 class Machine;
+
 }  // namespace detail
 
 /**

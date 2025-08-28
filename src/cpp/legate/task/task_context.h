@@ -24,7 +24,9 @@ struct CUstream_st;
  */
 
 namespace legate::detail {
+
 class TaskContext;
+
 }  // namespace legate::detail
 
 namespace legate {

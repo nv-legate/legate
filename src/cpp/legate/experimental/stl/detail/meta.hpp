@@ -65,6 +65,7 @@ template <template <typename...> typename, typename...>
 struct test_evaluable_with;  // NOLINT(readability-identifier-naming)
 
 struct test_evaluable_with_base {  // NOLINT(readability-identifier-naming)
+
   template <template <typename...> typename C, typename... Args>
   friend constexpr front_<bool, C<Args...>> test_evaluable(test_evaluable_with<C, Args...>*)
   {
@@ -116,6 +117,7 @@ struct always {  // NOLINT(readability-identifier-naming)
 
 template <template <typename...> typename Fun, typename Default>
 struct quote_or {  // NOLINT(readability-identifier-naming)
+
   template <bool Evaluable>
   struct maybe  // NOLINT(readability-identifier-naming)
     : if_c<Evaluable, quote<Fun>, always<Default>> {};

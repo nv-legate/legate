@@ -59,6 +59,7 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_copy_gather";
+
   static void registration_callback(legate::Library library)
   {
     FillTask<1>::register_variants(library);

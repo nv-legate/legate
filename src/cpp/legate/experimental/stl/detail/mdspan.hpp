@@ -70,6 +70,7 @@ class DefaultAccessor {
       return store.read_write_accessor<ElementType, Dim>();
     }
   }
+
   // NOLINTEND(bugprone-exception-escape)
 };
 
@@ -101,6 +102,7 @@ class ReductionAccessor {
       return store.reduce_accessor<Op, Exclusive, Dim>();
     }
   }
+
   // NOLINTEND(bugprone-exception-escape)
 };
 
@@ -195,6 +197,7 @@ class MDSpanAccessor {
       accessor_{Accessor::template get<ElementType, ActualDim>(store_)}
   {
   }
+
   // NOLINTEND(google-explicit-constructor)
 
   LEGATE_HOST_DEVICE [[nodiscard]] reference access(data_handle_type handle,

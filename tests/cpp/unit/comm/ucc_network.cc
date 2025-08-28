@@ -118,6 +118,7 @@ class MockOOBForUCC final : public OOBAllgather {
   }
 
   ucc_status_t test(void* /*request*/) override { return UCC_OK; }
+
   ucc_status_t free(void* /*request*/) override { return UCC_OK; }
 };
 

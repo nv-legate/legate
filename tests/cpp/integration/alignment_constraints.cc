@@ -78,6 +78,7 @@ struct TransformedTester : public legate::LegateTask<TransformedTester<DIM>> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_alignment_constraints";
+
   static void registration_callback(legate::Library library)
   {
     Initializer::register_variants(library);

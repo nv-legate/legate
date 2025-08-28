@@ -74,6 +74,7 @@ inline constexpr bool abi_compatible_v = abi_compatible<T1, T2>::value;
 
 // NOLINTBEGIN
 enum Foo_enum {};
+
 using FooEnum = int;
 
 struct Foo_st;

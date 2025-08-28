@@ -30,6 +30,7 @@ struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_provenance";
+
   static void registration_callback(legate::Library library)
   {
     ProvenanceTask::register_variants(library);

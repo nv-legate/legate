@@ -28,10 +28,12 @@
  */
 
 namespace legate::detail {
+
 class LogicalArray;
 class LogicalStore;
 class LogicalStorePartition;
 class Storage;
+
 }  // namespace legate::detail
 
 namespace legate {

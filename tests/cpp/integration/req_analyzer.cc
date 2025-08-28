@@ -37,6 +37,7 @@ struct Tester : public legate::LegateTask<Tester> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_req_analyzer";
+
   static void registration_callback(legate::Library library) { Tester::register_variants(library); }
 };
 

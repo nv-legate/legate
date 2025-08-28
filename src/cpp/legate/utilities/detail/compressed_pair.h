@@ -43,12 +43,14 @@ class compressed_pair_impl<T, U, 0> : std::pair<T, U> {
   using typename base_type::second_type;
 
   [[nodiscard]] first_type& first() noexcept { return static_cast<base_type&>(*this).first; }
+
   [[nodiscard]] const first_type& first() const noexcept
   {
     return static_cast<const base_type&>(*this).first;
   }
 
   [[nodiscard]] second_type& second() noexcept { return static_cast<base_type&>(*this).second; }
+
   [[nodiscard]] const second_type& second() const noexcept
   {
     return static_cast<const base_type&>(*this).second;
@@ -76,9 +78,11 @@ class compressed_pair_impl<T, U, 1> : T {
   compressed_pair_impl(second_type x) : second_{std::move(x)} {}
 
   [[nodiscard]] first_type& first() noexcept { return *this; }
+
   [[nodiscard]] const first_type& first() const noexcept { return *this; }
 
   [[nodiscard]] second_type& second() noexcept { return second_; }
+
   [[nodiscard]] const second_type& second() const noexcept { return second_; }
 
  private:
@@ -105,9 +109,11 @@ class compressed_pair_impl<T, U, 2> : U {
   compressed_pair_impl(first_type x) : first_{std::move(x)} {}
 
   [[nodiscard]] first_type& first() noexcept { return first_; }
+
   [[nodiscard]] const first_type& first() const noexcept { return first_; }
 
   [[nodiscard]] second_type& second() noexcept { return *this; }
+
   [[nodiscard]] const second_type& second() const noexcept { return *this; }
 
  private:
@@ -142,12 +148,14 @@ class compressed_pair_impl<T, U, 3> : T, U {
   //
   // In this case both U and T are able to satisfy "conversion" to T
   [[nodiscard]] first_type& first() noexcept { return static_cast<first_type&>(*this); }
+
   [[nodiscard]] const first_type& first() const noexcept
   {
     return static_cast<const first_type&>(*this);
   }
 
   [[nodiscard]] second_type& second() noexcept { return static_cast<second_type&>(*this); }
+
   [[nodiscard]] const second_type& second() const noexcept
   {
     return static_cast<const second_type&>(*this);

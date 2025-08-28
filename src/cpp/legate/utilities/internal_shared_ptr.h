@@ -118,6 +118,7 @@ class InternalWeakPtr {
   void weak_dereference_() noexcept;
 
   struct copy_tag {};
+
   struct move_tag {};
 
   constexpr InternalWeakPtr(move_tag, control_block_type* ctrl_block_) noexcept;
@@ -291,6 +292,7 @@ class InternalSharedPtr {
   void weak_dereference_() noexcept;
 
   struct AllocatedControlBlockTag {};
+
   struct NoCatchAndDeleteTag {};
 
   template <typename U>

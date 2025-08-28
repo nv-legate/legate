@@ -71,6 +71,7 @@ template <typename Function>
 class Elementwise : private Function {
  public:
   Elementwise() = default;
+
   explicit Elementwise(Function fn) : Function{std::move(fn)} {}
 
   [[nodiscard]] const Function& function() const noexcept { return *this; }

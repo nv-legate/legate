@@ -25,6 +25,7 @@ constexpr std::string_view LIBRARY_NAME = "test_alias_via_promote";
 struct Checker : public legate::LegateTask<Checker> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 

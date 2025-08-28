@@ -19,6 +19,7 @@ namespace partitioner_test {
 struct Initializer : public legate::LegateTask<Initializer> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -39,6 +40,7 @@ struct Checker : public legate::LegateTask<Checker> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_partitioner";
+
   static void registration_callback(legate::Library library)
   {
     Initializer::register_variants(library);

@@ -25,6 +25,7 @@ void intentionally_leak_handle(T&& handle)
 {
   static_cast<void>(std::make_unique<T>(std::forward<T>(handle)).release());
 }
+
 // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 }  // namespace

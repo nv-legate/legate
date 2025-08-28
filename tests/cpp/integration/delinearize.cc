@@ -57,6 +57,7 @@ struct Copy : public legate::LegateTask<Copy> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_delinearize";
+
   static void registration_callback(legate::Library library)
   {
     Arange::register_variants(library);

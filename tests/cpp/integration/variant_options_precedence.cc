@@ -24,6 +24,7 @@ struct HasDeclOptions : public legate::LegateTask<HasDeclOptions> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
   static constexpr auto CPU_VARIANT_OPTIONS = DECL_OPTS;
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -33,12 +34,14 @@ struct HasDeclOptionsAndConfig : public legate::LegateTask<HasDeclOptionsAndConf
       legate::VariantOptions{}.with_elide_device_ctx_sync(false));
 
   static constexpr auto CPU_VARIANT_OPTIONS = DECL_OPTS;
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct NoDeclOptions : public legate::LegateTask<NoDeclOptions> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 

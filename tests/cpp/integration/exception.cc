@@ -21,6 +21,7 @@ constexpr std::uint32_t NUM_NORM = 7;
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto index = context.scalar(0).value<std::int32_t>();
@@ -35,12 +36,14 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
 struct NormalTask : public legate::LegateTask<NormalTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_exception";
+
   static void registration_callback(legate::Library library)
   {
     ExceptionTask::register_variants(library);

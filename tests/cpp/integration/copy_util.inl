@@ -72,6 +72,7 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
 
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{FILL_TASK + DIM}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();

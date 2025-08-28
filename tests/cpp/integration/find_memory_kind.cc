@@ -15,6 +15,7 @@ namespace test_find_memory_kind {
 struct Checker : public legate::LegateTask<Checker> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     EXPECT_EQ(legate::find_memory_kind_for_executing_processor(), legate::Memory::Kind::SYSTEM_MEM);
@@ -23,6 +24,7 @@ struct Checker : public legate::LegateTask<Checker> {
     EXPECT_EQ(legate::find_memory_kind_for_executing_processor(false),
               legate::Memory::Kind::SYSTEM_MEM);
   }
+
   static void gpu_variant(legate::TaskContext /*context*/)
   {
     EXPECT_EQ(legate::find_memory_kind_for_executing_processor(), legate::Memory::Kind::Z_COPY_MEM);
@@ -36,6 +38,7 @@ struct Checker : public legate::LegateTask<Checker> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
+
   static void registration_callback(legate::Library library)
   {
     Checker::register_variants(library);

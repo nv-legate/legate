@@ -56,26 +56,37 @@ struct type_code_of  // NOLINT(readability-identifier-naming)
 
 template <>
 struct type_code_of<__half> : std::integral_constant<Type::Code, Type::Code::FLOAT16> {};
+
 template <>
 struct type_code_of<float> : std::integral_constant<Type::Code, Type::Code::FLOAT32> {};
+
 template <>
 struct type_code_of<double> : std::integral_constant<Type::Code, Type::Code::FLOAT64> {};
+
 template <>
 struct type_code_of<std::int8_t> : std::integral_constant<Type::Code, Type::Code::INT8> {};
+
 template <>
 struct type_code_of<std::int16_t> : std::integral_constant<Type::Code, Type::Code::INT16> {};
+
 template <>
 struct type_code_of<std::int32_t> : std::integral_constant<Type::Code, Type::Code::INT32> {};
+
 template <>
 struct type_code_of<std::int64_t> : std::integral_constant<Type::Code, Type::Code::INT64> {};
+
 template <>
 struct type_code_of<std::uint8_t> : std::integral_constant<Type::Code, Type::Code::UINT8> {};
+
 template <>
 struct type_code_of<std::uint16_t> : std::integral_constant<Type::Code, Type::Code::UINT16> {};
+
 template <>
 struct type_code_of<std::uint32_t> : std::integral_constant<Type::Code, Type::Code::UINT32> {};
+
 template <>
 struct type_code_of<std::uint64_t> : std::integral_constant<Type::Code, Type::Code::UINT64> {};
+
 // Do not be fooled by the template parameter. This matches *exactly* std::size_t if and only
 // if it is not the same as std::uint64_t. It needs to be a template because otherwise you
 // cannot use std::enable_if_t.
@@ -90,12 +101,16 @@ struct type_code_of<
   static_assert(sizeof(T) == sizeof(std::uint64_t));
   static_assert(alignof(T) == alignof(std::uint64_t));
 };
+
 template <>
 struct type_code_of<bool> : std::integral_constant<Type::Code, Type::Code::BOOL> {};
+
 template <>
 struct type_code_of<std::string> : std::integral_constant<Type::Code, Type::Code::STRING> {};
+
 template <>
 struct type_code_of<complex<float>> : std::integral_constant<Type::Code, Type::Code::COMPLEX64> {};
+
 template <>
 struct type_code_of<complex<double>> : std::integral_constant<Type::Code, Type::Code::COMPLEX128> {
 };
@@ -103,6 +118,7 @@ struct type_code_of<complex<double>> : std::integral_constant<Type::Code, Type::
 template <>
 struct type_code_of<std::complex<float>>
   : std::integral_constant<Type::Code, Type::Code::COMPLEX64> {};
+
 template <>
 struct type_code_of<std::complex<double>>
   : std::integral_constant<Type::Code, Type::Code::COMPLEX128> {};
@@ -131,6 +147,7 @@ inline constexpr Type::Code type_code_of_v = type_code_of_detail::type_code_of<T
 template <typename T>
 inline constexpr Type::Code type_code_of [[deprecated("use legate::type_code_of_v instead")]] =
   type_code_of_v<T>;
+
 // NOLINTEND(readability-identifier-naming)
 
 // TODO(jfaibussowit)
@@ -141,62 +158,77 @@ template <Type::Code CODE>
 struct type_of {  // NOLINT(readability-identifier-naming)
   using type = void;
 };
+
 template <>
 struct type_of<Type::Code::BOOL> {
   using type = bool;
 };
+
 template <>
 struct type_of<Type::Code::INT8> {
   using type = std::int8_t;
 };
+
 template <>
 struct type_of<Type::Code::INT16> {
   using type = std::int16_t;
 };
+
 template <>
 struct type_of<Type::Code::INT32> {
   using type = std::int32_t;
 };
+
 template <>
 struct type_of<Type::Code::INT64> {
   using type = std::int64_t;
 };
+
 template <>
 struct type_of<Type::Code::UINT8> {
   using type = std::uint8_t;
 };
+
 template <>
 struct type_of<Type::Code::UINT16> {
   using type = std::uint16_t;
 };
+
 template <>
 struct type_of<Type::Code::UINT32> {
   using type = std::uint32_t;
 };
+
 template <>
 struct type_of<Type::Code::UINT64> {
   using type = std::uint64_t;
 };
+
 template <>
 struct type_of<Type::Code::FLOAT16> {
   using type = __half;
 };
+
 template <>
 struct type_of<Type::Code::FLOAT32> {
   using type = float;
 };
+
 template <>
 struct type_of<Type::Code::FLOAT64> {
   using type = double;
 };
+
 template <>
 struct type_of<Type::Code::COMPLEX64> {
   using type = complex<float>;
 };
+
 template <>
 struct type_of<Type::Code::COMPLEX128> {
   using type = complex<double>;
 };
+
 template <>
 struct type_of<Type::Code::STRING> {
   using type = std::string;

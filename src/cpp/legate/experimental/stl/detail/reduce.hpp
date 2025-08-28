@@ -304,6 +304,7 @@ template <typename ValueType = void, typename Function>
 
 template <typename Fun, typename ValueType = void>
 using as_reduction_t = decltype(stl::as_reduction<ValueType>(std::declval<Fun>()));
+
 /** @endcond */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -29,6 +29,7 @@ struct Initializer : public legate::LegateTask<Initializer> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_constraints";
+
   static void registration_callback(legate::Library library)
   {
     Initializer::register_variants(library);
@@ -210,4 +211,5 @@ TEST_F(Constraint, BloatConstraint)
 }
 
 // NOLINTEND(readability-magic-numbers)
+
 }  // namespace

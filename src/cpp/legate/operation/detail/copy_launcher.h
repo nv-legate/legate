@@ -13,7 +13,9 @@
 #include <legate/utilities/detail/small_vector.h>
 
 namespace legate {
+
 class Scalar;
+
 }  // namespace legate
 
 namespace legate::detail {
@@ -71,6 +73,7 @@ class CopyLauncher {
                  Legion::PrivilegeMode privilege);
 
   void set_source_indirect_out_of_range(bool flag) { source_indirect_out_of_range_ = flag; }
+
   void set_target_indirect_out_of_range(bool flag) { target_indirect_out_of_range_ = flag; }
 
   void execute(const Legion::Domain& launch_domain);

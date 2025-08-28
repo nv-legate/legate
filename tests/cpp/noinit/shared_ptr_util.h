@@ -244,6 +244,7 @@ class TogglingDerived final : public BasicDerived {
   bool* toggle{};
 
   TogglingDerived() = delete;
+
   explicit TogglingDerived(bool* tptr) : toggle{tptr} { check_mem_corruption(); }
 
   ~TogglingDerived() override { *toggle = true; }

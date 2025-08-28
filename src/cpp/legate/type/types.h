@@ -25,7 +25,9 @@
  */
 
 namespace legate::detail {
+
 class Type;
+
 }  // namespace legate::detail
 
 namespace legate {
@@ -54,6 +56,7 @@ enum class ReductionOpKind : std::int32_t {
   AND = LEGION_REDOP_KIND_AND,  /*!< Bitwse AND */
   XOR = LEGION_REDOP_KIND_XOR,  /*!< Bitwas XOR */
 };
+
 // NOLINTEND(performance-enum-size)
 
 /**

@@ -26,7 +26,9 @@
  */
 
 namespace legate::detail {
+
 class Scalar;
+
 }  // namespace legate::detail
 
 namespace legate {

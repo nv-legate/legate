@@ -57,6 +57,7 @@ using namespace ::legate::experimental::stl::detail::tags::obj;
 
 #if LEGATE_DEFINED(LEGATE_DOXYGEN)
 namespace legate::experimental::stl {
+
 /**
  * @brief Get the logical store from a logical store-like object.
  *
@@ -65,6 +66,7 @@ namespace legate::experimental::stl {
  */
 template <typename StoreLike>
 LogicalStore get_logical_store(StoreLike&& store_like);
+
 }  // namespace legate::experimental::stl
 #endif
 

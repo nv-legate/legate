@@ -69,6 +69,7 @@ struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
   using Registrar                      = Registry;
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{TID}};
+
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
@@ -270,7 +271,9 @@ class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
     legate::VariantOptions{}.with_elide_device_ctx_sync(true);
 
   static void cpu_variant(legate::TaskContext) {}
+
   static void omp_variant(legate::TaskContext) {}
+
   static void gpu_variant(legate::TaskContext) {}
 };
 

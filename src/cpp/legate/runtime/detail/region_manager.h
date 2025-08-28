@@ -24,12 +24,14 @@ class RegionManager {
   class ManagerEntry {
    public:
     explicit ManagerEntry(Legion::LogicalRegion _region) : region{std::move(_region)} {}
+
     ManagerEntry(const Legion::LogicalRegion& _region, std::uint32_t num_fields)
       : region{_region}, next_field_id{FIELD_ID_BASE + num_fields}
     {
     }
 
     [[nodiscard]] bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
+
     [[nodiscard]] Legion::FieldID get_next_field_id() { return next_field_id++; }
 
     void destroy(Runtime& runtime, bool unordered) const;
@@ -50,7 +52,9 @@ class RegionManager {
 
  private:
   [[nodiscard]] const ManagerEntry& active_entry_() const { return entries_.back(); }
+
   [[nodiscard]] ManagerEntry& active_entry_() { return entries_.back(); }
+
   void push_entry_();
 
  public:

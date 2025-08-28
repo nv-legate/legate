@@ -431,6 +431,7 @@ class ThrowingAllocator {
 class DeleterChecker {
  public:
   explicit DeleterChecker(bool* target) : deleted_{target} {}
+
   void operator()(void* /*ptr*/) const { *deleted_ = true; }
 
  private:

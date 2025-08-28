@@ -79,6 +79,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
         ASSERT_EQ(src[*it] + i * seed.value<VAL>(), tgt[*it]);
       }
     }
+
     template <legate::Type::Code CODE, std::enable_if_t<!legate::is_integral<CODE>::value, int> = 0>
     void operator()(legate::PhysicalStore& /*source*/,
                     legate::PhysicalStore& /*target*/,
@@ -110,6 +111,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_copy_normal";
+
   static void registration_callback(legate::Library library)
   {
     FillTask<1>::register_variants(library);

@@ -214,7 +214,9 @@ namespace {
 
 // NOLINTBEGIN
 MATCHER(PtrEq, "Pointer equals") { return *std::get<0>(arg) == *std::get<1>(arg); }
+
 MATCHER(PtrNotEq, "Pointer not equals") { return *std::get<0>(arg) != *std::get<1>(arg); }
+
 // NOLINTEND
 
 }  // namespace

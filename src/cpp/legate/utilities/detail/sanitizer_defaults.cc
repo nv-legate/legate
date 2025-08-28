@@ -54,6 +54,7 @@ const char* __tsan_default_suppressions()
 #include <legate/generated/tsan_suppressions.h>
     ;
 }
+
 // NOLINTEND
 
 }  // extern "C"

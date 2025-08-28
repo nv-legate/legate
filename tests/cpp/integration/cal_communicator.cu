@@ -48,6 +48,7 @@ class CALCommunicatorTester : public legate::LegateTask<CALCommunicatorTester> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_cal_communicator";
+
   static void registration_callback(legate::Library library)
   {
     CALCommunicatorTester::register_variants(library, CALCommunicatorTester::TASK_CONFIG.task_id());

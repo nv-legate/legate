@@ -66,6 +66,7 @@ class CommunicatorFactory {
     bool operator==(const CacheKey& other) const;
     [[nodiscard]] std::size_t hash() const noexcept;
   };
+
   using CommKey  = CacheKey<std::uint32_t>;
   using AliasKey = CacheKey<Domain>;
 

@@ -34,6 +34,7 @@ class TesterTask : public legate::LegateTask<TesterTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_region_manager";
+
   static void registration_callback(legate::Library library)
   {
     TesterTask::register_variants(library);

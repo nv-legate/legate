@@ -26,8 +26,10 @@
  */
 
 namespace legate::detail {
+
 class AutoTask;
 class ManualTask;
+
 }  // namespace legate::detail
 
 namespace legate {

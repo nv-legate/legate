@@ -128,6 +128,7 @@ Storage::~Storage()
     }
   }
 }
+
 // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 Span<const std::int64_t> Storage::offsets() const

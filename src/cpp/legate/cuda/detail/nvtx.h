@@ -19,6 +19,7 @@ class [[maybe_unused]] scoped_range {
   {
   }
 };
+
 // NOLINTEND
 
 }  // namespace nvtx3

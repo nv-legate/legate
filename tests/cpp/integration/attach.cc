@@ -103,6 +103,7 @@ struct CheckerTask : public legate::LegateTask<CheckerTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_attach";
+
   static void registration_callback(legate::Library library)
   {
     AdderTask::register_variants(library);

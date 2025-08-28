@@ -19,12 +19,14 @@ namespace {
 struct DummyTask : public legate::LegateTask<DummyTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "tracing_test";
+
   static void registration_callback(legate::Library library)
   {
     DummyTask::register_variants(library);

@@ -22,6 +22,7 @@ namespace legate::detail {
 
 static_assert(!is_pure_move_constructible_v<Legion::CodeDescriptor>,
               "Use by value and std::move for Legion::CodeDescriptor");
+
 void TaskInfo::add_variant(VariantCode vid,
                            VariantImpl body,
                            const Legion::CodeDescriptor& code_desc,

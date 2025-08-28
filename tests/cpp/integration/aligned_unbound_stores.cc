@@ -31,6 +31,7 @@ struct Producer : public legate::LegateTask<Producer> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_unbound_nullable_array";
+
   static void registration_callback(legate::Library library)
   {
     Producer::register_variants(library);

@@ -50,6 +50,7 @@ struct WrapFillValueTask : public legate::LegateTask<WrapFillValueTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_fill";
+
   static void registration_callback(legate::Library library)
   {
     CheckTask<1>::register_variants(library);

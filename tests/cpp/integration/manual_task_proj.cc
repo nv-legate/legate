@@ -20,6 +20,7 @@ constexpr const std::size_t N_TILES_PER_DIM = 2;
 struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& task_index = context.get_task_index();
@@ -41,6 +42,7 @@ struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_manual_task_proj";
+
   static void registration_callback(legate::Library library)
   {
     ProjTesterTask::register_variants(library);

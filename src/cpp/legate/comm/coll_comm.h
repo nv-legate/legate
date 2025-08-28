@@ -14,7 +14,9 @@
 #include <cstdint>
 
 namespace legate::detail::comm::coll {
+
 class ThreadComm;
+
 }  // namespace legate::detail::comm::coll
 
 namespace legate::comm::coll {
@@ -62,6 +64,7 @@ class Coll_Comm {
   int unique_id{};
   bool status{};
 };
+
 // NOLINTEND(readability-identifier-naming)
 
 using CollComm = Coll_Comm*;

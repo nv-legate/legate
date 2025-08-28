@@ -13,6 +13,7 @@ namespace legate::experimental {
 class Trace::Impl {
  public:
   explicit Impl(std::uint32_t trace_id) : trace_id_{trace_id} { Trace::begin_trace(trace_id_); }
+
   ~Impl() { Trace::end_trace(trace_id_); }
 
  private:

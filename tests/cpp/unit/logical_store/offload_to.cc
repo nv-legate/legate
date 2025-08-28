@@ -40,6 +40,7 @@ class GPUonlyTask : public legate::LegateTask<GPUonlyTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "TEST_HOST_OFFLOAD_LIB";
+
   static void registration_callback(legate::Library library)
   {
     GPUonlyTask::register_variants(library);

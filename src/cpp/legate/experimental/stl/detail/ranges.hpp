@@ -199,6 +199,7 @@ inline constexpr bool is_range_v = meta::evaluable_q<detail::is_range_like_t, Ra
  */
 
 namespace legate::experimental::stl {
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace tags {
 namespace as_range {

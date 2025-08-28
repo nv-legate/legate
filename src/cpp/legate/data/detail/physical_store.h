@@ -18,7 +18,9 @@
 #include <cstdint>
 
 namespace legate {
+
 class PhysicalStore;
+
 }  // namespace legate
 
 namespace legate::detail {

@@ -41,6 +41,7 @@ class ConstraintSolver::UnionFindEntry {
     end->size += other->size;
     return self;
   }
+
   void restrict_all() { std::fill(restrictions.begin(), restrictions.end(), Restriction::FORBID); }
 
   const Variable* partition_symbol{};

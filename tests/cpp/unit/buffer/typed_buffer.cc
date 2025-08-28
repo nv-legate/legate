@@ -73,6 +73,7 @@ class BufferTask : public legate::LegateTask<BufferTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "legate.buffer";
+
   static void registration_callback(legate::Library library)
   {
     BufferTask::register_variants(library);

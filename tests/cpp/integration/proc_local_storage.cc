@@ -66,6 +66,7 @@ class ObjectTester : public legate::LegateTask<ObjectTester> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_proc_local_storage";
+
   static void registration_callback(legate::Library library)
   {
     PrimitiveTester::register_variants(library);

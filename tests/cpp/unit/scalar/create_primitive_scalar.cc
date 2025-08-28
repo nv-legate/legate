@@ -111,6 +111,7 @@ scalar_with_rect_cases()
 
   return cases;
 }
+
 // NOLINTEND(readability-magic-numbers)
 
 INSTANTIATE_TEST_SUITE_P(

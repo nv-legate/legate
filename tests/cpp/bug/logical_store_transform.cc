@@ -65,6 +65,7 @@ class CopyTask : public legate::LegateTask<CopyTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_transform_on_weighted_partition";
+
   static void registration_callback(legate::Library library)
   {
     InitTask::register_variants(library);

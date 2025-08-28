@@ -70,6 +70,7 @@ namespace legate::experimental::stl {
  * @ingroup stl-algorithms
  */
 // clang-format on
+
 template <typename InputRange,
           typename Init,
           typename Reduction,
@@ -159,6 +160,7 @@ template <typename InputRange,
  * @ingroup stl-algorithms
  */
 // clang-format on
+
 template <typename InputRange1,
           typename InputRange2,
           typename Init,

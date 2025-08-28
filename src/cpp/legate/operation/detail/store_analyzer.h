@@ -100,6 +100,7 @@ class FieldSet {
     bool is_key{};
     bool has_streaming_discard_{};
   };
+
   // This must be an ordered map to avoid control divergence.
   std::map<Key, Entry> coalesced_{};
   using ReqIndexMapKey = std::pair<Key, Legion::FieldID>;
@@ -153,6 +154,7 @@ class OutputRequirementAnalyzer {
     std::uint32_t dim{UNSET};
     std::uint32_t req_idx{};
   };
+
   // This must be an ordered map to avoid control divergence
   std::map<Legion::FieldSpace, std::set<Legion::FieldID>> field_groups_{};
   std::unordered_map<Legion::FieldSpace, ReqInfo> req_infos_{};

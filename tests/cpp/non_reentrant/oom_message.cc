@@ -32,6 +32,7 @@ class DummyTask : public legate::LegateTask<DummyTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_oom_message";
+
   static void registration_callback(legate::Library library)
   {
     DummyTask::register_variants(library);

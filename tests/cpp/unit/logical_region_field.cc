@@ -428,10 +428,12 @@ TEST_F(LogicalRegionFieldUnit, InvalidationCallbackWithState)
   auto runtime      = legate::Runtime::get_runtime();
   auto store        = runtime->create_store(legate::Shape{3}, legate::uint32());
   auto region_field = store.impl()->get_region_field();
+
   struct CallbackState {
     int value{0};
     bool called{false};
   };
+
   auto state = std::make_shared<CallbackState>();
 
   constexpr std::uint32_t value = 42;

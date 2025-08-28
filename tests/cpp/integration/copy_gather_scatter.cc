@@ -86,6 +86,7 @@ struct CheckGatherScatterTask
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_copy_gather_scatter";
+
   static void registration_callback(legate::Library library)
   {
     FillTask<1>::register_variants(library);

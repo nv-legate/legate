@@ -43,10 +43,12 @@ using MPIInterface = legate::detail::comm::mpi::detail::MPIInterface;
 
 // MPI tag generation constants
 namespace {
+
 constexpr int GATHER_TAG_MAX    = 100;
 constexpr int GATHER_TAG_OFFSET = 4;
 constexpr int BCAST_TAG_MAX     = 10;
 constexpr int BCAST_TAG_OFFSET  = 0;
+
 }  // namespace
 
 class MPIOOBAllgather::Impl {

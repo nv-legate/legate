@@ -20,6 +20,7 @@ TYPED_TEST_SUITE(InternalWeakPtrUnit, BasicSharedPtrTypeList, );
 namespace {
 
 constexpr auto MAGIC_NUMBER = 66;
+
 }
 
 TYPED_TEST(InternalWeakPtrUnit, Create)

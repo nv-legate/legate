@@ -70,6 +70,7 @@ class AccessTask : public legate::LegateTask<AccessTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "legate.external_allocation";
+
   static void registration_callback(legate::Library library)
   {
     AccessTask::register_variants(library);

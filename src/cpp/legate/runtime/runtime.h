@@ -33,7 +33,9 @@
  */
 
 namespace legate::mapping {
+
 class Mapper;
+
 }  // namespace legate::mapping
 
 namespace legate {

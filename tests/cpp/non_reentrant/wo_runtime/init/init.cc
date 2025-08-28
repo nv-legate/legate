@@ -93,4 +93,5 @@ TEST_F(RuntimeInitUnit, Restart)
   ASSERT_TRUE(legate::has_finished());
   ASSERT_FALSE(legate::has_started());
 }
+
 }  // namespace runtime_init_test

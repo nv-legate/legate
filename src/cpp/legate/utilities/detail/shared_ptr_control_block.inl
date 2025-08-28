@@ -53,11 +53,13 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::load_refcount
 //
 LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_GCC_IGNORE("-Wstringop-overflow");
+
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::increment_refcount_(
   std::atomic<ref_count_type>* refcount) noexcept
 {
   return refcount->fetch_add(1, std::memory_order_relaxed) + 1;
 }
+
 LEGATE_PRAGMA_POP();
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(

@@ -112,6 +112,7 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_tree_reduce_unique";
+
   static void registration_callback(legate::Library library)
   {
     FillTask::register_variants(library);

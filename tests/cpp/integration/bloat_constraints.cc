@@ -54,6 +54,7 @@ struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_bloat_constraints";
+
   static void registration_callback(legate::Library library)
   {
     BloatTester<1>::register_variants(library);

@@ -19,6 +19,7 @@ namespace legate {
 namespace detail {
 
 LEGATE_CPP_VERSION_TODO(20, "Use std::to_address() instead");
+
 template <typename T>
 constexpr T* to_address(T* p) noexcept
 {

@@ -189,7 +189,9 @@ class LegateProjectionFunctor : public Legion::ProjectionFunctor {
 
   // legate projection functors are almost always functional and don't traverse the region tree
   [[nodiscard]] bool is_functional() const override { return true; }
+
   [[nodiscard]] bool is_exclusive() const override { return true; }
+
   [[nodiscard]] unsigned get_depth() const override { return 0; }
 
  private:

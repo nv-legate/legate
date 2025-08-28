@@ -105,6 +105,7 @@ void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
  * @ingroup stl-algorithms
  */
 // clang-format on
+
 template <typename InputRange1,
           typename InputRange2,
           typename OutputRange,

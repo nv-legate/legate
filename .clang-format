@@ -173,3 +173,5 @@ Macros:
   - LEGATE_STL_UNSPECIFIED(...)=__VA_ARGS__
   - CPPTRACE_TRY=try
   - CPPTRACE_CATCH(x)=catch(x)
+SeparateDefinitionBlocks: Always
+WrapNamespaceBodyWithEmptyLines: Always

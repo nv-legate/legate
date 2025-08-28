@@ -45,12 +45,14 @@ struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
 struct CpuVariantOnlyTask : public legate::LegateTask<CpuVariantOnlyTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{CPU_VARIANT}};
+
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 };
 
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "machine_scope";
+
   static void registration_callback(legate::Library library)
   {
     MultiVariantTask::register_variants(library);

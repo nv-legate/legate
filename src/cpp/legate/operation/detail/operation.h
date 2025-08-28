@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 namespace legate::detail {
+
 class ConstraintSolver;
 class Strategy;
 

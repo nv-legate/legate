@@ -10,7 +10,9 @@
 #include <legate/type/types.h>
 
 namespace legate::mapping::detail {
+
 class Array;
+
 }  // namespace legate::mapping::detail
 
 namespace legate::mapping {

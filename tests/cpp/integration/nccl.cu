@@ -68,6 +68,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_nccl";
+
   static void registration_callback(legate::Library library)
   {
     NCCLTester::register_variants(library, NCCLTester::TASK_CONFIG.task_id());

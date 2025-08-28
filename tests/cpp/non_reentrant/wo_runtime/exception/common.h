@@ -61,6 +61,7 @@ class TracedExceptionFixture : public DefaultFixture {
 class NonStdException {
  public:
   NonStdException() = default;
+
   explicit NonStdException(std::string text) : text_{std::move(text)} {}
 
  private:

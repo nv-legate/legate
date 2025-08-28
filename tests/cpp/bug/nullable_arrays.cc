@@ -16,6 +16,7 @@ struct Initialize : public legate::LegateTask<Initialize> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto arr_prim   = context.output(0);
@@ -37,6 +38,7 @@ struct Initialize : public legate::LegateTask<Initialize> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_unbound_nullable_array_test";
+
   static void registration_callback(legate::Library library)
   {
     Initialize::register_variants(library);

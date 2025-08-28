@@ -30,6 +30,7 @@ class AutoTask::Impl {
   void clear_refs() { refs_.clear(); }
 
   [[nodiscard]] const SharedPtr<detail::AutoTask>& impl() const noexcept { return impl_; }
+
   [[nodiscard]] SharedPtr<detail::AutoTask>& impl() noexcept { return impl_; }
 
  private:
@@ -186,6 +187,7 @@ class ManualTask::Impl {
   {
     return store_refs_.emplace_back(std::move(store)).impl();
   }
+
   [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& add_ref(
     LogicalStorePartition store_partition)
   {
@@ -199,6 +201,7 @@ class ManualTask::Impl {
   }
 
   [[nodiscard]] const SharedPtr<detail::ManualTask>& impl() const noexcept { return impl_; }
+
   [[nodiscard]] SharedPtr<detail::ManualTask>& impl() noexcept { return impl_; }
 
  private:

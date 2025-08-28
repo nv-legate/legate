@@ -40,4 +40,5 @@ extern "C" CUresult cuGetProcAddress(const char* name, void** fn_ptr, int, cuuin
   }
   return 0;
 }
+
 // NOLINTEND

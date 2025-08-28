@@ -20,7 +20,9 @@
 namespace legate::mapping {
 
 namespace detail {
+
 class Task;
+
 }  // namespace detail
 
 /**

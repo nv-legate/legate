@@ -20,6 +20,7 @@ class NormalTask : public legate::LegateTask<NormalTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto scalar_value = context.scalar(0).value<std::int32_t>();
@@ -31,6 +32,7 @@ class ExceptionUnboundTask : public legate::LegateTask<ExceptionUnboundTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto scalar_value = context.scalar(0).value<std::int32_t>();
@@ -45,6 +47,7 @@ class ExceptionUnboundTask : public legate::LegateTask<ExceptionUnboundTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_task_misc";
+
   static void registration_callback(legate::Library library)
   {
     NormalTask::register_variants(library);

@@ -69,6 +69,7 @@ LEGATE_PRAGMA_POP();
 #include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
+
 /**
  * @cond
  */
@@ -77,6 +78,7 @@ namespace legate::experimental::stl {
 namespace tags {
 
 inline namespace obj {
+
 }
 
 }  // namespace tags
@@ -180,6 +182,7 @@ inline constexpr std::int32_t dim_of_v<logical_store<ElementType, Dim>> = Dim;
 /** @cond */
 template <typename ElementType, std::int32_t Dim = dynamic_dims>
 logical_store<ElementType, Dim> as_typed(const legate::LogicalStore& store);
+
 /** @endcond */
 
 namespace detail {
@@ -221,6 +224,7 @@ LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
   const legate::PhysicalArray& array);
 
 void as_mdspan(const PhysicalStore&&) = delete;
+
 /** @endcond */
 
 struct iteration_kind {};  // NOLINT(readability-identifier-naming)

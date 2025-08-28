@@ -28,6 +28,7 @@ struct PaddingStructData {
   bool bool_data;
   std::int32_t int32_data;
   std::uint64_t uint64_data;
+
   bool operator==(const PaddingStructData& other) const
   {
     return bool_data == other.bool_data && int32_data == other.int32_data &&
@@ -39,6 +40,7 @@ struct [[gnu::packed]] NoPaddingStructData {
   bool bool_data;
   std::int32_t int32_data;
   std::uint64_t uint64_data;
+
   bool operator==(const NoPaddingStructData& other) const
   {
     return bool_data == other.bool_data && int32_data == other.int32_data &&

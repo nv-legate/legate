@@ -53,6 +53,7 @@ struct hash<legate::Domain> {
 
 template <typename T>
 struct hash<std::reference_wrapper<T>> {  // NOLINT(cert-dcl58-cpp)
+
   [[nodiscard]] std::size_t operator()(const std::reference_wrapper<T>& v) const noexcept
   {
     return std::hash<std::decay_t<T>>{}(v.get());

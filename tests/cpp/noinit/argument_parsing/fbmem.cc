@@ -109,6 +109,7 @@ class AutoDriverAPIMockBase {
 TEST_F(ConfigureFBMemUnit, AutoConfigCUDA)
 {
   static constexpr std::size_t FBMEM_SIZE = 256;
+
   // We only need to mock the functions required to do:
   //
   // 1. AutoPrimaryContext:
@@ -136,13 +137,17 @@ TEST_F(ConfigureFBMemUnit, AutoConfigCUDA)
       *ctx = nullptr;
       return 0;
     }
+
     static CUresult mock_ctx_push_current_(CUcontext) { return 0; }
+
     static CUresult mock_ctx_pop_current_(CUcontext* ctx)
     {
       *ctx = nullptr;
       return 0;
     }
+
     static CUresult mock_device_primary_ctx_release_(CUdevice) { return 0; }
+
     static CUresult mock_mem_get_info_(std::size_t* fbmem_size, std::size_t*)
     {
       *fbmem_size = FBMEM_SIZE * MB;

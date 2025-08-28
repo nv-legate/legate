@@ -55,6 +55,7 @@ struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_scale_constraints";
+
   static void registration_callback(legate::Library library)
   {
     ScaleTester<1>::register_variants(library);

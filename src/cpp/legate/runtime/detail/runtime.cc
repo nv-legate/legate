@@ -472,6 +472,7 @@ void Runtime::tree_reduce(const Library& library,
 }
 
 namespace {
+
 // OffloadTo is an empty task that runs with Read/Write permissions on its data,
 // so that the data ends up getting copied to the target memory. Additionally, we
 // modify the core-mapper to map the data to the specified target memory in
@@ -509,6 +510,7 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
       }
       break;
     }
+
     case mapping::TaskTarget::CPU: [[fallthrough]];
     case mapping::TaskTarget::OMP: break;
   }
@@ -637,6 +639,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
     return make_internal_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
   }
+
   return create_base_array_(shape, std::move(type), nullable, optimize_scalar);
 }
 
@@ -676,6 +679,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
   if (!is_rect_type(descriptor->type(), 1)) {
     throw TracedException<std::invalid_argument>{"Descriptor array does not have a 1D rect type"};
   }
+
   // If this doesn't hold, something bad happened (and will happen below)
   LEGATE_CHECK(!descriptor->nested());
   if (vardata->nullable()) {
@@ -936,6 +940,7 @@ class ExtractExceptionFn {
     if (auto exn = fut.get_result<ReturnedException>(); exn.raised()) {
       return {std::move(exn)};
     }
+
     return std::nullopt;
   }
 
@@ -945,6 +950,7 @@ class ExtractExceptionFn {
     if (pending.raised()) {
       return {std::move(pending)};
     }
+
     return std::nullopt;
   }  // namespace
 };
@@ -961,6 +967,7 @@ void Runtime::raise_pending_exception()
       break;
     }
   }
+
   pending_exceptions_.clear();
 
   if (found.has_value()) {
@@ -1023,6 +1030,7 @@ void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
   if (provenance.empty()) {
     return;
   }
+
   get_legion_runtime()->attach_semantic_information(
     rf->region().get_field_space(),
     rf->field_id(),
@@ -1907,6 +1915,7 @@ Runtime& RuntimeManager::construct_runtime(Config config)
       "Legate runtime has already been constructed or finalized, and cannot be re-initialized "
       "without restarting the program."};
   }
+
   LEGATE_CHECK(!rt_.has_value());
   rt_.emplace(std::move(config));
   state_ = State::INITIALIZED;
@@ -1988,6 +1997,7 @@ std::int32_t Runtime::finish()
   for (auto&& [_, region_manager] : region_managers_) {
     region_manager.destroy(true /*unordered*/);
   }
+
   for (auto&& [_, index_space] : cached_index_spaces_) {
     get_legion_runtime()->destroy_index_space(
       get_legion_context(), index_space, true /*unordered*/);

@@ -396,23 +396,32 @@ class ManualTaskNormal
       std::tuple<std::int32_t,
                  std::int32_t,
                  std::tuple<legate::Shape, legate::Shape, std::vector<std::uint64_t>>>> {};
+
 class ManualTaskNormalInput : public ManualTaskNormal {};
+
 class ManualTaskNormalOutput : public ManualTaskNormal {};
+
 class ManualTaskNormalReduction : public ManualTaskNormal {};
 
 class ManualTaskUnbound : public TaskStoreTests,
                           public ::testing::WithParamInterface<
                             std::tuple<std::int32_t, std::tuple<std::uint32_t, legate::Shape>>> {};
+
 class ManualTaskUnboundInput : public ManualTaskUnbound {};
+
 class ManualTaskUnboundOutput : public ManualTaskUnbound {};
+
 class ManualTaskUnboundReduction : public ManualTaskUnbound {};
 
 class ManualTaskScalar
   : public TaskStoreTests,
     public ::testing::WithParamInterface<
       std::tuple<std::int32_t, std::tuple<legate::Shape, std::vector<std::uint64_t>>>> {};
+
 class ManualTaskScalarInput : public ManualTaskScalar {};
+
 class ManualTaskScalarOutput : public ManualTaskScalar {};
+
 class ManualTaskScalarReduction : public ManualTaskScalar {};
 
 class ManualTaskPromote
@@ -422,8 +431,11 @@ class ManualTaskPromote
                                                                legate::Shape,
                                                                std::vector<std::uint64_t>,
                                                                std::vector<std::int32_t>>>> {};
+
 class ManualTaskPromoteInput : public ManualTaskPromote {};
+
 class ManualTaskPromoteOutput : public ManualTaskPromote {};
+
 class ManualTaskPromoteReduction : public ManualTaskPromote {};
 
 // Test instantiations

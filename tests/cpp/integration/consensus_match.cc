@@ -31,6 +31,7 @@ void register_tasks()
 struct Thing {
   bool flag;
   std::int32_t number;
+
   bool operator==(const Thing& other) const { return flag == other.flag && number == other.number; }
 };
 

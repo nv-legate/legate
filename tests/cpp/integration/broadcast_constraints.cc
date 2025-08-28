@@ -47,6 +47,7 @@ struct Initializer : public legate::LegateTask<Initializer> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_broadcast_constraints";
+
   static void registration_callback(legate::Library library)
   {
     TesterTask::register_variants(library);

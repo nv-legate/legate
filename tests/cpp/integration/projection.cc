@@ -50,6 +50,7 @@ struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> 
 struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     if (context.is_single_task()) {
@@ -76,6 +77,7 @@ struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "lib_projection_test";
+
   static void registration_callback(legate::Library library)
   {
     ExtraProjectionTester::register_variants(library);

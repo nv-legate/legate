@@ -102,6 +102,7 @@ bool check_alignment(const void* buffer, std::size_t alignment)
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "legate.scopedallocator";
+
   static void registration_callback(legate::Library library)
   {
     DeallocateTask::register_variants(library);
@@ -125,6 +126,7 @@ INSTANTIATE_TEST_SUITE_P(
   ::testing::Combine(::testing::Values(0, ALLOCATE_BYTES),
                      ::testing::Values(1, alignof(std::max_align_t), OVER_ALIGNMENT),
                      ::testing::Values(legate::Memory::NO_MEMKIND, legate::Memory::SYSTEM_MEM)));
+
 // TODO(joyshennv): issue #1189
 //  legate::Memory::GLOBAL_MEM,
 //  legate::Memory::REGDMA_MEM,

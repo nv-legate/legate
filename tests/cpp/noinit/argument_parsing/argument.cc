@@ -22,8 +22,11 @@ using ArgumentTypes = ::testing::Types<std::int32_t, std::string, std::filesyste
 namespace {
 
 [[nodiscard]] std::string as_string(std::string s) { return s; }
+
 [[nodiscard]] std::string as_string(const std::filesystem::path& p) { return p; }
+
 [[nodiscard]] std::string as_string(std::int32_t v) { return std::to_string(v); }
+
 [[nodiscard]] std::string as_string(float v) { return std::to_string(v); }
 
 template <typename T>
@@ -55,10 +58,12 @@ class Values<float> {
   {
     return 1.0F;  // NOLINT(readability-magic-numbers)
   }
+
   [[nodiscard]] static constexpr float alternate_value()
   {
     return 2.0F;  // NOLINT(readability-magic-numbers)
   }
+
   [[nodiscard]] static constexpr float second_alternate_value()
   {
     return 3.0F;  // NOLINT(readability-magic-numbers)
@@ -69,7 +74,9 @@ template <>
 class Values<std::string> {
  public:
   [[nodiscard]] static std::string default_value() { return "foo,bar,baz"; };
+
   [[nodiscard]] static std::string alternate_value() { return "baz,bar,foo"; };
+
   [[nodiscard]] static std::string second_alternate_value() { return "qux,quux,bop"; };
 };
 
@@ -77,7 +84,9 @@ template <>
 class Values<std::filesystem::path> {
  public:
   [[nodiscard]] static std::filesystem::path default_value() { return "foo/bar/baz"; }
+
   [[nodiscard]] static std::filesystem::path alternate_value() { return "baz/bar/foo"; }
+
   [[nodiscard]] static std::filesystem::path second_alternate_value() { return "qux/quux/bop"; }
 };
 

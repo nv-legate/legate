@@ -70,6 +70,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::vector<std::int32_t>({0, 1}) /* invalid axes length */,
                     std::vector<std::int32_t>({1}) /* invalid axis in axes */,
                     std::vector<std::int32_t>({2, 2, 1}) /* invalid axis in axes */));
+
 }  // namespace
 
 TEST_P(TransposeBoundStoreTest, Basic)

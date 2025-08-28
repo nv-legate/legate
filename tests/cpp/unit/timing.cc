@@ -33,12 +33,14 @@ void hello_cpu_variant(legate::TaskContext& context)
 struct HelloTask : legate::LegateTask<HelloTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); };
 };
 
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_timing";
+
   static void registration_callback(legate::Library library)
   {
     HelloTask::register_variants(library);

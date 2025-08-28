@@ -97,6 +97,7 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_task_store";
+
   static void registration_callback(legate::Library library)
   {
 #define REGISTER_VARIANTS(__DIM__) SimpleTask<__DIM__>::register_variants(library);

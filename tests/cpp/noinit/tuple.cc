@@ -600,6 +600,7 @@ TEST(TupleUnitNegative, Remove)
 
 LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_GCC_IGNORE("-Wstringop-overflow");
+
 TEST(TupleUnitNegative, RemoveInplace)
 {
   if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -614,6 +615,7 @@ TEST(TupleUnitNegative, RemoveInplace)
   ASSERT_THROW(tuple_empty.remove_inplace(0), std::out_of_range);
   ASSERT_THROW(tuple_empty.remove_inplace(-1), std::out_of_range);
 }
+
 LEGATE_PRAGMA_POP();
 
 TEST(TupleUnitNegative, Update)

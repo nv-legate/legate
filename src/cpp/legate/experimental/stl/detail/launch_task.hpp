@@ -243,6 +243,7 @@ class Function;
  */
 template <>
 class Function<> {};
+
 /**
  * @endcond
  */
@@ -344,6 +345,7 @@ class Reduction;
  */
 template <>
 class Reduction<> {};
+
 /**
  * @endcond
  */
@@ -1047,6 +1049,7 @@ template <template <typename...> typename Which,
 {
   return get_arg<Which>(tail...);
 }
+
 /**
  * @endcond
  */

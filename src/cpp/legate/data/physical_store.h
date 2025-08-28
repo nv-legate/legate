@@ -37,7 +37,9 @@
 struct CUstream_st;
 
 namespace legate::detail {
+
 class PhysicalStore;
+
 }  // namespace legate::detail
 
 namespace legate {

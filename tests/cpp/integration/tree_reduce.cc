@@ -86,6 +86,7 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_tree_reduce";
+
   static void registration_callback(legate::Library library)
   {
     ProduceNormalTask::register_variants(library);

@@ -33,6 +33,7 @@ struct FormatterBaseTask : public legate::LegateTask<FormatterBaseTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_formatter";
+
   static void registration_callback(legate::Library library)
   {
     FormatterBaseTask::register_variants(library);

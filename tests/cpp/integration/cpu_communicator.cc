@@ -48,6 +48,7 @@ struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> 
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_cpu_communicator";
+
   static void registration_callback(legate::Library library)
   {
     CPUCommunicatorTester::register_variants(library);

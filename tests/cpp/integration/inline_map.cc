@@ -36,6 +36,7 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_inline_map";
+
   static void registration_callback(legate::Library library)
   {
     AdderTask::register_variants(library);

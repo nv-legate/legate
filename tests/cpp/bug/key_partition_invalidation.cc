@@ -26,6 +26,7 @@ constexpr legate::coord_t TILE_SIZE     = EXT / NUM_TILES;
 struct InitRanges : public legate::LegateTask<InitRanges> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0);
@@ -41,6 +42,7 @@ struct InitRanges : public legate::LegateTask<InitRanges> {
 struct Checker : public legate::LegateTask<Checker> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 

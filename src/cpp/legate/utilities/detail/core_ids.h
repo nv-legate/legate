@@ -78,6 +78,7 @@ enum CoreTask : std::underlying_type_t<LocalTaskID> {  // NOLINT(performance-enu
   // enough so that there's enough slack.
   MAX_TASK = 1024,  // must be last
 };
+
 // NOLINTEND(readability-enum-initial-value)
 
 }  // namespace CoreTask
@@ -101,6 +102,7 @@ enum class CoreShardID : std::underlying_type_t<CoreProjectionOp> {
   MAX_FUNCTOR =
     static_cast<std::underlying_type_t<CoreProjectionOp>>(CoreProjectionOp::MAX_FUNCTOR),
 };
+
 // NOLINTEND(readability-enum-initial-value)
 
 namespace CoreReductionOp {  // NOLINT(readability-identifier-naming)

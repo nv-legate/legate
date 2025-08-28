@@ -74,6 +74,7 @@ template <typename Fn, typename... Args>
 BinderBack(Fn, Args...) -> BinderBack<Fn, Args...>;
 
 }  // namespace detail
+
 /// \endcond
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

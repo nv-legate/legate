@@ -261,6 +261,7 @@ class Foo : public legate::LegateTask<Foo> {
     // some very useful work...
   }
 };
+
 /// [Foo declaration]
 
 TEST_F(Library, TaskIDExample)

@@ -139,6 +139,7 @@ class SharedPtr {
 
  private:
   struct copy_tag {};
+
   struct move_tag {};
 
   template <typename U>

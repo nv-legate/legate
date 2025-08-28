@@ -170,6 +170,7 @@ InternalSharedPtr<T> InternalWeakPtr<T>::lock() const noexcept
   // in this case know it is not, and hence this function is noexcept
   return expired() ? InternalSharedPtr<T>{} : InternalSharedPtr<T>{*this};
 }
+
 // NOLINTEND(bugprone-exception-escape)
 
 template <typename T>
@@ -291,6 +292,7 @@ void InternalSharedPtr<T>::user_reference_(SharedPtrAccessTag) noexcept
     ctrl_->user_ref();
   }
 }
+
 // NOLINTEND(readability-identifier-naming)
 
 // NOLINTBEGIN(readability-identifier-naming)
@@ -310,6 +312,7 @@ void InternalSharedPtr<T>::user_dereference_(SharedPtrAccessTag) noexcept
     }
   }
 }
+
 // NOLINTEND(readability-identifier-naming)
 
 template <typename T>

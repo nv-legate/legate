@@ -102,6 +102,7 @@ struct InitListTraits<ElementType, 0> {
 };
 
 }  // namespace detail
+
 /** @endcond */
 
 /**
@@ -255,6 +256,7 @@ class logical_store
     const mdspan_t<ElementType, Dim> span = as_mdspan(*this);
     init_list_traits_t::fill(std::make_index_sequence<Dim>{}, shape, il, span);
   }
+
   // NOLINTEND(google-explicit-constructor)
 
   /**
@@ -383,6 +385,7 @@ class logical_store<ElementType, 0> : private LogicalStore {
 
   friend auto as_range(const logical_store& self) noexcept { return elements_of(self); }
 };
+
 /** @endcond */
 
 /*-***********************************************************************************************
@@ -441,7 +444,9 @@ template <std::int32_t Dim>
 {
   return dynamic_extents<Dim>(store.shape<Dim ? Dim : 1>());
 }
+
 }  // namespace detail
+
 /** @endcond */
 
 /**
@@ -539,6 +544,7 @@ class AsMdspanResult<true> {
 };
 
 }  // namespace detail
+
 /** @endcond */
 
 template <typename T, typename ElementType = void, std::int32_t Dim = -1>

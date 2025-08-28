@@ -15,7 +15,9 @@
  */
 
 namespace legate::mapping::detail {
+
 class Store;
+
 }  // namespace legate::mapping::detail
 
 namespace legate::mapping {

@@ -16,6 +16,7 @@ namespace test_is_running_in_task {
 struct Checker : public legate::LegateTask<Checker> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
+
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     EXPECT_TRUE(legate::is_running_in_task());
@@ -25,6 +26,7 @@ struct Checker : public legate::LegateTask<Checker> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
+
   static void registration_callback(legate::Library library)
   {
     Checker::register_variants(library);
