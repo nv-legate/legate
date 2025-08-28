@@ -11,7 +11,7 @@ repos:
         args: ['-c', './scripts/pre-commit/yamllint.yml']
         exclude: 'meta\.yaml$'
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-json  # checks that all json files have proper syntax
       - id: check-toml  # checks that all toml files have proper syntax
@@ -89,13 +89,13 @@ repos:
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.4
+    rev: v0.12.11
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.17.0'
+    rev: 'v1.17.1'
     hooks:
       - id: mypy
         pass_filenames: false
@@ -172,7 +172,6 @@ repos:
         # of dependencies, so we'll have to update this manually.
         additional_dependencies:
           - cmakelang==0.6.13
-        verbose: true
       - id: cmake-lint
         name: cmake-lint
         entry: ./scripts/pre-commit/cmake-format.bash cmake-lint
@@ -182,7 +181,6 @@ repos:
         # of dependencies, so we'll have to update this manually.
         additional_dependencies:
           - cmakelang==0.6.13
-        verbose: true
       - id: dej2lint
         name: dej2lint
         description: 'Run yamllint on meta.yaml files, removing Jinja2 directives'
