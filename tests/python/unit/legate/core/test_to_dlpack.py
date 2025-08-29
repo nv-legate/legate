@@ -9,7 +9,12 @@ import numpy as np
 
 import pytest
 
-from legate.core import get_legate_runtime, types as ty
+from legate.core import (
+    StoreTarget,
+    TaskTarget,
+    get_legate_runtime,
+    types as ty,
+)
 
 if TYPE_CHECKING:
     from legate.core import Type
@@ -22,18 +27,39 @@ def is_capsule_type(obj: Any) -> bool:
     return t.__module__ == "builtins" and t.__name__ == "PyCapsule"
 
 
+def to_store_target(target: TaskTarget) -> StoreTarget:
+    match target:
+        case TaskTarget.CPU:
+            return StoreTarget.SYSMEM
+        case TaskTarget.OMP:
+            return StoreTarget.SOCKETMEM
+        case TaskTarget.GPU:
+            return StoreTarget.FBMEM
+
+
 class TestToDLPack:
     @pytest.mark.parametrize("shape", ((1,), (2, 2), (3, 3, 3)))
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
-    def test_basic(self, shape: tuple[int, ...], legate_type: Type) -> None:
-        store = get_legate_runtime().create_store(
-            dtype=legate_type, shape=shape
-        )
+    @pytest.mark.parametrize("target", tuple(TaskTarget))
+    def test_basic(
+        self, shape: tuple[int, ...], legate_type: Type, target: TaskTarget
+    ) -> None:
+        runtime = get_legate_runtime()
+        store_target = to_store_target(target)
+
+        if runtime.machine.count(target) == 0:
+            pytest.skip(
+                f"Test requires support for {store_target} memory in order "
+                "to be run"
+            )
+
+        store = runtime.create_store(dtype=legate_type, shape=shape)
         store.fill(3)
 
-        phys = store.get_physical_store()
+        phys = store.get_physical_store(target=store_target)
+        assert phys.target == store_target
         capsule = phys.__dlpack__()
         assert is_capsule_type(capsule)
         # str(capsule) = '<capsule object "dltensor_versioned" at 0x103c97b50>'

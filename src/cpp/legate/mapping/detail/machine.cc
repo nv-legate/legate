@@ -424,7 +424,7 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
     slice.low, global_range.count(), local_procs.data() + (slice.low - my_low), slice.count()};
 }
 
-Processor LocalMachine::find_first_processor_with_affinity_to(StoreTarget target) const
+const Processor& LocalMachine::find_first_processor_with_affinity_to(StoreTarget target) const
 {
   switch (target) {
     case StoreTarget::SYSMEM: {

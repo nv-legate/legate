@@ -216,11 +216,11 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
       }
       case mapping::StoreTarget::FBMEM: {
         return DLDevice{/* device_type */ DLDeviceType::kDLCUDA,
-                        /* device_id */ cuda::detail::get_cuda_driver_api()->ctx_get_device()};
+                        /* device_id */ Runtime::get_runtime().get_current_cuda_device()};
       }
       case mapping::StoreTarget::ZCMEM: {
         return DLDevice{/* device_type */ DLDeviceType::kDLCUDAHost,
-                        /* device_id */ cuda::detail::get_cuda_driver_api()->ctx_get_device()};
+                        /* device_id */ Runtime::get_runtime().get_current_cuda_device()};
       }
     }
     LEGATE_ABORT("Unhandled allocation target ", target);
@@ -352,6 +352,7 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
   switch (src_target) {
     case mapping::StoreTarget::FBMEM: [[fallthrough]];
     case mapping::StoreTarget::ZCMEM: {
+      const auto ctx   = cuda::detail::AutoPrimaryContext{};
       auto&& api       = cuda::detail::get_cuda_driver_api();
       auto task_stream = Runtime::get_runtime().get_cuda_stream();
 
@@ -364,6 +365,11 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
       // lifetime.
       auto tmp = std::unique_ptr<void, void (*)(void*)>{
         api->mem_alloc_async(num_bytes, task_stream), [](void* ptr) {
+          // Just have to hope that the deleter is called in a place where the current device
+          // is the same as the one that allocated the pointer. I am not sure if CUDA
+          // automatically handles this for us.
+          const auto _ = cuda::detail::AutoPrimaryContext{};
+
           cuda::detail::get_cuda_driver_api()->mem_free_async(&ptr, LEGATE_CU_STREAM_DEFAULT);
         }};
 

@@ -397,6 +397,23 @@ class Runtime {
   [[nodiscard]] const Library& core_library() const;
 
   [[nodiscard]] CUstream get_cuda_stream() const;
+  /**
+   * @brief Return the current active CUDA device ordinal.
+   *
+   * This routine may be called from anywhere, including from the top-level task. Inside leaf
+   * tasks, it assumes that Realm has set the current context and device for us, and simply
+   * returns that.
+   *
+   * From the top-level task, it attempts to find the "first" GPU assigned to the current
+   * processor and returns that.
+   *
+   * @return The current CUDA device ordinal.
+   *
+   * @throw std::invalid_argument If Realm fails to detect the current CUDA device.
+   * @throw std::runtime_error If this routine is called on a build that does not have CUDA
+   * support.
+   */
+  [[nodiscard]] CUdevice get_current_cuda_device() const;
   [[nodiscard]] cuda::detail::CUDAModuleManager& get_cuda_module_manager();
 
   [[nodiscard]] Legion::Runtime* get_legion_runtime();

@@ -83,6 +83,7 @@ LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_GCC_IGNORE("-Walloc-zero");
 #include <regex>
 LEGATE_PRAGMA_POP();
+#include <cstdint>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -2279,6 +2280,46 @@ CUstream Runtime::get_cuda_stream() const
     return Realm::Cuda::get_task_cuda_stream();
   }
   return nullptr;
+}
+
+CUdevice Runtime::get_current_cuda_device() const
+{
+  if (is_running_in_task()) {
+    // We are inside a task, which means Realm has set the current CUDA context and device for
+    // us.
+    return cuda::detail::get_cuda_driver_api()->ctx_get_device();
+  }
+
+  // We are in the top-level task, and so ctx_get_device() may not be accurate, because the
+  // current node might have multiple devices assigned to it (if we are running multiple GPU
+  // per rank). Furthermore, Realm doesn't automatically set the CUDA context for the top-level
+  // task, so chances are we don't have a valid context to query either.
+  //
+  // So as a workaround, we try to figure out what Realm considers to be the "first" GPU
+  // assigned to us, since that is what it would use for any GPU related tasks on the
+  // top-level.
+  auto&& proc = local_machine().find_first_processor_with_affinity_to(mapping::StoreTarget::FBMEM);
+
+  std::int32_t device_id = -1;
+  // The symbols for get_cuda_device_id() exist regardless of whether Realm has CUDA support,
+  // but if it doesn't we get linker errors at runtime because the CUDA module was never
+  // compiled.
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+    // Use explicit bool type here instead of auto in case Realm changes this to an error code
+    // return.
+    const bool success = Realm::Cuda::get_cuda_device_id(proc, &device_id);
+
+    if (!success) {
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Current Processor {} is not GPU", fmt::streamed(proc))};
+    }
+  } else {
+    throw TracedException<std::runtime_error>{
+      "Legate was not compiled for CUDA support, although a GPU memory "
+      "PhysicalStore was requested. This should not happen."};
+  }
+
+  return static_cast<CUdevice>(device_id);
 }
 
 cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()

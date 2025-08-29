@@ -196,11 +196,19 @@ class CUDADriverAPI {
  */
 class AutoPrimaryContext {
  public:
-  AutoPrimaryContext()                                     = delete;
   AutoPrimaryContext(const AutoPrimaryContext&)            = delete;
   AutoPrimaryContext& operator=(const AutoPrimaryContext&) = delete;
   AutoPrimaryContext(AutoPrimaryContext&&)                 = delete;
   AutoPrimaryContext& operator=(AutoPrimaryContext&&)      = delete;
+
+  /**
+   * @brief Push the current primary context onto the stack.
+   *
+   * The current device is automatically detected based on the current processor. This may not
+   * always provide the same answer for subsequent calls, so the user is highly encouraged to
+   * use the `AutoPrimaryContext(CUdevice)` overload and pass a specific device argument.
+   */
+  AutoPrimaryContext();
 
   /**
    * @brief Push the current primary context onto the stack.

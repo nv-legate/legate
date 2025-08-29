@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
@@ -514,6 +515,11 @@ bool CUDADriverAPI::is_loaded() const noexcept { return handle_ != nullptr; }
 
 // ==========================================================================================
 
+AutoPrimaryContext::AutoPrimaryContext()
+  : AutoPrimaryContext{legate::detail::Runtime::get_runtime().get_current_cuda_device()}
+{
+}
+
 AutoPrimaryContext::AutoPrimaryContext(CUdevice device) : device_{device}
 {
   auto&& api = get_cuda_driver_api();
@@ -559,6 +565,10 @@ std::optional<InternalSharedPtr<CUDADriverAPI>> CUDA_DRIVER_API{};
 
 }  // namespace
 
+// These functions could technically race, if one thread sets the active driver API while
+// another is retrieving it. But we (currently) only set the driver path at legate startup
+// where a single thread reigns supreme, so there doesn't seem much point in guarding access
+// with a mutex here.
 void set_active_cuda_driver_api(std::string handle_path)
 {
   if (CUDA_DRIVER_API.has_value() && (*CUDA_DRIVER_API)->handle_path() == handle_path) {
