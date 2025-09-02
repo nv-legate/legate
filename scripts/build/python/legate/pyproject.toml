@@ -27,9 +27,6 @@ classifiers = [
 dependencies = [
     "numpy>=1.22,!=2.1.0",
     "zarr<3",
-    "h5py",
-    "fsspec",
-    "kerchunk",
     "rich",
     "nvidia-nccl-cu12; sys_platform == 'linux'",
     "libucx-cu12; sys_platform == 'linux'",
@@ -50,6 +47,7 @@ test = [
     "pytest-mock",
     "jupyter_client",
     "openmpi",
+    "h5py",
 ]
 
 [project.urls]

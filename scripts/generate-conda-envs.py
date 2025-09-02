@@ -220,10 +220,7 @@ class RuntimeConfig(SectionConfig):
             "libhwloc=*=*default*",
             "hdf5",
             "h5py",
-            # FIXME(wonchanl): Kerchunk needs to be updated for Zarr v3
             "zarr<3",
-            "fsspec",
-            "kerchunk",
         )
         if self.sanitizers:
             pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)

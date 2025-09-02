@@ -7,6 +7,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
+import zarr  # type: ignore # noqa: PGH003
 import zarr.core  # type: ignore # noqa: PGH003
 
 from ... import LogicalArray, Type, get_legate_runtime
@@ -116,6 +117,16 @@ def read_array(dirpath: Path | str) -> LogicalArray:
 
     # We use Zarr to read the meta data
     zarr_ary = zarr.open_array(dirpath, mode="r")
+
+    # Zarr v3 changed the way the data is stored on disk. Instead of a single
+    # directory with a bunch of files, it now stores the files hierarchically
+    # according to the spec here
+    # https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html. I haven't
+    # had the time to fully look into it, so just bail here.
+    if hasattr(zarr_ary, "metadata") and zarr_ary.metadata.zarr_format >= 3:  # noqa: PLR2004
+        m = "Zarr v3 support is not implemented yet"
+        raise NotImplementedError(m)
+
     if zarr_ary.compressor is not None:
         msg = "compressor isn't supported"
         raise NotImplementedError(msg)

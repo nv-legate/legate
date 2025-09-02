@@ -29,7 +29,7 @@ rapids-logger "legate-issue"
 python -c "from legate.issue import main; main()"
 
 # Attempt to run the tests...
-rapids-pip-retry install psutil pytest pytest-mock ipython jupyter_client cupy openmpi
+rapids-pip-retry install psutil pytest pytest-mock ipython jupyter_client cupy openmpi h5py
 
 # pytest doesn't truncate output if "CI" is defined in the env:
 # https://doc.pytest.org/en/latest/explanation/ci.html

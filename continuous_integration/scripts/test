@@ -154,7 +154,7 @@ run_test_or_analysis() {
                                -c conda-forge \
                                psutil pytest pytest-mock ipython jupyter_client cupy "${ucx_libs[@]}"
 
-            hdf5_libs=(zarr fsspec kerchunk h5py)
+            hdf5_libs=('zarr<3' h5py)
             # shellcheck disable=SC2154
             rapids-conda-retry install \
                                -y \

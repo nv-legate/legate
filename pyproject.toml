@@ -31,10 +31,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.22,!=2.1.0",
-    "zarr",
-    "h5py",
-    "fsspec",
-    "kerchunk",
+    "zarr<3",
     "rich",
 ]
 dynamic = ["version"]
@@ -52,6 +49,7 @@ test = [
     "pytest-mock",
     "jupyter_client",
     "openmpi",
+    "h5py",
 ]
 
 [project.urls]

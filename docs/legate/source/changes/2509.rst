@@ -87,3 +87,6 @@ Python
 .. rubric:: Utilities
 
 .. rubric:: I/O
+
+- Remove ``legate.io.hdf5.kerchunk_read()``. Legate has had first-class support for HDF5
+  reads for a while, making this function obsolete.
