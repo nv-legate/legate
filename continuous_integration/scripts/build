@@ -45,17 +45,19 @@ setup_legate_env() {
 
 setup_profiler() {
   cd "${LEGATE_DIR}"
-  LEGATE_GIT_DESCRIBE_TAG=$(git describe --tags | sed 's/-.*//')
-  LEGATE_GIT_DESCRIBE_NUMBER=$(git describe --tags | sed 's/.*-\([^-]*\)-[^-]*$/\1/')
-  LEGATE_GIT_DESCRIBE_HASH="g$(git rev-parse --short HEAD)"
-  export LEGATE_GIT_DESCRIBE_TAG=${LEGATE_GIT_DESCRIBE_TAG}
-  export LEGATE_GIT_DESCRIBE_NUMBER=${LEGATE_GIT_DESCRIBE_NUMBER}
-  export LEGATE_GIT_DESCRIBE_HASH="g${LEGATE_GIT_DESCRIBE_HASH}"
+
+  # Extract version components directly via git (assumes tags are present)
+  TAG=$(git describe --tags --abbrev=0)
+  COUNT=$(git rev-list "${TAG}..HEAD" --count)
+  HASH_SHORT=$(git rev-parse --short=8 HEAD)
 
   LEGION_GIT_REV=$(jq -r '.packages.Legion.git_tag' "${LEGATE_DIR}/src/cmake/versions/legion_version.json")
   LEGION_GIT_URL=$(jq -r '.packages.Legion.git_url' "${LEGATE_DIR}/src/cmake/versions/legion_version.json")
-  export LEGION_GIT_REV=${LEGION_GIT_REV}
-  export LEGION_GIT_URL=${LEGION_GIT_URL}
+  export LEGION_GIT_REV LEGION_GIT_URL
+
+  export LEGATE_GIT_DESCRIBE_TAG="${TAG}"
+  export LEGATE_GIT_DESCRIBE_NUMBER="${COUNT}"
+  export LEGATE_GIT_DESCRIBE_HASH="g${HASH_SHORT}"
 
   export CONDA_ROOT="/tmp/conda-croot/legate-profiler"
   export CONDA_OUTPUT="/tmp/conda-build/legate-profiler"

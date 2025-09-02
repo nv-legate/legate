@@ -55,6 +55,7 @@ requirements:
     - {{ compiler('c') }}
     - libclang
     - clang
+    - pkgconfig
     {% if gpu_enabled_bool %}
     - cuda-nvcc
     - cuda-cudart-dev
