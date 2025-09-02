@@ -1,6 +1,0 @@
-﻿legate.io.hdf5.kerchunk\_read
-=============================
-
-.. currentmodule:: legate.io.hdf5
-
-.. autofunction:: kerchunk_read

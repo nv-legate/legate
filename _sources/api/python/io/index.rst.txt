@@ -24,7 +24,6 @@ API
    :toctree: ../generated/
 
    from_file
-   kerchunk_read
 
 KVikIO
 ======
