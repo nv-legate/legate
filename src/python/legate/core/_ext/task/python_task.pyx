@@ -20,8 +20,11 @@ cdef dict[_GlobalTaskID, dict[VariantCode, object]] _gid_to_variant_callbacks = 
 
 cdef void register_variants(_GlobalTaskID global_task_id, dict variants):
     if global_task_id in _gid_to_variant_callbacks:
-        m = f"Already registered task (global id: {global_task_id})"
-        raise AssertionError(m)
+        m = (
+            "Already registered task "  # pragma: no cover
+            f"(global id: {global_task_id})"  # pragma: no cover
+        )
+        raise AssertionError(m)  # pragma: no cover
 
     _gid_to_variant_callbacks[global_task_id] = variants
 
@@ -31,16 +34,17 @@ cdef void py_variant_inner(TaskContext ctx):
     cdef dict variant_callbacks = _gid_to_variant_callbacks.get(global_task_id)
 
     assert variant_callbacks is not None, (
-        f"Task (global task id {global_task_id}) did not have any variant "
-        "callbacks registered"
+        f"Task (global task id {global_task_id}) "  # pragma: no cover
+        "did not have any variant callbacks registered"
     )
 
     cdef VariantCode variant_kind = ctx.get_variant_kind()
     cdef object py_callback = variant_callbacks.get(variant_kind)
 
     assert py_callback is not None, (
-        f"Task (global task id {global_task_id}) did not have a variant "
-        f"registered for variant kind: {variant_kind}"
+        f"Task (global task id {global_task_id}) "  # pragma: no cover
+        "did not have a variant "
+        f"registered for variant kind: {variant_kind}"  # pragma: no cover
     )
 
     # Disable garbage collection while executing a python task, because some
@@ -67,17 +71,20 @@ cdef void py_variant_inner(TaskContext ctx):
 cdef void abort_process(object exception) noexcept:
     cdef std_string abort_message
 
-    try:
-        abort_message = str(exception).encode()
-    except:  # noqa E722
+    try:  # pragma: no cover
+        abort_message = str(exception).encode()  # pragma: no cover
+    except:  # noqa E722 # pragma: no cover
         # couldn't even encode, something is truly wrong
-        abort_message = "Unknown error occurred"
+        abort_message = "Unknown error occurred"  # pragma: no cover
 
     # We failed to set the exception for some reason. There is not
     # much that can really go wrong with that, so if that happened
     # we are well and truly hosed. Try one last ditch effort to
     # inform the user, and then abort
-    LEGATE_ABORT("Unhandled Python exception: ", abort_message)
+    LEGATE_ABORT(   # pragma: no cover
+        "Unhandled Python exception: ", abort_message
+    )
+
 
 # This is a public variable used for testing the cache.
 _TLS_CACHE_HIT_COUNTER = 0
@@ -126,15 +133,15 @@ cdef void py_variant_with_gil "py_variant_with_gil" (
         global _TLS_CACHE_HIT_COUNTER
 
         _TLS_CACHE_HIT_COUNTER += cache_hit
-    except Exception as e:
-        abort_process(e)
+    except Exception as e:  # pragma: no cover
+        abort_process(e)  # pragma: no cover
 
     try:
         py_ctx = TaskContext.from_handle(&ctx)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         # If we cannot even create the TaskContext, then the only thing to
         # do is abort
-        abort_process(e)
+        abort_process(e)  # pragma: no cover
 
     try:
         py_variant_inner(py_ctx)
@@ -143,8 +150,8 @@ cdef void py_variant_with_gil "py_variant_with_gil" (
         # tell the context to throw them later
         try:
             py_ctx.set_exception(e)
-        except Exception as e2:
-            abort_process(e2)
+        except Exception as e2:  # pragma: no cover
+            abort_process(e2)  # pragma: no cover
 
 
 cdef extern from * nogil:
@@ -158,13 +165,13 @@ cdef object MAIN_THREAD_TRACE_FUNC "MAIN_THREAD_TRACE_FUNC" = gettrace()
 
 cdef void setup_trace "setup_trace" () noexcept:
     if not LEGATE_CYTHON_TRACE:
-        return
+        return  # pragma: no cover
 
     try:
         if gettrace() != MAIN_THREAD_TRACE_FUNC:
-            settrace(MAIN_THREAD_TRACE_FUNC)
-    except Exception as e:
-        abort_process(e)
+            settrace(MAIN_THREAD_TRACE_FUNC)  # pragma: no cover
+    except Exception as e:  # pragma: no cover
+        abort_process(e)  # pragma: no cover
 
 cdef extern from "Python.h":
     ctypedef struct PyInterpreterState:
@@ -197,7 +204,7 @@ cdef PyInterpreterState *_INTERP_STATE = PyInterpreterState_Get()
 cdef PyInterpreterState * MAIN_THREAD_INTERP_STATE "MAIN_THREAD_INTERP_STATE" (
 
 ) noexcept nogil:
-    return _INTERP_STATE
+    return _INTERP_STATE  # pragma: no cover
 
 # NOTE: The AutoPyThreadState is in thread_local storage. This is deliberate!
 #
@@ -442,9 +449,9 @@ cdef void finalize_variant_registration(
 
     try:
         entry = _variant_to_callback[code]
-    except KeyError as ke:
-        m = f"Unknown variant '{code}'"
-        raise ValueError(m) from ke
+    except KeyError as ke:  # pragma: no cover
+        m = f"Unknown variant '{code}'"  # pragma: no cover
+        raise ValueError(m) from ke  # pragma: no cover
 
     with nogil:
         cytaskinfo_add_variant(

@@ -34,6 +34,7 @@ from legate.core.task import (
     InputArray,
     InputStore,
     OutputStore,
+    PyTask,
     ReductionStore,
     task,
 )
@@ -440,6 +441,30 @@ class TestPyTask:
             )
             def fill_task(val: int, out: OutputStore) -> None:
                 pass
+
+    def test_empty_variants(self) -> None:
+        def foo() -> None:
+            pass
+
+        msg = "Task has no registered variants"
+        with pytest.raises(ValueError, match=msg):
+            PyTask(func=foo, variants=[])
+
+    @pytest.mark.skipif(
+        get_legate_runtime().machine.preferred_target == TaskTarget.OMP,
+        reason="CPU/GPU only test",
+    )
+    def test_unregistered_variant(self) -> None:
+        def foo() -> None:
+            pass
+
+        pytask = PyTask(func=foo, variants=(VariantCode.OMP,))
+        msg = (
+            "does not have any valid variant for the current machine "
+            "configuration"
+        )
+        with pytest.raises(ValueError, match=msg):
+            pytask()
 
 
 if __name__ == "__main__":
