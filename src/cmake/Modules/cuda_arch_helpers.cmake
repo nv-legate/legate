@@ -20,7 +20,10 @@ function(_legate_get_supported_arch_list_nvcc dest_var var_name)
                   RESULT_VARIABLE result
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  if(result OR err)
+  # Ignore stderr unless there is a nonzero return value. nvcc will occasionally emit
+  # useless warning messages to the effect of: "incompatible redefinition for option <some
+  # flag>, the last value of this option was used" which we should ignore.
+  if(result)
     message(FATAL_ERROR "Failed to auto-detect the list of supported CUDA "
                         "architectures from NVCC. Please set ${var_name} to "
                         "the appropriate list of architectures. Ran:\n"
