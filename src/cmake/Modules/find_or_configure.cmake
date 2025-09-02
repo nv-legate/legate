@@ -5,15 +5,6 @@
 
 include_guard(GLOBAL)
 
-function(legate_find_or_configure_init)
-  set(legate_DEP_INSTALL_LIBDIR "${CMAKE_INSTALL_LIBDIR}/legate/deps" PARENT_SCOPE)
-  set(legate_DEP_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/deps"
-      PARENT_SCOPE)
-  set(legate_DEP_INSTALL_BINDIR
-      "${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_BINDIR}" PARENT_SCOPE)
-  set(legate_FIND_OR_CONFIGURE_INIT ON PARENT_SCOPE)
-endfunction()
-
 function(legate_install_dependencies)
   list(APPEND CMAKE_MESSAGE_CONTEXT "install_dependency")
 
@@ -23,10 +14,6 @@ function(legate_install_dependencies)
 
   if(NOT _LEGATE_TARGETS)
     message(FATAL_ERROR "Must pass TARGETS")
-  endif()
-
-  if(NOT legate_FIND_OR_CONFIGURE_INIT)
-    message(FATAL_ERROR "Must call legate_find_or_configure_init() first")
   endif()
 
   foreach(target IN LISTS _LEGATE_TARGETS)
@@ -112,10 +99,6 @@ endmacro()
 macro(legate_find_or_configure)
   list(APPEND CMAKE_MESSAGE_CONTEXT "find_or_configure")
 
-  if(NOT legate_FIND_OR_CONFIGURE_INIT)
-    message(FATAL_ERROR "Must call legate_find_or_configure_init() first")
-  endif()
-
   cmake_parse_arguments(_LEGATE_FOC "" "PACKAGE" "" ${ARGN})
 
   if(NOT _LEGATE_FOC_PACKAGE)
@@ -137,8 +120,11 @@ macro(legate_find_or_configure)
   if(legate_IGNORE_INSTALLED_PACKAGES AND (NOT ${_LEGATE_FOC_PACKAGE}_ROOT))
     message(STATUS "Ignoring all installed packages when searching for ${_LEGATE_FOC_PACKAGE}"
     )
+    # Use set() instead of option() because we definitely want to force this on. option()
+    # allows the user to override
     set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON)
-    set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
+    set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON
+        CACHE BOOL "Force CPM to download ${_LEGATE_FOC_PACKAGE}" FORCE)
   endif()
 
   cmake_language(CALL "find_or_configure_${_LEGATE_FOC_PACKAGE_LOWER}")
@@ -177,8 +163,10 @@ macro(legate_find_or_configure)
     # cmake-format: on
     message(STATUS "${_LEGATE_FOC_PACKAGE}_DIR and ${_LEGATE_FOC_PACKAGE}_ROOT undefined, "
                    "forcing CPM to reuse downloaded ${_LEGATE_FOC_PACKAGE} from now on")
-    set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON)
-    set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
+    # Use option() here to make this stick in case legate_IGNORE_INSTALLED_PACKAGES wasn't
+    # set.
+    option(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE}
+           "Force CPM to download ${_LEGATE_FOC_PACKAGE}" ON)
   endif()
 
   unset(_LEGATE_FOC_PACKAGE)

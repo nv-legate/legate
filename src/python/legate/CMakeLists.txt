@@ -16,8 +16,6 @@ add_compile_options(-w)
 
 include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
 
-legate_find_or_configure_init()
-
 legate_find_or_configure(PACKAGE fmt)
 
 # More tomfoolery required because of scikit-build-core. scikit-build-core has a "wheel

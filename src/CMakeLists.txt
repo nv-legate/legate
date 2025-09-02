@@ -116,7 +116,11 @@ set_property(DIRECTORY
                       "${LEGATE_CMAKE_DIR}/versions/versions.json"
                       "${LEGATE_CMAKE_DIR}/versions/legion_version.json"
                       "${LEGATE_CMAKE_DIR}/templates/uninstall.cmake.in"
-                      "${LEGATE_CMAKE_DIR}/templates/legate_defines.h.in")
+                      "${LEGATE_CMAKE_DIR}/templates/legate_defines.h.in"
+                      "${LEGATE_CMAKE_DIR}/templates/bin2c.cc.in"
+                      "${LEGATE_CMAKE_DIR}/templates/bin2c.h.in"
+                      "${LEGATE_CMAKE_DIR}/templates/git_version.cc.in"
+                      "${LEGATE_CMAKE_DIR}/templates/install_info.py.in")
 
 macro(set_ifndef variable value)
   if(NOT DEFINED ${variable})
@@ -175,5 +179,11 @@ else()
   message(FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}, don't know how to set "
                       "rpath 'origin' on this platform")
 endif()
+
+cmake_path(SET legate_DEP_INSTALL_LIBDIR NORMALIZE "${CMAKE_INSTALL_LIBDIR}/legate/deps")
+cmake_path(SET legate_DEP_INSTALL_INCLUDEDIR NORMALIZE
+           "${CMAKE_INSTALL_INCLUDEDIR}/legate/deps")
+cmake_path(SET legate_DEP_INSTALL_BINDIR NORMALIZE
+           "${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_BINDIR}")
 
 add_subdirectory(${legate_project_suffix})

@@ -83,8 +83,6 @@ legate_configure_debug_symbols()
 
 include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
 
-legate_find_or_configure_init()
-
 # ########################################################################################
 # * CCCL ---------------------------------------------------------------------
 

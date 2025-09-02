@@ -89,8 +89,6 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   message(VERBOSE "legate: Legion git_branch: ${git_branch}")
   message(VERBOSE "legate: Legion exclude_from_all: ${exclude_from_all}")
 
-  set_ifndef(Legion_USE_CUDA "${legate_USE_CUDA}")
-
   rapids_cpm_find(Legion "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
