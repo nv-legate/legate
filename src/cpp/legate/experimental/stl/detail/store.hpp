@@ -293,7 +293,11 @@ class logical_store
 
   [[nodiscard]] static LogicalStore create_(::cuda::std::span<const std::size_t, Dim> exts)
   {
-    Runtime* runtime = legate::Runtime::get_runtime();
+    // clang-tidy claims we can make runtime into const Runtime *const. But create_store() is a
+    // non-const member function, so clang-tidy is off its rocker.
+    //
+    // NOLINTNEXTLINE(misc-const-correctness)
+    Runtime* const runtime = legate::Runtime::get_runtime();
     // create_store() takes const-ref for now, but may not always be the case
     // NOLINTNEXTLINE(misc-const-correctness)
     Shape shape{std::vector<std::uint64_t>{exts.begin(), exts.end()}};

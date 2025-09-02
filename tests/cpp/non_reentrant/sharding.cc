@@ -471,7 +471,7 @@ TEST_F(LegateShardingDeathTest, FindByInvalidProjection)
   ASSERT_EXIT(
     static_cast<void>(legate::detail::find_sharding_functor_by_projection_functor(invalid_proj_id)),
     ::testing::KilledBySignal(SIGABRT),
-    "functor_id_table.find\\(proj_id\\) != functor_id_table.end\\(\\)");
+    "it != functor_id_table.end\\(\\)");
 }
 
 TEST_F(LegateShardingDeathTest, CreateWithDuplicateID)

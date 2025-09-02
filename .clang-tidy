@@ -42,6 +42,7 @@ Checks:
   - '-misc-header-include-cycle'
   - '-modernize-macro-to-enum'
   - '-misc-no-recursion'
+  - '-portability-avoid-pragma-once'
   # Generally speaking if something is static then it has an express reason to be. 99% of
   # the candidates identified by this check were because they just so happened not to
   # touch any member variables, not because they are logically static. So we disable the

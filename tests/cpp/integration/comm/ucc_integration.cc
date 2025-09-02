@@ -172,7 +172,7 @@ class UCCIntegrationTest : public DefaultFixture {
           ASSERT_EQ(comm->unique_id, unique_id);
           ASSERT_EQ(comm->status, true);
 
-          const std::lock_guard<std::mutex> lock{comm_mutex};
+          const std::scoped_lock<std::mutex> lock{comm_mutex};
 
           comms_[i] = std::move(comm);
         } catch (const std::exception& e) {

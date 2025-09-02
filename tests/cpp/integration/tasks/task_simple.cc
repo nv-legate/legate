@@ -35,7 +35,7 @@ void register_tasks()
 
   auto acc = output.write_accessor<std::int64_t, 2>(shape);
   for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    acc[*it] = (*it)[0] + (*it)[1] * 1000;
+    acc[*it] = (*it)[0] + ((*it)[1] * 1000);
   }
 }
 

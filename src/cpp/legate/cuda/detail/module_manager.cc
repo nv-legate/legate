@@ -95,7 +95,7 @@ CUlibrary CUDAModuleManager::load_library(
   // Need to acquire and hold the lock here because this can be called from anywhere, including
   // within tasks. In that case, we don't want the initialization of the module to introduce a
   // race condition.
-  const std::lock_guard<std::mutex> lock{mut_};
+  const std::scoped_lock<std::mutex> lock{mut_};
 
   const auto [it, inserted] = libraries_().try_emplace(fatbin);
 

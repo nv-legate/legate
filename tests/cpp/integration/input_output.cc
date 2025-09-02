@@ -68,7 +68,7 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
     for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
       auto p = *it;
       EXPECT_EQ(acc[p], 123);
-      acc[*it] = (p[0] + 1) + (p[1] + 1) * 1000;
+      acc[*it] = (p[0] + 1) + ((p[1] + 1) * 1000);
     }
   }
 };

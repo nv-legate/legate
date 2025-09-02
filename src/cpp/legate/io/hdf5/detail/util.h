@@ -23,7 +23,7 @@ namespace legate::io::hdf5::detail {
 class HDF5GlobalLock {
   static inline std::mutex mut_{};
 
-  std::lock_guard<std::mutex> guard_{mut_};
+  std::scoped_lock<std::mutex> guard_{mut_};
 };
 
 [[nodiscard]] HighFive::File open_hdf5_file(const HDF5GlobalLock&,

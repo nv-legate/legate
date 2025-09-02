@@ -137,7 +137,17 @@ using cuGetProcAddressT = CUresult (*)(const char*, void**, int, std::uint64_t);
     }
   }
 
-  void* ret = nullptr;
+  // clang-tidy says:
+  //
+  // src/cpp/legate/cuda/detail/cuda_driver_api.cc:140:3: error: pointee of variable 'ret' of
+  // type 'void *' can be declared 'const' [misc-const-correctness,-warnings-as-errors]
+  // 140 |   void* ret = nullptr;
+  //     |   ^
+  //     |        const
+  //
+  // But cu_get_proc_address() explicitly takes a void **, and we return a void *, so this
+  // seems incorrect.
+  void* ret = nullptr;  // NOLINT(misc-const-correctness)
   const auto error =
     cu_get_proc_address(driver_function, &ret, LEGATE_CUDA_VERSION, CU_GET_PROC_ADDRESS_DEFAULT);
 

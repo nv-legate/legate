@@ -355,7 +355,7 @@ void UCCNetwork::Impl::comm_create(legate::comm::coll::CollComm global_comm,
   LEGATE_CHECK(lib_.has_value());
 
   {
-    const std::lock_guard<std::mutex> lock{ucc_comms_lock_};
+    const std::scoped_lock<std::mutex> lock{ucc_comms_lock_};
 
     if (ucc_comms_.find(global_rank) != ucc_comms_.end()) {
       LEGATE_ABORT(
@@ -381,7 +381,7 @@ void UCCNetwork::Impl::comm_create(legate::comm::coll::CollComm global_comm,
   global_comm->global_comm_size = global_comm_size;
 
   {
-    const std::lock_guard<std::mutex> lock{ucc_comms_lock_};
+    const std::scoped_lock<std::mutex> lock{ucc_comms_lock_};
     ucc_comms_[global_rank] = std::move(ucc_comm);
   }
 }
@@ -392,7 +392,7 @@ void UCCNetwork::Impl::comm_destroy(legate::comm::coll::CollComm global_comm)
 
   // Look up the communicator by unique ID and extract it safely
   auto ucc_comm_ptr = [&]() -> std::unique_ptr<UCCCommunicator> {
-    const std::lock_guard<std::mutex> lock{ucc_comms_lock_};
+    const std::scoped_lock<std::mutex> lock{ucc_comms_lock_};
 
     auto it = ucc_comms_.find(global_comm->global_rank);
     if (it == ucc_comms_.end()) {
@@ -429,7 +429,7 @@ void UCCNetwork::Impl::all_to_all_v(const void* sendbuf,
   LEGATE_CHECK(rdispls != nullptr);
 
   UCCCommunicator* ucc_comm = [&]() -> UCCCommunicator* {
-    const std::lock_guard<std::mutex> lock{ucc_comms_lock_};
+    const std::scoped_lock<std::mutex> lock{ucc_comms_lock_};
     auto it = ucc_comms_.find(global_comm->global_rank);
 
     if (it == ucc_comms_.end()) {
@@ -480,7 +480,7 @@ void UCCNetwork::Impl::all_to_all(const void* sendbuf,
   LEGATE_CHECK(recvbuf != nullptr);
 
   UCCCommunicator* ucc_comm = [&]() -> UCCCommunicator* {
-    const std::lock_guard<std::mutex> lock{ucc_comms_lock_};
+    const std::scoped_lock<std::mutex> lock{ucc_comms_lock_};
     auto it = ucc_comms_.find(global_comm->global_rank);
 
     if (it == ucc_comms_.end()) {
@@ -520,7 +520,7 @@ void UCCNetwork::Impl::all_gather(const void* sendbuf,
   LEGATE_CHECK(recvbuf != nullptr);
 
   UCCCommunicator* ucc_comm = [&]() -> UCCCommunicator* {
-    const std::lock_guard<std::mutex> lock{ucc_comms_lock_};
+    const std::scoped_lock<std::mutex> lock{ucc_comms_lock_};
     auto it = ucc_comms_.find(global_comm->global_rank);
     if (it == ucc_comms_.end()) {
       LEGATE_ABORT(

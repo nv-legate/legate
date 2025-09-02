@@ -37,7 +37,7 @@ class GlobalTaskOrder {
 
   void append(legate::LocalTaskID task_id, const legate::DomainPoint& dp)
   {
-    const auto _ = std::lock_guard<std::mutex>{mut_};
+    const auto _ = std::scoped_lock<std::mutex>{mut_};
 
     task_ids_.emplace_back(task_id);
     domain_points_.emplace_back(dp);
@@ -45,7 +45,7 @@ class GlobalTaskOrder {
 
   void clear()
   {
-    const auto _ = std::lock_guard<std::mutex>{mut_};
+    const auto _ = std::scoped_lock<std::mutex>{mut_};
 
     task_ids_.clear();
     domain_points_.clear();

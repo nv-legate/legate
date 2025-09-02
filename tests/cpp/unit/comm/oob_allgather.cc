@@ -38,7 +38,7 @@ TEST_F(OOBAllgatherTest, DefaultConstruction)
   // Test that we can create an MPIOOBAllgather instance
   const std::vector<int> mapping_table = {0, 0};
   auto mpi_oob_allgather               = std::make_unique<MPIOOBAllgather>(0, 2, mapping_table);
-  void* req                            = nullptr;
+  void* req                            = nullptr;  // NOLINT(misc-const-correctness)
 
   // Test member functions with invalid arguments - should fail gracefully
   ASSERT_NE(mpi_oob_allgather->allgather(nullptr, nullptr, 0, nullptr, &req), UCC_OK);

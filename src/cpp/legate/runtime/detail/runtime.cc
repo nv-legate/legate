@@ -1824,8 +1824,8 @@ void set_env_vars()
 
   handle_realm_default_args(need_network_init);
 
-  int argc                     = 1;
-  const char* dummy_argv_arr[] = {"legate-placeholder-binary-name", nullptr};
+  int argc                           = 1;
+  const char* const dummy_argv_arr[] = {"legate-placeholder-binary-name", nullptr};
   // Realm won't modify the existing strings, but nevertheless they require a char*
   char** dummy_argv = const_cast<char**>(dummy_argv_arr);
   char** argv       = dummy_argv;

@@ -130,9 +130,11 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
 
 Legion::ShardingID find_sharding_functor_by_projection_functor(Legion::ProjectionID proj_id)
 {
-  const std::lock_guard<std::mutex> lock{functor_table_lock};
-  LEGATE_CHECK(functor_id_table.find(proj_id) != functor_id_table.end());
-  return functor_id_table[proj_id];
+  const std::scoped_lock<std::mutex> lock{functor_table_lock};
+  const auto it = functor_id_table.find(proj_id);
+
+  LEGATE_CHECK(it != functor_id_table.end());
+  return it->second;
 }
 
 class ShardingCallbackArgs {
@@ -162,7 +164,7 @@ void create_sharding_functor_using_projection(Legion::ShardID shard_id,
 {
   legate::detail::ShardingCallbackArgs args{shard_id, proj_id, range};
   {
-    const std::lock_guard<std::mutex> lock{legate::detail::functor_table_lock};
+    const std::scoped_lock<std::mutex> lock{legate::detail::functor_table_lock};
     legate::detail::functor_id_table[proj_id] = shard_id;
   }
   const Legion::UntypedBuffer buffer{&args, sizeof(args)};

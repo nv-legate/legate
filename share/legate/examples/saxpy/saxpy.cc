@@ -50,7 +50,7 @@ class SAXPYTask : public legate::LegateTask<SAXPYTask> {
     const auto output_shape = output_store.shape<DIM>();
 
     // Assert that all shapes are equal
-    LEGATE_ASSERT(x_shape == y_shape && y_shape == output_shape);
+    LEGATE_CHECK(x_shape == y_shape && y_shape == output_shape);
 
     // Create accessors for reading input and writing output
     auto x_accessor      = x_input_store.read_accessor<std::int32_t, DIM>();

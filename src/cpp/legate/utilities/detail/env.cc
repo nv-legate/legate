@@ -29,11 +29,11 @@ namespace legate::detail {
 
 namespace {
 
-[[nodiscard]] std::lock_guard<std::mutex> ENVIRONMENT_LOCK()
+[[nodiscard]] std::scoped_lock<std::mutex> ENVIRONMENT_LOCK()
 {
   static std::mutex mut{};
 
-  return std::lock_guard<std::mutex>{mut};
+  return std::scoped_lock<std::mutex>{mut};
 }
 
 template <typename T>

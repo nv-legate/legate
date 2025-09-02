@@ -31,7 +31,7 @@ coord_t LinearizeFn::operator()(const DomainPoint& lo,
   coord_t idx = 0;
 
   for (std::uint32_t dim = 0; dim < DIM; ++dim) {
-    idx = idx * (hi[dim] - lo[dim] + 1) + point[dim] - lo[dim];
+    idx = (idx * (hi[dim] - lo[dim] + 1)) + point[dim] - lo[dim];
   }
   return idx;
 }
@@ -66,7 +66,7 @@ DomainPoint DelinearizeFn::operator()(const DomainPoint& lo,
     const auto udim   = static_cast<std::uint32_t>(dim);
     const auto extent = hi[udim] - lo[udim] + 1;
 
-    point[udim] = idx % extent + lo[udim];
+    point[udim] = (idx % extent) + lo[udim];
     idx /= extent;
   }
   return point;

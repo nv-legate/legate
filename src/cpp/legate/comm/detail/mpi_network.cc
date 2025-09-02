@@ -54,8 +54,9 @@ MPINetwork::MPINetwork()
       "MPI_THREAD_MULTIPLE");
   }
 
-  int flag    = 0;
-  int* tag_ub = nullptr;
+  int flag = 0;
+  // tag_ub is clearly modified
+  int* tag_ub = nullptr;  // NOLINT(misc-const-correctness)
   // check
   LEGATE_CHECK_MPI(MPIInterface::mpi_comm_get_attr(MPIInterface::MPI_COMM_WORLD(),
                                                    MPIInterface::MPI_TAG_UB(),
@@ -521,7 +522,7 @@ enum CollTag : std::uint8_t {
 
   // new tagging system, if crash, switch to the old one
 
-  tag = rank1 % global_comm->nb_threads * global_comm->global_comm_size + rank2;
+  tag = (rank1 % global_comm->nb_threads * global_comm->global_comm_size) + rank2;
 
   // Szudzik's Function, two numbers < 32768
   // if (rank1 >= rank2) {

@@ -119,8 +119,9 @@ MPIOOBAllgather::Impl::Impl(int rank, int size, std::vector<int> mapping_table)
   LEGATE_CHECK_MPI(MPIInterface::mpi_comm_rank(comm_, &mpi_rank_));
   LEGATE_CHECK_MPI(MPIInterface::mpi_comm_size(comm_, &mpi_size_));
 
-  int flag    = 0;
-  int* tag_ub = nullptr;
+  int flag = 0;
+  // tag_ub is clearly modified
+  int* tag_ub = nullptr;  // NOLINT(misc-const-correctness)
 
   // Get the upper bound of tag values
   LEGATE_CHECK_MPI(MPIInterface::mpi_comm_get_attr(MPIInterface::MPI_COMM_WORLD(),

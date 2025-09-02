@@ -183,7 +183,7 @@ TEST_F(UCCNetworkTest, OOBTwoThreads)
 
       network.comm_create(comm.get(), num_threads, index, unique_id, mapping_table.data());
 
-      const std::lock_guard<std::mutex> lock{comm_mutex};
+      const std::scoped_lock<std::mutex> lock{comm_mutex};
 
       comms.push_back(std::move(comm));
     }};

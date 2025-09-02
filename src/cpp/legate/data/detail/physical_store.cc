@@ -87,7 +87,7 @@ Domain PhysicalStore::domain() const
   if (!transform_->identity()) {
     result = transform_->transform(result);
   }
-  LEGATE_ASSERT(result.dim == dim() || maybe_fake_domain);
+  LEGATE_CHECK(result.get_dim() == dim() || maybe_fake_domain);
   return result;
 }
 

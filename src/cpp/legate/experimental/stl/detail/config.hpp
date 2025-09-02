@@ -22,7 +22,7 @@
 
 #define LEGATE_STL_DETAIL_CONFIG_INCLUDED
 
-#if defined(__cpp_concepts)
+#ifdef __cpp_concepts
 #define LEGATE_STL_CONCEPTS() 1
 #else
 #define LEGATE_STL_CONCEPTS() 0

@@ -236,7 +236,7 @@ void register_legion_functor(Legion::ProjectionID proj_id,
   runtime->register_projection_functor(
     proj_id, new LegateProjectionFunctor{runtime, legate_functor.get()}, true /*silence warnings*/);
 
-  const std::lock_guard<std::mutex> lock{functor_table_lock};
+  const std::scoped_lock<std::mutex> lock{functor_table_lock};
 
   functor_table.try_emplace(proj_id, std::move(legate_functor));
 }
@@ -270,7 +270,7 @@ ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id)
     return identity_projection();
   }
 
-  const std::lock_guard<std::mutex> lock{functor_table_lock};
+  const std::scoped_lock<std::mutex> lock{functor_table_lock};
   auto finder = functor_table.find(proj_id);
 
   if (finder == functor_table.end()) {
@@ -328,7 +328,7 @@ class LinearizingPointTransformFunctor final : public Legion::PointTransformFunc
     std::int64_t idx        = point[0];
     for (std::int32_t dim = 1; dim < ndim; ++dim) {
       const std::int64_t extent = domain.rect_data[dim + ndim] - domain.rect_data[dim] + 1;
-      idx                       = idx * extent + point[dim];
+      idx                       = (idx * extent) + point[dim];
     }
     result[0] = idx;
     return result;
