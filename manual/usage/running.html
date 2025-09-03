@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running Legate Programs &#8212; NVIDIA legate (25.09.00.dev68+g66cea4beb)</title>
+    <title>Running Legate Programs &#8212; NVIDIA legate (25.09.00.dev74+gcf8140339)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=4e5b9b82"></script>
+    <script src="../../_static/documentation_options.js?v=16ecaade"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev68+g66cea4beb)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev74+gcf8140339)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev68+g66cea4beb)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev74+gcf8140339)</p>
   
 </a>
 
@@ -333,6 +333,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l2"><a class="reference internal" href="../mappers/index.html">Mappers</a></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Running Legate Programs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">Running Legate Programs</a></li>
+
 
 
 
@@ -679,6 +680,45 @@ driver:</p>
 </pre></div>
 </div>
 </section>
+<section id="runtime-configuration">
+<h1>Runtime Configuration<a class="headerlink" href="#runtime-configuration" title="Link to this heading">#</a></h1>
+<p>Legate does not consume any command-line options. Instead, it is configured by a single
+environment variable, <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> which accepts a space-separated string of
+arguments:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--cpus=2 --gpus=10 --fbmem=1024&#39;</span><span class="w"> </span>./myprog
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> is read exactly once, during the first call to <code class="docutils literal notranslate"><span class="pre">legate::start()</span></code>
+(or first time importing the <code class="docutils literal notranslate"><span class="pre">legate.core</span></code> module in Python). Modifying
+<code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> at any point after this call will have no effect. Calling
+<code class="docutils literal notranslate"><span class="pre">legate::start()</span></code> multiple times will also have no effect.</p>
+</div>
+<p>The user may query the flags available for configuration by passing the <code class="docutils literal notranslate"><span class="pre">--help</span></code> flag:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--help&#39;</span><span class="w"> </span>./myprog
+</pre></div>
+</div>
+<p>This will cause Legate to list the available runtime options and exit the program.</p>
+<p>Boolean flags may take several forms:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--flag</span></code>: implies <code class="docutils literal notranslate"><span class="pre">flag=true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--flag=1|t|true|y|yes</span></code>: implies <code class="docutils literal notranslate"><span class="pre">flag=true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--flag=0|f|false|n|no</span></code>: implies <code class="docutils literal notranslate"><span class="pre">flag=false</span></code>.</p></li>
+</ul>
+<p>While the <code class="docutils literal notranslate"><span class="pre">=</span></code> separator between the flag’s name and value is optional (<code class="docutils literal notranslate"><span class="pre">--flag=value</span></code>
+is equivalent to <code class="docutils literal notranslate"><span class="pre">--flag</span> <span class="pre">value</span></code>), it is nevertheless recommended in order to make value
+association clearer.</p>
+<p>The same flag (regardless of type) may also be passed multiple times to <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code>,
+with the last value “winning”. For example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--foo --foo=f --foo=1&#39;</span>
+</pre></div>
+</div>
+<p>is equivalent to:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--foo=1&#39;</span>
+</pre></div>
+</div>
+</section>
 <section id="resource-allocation">
 <h1>Resource Allocation<a class="headerlink" href="#resource-allocation" title="Link to this heading">#</a></h1>
 <p>By default Legate will query the available hardware on the current machine, and
@@ -943,6 +983,7 @@ program’s execution:</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Running Legate Programs</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime-configuration">Runtime Configuration</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-allocation">Resource Allocation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#distributed-launch">Distributed Launch</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#running-legate-on-typical-slurm-clusters">Running Legate on Typical SLURM Clusters</a></li>

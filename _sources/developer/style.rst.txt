@@ -37,6 +37,122 @@ yet possible. These are discussed below. In all other cases the following rules 
 
 ------------------------------
 
+Classes
+-------
+
+#. 1 class definition per header file.
+
+#. Try to avoid nested classes that are visible outside the class. Nested classes cannot
+   be forward-declared and therefore require including the entire header file of the
+   enclosing class.
+
+#. Member functions (or constructors) taking a resource which they intend to own should
+   take the resource by value and ``std::move()`` it into place. This avoids a double copy
+   in case the argument is constructed in-place at the call-site, and is no less efficient
+   if a copy is required.
+
+   .. code-block:: cpp
+
+
+      // GOOD, the object intends to own f, so it should take by value
+      void MyObject::add_foo(Foo f)
+      {
+        foos_.emplace_back(std::move(f));
+      }
+
+
+      // BAD
+      void MyObject::add_foo(const Foo& f)
+      {
+        foos_.emplace_back(f);
+      }
+
+      // Bad because this now causes a copy. The in-place constructed Foo is copied into
+      // the member variable instead of being moved.
+      my_object.add_foo(Foo{...});
+
+#. Do not hold raw pointers to resources inside a class unless absolutely
+   necessary. Prefer to hold smart pointers or ``std::reference_wrapper``. If this is not
+   possible, the initializer for the pointer must be done via reference.
+
+   .. code-block:: cpp
+
+      // GOOD
+      class Foo {
+      public:
+        // Good, take b by reference by converting to pointer internally.
+        Foo(const Bar &b) : bar_{&b} { }
+
+        // Good, return a reference to bar_, not the pointer.
+        const Bar &bar() const { return *bar_; }
+
+      private:
+        const Bar *bar_{};
+      };
+
+      // BAD
+      class Foo {
+      public:
+        // Bad, should take a reference to indicate to the caller "this resource must exist"
+        // and allow compiler to check this for us.
+        Foo(const Bar *b) : bar_{b} { }
+
+        // Bad, should return a reference to bar_, not the pointer.
+        const Bar *bar() const { return bar_; }
+
+      private:
+        const Bar *bar_{};
+      };
+
+
+#. Do not befriend other classes. If another class must have private access to specific
+   member variables or member functions that should otherwise not be exposed, expose these
+   functions as public methods with private "keys":
+
+   .. code-block:: cpp
+
+      class Foo;
+
+      class Bar {
+      public:
+
+      class UseResourceKey {
+        // Note, default constructor is explicitly made private. No-one except for classes
+        // or functions made friends may construct this "key" now.
+        UseResourceKey() = default;
+
+        // OK, allow any function of Foo to call the private function.
+        friend class Foo;
+
+        // Best, allow only specific functions of Foo to call the private function.
+        friend void Foo::use_resource(...);
+
+        // Usually you will want the current class as a friend so that it may call the
+        // function as well.
+        friend class Bar;
+      };
+
+      // Function must be public, so that Foo is allowed to call it. But it is for all
+      // intents and purposes private, because no-one except for specific classes or
+      // functions can construct the first "key" argument.
+      void use_resource(UseResourceKey, ...);
+
+      private:
+        Widget resource_{};
+      };
+
+#. Do not expose your members directly. Instead, make them ``private`` and provide
+   ``public`` accessor functions to them. This serves to encapsulate the resource and
+   provide clear ownership semantics.
+
+   This also aides in debugging. When tracking when a member's variables are changed, it
+   is much easier to place a breakpoint on a function than it is to place a watchpoint on
+   a particular member variable's address (which may change due to serdez).
+
+#. Do not expose mutable references to members unless absolutely necessary. Instead,
+   provide functions that perform the mutation directly. Not only should a class own its
+   resources, it should have complete control of any modifications of those resources.
+
 Functions
 ---------
 
@@ -162,6 +278,24 @@ Functions
    In this case, it is better to have it defined in the ``.cc``, where the compiler can
    inline the other function call, resulting in more efficient code overall.
 
+#. All functions, public or private, must be documented with a proper doxygen
+   docstring. This includes translation-unit local functions, such as those in anonymous
+   namespaces.
+
+   If the public and private variants are more or less identical in terms of arguments
+   (i.e. the public is a pass-through for the private), then the private docstring does
+   not need to repeat the docstring of the public. Instead, it should include text that
+   references the public variant (e.g. "see legate::Foo::bar() for further discussion"),
+   and document only the "private" effects of calling the function (e.g. "this function
+   modifies <some internal property> to state X and therefore shouldn't be called before
+   XYZ").
+
+   We could have adopted a rule that "small" or "obvious" functions shouldn't get this
+   treatment, but then there would be endless bike-shedding on whether a particular
+   function is small or obvious enough. Combined with the fact that it is very easy to
+   hide code in operators in C++, it is easier to mandate that all functions be
+   documented.
+
 
 Variables
 ---------
@@ -262,6 +396,16 @@ Variables
        have a lot of if branches).
     #. You can make ``var`` ``const``.
 
+#. Do not use pointers to indicate lack of value. If a resource may or may not exist, then
+   use ``std::optional<T>`` instead. This also goes for smart pointers; as described
+   above, Legate assumes all pointers (smart or otherwise) are non-null and point to a
+   value.
+
+   The rationale for this is that compiler will warn about unchecked accesses to
+   ``std::optional<T>`` (which is undefined behavior if the optional does not contain a
+   value), while they won't complain about NULL-pointer dereferences. ``std::optional`` is
+   also more explicit and self-documenting. It tells the reader unambiguously that "this
+   might not exist".
 
 Misc
 ----

@@ -30,7 +30,6 @@ legate.core.ManualTask
    .. autosummary::
       :toctree: .
    
-      ~ManualTask.add_cal_communicator
       ~ManualTask.add_communicator
       ~ManualTask.add_cpu_communicator
       ~ManualTask.add_input

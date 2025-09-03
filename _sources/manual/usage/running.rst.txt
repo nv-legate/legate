@@ -39,6 +39,58 @@ or invoked directly:
 
     $ ./myprog <myprog options>
 
+
+Runtime Configuration
+---------------------
+
+Legate does not consume any command-line options. Instead, it is configured by a single
+environment variable, ``LEGATE_CONFIG`` which accepts a space-separated string of
+arguments:
+
+.. code-block:: sh
+
+   $ LEGATE_CONFIG='--cpus=2 --gpus=10 --fbmem=1024' ./myprog
+
+
+.. important::
+
+   ``LEGATE_CONFIG`` is read exactly once, during the first call to ``legate::start()``
+   (or first time importing the ``legate.core`` module in Python). Modifying
+   ``LEGATE_CONFIG`` at any point after this call will have no effect. Calling
+   ``legate::start()`` multiple times will also have no effect.
+
+The user may query the flags available for configuration by passing the ``--help`` flag:
+
+.. code-block:: sh
+
+   $ LEGATE_CONFIG='--help' ./myprog
+
+This will cause Legate to list the available runtime options and exit the program.
+
+Boolean flags may take several forms:
+
+* ``--flag``: implies ``flag=true``.
+* ``--flag=1|t|true|y|yes``: implies ``flag=true``.
+* ``--flag=0|f|false|n|no``: implies ``flag=false``.
+
+While the ``=`` separator between the flag's name and value is optional (``--flag=value``
+is equivalent to ``--flag value``), it is nevertheless recommended in order to make value
+association clearer.
+
+The same flag (regardless of type) may also be passed multiple times to ``LEGATE_CONFIG``,
+with the last value "winning". For example:
+
+.. code-block:: sh
+
+   $ LEGATE_CONFIG='--foo --foo=f --foo=1'
+
+is equivalent to:
+
+.. code-block:: sh
+
+   $ LEGATE_CONFIG='--foo=1'
+
+
 Resource Allocation
 -------------------
 

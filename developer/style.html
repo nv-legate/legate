@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Style &#8212; NVIDIA legate (25.09.00.dev68+g66cea4beb)</title>
+    <title>Code Style &#8212; NVIDIA legate (25.09.00.dev74+gcf8140339)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4e5b9b82"></script>
+    <script src="../_static/documentation_options.js?v=16ecaade"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev68+g66cea4beb)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev74+gcf8140339)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev68+g66cea4beb) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev68+g66cea4beb)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev74+gcf8140339)</p>
   
 </a>
 
@@ -333,6 +333,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l2"><a class="reference internal" href="../manual/mappers/index.html">Mappers</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../manual/usage/index.html">Running Legate Programs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../manual/usage/running.html">Running Legate Programs</a></li>
+
 
 
 
@@ -678,6 +679,115 @@ solution (and potentially miss cases), they can be tailored to just a handful of
 </li>
 </ol>
 <hr class="docutils" />
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<ol class="arabic">
+<li><p>1 class definition per header file.</p></li>
+<li><p>Try to avoid nested classes that are visible outside the class. Nested classes cannot
+be forward-declared and therefore require including the entire header file of the
+enclosing class.</p></li>
+<li><p>Member functions (or constructors) taking a resource which they intend to own should
+take the resource by value and <code class="docutils literal notranslate"><span class="pre">std::move()</span></code> it into place. This avoids a double copy
+in case the argument is constructed in-place at the call-site, and is no less efficient
+if a copy is required.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// GOOD, the object intends to own f, so it should take by value</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">MyObject::add_foo</span><span class="p">(</span><span class="n">Foo</span><span class="w"> </span><span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">foos_</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">));</span>
+<span class="p">}</span>
+
+
+<span class="c1">// BAD</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">MyObject::add_foo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Foo</span><span class="o">&amp;</span><span class="w"> </span><span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="n">foos_</span><span class="p">.</span><span class="n">emplace_back</span><span class="p">(</span><span class="n">f</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Bad because this now causes a copy. The in-place constructed Foo is copied into</span>
+<span class="c1">// the member variable instead of being moved.</span>
+<span class="n">my_object</span><span class="p">.</span><span class="n">add_foo</span><span class="p">(</span><span class="n">Foo</span><span class="p">{...});</span>
+</pre></div>
+</div>
+</li>
+<li><p>Do not hold raw pointers to resources inside a class unless absolutely
+necessary. Prefer to hold smart pointers or <code class="docutils literal notranslate"><span class="pre">std::reference_wrapper</span></code>. If this is not
+possible, the initializer for the pointer must be done via reference.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// GOOD</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Foo</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="c1">// Good, take b by reference by converting to pointer internally.</span>
+<span class="w">  </span><span class="n">Foo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Bar</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">bar_</span><span class="p">{</span><span class="o">&amp;</span><span class="n">b</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Good, return a reference to bar_, not the pointer.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Bar</span><span class="w"> </span><span class="o">&amp;</span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="n">bar_</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Bar</span><span class="w"> </span><span class="o">*</span><span class="n">bar_</span><span class="p">{};</span>
+<span class="p">};</span>
+
+<span class="c1">// BAD</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Foo</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="c1">// Bad, should take a reference to indicate to the caller &quot;this resource must exist&quot;</span>
+<span class="w">  </span><span class="c1">// and allow compiler to check this for us.</span>
+<span class="w">  </span><span class="n">Foo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Bar</span><span class="w"> </span><span class="o">*</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">bar_</span><span class="p">{</span><span class="n">b</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Bad, should return a reference to bar_, not the pointer.</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Bar</span><span class="w"> </span><span class="o">*</span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">bar_</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">Bar</span><span class="w"> </span><span class="o">*</span><span class="n">bar_</span><span class="p">{};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</li>
+<li><p>Do not befriend other classes. If another class must have private access to specific
+member variables or member functions that should otherwise not be exposed, expose these
+functions as public methods with private “keys”:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Foo</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Bar</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UseResourceKey</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Note, default constructor is explicitly made private. No-one except for classes</span>
+<span class="w">  </span><span class="c1">// or functions made friends may construct this &quot;key&quot; now.</span>
+<span class="w">  </span><span class="n">UseResourceKey</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// OK, allow any function of Foo to call the private function.</span>
+<span class="w">  </span><span class="k">friend</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Foo</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// Best, allow only specific functions of Foo to call the private function.</span>
+<span class="w">  </span><span class="k">friend</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">Foo::use_resource</span><span class="p">(...);</span>
+
+<span class="w">  </span><span class="c1">// Usually you will want the current class as a friend so that it may call the</span>
+<span class="w">  </span><span class="c1">// function as well.</span>
+<span class="w">  </span><span class="k">friend</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">Bar</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// Function must be public, so that Foo is allowed to call it. But it is for all</span>
+<span class="c1">// intents and purposes private, because no-one except for specific classes or</span>
+<span class="c1">// functions can construct the first &quot;key&quot; argument.</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">use_resource</span><span class="p">(</span><span class="n">UseResourceKey</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
+
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="n">Widget</span><span class="w"> </span><span class="n">resource_</span><span class="p">{};</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</li>
+<li><p>Do not expose your members directly. Instead, make them <code class="docutils literal notranslate"><span class="pre">private</span></code> and provide
+<code class="docutils literal notranslate"><span class="pre">public</span></code> accessor functions to them. This serves to encapsulate the resource and
+provide clear ownership semantics.</p>
+<p>This also aides in debugging. When tracking when a member’s variables are changed, it
+is much easier to place a breakpoint on a function than it is to place a watchpoint on
+a particular member variable’s address (which may change due to serdez).</p>
+</li>
+<li><p>Do not expose mutable references to members unless absolutely necessary. Instead,
+provide functions that perform the mutation directly. Not only should a class own its
+resources, it should have complete control of any modifications of those resources.</p></li>
+</ol>
+</section>
 <section id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
 <ol class="arabic" id="label-short-and-sweet-functions">
@@ -782,6 +892,22 @@ in having it be in the <code class="docutils literal notranslate"><span class="p
 <p>In this case, it is better to have it defined in the <code class="docutils literal notranslate"><span class="pre">.cc</span></code>, where the compiler can
 inline the other function call, resulting in more efficient code overall.</p>
 </li>
+<li><p>All functions, public or private, must be documented with a proper doxygen
+docstring. This includes translation-unit local functions, such as those in anonymous
+namespaces.</p>
+<p>If the public and private variants are more or less identical in terms of arguments
+(i.e. the public is a pass-through for the private), then the private docstring does
+not need to repeat the docstring of the public. Instead, it should include text that
+references the public variant (e.g. “see legate::Foo::bar() for further discussion”),
+and document only the “private” effects of calling the function (e.g. “this function
+modifies &lt;some internal property&gt; to state X and therefore shouldn’t be called before
+XYZ”).</p>
+<p>We could have adopted a rule that “small” or “obvious” functions shouldn’t get this
+treatment, but then there would be endless bike-shedding on whether a particular
+function is small or obvious enough. Combined with the fact that it is very easy to
+hide code in operators in C++, it is easier to mandate that all functions be
+documented.</p>
+</li>
 </ol>
 </section>
 <section id="variables">
@@ -876,6 +1002,16 @@ have a lot of if branches).</p></li>
 </ol>
 </div></blockquote>
 </li>
+<li><p>Do not use pointers to indicate lack of value. If a resource may or may not exist, then
+use <code class="docutils literal notranslate"><span class="pre">std::optional&lt;T&gt;</span></code> instead. This also goes for smart pointers; as described
+above, Legate assumes all pointers (smart or otherwise) are non-null and point to a
+value.</p>
+<p>The rationale for this is that compiler will warn about unchecked accesses to
+<code class="docutils literal notranslate"><span class="pre">std::optional&lt;T&gt;</span></code> (which is undefined behavior if the optional does not contain a
+value), while they won’t complain about NULL-pointer dereferences. <code class="docutils literal notranslate"><span class="pre">std::optional</span></code> is
+also more explicit and self-documenting. It tells the reader unambiguously that “this
+might not exist”.</p>
+</li>
 </ol>
 </section>
 <section id="misc">
@@ -959,6 +1095,7 @@ example:</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#misc">Misc</a></li>

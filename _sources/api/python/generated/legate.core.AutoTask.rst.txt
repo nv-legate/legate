@@ -32,7 +32,6 @@ legate.core.AutoTask
    
       ~AutoTask.add_alignment
       ~AutoTask.add_broadcast
-      ~AutoTask.add_cal_communicator
       ~AutoTask.add_communicator
       ~AutoTask.add_constraint
       ~AutoTask.add_cpu_communicator
