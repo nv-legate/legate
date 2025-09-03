@@ -1,4 +1,4 @@
-// -*- mode: fundamental-mode  -*-
+// -*- mode: fundamental  -*-
 /*
  * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
@@ -6,6 +6,10 @@
  */
 
 #pragma once
+
+#ifndef LEGION_DISABLE_DEPRECATED_ENUMS
+#define LEGION_DISABLE_DEPRECATED_ENUMS 1
+#endif
 
 #include <legion_defines.h>
 #include <realm_defines.h>

@@ -173,8 +173,8 @@ TEST_F(LogicalRegionFieldUnit, AttachWithPhysicalRegion)
   launcher.constraints.field_constraint.contiguous = false;
   launcher.constraints.field_constraint.inorder    = false;
   launcher.constraints.ordering_constraint.ordering.clear();
-  launcher.constraints.ordering_constraint.ordering.push_back(DIM_X);
-  launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
+  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_X);
+  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_F);
   launcher.privilege_fields.insert(region_field->field_id());
 
   auto external_resources = Legion::Runtime::get_runtime()->attach_external_resources(
@@ -240,9 +240,9 @@ TEST_F(LogicalRegionFieldUnit, AttachWithExternalResources)
   launcher.constraints.field_constraint.contiguous = false;
   launcher.constraints.field_constraint.inorder    = false;
   launcher.constraints.ordering_constraint.ordering.clear();
-  launcher.constraints.ordering_constraint.ordering.push_back(DIM_X);
-  launcher.constraints.ordering_constraint.ordering.push_back(DIM_Y);
-  launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
+  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_X);
+  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_Y);
+  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_F);
 
   auto external_resources = Legion::Runtime::get_runtime()->attach_external_resources(
     Legion::Runtime::get_context(), launcher);

@@ -19,6 +19,10 @@ Changes: 25.09
 
 .. rubric:: General
 
+- Define ``LEGION_DISABLE_DEPRECATED_ENUMS`` in ``legate_defines.h``, which disables the
+  use of deprecated Legion enum values. Uses of these values will now result in
+  compile-time errors.
+
 C++
 ---
 
