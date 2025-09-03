@@ -44,7 +44,6 @@ rapids-pip-retry install -v --prefer-binary -r continuous_integration/requiremen
 
 # Recreate the missing symlink and add in the cmake config for UCC.
 sitepkgs=$(python -c 'import site; print(site.getsitepackages()[0], end="")')
-ln -fs "${sitepkgs}"/nvidia/libcal/cu12/lib/libcal.so.0 "${sitepkgs}"/nvidia/libcal/cu12/lib/libcal.so
 ln -fs "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so.1 "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so
 ln -fs "${sitepkgs}"/nvidia/nccl/lib/libnccl.so.2 "${sitepkgs}"/nvidia/nccl/lib/libnccl.so
 if [[ ! -d "${sitepkgs}/nvidia/libcal/cu12/lib/cmake" ]]; then
@@ -114,7 +113,6 @@ rapids-logger "Repairing the wheel"
 mkdir -p "${LEGATE_DIR}/final-dist"
 export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/legate/prefix/lib"
 python -m auditwheel repair \
-  --exclude libcal.so.* \
   --exclude libcrypto.so.* \
   --exclude libcuda.so.* \
   --exclude libcudart.so.* \

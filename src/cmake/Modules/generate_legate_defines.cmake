@@ -25,10 +25,6 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_OPENMP 1)
   endif()
 
-  if(legate_USE_CAL)
-    set(LEGATE_USE_CAL 1)
-  endif()
-
   if(legate_USE_HDF5)
     set(LEGATE_USE_HDF5 1)
   endif()

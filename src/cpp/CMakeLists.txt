@@ -186,13 +186,6 @@ if(legate_USE_UCX)
 endif()
 
 # ########################################################################################
-# * CAL ----------------------------------------------------------------
-
-if(legate_USE_CAL)
-  legate_find_or_configure(PACKAGE CAL)
-endif()
-
-# ########################################################################################
 # * fmt::fmt --------------------------------------------------------------
 
 legate_find_or_configure(PACKAGE fmt)
@@ -517,10 +510,6 @@ if(Legion_USE_OpenMP)
                                     legate/partitioning/detail/partitioning_tasks_omp.cc)
 endif()
 
-if(legate_USE_CAL)
-  target_sources(legate_obj PRIVATE legate/comm/detail/comm_cal.cc)
-endif()
-
 if(legate_USE_NCCL)
   target_sources(legate_obj PRIVATE legate/comm/detail/comm_nccl.cc)
 endif()
@@ -687,10 +676,6 @@ foreach(target legate_obj legate)
 
   if(legate_USE_HDF5)
     target_link_libraries("${target}" PRIVATE HighFive::HighFive)
-  endif()
-
-  if(legate_USE_CAL)
-    target_link_libraries("${target}" PRIVATE CAL::CAL)
   endif()
 
   if(legate_USE_UCX)

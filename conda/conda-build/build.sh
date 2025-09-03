@@ -79,7 +79,6 @@ function preamble()
   # We rely on an environment variable to determine if we need to build cpu-only bits
   if [[ "${CPU_ONLY:-0}" == '0' ]]; then
     configure_args+=(--with-cuda)
-    configure_args+=(--with-cal)
   else
     configure_args+=(--with-cuda=0)
   fi

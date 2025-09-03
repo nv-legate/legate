@@ -45,8 +45,8 @@ void CommunicatorFactory::destroy()
   // Without this fence, Legion might still reorder the finalization tasks if they don't have
   // obvious data dependencies.
   //
-  // For example, CAL stuffs a CPU communicator into its own communicator, and so the
-  // finalize task doesn't need to pass both the CAL comm and CPU comm as arguments to the
+  // For example, a communicator can use another communicator inside, so the
+  // finalize task doesn't need to pass both these communicators as arguments to the
   // task. So Legion thinks they are disjoint and schedules them independently.
   runtime.issue_execution_fence();
   // Must also flush the scheduling window so that our fence definitely makes it down to

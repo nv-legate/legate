@@ -24,7 +24,6 @@ from aedifix.packages.cmake import CMake
 from aedifix.packages.cuda import CUDA
 from aedifix.packages.python import Python
 
-from .packages.cal import CAL
 from .packages.hdf5 import HDF5
 from .packages.legion import Legion
 from .packages.mpi import MPI
@@ -38,7 +37,7 @@ if TYPE_CHECKING:
 class Legate(MainPackage):
     name = "Legate"
 
-    dependencies = (CMake, Legion, Python, CAL, HDF5, NCCL, UCX, CUDA, MPI)
+    dependencies = (CMake, Legion, Python, HDF5, NCCL, UCX, CUDA, MPI)
 
     legate_BUILD_DOCS: Final = ConfigArgument(
         name="--with-docs",
@@ -141,7 +140,7 @@ class Legate(MainPackage):
         ),
         cmake_var=CMAKE_VARIABLE("legate_USE_CPROFILE", CMakeBool),
     )
-    legate_USE_CAL: Final = CMAKE_VARIABLE("legate_USE_CAL", CMakeBool)
+
     legate_USE_HDF5: Final = CMAKE_VARIABLE("legate_USE_HDF5", CMakeBool)
     legate_USE_HDF5_VFD_GDS: Final = ConfigArgument(
         name="--with-hdf5-vfd-gds",
@@ -440,14 +439,6 @@ class Legate(MainPackage):
             self.LEGATE_CLANG_TIDY, self.cl_args.clang_tidy_executable
         )
 
-    def configure_cal(self) -> None:
-        r"""Configure CAL variables."""
-        state = self.deps.CAL.state
-        if state.enabled():
-            self.manager.set_cmake_variable(self.legate_USE_CAL, True)
-        elif state.explicitly_disabled():
-            self.manager.set_cmake_variable(self.legate_USE_CAL, False)
-
     def configure_cprofile(self) -> None:
         r"""Configure cprofile variables."""
         self.set_flag_if_user_set(
@@ -505,7 +496,6 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_legate_variables)
         self.log_execute_func(self.configure_legion)
         self.log_execute_func(self.configure_clang_tidy)
-        self.log_execute_func(self.configure_cal)
         self.log_execute_func(self.configure_cprofile)
         self.log_execute_func(self.configure_hdf5)
         self.log_execute_func(self.configure_nccl)
@@ -546,7 +536,6 @@ class Legate(MainPackage):
             ("Tests", m.get_cmake_variable(self.legate_BUILD_TESTS)),
             ("Docs", m.get_cmake_variable(self.legate_BUILD_DOCS)),
             ("Benchmarks", m.get_cmake_variable(self.legate_BUILD_BENCHMARKS)),
-            ("CAL", m.get_cmake_variable(self.legate_USE_CAL)),
             ("HDF5", m.get_cmake_variable(self.legate_USE_HDF5)),
             (
                 "HDF5 VFD GDS",

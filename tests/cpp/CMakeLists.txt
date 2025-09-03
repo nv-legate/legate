@@ -357,11 +357,6 @@ legate_configure_test(NAME tests_non_reentrant_wo_runtime
 set(gpu_SRC)
 set(gpu_TARGETS)
 
-if(legate_USE_CAL)
-  list(APPEND gpu_SRC integration/cal_communicator.cu)
-  list(APPEND gpu_TARGETS CAL::CAL)
-endif()
-
 if(legate_USE_NCCL)
   list(APPEND gpu_SRC integration/nccl.cu)
   list(APPEND gpu_TARGETS NCCL::NCCL)

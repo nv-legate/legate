@@ -190,7 +190,6 @@ requirements:
     - cuda-nvml-dev
     - cuda-driver-dev
     - libcufile-dev
-    - libcal-dev
 {% endif %}
 {% if network == 'ucx' %}
     - ucx

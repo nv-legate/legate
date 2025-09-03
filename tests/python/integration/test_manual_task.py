@@ -404,7 +404,7 @@ class TestManualTask:
         runtime.issue_execution_fence(block=True)
         assert obj.val == count
 
-    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl"])
     def test_add_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
@@ -426,7 +426,7 @@ class TestManualTask:
             assert expected in raised
         manual_task.execute()
 
-    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl"])
     def test_builtin_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
