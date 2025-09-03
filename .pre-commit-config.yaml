@@ -119,7 +119,14 @@ repos:
     rev: 'v1.6.0'
     hooks:
       - id: vermin
-        args: ['--config-file', './setup.cfg']
+        args: [
+          '-vvv',
+          '--violations',
+          '--eval-annotations',
+          '--target=3.11-',
+          '--exclude-regex=".*venv/"',
+          '--exclude-regex="arch-.*/"'
+        ]
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
     rev: '3.0.0'
     hooks:
