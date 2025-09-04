@@ -95,6 +95,7 @@ legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate
 legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" OFF)
 legate_option(legate_USE_UCX LEGATE_USE_UCX "Enable UCX support" OFF)
 legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" ${legate_USE_UCX})
+legate_option(Legion_USE_GASNET LEGION_USE_GASNET "Enable GASNet support in Legion" OFF)
 
 set(legion_networks)
 
@@ -103,6 +104,9 @@ if(legate_USE_UCX)
 endif()
 if(legate_USE_MPI)
   list(APPEND legion_networks "mpi")
+endif()
+if(Legion_USE_GASNET)
+  list(APPEND legion_networks "gasnetex")
 endif()
 
 legate_setting(Legion_NETWORKS NETWORKS

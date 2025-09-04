@@ -428,10 +428,6 @@ class Legate(MainPackage):
             legion.DirGroup.CPM_Legion_SOURCE  # type: ignore[attr-defined]
         ):
             self._warn_legion_patches(src_dir)
-        if self.deps.Python.state.enabled():
-            self.manager.set_cmake_variable(
-                legion.Legion_BUILD_BINDINGS, False
-            )
 
     def configure_clang_tidy(self) -> None:
         r"""Configure clang-tidy variables."""
@@ -526,9 +522,7 @@ class Legate(MainPackage):
         ]
 
     def _summarize_python(self) -> list[tuple[str, Any]]:
-        python = cast(Python, self.deps.Python)
-        py_enabled = python.state.enabled()
-        return [("Python bindings", py_enabled)]
+        return [("Python bindings", self.deps.Python.state.enabled())]
 
     def _summarize_misc(self) -> list[tuple[str, Any]]:
         m = self.manager

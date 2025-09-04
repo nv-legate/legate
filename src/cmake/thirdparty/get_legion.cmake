@@ -49,16 +49,6 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
 
   string(REGEX REPLACE "0([0-9]+)" "\\1" version "${version}")
 
-  # cmake-lint: disable=W0106
-  set_ifndef(Legion_PYTHON_EXTRA_INSTALL_ARGS
-             "--root / --prefix \"\${CMAKE_INSTALL_PREFIX}\"")
-
-  # Support comma and semicolon delimited lists
-  string(REPLACE "," " " Legion_PYTHON_EXTRA_INSTALL_ARGS
-                 "${Legion_PYTHON_EXTRA_INSTALL_ARGS}")
-  string(REPLACE ";" " " Legion_PYTHON_EXTRA_INSTALL_ARGS
-                 "${Legion_PYTHON_EXTRA_INSTALL_ARGS}")
-
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(Legion_BACKTRACE_USE_LIBDW ON)
   else()
@@ -83,6 +73,8 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
     set(Legion_CUDA_DYNAMIC_LOAD OFF)
     set(Legion_UCX_MPI_BOOTSTRAP OFF)
   endif()
+
+  set_ifndef(Legion_EMBED_GASNet_CONFIGURE_ARGS "--with-ibv-max-hcas=8")
 
   message(VERBOSE "legate: Legion version: ${version}")
   message(VERBOSE "legate: Legion git_repo: ${git_repo}")
@@ -112,6 +104,8 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           # We never want local fields
                           "Legion_DEFAULT_LOCAL_FIELDS 0"
                           "Legion_HIJACK_CUDART OFF"
+                          "Legion_BUILD_BINDINGS OFF"
+                          "Legion_EMBED_GASNet_CONFIGURE_ARGS ${Legion_EMBED_GASNet_CONFIGURE_ARGS}"
                           "Legion_UCX_MPI_BOOTSTRAP ${Legion_UCX_MPI_BOOTSTRAP}"
                           "Legion_USE_ZLIB OFF"
                           "Legion_CUDA_DYNAMIC_LOAD ${Legion_CUDA_DYNAMIC_LOAD}"

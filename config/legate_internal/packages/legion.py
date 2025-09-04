@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final
 
 from aedifix.cmake import (
     CMAKE_VARIABLE,
@@ -29,7 +29,6 @@ from .gasnet import GASNet
 from .mpi import MPI
 from .openmp import OpenMP
 from .ucx import UCX
-from .zlib import ZLIB
 
 if TYPE_CHECKING:
     from aedifix.manager import ConfigurationManager
@@ -38,7 +37,7 @@ if TYPE_CHECKING:
 class Legion(Package):
     name = "Legion"
 
-    dependencies = (CUDA, GASNet, OpenMP, Python, MPI, UCX, ZLIB)
+    dependencies = (CUDA, GASNet, OpenMP, Python, MPI, UCX)
 
     DirGroup: Final = ExclusiveArgumentGroup(
         Legion_ROOT=ConfigArgument(
@@ -131,26 +130,20 @@ class Legion(Package):
         cmake_var=CMAKE_VARIABLE("Legion_CUDA_FLAGS", CMakeList),
     )
 
-    Legion_EMBED_GASNet_CONFIGURE_ARGS: Final = CMAKE_VARIABLE(
-        "Legion_EMBED_GASNet_CONFIGURE_ARGS", CMakeList
-    )
     Legion_USE_CUDA: Final = CMAKE_VARIABLE("Legion_USE_CUDA", CMakeBool)
     Legion_USE_OpenMP: Final = CMAKE_VARIABLE("Legion_USE_OpenMP", CMakeBool)
     Legion_USE_Python: Final = CMAKE_VARIABLE("Legion_USE_Python", CMakeBool)
-    Legion_USE_ZLIB: Final = CMAKE_VARIABLE("Legion_USE_ZLIB", CMakeBool)
     Legion_NETWORKS: Final = CMAKE_VARIABLE(
         "Legion_NETWORKS", CMakeSemiColonList
     )
     Legion_BUILD_JUPYTER: Final = CMAKE_VARIABLE(
         "Legion_BUILD_JUPYTER", CMakeBool
     )
-    Legion_BUILD_BINDINGS: Final = CMAKE_VARIABLE(
-        "Legion_BUILD_BINDINGS", CMakeBool
-    )
     CPM_DOWNLOAD_Legion: Final = CMAKE_VARIABLE(
         "CPM_DOWNLOAD_Legion", CMakeBool
     )
     Legion_DIR: Final = CMAKE_VARIABLE("Legion_DIR", CMakePath)
+    Legion_USE_GASNet: Final = CMAKE_VARIABLE("Legion_USE_GASNet", CMakeBool)
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a Legion Package.
@@ -248,11 +241,11 @@ class Legion(Package):
         r"""Configure Legion to use GASNet. Does nothing if GASNet is not
         enabled.
         """
-        if self.deps.GASNet.state.enabled():
-            self.manager.append_cmake_variable(
-                self.Legion_EMBED_GASNet_CONFIGURE_ARGS,
-                ["--with-ibv-max-hcas=8"],
-            )
+        state = self.deps.GASNet.state
+        if state.enabled():
+            self.manager.set_cmake_variable(self.Legion_USE_GASNet, True)
+        elif state.explicitly_disabled():
+            self.manager.set_cmake_variable(self.Legion_USE_GASNet, False)
 
     def configure_openmp(self) -> None:
         r"""Configure Legion to use OpenMP. Does nothing if OpenMP is not
@@ -268,24 +261,11 @@ class Legion(Package):
         r"""Configure Legion to use Python. Does nothing if Python is not
         enabled.
         """
-        python = cast(Python, self.deps.Python)
-        py_state = python.state
+        py_state = self.deps.Python.state
         if py_state.enabled():
-            self.manager.set_cmake_variable(self.Legion_BUILD_BINDINGS, True)
             self.manager.set_cmake_variable(self.Legion_USE_Python, True)
-            self.manager.set_cmake_variable(self.Legion_BUILD_JUPYTER, True)
         elif py_state.explicitly_disabled():
-            self.manager.set_cmake_variable(self.Legion_BUILD_BINDINGS, False)
-            self.manager.set_cmake_variable(self.Legion_BUILD_JUPYTER, False)
             self.manager.set_cmake_variable(self.Legion_USE_Python, False)
-
-    def configure_zlib(self) -> None:
-        r"""Configure Legion to use ZLIB. Disables ZLIB if is not enabled."""
-        zlib_state = self.deps.ZLIB.state
-        if zlib_state.enabled():
-            self.manager.set_cmake_variable(self.Legion_USE_ZLIB, True)
-        elif zlib_state.explicitly_disabled():
-            self.manager.set_cmake_variable(self.Legion_USE_ZLIB, False)
 
     def configure(self) -> None:
         r"""Configure Legion."""
@@ -297,7 +277,7 @@ class Legion(Package):
         self.log_execute_func(self.configure_gasnet)
         self.log_execute_func(self.configure_openmp)
         self.log_execute_func(self.configure_python)
-        self.log_execute_func(self.configure_zlib)
+        self.log_execute_func(self.configure_gasnet)
 
     def summarize(self) -> str:
         r"""Summarize Legion.
