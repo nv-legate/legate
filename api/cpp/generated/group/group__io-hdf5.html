@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>io-hdf5 &#8212; NVIDIA legate (25.09.00.dev74+gcf8140339)</title>
+    <title>io-hdf5 &#8212; NVIDIA legate (25.09.00.dev79+gf1dae0829)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=16ecaade"></script>
+    <script src="../../../../_static/documentation_options.js?v=871538b9"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev79+gf1dae0829) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev79+gf1dae0829) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev74+gcf8140339)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev79+gf1dae0829)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev74+gcf8140339) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.09.00.dev79+gf1dae0829) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.09.00.dev79+gf1dae0829) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.09.00.dev74+gcf8140339)</p>
+    <p class="title logo__title">NVIDIA legate (25.09.00.dev79+gf1dae0829)</p>
   
 </a>
 
@@ -696,6 +696,36 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 </dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv47to_fileRK12LogicalArrayNSt10filesystem4pathENSt11string_viewE">
+<span id="_CPPv37to_fileRK12LogicalArrayNSt10filesystem4pathENSt11string_viewE"></span><span id="_CPPv27to_fileRK12LogicalArrayNSt10filesystem4pathENSt11string_viewE"></span><span id="to_file__LogicalArrayCR.std::filesystem::path.std::string_view"></span><span class="target" id="group__io-hdf5_1ga006413d4e50341d4318ca525710c6be0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_file</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">LogicalArray</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">array</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">file_path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dataset_name</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47to_fileRK12LogicalArrayNSt10filesystem4pathENSt11string_viewE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Write a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> to disk as a HDF5 dataset. </p>
+<p>If <code class="docutils literal notranslate"><span class="pre">file_path</span></code> already exists at the time of writing, the file will be overwritten.</p>
+<p><code class="docutils literal notranslate"><span class="pre">file_path</span></code> may be absolute or relative. If it is relative, it will be written relative to the current working directory at the time of this function call.</p>
+<p><code class="docutils literal notranslate"><span class="pre">file_path</span></code> may not fully exist at the time of this function call. Any missing directories are created (with the same permissions and properties of the current process) before tasks are launched. However, no protection is provided if those directories are later deleted before the task executes &amp;#8212; the tasks assume these directories exist when they execute.</p>
+<p><code class="docutils literal notranslate"><span class="pre">array</span></code> must not be unbound.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> – The array to store. </p></li>
+<li><p><strong>file_path</strong> – The resulting HDF5 file. </p></li>
+<li><p><strong>dataset_name</strong> – The HDF5 dataset name to store the array under. See <a class="reference external" href="https://support.hdfgroup.org/documentation/hdf5/latest/_h5_d__u_g.html">https://support.hdfgroup.org/documentation/hdf5/latest/_h5_d__u_g.html</a> for further discussion on datasets.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">file_path</span></code> would not be a valid path name, for example if it is a directory name. Generally speaking this means that it must be of the form <code class="docutils literal notranslate"><span class="pre">/path/to/file.h5</span></code>. </p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE">
@@ -815,6 +845,7 @@ SPDX-License-Identifier: Apache-2.0
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49from_fileRKNSt10filesystem4pathENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">from_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv47to_fileRK12LogicalArrayNSt10filesystem4pathENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">to_file()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE"><code class="docutils literal notranslate"><span class="pre">legate::io::hdf5::UnsupportedHDF5DataTypeError</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate2io4hdf519InvalidDataSetErrorE"><code class="docutils literal notranslate"><span class="pre">legate::io::hdf5::InvalidDataSetError</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate2io4hdf519InvalidDataSetError19InvalidDataSetErrorERKNSt6stringENSt10filesystem4pathENSt6stringE"><code class="docutils literal notranslate"><span class="pre">InvalidDataSetError()</span></code></a></li>
