@@ -25,10 +25,46 @@
 
 #include <realm/runtime.h>
 
+#include <fmt/format.h>
+
 #include <cstddef>
-#include <iostream>
 #include <stdexcept>
 #include <vector>
+
+namespace {
+
+template <typename T>
+class ArgView {
+ public:
+  const legate::detail::Argument<T>& arg;
+};
+
+template <typename T>
+ArgView(const legate::detail::Argument<T>&) -> ArgView<T>;
+
+}  // namespace
+
+namespace fmt {
+
+template <typename T>
+struct formatter<ArgView<T>> : public formatter<std::string_view> {
+  format_context::iterator format(const ArgView<T>& view, format_context& ctx) const
+  {
+    return format_to(ctx.out(), "{}={}", view.arg.flag(), view.arg.value());
+  }
+};
+
+template <typename T>
+struct formatter<ArgView<legate::detail::Scaled<T>>> : public formatter<std::string_view> {
+  format_context::iterator format(const ArgView<legate::detail::Scaled<T>>& view,
+                                  format_context& ctx) const
+  {
+    return format_to(
+      ctx.out(), "{}={}", view.arg.flag(), fmt::group_digits(view.arg.value().scaled_value()));
+  }
+};
+
+}  // namespace fmt
 
 namespace legate::detail {
 
@@ -155,19 +191,28 @@ Config handle_legate_args()
   autoconfigure(&parsed, &cfg);
   if (cfg.show_config()) {
     // Can't use a logger, since Realm hasn't been initialized yet.
-    std::cout << "Legate hardware configuration:";
-    std::cout << " " << parsed.cpus.flag() << "=" << parsed.cpus.value();
-    std::cout << " " << parsed.gpus.flag() << "=" << parsed.gpus.value();
-    std::cout << " " << parsed.omps.flag() << "=" << parsed.omps.value();
-    std::cout << " " << parsed.ompthreads.flag() << "=" << parsed.ompthreads.value();
-    std::cout << " " << parsed.util.flag() << "=" << parsed.util.value();
-    std::cout << " " << parsed.sysmem.flag() << "=" << parsed.sysmem.value().scaled_value();
-    std::cout << " " << parsed.numamem.flag() << "=" << parsed.numamem.value().scaled_value();
-    std::cout << " " << parsed.fbmem.flag() << "=" << parsed.fbmem.value().scaled_value();
-    std::cout << " " << parsed.zcmem.flag() << "=" << parsed.zcmem.value().scaled_value();
-    std::cout << " " << parsed.regmem.flag() << "=" << parsed.regmem.value().scaled_value();
-    // Use of endl is deliberate, we want a newline and flush
-    std::cout << std::endl;  // NOLINT(performance-avoid-endl)
+    fmt::println(
+      "Legate hardware configuration: "
+      "{} "
+      "{} "
+      "{} "
+      "{} "
+      "{} "
+      "{} "
+      "{} "
+      "{} "
+      "{} "
+      "{}",
+      ArgView{parsed.cpus},
+      ArgView{parsed.gpus},
+      ArgView{parsed.omps},
+      ArgView{parsed.ompthreads},
+      ArgView{parsed.util},
+      ArgView{parsed.sysmem},
+      ArgView{parsed.numamem},
+      ArgView{parsed.fbmem},
+      ArgView{parsed.zcmem},
+      ArgView{parsed.regmem});
   }
 
   // These config flags are set by the autoconfigure call above, but allow the user to be able

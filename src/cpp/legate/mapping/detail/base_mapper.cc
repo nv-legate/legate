@@ -1282,9 +1282,11 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
   //
   // UPDATE(wonchanl): Removing the mentioning of the eager pool from the message, but the reporting
   // still needs to be extended per the description above.
-  logger().error() << "There is not enough space because Legate is reserving " << total_size
-                   << " of the available " << target_memory.capacity()
-                   << " bytes for the following LogicalStores:";
+  logger().error() << fmt::format(
+    "There is not enough space because Legate is reserving {} of the available {} bytes for the "
+    "following LogicalStores:",
+    fmt::group_digits(total_size),
+    fmt::group_digits(target_memory.capacity()));
   for (auto&& [store_key, insts] : insts_for_store) {
     auto&& [fs, fid] = store_key;
 
@@ -1292,11 +1294,12 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
     for (const Legion::Mapping::PhysicalInstance& inst : insts) {
       std::set<Legion::FieldID> fields;
       inst.get_fields(fields);
-      logger().error() << "  Instance " << std::hex << inst.get_instance_id() << std::dec
-                       << " of size " << inst.get_instance_size() << " covering elements "
-                       << Legion::Mapping::Utilities::to_string(
-                            runtime, ctx, inst.get_instance_domain())
-                       << (fields.size() > 1 ? " of multiple stores" : " ");
+      logger().error() << fmt::format(
+        "  Instance {:x} of size {} covering elements {} {}",
+        inst.get_instance_id(),
+        fmt::group_digits(inst.get_instance_size()),
+        Legion::Mapping::Utilities::to_string(runtime, ctx, inst.get_instance_domain()),
+        (fields.size() > 1 ? "of multiple stores" : ""));
       if (const auto it = creating_operation_.find(inst); it != creating_operation_.end()) {
         logger().error() << "    created for an operation launched at " << it->second;
       }
