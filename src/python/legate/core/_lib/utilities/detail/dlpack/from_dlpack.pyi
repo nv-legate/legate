@@ -16,6 +16,6 @@ def from_dlpack(
     x: SupportsDLPack,
     /,
     *,
-    device: tuple[Enum, int] | None = None,
+    device: tuple[int | Enum, int] | None = None,
     copy: bool | None = None,
 ) -> LogicalStore: ...

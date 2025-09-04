@@ -12,6 +12,9 @@ from legate.core import LogicalStore, get_legate_runtime, types as ty
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from numpy.typing import NDArray
+    from typing_extensions import CapsuleType
+
 
 def create_np_array_and_store(
     legate_dtype: ty.Type,
@@ -103,3 +106,18 @@ def create_random_points(
         for coord in np.split(shuffled.reshape((*shape, ndim)), ndim, axis=-1)
     )
     return coords, store
+
+
+class UnversionedDLPack:
+    def __init__(self, arr: NDArray[Any]) -> None:
+        self.arr = arr
+
+    def __dlpack__(
+        self,
+        stream: int | Any | None = None,
+        dl_device: tuple[int, int] | None = None,
+        copy: bool | None = None,
+    ) -> CapsuleType:
+        return self.arr.__dlpack__(
+            stream=stream, dl_device=dl_device, copy=copy
+        )

@@ -236,3 +236,10 @@ def basic_bloat_task(
             min(shape[i] - 1, in_store.domain.hi[i] + high_offsets[i])
             == bloat_store.domain.hi[i]
         )
+
+
+@task(variants=tuple(VariantCode))
+def fill_dlpack_task(store: OutputStore, val: int) -> None:
+    lib = numpy_or_cupy(store.get_inline_allocation())
+    arr = lib.from_dlpack(store)
+    arr.fill(val)

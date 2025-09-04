@@ -8,6 +8,11 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
+try:
+    import cupy  # type: ignore[import-not-found]
+except ModuleNotFoundError:
+    cupy = None
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
@@ -24,6 +29,7 @@ from legate.core import (
     align,
     bloat,
     broadcast,
+    from_dlpack,
     get_legate_runtime,
     image,
     scale,
@@ -57,6 +63,50 @@ class TestPyTask:
         out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
         tasks.copy_store_task(store, out_store)
         np.testing.assert_allclose(out_arr, arr)
+
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    def test_dlpack_input_output(self, shape: tuple[int, ...]) -> None:
+        arr = np.random.rand(*shape)
+        out_arr = np.empty(shape)
+        store = from_dlpack(arr)
+        out_store = from_dlpack(utils.UnversionedDLPack(out_arr))
+        tasks.copy_store_task(store, out_store)
+        np.testing.assert_allclose(out_arr, arr)
+
+    @pytest.mark.skipif(
+        get_legate_runtime().machine.preferred_target != TaskTarget.GPU,
+        reason="GPU only test",
+    )
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    def test_cupy_dlpack_input_output(self, shape: tuple[int, ...]) -> None:
+        if not cupy:
+            pytest.skip(reason="test requires cupy")
+        arr = cupy.random.rand(*shape)
+        out_arr = cupy.empty(shape)
+        store = from_dlpack(arr)
+        out_store = from_dlpack(utils.UnversionedDLPack(out_arr))
+        tasks.copy_store_task(store, out_store)
+        get_legate_runtime().issue_execution_fence(block=True)
+        cupy.testing.assert_allclose(out_arr, arr)
+
+    def test_fill_dlpack(self) -> None:
+        store = get_legate_runtime().create_store(ty.int32, (3, 1, 3))
+        tasks.fill_dlpack_task(store, 1)
+        assert (np.asarray(store.get_physical_store()) == 1).all()
+
+    @pytest.mark.skipif(
+        TaskTarget.GPU not in get_legate_runtime().machine.valid_targets,
+        reason="GPU only test",
+    )
+    @pytest.mark.parametrize("stream", [-1, 0, 2])
+    def test_dlpack_stream(self, stream: int) -> None:
+        @task(variants=(VariantCode.GPU,))
+        def stream_task(store: InputStore) -> None:
+            store.__dlpack__(stream=stream)
+
+        store = get_legate_runtime().create_store(ty.int32, (3, 1, 3))
+        store.fill(0)
+        stream_task(store)
 
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     def test_input_output_prepare(self, shape: tuple[int, ...]) -> None:

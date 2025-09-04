@@ -25,8 +25,11 @@ cdef void dlpack_capsule_deleter(object capsule) noexcept:
     )
 
     if managed == NULL:
-        m = "DLPack PyCapsule contained a NULL pointer for the tensor."
-        raise ValueError(m)
+        m = (
+            "DLPack PyCapsule contained a NULL pointer "   # pragma: no cover
+            "for the tensor."
+        )
+        raise ValueError(m)  # pragma: no cover
 
     if managed.deleter:
         managed.deleter(managed)

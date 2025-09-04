@@ -151,3 +151,33 @@ class TestToDLPack:
         alloc = phys.get_inline_allocation()
         assert not hasattr(alloc, "__dlpack__")
         assert (np.asarray(alloc) == NEW_VALUE).all()
+
+    @pytest.mark.skipif(
+        TaskTarget.GPU not in get_legate_runtime().machine.valid_targets,
+        reason="GPU only test",
+    )
+    @pytest.mark.xfail(reason="dlpack broken in FBMEM")
+    @pytest.mark.parametrize("stream", [-1, 0, 2])
+    def test_stream(self, stream: int) -> None:
+        store = get_legate_runtime().create_store(
+            dtype=ty.float32, shape=(3, 1, 3)
+        )
+        store.fill(3)
+        phys = store.get_physical_store(target=StoreTarget.FBMEM)
+        capsule = phys.__dlpack__(stream=stream)
+        assert is_capsule_type(capsule)
+        assert '"dltensor_versioned"' in str(capsule)
+
+
+class TestToDLPackErrors:
+    def test_invalid_dl_device(self) -> None:
+        store = get_legate_runtime().create_store(
+            dtype=ty.float32, shape=(3, 1, 3)
+        )
+        store.fill(3)
+
+        phys = store.get_physical_store()
+        with pytest.raises(BufferError, match="^$"):
+            # There are legate RuntimeError messages dumped, but the actual
+            # exception is BufferError which doesn't have any messages
+            phys.__dlpack__(dl_device=(-1, 0))
