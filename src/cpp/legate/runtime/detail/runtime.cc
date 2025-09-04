@@ -24,6 +24,7 @@
 #include <legate/operation/detail/copy.h>
 #include <legate/operation/detail/discard.h>
 #include <legate/operation/detail/execution_fence.h>
+#include <legate/operation/detail/extract_scalar.h>
 #include <legate/operation/detail/fill.h>
 #include <legate/operation/detail/gather.h>
 #include <legate/operation/detail/index_attach.h>
@@ -48,8 +49,6 @@
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/legion_task.h>
-#include <legate/task/detail/legion_task_body.h>
-#include <legate/task/detail/task.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/task_config.h>
 #include <legate/task/task_context.h>
@@ -65,7 +64,6 @@
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/hash.h>
-#include <legate/utilities/machine.h>
 #include <legate/utilities/scope_guard.h>
 
 #include <realm/cuda/cuda_module.h>
@@ -493,7 +491,7 @@ class OffloadTo : public LegateTask<OffloadTo> {
 
   static void gpu_variant(legate::TaskContext) {}
 
-  static void omp_variant(legate::TaskContext) {}  // namespace
+  static void omp_variant(legate::TaskContext) {}
 };
 
 }  // namespace
@@ -1443,14 +1441,12 @@ Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                        std::size_t size) const
 {
   const auto& machine = get_machine();
-  auto provenance     = get_provenance();
-  auto variant        = static_cast<Legion::MappingTagID>(machine.preferred_variant());
   auto launcher       = TaskLauncher{core_library(),
                                machine,
                                parallel_policy,
-                               provenance,
-                               LocalTaskID{CoreTask::EXTRACT_SCALAR},
-                               variant};
+                               get_provenance(),
+                               ExtractScalar::TASK_CONFIG.task_id(),
+                               static_cast<Legion::MappingTagID>(machine.preferred_variant())};
 
   launcher.add_future(result);
   launcher.reserve_scalars(2);
@@ -1467,14 +1463,12 @@ Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                           const Legion::Domain& launch_domain) const
 {
   const auto& machine = get_machine();
-  auto provenance     = get_provenance();
-  auto variant        = static_cast<Legion::MappingTagID>(machine.preferred_variant());
   auto launcher       = TaskLauncher{core_library(),
                                machine,
                                parallel_policy,
-                               provenance,
-                               LocalTaskID{CoreTask::EXTRACT_SCALAR},
-                               variant};
+                               get_provenance(),
+                               ExtractScalar::TASK_CONFIG.task_id(),
+                               static_cast<Legion::MappingTagID>(machine.preferred_variant())};
 
   launcher.add_future_map(result);
   launcher.reserve_scalars(2);
@@ -2055,57 +2049,6 @@ std::int32_t Runtime::finish()
 
 namespace {
 
-template <VariantCode variant_kind>
-void extract_scalar_task(const void* args,
-                         std::size_t arglen,
-                         const void* /*userdata*/,
-                         std::size_t /*userlen*/,
-                         Legion::Processor p)
-{
-  // TODO(jfaibussowit)
-  // This task should really be going through the proper channels instead of this Frankenstein.
-  const Legion::Task* task;
-  const std::vector<Legion::PhysicalRegion>* regions;
-  Legion::Context legion_context;
-  Legion::Runtime* runtime;
-  Legion::Runtime::legion_task_preamble(args, arglen, p, task, regions, legion_context, runtime);
-
-  show_progress(task, legion_context, runtime);
-
-  auto legion_task_context = LegionTaskContext{*task, variant_kind, *regions};
-  const auto context       = legate::TaskContext{&legion_task_context};
-  auto offset              = context.scalar(0).value<std::size_t>();
-  auto size                = context.scalar(1).value<std::size_t>();
-
-  const auto& future = task->futures[0];
-  size               = std::min(size, future.get_untyped_size() - offset);
-
-  auto mem_kind   = find_memory_kind_for_executing_processor();
-  const auto* ptr = static_cast<const std::int8_t*>(future.get_buffer(mem_kind)) + offset;
-
-  const Legion::UntypedDeferredValue return_value{size, mem_kind};
-  const AccessorWO<std::int8_t, 1> acc{return_value, size, false};
-  std::memcpy(acc.ptr(0), ptr, size);
-
-  // Legion postamble
-  return_value.finalize(legion_context);
-}
-
-template <VariantCode variant_id>
-void register_extract_scalar_variant(const InternalSharedPtr<TaskInfo>& task_info,
-                                     const TaskInfo::RuntimeAddVariantKey& key,
-                                     const Library& core_lib,
-                                     const VariantOptions& variant_options)
-{
-  // TODO(wonchanl): We could support Legion & Realm calling conventions so we don't pass nullptr
-  // here. Should also remove the corresponding workaround function in TaskInfo!
-  task_info->add_variant_(key,
-                          core_lib,
-                          variant_id,
-                          &variant_options,
-                          Legion::CodeDescriptor{extract_scalar_task<variant_id>});
-}
-
 // This task is launched for the side effect of having bloated instances created for the task and
 // intended to do nothing otherwise.
 class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
@@ -2137,33 +2080,18 @@ class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
 #endif
 };
 
-}  // namespace
-
 void register_legate_core_tasks(Library& core_lib)
 {
-  constexpr auto key     = TaskInfo::RuntimeAddVariantKey{};
-  auto task_info         = make_internal_shared<TaskInfo>("core::extract_scalar");
-  constexpr auto options = VariantOptions{}.with_has_allocations(true);
+  const auto pub_core_lib = legate::Library{&core_lib};
 
-  register_extract_scalar_variant<VariantCode::CPU>(task_info, key, core_lib, options);
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-    register_extract_scalar_variant<VariantCode::GPU>(
-      task_info, key, core_lib, VariantOptions{options}.with_elide_device_ctx_sync(true));
-  }
-  if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
-    register_extract_scalar_variant<VariantCode::OMP>(task_info, key, core_lib, options);
-  }
-  core_lib.register_task(LocalTaskID{CoreTask::EXTRACT_SCALAR}, std::move(task_info));
-  PrefetchBloatedInstances::register_variants(legate::Library{&core_lib});
-
+  ExtractScalar::register_variants(pub_core_lib);
+  PrefetchBloatedInstances::register_variants(pub_core_lib);
   register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
   legate::experimental::io::detail::register_tasks();
-  OffloadTo::register_variants(legate::Library{&core_lib});
+  OffloadTo::register_variants(pub_core_lib);
 }
-
-namespace {
 
 [[nodiscard]] constexpr GlobalRedopID builtin_redop_id(ReductionOpKind op, Type::Code type_code)
 {
@@ -2249,6 +2177,7 @@ extern void register_exception_reduction_op(const Library& context);
   }();
 
   ResourceConfig config;
+
   config.max_tasks       = CoreTask::MAX_TASK;
   config.max_dyn_tasks   = config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
   config.max_projections = to_underlying(CoreProjectionOp::MAX_FUNCTOR);

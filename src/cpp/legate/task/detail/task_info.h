@@ -21,10 +21,7 @@
 
 namespace legate::detail {
 
-class Library;
 class TaskSignature;
-
-void register_legate_core_tasks(Library& core_lib);
 
 /**
  * @brief A class holding the task registration info.
@@ -51,20 +48,6 @@ class TaskInfo {
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options,
                    std::optional<InternalSharedPtr<TaskSignature>> signature);
-
-  // TODO(wonchanl): remove once scalar extraction workaround is removed
-  class RuntimeAddVariantKey {
-    RuntimeAddVariantKey() = default;
-
-    friend void register_legate_core_tasks(Library& core_lib);
-  };
-
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  void add_variant_(RuntimeAddVariantKey,
-                    const Library& core_lib,
-                    VariantCode vid,
-                    const VariantOptions* callsite_options,
-                    const Legion::CodeDescriptor& descr);
 
   /**
    * @brief Find a particular variant for the task.

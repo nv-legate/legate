@@ -40,26 +40,6 @@ void TaskInfo::add_variant(VariantCode vid,
   }
 }
 
-void TaskInfo::add_variant_(RuntimeAddVariantKey,
-                            const Library& core_lib,
-                            VariantCode vid,
-                            const VariantOptions* callsite_options,
-                            const Legion::CodeDescriptor& descr)
-{
-  auto&& options = [&]() -> const VariantOptions& {
-    if (callsite_options) {
-      return *callsite_options;
-    }
-
-    auto&& lib_defaults = core_lib.get_default_variant_options();
-    const auto it       = lib_defaults.find(vid);
-
-    return it == lib_defaults.end() ? VariantOptions::DEFAULT_OPTIONS : it->second;
-  }();
-
-  add_variant(vid, nullptr, descr, options, std::nullopt);
-}
-
 std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::find_variant(
   VariantCode vid) const
 {

@@ -363,6 +363,7 @@ target_sources(legate_obj
                        legate/operation/detail/task.cc
                        legate/operation/detail/task_launcher.cc
                        legate/operation/detail/timing.cc
+                       legate/operation/detail/extract_scalar.cc
                        legate/partitioning/constraint.cc
                        legate/partitioning/proxy.cc
                        legate/partitioning/detail/constraint.cc
