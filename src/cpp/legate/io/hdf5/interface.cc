@@ -33,12 +33,26 @@ std::string_view InvalidDataSetError::dataset_name() const noexcept { return dat
 
 LogicalArray from_file(const std::filesystem::path& file_path, std::string_view dataset_name)
 {
-  if (!LEGATE_DEFINED(LEGATE_USE_HDF5)) {
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_HDF5)) {
+    return detail::from_file(file_path, dataset_name);
+  } else {
     throw legate::detail::TracedException<std::runtime_error>{
       "Legate was not configured with HDF5 support. Please reconfigure Legate with HDF5 support to "
       "use this API."};
   }
-  return detail::from_file(file_path, dataset_name);
+}
+
+void to_file(const LogicalArray& array,
+             std::filesystem::path file_path,
+             std::string_view dataset_name)
+{
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_HDF5)) {
+    detail::to_file(array, std::move(file_path), dataset_name);
+  } else {
+    throw legate::detail::TracedException<std::runtime_error>{
+      "Legate was not configured with HDF5 support. Please reconfigure Legate with HDF5 support to "
+      "use this API."};
+  }
 }
 
 }  // namespace legate::io::hdf5

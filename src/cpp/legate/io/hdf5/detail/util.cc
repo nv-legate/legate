@@ -46,12 +46,11 @@ void EnableGDS::apply(::hid_t hid) const noexcept
 
 }  // namespace
 
-[[nodiscard]] HighFive::File open_hdf5_file(const HDF5GlobalLock&,
-                                            const std::string& filepath,
-                                            bool gds_on)
+HighFive::File open_hdf5_file(const wrapper::HDF5MaybeLockGuard&,
+                              const std::string& filepath,
+                              bool gds_on,
+                              HighFive::File::AccessMode open_mode)
 {
-  constexpr auto open_mode = HighFive::File::ReadOnly;
-
   static_assert(!std::is_constructible_v<HighFive::File,
                                          std::string_view,
                                          std::decay_t<decltype(open_mode)>,

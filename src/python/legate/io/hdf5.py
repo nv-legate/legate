@@ -5,6 +5,6 @@ from __future__ import annotations
 
 # This module is the "public" interface for this function, so import it purely
 # to re-export it.
-from ._lib.hdf5.hdf5_interface import from_file
+from ._lib.hdf5.hdf5_interface import from_file, to_file
 
-__all__ = ("from_file",)
+__all__ = ("from_file", "to_file")

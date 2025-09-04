@@ -54,7 +54,7 @@ constexpr auto MAGIC_BYTE = OpaqueType{123};
 class CheckerTask : public legate::LegateTask<CheckerTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{0}};
+    legate::TaskConfig{legate::LocalTaskID{0}}.with_signature(legate::TaskSignature{}.inputs(1));
 
   static void cpu_variant(legate::TaskContext ctx)
   {
@@ -100,9 +100,6 @@ class IOHDF5ReadUnit : public RegisterOnceFixture<Config> {
 
 }  // namespace
 
-// TODO(jfaibussowit)
-// Re-enable this test once Quincey and I figure out why reading Opaque data as std::uint8_t
-// magically works for the SLACK dataset
 TEST_F(IOHDF5ReadUnit, Binary)
 {
   constexpr auto SIZE    = 10;

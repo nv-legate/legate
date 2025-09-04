@@ -94,6 +94,8 @@ IncludeCategories:
     Priority:        64
   - Regex:           '^("|<)argparse.*'
     Priority:        65
+  - Regex:           '^("|<)H5.*'
+    Priority:        66
   - Regex:           '^("|<)(gtest|gmock).*'
     Priority:        90
   - Regex:           '^".*'

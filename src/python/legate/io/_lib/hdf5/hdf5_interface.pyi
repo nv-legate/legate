@@ -11,3 +11,6 @@ from ....core import LogicalArray
 Pathlike: TypeAlias = str | os_PathLike[str] | Path
 
 def from_file(path: Pathlike, dataset_name: str) -> LogicalArray: ...
+def to_file(
+    array: LogicalArray, path: Pathlike, dataset_name: str
+) -> None: ...

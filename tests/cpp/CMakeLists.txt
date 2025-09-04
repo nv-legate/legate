@@ -284,7 +284,7 @@ set(with_runtime_SRC
     experimental/tracing.cc)
 
 if(legate_USE_HDF5)
-  list(APPEND with_runtime_SRC unit/io/hdf5/read.cc)
+  list(APPEND with_runtime_SRC unit/io/hdf5/read.cc unit/io/hdf5/write.cc)
   list(APPEND with_runtime_TARGETS HighFive::HighFive)
 endif()
 

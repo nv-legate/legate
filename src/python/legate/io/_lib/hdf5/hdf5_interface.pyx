@@ -43,3 +43,46 @@ cpdef LogicalArray from_file(object path, str dataset_name):
         ret = _from_file(cpp_path, cpp_dataset_name)
 
     return LogicalArray.from_handle(std_move(ret))
+
+cpdef void to_file(LogicalArray array, object path, str dataset_name):
+    r"""Write a LogicalArray to disk using HDF5.
+
+    If ``path`` already exists at the time of writing, the file will be
+    overwritten.
+
+    ``path`` may be absolute or relative. If it is relative, it will be written
+    relative to the current working directory at the time of this function call.
+
+    ``path`` may not fully exist at the time of this function call. Any missing
+    directories are created (with the same permissions and properties of the
+    current process) before tasks are launched. However, no protection is
+    provided if those directories are later deleted before the task executes -
+    the tasks assume these directories exist when they execute.
+
+    ``array`` must not be unbound.
+
+    Parameters
+    ----------
+    array : LogicalArray
+        The array to serialize.
+    path : Pathlike
+        Path to write to.
+    dataset_name : str
+        The name of the data set to store the array under.
+
+    Raises
+    ------
+    ValueError
+        If ``path`` would not be a valid path name, for example if it is a
+        directory name. Generally speaking, it should be in the form
+        ``/path/to/file.h5``.
+    """
+    cdef str str_path = str(path)
+    cdef std_string_view cpp_path
+    cdef std_string_view cpp_dataset_name
+
+    cpp_path = std_string_view_from_py(str_path)
+    cpp_dataset_name = std_string_view_from_py(dataset_name)
+
+    with nogil:
+        _to_file(array._handle, cpp_path, cpp_dataset_name)

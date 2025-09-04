@@ -7,6 +7,7 @@
 #include <legate/io/hdf5/detail/read.h>
 
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/io/hdf5/detail/hdf5_wrapper.h>
 #include <legate/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
@@ -29,13 +30,18 @@ namespace legate::io::hdf5::detail {
 
 namespace {
 
-void read_hdf5_file(const HDF5GlobalLock&,
-                    const HighFive::DataSet& dataset,
+void read_hdf5_file(std::string_view filepath,
+                    bool gds_on,
+                    std::string_view dataset_name,
                     const std::vector<std::size_t>& offset,
                     const std::vector<std::size_t>& count,
                     void* dst)
 {
-  auto&& dspace = dataset.getSpace();
+  const auto lock = wrapper::HDF5MaybeLockGuard{};
+  const auto f    = open_hdf5_file(lock, std::string{filepath}, gds_on);
+  // Open selected part of the hdf5 file
+  const auto dataset = f.getDataSet(std::string{dataset_name});
+  const auto dspace  = dataset.getSpace();
   // Reuse the datatype that we get from the dataset. In this case, HDF5 will simply believe
   // that `dst` points to what we claim it does.
   //
@@ -44,7 +50,7 @@ void read_hdf5_file(const HDF5GlobalLock&,
   // as OPAQUE, we try to read it as std::byte. In this case HDF5 would complain because it (by
   // design) does not know how to convert OPAQUE to std::byte, but we know that this is in fact
   // the right type to read with.
-  auto&& dtype = dataset.getDataType();
+  const auto dtype = dataset.getDataType();
 
   // Handle scalar & null dataspaces
   if (0 == dspace.getNumberDimensions()) {
@@ -86,8 +92,8 @@ class HDF5ReadFn {
   {
     // TODO(jfaibussowit)
     // Remove this once binary type access is merged
-    using DTYPE =
-      std::conditional_t<CODE == Type::Code::BINARY, std::byte, legate::type_of_t<CODE>>;
+    constexpr auto BINARY_TYPE = CODE == Type::Code::BINARY;
+    using DTYPE = std::conditional_t<BINARY_TYPE, std::byte, legate::type_of_t<CODE>>;
 
     auto&& shape = store->shape<DIM>();
 
@@ -98,49 +104,46 @@ class HDF5ReadFn {
     // Find file offset and size of each dimension
     std::vector<std::size_t> offset{};
     std::vector<std::size_t> count{};
-    std::size_t total_count = 1;
 
     offset.reserve(DIM);
     count.reserve(DIM);
     for (std::int32_t i = 0; i < DIM; ++i) {
       offset.emplace_back(shape.lo[i]);
-      total_count *= count.emplace_back(shape.hi[i] - shape.lo[i] + 1);
+      count.emplace_back(shape.hi[i] - shape.lo[i] + 1);
     }
 
-    const auto gds_on = legate::detail::Runtime::get_runtime().config().io_use_vfd_gds();
-
+    const auto gds_on       = legate::detail::Runtime::get_runtime().config().io_use_vfd_gds();
     const auto filepath     = context.scalar(0).value<std::string_view>();
     const auto dataset_name = context.scalar(1).value<std::string_view>();
-    auto* dst               = store
-                  ->write_accessor<DTYPE,
-                                   DIM,
-                                   // TODO(jfaibussowit)
-                                   // Remove this once binary type access is merged
-                                   /* VALIDATE_TYPE */ CODE != Type::Code::BINARY>()
-                  .ptr(shape);
+    const auto acc          = store->write_accessor<DTYPE,
+                                                    DIM,
+                                                    // TODO(jfaibussowit)
+                                                    // Remove this once binary type access is merged
+                                                    /* VALIDATE_TYPE */ !BINARY_TYPE>();
+    // The binary type will default to a field size of 1, but our actual type might be
+    // arbitrarily sized. So we need to tell Legion the true size, otherwise we get a bunch of:
+    //
+    // ERROR: Illegal request for pointer of non-dense rectangle
+    // Assertion failed: (false), function ptr, file legion.inl, line 4125.
+    const auto type_size = BINARY_TYPE ? store->type().size() : sizeof(DTYPE);
+    auto* dst            = acc.ptr(shape, /* field_size */ type_size);
 
-    // Open selected part of the hdf5 file
-    const auto f       = open_hdf5_file({}, std::string{filepath}, gds_on);
-    const auto dataset = f.getDataSet(std::string{dataset_name});
-
-    if (is_device) {
-      if (gds_on) {
-        read_hdf5_file({}, dataset, offset, count, dst);
-      } else {
-        // Otherwise, we read into a bounce buffer
-        auto bounce_buffer = create_buffer<DTYPE>(total_count, Memory::Z_COPY_MEM);
-        auto* ptr          = bounce_buffer.ptr(0);
-        auto stream        = context.get_task_stream();
-
-        read_hdf5_file({}, dataset, offset, count, ptr);
-        // And then copy from the bounce buffer to the GPU
-        cuda::detail::get_cuda_driver_api()->mem_cpy_async(
-          dst, ptr, shape.volume() * sizeof(DTYPE), stream);
-      }
-    } else {
-      // When running on a CPU, we read directly into the destination memory
-      read_hdf5_file({}, dataset, offset, count, dst);
+    if ((is_device && gds_on) || !is_device) {
+      // When running on a CPU, or using GPU with GDS, we can read directly into the
+      // destination memory
+      read_hdf5_file(filepath, gds_on, dataset_name, offset, count, dst);
+      return;
     }
+
+    // Otherwise, we need to read into a bounce buffer
+    const auto total_count = shape.volume();
+    auto bounce_buffer     = create_buffer<DTYPE>(total_count, Memory::Z_COPY_MEM);
+    auto* ptr              = bounce_buffer.ptr(0);
+    auto stream            = context.get_task_stream();
+
+    read_hdf5_file(filepath, gds_on, dataset_name, offset, count, ptr);
+    // And then copy from the bounce buffer to the GPU
+    cuda::detail::get_cuda_driver_api()->mem_cpy_async(dst, ptr, total_count * type_size, stream);
   }
 
   template <legate::Type::Code CODE,
@@ -151,8 +154,6 @@ class HDF5ReadFn {
     throw legate::detail::TracedException<std::runtime_error>{
       fmt::format("HDF5 read not supported for {}", CODE)};
   }
-
- private:
 };
 
 // TODO(jfaibussowit)

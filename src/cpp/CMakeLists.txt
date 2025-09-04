@@ -469,8 +469,12 @@ target_sources(legate_obj
 
 if(legate_USE_HDF5)
   target_sources(legate_obj
-                 PRIVATE legate/io/hdf5/detail/interface.cc legate/io/hdf5/detail/read.cc
-                         legate/io/hdf5/detail/util.cc)
+                 PRIVATE legate/io/hdf5/detail/interface.cc
+                         legate/io/hdf5/detail/read.cc
+                         legate/io/hdf5/detail/write_vds.cc
+                         legate/io/hdf5/detail/combine_vds.cc
+                         legate/io/hdf5/detail/util.cc
+                         legate/io/hdf5/detail/hdf5_wrapper.cc)
 endif()
 
 if(legate_ENABLE_SANITIZERS)

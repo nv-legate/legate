@@ -64,6 +64,8 @@ C++
 
 .. rubric:: I/O
 
+- Add ``legate::io::hdf5::to_file()`` to write a ``legate::LogicalArray()`` to file using
+  HDF5.
 
 Python
 ------
@@ -103,3 +105,5 @@ Python
 
 - Remove ``legate.io.hdf5.kerchunk_read()``. Legate has had first-class support for HDF5
   reads for a while, making this function obsolete.
+- Add ``legate.io.hdf5.to_file()`` to write a ``legate.core.LogicalArray`` to file using
+  HDF5.

@@ -12,7 +12,9 @@
 #include <legate/experimental/io/kvikio/detail/basic.h>
 #include <legate/experimental/io/kvikio/detail/tile.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
+#include <legate/io/hdf5/detail/combine_vds.h>
 #include <legate/io/hdf5/detail/read.h>
+#include <legate/io/hdf5/detail/write_vds.h>
 
 namespace legate::experimental::io::detail {
 
@@ -29,6 +31,8 @@ void register_tasks()
   // HDF5
   if constexpr (LEGATE_DEFINED(LEGATE_USE_HDF5)) {
     legate::io::hdf5::detail::HDF5Read::register_variants(lib);
+    legate::io::hdf5::detail::HDF5WriteVDS::register_variants(lib);
+    legate::io::hdf5::detail::HDF5CombineVDS::register_variants(lib);
   }
 }
 

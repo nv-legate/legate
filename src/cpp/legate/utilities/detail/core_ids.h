@@ -67,6 +67,8 @@ enum CoreTask : std::underlying_type_t<LocalTaskID> {  // NOLINT(performance-enu
   IO_KVIKIO_TILE_WRITE,
   IO_KVIKIO_TILE_BY_OFFSETS_READ,
   IO_HDF5_FILE_READ,
+  IO_HDF5_FILE_WRITE_VDS,
+  IO_HDF5_FILE_COMBINE_VDS,
   OFFLOAD_TO,
   // NOTE: add core specific task IDs above FIRST_DYNAMIC_TASK
   FIRST_DYNAMIC_TASK,

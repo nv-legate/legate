@@ -19,5 +19,10 @@ cdef extern from "legate/io/hdf5/interface.h" namespace "legate" nogil:
         std_string_view, std_string_view
     ) except+
 
+    cdef void _to_file "legate::io::hdf5::to_file" (
+        const _LogicalArray&, std_string_view, std_string_view
+    ) except+
+
 
 cpdef LogicalArray from_file(object path, str dataset_name)
+cpdef void to_file(LogicalArray array, object path, str dataset_name)
