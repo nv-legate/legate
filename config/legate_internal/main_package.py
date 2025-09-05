@@ -98,6 +98,20 @@ class Legate(MainPackage):
         ),
         cmake_var=CMAKE_VARIABLE("LEGATE_CLANG_TIDY", CMakeExecutable),
     )
+    # Enable stub fatbins to allow running clang-tidy without building
+    # fatbins/Legion during analysis.
+    legate_FAKE_FATBINS_FOR_TIDY: Final = ConfigArgument(
+        name="--with-fake-fatbins-for-tidy",
+        spec=ArgSpec(
+            dest="with_fake_fatbins_for_tidy",
+            type=bool,
+            help=(
+                "Emit stub fatbins for clang-tidy "
+                "(avoids building CUDA/Legion during tidy)"
+            ),
+        ),
+        cmake_var=CMAKE_VARIABLE("legate_FAKE_FATBINS_FOR_TIDY", CMakeBool),
+    )
     legate_LEGION_REPOSITORY: Final = CMAKE_VARIABLE(
         "legate_LEGION_REPOSITORY", CMakeString
     )
@@ -433,6 +447,11 @@ class Legate(MainPackage):
         r"""Configure clang-tidy variables."""
         self.set_flag_if_user_set(
             self.LEGATE_CLANG_TIDY, self.cl_args.clang_tidy_executable
+        )
+        # Allow explicit CLI control for fake fatbins for tidy
+        self.set_flag_if_user_set(
+            self.legate_FAKE_FATBINS_FOR_TIDY,
+            self.cl_args.with_fake_fatbins_for_tidy,
         )
 
     def configure_cprofile(self) -> None:

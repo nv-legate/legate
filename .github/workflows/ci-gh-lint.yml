@@ -114,12 +114,13 @@ jobs:
             steps.get-week-hash.outputs.week }}-${{ env.CACHE_NUMBER }}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
-          CACHE_NUMBER: 3
+          CACHE_NUMBER: 5
         id: cache
 
       - name: Update environment
         run: |
-          conda create -n legate \
+          conda create -n legate -y \
+            -c conda-forge \
             cmake \
             clang \
             clangxx \
@@ -133,10 +134,11 @@ jobs:
             ucx \
             libcal-dev \
             cuda-cudart-dev \
+            libcurand-dev \
             cuda-nvcc \
             cuda-nvtx-dev \
             cuda-cupti-dev \
-            'nccl<2.27.0' \
+            nccl \
             libcufile-dev \
             llvm-openmp \
             pybind11
@@ -151,7 +153,7 @@ jobs:
         run: |
           clang-tidy --version
 
-      - name: Configure legate
+      - name: Configure legate (clang CUDA, fake fatbins for tidy)
         # CMake Error: CMake was unable to find a build program corresponding to "Ninja".
         # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
         # tool.
@@ -164,16 +166,23 @@ jobs:
             --with-mpi \
             --with-nccl \
             --with-openmp \
-            --with-cuda=0 \
+            --with-cuda \
+            --with-cuda-dir="${CONDA_PREFIX}" \
+            --with-fake-fatbins-for-tidy \
+            --with-cudac=clang++ \
+            --cuda-arch=90 \
             --with-cc=clang \
-            --with-cxx=clang++ || { cat configure.log; exit 1; }
+            --with-cxx=clang++ \
+            --CUDAFLAGS "-O3" \
+            || { cat configure.log; exit 1; }
 
       - name: Run clang-tidy
         run: |
           # "-- -k" tells the underlying build tool to not stop on first error. We want
           # CI to unearth all clang-tidy errors in one go, otherwise the dev needs to play
           # whack-a-mole with each additional error.
-          LEGATE_CMAKE_ARGS="-- -k 0" make tidy -j 14
+          CORES=$(nproc)
+          LEGATE_CMAKE_ARGS="-- -k 0" make tidy -j "${CORES}"
 
 
   lint-pass:

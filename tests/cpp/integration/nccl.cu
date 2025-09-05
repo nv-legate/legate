@@ -15,7 +15,8 @@
 
 namespace test_nccl {
 
-constexpr std::size_t SIZE = 100;
+constexpr std::size_t SIZE         = 100;
+constexpr std::uint64_t SEND_VALUE = 12345;  // Value used in NCCL send/verify
 
 struct NCCLTester : public legate::LegateTask<NCCLTester> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -32,7 +33,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     }
     auto comm = context.communicators().at(0).get<ncclComm_t*>();
 
-    std::size_t num_tasks = context.get_launch_domain().get_volume();
+    const std::size_t num_tasks = context.get_launch_domain().get_volume();
 
     auto recv_buffer =
       legate::create_buffer<std::uint64_t>(num_tasks, legate::Memory::Kind::Z_COPY_MEM);
@@ -44,7 +45,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
       p_recv[idx] = 0;
     }
-    *p_send = 12345;
+    *p_send = SEND_VALUE;
 
     auto stream = context.get_task_stream();
 
@@ -60,7 +61,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
 
     legate::cuda::detail::get_cuda_driver_api()->stream_synchronize(stream);
     for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
-      EXPECT_EQ(p_recv[idx], 12345);
+      EXPECT_EQ(p_recv[idx], SEND_VALUE);
     }
   }
 };
@@ -77,12 +78,15 @@ class Config {
 
 class NCCL : public RegisterOnceFixture<Config> {};
 
+namespace {
+
 void test_nccl_auto(std::int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto store   = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
-
+  auto store =
+    runtime->create_store(legate::full(ndim, SIZE),  // NOLINT(readability-suspicious-call-argument)
+                          legate::int32());
   auto task = runtime->create_task(context, NCCLTester::TASK_CONFIG.task_id());
   auto part = task.declare_partition();
   task.add_output(store, part);
@@ -92,14 +96,16 @@ void test_nccl_auto(std::int32_t ndim)
 
 void test_nccl_manual(std::int32_t ndim)
 {
-  auto runtime          = legate::Runtime::get_runtime();
-  std::size_t num_procs = runtime->get_machine().count();
+  auto runtime                = legate::Runtime::get_runtime();
+  const std::size_t num_procs = runtime->get_machine().count();
   if (num_procs <= 1) {
     return;
   }
 
-  auto context      = runtime->find_library(Config::LIBRARY_NAME);
-  auto store        = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto store =
+    runtime->create_store(legate::full(ndim, SIZE),  // NOLINT(readability-suspicious-call-argument)
+                          legate::int32());
   auto launch_shape = legate::full<std::uint64_t>(ndim, 1);
   auto tile_shape   = legate::full<std::uint64_t>(ndim, 1);
   launch_shape[0]   = num_procs;
@@ -113,6 +119,8 @@ void test_nccl_manual(std::int32_t ndim)
   runtime->submit(std::move(task));
 }
 
+}  // namespace
+
 // Test case with single unbound store
 TEST_F(NCCL, Auto)
 {
@@ -121,9 +129,9 @@ TEST_F(NCCL, Auto)
   if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
     return;
   }
-  legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
+  const legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
 
-  for (std::int32_t ndim : {1, 3}) {
+  for (const std::int32_t ndim : {1, 3}) {
     test_nccl_auto(ndim);
   }
 }
@@ -135,9 +143,9 @@ TEST_F(NCCL, Manual)
   if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
     return;
   }
-  legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
+  const legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
 
-  for (std::int32_t ndim : {1, 3}) {
+  for (const std::int32_t ndim : {1, 3}) {
     test_nccl_manual(ndim);
   }
 }

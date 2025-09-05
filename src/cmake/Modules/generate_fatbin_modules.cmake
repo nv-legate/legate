@@ -5,6 +5,8 @@
 
 include_guard(GLOBAL)
 
+include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
+
 function(_legate_check_nvcc_pedantic_flags FLAGS)
   if(legate_SKIP_NVCC_PEDANTIC_CHECK)
     message(VERBOSE "Skipping nvcc pedantic check (explicitly skipped by user)")
@@ -53,6 +55,15 @@ function(legate_generate_fatbin_modules)
   set(src_list)
   set(seen_fatbin_vars)
   foreach(src IN LISTS _LEGATE_SOURCES)
+    legate_add_tidy_target(SOURCE "${src}")
+    if(legate_FAKE_FATBINS_FOR_TIDY)
+      # Generate stub header and skip real fatbin work
+      cmake_path(GET src STEM fatbin_var_name)
+      set(VAR_NAME "${fatbin_var_name}")
+      configure_file("${LEGATE_CMAKE_DIR}/templates/stubfatbin.h.in"
+                     "${_LEGATE_DEST_DIR}/${fatbin_var_name}.h" @ONLY)
+      continue()
+    endif()
     string(MAKE_C_IDENTIFIER "${src}_fatbin" fatbin_target_name)
 
     add_library("${fatbin_target_name}" OBJECT "${src}")

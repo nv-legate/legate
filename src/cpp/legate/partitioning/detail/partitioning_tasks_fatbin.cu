@@ -22,9 +22,11 @@ namespace {
 
 template <std::int32_t NDIM>
 __device__ void copy_output(
-  legate::AccessorWO<legate::Domain, 1> out,
-  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMin<NDIM>> in_low,
-  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMax<NDIM>> in_high)
+  legate::AccessorWO<legate::Domain, 1> out,  // NOLINT(performance-unnecessary-value-param)
+  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMin<NDIM>>
+    in_low,  // NOLINT(performance-unnecessary-value-param)
+  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMax<NDIM>>
+    in_high)  // NOLINT(performance-unnecessary-value-param)
 {
   out[0] = legate::Rect<NDIM>{in_low.read(), in_high.read()};
 }
@@ -33,6 +35,7 @@ __device__ void copy_output(
 
 }  // namespace detail
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #define COPY_OUTPUT_TPL_INST(NDIM)                                                     \
   extern "C" __global__ void __launch_bounds__(1, 1) legate_copy_output_##NDIM(        \
     legate::AccessorWO<legate::Domain, 1> out,                                         \
@@ -42,9 +45,11 @@ __device__ void copy_output(
     detail::copy_output<NDIM>(out, in_low, in_high);                                   \
   }
 
-LEGION_FOREACH_N(COPY_OUTPUT_TPL_INST)
+LEGION_FOREACH_N(COPY_OUTPUT_TPL_INST)  // NOLINT(performance-unnecessary-value-param)
 
 #undef COPY_OUTPUT_TPL_INST
+
+// NOLINTEND(bugprone-macro-parentheses)
 
 // ==========================================================================================
 
@@ -55,9 +60,11 @@ namespace {
 template <std::int32_t STORE_NDIM, std::int32_t POINT_NDIM, typename InAcc>
 __device__ void find_bounding_box_sorted_kernel(
   legate::detail::Unravel<STORE_NDIM> unravel,
-  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMin<POINT_NDIM>> out_low,
-  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMax<POINT_NDIM>> out_high,
-  legate::AccessorRO<InAcc, STORE_NDIM> in)
+  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMin<POINT_NDIM>>
+    out_low,  // NOLINT(performance-unnecessary-value-param)
+  legate::detail::CUDAReductionBuffer<legate::detail::ElementWiseMax<POINT_NDIM>>
+    out_high,                                // NOLINT(performance-unnecessary-value-param)
+  legate::AccessorRO<InAcc, STORE_NDIM> in)  // NOLINT(performance-unnecessary-value-param)
 {
   const auto& first = in[unravel(0)];
   const auto& last  = in[unravel(unravel.volume() - 1)];
@@ -79,6 +86,7 @@ __device__ void find_bounding_box_sorted_kernel(
 
 }  // namespace detail
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #define FIND_BBOX_SORTED_TPL_INST(STORE_NDIM, POINT_NDIM)                                        \
   extern "C" __global__ void __launch_bounds__(LEGATE_THREADS_PER_BLOCK, LEGATE_MIN_CTAS_PER_SM) \
     legate_find_bounding_box_sorted_kernel_rect_##STORE_NDIM##_##POINT_NDIM(                     \
@@ -100,9 +108,11 @@ __device__ void find_bounding_box_sorted_kernel(
     detail::find_bounding_box_sorted_kernel(unravel, out_low, out_high, in);                     \
   }
 
-LEGION_FOREACH_NN(FIND_BBOX_SORTED_TPL_INST)
+LEGION_FOREACH_NN(FIND_BBOX_SORTED_TPL_INST)  // NOLINT(performance-unnecessary-value-param)
 
 #undef FIND_BBOX_SORTED_TPL_INST
+
+// NOLINTEND(bugprone-macro-parentheses)
 
 // ==========================================================================================
 
@@ -129,21 +139,26 @@ __device__ __forceinline__ T shuffle(unsigned mask, T var, int laneMask, int wid
 }
 
 template <typename RED_LOW, typename RED_HIGH, std::int32_t NDIM>
-__device__ __forceinline__ void block_reduce(legate::detail::CUDAReductionBuffer<RED_LOW> out_low,
-                                             legate::detail::CUDAReductionBuffer<RED_HIGH> out_high,
-                                             legate::Point<NDIM> local_low,
-                                             legate::Point<NDIM> local_high)
+__device__ __forceinline__ void block_reduce(
+  legate::detail::CUDAReductionBuffer<RED_LOW>
+    out_low,  // NOLINT(performance-unnecessary-value-param)
+  legate::detail::CUDAReductionBuffer<RED_HIGH>
+    out_high,  // NOLINT(performance-unnecessary-value-param)
+  legate::Point<NDIM> local_low,
+  legate::Point<NDIM> local_high)
 {
   __shared__ legate::Point<NDIM> block_low[LEGATE_THREADS_PER_BLOCK / LEGATE_WARP_SIZE];
   __shared__ legate::Point<NDIM> block_high[LEGATE_THREADS_PER_BLOCK / LEGATE_WARP_SIZE];
 
   // Reduce across the warp
-  const int lane_id = threadIdx.x & (LEGATE_WARP_SIZE - 1);
-  const int warp_id = threadIdx.x >> 5;
+  const unsigned int lane_id = threadIdx.x & (LEGATE_WARP_SIZE - 1);
+  const unsigned int warp_id = threadIdx.x / LEGATE_WARP_SIZE;
 
-  for (int i = 16; i >= 1; i /= 2) {
-    auto shuffle_low  = shuffle(0xffffffff, local_low, i, LEGATE_WARP_SIZE);
-    auto shuffle_high = shuffle(0xffffffff, local_high, i, LEGATE_WARP_SIZE);
+  constexpr unsigned k_full_mask = 0xFFFFFFFFU;
+
+  for (int i = LEGATE_WARP_SIZE / 2; i >= 1; i /= 2) {
+    auto shuffle_low  = shuffle(k_full_mask, local_low, i, LEGATE_WARP_SIZE);
+    auto shuffle_high = shuffle(k_full_mask, local_high, i, LEGATE_WARP_SIZE);
 
     RED_LOW::template fold<true /*exclusive*/>(local_low, shuffle_low);
     RED_HIGH::template fold<true /*exclusive*/>(local_high, shuffle_high);
@@ -161,8 +176,8 @@ __device__ __forceinline__ void block_reduce(legate::detail::CUDAReductionBuffer
       RED_LOW::template fold<true /*exclusive*/>(local_low, block_low[i]);
       RED_HIGH::template fold<true /*exclusive*/>(local_high, block_high[i]);
     }
-    out_low.reduce<false /*EXCLUSIVE*/>(local_low);
-    out_high.reduce<false /*EXCLUSIVE*/>(local_high);
+    out_low.template reduce<false /*EXCLUSIVE*/>(local_low);
+    out_high.template reduce<false /*EXCLUSIVE*/>(local_high);
 
     // Make sure the result is visible externally
     __threadfence_system();
@@ -174,19 +189,22 @@ template <std::int32_t STORE_NDIM,
           typename RED_LOW,
           typename RED_HIGH,
           typename InAcc>
-__device__ void find_bounding_box_kernel(legate::detail::Unravel<STORE_NDIM> unravel,
-                                         std::size_t num_iters,
-                                         legate::detail::CUDAReductionBuffer<RED_LOW> out_low,
-                                         legate::detail::CUDAReductionBuffer<RED_HIGH> out_high,
-                                         legate::AccessorRO<InAcc, STORE_NDIM> in,
-                                         legate::Point<POINT_NDIM> identity_low,
-                                         legate::Point<POINT_NDIM> identity_high)
+__device__ void find_bounding_box_kernel(
+  legate::detail::Unravel<STORE_NDIM> unravel,
+  std::size_t num_iters,
+  legate::detail::CUDAReductionBuffer<RED_LOW>
+    out_low,  // NOLINT(performance-unnecessary-value-param)
+  legate::detail::CUDAReductionBuffer<RED_HIGH>
+    out_high,                                // NOLINT(performance-unnecessary-value-param)
+  legate::AccessorRO<InAcc, STORE_NDIM> in,  // NOLINT(performance-unnecessary-value-param)
+  legate::Point<POINT_NDIM> identity_low,
+  legate::Point<POINT_NDIM> identity_high)
 {
   auto local_low  = identity_low;
   auto local_high = identity_high;
 
   for (std::size_t iter = 0; iter < num_iters; ++iter) {
-    const auto index = (iter * gridDim.x + blockIdx.x) * blockDim.x + threadIdx.x;
+    const auto index = ((iter * gridDim.x + blockIdx.x) * blockDim.x) + threadIdx.x;
 
     if (index < unravel.volume()) {
       auto p = unravel(index);
@@ -212,6 +230,7 @@ __device__ void find_bounding_box_kernel(legate::detail::Unravel<STORE_NDIM> unr
 
 }  // namespace detail
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #define FIND_BBOX_TPL_INST(STORE_NDIM, POINT_NDIM)                                               \
   extern "C" __global__ void __launch_bounds__(LEGATE_THREADS_PER_BLOCK, LEGATE_MIN_CTAS_PER_SM) \
     legate_find_bounding_box_kernel_rect_##STORE_NDIM##_##POINT_NDIM(                            \
@@ -241,6 +260,7 @@ __device__ void find_bounding_box_kernel(legate::detail::Unravel<STORE_NDIM> unr
       unravel, num_iters, out_low, out_high, in, identity_low, identity_high);                   \
   }
 
-LEGION_FOREACH_NN(FIND_BBOX_TPL_INST)
+LEGION_FOREACH_NN(FIND_BBOX_TPL_INST)  // NOLINT(performance-unnecessary-value-param)
 
 #undef FIND_BBOX_TPL_INST
+// NOLINTEND(bugprone-macro-parentheses)

@@ -1,0 +1,15 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights
+ * reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#pragma once
+/* clang-tidy stub */
+#include <cstddef>
+
+namespace legate::detail {
+
+extern const unsigned char @VAR_NAME@[];
+extern const std::size_t @VAR_NAME@_len;
+
+}  // namespace legate::detail

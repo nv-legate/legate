@@ -16,13 +16,13 @@ namespace legate::detail {
 
 // Copied and modified from Legion
 template <typename OP, typename T>
-#if LEGATE_DEFINED(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_DEVICE_COMPILE)
 LEGATE_DEVICE
 #endif
   void
   wrap_with_cas(OP op, T& lhs, T rhs)
 {
-#if LEGATE_DEFINED(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_DEVICE_COMPILE)
   T newval = lhs, oldval;
   // atomicCAS has no override for std::uint64_t, so we suppress the clang tidy error
   auto* ptr = reinterpret_cast<unsigned long long int*>(&lhs);  // NOLINT(google-runtime-int)
@@ -41,7 +41,7 @@ LEGATE_DEVICE
   } while (!atomic.compare_exchange_weak(oldval, newval));
 #else
   T oldval, newval;
-  Legion::TypePunning::Pointer<T> pointer{static_cast<void*>(&lhs)};
+  const Legion::TypePunning::Pointer<T> pointer{static_cast<void*>(&lhs)};
   do {
     oldval = *pointer;
     newval = op(oldval, rhs);
