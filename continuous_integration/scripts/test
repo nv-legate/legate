@@ -307,18 +307,54 @@ run_test_or_analysis() {
               NCPUS=1
             fi
 
-            LEGATE_AUTO_CONFIG=0 LEGATE_TEST=1 legate --profile --cpus "${NCPUS}" --gpus "${GPUS_COUNT}" "${CONDA_PREFIX}/bin/tests_with_runtime" --gtest_filter=TaskStoreTests/*
-            find "${REPO_DIR}" -iname "*.prof"
-            # shellcheck disable=SC2154
-            rapids-conda-retry install \
-                  -y \
-                  -n "${CONDA_ENV}" \
-                  -c "${PROFILER_DIR}/conda-build/legate-profiler" \
-                  legate-profiler
+            # Run the profiler test but keep going to package artifacts even on failure.
+            set +e
+            LEGATE_AUTO_CONFIG=0 LEGATE_TEST=1 \
+              legate --profile --cpus "${NCPUS}" --gpus "${GPUS_COUNT}" \
+                     "${CONDA_PREFIX}/bin/tests_with_runtime" \
+                     --gtest_filter=TaskStoreTests/*
+            prof_rc=$?
+            set -e
 
-            "${CONDA_PREFIX}"/bin/legate_prof archive "${REPO_DIR}"/legate_*.prof
+            # Try to list any generated .prof files (non-fatal).
+            find "${REPO_DIR}" -iname "*.prof" || true
+
+            # Ensure output dir exists for packaging.
             # shellcheck disable=SC2154
-            cp -a legion_prof "${OUTPUT_ARTIFACTS_DIR}"/
+            mkdir -p "${OUTPUT_ARTIFACTS_DIR}"
+
+            # If raw profiler inputs exist, archive them and copy both inputs and
+            # processed outputs into the OUTPUT_ARTIFACTS_DIR for upload.
+            if compgen -G "${REPO_DIR}/legate_*.prof" > /dev/null; then
+              # Install legate-profiler if needed; ignore failures so we still
+              # attempt to package raw inputs below.
+              # shellcheck disable=SC2154
+              rapids-conda-retry install \
+                    -y \
+                    -n "${CONDA_ENV}" \
+                    -c "${PROFILER_DIR}/conda-build/legate-profiler" \
+                    legate-profiler || true
+
+              # Archive to legion_prof; ignore failures so we still upload inputs.
+              "${CONDA_PREFIX}"/bin/legate_prof archive "${REPO_DIR}"/legate_*.prof || true
+
+              # Copy processed profiler output if present
+              if [[ -d legion_prof ]]; then
+                cp -a legion_prof "${OUTPUT_ARTIFACTS_DIR}/" || true
+              fi
+
+              # Also package the profiler input logs together with the outputs
+              # so downstream debugging has access to the raw .prof files.
+              # This addresses nv-legate/legate.internal#2649.
+              inputs_dir="${OUTPUT_ARTIFACTS_DIR}/profiler-inputs"
+              mkdir -p "${inputs_dir}"
+              cp -a "${REPO_DIR}"/legate_*.prof "${inputs_dir}/" || true
+            else
+              rapids-logger "No profiler input logs (legate_*.prof) found to package"
+            fi
+
+            # Propagate the profiler test result
+            return "${prof_rc}"
             ;;
         *)
             rapids-logger "Invalid case: $1"
