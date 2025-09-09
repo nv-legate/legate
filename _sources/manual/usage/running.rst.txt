@@ -359,9 +359,215 @@ launching the application (or through ``LEGATE_CONFIG``):
 At the end of execution you will have a set of ``legate_*.prof`` files (one per
 process). By default these files are placed in the same directory where the
 program was launched (you can control this with the ``--logdir`` option). These
-files can be opened with the profile viewer, to see a timeline of your
-program's execution:
+files can be opened with the profile viewer:
 
 .. code-block:: sh
 
     legion_prof view legate_*.prof
+
+The viewer will open a window with a timeline of your program's execution:
+
+.. figure:: images/profile.png
+
+Understanding the Profile
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each node appears as a separate section in the UI, with a timeline showing
+the execution of tasks on that node. Within each timeline, you'll see different
+substreams for processor execution and memory utilization over time.
+Each box represents either a task (on processor streams) or an instance/memory allocation (on memory streams).
+
+.. list-table:: Processor and Memory Stream Types
+   :header-rows: 1
+   :widths: 20 25 55
+
+   * - Stream Type
+     - Parameter
+     - Description
+   * - CPU
+     - ``--cpus``
+     - Main CPU cores for user tasks, computations, and data movement
+   * - GPU Device
+     - ``--gpus``
+     - GPU execution units for CUDA kernels, GPU memory operations
+   * - GPU Host
+     - (automatic)
+     - Host operations for GPU tasks
+   * - Utility
+     - (automatic)
+     - Dedicated CPU cores for runtime meta-work such as task mapping, dependency analysis, and coordination
+   * - OpenMP
+     - ``--omps``, ``--ompthreads``
+     - OpenMP thread pools for parallel CPU execution, loop parallelism
+   * - IO
+     - (automatic)
+     - File I/O operations, Python execution time, other TopLevelTask-level operations
+   * - System
+     - (automatic)
+     - Low-level system interactions such as memory allocation, process/thread management, and kernel operations
+   * - Zero Copy
+     - (automatic)
+     - Zero-copy memory allocations/deallocations
+   * - Framebuffer
+     - (automatic)
+     - Framebuffer memory allocations/deallocations
+   * - Channel
+     - (automatic)
+     - Communication pathways grouped by source and destination memory of copies, showing copy information such as timing and instances.
+
+
+Interpreting Stream Activity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can interact with the timeline by clicking on different elements:
+
+- Click on task boxes to see detailed execution information
+- Click on substreams to expand and see all tasks for that processor type
+- Hover over task boxes to see summary information like task names, duration, and status
+
+.. figure:: images/prof_box.png
+
+Task box colors represent the current state of each processor:
+
+- **Darkest shade**: Task is actively executing on the processor
+- **Intermediate shade**: The event that the task blocked on has triggered, so the task is ready to resume execution, but it hasn't started yet (most likely because another task is currently executing on the processor). If this is the case, the "Previous Executing" field will tell you which task was preventing the ready task from resuming.
+- **Lightest shade**: Task is blocked waiting on an event and has been preempted which means that it is not running and the event that it blocked on has not yet triggered
+- **Empty spaces**: Processor is idle with no tasks scheduled
+- **Gray sections**: Groups of very small tasks that are too small to display individually at the current zoom level
+
+.. figure:: images/stream_activity.png
+
+The relative activity and idle time across different streams can help identify
+performance bottlenecks:
+
+- High CPU utilization with low GPU usage may indicate insufficient GPU work
+- Busy utility processors suggest the runtime is working hard on scheduling
+- Frequent and long operations in Channel might indicate data movement bottlenecks
+- Long IO operations suggest you are waiting on Python code to be executed first
+- Gaps between tasks on the same processor may reveal synchronization issues
+- It can also reveal that your program has a dependency on long copies, a utilility thread that is too busy, or other issues.
+
+If you want to understand why a specific box on the profile timeline didn't start executing earlier, you can look at the "Critical Path" field on the pop-up box for more information.
+
+Example: Conjugate Gradient Algorithm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To demonstrate these profiling concepts in practice, let's examine a real-world example
+using the Conjugate Gradient (CG) algorithm. This algorithm solves linear systems of the form
+**Ax = b** where **A** is a symmetric positive definite matrix. The implementation of the CG
+example is available `here <https://github.com/nv-legate/cupynumeric/blob/main/examples/cg.py>`_.
+
+The profile below shows the CG example running on a system with 4 GPUs:
+
+.. figure:: images/cg_profile.png
+
+Key Observations
+================
+
+To understand a program's behavior and investigate bottlenecks, we often inspect GPU tasks, utility processors, and communication channels.
+
+GPU Tasks
++++++++++
+In the CG code, the workflow begins with matrix generation and variable initialization, followed by warmup iterations, and then the main iterative algorithm (which includes matrix-vector multiplications and dot products) until convergence. In the GPU Device stream, we can see that:
+
+.. figure:: images/cg_gpudev.png
+
+- Initial operations appear slower due to one-time CUDA setup costs (context initialization, memory allocation, and kernel compilation). This startup overhead is expected and unrelated to cuPyNumeric performance.
+- Post-warmup iterations show faster and more consistent execution as the runtime reaches steady state, with uniform kernel durations indicating efficient reuse of compiled kernels and allocated memory.
+- The program concludes with tasks that unload the CUDA libraries on each GPU (the blue boxes at the end of the timeline)
+
+If you zoom in, you can see iteration-level patterns:
+
+.. figure:: images/cg_zoomed.png
+
+In the GPU Device stream, the yellow boxes are cuPyNumeric matrix-vector multiplication task kernels, the blue boxes are cuPyNumeric dot task kernels, and the red boxes are cuPyNumeric binary operation task kernels.
+
+Clicking on a box in the profile opens a pop-up showing detailed information about that task:
+
+.. figure:: images/cg_matmul.png
+
+.. figure:: images/cg_dottask.png
+
+The pop-up shows that the matrix-vector multiplication task corresponds to line 107 and the dot task corresponds to line 108 in the code:
+
+.. code-block:: python
+
+    107 Ap = A.dot(p)
+    108 alpha = rsold / (p.dot(Ap))
+
+Utility Processor
++++++++++++++++++
+The utility processor shows Legate runtime behavior, including task mapping, dependency analysis, and scheduling. In this example:
+
+- Busy utility processors indicate active optimization of task placement and data movement
+- Gaps between GPU tasks often correspond to runtime mapping and scheduling activity. They may also indicate the GPU is waiting for other operations to complete (i.e. memory copies)
+
+.. figure:: images/cg_gaps.png
+
+The utility processor shows that the gap between the matrix-vector multiplication (line 107) and the dot task (line 108) occurs because the dot task depends on the completion and mapping of the result of the matrix-vector multiplication.
+
+Communication Channels
+++++++++++++++++++++++
+
+The communication channels show data movement patterns between devices:
+
+.. figure:: images/cg_channel.png
+
+At the start of the program, device-to-device copies are sparse due to initialization and warmup iterations, but they become more uniform in subsequent iterations. The length and frequency of these transfers indicate whether data is moved in large chunks or in smaller, more granular batches.
+
+
+Applying this to your own program
+=================================
+
+When profiling your own program, you can look at the same streams to better understand
+its behavior and locate potential bottlenecks:
+
+- **GPU stream**: Identify unusually long tasks and inspect the corresponding code to determine if an operation is taking longer than expected. Note any gaps between GPU tasks and check which other streams are active during those gaps
+- **Utility processor**: Monitor utility processor activity, as lower usage typically indicates better performance. When utility processors are constantly busy, this suggests the runtime is spending excessive time on task scheduling and coordination. To address this, consider coarsening your tasks by processing larger data chunks per task or fusing multiple operations together. For applications with repeated loops, enabling tracing can significantly reduce utility processor overhead. Additionally, if utility processors remain overly busy, you should examine mapper call lifetimes to ensure your mapper isn't spending too much time making decisions
+- **Channel stream**: Review data transfers between devices to understand their timing, purpose, and potential impact on performance
+
+When comparing different versions of the same application, you can compare how these metrics change between runs.
+
+Integrating with NVIDIA Nsight Systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below are the steps necessary to build and run the Legion Prof tool, profile a
+Legion program, and export profiling data through NVTXW, which can then be
+viewed in NVIDIA Nsight Systems 2024.5.1 or later.
+
+Setup Nsys/Legion Prof
+~~~~~~~~~~~~~~~~~~~~~~
+
+First, install NVIDIA Nsight Systems 2024.5.1 or later. It is available from:
+https://developer.nvidia.com/nsight-systems/get-started#Linuxx86
+
+Building with packages
+~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to install with pip, you can do so with:
+
+.. code-block:: sh
+
+   pip install legate-profiler
+
+Otherwise, you can install with conda:
+
+.. code-block:: sh
+
+    conda install -c conda-forge -c legate legate-profiler
+
+
+Run Nsys/Legion Prof
+~~~~~~~~~~~~~~~~~~~~
+
+With all prerequisites built, you can now run Legion programs to profile them.
+
+A sample command using Legion's ``CG`` example would be:
+
+.. code-block:: sh
+
+    legate --gpus 2 --nsys --profile examples/cg.py  -n 235
+
+This will create a ``legate_0.nsys-rep`` file which can be viewed in the Nsight Systems UI. In this file, you can see your cuPyNumeric operations in the NVTXW row:
+
+.. figure:: images/nsys_ui.png
