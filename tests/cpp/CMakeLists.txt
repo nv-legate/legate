@@ -152,6 +152,7 @@ set(with_runtime_SRC
     integration/machine_scope.cc
     integration/manual_task.cc
     integration/manual_task_proj.cc
+    integration/mapping.cc
     integration/mixed_dim.cc
     integration/multi_scalar_out.cc
     integration/partitioner.cc
