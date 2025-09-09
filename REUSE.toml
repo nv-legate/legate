@@ -34,7 +34,19 @@ SPDX-License-Identifier = "Apache-2.0"
 # Image files.
 [[annotations]]
 path = [
-    "docs/figures/developer-build.png"
+    "docs/figures/developer-build.png",
+    "docs/legate/source/manual/usage/images/stream_activity.png",
+    "docs/legate/source/manual/usage/images/cg_matmul.png",
+    "docs/legate/source/manual/usage/images/profile.png",
+    "docs/legate/source/manual/usage/images/nsys_ui.png",
+    "docs/legate/source/manual/usage/images/cg_zoomed.png",
+    "docs/legate/source/manual/usage/images/cg_gpudev.png",
+    "docs/legate/source/manual/usage/images/cg_channel.png",
+    "docs/legate/source/manual/usage/images/cg_profile.png",
+    "docs/legate/source/manual/usage/images/prof_box.png",
+    "docs/legate/source/manual/usage/images/cg_dottask.png",
+    "docs/legate/source/manual/usage/images/cg_boxes.png",
+    "docs/legate/source/manual/usage/images/cg_gaps.png"
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
