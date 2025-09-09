@@ -334,7 +334,22 @@ ParsedArgs parse_args(std::vector<std::string> args)
   parser.parser()->add_group("Resource configuration");
 
   auto cpus = parser.add_argument(
-    "--cpus", "Number of standalone CPU cores to reserve, must be >=0", DEFAULT_CPUS);
+    "--cpus",
+    "Number of standalone CPU cores to reserve per rank, must be >=0.\n"
+    "\n"
+    "Setting this to a value > 1 will enable additional parallelism in addition to multi-node "
+    "execution. For example, running a program across 4 processes with --cpus 2 will result in a "
+    "total of 2 * 4 = 8 parallel threads of execution.\n"
+    "\n"
+    "For best performance, the number of reserved CPU cores should not exceed the number of "
+    "physical cores on the CPU (hyper-threaded physical cores typically count as 2 logical cores), "
+    "as Legate will attempt to uniquely pin a thread to each reserved core.\n"
+    "\n"
+    "If the system does not support thread pinning, it is unspecified which cores a thread will "
+    "execute on. If the system does support thread pinning, but the number of requested CPUs "
+    "exceed the number of cores, then Legate will oversubscribe the available cores. The manner in "
+    "which the cores are oversubscribed is unspecified.",
+    DEFAULT_CPUS);
 
   cpus.action([](std::string_view, const Argument<std::int32_t>* cpus_arg) {
     if (cpus_arg->value() < 0) {
@@ -344,7 +359,8 @@ ParsedArgs parse_args(std::vector<std::string> args)
     return cpus_arg->value();
   });
 
-  auto gpus = parser.add_argument("--gpus", "Number of GPUs to reserve, must be >=0", DEFAULT_GPUS);
+  auto gpus =
+    parser.add_argument("--gpus", "Number of GPUs to reserve per rank, must be >=0.", DEFAULT_GPUS);
 
   gpus.action([](std::string_view, const Argument<std::int32_t>* gpus_arg) {
     if (gpus_arg->value() < 0) {
@@ -354,8 +370,18 @@ ParsedArgs parse_args(std::vector<std::string> args)
     return gpus_arg->value();
   });
 
-  auto omps =
-    parser.add_argument("--omps", "Number of OpenMP groups to use, must be >=0", DEFAULT_OMPS);
+  auto omps = parser.add_argument(
+    "--omps",
+    "Number of OpenMP groups to use per rank, must be >=0.\n"
+    "\n"
+    "Each OpenMP group reserves --ompthreads number of CPU physical cores. For example, running a "
+    "program across 4 processes, with --omps 2 --ompthreads 4 will result in a combined total of 4 "
+    "* 2 * 4 = 32 parallel threads of execution.\n"
+    "\n"
+    "OpenMP cores are distinct from (and additional to) CPU cores reserved via --cpus, and for the "
+    "purposes of core reservations, count as separate cores. The behavior for pinning and "
+    "oversubscription is identical to that of regular CPU cores.",
+    DEFAULT_OMPS);
 
   omps.action([](std::string_view, const Argument<std::int32_t>* omps_arg) {
     if (omps_arg->value() < 0) {
@@ -367,7 +393,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
 
   auto ompthreads =
     parser.add_argument("--ompthreads",
-                        "Number of threads / reserved CPU cores per OpenMP group, must be >=0",
+                        "Number of threads (reserved CPU cores) per OpenMP group, must be >=0",
                         DEFAULT_OMPTHREADS);
 
   ompthreads.action([](std::string_view, const Argument<std::int32_t>* ompthreads_arg) {
@@ -379,7 +405,18 @@ ParsedArgs parse_args(std::vector<std::string> args)
   });
 
   auto util = parser.add_argument(
-    "--utility", "Number of threads to use for runtime meta-work, must be >0", DEFAULT_UTILITY);
+    "--utility",
+    "Number of threads per rank to use for runtime meta-work, must be >0.\n"
+    "\n"
+    "Legate will attempt to reserve a unique core per utility thread if possible. Failing this, "
+    "Legate will attempt to spread the utility threads out over any remaining unclaimed cores. "
+    "While utility threads may oversubscribe cores assigned to other utility threads, they may not "
+    "cohabitate with compute threads (--cpus/--omps). Thus, when manually configuring "
+    "reservations, the user must ensure that at least one unclaimed core remains to place the "
+    "utility threads.\n"
+    "\n"
+    "For best performance, it is recommended that utility threads each reserve a unique core.",
+    DEFAULT_UTILITY);
 
   util.action([](std::string_view, const Argument<std::int32_t>* util_arg) {
     if (util_arg->value() < 1) {
