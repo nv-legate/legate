@@ -12,8 +12,6 @@ sys.path.append(str(Path(__file__).parents[2]))
 
 from get_legate_dir import get_legate_dir  # type: ignore[import-not-found]
 
-from .bump_cmake_versions import get_cmakelists_version
-
 if TYPE_CHECKING:
     from argparse import Namespace
     from collections.abc import Sequence
@@ -32,12 +30,11 @@ class Context:
         self._version_after_this = args.version_after_this
         self._mode = args.mode
 
-        cmakelists = self.legate_dir / "src" / "CMakelists.txt"
-        self.vprint(f"Opening {cmakelists}")
-        version, _ = get_cmakelists_version(
-            cmakelists, cmakelists.read_text().splitlines()
-        )
-
+        # Determine the version being released from the top-level VERSION file
+        version_file = self.legate_dir / "VERSION"
+        self.vprint(f"Opening {version_file}")
+        version = version_file.read_text().strip()
+        # Keep just major.minor (e.g. 25.09 from 25.09.00)
         version = ".".join(version.split(".")[:2])
         self._version_being_released = version
 

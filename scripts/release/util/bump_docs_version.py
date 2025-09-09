@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
@@ -55,18 +56,16 @@ def rotate_switcher(ctx: Context) -> None:
         raise ValueError(m)
 
     last_version = last_release["version"].strip()
-    if last_version == ctx.version_being_released:
-        # nothing to do
-        ctx.vprint(f"Last release version {last_version} == current version")
+    new_version = ctx.version_after_this
+    if last_version == new_version:
+        ctx.vprint(f"Switcher already points to {new_version}")
         return
 
     new_release: SwitcherData = {
-        "name": ctx.version_being_released,
+        "name": new_version,
         "preferred": True,
-        "url": last_release["url"].replace(
-            last_version, ctx.version_being_released
-        ),
-        "version": ctx.version_being_released,
+        "url": last_release["url"].replace(last_version, new_version),
+        "version": new_version,
     }
 
     data.append(new_release)
@@ -74,11 +73,16 @@ def rotate_switcher(ctx: Context) -> None:
         with switcher_json.open(mode="w") as fd:
             json.dump(data, fd, indent=4, sort_keys=True)
 
-    ctx.vprint(f"Updated {switcher_json} to {ctx.version_being_released}")
+    ctx.vprint(f"Updated {switcher_json} to {new_version}")
 
 
 DEFAULT_CHANGELOG: Final = """\
+..
+  SPDX-FileCopyrightText: Copyright (c) 2022-{current_year} NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
 
+{header}
+{underline}
 ..
    STYLE:
    * Capitalize sentences.
@@ -135,7 +139,7 @@ Python
 .. rubric:: Utilities
 
 .. rubric:: I/O
-""".strip()
+""".strip()  # noqa: E501
 
 
 def _rotate_log_files(ctx: Context) -> Path:
@@ -155,7 +159,10 @@ def _rotate_log_files(ctx: Context) -> Path:
 
     header = f"Changes: {ctx.version_after_this}"
     underline = "=" * len(header)
-    changelog = f"{header}\n{underline}\n{DEFAULT_CHANGELOG}"
+    current_year = datetime.now().year
+    changelog = DEFAULT_CHANGELOG.format(
+        header=header, underline=underline, current_year=current_year
+    )
 
     if not ctx.dry_run:
         new_log.write_text(changelog)
