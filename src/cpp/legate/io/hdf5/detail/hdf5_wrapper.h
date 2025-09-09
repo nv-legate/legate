@@ -154,21 +154,49 @@ class HDF5DataSpace : public HDF5Object {
    */
   [[nodiscard]] legate::detail::SmallVector<hsize_t> extents() const;
 
+  [[nodiscard]] std::size_t element_count() const;
+
   /**
    * @brief Select a subset of the DataSpace. The selection is done in place.
    *
    * @param mode The selection mode for the hyper slab.
    * @param start The position of the start of the bottom left corner of the selection.
-   * @param stride The strides in the direction of the n'th dimension.
    * @param count The extents of the selection.
+   * @param stride The strides in the direction of the n'th dimension.
    * @block block The block sizes, if any.
    *
    */
   void select_hyperslab(SelectMode mode,
                         Span<const hsize_t> start,
-                        Span<const hsize_t> stride,
                         Span<const hsize_t> count,
-                        Span<const hsize_t> block);
+                        Span<const hsize_t> stride = {},
+                        Span<const hsize_t> block  = {});
+};
+
+class HDF5Type : public HDF5Object {
+ public:
+  HDF5Type();
+  explicit HDF5Type(hid_t hid);
+
+  enum class Class : std::uint8_t {
+    BOOL,
+    SIGNED_INTEGER,
+    UNSIGNED_INTEGER,
+    FLOAT,
+    TIME,
+    STRING,
+    BITFIELD,
+    OPAQUE,
+    COMPOUND,
+    REFERENCE,
+    ENUM,
+    VARIABLE_LENGTH,
+    ARRAY
+  };
+
+  [[nodiscard]] std::size_t size() const;
+  [[nodiscard]] Class type_class() const;
+  [[nodiscard]] std::string to_string() const;
 };
 
 /**
@@ -247,21 +275,21 @@ class HDF5DataSet : public HDF5Object {
    *
    * @return Identifier of the dataset's datatype.
    */
-  [[nodiscard]] hid_t get_type() const;
+  [[nodiscard]] HDF5Type type() const;
 
   /**
    * @brief Get the name of the dataset.
    *
    * @return Dataset name.
    */
-  [[nodiscard]] std::string get_name() const;
+  [[nodiscard]] std::string name() const;
 
   /**
    * @brief Get the dataspace associated with this dataset.
    *
    * @return Dataspace object.
    */
-  [[nodiscard]] HDF5DataSpace get_data_space() const;
+  [[nodiscard]] HDF5DataSpace data_space() const;
 
   /**
    * @brief Write data into the dataset.
@@ -272,6 +300,10 @@ class HDF5DataSet : public HDF5Object {
    * @param buf Pointer to the data buffer to write.
    */
   void write(hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, const void* buf) const;
+
+  void read(hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void* buf) const;
+  void read(
+    hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void* buf) const;
 };
 
 /**
@@ -313,7 +345,10 @@ class HDF5File : public HDF5Object {
    *
    * @return The requested dataset.
    */
-  [[nodiscard]] HDF5DataSet get_data_set(legate::detail::ZStringView name) const;
+  [[nodiscard]] HDF5DataSet data_set(legate::detail::ZStringView name) const;
+
+  [[nodiscard]] bool has_data_set(legate::detail::ZStringView dataset_name,
+                                  hid_t lapl_id = LEGATE_PURE_H5_ENUM(H5P_DEFAULT)) const;
 };
 
 /**

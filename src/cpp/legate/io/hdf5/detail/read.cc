@@ -8,15 +8,11 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/io/hdf5/detail/hdf5_wrapper.h>
-#include <legate/io/hdf5/detail/util.h>
-#include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/types.h>  // for Type::Code formatter
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
-
-#include <highfive/H5File.hpp>
 
 #include <fmt/format.h>
 
@@ -30,38 +26,45 @@ namespace legate::io::hdf5::detail {
 
 namespace {
 
-void read_hdf5_file(std::string_view filepath,
+void read_hdf5_file(legate::detail::ZStringView filepath,
                     bool gds_on,
-                    std::string_view dataset_name,
-                    const std::vector<std::size_t>& offset,
-                    const std::vector<std::size_t>& count,
+                    legate::detail::ZStringView dataset_name,
+                    Span<const hsize_t> offset,
+                    Span<const hsize_t> count,
                     void* dst)
 {
-  const auto lock = wrapper::HDF5MaybeLockGuard{};
-  const auto f    = open_hdf5_file(lock, std::string{filepath}, gds_on);
+  const auto f = [&] {
+    if (gds_on) {
+      constexpr auto BLOCK_SIZE = 4096;
+      constexpr auto BUF_SIZE   = 16 * 1024 * 1024;
+      auto props                = wrapper::HDF5FileAccessPropertyList{};
+
+      props.set_gds(BLOCK_SIZE, BLOCK_SIZE, BUF_SIZE);
+      return wrapper::HDF5File{filepath, wrapper::HDF5File::OpenMode::READ_ONLY, props};
+    }
+    return wrapper::HDF5File{filepath, wrapper::HDF5File::OpenMode::READ_ONLY};
+  }();
   // Open selected part of the hdf5 file
-  const auto dataset = f.getDataSet(std::string{dataset_name});
-  const auto dspace  = dataset.getSpace();
-  // Reuse the datatype that we get from the dataset. In this case, HDF5 will simply believe
-  // that `dst` points to what we claim it does.
-  //
-  // We do this because we have already selected the appropriate datatype while launching the
-  // task, so we don't want HDF5 to get too fancy on us. For example, when the data is stored
-  // as OPAQUE, we try to read it as std::byte. In this case HDF5 would complain because it (by
-  // design) does not know how to convert OPAQUE to std::byte, but we know that this is in fact
-  // the right type to read with.
-  const auto dtype = dataset.getDataType();
+  const auto dataset = f.data_set(dataset_name);
+  auto dspace        = dataset.data_space();
 
   // Handle scalar & null dataspaces
-  if (0 == dspace.getNumberDimensions()) {
+  if (dspace.extents().empty()) {
     // Scalar
-    if (1 == dspace.getElementCount()) {
-      dataset.read_raw(dst, dtype);
+    if (1 == dspace.element_count()) {
+      dataset.read(LEGATE_PURE_H5_ENUM(H5S_ALL),
+                   LEGATE_PURE_H5_ENUM(H5S_ALL),
+                   LEGATE_PURE_H5_ENUM(H5P_DEFAULT),
+                   dst);
     }
-  } else {
-    // Read selected part of the hdf5 file
-    dataset.select(offset, count).read_raw(dst, dtype);
+    return;
   }
+
+  dspace.select_hyperslab(wrapper::HDF5DataSpace::SelectMode::SELECT_SET, offset, count);
+
+  const auto memspace = wrapper::HDF5DataSpace{count};
+
+  dataset.read(memspace.hid(), dspace.hid(), LEGATE_PURE_H5_ENUM(H5P_DEFAULT), dst);
 }
 
 /**
@@ -102,19 +105,17 @@ class HDF5ReadFn {
     }
 
     // Find file offset and size of each dimension
-    std::vector<std::size_t> offset{};
-    std::vector<std::size_t> count{};
+    std::array<hsize_t, DIM> offset{};
+    std::array<hsize_t, DIM> count{};
 
-    offset.reserve(DIM);
-    count.reserve(DIM);
-    for (std::int32_t i = 0; i < DIM; ++i) {
-      offset.emplace_back(shape.lo[i]);
-      count.emplace_back(shape.hi[i] - shape.lo[i] + 1);
+    for (std::uint32_t i = 0; i < DIM; ++i) {
+      offset[i] = static_cast<hsize_t>(shape.lo[i]);
+      count[i]  = static_cast<hsize_t>(shape.hi[i] - shape.lo[i] + 1);
     }
 
     const auto gds_on       = legate::detail::Runtime::get_runtime().config().io_use_vfd_gds();
-    const auto filepath     = context.scalar(0).value<std::string_view>();
-    const auto dataset_name = context.scalar(1).value<std::string_view>();
+    const auto filepath     = context.scalar(0).value<std::string>();
+    const auto dataset_name = context.scalar(1).value<std::string>();
     const auto acc          = store->write_accessor<DTYPE,
                                                     DIM,
                                                     // TODO(jfaibussowit)
@@ -138,7 +139,7 @@ class HDF5ReadFn {
     // Otherwise, we need to read into a bounce buffer
     const auto total_count = shape.volume();
     auto bounce_buffer     = create_buffer<DTYPE>(total_count, Memory::Z_COPY_MEM);
-    auto* ptr              = bounce_buffer.ptr(0);
+    auto* const ptr        = bounce_buffer.ptr(0);
     auto stream            = context.get_task_stream();
 
     read_hdf5_file(filepath, gds_on, dataset_name, offset, count, ptr);

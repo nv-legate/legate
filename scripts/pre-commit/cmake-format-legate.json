@@ -67,6 +67,11 @@
                     "nargs": 0
                 }
             },
+            "find_or_configure_hdf5": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "find_or_configure_hdf5_vfd_gds": {
                 "pargs": {
                     "nargs": 0

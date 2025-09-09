@@ -197,10 +197,10 @@ legate_find_or_configure(PACKAGE argparse)
 legate_find_or_configure(PACKAGE KvikIO)
 
 # ########################################################################################
-# * HighFive --------------------------------------------------------------
+# * HDF5 --------------------------------------------------------------
 
 if(legate_USE_HDF5)
-  legate_find_or_configure(PACKAGE HighFive)
+  legate_find_or_configure(PACKAGE HDF5)
 endif()
 
 # ########################################################################################
@@ -469,7 +469,6 @@ if(legate_USE_HDF5)
                          legate/io/hdf5/detail/read.cc
                          legate/io/hdf5/detail/write_vds.cc
                          legate/io/hdf5/detail/combine_vds.cc
-                         legate/io/hdf5/detail/util.cc
                          legate/io/hdf5/detail/hdf5_wrapper.cc)
 endif()
 
@@ -676,7 +675,7 @@ foreach(target legate_obj legate)
   endif()
 
   if(legate_USE_HDF5)
-    target_link_libraries("${target}" PRIVATE HighFive::HighFive)
+    target_link_libraries("${target}" PRIVATE HDF5::HDF5)
   endif()
 
   if(legate_USE_UCX)

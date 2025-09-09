@@ -286,7 +286,7 @@ set(with_runtime_SRC
 
 if(legate_USE_HDF5)
   list(APPEND with_runtime_SRC unit/io/hdf5/read.cc unit/io/hdf5/write.cc)
-  list(APPEND with_runtime_TARGETS HighFive::HighFive)
+  list(APPEND with_runtime_TARGETS HDF5::HDF5)
 endif()
 
 set(wo_runtime_SRC

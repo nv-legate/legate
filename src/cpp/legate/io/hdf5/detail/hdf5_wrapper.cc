@@ -19,7 +19,9 @@
 #include <H5Tpublic.h>
 #include <H5public.h>
 
+#include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -259,6 +261,17 @@ void h5s_select_hyperslab(const HDF5MaybeLockGuard& lock,
   return ret;
 }
 
+[[nodiscard]] std::size_t h5s_get_simple_extents_npoints(const HDF5MaybeLockGuard& lock,
+                                                         hid_t space)
+{
+  const auto ret = HDF5_CALL_NO_ERROR_PRINTING(H5Sget_simple_extent_npoints(space));
+
+  if (ret < 0) {
+    throw_hdf5_exception(lock, "Failed to get number of points from space");
+  }
+  return static_cast<std::size_t>(ret);
+}
+
 // ==========================================================================================
 
 [[nodiscard]] hid_t h5t_create(const HDF5MaybeLockGuard& lock, H5T_class_t type, std::size_t size)
@@ -272,6 +285,98 @@ void h5s_select_hyperslab(const HDF5MaybeLockGuard& lock,
                                      size));
   }
   return id;
+}
+
+[[nodiscard]] hid_t h5t_enum_create(const HDF5MaybeLockGuard& lock, hid_t base_id)
+{
+  const auto id = HDF5_CALL_NO_ERROR_PRINTING(H5Tenum_create(base_id));
+
+  if (id == H5I_INVALID_HID) {
+    throw_hdf5_exception(lock, "Failed to create HDF5 enum type");
+  }
+  return id;
+}
+
+void h5t_enum_insert(const HDF5MaybeLockGuard& lock,
+                     hid_t enum_id,
+                     legate::detail::ZStringView name,
+                     const void* value)
+{
+  const auto err = HDF5_CALL_NO_ERROR_PRINTING(
+    H5Tenum_insert(enum_id,
+                   name.data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
+                   value));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, fmt::format("Failed to insert enum value {}={}", name, value));
+  }
+}
+
+[[nodiscard]] std::uint32_t h5t_get_nmembers(const HDF5MaybeLockGuard& lock, hid_t type_id)
+{
+  const auto ret = HDF5_CALL_NO_ERROR_PRINTING(H5Tget_nmembers(type_id));
+
+  if (ret < 0) {
+    throw_hdf5_exception(lock, "Failed to get HDF5 enum number of members");
+  }
+  return static_cast<std::uint32_t>(ret);
+}
+
+[[nodiscard]] std::string h5t_get_member_name(const HDF5MaybeLockGuard& lock,
+                                              hid_t type_id,
+                                              std::uint32_t mem_idx)
+{
+  auto* const name = HDF5_CALL_NO_ERROR_PRINTING(H5Tget_member_name(type_id, mem_idx));
+
+  if (name == nullptr) {
+    throw_hdf5_exception(lock, fmt::format("Failed to get HDF5 type member name {}", mem_idx));
+  }
+
+  auto ret = [&] {
+    try {
+      return std::string{name};
+    } catch (...) {
+      LEGATE_CHECK(H5free_memory(name) >= 0);
+      throw;
+    }
+  }();
+
+  const auto err = HDF5_CALL_NO_ERROR_PRINTING(H5free_memory(name));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, fmt::format("Failed to free HDF5 type member name {}", ret));
+  }
+  return ret;
+}
+
+[[nodiscard]] std::size_t h5t_get_size(const HDF5MaybeLockGuard& lock, hid_t type_id)
+{
+  const auto ret = HDF5_CALL_NO_ERROR_PRINTING(H5Tget_size(type_id));
+
+  if (ret == 0) {
+    throw_hdf5_exception(lock, "Failed to get HDF5 type size");
+  }
+  return ret;
+}
+
+[[nodiscard]] H5T_class_t h5t_get_class(const HDF5MaybeLockGuard& lock, hid_t type_id)
+{
+  const auto ret = HDF5_CALL_NO_ERROR_PRINTING(H5Tget_class(type_id));
+
+  if (ret == H5T_NO_CLASS) {
+    throw_hdf5_exception(lock, "Failed to get HDF5 type class");
+  }
+  return ret;
+}
+
+[[nodiscard]] H5T_sign_t h5t_get_sign(const HDF5MaybeLockGuard& lock, hid_t type_id)
+{
+  const auto ret = HDF5_CALL_NO_ERROR_PRINTING(H5Tget_sign(type_id));
+
+  if (ret == H5T_SGN_ERROR) {
+    throw_hdf5_exception(lock, "Failed to get HDF5 type sign");
+  }
+  return ret;
 }
 
 void h5t_set_tag(const HDF5MaybeLockGuard& lock, hid_t type, legate::detail::ZStringView name)
@@ -299,13 +404,6 @@ void h5t_close(hid_t hid) noexcept
 
 [[nodiscard]] hid_t get_opaque_type(const HDF5MaybeLockGuard& lock, std::size_t size)
 {
-  class HDF5Type : public HDF5Object {
-   public:
-    HDF5Type() : HDF5Type{H5I_INVALID_HID} {}
-
-    explicit HDF5Type(hid_t hid) : HDF5Object{hid, nothrow::h5t_close} {}
-  };
-
   static auto type_cache_mutex = std::mutex{};
   static auto type_cache       = std::unordered_map<std::size_t, HDF5Type>{};
 
@@ -385,6 +483,22 @@ void h5d_write(const HDF5MaybeLockGuard& lock,
 
   if (err < 0) {
     throw_hdf5_exception(lock, "Failed to write to disk");
+  }
+}
+
+void h5d_read(const HDF5MaybeLockGuard& lock,
+              hid_t dset_id,
+              hid_t mem_type_id,
+              hid_t mem_space_id,
+              hid_t file_space_id,
+              hid_t dxpl_id,
+              void* buf)
+{
+  const herr_t err = HDF5_CALL_NO_ERROR_PRINTING(
+    H5Dread(dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, "Failed to read from disk");
   }
 }
 
@@ -468,6 +582,53 @@ void h5p_set_fapl_gds(const HDF5MaybeLockGuard& lock,
   }
 }
 
+// ==========================================================================================
+
+[[nodiscard]] bool h5l_exists(const HDF5MaybeLockGuard& lock,
+                              hid_t loc_id,
+                              legate::detail::ZStringView name,
+                              hid_t lapl_id)
+{
+  // The root path always exists, but H5Lexists return 0 or 1 depending of the version of HDF5,
+  // so always return true for it.
+  if (name == "/") {
+    return true;
+  }
+
+  const auto ret = HDF5_CALL_NO_ERROR_PRINTING(
+    H5Lexists(loc_id,
+              name.data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
+              lapl_id));
+
+  if (ret < 0) {
+    throw_hdf5_exception(lock, "Invalid link for exist()");
+  }
+  return ret > 0;
+}
+
+// ==========================================================================================
+
+[[nodiscard]] H5O_info_t h5o_get_info_by_name(const HDF5MaybeLockGuard& lock,
+                                              hid_t loc_id,
+                                              legate::detail::ZStringView name,
+                                              std::uint32_t fields,
+                                              hid_t lapl_id)
+{
+  H5O_info_t ret{};
+
+  const auto err = HDF5_CALL_NO_ERROR_PRINTING(
+    H5Oget_info_by_name(loc_id,
+                        name.data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
+                        &ret,
+                        fields,
+                        lapl_id));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, "Invalid object for info");
+  }
+  return ret;
+}
+
 }  // namespace
 
 // ==========================================================================================
@@ -544,8 +705,8 @@ namespace {
 
 void HDF5DataSpace::select_hyperslab(SelectMode mode,
                                      Span<const hsize_t> start,
-                                     Span<const hsize_t> stride,
                                      Span<const hsize_t> count,
+                                     Span<const hsize_t> stride,
                                      Span<const hsize_t> block)
 {
   const auto lock = HDF5MaybeLockGuard{};
@@ -556,6 +717,94 @@ void HDF5DataSpace::select_hyperslab(SelectMode mode,
 legate::detail::SmallVector<hsize_t> HDF5DataSpace::extents() const
 {
   return h5s_get_simple_extents({}, hid());
+}
+
+std::size_t HDF5DataSpace::element_count() const
+{
+  return h5s_get_simple_extents_npoints({}, hid());
+}
+
+// ==========================================================================================
+
+HDF5Type::HDF5Type() : HDF5Type{H5I_INVALID_HID} {}
+
+HDF5Type::HDF5Type(hid_t hid) : HDF5Object{hid, nothrow::h5t_close} {}
+
+std::size_t HDF5Type::size() const { return h5t_get_size({}, hid()); }
+
+namespace {
+
+[[nodiscard]] std::string string_tolower(std::string s)
+{
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+  return s;
+}
+
+}  // namespace
+
+HDF5Type::Class HDF5Type::type_class() const
+{
+  const auto lock = HDF5MaybeLockGuard{};
+  const auto cls  = h5t_get_class(lock, hid());
+
+  switch (cls) {
+    case H5T_INTEGER: {
+      const auto sign = h5t_get_sign(lock, hid());
+
+      return sign == H5T_SGN_NONE ? Class::UNSIGNED_INTEGER : Class::SIGNED_INTEGER;
+    }
+    case H5T_FLOAT: return Class::FLOAT;
+    case H5T_TIME: return Class::TIME;
+    case H5T_STRING: return Class::STRING;
+    case H5T_BITFIELD: return Class::BITFIELD;
+    case H5T_OPAQUE: return Class::OPAQUE;
+    case H5T_COMPOUND: return Class::COMPOUND;
+    case H5T_REFERENCE: return Class::REFERENCE;
+    case H5T_ENUM: {
+      if (const auto nmembers = h5t_get_nmembers(lock, hid()); nmembers == 2) {
+        const auto name1          = string_tolower(h5t_get_member_name(lock, hid(), 0));
+        const auto name2          = string_tolower(h5t_get_member_name(lock, hid(), 1));
+        constexpr auto is_boolean = [](std::string_view name) {
+          return name == "true" || name == "false";
+        };
+
+        if (is_boolean(name1) && is_boolean(name2)) {
+          return Class::BOOL;
+        }
+      }
+      return Class::ENUM;
+    }
+    case H5T_VLEN: return Class::VARIABLE_LENGTH;
+    case H5T_ARRAY: return Class::ARRAY;
+    case H5T_NO_CLASS: [[fallthrough]];
+    case H5T_NCLASSES: break;
+  }
+  LEGATE_ABORT("Unhandled class type", legate::detail::to_underlying(cls));
+}
+
+std::string HDF5Type::to_string() const
+{
+  const auto type_class_to_string = [=]() -> std::string_view {
+    switch (type_class()) {
+      case Class::BOOL: return "bool";
+      case Class::SIGNED_INTEGER: return "int";
+      case Class::UNSIGNED_INTEGER: return "uint";
+      case Class::FLOAT: return "float";
+      case Class::TIME: return "time";
+      case Class::STRING: return "string";
+      case Class::BITFIELD: return "bitfield";
+      case Class::OPAQUE: return "opaque";
+      case Class::COMPOUND: return "compound";
+      case Class::REFERENCE: return "reference";
+      case Class::ENUM: return "enum";
+      case Class::VARIABLE_LENGTH: return "variable_length";
+      case Class::ARRAY: return "array";
+    }
+    // Unreachable
+    LEGATE_ABORT("Unhandled type class");
+  }();
+
+  return fmt::format("{}({})", type_class_to_string, size());
 }
 
 // ==========================================================================================
@@ -575,13 +824,34 @@ HDF5DataSet::HDF5DataSet(const HDF5File& file,
 
 namespace {
 
+[[nodiscard]] HDF5Type make_bool_type(const HDF5MaybeLockGuard& lock)
+{
+  auto ret                 = HDF5Type{h5t_enum_create(lock, H5T_NATIVE_HBOOL)};
+  constexpr auto false_val = false;
+  constexpr auto true_val  = true;
+
+  h5t_enum_insert(lock, ret.hid(), "FALSE", &false_val);
+  h5t_enum_insert(lock, ret.hid(), "TRUE", &true_val);
+  return ret;
+}
+
 [[nodiscard]] hid_t to_hdf5_type(const HDF5MaybeLockGuard& lock, const Type& type)
 {
   const auto code = type.code();
   // These macros also expand to H5open() (a library call) and therefore must be called while
   // the HDF5 mutex is held.
   switch (code) {
-    case Type::Code::BOOL: return H5T_NATIVE_HBOOL;
+    case Type::Code::BOOL: {
+      // We cannot use H5T_NATIVE_HBOOL directly, because it's not a "real" boolean
+      // type. Instead, it's an alias to whichever host type is closest, usually uint8_t. This
+      // makes it indistinguishuable from a truex std::uint8_t when reading again.
+      //
+      // So make a custom enum with true/false values in the hopes that other readers can use
+      // it properly.
+      static const auto bool_type = make_bool_type(lock);
+
+      return bool_type.hid();
+    }
     case Type::Code::INT8: return H5T_NATIVE_INT8;
     case Type::Code::INT16: return H5T_NATIVE_INT16;
     case Type::Code::INT32: return H5T_NATIVE_INT32;
@@ -671,23 +941,31 @@ HDF5DataSet::HDF5DataSet(const HDF5File& file,
 {
 }
 
-hid_t HDF5DataSet::get_type() const { return h5d_get_type({}, hid()); }
+HDF5Type HDF5DataSet::type() const { return HDF5Type{h5d_get_type({}, hid())}; }
 
-std::string HDF5DataSet::get_name() const { return h5i_get_name({}, hid()); }
+std::string HDF5DataSet::name() const { return h5i_get_name({}, hid()); }
 
-HDF5DataSpace HDF5DataSet::get_data_space() const
-{
-  return HDF5DataSpace{h5d_get_space({}, hid())};
-}
+HDF5DataSpace HDF5DataSet::data_space() const { return HDF5DataSpace{h5d_get_space({}, hid())}; }
 
 void HDF5DataSet::write(hid_t mem_space_id,
                         hid_t file_space_id,
                         hid_t dxpl_id,
                         const void* buf) const
 {
-  const auto ty = get_type();
+  const auto ty = type();
 
-  h5d_write({}, hid(), ty, mem_space_id, file_space_id, dxpl_id, buf);
+  h5d_write({}, hid(), ty.hid(), mem_space_id, file_space_id, dxpl_id, buf);
+}
+
+void HDF5DataSet::read(hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void* buf) const
+{
+  read(type().hid(), mem_space_id, file_space_id, dxpl_id, buf);
+}
+
+void HDF5DataSet::read(
+  hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void* buf) const
+{
+  h5d_read({}, hid(), mem_type_id, mem_space_id, file_space_id, dxpl_id, buf);
 }
 
 // ==========================================================================================
@@ -734,9 +1012,22 @@ HDF5File::HDF5File(legate::detail::ZStringView filepath,
 {
 }
 
-HDF5DataSet HDF5File::get_data_set(legate::detail::ZStringView name) const
+HDF5DataSet HDF5File::data_set(legate::detail::ZStringView name) const
 {
   return HDF5DataSet{h5d_open({}, hid(), name, H5P_DEFAULT)};
+}
+
+bool HDF5File::has_data_set(legate::detail::ZStringView dataset_name, hid_t lapl_id) const
+{
+  const auto lock = HDF5MaybeLockGuard{};
+
+  if (!h5l_exists(lock, hid(), dataset_name, lapl_id)) {
+    return false;
+  }
+
+  const auto info = h5o_get_info_by_name(lock, hid(), dataset_name, H5O_INFO_BASIC, lapl_id);
+
+  return info.type == H5O_TYPE_DATASET;
 }
 
 // ==========================================================================================
@@ -777,7 +1068,7 @@ void HDF5DataSetCreatePropertyList::set_virtual(const HDF5DataSpace& vds_space,
                                                 const HDF5DataSet& src_dset,
                                                 const HDF5DataSpace& src_space)
 {
-  set_virtual(vds_space, file, src_dset.get_name(), src_space);
+  set_virtual(vds_space, file, src_dset.name(), src_space);
 }
 
 void HDF5DataSetCreatePropertyList::set_virtual(const HDF5DataSpace& vds_space,

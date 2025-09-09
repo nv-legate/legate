@@ -99,7 +99,7 @@ def test_array_read_virtual_dataset(tmp_path: Path) -> None:
     assert_array_equal(a, np.asarray(b.get_physical_array()))
 
 
-@pytest.mark.parametrize("dtype", ["float16", "complex64", "complex128"])
+@pytest.mark.parametrize("dtype", ["complex64", "complex128"])
 def test_array_read_unsupported_dtype(tmp_path: Path, dtype: str) -> None:
     filename = tmp_path / "test-file.hdf5"
     a = np.arange(10, dtype=dtype).reshape(2, 5)

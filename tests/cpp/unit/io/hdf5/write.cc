@@ -217,30 +217,21 @@ class IOHDF5WriteUnit : public RegisterOnceFixture<Config>,
 [[nodiscard]] bool supported_by_hdf5_reader(const legate::Type& type)
 {
   switch (type.code()) {
-    // HighFive reads bools as int8's, which is not correct
-    case legate::Type::Code::BOOL: return false;
+    case legate::Type::Code::BOOL: [[fallthrough]];
+    case legate::Type::Code::UINT8: [[fallthrough]];
+    case legate::Type::Code::UINT16: [[fallthrough]];
+    case legate::Type::Code::UINT32: [[fallthrough]];
+    case legate::Type::Code::UINT64: [[fallthrough]];
     case legate::Type::Code::INT8: [[fallthrough]];
     case legate::Type::Code::INT16: [[fallthrough]];
     case legate::Type::Code::INT32: [[fallthrough]];
     case legate::Type::Code::INT64: [[fallthrough]];
+    case legate::Type::Code::FLOAT16: [[fallthrough]];
     case legate::Type::Code::FLOAT32: [[fallthrough]];
     case legate::Type::Code::FLOAT64: [[fallthrough]];
     case legate::Type::Code::NIL: [[fallthrough]];
     case legate::Type::Code::STRING: [[fallthrough]];
     case legate::Type::Code::BINARY: return true;
-    // TODO(jfaibussowit)
-    // Unsigned integer types do not properly round-trip with HighFive
-    // (https://github.com/highfive-devs/highfive/issues/77), which is what we
-    // use for the reader implementation. Either wait for them to fix the bug,
-    // or, better yet, remove dependency on HighFive altogether
-    // (https://github.com/nv-legate/legate.internal/issues/2719)
-    case legate::Type::Code::UINT8: [[fallthrough]];
-    case legate::Type::Code::UINT16: [[fallthrough]];
-    case legate::Type::Code::UINT32: [[fallthrough]];
-    case legate::Type::Code::UINT64: [[fallthrough]];
-    // HighFive doesn't support float16 (see
-    // deduce_type_from_dataset() in src/cpp/legate/io/hdf5/detail/interface.cc).
-    case legate::Type::Code::FLOAT16: [[fallthrough]];
     // HDF5 does not have native complex support, we should approximate this with structure
     // types ideally.
     case legate::Type::Code::COMPLEX64: [[fallthrough]];
@@ -250,8 +241,7 @@ class IOHDF5WriteUnit : public RegisterOnceFixture<Config>,
     case legate::Type::Code::STRUCT: [[fallthrough]];
     case legate::Type::Code::LIST: return false;
   }
-
-  return false;
+  LEGATE_ABORT("Unhandled type code ", type.code());
 }
 
 }  // namespace
@@ -296,9 +286,9 @@ TEST_P(IOHDF5WriteUnit, Basic)
   legate::io::hdf5::to_file(array, h5_file, dataset);
 
   if (!supported_by_hdf5_reader(type)) {
-    GTEST_SUCCEED() << "Some types aren't properly supported by our reader, and/or are limited by "
-                       "bugs in HDF5/HighFive. Return early for now, with the hope that things are "
-                       "eventually fixed.";
+    GTEST_SUCCEED()
+      << "Some types aren't properly supported by our reader, and/or are limited by "
+         "bugs in HDF5. Return early for now, with the hope that things are eventually fixed.";
     return;
   }
 

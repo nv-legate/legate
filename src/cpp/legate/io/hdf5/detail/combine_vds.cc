@@ -202,7 +202,7 @@ class UnwrappedDomain {
   auto start =
     legate::detail::SmallVector<hsize_t>{legate::detail::tags::size_tag, global_shape.size(), 0};
   auto extents   = start;
-  auto src_dtype = std::optional<hid_t>{};
+  auto src_dtype = std::optional<wrapper::HDF5Type>{};
 
   // HDF5WriteVDS leaf tasks each write their local section of the array to a separate file
   // under `vds_dir`. The final step of VDS construction creates a super-file that stitches
@@ -276,7 +276,7 @@ class UnwrappedDomain {
       // error-prone) to just read it from disk.
       const auto file = wrapper::HDF5File{path, wrapper::HDF5File::OpenMode::READ_ONLY};
 
-      src_dtype = file.get_data_set(dset_name).get_type();
+      src_dtype = file.data_set(dset_name).type();
     }
 
     LEGATE_CHECK(sub_domain->lo.get_dim() == static_cast<int>(start.size()));
@@ -287,11 +287,7 @@ class UnwrappedDomain {
       extents[i] = static_cast<hsize_t>(sub_domain->hi[i] - sub_domain->lo[i] + 1);
     }
 
-    vds_space.select_hyperslab(wrapper::HDF5DataSpace::SelectMode::SELECT_SET,
-                               start,
-                               /* stride */ {},
-                               /* count */ extents,
-                               /* block */ {});
+    vds_space.select_hyperslab(wrapper::HDF5DataSpace::SelectMode::SELECT_SET, start, extents);
     vds_plist.set_virtual(vds_space, path, dset_name, wrapper::HDF5DataSpace{extents});
   }
 
@@ -301,7 +297,7 @@ class UnwrappedDomain {
   // destructors of these objects ensure that HDF5 creates the stitched file.
   const auto stitched_file = wrapper::HDF5File{vds_file, wrapper::HDF5File::OpenMode::OVERWRITE};
   const auto stitched_dset = wrapper::HDF5DataSet{
-    stitched_file, dset_name, *src_dtype, vds_space, H5P_DEFAULT, vds_plist, H5P_DEFAULT};
+    stitched_file, dset_name, src_dtype->hid(), vds_space, H5P_DEFAULT, vds_plist, H5P_DEFAULT};
 }
 
 }  // namespace legate::io::hdf5::detail

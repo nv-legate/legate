@@ -4,18 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef HIGHFIVE_CXX_STD
-#include <legate/utilities/cpp_version.h>
-// Highfive doesn't export this in their cmake files, so we have to
-#define HIGHFIVE_CXX_STD LEGATE_CPP_MIN_VERSION
-#endif
-
 #include <legate.h>
 
 #include <legate/io/hdf5/interface.h>
 
-#include <highfive/H5DataType.hpp>
-#include <highfive/H5File.hpp>
+#include <H5Fpublic.h>
+#include <H5Gpublic.h>
+#include <H5Ppublic.h>
 
 #include <gtest/gtest.h>
 
@@ -25,6 +20,8 @@
 #include <string_view>
 #include <utilities/utilities.h>
 
+namespace test_io_hdf5_read {
+
 namespace {
 
 struct OpaqueType {
@@ -32,22 +29,6 @@ struct OpaqueType {
 
   bool operator==(const OpaqueType& other) const { return byte == other.byte; }
 };
-
-}  // namespace
-
-namespace HighFive {
-
-template <>
-inline AtomicType<OpaqueType>::AtomicType()
-{
-  _hid = detail::h5t_create(H5T_OPAQUE, sizeof(OpaqueType));
-}
-
-}  // namespace HighFive
-
-namespace test_io_hdf5_read {
-
-namespace {
 
 constexpr auto MAGIC_BYTE = OpaqueType{123};
 
@@ -102,24 +83,50 @@ class IOHDF5ReadUnit : public RegisterOnceFixture<Config> {
 
 TEST_F(IOHDF5ReadUnit, Binary)
 {
-  constexpr auto SIZE    = 10;
-  constexpr auto DATASET = "legate/foo";
-  constexpr auto DIM     = 1;
-  const auto file_path   = base_path / "foo.hdf";
+  constexpr auto SIZE         = 10;
+  constexpr auto BASE_DATASET = "/legate";
+  constexpr auto DATASET      = "/legate/foo";
+  constexpr auto DIM          = 1;
+  const auto file_path        = base_path / "foo.hdf";
 
   {
-    auto hf_file = HighFive::File{file_path, HighFive::File::Truncate};
-    auto dset    = hf_file.createDataSet<OpaqueType>(DATASET, HighFive::DataSpace{SIZE});
+    /*
+     * Create the source files and  datasets. Write data to each dataset and
+     * close all resources.
+     */
 
-    // This is the whole point of this exercise, if this isn't true, then the below does not
-    // exercise the binary-type load path
-    ASSERT_EQ(dset.getDataType().getClass(), HighFive::DataTypeClass::Opaque);
-    ASSERT_EQ(dset.getDataType().getSize(), sizeof(OpaqueType));
+    const auto opaque_hid = H5Tcreate(H5T_OPAQUE, sizeof(OpaqueType));
+
+    ASSERT_GE(opaque_hid, 0);
+
+    const auto file = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    ASSERT_GE(file, 0);
+
+    constexpr auto dims = std::array<hsize_t, 1>{SIZE};
+    const auto space    = H5Screate_simple(dims.size(), dims.data(), nullptr);
+
+    ASSERT_GE(space, 0);
+
+    const auto sub_group = H5Gcreate(file, BASE_DATASET, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    ASSERT_GE(sub_group, 0);
+
+    const auto dset =
+      H5Dcreate(file, DATASET, opaque_hid, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    ASSERT_GE(dset, 0);
 
     auto data = std::array<OpaqueType, SIZE>{};
 
     data.fill(MAGIC_BYTE);
-    dset.write(data);
+
+    ASSERT_GE(H5Dwrite(dset, opaque_hid, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data()), 0);
+    ASSERT_GE(H5Sclose(space), 0);
+    ASSERT_GE(H5Dclose(dset), 0);
+    ASSERT_GE(H5Fclose(file), 0);
+    ASSERT_GE(H5Tclose(opaque_hid), 0);
+    ASSERT_GE(H5Gclose(sub_group), 0);
   }
 
   const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);

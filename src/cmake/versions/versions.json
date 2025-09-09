@@ -3,12 +3,6 @@
         "GTest": {
             "exclude_from_all": true
         },
-        "HighFive": {
-            "exclude_from_all": true,
-            "git_tag": "v${version}-beta2",
-            "git_url": "https://github.com/highfive-devs/highfive.git",
-            "version": "3.0.0"
-        },
         "argparse": {
             "exclude_from_all": true,
             "git_shallow": false,
