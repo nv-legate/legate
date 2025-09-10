@@ -98,7 +98,7 @@ legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" ${legate_USE_UC
 legate_option(legate_FAKE_FATBINS_FOR_TIDY LEGATE_FAKE_FATBINS_FOR_TIDY
               "Emit stub fatbins for clang-tidy (avoids building CUDA/Legion during tidy)"
               OFF)
-legate_option(Legion_USE_GASNET LEGION_USE_GASNET "Enable GASNet support in Legion" OFF)
+legate_option(Legion_USE_GASNet LEGION_USE_GASNET "Enable GASNet support in Legion" OFF)
 
 set(legion_networks)
 
@@ -108,7 +108,7 @@ endif()
 if(legate_USE_MPI)
   list(APPEND legion_networks "mpi")
 endif()
-if(Legion_USE_GASNET)
+if(Legion_USE_GASNet)
   list(APPEND legion_networks "gasnetex")
 endif()
 
