@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running Legate Programs &#8212; NVIDIA legate (25.10.00.dev1+g03f69dbbe)</title>
+    <title>Running Legate Programs &#8212; NVIDIA legate (25.10.00.dev7+gda4dec414)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=e2c545b4"></script>
+    <script src="../../_static/documentation_options.js?v=27f6df25"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev1+g03f69dbbe)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev7+gda4dec414)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev1+g03f69dbbe)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev7+gda4dec414)</p>
   
 </a>
 
@@ -396,6 +396,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l3"><a class="reference internal" href="../../api/python/settings.html">Settings</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.io.hdf5.from_file_batched.html">legate.io.hdf5.from_file_batched</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.io.hdf5.to_file.html">legate.io.hdf5.to_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
@@ -928,11 +930,221 @@ launching the application (or through <code class="docutils literal notranslate"
 <p>At the end of execution you will have a set of <code class="docutils literal notranslate"><span class="pre">legate_*.prof</span></code> files (one per
 process). By default these files are placed in the same directory where the
 program was launched (you can control this with the <code class="docutils literal notranslate"><span class="pre">--logdir</span></code> option). These
-files can be opened with the profile viewer, to see a timeline of your
-program’s execution:</p>
+files can be opened with the profile viewer:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>legion_prof<span class="w"> </span>view<span class="w"> </span>legate_*.prof
 </pre></div>
 </div>
+<p>The viewer will open a window with a timeline of your program’s execution:</p>
+<figure class="align-default">
+<img alt="../../_images/profile.png" src="../../_images/profile.png" />
+</figure>
+<section id="understanding-the-profile">
+<h2>Understanding the Profile<a class="headerlink" href="#understanding-the-profile" title="Link to this heading">#</a></h2>
+<p>Each node appears as a separate section in the UI, with a timeline showing
+the execution of tasks on that node. Within each timeline, you’ll see different
+substreams for processor execution and memory utilization over time.
+Each box represents either a task (on processor streams) or an instance/memory allocation (on memory streams).</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Processor and Memory Stream Types</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 25.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Stream Type</p></th>
+<th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CPU</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--cpus</span></code></p></td>
+<td><p>Main CPU cores for user tasks, computations, and data movement</p></td>
+</tr>
+<tr class="row-odd"><td><p>GPU Device</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--gpus</span></code></p></td>
+<td><p>GPU execution units for CUDA kernels, GPU memory operations</p></td>
+</tr>
+<tr class="row-even"><td><p>GPU Host</p></td>
+<td><p>(automatic)</p></td>
+<td><p>Host operations for GPU tasks</p></td>
+</tr>
+<tr class="row-odd"><td><p>Utility</p></td>
+<td><p>(automatic)</p></td>
+<td><p>Dedicated CPU cores for runtime meta-work such as task mapping, dependency analysis, and coordination</p></td>
+</tr>
+<tr class="row-even"><td><p>OpenMP</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--omps</span></code>, <code class="docutils literal notranslate"><span class="pre">--ompthreads</span></code></p></td>
+<td><p>OpenMP thread pools for parallel CPU execution, loop parallelism</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO</p></td>
+<td><p>(automatic)</p></td>
+<td><p>File I/O operations, Python execution time, other TopLevelTask-level operations</p></td>
+</tr>
+<tr class="row-even"><td><p>System</p></td>
+<td><p>(automatic)</p></td>
+<td><p>Low-level system interactions such as memory allocation, process/thread management, and kernel operations</p></td>
+</tr>
+<tr class="row-odd"><td><p>Zero Copy</p></td>
+<td><p>(automatic)</p></td>
+<td><p>Zero-copy memory allocations/deallocations</p></td>
+</tr>
+<tr class="row-even"><td><p>Framebuffer</p></td>
+<td><p>(automatic)</p></td>
+<td><p>Framebuffer memory allocations/deallocations</p></td>
+</tr>
+<tr class="row-odd"><td><p>Channel</p></td>
+<td><p>(automatic)</p></td>
+<td><p>Communication pathways grouped by source and destination memory of copies, showing copy information such as timing and instances.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="interpreting-stream-activity">
+<h3>Interpreting Stream Activity<a class="headerlink" href="#interpreting-stream-activity" title="Link to this heading">#</a></h3>
+<p>You can interact with the timeline by clicking on different elements:</p>
+<ul class="simple">
+<li><p>Click on task boxes to see detailed execution information</p></li>
+<li><p>Click on substreams to expand and see all tasks for that processor type</p></li>
+<li><p>Hover over task boxes to see summary information like task names, duration, and status</p></li>
+</ul>
+<figure class="align-default">
+<img alt="../../_images/prof_box.png" src="../../_images/prof_box.png" />
+</figure>
+<p>Task box colors represent the current state of each processor:</p>
+<ul class="simple">
+<li><p><strong>Darkest shade</strong>: Task is actively executing on the processor</p></li>
+<li><p><strong>Intermediate shade</strong>: The event that the task blocked on has triggered, so the task is ready to resume execution, but it hasn’t started yet (most likely because another task is currently executing on the processor). If this is the case, the “Previous Executing” field will tell you which task was preventing the ready task from resuming.</p></li>
+<li><p><strong>Lightest shade</strong>: Task is blocked waiting on an event and has been preempted which means that it is not running and the event that it blocked on has not yet triggered</p></li>
+<li><p><strong>Empty spaces</strong>: Processor is idle with no tasks scheduled</p></li>
+<li><p><strong>Gray sections</strong>: Groups of very small tasks that are too small to display individually at the current zoom level</p></li>
+</ul>
+<figure class="align-default">
+<img alt="../../_images/stream_activity.png" src="../../_images/stream_activity.png" />
+</figure>
+<p>The relative activity and idle time across different streams can help identify
+performance bottlenecks:</p>
+<ul class="simple">
+<li><p>High CPU utilization with low GPU usage may indicate insufficient GPU work</p></li>
+<li><p>Busy utility processors suggest the runtime is working hard on scheduling</p></li>
+<li><p>Frequent and long operations in Channel might indicate data movement bottlenecks</p></li>
+<li><p>Long IO operations suggest you are waiting on Python code to be executed first</p></li>
+<li><p>Gaps between tasks on the same processor may reveal synchronization issues</p></li>
+<li><p>It can also reveal that your program has a dependency on long copies, a utilility thread that is too busy, or other issues.</p></li>
+</ul>
+<p>If you want to understand why a specific box on the profile timeline didn’t start executing earlier, you can look at the “Critical Path” field on the pop-up box for more information.</p>
+</section>
+<section id="example-conjugate-gradient-algorithm">
+<h3>Example: Conjugate Gradient Algorithm<a class="headerlink" href="#example-conjugate-gradient-algorithm" title="Link to this heading">#</a></h3>
+<p>To demonstrate these profiling concepts in practice, let’s examine a real-world example
+using the Conjugate Gradient (CG) algorithm. This algorithm solves linear systems of the form
+<strong>Ax = b</strong> where <strong>A</strong> is a symmetric positive definite matrix. The implementation of the CG
+example is available <a class="reference external" href="https://github.com/nv-legate/cupynumeric/blob/main/examples/cg.py">here</a>.</p>
+<p>The profile below shows the CG example running on a system with 4 GPUs:</p>
+<figure class="align-default">
+<img alt="../../_images/cg_profile.png" src="../../_images/cg_profile.png" />
+</figure>
+<section id="key-observations">
+<h4>Key Observations<a class="headerlink" href="#key-observations" title="Link to this heading">#</a></h4>
+<p>To understand a program’s behavior and investigate bottlenecks, we often inspect GPU tasks, utility processors, and communication channels.</p>
+<section id="gpu-tasks">
+<h5>GPU Tasks<a class="headerlink" href="#gpu-tasks" title="Link to this heading">#</a></h5>
+<p>In the CG code, the workflow begins with matrix generation and variable initialization, followed by warmup iterations, and then the main iterative algorithm (which includes matrix-vector multiplications and dot products) until convergence. In the GPU Device stream, we can see that:</p>
+<figure class="align-default">
+<img alt="../../_images/cg_gpudev.png" src="../../_images/cg_gpudev.png" />
+</figure>
+<ul class="simple">
+<li><p>Initial operations appear slower due to one-time CUDA setup costs (context initialization, memory allocation, and kernel compilation). This startup overhead is expected and unrelated to cuPyNumeric performance.</p></li>
+<li><p>Post-warmup iterations show faster and more consistent execution as the runtime reaches steady state, with uniform kernel durations indicating efficient reuse of compiled kernels and allocated memory.</p></li>
+<li><p>The program concludes with tasks that unload the CUDA libraries on each GPU (the blue boxes at the end of the timeline)</p></li>
+</ul>
+<p>If you zoom in, you can see iteration-level patterns:</p>
+<figure class="align-default">
+<img alt="../../_images/cg_zoomed.png" src="../../_images/cg_zoomed.png" />
+</figure>
+<p>In the GPU Device stream, the yellow boxes are cuPyNumeric matrix-vector multiplication task kernels, the blue boxes are cuPyNumeric dot task kernels, and the red boxes are cuPyNumeric binary operation task kernels.</p>
+<p>Clicking on a box in the profile opens a pop-up showing detailed information about that task:</p>
+<figure class="align-default">
+<img alt="../../_images/cg_matmul.png" src="../../_images/cg_matmul.png" />
+</figure>
+<figure class="align-default">
+<img alt="../../_images/cg_dottask.png" src="../../_images/cg_dottask.png" />
+</figure>
+<p>The pop-up shows that the matrix-vector multiplication task corresponds to line 107 and the dot task corresponds to line 108 in the code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="mi">107</span> <span class="n">Ap</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="mi">108</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">rsold</span> <span class="o">/</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Ap</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="utility-processor">
+<h5>Utility Processor<a class="headerlink" href="#utility-processor" title="Link to this heading">#</a></h5>
+<p>The utility processor shows Legate runtime behavior, including task mapping, dependency analysis, and scheduling. In this example:</p>
+<ul class="simple">
+<li><p>Busy utility processors indicate active optimization of task placement and data movement</p></li>
+<li><p>Gaps between GPU tasks often correspond to runtime mapping and scheduling activity. They may also indicate the GPU is waiting for other operations to complete (i.e. memory copies)</p></li>
+</ul>
+<figure class="align-default">
+<img alt="../../_images/cg_gaps.png" src="../../_images/cg_gaps.png" />
+</figure>
+<p>The utility processor shows that the gap between the matrix-vector multiplication (line 107) and the dot task (line 108) occurs because the dot task depends on the completion and mapping of the result of the matrix-vector multiplication.</p>
+</section>
+<section id="communication-channels">
+<h5>Communication Channels<a class="headerlink" href="#communication-channels" title="Link to this heading">#</a></h5>
+<p>The communication channels show data movement patterns between devices:</p>
+<figure class="align-default">
+<img alt="../../_images/cg_channel.png" src="../../_images/cg_channel.png" />
+</figure>
+<p>At the start of the program, device-to-device copies are sparse due to initialization and warmup iterations, but they become more uniform in subsequent iterations. The length and frequency of these transfers indicate whether data is moved in large chunks or in smaller, more granular batches.</p>
+</section>
+</section>
+<section id="applying-this-to-your-own-program">
+<h4>Applying this to your own program<a class="headerlink" href="#applying-this-to-your-own-program" title="Link to this heading">#</a></h4>
+<p>When profiling your own program, you can look at the same streams to better understand
+its behavior and locate potential bottlenecks:</p>
+<ul class="simple">
+<li><p><strong>GPU stream</strong>: Identify unusually long tasks and inspect the corresponding code to determine if an operation is taking longer than expected. Note any gaps between GPU tasks and check which other streams are active during those gaps</p></li>
+<li><p><strong>Utility processor</strong>: Monitor utility processor activity, as lower usage typically indicates better performance. When utility processors are constantly busy, this suggests the runtime is spending excessive time on task scheduling and coordination. To address this, consider coarsening your tasks by processing larger data chunks per task or fusing multiple operations together. For applications with repeated loops, enabling tracing can significantly reduce utility processor overhead. Additionally, if utility processors remain overly busy, you should examine mapper call lifetimes to ensure your mapper isn’t spending too much time making decisions</p></li>
+<li><p><strong>Channel stream</strong>: Review data transfers between devices to understand their timing, purpose, and potential impact on performance</p></li>
+</ul>
+<p>When comparing different versions of the same application, you can compare how these metrics change between runs.</p>
+</section>
+</section>
+</section>
+<section id="integrating-with-nvidia-nsight-systems">
+<h2>Integrating with NVIDIA Nsight Systems<a class="headerlink" href="#integrating-with-nvidia-nsight-systems" title="Link to this heading">#</a></h2>
+<p>Below are the steps necessary to build and run the Legion Prof tool, profile a
+Legion program, and export profiling data through NVTXW, which can then be
+viewed in NVIDIA Nsight Systems 2024.5.1 or later.</p>
+<section id="setup-nsys-legion-prof">
+<h3>Setup Nsys/Legion Prof<a class="headerlink" href="#setup-nsys-legion-prof" title="Link to this heading">#</a></h3>
+<p>First, install NVIDIA Nsight Systems 2024.5.1 or later. It is available from:
+<a class="reference external" href="https://developer.nvidia.com/nsight-systems/get-started#Linuxx86">https://developer.nvidia.com/nsight-systems/get-started#Linuxx86</a></p>
+</section>
+<section id="building-with-packages">
+<h3>Building with packages<a class="headerlink" href="#building-with-packages" title="Link to this heading">#</a></h3>
+<p>If you want to install with pip, you can do so with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>legate-profiler
+</pre></div>
+</div>
+<p>Otherwise, you can install with conda:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate-profiler
+</pre></div>
+</div>
+</section>
+<section id="run-nsys-legion-prof">
+<h3>Run Nsys/Legion Prof<a class="headerlink" href="#run-nsys-legion-prof" title="Link to this heading">#</a></h3>
+<p>With all prerequisites built, you can now run Legion programs to profile them.</p>
+<p>A sample command using Legion’s <code class="docutils literal notranslate"><span class="pre">CG</span></code> example would be:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>legate<span class="w"> </span>--gpus<span class="w"> </span><span class="m">2</span><span class="w"> </span>--nsys<span class="w"> </span>--profile<span class="w"> </span>examples/cg.py<span class="w">  </span>-n<span class="w"> </span><span class="m">235</span>
+</pre></div>
+</div>
+<p>This will create a <code class="docutils literal notranslate"><span class="pre">legate_0.nsys-rep</span></code> file which can be viewed in the Nsight Systems UI. In this file, you can see your cuPyNumeric operations in the NVTXW row:</p>
+<figure class="align-default">
+<img alt="../../_images/nsys_ui.png" src="../../_images/nsys_ui.png" />
+</figure>
+</section>
+</section>
 </section>
 
 
@@ -989,7 +1201,29 @@ program’s execution:</p>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-allocation">Resource Allocation</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#distributed-launch">Distributed Launch</a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#running-legate-on-typical-slurm-clusters">Running Legate on Typical SLURM Clusters</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#profiling">Profiling</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#profiling">Profiling</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#understanding-the-profile">Understanding the Profile</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpreting-stream-activity">Interpreting Stream Activity</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-conjugate-gradient-algorithm">Example: Conjugate Gradient Algorithm</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#key-observations">Key Observations</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#gpu-tasks">GPU Tasks</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#utility-processor">Utility Processor</a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#communication-channels">Communication Channels</a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#applying-this-to-your-own-program">Applying this to your own program</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integrating-with-nvidia-nsight-systems">Integrating with NVIDIA Nsight Systems</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-nsys-legion-prof">Setup Nsys/Legion Prof</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-with-packages">Building with packages</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-nsys-legion-prof">Run Nsys/Legion Prof</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
   </nav></div>

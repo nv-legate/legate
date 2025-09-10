@@ -1,0 +1,6 @@
+﻿legate.io.hdf5.from\_file\_batched
+==================================
+
+.. currentmodule:: legate.io.hdf5
+
+.. autofunction:: from_file_batched

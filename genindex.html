@@ -12,7 +12,7 @@ SPDX-License-Identifier: Apache-2.0
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; NVIDIA legate (25.10.00.dev1+g03f69dbbe)</title>
+    <title>Index &#8212; NVIDIA legate (25.10.00.dev7+gda4dec414)</title>
   
   
   
@@ -45,7 +45,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e2c545b4"></script>
+    <script src="_static/documentation_options.js?v=27f6df25"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,11 +130,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev1+g03f69dbbe)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev7+gda4dec414)</p>
   
 </a></div>
     
@@ -237,11 +237,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev1+g03f69dbbe) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev7+gda4dec414) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev1+g03f69dbbe)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev7+gda4dec414)</p>
   
 </a>
 
@@ -389,6 +389,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l3"><a class="reference internal" href="api/python/settings.html">Settings</a></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.from_file_batched.html">legate.io.hdf5.from_file_batched</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.to_file.html">legate.io.hdf5.to_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
@@ -1404,6 +1406,8 @@ SPDX-License-Identifier: Apache-2.0
         <li><a href="api/python/generated/legate.io.hdf5.from_file.html#legate.io.hdf5.from_file">(in module legate.io.hdf5)</a>
 </li>
       </ul></li>
+      <li><a href="api/python/generated/legate.io.hdf5.from_file_batched.html#legate.io.hdf5.from_file_batched">from_file_batched() (in module legate.io.hdf5)</a>
+</li>
       <li><a href="api/cpp/generated/group/group__io-kvikio.html#_CPPv420from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE">from_file_by_offsets (C++ function)</a>
 </li>
       <li><a href="api/python/generated/legate.core.FixedArrayType.from_numpy_dtype.html#legate.core.FixedArrayType.from_numpy_dtype">from_numpy_dtype() (legate.core.FixedArrayType static method)</a>
@@ -3687,7 +3691,11 @@ SPDX-License-Identifier: Apache-2.0
       <li><a href="api/cpp/generated/group/group__io-hdf5.html#_CPPv47to_fileRK12LogicalArrayNSt10filesystem4pathENSt11string_viewE">to_file (C++ function)</a>, <a href="api/cpp/generated/group/group__io-kvikio.html#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArray">[1]</a>, <a href="api/cpp/generated/group/group__io-kvikio.html#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE">[2]</a>
 </li>
       <li><a href="api/python/generated/legate.core.experimental.io.file_handle.to_file.html#legate.core.experimental.io.file_handle.to_file">to_file() (in module legate.core.experimental.io.file_handle)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.io.hdf5.to_file.html#legate.io.hdf5.to_file">(in module legate.io.hdf5)</a>
 </li>
+      </ul></li>
       <li><a href="api/python/generated/legate.core.FixedArrayType.to_numpy_dtype.html#legate.core.FixedArrayType.to_numpy_dtype">to_numpy_dtype() (legate.core.FixedArrayType method)</a>
 
       <ul>

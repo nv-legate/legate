@@ -1,0 +1,6 @@
+﻿legate.io.hdf5.to\_file
+=======================
+
+.. currentmodule:: legate.io.hdf5
+
+.. autofunction:: to_file

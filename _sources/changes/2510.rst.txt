@@ -60,3 +60,5 @@ Python
 .. rubric:: Utilities
 
 .. rubric:: I/O
+
+- Add ``legate.io.hdf5.from_file_batched()`` to read a HDF5 file in batches.
