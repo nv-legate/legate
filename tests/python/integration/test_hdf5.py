@@ -15,8 +15,8 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from legate.core import get_legate_runtime
-from legate.io.hdf5 import from_file
+from legate.core import LogicalArray, Type, get_legate_runtime, types as ty
+from legate.io.hdf5 import from_file, from_file_batched
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -32,9 +32,6 @@ shape_chunks = (
         ((5, 4, 3, 2), (2, 2, 2, 2)),
     ],
 )
-
-# Called for effect to start legate runtime
-get_legate_runtime()
 
 
 @pytest.mark.parametrize(*shape_chunks)
@@ -110,6 +107,77 @@ def test_array_read_unsupported_dtype(tmp_path: Path, dtype: str) -> None:
         ValueError, match=r"unsupported (floating point size|HDF5 datatype).*"
     ):
         from_file(filename, dataset_name="dataset")
+
+
+@pytest.mark.parametrize(
+    "dtype", [ty.int8, ty.uint16, ty.int32, ty.float64, ty.float32, ty.uint64]
+)
+@pytest.mark.parametrize(*shape_chunks)
+def test_from_file_batched(
+    tmp_path: Path,
+    dtype: Type,
+    shape: tuple[int, ...],
+    chunks: tuple[int, ...],
+) -> None:
+    filename = tmp_path / "test-file.h5"
+    data = np.arange(math.prod(shape), dtype=dtype.to_numpy_dtype()).reshape(
+        *shape
+    )
+    dataset_name = "foo"
+    with h5py.File(filename, "w") as f:
+        f[dataset_name] = data
+
+    for arr, offsets in from_file_batched(filename, dataset_name, chunks):
+        assert isinstance(arr, LogicalArray)
+        assert arr.type == dtype
+
+        phys = arr.get_physical_array()
+        arr_np = np.asarray(phys)
+
+        # Shape is not necessarily divisible, so some batches won't have
+        # exactly the same shape, but they should the same dimensions
+        assert len(arr_np.shape) == len(chunks)
+        assert arr_np.shape <= chunks
+
+        slices = tuple(
+            slice(o, o + s) for o, s in zip(offsets, chunks, strict=True)
+        )
+        assert_array_equal(arr_np, data[slices])
+
+
+@pytest.mark.parametrize("chunk_size", ((0, 1, 2), (-1, 2, 3)))
+def test_from_file_batched_invalid_chunk_size(
+    chunk_size: tuple[int, ...],
+) -> None:
+    m = re.escape(f"Invalid chunk size ({chunk_size}), must be >0")
+    with pytest.raises(ValueError, match=m):  # noqa: PT012
+        # Python generators are fully lazy, executing the function body only
+        # once you start iterating the generator. So we need to iterate it in
+        # order to trigger the error checks.
+        for _ in from_file_batched("foo.h5", "foo", chunk_size):
+            pytest.fail("Should never actually iterate the generator")
+
+
+def test_from_file_batched_invalid_chunk_dim(tmp_path: Path) -> None:
+    chunk_size = (2, 2)
+    shape = (*chunk_size, 2)
+    data = np.ones(shape)
+    dataset_name = "foo"
+    filename = tmp_path / "test-file.h5"
+
+    with h5py.File(filename, "w") as f:
+        f[dataset_name] = data
+
+    m = re.escape(
+        f"Dimensions of chunks ({len(chunk_size)}) must match "
+        f"dimension of dataset ({len(shape)})."
+    )
+    with pytest.raises(ValueError, match=m):  # noqa: PT012
+        # Python generators are fully lazy, executing the function body only
+        # once you start iterating the generator. So we need to iterate it in
+        # order to trigger the error checks.
+        for _ in from_file_batched(filename, dataset_name, chunk_size):
+            pytest.fail("Should never actually iterate the generator")
 
 
 if __name__ == "__main__":

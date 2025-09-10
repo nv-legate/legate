@@ -24,6 +24,8 @@ API
    :toctree: ../generated/
 
    from_file
+   from_file_batched
+   to_file
 
 KVikIO
 ======

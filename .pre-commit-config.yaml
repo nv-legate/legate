@@ -107,6 +107,7 @@ repos:
           pytest_mock,
           types-psutil,
           rich,
+          h5py,
           "dask[distributed]",
           "git+https://github.com/nv-legate/aedifix@1.10.0"
         ]
