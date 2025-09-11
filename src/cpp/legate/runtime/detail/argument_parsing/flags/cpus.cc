@@ -51,9 +51,17 @@ void configure_cpus(bool auto_config,
   // use all unallocated cores
   int res_num_cpus{};
 
-  if (!core.get_resource("cpu", res_num_cpus)) {
+  if (auto realm_status = core.get_resource("cpu", res_num_cpus); realm_status != REALM_SUCCESS) {
+    // cpu cores must be available
+    LEGATE_CHECK(realm_status != REALM_MODULE_CONFIG_ERROR_INVALID_NAME);
+    if (realm_status == REALM_MODULE_CONFIG_ERROR_NO_RESOURCE) {
+      throw TracedException<AutoConfigurationError>{
+        "Core Realm module could not determine the number of CPU cores."};
+    }
     throw TracedException<AutoConfigurationError>{
-      "Core Realm module could not determine the number of CPU cores."};
+      fmt::format("Core Realm module encountered an unknown error while determining the number of "
+                  "CPU cores, error {}.",
+                  static_cast<int>(realm_status))};
   }
   if (res_num_cpus == 0) {
     throw TracedException<AutoConfigurationError>{

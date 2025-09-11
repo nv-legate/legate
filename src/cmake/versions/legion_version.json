@@ -2,7 +2,7 @@
     "packages": {
         "Legion": {
             "git_shallow": false,
-            "git_tag": "16441d05a66bdf0f21e271b943a60315f113a55e",
+            "git_tag": "bded7848c35c6bcaa09ab94263d8b9b132671941",
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
             "patches": [
                 {
@@ -21,6 +21,12 @@
                     "file": "${current_json_dir}/../patches/legion_redop.diff",
                     "fixed_in": "",
                     "issue": "legion half",
+                    "required": true
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_realm_cmake_targets.diff",
+                    "fixed_in": "",
+                    "issue": "legion hdf5",
                     "required": true
                 }
             ],

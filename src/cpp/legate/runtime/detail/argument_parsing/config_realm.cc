@@ -68,13 +68,23 @@ void try_set_property(const std::string& module_name,
   const auto value = arg_value(arg);
 
   LEGATE_CHECK(value >= 0);
-  if (!config->set_property(property_name, value)) {
+  if (auto realm_status = config->set_property(property_name, value);
+      realm_status != REALM_SUCCESS) {
+    const auto error_detail = [&]() -> std::string {
+      if (realm_status == REALM_MODULE_CONFIG_ERROR_INVALID_NAME) {
+        return "Module doesn't have the configuration.";
+      }
+      return fmt::format("Unknown error: {}.", static_cast<int>(realm_status));
+    }();
+
     throw TracedException<ConfigurationError>{
-      fmt::format("Realm failed to set {}->{} to value {} (from flag {}).",
+      fmt::format("Realm failed to set module configuration. Module: {} Configuration: {} Value: "
+                  "{} (from flag {}). {}",
                   module_name,
                   property_name,
                   value,
-                  arg.flag())};
+                  arg.flag(),
+                  error_detail)};
   }
 }
 

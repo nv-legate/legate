@@ -13,6 +13,8 @@
 
 #include <realm/module_config.h>
 
+#include <fmt/core.h>
+
 namespace legate::detail {
 
 namespace {
@@ -29,9 +31,19 @@ void configure_gpus_impl(bool auto_config,
     std::int32_t auto_gpus = 0;
 
     // use all available GPUs
-    if (!cuda->get_resource("gpu", auto_gpus)) {
+    if (auto realm_status = cuda->get_resource("gpu", auto_gpus); realm_status != REALM_SUCCESS) {
+      if (realm_status == REALM_MODULE_CONFIG_ERROR_INVALID_NAME) {
+        throw TracedException<AutoConfigurationError>{
+          "CUDA Realm module is not configured for GPUs."};
+      }
+      if (realm_status == REALM_MODULE_CONFIG_ERROR_NO_RESOURCE) {
+        throw TracedException<AutoConfigurationError>{
+          "CUDA Realm module could not determine the number of GPUs."};
+      }
       throw TracedException<AutoConfigurationError>{
-        "CUDA Realm module could not determine the number of GPUs."};
+        fmt::format("CUDA Realm module encountered an unknown error while determining the number "
+                    "of GPUs, error {}.",
+                    static_cast<int>(realm_status))};
     }
     gpus->value_mut() = auto_gpus;
   } else {

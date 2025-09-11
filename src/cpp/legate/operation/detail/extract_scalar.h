@@ -19,41 +19,6 @@
 
 #include <vector>
 
-// Doxygen chokes on this with
-//
-// /src/cpp/legate/operation/detail/extract_scalar.h:34: error: documented symbol 'void
-// Legion::LegionSerialization::end_task< UntypedDeferredValue>' was not declared or defined.
-//
-// Because it thinks we are documenting a symbol we defined somewhere else (we aren't).
-#ifndef DOXYGEN
-namespace Legion {
-
-// Legion defines this specialization for DeferredValue<T> but not UntypedDeferredValue. This
-// is likely a mistake, since calling `result.finalize()` on its own seems to work. Trying to
-// use the normal Legion::LegionTaskWrapper::task_wrapper mechanisms lead to
-//
-// [0 - 17064b000] 0.388027 {5}{runtime}: LEGION ERROR: Task legate::detail::(anonymous
-// namespace)::ExtractScalar (UID 19) used a task variant with a maximum return size of 1 but
-// returned a result of 8 bytes. (from file /legion-src/runtime/legion/legion_tasks.cc:4626)
-//
-// Because it incorrectly computes the return size based on sizeof(UntypedDeferredValue).
-//
-// This is fixed by
-// https://gitlab.com/StanfordLegion/legion/-/commit/1be420ecad2167fda7d1879ea8f17eeed1e43fed,
-// but until we bump Legion for that hash, we define it ourselves here. If and when we do bump,
-// we should get compile errors from duplicate definitions, so we'll know to remove this.
-template <bool FINAL>
-struct LegionSerialization::NonPODSerializer<UntypedDeferredValue, false, FINAL> {
-  static void end_task(Context ctx, UntypedDeferredValue* result) { result->finalize(ctx); }
-
-  static Future from_value(const UntypedDeferredValue*) { std::abort(); }
-
-  static UntypedDeferredValue unpack(const Future&, bool, const char*) { std::abort(); }
-};
-
-}  // namespace Legion
-#endif
-
 namespace legate::detail {
 
 class ExtractScalar : public LegionTask<ExtractScalar> {

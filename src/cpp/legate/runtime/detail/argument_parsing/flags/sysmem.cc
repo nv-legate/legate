@@ -8,9 +8,12 @@
 
 #include <legate/runtime/detail/argument_parsing/argument.h>
 #include <legate/runtime/detail/argument_parsing/exceptions.h>
+#include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <realm/module_config.h>
+
+#include <fmt/core.h>
 
 #include <cmath>
 #include <cstddef>
@@ -44,9 +47,18 @@ void configure_sysmem(bool auto_config,
 
   std::size_t res_sysmem_size{};
 
-  if (!core.get_resource("sysmem", res_sysmem_size)) {
+  if (auto realm_status = core.get_resource("sysmem", res_sysmem_size);
+      realm_status != REALM_SUCCESS) {
+    // system memory must be available
+    LEGATE_CHECK(realm_status != REALM_MODULE_CONFIG_ERROR_INVALID_NAME);
+    if (realm_status == REALM_MODULE_CONFIG_ERROR_NO_RESOURCE) {
+      throw TracedException<AutoConfigurationError>{
+        "Core Realm module could not determine the available system memory."};
+    }
     throw TracedException<AutoConfigurationError>{
-      "Core Realm module could not determine the available system memory."};
+      fmt::format("Core Realm module encountered an unknown error while determining the available "
+                  "system memory, error {}.",
+                  static_cast<int>(realm_status))};
   }
 
   constexpr double SYSMEM_FRACTION = 0.8;

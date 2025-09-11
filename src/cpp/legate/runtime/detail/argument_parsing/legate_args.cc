@@ -155,7 +155,7 @@ void autoconfigure(ParsedArgs* args, Config* config)
   std::vector<std::size_t> numa_mems{};
 
   if (const auto* numa_mod = rt.get_module_config("numa")) {
-    if (!numa_mod->get_resource("numa_mems", numa_mems)) {
+    if (numa_mod->get_resource("numa_mems", numa_mems) != REALM_SUCCESS) {
       // Some kind of error happened during NUMA detection, so pretend like we don't have any
       // NUMA memory
       numa_mems.clear();

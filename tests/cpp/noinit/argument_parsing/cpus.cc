@@ -41,11 +41,14 @@ class MockCoreModuleConfig : public Realm::ModuleConfig {
   MockCoreModuleConfig(std::int32_t num_cpus, bool should_fail)
     : ModuleConfig{"mock_core"}, num_cpus_{num_cpus}
   {
-    resource_discover_finished = true;
+    // this will make it return error REALM_MODULE_CONFIG_ERROR_NO_RESOURCE when
+    // get_resource is called
+    resource_discover_finished = false;
     if (!should_fail) {
       const auto inserted = resource_map.insert({"cpu", &num_cpus_}).second;
 
       LEGATE_CHECK(inserted);
+      resource_discover_finished = true;
     }
   }
 

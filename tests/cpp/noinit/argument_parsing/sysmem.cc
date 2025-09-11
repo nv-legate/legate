@@ -42,11 +42,14 @@ class MockCoreModuleConfig : public Realm::ModuleConfig {
   MockCoreModuleConfig(std::size_t sysmem_size, bool should_fail)
     : ModuleConfig{"mock_core"}, sysmem_size_{sysmem_size}
   {
-    resource_discover_finished = true;
+    // this will make it return error REALM_MODULE_CONFIG_ERROR_NO_RESOURCE when
+    // get_resource is called
+    resource_discover_finished = false;
     if (!should_fail) {
       const auto inserted = resource_map.insert({"sysmem", &sysmem_size_}).second;
 
       LEGATE_CHECK(inserted);
+      resource_discover_finished = true;
     }
   }
 

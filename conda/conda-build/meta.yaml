@@ -163,10 +163,11 @@ requirements:
     - {{ compiler('cuda') }}
     # cupti is only in the build section for headers, not in the host section
     - cuda-cupti-dev
-    # Cufile an NVML are not detected by our build system if we don't list them here
+    # Cufile, NVML and NVTX not detected by our build system if we don't list them here
     # because of the include directory structure.
     - libcufile-dev
     - cuda-nvml-dev
+    - cuda-nvtx-dev
 {% endif %}
 
   # Libraries and header files (C/C++).

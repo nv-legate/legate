@@ -25,8 +25,15 @@ if(NOT SOURCES)
   message(FATAL_ERROR "Must pass non-empty source list (have ${SOURCES})")
 endif()
 
+# Legion is not found by CPMFindPackage in legeate-dependencies.cmake as Legion is trying
+# to find Realm. So we need to manually set the CPM_Legion_SOURCE and some Legion flags.
 execute_process(COMMAND ${CMAKE_COMMAND} -S "${ROOT_DIR}" -B "${BUILD_DIR}"
                         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --fresh
+                        -Dlegate_DIR=${LEGATE_BUILD_DIR}
+                        -DLegion_DIR=${LEGATE_BUILD_DIR}/_deps/legion-build
+                        -DCPM_Legion_SOURCE=${LEGATE_BUILD_DIR}/_deps/legion-src
+                        -DLegion_REDOP_COMPLEX=ON -DLegion_REDOP_HALF=ON
+                        -DLegion_USE_CUDA=${legate_USE_CUDA}
                 WORKING_DIRECTORY "${ROOT_DIR}"
                 OUTPUT_VARIABLE output
                 ERROR_VARIABLE output
