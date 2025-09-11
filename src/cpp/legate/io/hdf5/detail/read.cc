@@ -138,7 +138,7 @@ class HDF5ReadFn {
 
     // Otherwise, we need to read into a bounce buffer
     const auto total_count = shape.volume();
-    auto bounce_buffer     = create_buffer<DTYPE>(total_count, Memory::Z_COPY_MEM);
+    auto bounce_buffer     = create_buffer<std::byte>(total_count * type_size, Memory::Z_COPY_MEM);
     auto* const ptr        = bounce_buffer.ptr(0);
     auto stream            = context.get_task_stream();
 

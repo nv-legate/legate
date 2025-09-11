@@ -1228,17 +1228,23 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
   std::stringstream req_ss;
 
   if (redop > GlobalRedopID{0}) {
-    req_ss << "reduction (" << legate::detail::to_underlying(redop) << ") requirement(s) ";
+    req_ss << "reduction (" << legate::detail::to_underlying(redop) << ") requirement(s)";
   } else {
-    req_ss << "region requirement(s) ";
+    req_ss << "region requirement(s)";
   }
-  req_ss << fmt::format("{}", mapping.requirement_indices());
 
-  logger().error() << "Failed to allocate " << footprint << " bytes on memory " << std::hex
-                   << target_memory.id << std::dec << " (of kind "
-                   << Legion::Mapping::Utilities::to_string(target_memory.kind()) << ") for "
-                   << req_ss.str() << " of " << log_mappable(mappable, true /*prefix_only*/)
-                   << opname << "[" << provenance << "] (UID " << mappable.get_unique_id() << ")";
+  logger().error() << fmt::format(
+    "Failed to allocate {} bytes on memory {:x} (of kind {}) for {} {} of {}{}[{}] (UID {})",
+    fmt::group_digits(footprint),
+    target_memory.id,
+    Legion::Mapping::Utilities::to_string(target_memory.kind()),
+    req_ss.str(),
+    mapping.requirement_indices(),
+    log_mappable(mappable, true /*prefix_only*/),
+    opname,
+    provenance,
+    mappable.get_unique_id());
+
   for (const Legion::RegionRequirement* req : mapping.requirements()) {
     for (const Legion::FieldID fid : req->instance_fields) {
       logger().error() << "  corresponding to a LogicalStore allocated at "
@@ -1983,6 +1989,14 @@ void BaseMapper::select_tasks_to_map(Legion::Mapping::MapperContext ctx,
     if (want_debug) {
       logger().debug() << "SELECT_TASKS_TO_MAP: processing "
                        << Legion::Mapping::Utilities::to_string(runtime, ctx, *task);
+    }
+
+    // Singleton tasks can always be selected immediately, even if they are potentially
+    // streaming tasks, because by definition their column size will always be exactly 1.
+    if (!task->is_index_space) {
+      logger().debug() << "-- singleton task, mapping immediately";
+      map_tasks.insert(task);
+      continue;
     }
 
     if (const auto stream_gen = Mappable::deserialize_only_streaming_generation(*task);

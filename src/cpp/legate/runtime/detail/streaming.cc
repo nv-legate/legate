@@ -38,6 +38,29 @@ void StreamingGeneration::pack(BufferBuilder& buffer) const
 namespace {
 
 /**
+ * @brief Determine whether a task will be launched as a singleton task.
+ *
+ * Due to the fact that the launch domain is not known for AutoTask's before the task is
+ * launched, this function can only definitively say whether a task will be a singleton task
+ * for ManualTask's.
+ *
+ * @param task The task to check.
+ *
+ * @return `true` if the task will definitely be a singleton task, `false` if not.
+ */
+[[nodiscard]] bool is_singleton_task(const Task& task)
+{
+  if (task.kind() != Operation::Kind::MANUAL_TASK) {
+    // Cannot yet predict launch domain of AutoTask.
+    return false;
+  }
+
+  const auto& domain = static_cast<const ManualTask&>(task).launch_domain();
+
+  return domain.get_dim() == 1 && domain.get_volume() == 1;
+}
+
+/**
  * @brief For a particular task, determine if argument was discarded and fixup the discard
  * privileges if so.
  *
@@ -212,7 +235,20 @@ void scan_task_discards(
       // 2. task(B) -> gen 2
       // 3. task(C) -> no gen
       LEGATE_CHECK(!finalized_generation);
-      ++generation_size;
+      // Manual tasks whose launch domain is exactly {1} will be launched as singleton tasks
+      // (not to be confused with index tasks whose launch volume is 1), and therefore won't be
+      // considered part of a streaming generation.
+      //
+      // There is special handling for this in `BaseMapper::select_tasks_to_map()`. Any
+      // singleton (non-index) tasks are immediately selected for mapping, and do not
+      // participate in the usual vertical scheduling business.
+      //
+      // Therefore it is *absolutely necessary* that we do not bump the generation size
+      // here. If we do, then any index launches in the same generation will be stuck waiting
+      // for this task to schedule because it was counted as part of the generation size.
+      if (!is_singleton_task(*task)) {
+        ++generation_size;
+      }
     }
 
     scan_task_discards(task, &discard_regions, &discard_ops);
@@ -314,6 +350,13 @@ void assign_streaming_generation(std::uint32_t generation_size,
       }
       break;
     }
+
+    if (is_singleton_task(*task)) {
+      // Singleton tasks don't participate in streaming generation analysis. See
+      // `BaseMapper::select_tasks_to_map()` for further discussion.
+      continue;
+    }
+
     last_set_it = rit;
     task->set_streaming_generation({{streaming_generation, generation_size}});
   }

@@ -203,6 +203,12 @@ void to_file(const LogicalArray& array,
   const auto vds_dir_scal = Scalar{vds_dir.native()};
   const auto dset_scal    = Scalar{dataset_name};
 
+  // This dummy argument exists because the HDF5CombineVDS task requires that all the separate
+  // VDS files have been written to disk first. We want to make it as small as possible because
+  // this argument -- by virtue of being an input to a task with a launch domain of 1 -- will
+  // be gathered to a single node by legion.
+  const auto dummy_data_dependence = runtime->create_store(Scalar{bool{}});
+
   {
     auto task = runtime->create_task(experimental::io::detail::core_io_library(),
                                      detail::HDF5WriteVDS::TASK_CONFIG.task_id());
@@ -210,30 +216,13 @@ void to_file(const LogicalArray& array,
     task.add_scalar_arg(vds_dir_scal);
     task.add_scalar_arg(dset_scal);
     task.add_input(array);
+    task.add_reduction(dummy_data_dependence, ReductionOpKind::ADD);
     // The point of no return. Once we submit the task, the user will be unable to potentially
     // catch any exceptions thrown by the task, so wait until this moment to actually create the
     // directories (because HDF5 will error if the base directory doesn't exist).
     std::filesystem::create_directories(vds_dir);
     runtime->submit(std::move(task));
   }
-
-  // NOTE(jfaibussowit)
-  // We must issue an execution fence here because the subsequent stitching task requires that
-  // all the separate VDS files have been written to disk first. *Technically* we could enforce
-  // this with a dummy data-dependency, but because the below task is a singleton task, this
-  // won't work in streaming scopes (which currently still require all tasks to have the same
-  // launch domains).
-  //
-  // An alternative would be to only issue the fence if we're in a streaming scope (and use
-  // data dependency otherwise), but this seems like a big change to the semantics of the
-  // task. It would be weird then to a future reader to see the "input" inside the task but
-  // never use it.
-  //
-  // Another alternative would be to make the stitching task be an index launch where all index
-  // points except the first do nothing. But that's very inefficient.
-  //
-  // It's not clear to me what the best solution here is.
-  runtime->issue_execution_fence();
 
   auto task = runtime->create_task(experimental::io::detail::core_io_library(),
                                    detail::HDF5CombineVDS::TASK_CONFIG.task_id(),
@@ -245,6 +234,7 @@ void to_file(const LogicalArray& array,
     array.extents()  // This blocks
   });
   task.add_scalar_arg(dset_scal);
+  task.add_input(dummy_data_dependence);
 
   runtime->submit(std::move(task));
 }

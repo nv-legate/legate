@@ -15,8 +15,15 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from legate.core import LogicalArray, Type, get_legate_runtime, types as ty
-from legate.io.hdf5 import from_file, from_file_batched
+from legate.core import (
+    LogicalArray,
+    ParallelPolicy,
+    Scope,
+    Type,
+    get_legate_runtime,
+    types as ty,
+)
+from legate.io.hdf5 import from_file, from_file_batched, to_file
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -178,6 +185,30 @@ def test_from_file_batched_invalid_chunk_dim(tmp_path: Path) -> None:
         # order to trigger the error checks.
         for _ in from_file_batched(filename, dataset_name, chunk_size):
             pytest.fail("Should never actually iterate the generator")
+
+
+@pytest.mark.parametrize("shape", [(1,), (2, 2), (3, 4, 5)])
+@pytest.mark.parametrize("dtype", [ty.int32, ty.int16, ty.float32, ty.float16])
+def test_array_write(
+    tmp_path: Path, shape: tuple[int, ...], dtype: Type
+) -> None:
+    runtime = get_legate_runtime()
+
+    filename = tmp_path / "test-file.hdf5"
+    dataset_name = "foo"
+
+    with Scope(
+        parallel_policy=ParallelPolicy(streaming=True, overdecompose_factor=8)
+    ):
+        array = runtime.create_array(dtype=dtype, shape=shape)
+        runtime.issue_fill(array, 1)
+
+        to_file(array=array, path=filename, dataset_name=dataset_name)
+        # del is deliberate here, we need the array to be destroyed and emit
+        # the discard inside the streaming scope.
+        del array
+
+    runtime.issue_execution_fence(block=True)
 
 
 if __name__ == "__main__":

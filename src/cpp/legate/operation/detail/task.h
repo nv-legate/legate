@@ -259,6 +259,13 @@ class ManualTask final : public Task {
                      std::int32_t redop_kind,
                      std::optional<SymbolicPoint> projection);
 
+  /**
+   * @brief Get the launch domain for this ManualTask.
+   *
+   * @return The launch domain for the task.
+   */
+  [[nodiscard]] const Domain& launch_domain() const;
+
  private:
   /**
    * @brief Add a store as an argument to the `ManualTask`

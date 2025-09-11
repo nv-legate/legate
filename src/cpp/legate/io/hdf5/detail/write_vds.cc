@@ -142,20 +142,20 @@ class HDF5WriteFn {
         write_hdf5_file(filepath, sizes, dataset_name, type, gds_on, ptr);
       } else {
         // ...otherwise we need to copy to a temporary buffer on the host first
-        const auto size     = shape.volume();
-        auto tmp            = create_buffer<T>(size, Memory::Z_COPY_MEM);
-        auto* const tmp_ptr = tmp.ptr(0);
-        auto stream         = context.get_task_stream();
-        auto&& api          = cuda::detail::get_cuda_driver_api();
-
+        const auto size = shape.volume();
         // If we are copying binary data, then sizeof(*tmp_ptr) will give us sizeof(std::byte),
         // but that's not correct since the underlying binary data might be arbitrarily
         // sized. So we need to use the type size.
         //
         // If not using binary type, type.size() and sizeof(*tmp_ptr) should be equivalent, but
         // we use sizeof() as it's faster.
-        api->mem_cpy_async(
-          tmp_ptr, ptr, size * (BINARY_TYPE ? type.size() : sizeof(*tmp_ptr)), stream);
+        const auto type_size = BINARY_TYPE ? type.size() : sizeof(*ptr);
+        auto tmp             = create_buffer<std::byte>(size * type_size, Memory::Z_COPY_MEM);
+        auto* const tmp_ptr  = tmp.ptr(0);
+        auto stream          = context.get_task_stream();
+        auto&& api           = cuda::detail::get_cuda_driver_api();
+
+        api->mem_cpy_async(tmp_ptr, ptr, size * type_size, stream);
         // Need to synchronize here before we pass to HDF5
         api->stream_synchronize(stream);
 

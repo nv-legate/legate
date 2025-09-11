@@ -252,7 +252,19 @@ void Task::legion_launch_(Strategy* strategy_ptr)
     valid_launch &&
     (has_projection(inputs_) || has_projection(outputs_) || has_projection(reductions_)));
 
-  if (valid_launch) {
+  // No need to execute an index launch if launch domain is 1. Note that under streaming scopes
+  // this is not just an optimization, this is a requirement. Singleton tasks do not
+  // participate in vertical scheduling, and are not part of a streaming generation. If they
+  // were launched as index tasks, it could potentially cause hangs as
+  // `BaseMapper::select_tasks_to_map()` would try to wait for additional leaf tasks for it to
+  // be scheduled.
+  //
+  // Note, we want to isolate launches with exactly a launch domain of {1}. Presumably, if a
+  // user is launching with a shape of {1, 1, 1} (whose volume is still 1), then they intend to
+  // make use of the shape itself, and we should still do an index launch.
+  const auto is_trivial_single_launch = launch_domain.get_dim() == 1 && launch_volume == 1;
+
+  if (valid_launch && !is_trivial_single_launch) {
     auto result = launcher.execute(launch_domain);
 
     if (launch_volume > 1) {
@@ -637,6 +649,8 @@ ManualTask::ManualTask(const Library& library,
 {
   strategy_.set_launch_domain(*this, launch_domain);
 }
+
+const Domain& ManualTask::launch_domain() const { return strategy_.launch_domain(*this); }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
 {
