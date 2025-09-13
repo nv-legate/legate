@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+command script import share/legate/lldb/smallvec_formatter.py
+
+type synthetic add --python-class smallvec_formatter.SmallVectorChildrenProvider -x "^legate::detail::SmallVector<.*>$"
+type summary add --expand -F smallvec_formatter.smallvector_summary_formatter -x "^legate::detail::SmallVector<.*>$"
