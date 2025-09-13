@@ -13,3 +13,4 @@ Developer Documentation
    Style <style>
    Running the Test Suite <testing>
    Code Linting <linting>
+   Debugging <debugging>
