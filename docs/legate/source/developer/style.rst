@@ -438,3 +438,22 @@ Misc
         // in an inconsistent state and the program cannot continue.
         LEGATE_CHECK(dim > 0);
       }
+
+#. Inline literal arguments (such as literal numbers or ``true``/ ``false`` constants)
+   should always have an inline comment with the argument name they refer to, except when
+   the intent is "obvious". Of course "what is obvious" is a whole other exercise in
+   bike-shedding of its own, but when in doubt err on the side of caution:
+
+   .. code-block:: cpp
+
+      // GOOD: obvious
+      foo.set_dim(4);
+      foo.is_cached(true);
+
+      // GOOD: labeled arguments
+      foo.create_bar(..., /* dim */ 5);
+      foo.to_string(/* provenance */ true);
+
+      // BAD: not obvious what the arguments refer to
+      foo.create_bar(..., 5);
+      foo.to_string(true);
