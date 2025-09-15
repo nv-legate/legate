@@ -214,7 +214,6 @@ function(legate_add_external_tidy_target)
                             -DSOURCES="${absolute_sources}" #
                             -DSED="${LEGATE_SED}" #
                             -DLEGATE_BUILD_DIR="${CMAKE_BINARY_DIR}" #
-                            -Dlegate_USE_CUDA="${legate_USE_CUDA}" #
                             -P "${LEGATE_CMAKE_DIR}/scripts/external_clang_tidy.cmake" #
                     COMMENT "clang-tidy ${rel_root_dir}")
   add_dependencies(tidy "${tidy_target}")

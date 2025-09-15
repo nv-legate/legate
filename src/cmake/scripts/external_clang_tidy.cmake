@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
-foreach(var ROOT_DIR BUILD_DIR CLANG_TIDY SED SOURCES)
+foreach(var ROOT_DIR BUILD_DIR CLANG_TIDY SED SOURCES LEGATE_BUILD_DIR)
   if(NOT DEFINED ${var})
     message(FATAL_ERROR "Must pass ${var}")
   endif()
@@ -30,10 +30,6 @@ endif()
 execute_process(COMMAND ${CMAKE_COMMAND} -S "${ROOT_DIR}" -B "${BUILD_DIR}"
                         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --fresh
                         -Dlegate_DIR=${LEGATE_BUILD_DIR}
-                        -DLegion_DIR=${LEGATE_BUILD_DIR}/_deps/legion-build
-                        -DCPM_Legion_SOURCE=${LEGATE_BUILD_DIR}/_deps/legion-src
-                        -DLegion_REDOP_COMPLEX=ON -DLegion_REDOP_HALF=ON
-                        -DLegion_USE_CUDA=${legate_USE_CUDA}
                 WORKING_DIRECTORY "${ROOT_DIR}"
                 OUTPUT_VARIABLE output
                 ERROR_VARIABLE output

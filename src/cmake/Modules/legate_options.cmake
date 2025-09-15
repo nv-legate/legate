@@ -120,6 +120,7 @@ unset(legion_networks)
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)
   legate_setting(GASNet_CONDUIT CONDUIT "Default GASNet conduit" "mpi")
+  option(Legion_USE_GASNETEX_WRAPPER "Enable gasnetex wrapper" OFF)
 
   if(NOT GASNet_ROOT_DIR)
     legate_option(Legion_EMBED_GASNet LEGION_EMBED_GASNET
@@ -171,3 +172,14 @@ endif()
 legate_option(legate_BUILD_MPI_WRAPPER LEGATE_BUILD_MPI_WRAPPER
               "Build the Legate MPI shim library" ${build_mpi_wrapper})
 unset(build_mpi_wrapper)
+
+if(LEGATE_BUILD_PIP_WHEELS)
+  set(cuda_dyn_load OFF)
+elseif(BUILD_SHARED_LIBS)
+  set(cuda_dyn_load ON)
+else()
+  set(cuda_dyn_load OFF)
+endif()
+
+option(Legion_CUDA_DYNAMIC_LOAD "Load CUDA libraries at runtime" ${cuda_dyn_load})
+unset(cuda_dyn_load)

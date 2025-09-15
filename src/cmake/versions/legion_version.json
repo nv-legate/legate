@@ -22,12 +22,6 @@
                     "fixed_in": "",
                     "issue": "legion half",
                     "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_realm_cmake_targets.diff",
-                    "fixed_in": "",
-                    "issue": "legion hdf5",
-                    "required": true
                 }
             ],
             "version": "25.10.0"

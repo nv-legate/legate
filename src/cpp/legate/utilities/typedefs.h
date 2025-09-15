@@ -408,20 +408,6 @@ namespace detail {
 
 }  // namespace legate
 
-// Until Realm does this for us, we declare this here
-namespace std {
-
-template <>
-struct hash<legate::Memory> {
-  [[nodiscard]] std::size_t operator()(const legate::Memory& mem) const noexcept
-  {
-    using id_type = decltype(mem.id);
-    return std::hash<id_type>{}(mem.id);
-  }
-};
-
-}  // namespace std
-
 // backwards-compat workaround, should not use
 [[deprecated("since 24.11: using legate::VariantCode::CPU instead")]] inline constexpr auto
   LEGATE_CPU_VARIANT = legate::VariantCode::CPU;

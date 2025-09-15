@@ -107,6 +107,11 @@
                     "nargs": 0
                 }
             },
+            "find_or_configure_realm": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "find_or_configure_span": {
                 "pargs": {
                     "nargs": 0

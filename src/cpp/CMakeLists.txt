@@ -123,6 +123,11 @@ macro(_legate_find_python3)
 endmacro()
 
 # ########################################################################################
+# * Realm -------------------------------------------------------------------
+
+legate_find_or_configure(PACKAGE Realm)
+
+# ########################################################################################
 # * Legion -------------------------------------------------------------------
 
 if(Legion_USE_Python)
@@ -653,7 +658,7 @@ foreach(target legate_obj legate)
   target_link_libraries("${target}" PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>)
 
   target_link_libraries("${target}"
-                        PUBLIC libcudacxx::libcudacxx Legion::Legion
+                        PUBLIC libcudacxx::libcudacxx Realm::Realm Legion::Legion
                         PRIVATE $<COMPILE_ONLY:fmt::fmt-header-only>
                                 $<COMPILE_ONLY:argparse::argparse> kvikio::kvikio
                                 cpptrace::cpptrace)

@@ -84,8 +84,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   rapids_cpm_find(Legion "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
-                  GLOBAL_TARGETS Legion::Realm Legion::Regent Legion::Legion
-                                 Legion::RealmRuntime Legion::LegionRuntime
+                  GLOBAL_TARGETS Legion::Regent Legion::Legion Legion::LegionRuntime
                   CPM_ARGS ${legion_cpm_git_args}
                            # HACK: Legion headers contain *many* warnings, but we would
                            # like to build with -Wall -Werror. But there is a work-around.
@@ -113,11 +112,6 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           "CMAKE_INSTALL_INCLUDEDIR ${legate_DEP_INSTALL_INCLUDEDIR}"
                           "INSTALL_SUFFIX -legate"
                           "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON")
-
-  # The legion_cuhook library lacks support for setting an install suffix.
-  if(TARGET realm_cuhook)
-    set_target_properties(realm_cuhook PROPERTIES OUTPUT_NAME realm-cuhook-legate)
-  endif()
 
   legate_export_variables(Legion)
   set(Legion_VERSION "${version}" PARENT_SCOPE)
