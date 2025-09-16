@@ -19,7 +19,9 @@ constexpr Legion::PrivilegeMode operator|=(Legion::PrivilegeMode& lhs, Legion::P
 
 constexpr Legion::PrivilegeMode operator|(Legion::PrivilegeMode lhs, Legion::PrivilegeMode rhs)
 {
-  return Legion::PrivilegeMode{to_underlying(lhs) | to_underlying(rhs)};
+  return Legion::PrivilegeMode{
+    to_underlying(lhs) |  // NOLINT(clang-analyzer-optin.core.EnumCastOutOfRange)
+    to_underlying(rhs)};  // NOLINT(clang-analyzer-optin.core.EnumCastOutOfRange)
 }
 
 constexpr bool has_privilege(Legion::PrivilegeMode priv, Legion::PrivilegeMode target)

@@ -67,17 +67,7 @@ std::uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
                                               const StoreProjection& store_proj,
                                               Legion::FieldID field_id) const
 {
-  // `ProjectionSet::insert()` strips out the discard-output mask from all incoming
-  // privileges. The mask is added back in `FieldSet::populate_launcher()`.
-  //
-  // The resulting (possibly promoted) privilege will then either be:
-  //
-  // 1. The privilege, unchanged, if all privileges were the same.
-  // 2. LEGION_READ_WRITE, if some of the privileges had a different type.
-  //
-  // So we must strip the privilege off here as well.
-  privilege = ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK);
-  for (auto priv : {privilege, LEGION_READ_WRITE}) {
+  for (auto priv : {privilege, LEGION_READ_WRITE, LEGION_READ_WRITE | LEGION_DISCARD_OUTPUT_MASK}) {
     if (const auto it = req_indices_.find({{priv, store_proj}, field_id});
         it != req_indices_.end()) {
       return it->second;
@@ -91,9 +81,14 @@ void FieldSet::coalesce()
   std::size_t num_fields = 0;
 
   for (const auto& [field_id, proj_set] : field_projs_) {
-    const auto priv            = proj_set.privilege();
+    auto priv                  = proj_set.privilege();
     const auto proj_set_is_key = proj_set.is_key();
     const auto had_discard     = proj_set.had_streaming_discard();
+
+    // We need to coalesce fields with DISCARD flag as a separate Legion Region Requirement
+    if (had_discard) {
+      priv |= LEGION_DISCARD_OUTPUT_MASK;
+    }
 
     for (const auto& store_proj : proj_set.store_projs()) {
       auto& [fields, is_key, has_streaming_discard] = coalesced_[{priv, store_proj}];
