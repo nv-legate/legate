@@ -21,7 +21,7 @@
 {% set git_shallow = environ.get('LEGION_GIT_SHALLOW', true) %}
 {% set git_describe_hash = environ.get('LEGATE_GIT_DESCRIBE_HASH', '0') %}
 
-{% set cuda_version='.'.join(environ.get('CUDA', '12.2.2').split('.')[:2]) %}
+{% set cuda_version=environ.get('CUDA_VERSION', '12.2.2') %}
 {% set cuda_major=cuda_version.split('.')[0]|int %}
 {% set py_version=environ.get('CONDA_PY', 36) %}
 
@@ -38,7 +38,7 @@ build:
   include_recipe: false
   number: 0
   skip: true  # [not linux]
-  string: {{ git_describe_hash }}{{ cpu_gpu_tag }}
+  string: {{ git_describe_hash }}
   script_env:
     - LIBCLANG_PATH=$BUILD_PREFIX/lib
   {% if gpu_enabled_bool %}
@@ -62,7 +62,6 @@ requirements:
     - cuda-cupti-dev
     - cuda-nvtx-dev
     - cuda-nvml-dev
-    - cuda-cupti-dev
     - cuda-version ={{ cuda_version }}
     {% endif %}
   host:

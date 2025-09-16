@@ -58,6 +58,8 @@ setup_profiler() {
   export LEGATE_GIT_DESCRIBE_TAG="${TAG}"
   export LEGATE_GIT_DESCRIBE_NUMBER="${COUNT}"
   export LEGATE_GIT_DESCRIBE_HASH="g${HASH_SHORT}"
+  LEGATE_VERSION="$(cat "${REPO_DIR}/VERSION")"
+  export LEGATE_VERSION
 
   export CONDA_ROOT="/tmp/conda-croot/legate-profiler"
   export CONDA_OUTPUT="/tmp/conda-build/legate-profiler"

@@ -20,7 +20,6 @@ jobs:
           - linux
           - linux-aarch64
         target-device:
-          - gpu
           - cpu
         python-version:
           - "3.13"

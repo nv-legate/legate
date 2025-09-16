@@ -2,7 +2,7 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 ---
-name: Build conda Nightly release and legate profiler packages
+name: Build conda Nightly release legate packages
 
 on:
   workflow_dispatch:

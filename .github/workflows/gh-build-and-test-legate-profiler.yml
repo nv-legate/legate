@@ -49,7 +49,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       legate-gh-ci-tag: "v1.39"
-      build-mode: ""
+      build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
@@ -64,7 +64,7 @@ jobs:
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.39
     with:
-      build-mode: ""
+      build-mode: release
       build-type: profiler
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
