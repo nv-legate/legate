@@ -1856,16 +1856,18 @@ void set_env_vars()
       fmt::format("Legion Runtime failed to start, error code: {}", result)};
   }
 
+  auto& runtime = Runtime::get_runtime();
+
   // Get the runtime now that we've started it
   auto* const legion_context =
     Legion::Runtime::get_runtime()->begin_implicit_task(CoreTask::TOPLEVEL,
-                                                        0 /*mapper id*/,
+                                                        runtime.mapper_id(),
                                                         Processor::LOC_PROC,
                                                         TOPLEVEL_NAME,
                                                         true /*control replicable*/);
 
   // We can now initialize the Legate runtime with the Legion context
-  Runtime::get_runtime().initialize(legion_context);
+  runtime.initialize(legion_context);
 }
 
 void Runtime::start_profiling_range()
