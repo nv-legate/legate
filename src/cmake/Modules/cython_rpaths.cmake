@@ -60,7 +60,7 @@ function(legate_populate_dependency_rpaths_editable ret_val)
   list(APPEND CMAKE_MESSAGE_CONTEXT "editable")
 
   set(legate_cython_rpaths)
-  set(legate_targets legate::legate Legion::LegionRuntime Legion::RealmRuntime)
+  set(legate_targets legate::legate Legion::LegionRuntime Realm::Realm)
   if(TARGET hdf5_vfd_gds)
     list(APPEND legate_targets hdf5_vfd_gds)
   endif()

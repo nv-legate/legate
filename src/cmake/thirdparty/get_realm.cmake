@@ -28,6 +28,7 @@ function(find_or_configure_realm)
   rapids_cpm_find(Realm "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
+                  GLOBAL_TARGETS Realm::Realm
                   CPM_ARGS
                   GIT_SHALLOW "${git_shallow}"
                   GIT_REPOSITORY "${git_url}" SYSTEM TRUE
