@@ -108,6 +108,7 @@ repos:
           types-psutil,
           rich,
           h5py,
+          nvidia-ml-py,
           "dask[distributed]",
           "git+https://github.com/nv-legate/aedifix@1.10.0"
         ]

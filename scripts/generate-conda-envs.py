@@ -79,7 +79,7 @@ class CUDAConfig(SectionConfig):
         deps = (
             f"cuda-version={drop_patch(self.ctk_version)}",  # runtime
             "nccl",  # runtime
-            "pynvml",  # tests
+            "nvidia-ml-py",  # tests
         )
 
         if V(self.ctk_version) < (12, 0, 0):
@@ -244,7 +244,7 @@ class TestsConfig(SectionConfig):
             "mypy>=0.961",
             "pre-commit",
             "psutil",
-            "pynvml",
+            "nvidia-ml-py",
             "pytest-cov",
             "pytest-mock",
             "pytest",

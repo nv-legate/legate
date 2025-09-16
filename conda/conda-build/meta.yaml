@@ -203,7 +203,7 @@ requirements:
     - numpy {{ numpy_version }}
     - zarr <3
     - zstd
-    - pynvml
+    - nvidia-ml-py
     - {{ openmp_lib }}
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}

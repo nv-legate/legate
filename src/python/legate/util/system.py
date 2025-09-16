@@ -86,7 +86,7 @@ class System:
             #
             # But pynvml may or may not be installed, and so the suggested
             # narrower error code ends up being wrong half the time.
-            import pynvml  # type: ignore[import, unused-ignore]  # noqa: PLC0415
+            import pynvml  # type: ignore[import-untyped] # noqa: PLC0415
 
             # Also a pynvml package is available on some platforms that won't
             # have GPUs for some reason. In which case this init call will
@@ -96,10 +96,8 @@ class System:
             if platform.system() == "Darwin":
                 msg = "GPU execution is not available on OSX."
                 raise RuntimeError(msg)
-            msg = (
-                "GPU detection failed. Make sure nvml and pynvml are "
-                "both installed."
-            )
+            msg = "GPU detection failed. Make sure nvml and pynvml are "
+            "both installed."
             raise RuntimeError(msg)
 
         num_gpus = pynvml.nvmlDeviceGetCount()
