@@ -180,7 +180,7 @@ class BuildConfig(SectionConfig):
             # requires using the conda-forge compilers.
             pkgs += ("openmpi<5",)
         if self.ucx:
-            pkgs += ("ucx>=1.16",)
+            pkgs += ("ucx>=1.16", "ucc")
         if self.sanitizers:
             pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
         if self.os == "linux":
