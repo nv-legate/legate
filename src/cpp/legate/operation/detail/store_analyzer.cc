@@ -144,6 +144,10 @@ void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& re
       has_streaming_discard ? privilege | LEGION_DISCARD_OUTPUT_MASK : privilege,
       is_key);
 
+    if (has_privilege(privilege, LEGION_WRITE_ONLY) && has_streaming_discard) {
+      req.add_flags(LEGION_SUPPRESS_WARNINGS_FLAG);
+    }
+
     task->region_requirements.emplace_back(std::move(req));
   }
 }
