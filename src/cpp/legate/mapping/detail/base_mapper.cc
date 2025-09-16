@@ -140,6 +140,13 @@ void populate_input_collective_regions(
   const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
   std::set<unsigned>* check_collective_regions)
 {
+  // Collective region is an optimization that will not impact correctness. This renders
+  // the task as not streamable and hence is being turned off when the task is inside
+  // a streaming section.
+  if (const auto stream_gen = Mappable::deserialize_only_streaming_generation(legion_task);
+      stream_gen.has_value()) {
+    return;
+  }
   const auto hi          = legion_task.index_domain.hi();
   const auto lo          = legion_task.index_domain.lo();
   const auto task_volume = legion_task.index_domain.get_volume();
@@ -174,6 +181,13 @@ void populate_reduction_collective_regions(
   const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
   std::set<unsigned>* check_collective_regions)
 {
+  // Collective region is an optimization that will not impact correctness. This renders
+  // the task as not streamable and hence is being turned off when the task is inside
+  // a streaming section.
+  if (const auto stream_gen = Mappable::deserialize_only_streaming_generation(legion_task);
+      stream_gen.has_value()) {
+    return;
+  }
   for (auto&& array : legate_task.reductions()) {
     for (auto&& store : get_stores(*array)) {
       if (store->is_future()) {
