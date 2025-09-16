@@ -9,6 +9,7 @@
 
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/macros.h>
@@ -16,7 +17,6 @@
 #include <fmt/format.h>
 #include <fmt/std.h>
 
-#include <algorithm>
 #include <cctype>
 #include <dlfcn.h>
 #include <filesystem>
@@ -110,14 +110,9 @@ namespace {
 {
   constexpr auto lib_name =
     ZStringView{LEGATE_SHARED_LIBRARY_PREFIX "legate_mpi_wrapper" LEGATE_SHARED_LIBRARY_SUFFIX};
-  constexpr auto is_not_space = [](unsigned char ch) { return !std::isspace(ch); };
 
-  auto ret = LEGATE_MPI_WRAPPER.get(/* default_value */ lib_name.as_string_view());
+  auto ret = string_strip(LEGATE_MPI_WRAPPER.get(/* default_value */ lib_name.as_string_view()));
 
-  // lstrip
-  ret.erase(ret.begin(), std::find_if(ret.begin(), ret.end(), is_not_space));
-  // rstrip
-  ret.erase(std::find_if(ret.rbegin(), ret.rend(), is_not_space).base(), ret.end());
   if (ret.empty()) {
     // If the user passes LEGATE_MPI_WRAPPER='', default to the default wrapper name
     ret = lib_name.as_string_view();

@@ -8,9 +8,9 @@
 
 #include <legate/comm/detail/logger.h>
 #include <legate/mapping/detail/base_mapper.h>
-#include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/cpp_version.h>
+#include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/typedefs.h>
 

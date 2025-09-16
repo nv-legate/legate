@@ -9,13 +9,9 @@
 #include <legate/utilities/span.h>
 
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace legate::detail {
-
-template <typename StringType = std::string>
-[[nodiscard]] std::vector<StringType> string_split(std::string_view command, char sep = ' ');
 
 /**
  * @return `true` when Legate is being invoked as a multi-node job, `false` otherwise.

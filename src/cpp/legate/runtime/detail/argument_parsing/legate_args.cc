@@ -21,6 +21,7 @@
 #include <legate/runtime/detail/config.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <realm/runtime.h>

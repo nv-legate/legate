@@ -12,6 +12,7 @@
 #include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/env_defaults.h>
+#include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/typedefs.h>
 #include <legate/version.h>
@@ -91,12 +92,6 @@ bool ParseBoolArg::operator()(std::string_view value) const
   return dest_;
 }
 
-[[nodiscard]] std::string string_tolower(std::string s)
-{
-  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
-  return s;
-}
-
 bool ParseBoolArg::do_parse_(std::string_view value)
 {
   if (value.empty()) {
@@ -104,7 +99,7 @@ bool ParseBoolArg::do_parse_(std::string_view value)
     return true;
   }
 
-  const auto equal_to_value = [lo = string_tolower(std::string{value})](std::string_view val) {
+  const auto equal_to_value = [lo = string_to_lower(std::string{value})](std::string_view val) {
     return val == lo;
   };
   constexpr std::string_view truthy_values[] = {"1", "t", "true", "y", "yes"};
