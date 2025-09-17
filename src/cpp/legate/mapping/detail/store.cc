@@ -72,6 +72,8 @@ Store::Store(Legion::Mapping::MapperRuntime& runtime,
 
 bool Store::valid() const { return is_future() || unbound() || region_field().valid(); }
 
+bool Store::transformed() const { return transform_ && !transform_->identity(); }
+
 bool Store::can_colocate_with(const Store& other) const
 {
   if (is_future() || other.is_future()) {

@@ -38,7 +38,6 @@ void Attach::launch()
                 "Don't use to_string() below");
   launcher.provenance                               = provenance().to_string();
   launcher.constraints.ordering_constraint.ordering = ordering_->generate_legion_dims(dim_);
-  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_F);
   launcher.constraints.field_constraint.field_set =
     std::vector<Legion::FieldID>{region_field_->field_id()};
   launcher.constraints.field_constraint.contiguous = false;

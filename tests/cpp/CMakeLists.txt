@@ -119,6 +119,8 @@ set(with_runtime_SRC
     bug/premature_free.cc
     bug/remap_double_detach.cc
     bug/singleton_index_task.cc
+    bug/projection_c_order.cc
+    bug/transpose_c_order.cc
     bug/transpose_fortran_order.cc
     bug/temporary_logical_store.cc
     bug/string_physical_array_owner.cc

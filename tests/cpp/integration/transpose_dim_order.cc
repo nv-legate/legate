@@ -231,9 +231,6 @@ INSTANTIATE_TEST_SUITE_P(TransposeDimOrder, TransposeDimOrder, ::testing::Values
 
 TEST_P(TransposeDimOrder, Transpose2D)
 {
-  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
-    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
-  }
   auto store               = make_store<2>();
   const bool fortran_order = GetParam();
   store                    = store.transpose({1, 0});
@@ -242,9 +239,6 @@ TEST_P(TransposeDimOrder, Transpose2D)
 
 TEST_P(TransposeDimOrder, Transpose2DTwice)
 {
-  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
-    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
-  }
   auto store               = make_store<2>();
   const bool fortran_order = GetParam();
   store                    = store.transpose({1, 0}).transpose({1, 0});
@@ -253,9 +247,6 @@ TEST_P(TransposeDimOrder, Transpose2DTwice)
 
 TEST_P(TransposeDimOrder, Transpose3D)
 {
-  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
-    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
-  }
   auto store               = make_store<3>();
   const bool fortran_order = GetParam();
   store                    = store.transpose({2, 1, 0});
@@ -264,9 +255,6 @@ TEST_P(TransposeDimOrder, Transpose3D)
 
 TEST_P(TransposeDimOrder, PromoteTranspose)
 {
-  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
-    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
-  }
   auto store               = make_store<2>();
   const bool fortran_order = GetParam();
   store                    = store.promote(1, Z_LEN).transpose({0, 2, 1});
@@ -275,9 +263,6 @@ TEST_P(TransposeDimOrder, PromoteTranspose)
 
 TEST_P(TransposeDimOrder, ProjectTranspose)
 {
-  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
-    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
-  }
   auto store               = make_store<3>();
   const bool fortran_order = GetParam();
   store                    = store.project(1, 0).transpose({1, 0});
@@ -286,9 +271,6 @@ TEST_P(TransposeDimOrder, ProjectTranspose)
 
 TEST_P(TransposeDimOrder, DelinearizeTranspose)
 {
-  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
-    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
-  }
   auto store               = make_store<2>();
   const bool fortran_order = GetParam();
   // factorize Y_LEN into two factors
@@ -301,21 +283,14 @@ TEST_P(TransposeDimOrder, DelinearizeTranspose)
 
 TEST_P(TransposeDimOrder, EmptyNoTransform)
 {
-  if (!LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
-    GTEST_SKIP() << "Disabled due to LEGATE_ENABLE_INVERT_DIMS being disabled";
-  }
   auto runtime             = legate::Runtime::get_runtime();
   auto store               = runtime->create_store(legate::Shape{}, legate::int64());
   const bool fortran_order = GetParam();
   launch_task_with_store<TaskEmptyNoTransform>(store, fortran_order);
 }
 
-// TODO(amberhassaan): uncomment this test when
-// https://github.com/nv-legate/legate.internal/issues/2417
-// is fixed.
 TEST_P(TransposeDimOrder, EmptyPromoteTranspose)
 {
-  GTEST_SKIP() << "Disable until https://github.com/nv-legate/legate.internal/issues/2417 is fixed";
   auto runtime             = legate::Runtime::get_runtime();
   auto store               = runtime->create_store(legate::Shape{}, legate::int64());
   const bool fortran_order = GetParam();

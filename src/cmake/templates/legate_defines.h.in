@@ -37,13 +37,6 @@
 
 #cmakedefine LEGATE_USE_MPI @LEGATE_USE_MPI@
 
-/*
- * TODO(amberhassaan): Remove this flag when
- * https://github.com/nv-legate/cupynumeric.internal/issues/703
- * is resolved
- */
-#cmakedefine LEGATE_ENABLE_INVERT_DIMS @LEGATE_ENABLE_INVERT_DIMS@
-
 #define LEGATE_SHARED_LIBRARY_SUFFIX "@CMAKE_SHARED_LIBRARY_SUFFIX@"
 
 #define LEGATE_SHARED_LIBRARY_PREFIX "@CMAKE_SHARED_LIBRARY_PREFIX@"
