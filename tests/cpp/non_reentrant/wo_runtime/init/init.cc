@@ -6,8 +6,10 @@
 
 #include <legate.h>
 
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/scope_guard.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace runtime_init_test {
@@ -16,11 +18,21 @@ class RuntimeInitUnit : public ::testing::Test {};
 
 TEST_F(RuntimeInitUnit, GetRuntime)
 {
+  ASSERT_THAT([&] { static_cast<void>(legate::detail::Runtime::get_runtime()); },
+              ::testing::ThrowsMessage<std::runtime_error>(::testing::HasSubstr(
+                "Must call legate::start() before retrieving the Legate runtime.")));
   ASSERT_NO_THROW(legate::start());
   ASSERT_EQ(legate::finish(), 0);
   ASSERT_TRUE(legate::has_finished());
   ASSERT_FALSE(legate::has_started());
-  EXPECT_THROW(static_cast<void>(legate::Runtime::get_runtime()), std::runtime_error);
+  ASSERT_THAT(
+    [&] { static_cast<void>(legate::Runtime::get_runtime()); },
+    ::testing::ThrowsMessage<std::runtime_error>(::testing::HasSubstr(
+      "Legate runtime has not been initialized. Please invoke legate::start to use the runtime")));
+  ASSERT_THAT([&] { static_cast<void>(legate::detail::Runtime::get_runtime()); },
+              ::testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("Legate runtime has been finalized, and cannot be "
+                                     "re-initialized without restarting the program.")));
   ASSERT_TRUE(legate::has_finished());
   ASSERT_FALSE(legate::has_started());
 }

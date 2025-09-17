@@ -243,6 +243,20 @@ TEST_F(Library, VariantOptions)
   ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
 }
 
+TEST_F(Library, CreateNegative)
+{
+  constexpr std::string_view LIBNAME = "test_library.create_negative";
+
+  auto* runtime = legate::Runtime::get_runtime();
+  auto lib      = runtime->create_library(LIBNAME);
+
+  ASSERT_EQ(lib.get_library_name(), LIBNAME);
+
+  ASSERT_THAT([&] { static_cast<void>(runtime->create_library(LIBNAME)); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr(fmt::format("Library {} already exists", LIBNAME))));
+}
+
 }  // namespace test_library
 
 namespace example {

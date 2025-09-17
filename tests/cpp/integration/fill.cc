@@ -86,9 +86,10 @@ INSTANTIATE_TEST_SUITE_P(FillTests,
 template <std::int32_t DIM>
 /*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input       = context.input(0);
-  auto shape       = input.shape<DIM>();
-  const auto value = context.scalar(0).value<std::int64_t>();
+  auto input           = context.input(0);
+  auto shape           = input.shape<DIM>();
+  const auto value     = context.scalar(0).value<std::int64_t>();
+  const auto null_mask = context.scalar(1).value<bool>();
 
   if (shape.empty()) {
     return;
@@ -105,7 +106,7 @@ template <std::int32_t DIM>
 
   auto mask_acc = input.null_mask().read_accessor<bool, DIM>(shape);
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-    EXPECT_EQ(mask_acc[*it], true);
+    EXPECT_EQ(mask_acc[*it], null_mask);
   }
 }
 
@@ -163,7 +164,7 @@ template <std::int32_t DIM>
   std::memcpy(acc.ptr(0), scalar.ptr(), scalar.size());
 }
 
-void check_output(const legate::LogicalArray& array, const legate::Scalar& value)
+void check_output(const legate::LogicalArray& array, const legate::Scalar& value, bool null_mask)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
@@ -172,6 +173,7 @@ void check_output(const legate::LogicalArray& array, const legate::Scalar& value
     context, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_TASK) + array.dim()});
   task.add_input(array);
   task.add_scalar_arg(value);
+  task.add_scalar_arg(legate::Scalar{null_mask});
   runtime->submit(std::move(task));
 }
 
@@ -220,7 +222,7 @@ void test_fill_index(std::int32_t dim, std::uint64_t size, bool nullable)
   runtime->issue_fill(lhs, v);
 
   // check the result of fill
-  check_output(lhs, v);
+  check_output(lhs, v, /*null_mask*/ true);
 }
 
 void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool task_init)
@@ -293,6 +295,92 @@ TEST_P(Slice, Index)
 }
 
 TEST_F(FillTests, Invalid) { test_invalid(); }
+
+TEST_F(FillTests, FillNullableArrayWithScalar)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), /*nullable*/ true);
+  const auto value = legate::Scalar{};
+
+  runtime->issue_fill(array, value);
+  check_output(array, legate::Scalar{int64_t{0}}, /*null_mask*/ false);
+}
+
+TEST_F(FillTests, FillNullableArrayWithStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), /*nullable*/ true);
+  const auto value = runtime->create_store(legate::null_type());
+
+  runtime->issue_fill(array, value);
+  check_output(array, legate::Scalar{int64_t{0}}, /*null_mask*/ false);
+}
+
+TEST_F(FillTests, FillUnboundStoreWithScalar)
+{
+  auto runtime     = legate::Runtime::get_runtime();
+  auto store       = runtime->create_store(legate::int64());
+  const auto value = legate::Scalar{10};
+
+  ASSERT_THAT([&] { runtime->issue_fill(store, value); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Fill lhs must be a normal store")));
+}
+
+TEST_F(FillTests, FillUnboundStoreWithStore)
+{
+  auto runtime     = legate::Runtime::get_runtime();
+  auto store       = runtime->create_store(legate::int64());
+  const auto value = runtime->create_store(legate::int64());
+
+  ASSERT_THAT([&] { runtime->issue_fill(store, value); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Fill lhs must be a normal store")));
+}
+
+TEST_F(FillTests, FillStructArrayWithScalar)
+{
+  auto runtime      = legate::Runtime::get_runtime();
+  auto struct_array = runtime->create_array(legate::struct_type(true, legate::int64()));
+  const auto value  = legate::Scalar{10};
+
+  ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },
+              ::testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("Fills on list or struct arrays are not supported yet")));
+}
+
+TEST_F(FillTests, FillStructArrayWithStore)
+{
+  auto runtime      = legate::Runtime::get_runtime();
+  auto struct_array = runtime->create_array(legate::struct_type(true, legate::int64()));
+  const auto value  = runtime->create_store(legate::int64());
+
+  ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },
+              ::testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("Fills on list or struct arrays are not supported yet")));
+}
+
+TEST_F(FillTests, FillArrayWithNullScalar)
+{
+  auto runtime     = legate::Runtime::get_runtime();
+  auto array       = runtime->create_array(legate::int64());
+  const auto value = legate::Scalar{};
+
+  ASSERT_THAT([&] { runtime->issue_fill(array, value); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Non-nullable arrays cannot be filled with null")));
+}
+
+TEST_F(FillTests, FillArrayWithNullStore)
+{
+  auto runtime     = legate::Runtime::get_runtime();
+  auto array       = runtime->create_array(legate::int64());
+  const auto value = runtime->create_store(legate::null_type());
+
+  ASSERT_THAT([&] { runtime->issue_fill(array, value); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Non-nullable arrays cannot be filled with null")));
+}
 
 // NOLINTEND(readability-magic-numbers)
 
