@@ -8,7 +8,7 @@
 
 #include <legate/utilities/detail/doxygen.h>
 
-#ifndef LEGATE_CHECK_ENV_VAR_DOCS
+#ifndef LEGATE_CHECK_ENV_VAR_DOCS  // legate-lint: no-legate-defined
 #define LEGATE_CHECK_ENV_VAR_DOCS(name) static_assert(true)
 #endif
 

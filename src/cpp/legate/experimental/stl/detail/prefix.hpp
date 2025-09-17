@@ -30,7 +30,7 @@
 #undef requires
 #endif
 
-#if !LEGATE_STL_CONCEPTS()
+#if !LEGATE_DEFINED(LEGATE_STL_CONCEPTS)
 #define requires LEGATE_STL_REQUIRES  // NOLINT
 #endif
 

@@ -23,9 +23,9 @@
 #define LEGATE_STL_DETAIL_CONFIG_INCLUDED
 
 #ifdef __cpp_concepts
-#define LEGATE_STL_CONCEPTS() 1
+#define LEGATE_STL_CONCEPTS 1
 #else
-#define LEGATE_STL_CONCEPTS() 0
+#define LEGATE_STL_CONCEPTS 0
 #endif
 
 #define LEGATE_STL_EAT(...)
@@ -47,7 +47,7 @@
 //     LEGATE_STL_REQUIRES(Fooable<A> && Barable<B>)
 //   void foobar(A a, B b) { ... }
 //
-#if LEGATE_DEFINED(LEGATE_STL_CONCEPTS())
+#if LEGATE_DEFINED(LEGATE_STL_CONCEPTS)
 #define LEGATE_STL_REQUIRES requires
 #else
 #define LEGATE_STL_REQUIRES LEGATE_STL_EAT
@@ -59,12 +59,12 @@
 #if __has_include(<ranges>) && \
   (defined(__cpp_lib_ranges) && __cpp_lib_ranges >= 201911L) && \
   (!LEGATE_DEFINED(LEGATE_CLANG) || __clang_major__ >= 16 || defined(_LIBCPP_VERSION))
-#define LEGATE_STL_HAS_STD_RANGES() 1
+#define LEGATE_STL_HAS_STD_RANGES 1
 #else
-#define LEGATE_STL_HAS_STD_RANGES() 0
+#define LEGATE_STL_HAS_STD_RANGES 0
 #endif
 
-#ifndef LEGATE_STL_UNSPECIFIED
+#ifndef LEGATE_STL_UNSPECIFIED  // legate-lint: no-legate-defined
 #if LEGATE_DEFINED(LEGATE_DOXYGEN)
 #define LEGATE_STL_UNSPECIFIED(...) implementation - defined
 #else

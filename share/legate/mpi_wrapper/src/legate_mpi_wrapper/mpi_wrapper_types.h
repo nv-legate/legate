@@ -5,7 +5,7 @@
 
 // Must use C-isms here since mpi_wrapper.cc might be compiled by C compiler
 // NOLINTBEGIN
-#ifndef LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H
+#ifndef LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H  // legate-lint: no-legate-defined
 #define LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H
 
 #include <stddef.h>

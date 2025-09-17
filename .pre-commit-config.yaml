@@ -147,11 +147,12 @@ repos:
       - id: legate-defined
         name: legate-defined
         description: 'Find uses of ifdef LEGATE_ that should be using LegateDefined()'
-        entry: ./scripts/pre-commit/legate_defined.sh
-        language: script
-        'types_or': [c++, c, cuda]
+        entry: ./scripts/pre-commit/legate_defined.py
+        language: python
+        types_or: [c++, c, cuda]
         stages: [pre-commit]
-        exclude: '^(src/cpp/legate/experimental/stl/detail/config\.hpp|src/cpp/legate/utilities/compiler\.h|share/legate/mpi_wrapper/.*|src/cpp/legate/utilities/env.h)$'
+        additional_dependencies:
+          - rich
       - id: no-default
         name: no-default
         description: "Ban the use of default: in switch statements"

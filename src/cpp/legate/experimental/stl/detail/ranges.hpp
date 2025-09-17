@@ -10,7 +10,7 @@
 #include <legate/experimental/stl/detail/meta.hpp>
 #include <legate/experimental/stl/detail/type_traits.hpp>
 
-#if LEGATE_STL_HAS_STD_RANGES()
+#if LEGATE_DEFINED(LEGATE_STL_HAS_STD_RANGES)
 
 #include <ranges>
 

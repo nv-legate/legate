@@ -13,7 +13,12 @@ if TYPE_CHECKING:
 def is_in_comment(re_match: Match) -> bool:
     string = re_match.string
     prev_end = re_match.start()
-    line_begin = string.rindex("\n", 0, prev_end) + 1
+    try:
+        line_begin = string.rindex("\n", 0, prev_end) + 1
+    except ValueError:
+        # ValueError: substring not found, means we are on the first line of
+        # the file
+        line_begin = 0
     line_prefix = string[line_begin:prev_end]
     return line_prefix.lstrip().startswith(("//", "/*", "*"))
 

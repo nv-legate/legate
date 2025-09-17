@@ -4,7 +4,7 @@
  */
 // NOLINTBEGIN
 // Must use C-isms here since mpi_wrapper.cc might be compiled by C compiler
-#ifndef LEGATE_SHARE_LEGATE_MPI_WRAPPER_H
+#ifndef LEGATE_SHARE_LEGATE_MPI_WRAPPER_H  // legate-lint: no-legate-defined
 #define LEGATE_SHARE_LEGATE_MPI_WRAPPER_H
 
 #include <legate_mpi_wrapper/mpi_wrapper_types.h>
@@ -12,7 +12,7 @@
 // Set by Legate CMake if we are building with networks but without MPI. In this case, legate
 // just needs this header to be include-able, but doesn't care about symbol visibility because
 // it will never attempt to load the symbols.
-#ifdef LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER
+#ifdef LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER  // legate-lint: no-legate-defined
 #define LEGATE_MPI_WRAPPER_EXPORT
 #else
 #include <legate_mpi_wrapper/legate_mpi_wrapper_exports.h>
