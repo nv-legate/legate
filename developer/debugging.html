@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Debugging Legate Programs &#8212; NVIDIA legate (25.10.00.dev17+gc9f9f6075)</title>
+    <title>Debugging Legate Programs &#8212; NVIDIA legate (25.10.00.dev25+g0c3f5e019)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=2ed4a080"></script>
+    <script src="../_static/documentation_options.js?v=5f22d633"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,7 +62,7 @@ SPDX-License-Identifier: Apache-2.0
     <link rel="icon" href="../_static/favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="GASNet-based Installation" href="../gasnet.html" />
+    <link rel="next" title="Dimension Ordering" href="dimension_ordering.html" />
     <link rel="prev" title="Code Linting" href="linting.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev17+gc9f9f6075) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev17+gc9f9f6075) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev17+gc9f9f6075)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev25+g0c3f5e019)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev17+gc9f9f6075) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev17+gc9f9f6075) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev17+gc9f9f6075)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev25+g0c3f5e019)</p>
   
 </a>
 
@@ -598,6 +598,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Running the Test Suite</a></li>
 <li class="toctree-l2"><a class="reference internal" href="linting.html">Code Linting</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimension_ordering.html">Dimension Ordering</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="../gasnet.html">GASNet-based Installation</a></li>
@@ -668,6 +669,8 @@ and <code class="docutils literal notranslate"><span class="pre">share/legate/ll
 <p>Pretty printers for GDB on Darwin/macOS are not currently supported.</p>
 </div>
 <p>The pretty printers support the following types:
+- <code class="docutils literal notranslate"><span class="pre">legate::InternalSharedPtr</span></code>
+- <code class="docutils literal notranslate"><span class="pre">legate::SharedPtr</span></code>
 - <code class="docutils literal notranslate"><span class="pre">legate::detail::SmallVector</span></code></p>
 <section id="usage">
 <h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
@@ -690,6 +693,8 @@ are listed under the <code class="docutils literal notranslate"><span class="pre
 global<span class="w"> </span>pretty-printers:
 <span class="w">  </span>...
 <span class="w">  </span>legate
+<span class="w">    </span>InternalSharedPtr
+<span class="w">    </span>SharedPtr
 <span class="w">    </span>SmallVector
 <span class="w">  </span>...
 </pre></div>
@@ -739,11 +744,11 @@ legate::detail::SmallVector&lt;.*&gt;:<span class="w">  </span>Python<span class
       </div>
     </a>
     <a class="right-next"
-       href="../gasnet.html"
+       href="dimension_ordering.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">GASNet-based Installation</p>
+        <p class="prev-next-title">Dimension Ordering</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
