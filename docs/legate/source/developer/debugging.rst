@@ -18,6 +18,8 @@ and ``share/legate/lldb`` directories, respectively.
    Pretty printers for GDB on Darwin/macOS are not currently supported.
 
 The pretty printers support the following types:
+- ``legate::InternalSharedPtr``
+- ``legate::SharedPtr``
 - ``legate::detail::SmallVector``
 
 Usage
@@ -50,6 +52,8 @@ are listed under the ``legate`` category:
    global pretty-printers:
      ...
      legate
+       InternalSharedPtr
+       SharedPtr
        SmallVector
      ...
 
