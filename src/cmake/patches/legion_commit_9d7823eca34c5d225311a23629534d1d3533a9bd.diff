@@ -1,0 +1,70 @@
+diff --git a/runtime/legion/legion_analysis.cc b/runtime/legion/legion_analysis.cc
+index b742d4865..070d274aa 100644
+--- a/runtime/legion/legion_analysis.cc
++++ b/runtime/legion/legion_analysis.cc
+@@ -14151,7 +14151,7 @@ namespace Legion {
+         }
+       }
+       // If we're doing a read-discard then we can invalidate the state
+-      if (IS_READ_DISCARD(analysis.usage))
++      if (IS_OUTPUT_DISCARD(analysis.usage))
+         invalidate_state(expr, expr_covers, user_mask, false/*record*/);
+     }
+ 
+diff --git a/runtime/legion/legion_tasks.cc b/runtime/legion/legion_tasks.cc
+index 48397b9c2..b65e8037f 100644
+--- a/runtime/legion/legion_tasks.cc
++++ b/runtime/legion/legion_tasks.cc
+@@ -11981,7 +11981,7 @@ namespace Legion {
+       for (unsigned idx = 0; idx < regions.size(); idx++)
+       {
+         const RegionRequirement &req = regions[idx];
+-        if (!IS_WRITE(req))
++        if (!IS_WRITE(req) && !IS_OUTPUT_DISCARD(req))
+           continue;
+         // If the projection functions are invertible then we don't have to 
+         // worry about interference because the runtime knows how to hook
+diff --git a/runtime/legion/legion_utilities.h b/runtime/legion/legion_utilities.h
+index 55d6f0f5a..bb3f48ff4 100644
+--- a/runtime/legion/legion_utilities.h
++++ b/runtime/legion/legion_utilities.h
+@@ -41,9 +41,9 @@
+ #define IS_WRITE_DISCARD(req) \
+   (((req).privilege & (LEGION_WRITE_ONLY | LEGION_DISCARD_INPUT_MASK)) \
+    == (LEGION_WRITE_PRIV | LEGION_DISCARD_INPUT_MASK))
+-#define IS_READ_DISCARD(req) \
+-  (((req).privilege & (LEGION_READ_PRIV | LEGION_DISCARD_OUTPUT_MASK)) \
+-   == (LEGION_READ_PRIV | LEGION_DISCARD_OUTPUT_MASK))
++#define IS_OUTPUT_DISCARD(req) \
++    (((req).privilege & LEGION_DISCARD_OUTPUT_MASK) \
++        == LEGION_DISCARD_OUTPUT_MASK)
+ #define FILTER_DISCARD(req) \
+   ((req).privilege & ~(LEGION_DISCARD_INPUT_MASK | LEGION_DISCARD_OUTPUT_MASK))
+ #define IS_COLLECTIVE(req) \
+@@ -300,7 +300,7 @@ namespace Legion {
+       if (IS_READ_ONLY(u1) && IS_READ_ONLY(u2))
+       {
+         // Two readers are never a dependence unless the second is discarding
+-        if (READ_DISCARD_EXCLUSIVE && IS_READ_DISCARD(u2))
++        if (READ_DISCARD_EXCLUSIVE && IS_OUTPUT_DISCARD(u2))
+           return LEGION_TRUE_DEPENDENCE;
+         else
+           return LEGION_NO_DEPENDENCE;
+diff --git a/runtime/legion/runtime.cc b/runtime/legion/runtime.cc
+index 9c2fe1e06..d9c944953 100644
+--- a/runtime/legion/runtime.cc
++++ b/runtime/legion/runtime.cc
+@@ -19019,9 +19019,10 @@ namespace Legion {
+       // requirement so we'll detect that case that specially and handle
+       // it here inside the runtime since we control the implementation of
+       // the identity projection function
+-      const bool find_dependences = IS_WRITE(req) && !IS_COLLECTIVE(req) &&
+-        !replaying && (is_invertible || ((projection_id == 0) && 
+-                           (req.handle_type == LEGION_REGION_PROJECTION)));
++      const bool find_dependences = ((IS_WRITE(req) && !IS_COLLECTIVE(req)) ||
++          IS_OUTPUT_DISCARD(req)) && !replaying &&
++        (is_invertible || ((projection_id == 0) &&
++                          (req.handle_type == LEGION_REGION_PROJECTION)));
+       // Can skip pointwise analysis if we're replaying
+       if (replaying)
+         pointwise_dependences = NULL;

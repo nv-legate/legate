@@ -1,0 +1,26 @@
+diff --git a/runtime/legion/legion_tasks.cc b/runtime/legion/legion_tasks.cc
+index b543a579badc972289e44f5710cebf11927c3a71..2c48f12b9208471df6faeef265b87062eac13efa 100644
+--- a/runtime/legion/legion_tasks.cc
++++ b/runtime/legion/legion_tasks.cc
+@@ -682,7 +682,8 @@ namespace Legion {
+       for (unsigned idx = 0; idx < logical_regions.size(); idx++)
+       {
+         const RegionRequirement &req = logical_regions[idx];
+-        if (req.privilege != LEGION_NO_ACCESS && req.privilege_fields.empty())
++        if ((req.privilege != LEGION_NO_ACCESS && req.privilege_fields.empty())
++            && ((req.flags & LEGION_SUPPRESS_WARNINGS_FLAG) == 0))
+           REPORT_LEGION_WARNING(LEGION_WARNING_REGION_REQUIREMENT_TASK,
+                            "REGION REQUIREMENT %d OF "
+                            "TASK %s (ID %lld) HAS NO PRIVILEGE "
+@@ -695,8 +696,9 @@ namespace Legion {
+             "qualifier with read-only privilege which will result in "
+             "undefined behavior, therefore this privilege combination is "
+             "disallowed.", idx, get_task_name(), get_unique_id())
+-        if (IS_WRITE_ONLY(req) && ((req.privilege & LEGION_DISCARD_OUTPUT_MASK)
+-              == LEGION_DISCARD_OUTPUT_MASK))
++        if ((IS_WRITE_ONLY(req) && ((req.privilege & LEGION_DISCARD_OUTPUT_MASK)
++              == LEGION_DISCARD_OUTPUT_MASK)) &&
++            ((req.flags & LEGION_SUPPRESS_WARNINGS_FLAG) == 0))
+           REPORT_LEGION_WARNING(LEGION_WARNING_REGION_REQUIREMENT_TASK,
+             "Region requirement %d of %s (UID %lld) combined output-discard "
+             "qualifier with write-only privilege which means this region is "
