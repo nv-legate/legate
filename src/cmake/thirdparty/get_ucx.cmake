@@ -9,6 +9,9 @@ function(find_or_configure_ucx)
   list(APPEND CMAKE_MESSAGE_CONTEXT "ucx")
 
   # Try to find UCX using rapids_find_package.
-  rapids_find_package(ucx REQUIRED BUILD_EXPORT_SET legate-exports
-                      INSTALL_EXPORT_SET legate-exports)
+  #
+  # Do not add UCX to the build or install export set. It is a private dependency, so
+  # downstream users do not need to know about it (except for transitive link
+  # dependencies).
+  rapids_find_package(ucx REQUIRED)
 endfunction()
