@@ -10,7 +10,7 @@ from pathlib import Path
 # make printers available to script
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from legate_printers import sharedptr_printer, smallvec_printer
+from legate_printers import sharedptr_printer, smallvec_printer, span_printer
 
 import gdb
 from gdb.printing import RegexpCollectionPrettyPrinter
@@ -21,6 +21,7 @@ def build_pretty_printer() -> RegexpCollectionPrettyPrinter:
     pp = RegexpCollectionPrettyPrinter("legate")
     smallvec_printer.register_printer(pp)
     sharedptr_printer.register_printer(pp)
+    span_printer.register_printer(pp)
     return pp
 
 
