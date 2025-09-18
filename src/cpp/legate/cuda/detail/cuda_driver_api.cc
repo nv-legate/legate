@@ -109,6 +109,24 @@ namespace legate::cuda::detail {
 
 namespace {
 
+[[noreturn]] void throw_null_driver_request(std::string_view fn_name)
+{
+  throw legate::detail::TracedException<std::runtime_error>{fmt::format(
+    "cuGetProcAddress returned null {} function pointers for CUDA 12.x and 13.x. "
+    "Please validate your CUDA driver has these symbols and are load-able via cuGetProcAddress.",
+    fn_name)};
+}
+
+[[noreturn]] void abort_null_driver_fn(std::string_view fn_name)
+{
+  LEGATE_ABORT(fmt::format("{} function pointers "
+                           "are null but expected to be non-null. Driver loading "
+                           "checks at least one function pointer is non-null."
+                           "This indicates checks are incorrect or "
+                           "function pointers were modified after driver loading."),
+               fn_name);
+}
+
 template <typename F>
 void load_dlsym_function(void* handle, const char name[], F** dest)
 {
@@ -123,7 +141,9 @@ void load_dlsym_function(void* handle, const char name[], F** dest)
 using cuGetProcAddressT = CUresult (*)(const char*, void**, int, std::uint64_t);
 
 [[nodiscard]] void* load_cu_driver_function_impl(cuGetProcAddressT cu_get_proc_address,
-                                                 const char driver_function[])
+                                                 const char driver_function[],
+                                                 int cuda_version,
+                                                 bool can_fail)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     const auto df_sv = std::string_view{driver_function};
@@ -149,9 +169,9 @@ using cuGetProcAddressT = CUresult (*)(const char*, void**, int, std::uint64_t);
   // seems incorrect.
   void* ret = nullptr;  // NOLINT(misc-const-correctness)
   const auto error =
-    cu_get_proc_address(driver_function, &ret, LEGATE_CUDA_VERSION, CU_GET_PROC_ADDRESS_DEFAULT);
+    cu_get_proc_address(driver_function, &ret, cuda_version, CU_GET_PROC_ADDRESS_DEFAULT);
 
-  if (error || !ret) {
+  if (!can_fail && (error || !ret)) {
     throw legate::detail::TracedException<std::runtime_error>{
       fmt::format("Failed to load the symbol {} from the CUDA driver shared library: {}",
                   driver_function,
@@ -163,10 +183,12 @@ using cuGetProcAddressT = CUresult (*)(const char*, void**, int, std::uint64_t);
 template <typename F>
 void load_cu_driver_function(cuGetProcAddressT cu_get_proc_address,
                              const char driver_function[],
-                             F** dest_function)
+                             F** dest_function,
+                             int cuda_version,
+                             bool can_fail)
 {
-  *dest_function =
-    reinterpret_cast<F*>(load_cu_driver_function_impl(cu_get_proc_address, driver_function));
+  *dest_function = reinterpret_cast<F*>(
+    load_cu_driver_function_impl(cu_get_proc_address, driver_function, cuda_version, can_fail));
 }
 
 }  // namespace
@@ -184,16 +206,74 @@ void CUDADriverAPI::read_symbols_()
   // ...then get the rest through it. We do this to make sure we are always loading the latest
   // version of the API with which we are compatible.
 
-#define LOAD_CU_DRIVER_FUNCTION(get_proc_address_, CU_FUNCTION, OUR_FUNCTION)           \
-  do {                                                                                  \
-    /* This decltype trick is needed because referencing member objects (even if */     \
-    /* just for the  purposes of deducing their type) is not considered a core */       \
-    /* constant expression, since the member objects themselves would depend on the */  \
-    /* address of the this pointer. So we get around this by creating a new function */ \
-    /* pointer object of the same type. */                                              \
-    CHECK_ABI_COMPATIBLE(CU_FUNCTION, std::decay_t<decltype(*(OUR_FUNCTION))>{});       \
-    /* Don't use LEGATE_STRINGIZE(), we don't want the CU_FUNCTION macro to expand */   \
-    load_cu_driver_function(get_proc_address_, #CU_FUNCTION, OUR_FUNCTION);             \
+// helper macro hacks for conditional compilation
+#define LEGATE_IF(cond) LEGATE_IF_##cond
+#define LEGATE_IF_0(t, f) f
+#define LEGATE_IF_1(t, f) t
+
+#define LEGATE_EAT(...)
+#define LEGATE_EXPAND(...) __VA_ARGS__
+#define LEGATE_WHEN(cond) LEGATE_IF(cond)(LEGATE_EXPAND, LEGATE_EAT)
+
+#if LEGATE_CUDA_VERSION >= 13000
+#define LEGATE_CU12 0
+#define LEGATE_CU13 1
+#elif (LEGATE_CUDA_VERSION >= 12000)
+#define LEGATE_CU12 1
+#define LEGATE_CU13 0
+#endif
+
+/**
+ * @brief Load a CUDA driver function via cuGetProcAddress using current CUDA version.
+ *
+ * @param get_proc_address_ Function pointer to cuGetProcAddress from the CUDA driver
+ * @param CU_FUNCTION The base name of the CUDA driver API function to load
+ * @param OUR_FUNCTION Address of the function pointer to write the function pointer to
+ */
+#define LOAD_CU_DRIVER_FUNCTION(get_proc_address_, CU_FUNCTION, OUR_FUNCTION)                    \
+  do {                                                                                           \
+    /* This decltype trick is needed because referencing member objects (even if */              \
+    /* just for the  purposes of deducing their type) is not considered a core */                \
+    /* constant expression, since the member objects themselves would depend on the */           \
+    /* address of the this pointer. So we get around this by creating a new function */          \
+    /* pointer object of the same type. */                                                       \
+    CHECK_ABI_COMPATIBLE(CU_FUNCTION, std::decay_t<decltype(*(OUR_FUNCTION))>{});                \
+    /* Don't use LEGATE_STRINGIZE(), we don't want the CU_FUNCTION macro to expand */            \
+    load_cu_driver_function(                                                                     \
+      get_proc_address_, #CU_FUNCTION, OUR_FUNCTION, LEGATE_CUDA_VERSION, /* can_fail */ false); \
+  } while (0)
+
+/**
+ * @brief Load a versioned CUDA driver function via cuGetProcAddress using a specific CUDA version.
+ *
+ * With CUDA 13.x, cuGetProcAddress broke its source compatibility requirements. This would lead
+ * it to return e.g. cuCtxGetDevice_v2 instead of cuCtxGetDevice. This macro separates out the
+ * versioned function for type-checking from the one provided to cuGetProcAddress and allows for
+ * loading specific to a CUDA version.
+ *
+ * @note The CUDA_VERSION_ARG that is passed must be the largest of (a) the CUDA version
+ * at which the desired symbol (CU_FUNCTION ## VER_SUFFIX) was introduced or (b) the
+ * last major version the code was compiled with (e.g. (CUDA_VERSION / 1000) * 1000).
+ *
+ * This is because cuGetProcAddress will always return the symbol for the version passed to it.
+ * However, the symbol located in cuda.h will be the same symbol as the last major version
+ * the code was compiled with (e.g. symbols in CUDA 12.X will match symbols in CUDA 12.0)
+ * Therefore, a signature mismatch can occur if we naively passed the CUDA_VERSION.
+ *
+ * @param get_proc_address_ Function pointer to cuGetProcAddress from the CUDA driver
+ * @param CU_FUNCTION The base name of the CUDA driver API function to load
+ * @param VER_SUFFIX The version suffix of the CUDA driver API function to load
+ * @param OUR_FUNCTION Address of the function pointer to write the function pointer to
+ * @param CUDA_VERSION_ARG The CUDA version to pass to cuGetProcAddress
+ * @param ENABLE_ABI_CHECK Whether to check ABI compatibility
+ */
+#define LOAD_CU_DRIVER_FUNCTION_VER(                                                         \
+  get_proc_address_, CU_FUNC, VER_SUFFIX, OUR_FUNCTION, CUDA_VERSION_ARG, ENABLE_ABI_CHECK)  \
+  do {                                                                                       \
+    LEGATE_WHEN(ENABLE_ABI_CHECK)(                                                           \
+      CHECK_ABI_COMPATIBLE(CU_FUNC##VER_SUFFIX, std::decay_t<decltype(*(OUR_FUNCTION))>{})); \
+    load_cu_driver_function(                                                                 \
+      get_proc_address_, #CU_FUNC, OUR_FUNCTION, CUDA_VERSION_ARG, /* can_fail */ true);     \
   } while (0)
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuInit, &init_);
@@ -220,10 +300,23 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(
     get_proc_address_, cuDevicePrimaryCtxRelease, &device_primary_ctx_release_);
 
-  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuCtxGetDevice, &ctx_get_device_);
+  LOAD_CU_DRIVER_FUNCTION_VER(
+    get_proc_address_, cuCtxGetDevice, /* no ver */, &ctx_get_device_cu_12_, 12000, LEGATE_CU12);
+  LOAD_CU_DRIVER_FUNCTION_VER(
+    get_proc_address_, cuCtxGetDevice, _v2, &ctx_get_device_cu_13_, 13000, LEGATE_CU13);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuCtxGetCurrent, &ctx_get_current_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuCtxPushCurrent, &ctx_push_current_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuCtxPopCurrent, &ctx_pop_current_);
-  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuCtxSynchronize, &ctx_synchronize_);
+  LOAD_CU_DRIVER_FUNCTION_VER(
+    get_proc_address_, cuCtxSynchronize, /* no ver */, &ctx_synchronize_cu_12_, 12000, LEGATE_CU12);
+  LOAD_CU_DRIVER_FUNCTION_VER(
+    get_proc_address_, cuCtxSynchronize, _v2, &ctx_synchronize_cu_13_, 13000, LEGATE_CU13);
+  if (!ctx_get_device_cu_12_ && !ctx_get_device_cu_13_) {
+    throw_null_driver_request("cuCtxGetDevice");
+  }
+  if (!ctx_synchronize_cu_12_ && !ctx_synchronize_cu_13_) {
+    throw_null_driver_request("cuCtxSynchronize");
+  }
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuKernelGetFunction, &kernel_get_function_);
 
@@ -409,12 +502,30 @@ void CUDADriverAPI::device_primary_ctx_release(CUdevice dev) const
   LEGATE_CHECK_CUDRIVER(device_primary_ctx_release_(dev));
 }
 
-CUdevice CUDADriverAPI::ctx_get_device() const
+CUcontext CUDADriverAPI::ctx_get_current() const
+{
+  CUcontext ctx;
+
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(ctx_get_current_(&ctx));
+  return ctx;
+}
+
+CUdevice CUDADriverAPI::ctx_get_device(CUcontext ctx) const
 {
   CUdevice device;
 
   check_initialized_();
-  LEGATE_CHECK_CUDRIVER(ctx_get_device_(&device));
+  if (ctx_get_device_cu_13_) {  // loaded CUDA 13.x at runtime
+    LEGATE_CHECK_CUDRIVER(ctx_get_device_cu_13_(&device, ctx));
+  } else if (ctx_get_device_cu_12_) {  // loaded CUDA 12.x at runtime
+    const AutoCUDAContext auto_ctx{ctx};
+
+    LEGATE_CHECK_CUDRIVER(ctx_get_device_cu_12_(&device));
+  } else {
+    abort_null_driver_fn("cuCtxGetDevice");
+  }
+
   return device;
 }
 
@@ -433,10 +544,18 @@ CUcontext CUDADriverAPI::ctx_pop_current() const
   return ctx;
 }
 
-void CUDADriverAPI::ctx_synchronize() const
+void CUDADriverAPI::ctx_synchronize(CUcontext ctx) const
 {
   check_initialized_();
-  LEGATE_CHECK_CUDRIVER(ctx_synchronize_());
+  if (ctx_synchronize_cu_13_) {  // loaded CUDA 13.x at runtime
+    LEGATE_CHECK_CUDRIVER(ctx_synchronize_cu_13_(ctx));
+  } else if (ctx_synchronize_cu_12_) {  // loaded CUDA 12.x at runtime
+    const AutoCUDAContext auto_ctx{ctx};
+
+    LEGATE_CHECK_CUDRIVER(ctx_synchronize_cu_12_());
+  } else {
+    abort_null_driver_fn("cuCtxSynchronize");
+  }
 }
 
 CUfunction CUDADriverAPI::kernel_get_function(CUkernel kernel) const
@@ -525,6 +644,21 @@ bool CUDADriverAPI::is_loaded() const noexcept { return handle_ != nullptr; }
 
 // ==========================================================================================
 
+namespace {
+
+[[noreturn]] void abort_expected_context(CUcontext active_ctx, CUcontext expected_ctx)
+{
+  LEGATE_ABORT("Current active CUDA context ",
+               active_ctx,
+               " does not match expected context ",
+               expected_ctx,
+               " (the primary context retained by this object). This indicates another CUDA "
+               "context was pushed onto the stack during the lifetime of this object, without "
+               "being popped from the stack.");
+}
+
+}  // namespace
+
 AutoPrimaryContext::AutoPrimaryContext()
   : AutoPrimaryContext{legate::detail::Runtime::get_runtime().get_current_cuda_device()}
 {
@@ -544,15 +678,29 @@ AutoPrimaryContext::~AutoPrimaryContext()
     auto&& api = get_cuda_driver_api();
 
     if (const auto cur_ctx = api->ctx_pop_current(); cur_ctx != ctx_) {
-      LEGATE_ABORT("Current active CUDA context ",
-                   cur_ctx,
-                   " does not match expected context ",
-                   ctx_,
-                   " (the primary context retained by this object). This indicates another CUDA "
-                   "context was pushed onto the stack during the lifetime of this object, without "
-                   "being popped from the stack.");
+      abort_expected_context(cur_ctx, ctx_);
     }
     api->device_primary_ctx_release(device_);
+  } catch (const std::exception& e) {
+    LEGATE_ABORT(e.what());
+  }
+}
+
+// ==========================================================================================
+
+AutoCUDAContext::AutoCUDAContext(CUcontext ctx) : ctx_{ctx}
+{
+  get_cuda_driver_api()->ctx_push_current(ctx_);
+}
+
+AutoCUDAContext::~AutoCUDAContext()
+{
+  try {
+    auto&& api = get_cuda_driver_api();
+
+    if (const auto cur_ctx = api->ctx_pop_current(); cur_ctx != ctx_) {
+      abort_expected_context(cur_ctx, ctx_);
+    }
   } catch (const std::exception& e) {
     LEGATE_ABORT(e.what());
   }

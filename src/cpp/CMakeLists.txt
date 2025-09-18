@@ -60,8 +60,8 @@ if(legate_USE_CUDA)
   # Find the CUDAToolkit
   rapids_find_package(CUDAToolkit 12.2 REQUIRED BUILD_EXPORT_SET legate-exports
                       INSTALL_EXPORT_SET legate-exports)
-  if("${CUDAToolkit_VERSION_MAJOR}" GREATER "12")
-    message(FATAL_ERROR "We do not support CUDAToolkit version greater than 12.x")
+  if("${CUDAToolkit_VERSION_MAJOR}" GREATER "13")
+    message(FATAL_ERROR "We do not support CUDAToolkit version greater than 13.x")
   endif()
 endif()
 

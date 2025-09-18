@@ -18,6 +18,8 @@ Changes: 25.10
 
 .. rubric:: General
 
+- Add support for CUDA 13.
+
 C++
 ---
 

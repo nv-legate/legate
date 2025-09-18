@@ -2218,7 +2218,9 @@ CUdevice Runtime::get_current_cuda_device() const
   if (is_running_in_task()) {
     // We are inside a task, which means Realm has set the current CUDA context and device for
     // us.
-    return cuda::detail::get_cuda_driver_api()->ctx_get_device();
+    auto&& api = cuda::detail::get_cuda_driver_api();
+
+    return api->ctx_get_device(api->ctx_get_current());
   }
 
   // We are in the top-level task, and so ctx_get_device() may not be accurate, because the

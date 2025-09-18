@@ -66,10 +66,11 @@ class CUDADriverAPI {
   [[nodiscard]] CUcontext device_primary_ctx_retain(CUdevice dev) const;
   void device_primary_ctx_release(CUdevice dev) const;
 
-  [[nodiscard]] CUdevice ctx_get_device() const;
+  [[nodiscard]] CUcontext ctx_get_current() const;
+  [[nodiscard]] CUdevice ctx_get_device(CUcontext ctx) const;
   void ctx_push_current(CUcontext ctx) const;
   [[nodiscard]] CUcontext ctx_pop_current() const;
-  void ctx_synchronize() const;
+  void ctx_synchronize(CUcontext ctx) const;
 
   [[nodiscard]] CUfunction kernel_get_function(CUkernel kernel) const;
 
@@ -148,10 +149,13 @@ class CUDADriverAPI {
   CUresult (*device_primary_ctx_retain_)(CUcontext* ctx, CUdevice dev) = nullptr;
   CUresult (*device_primary_ctx_release_)(CUdevice dev)                = nullptr;
 
-  CUresult (*ctx_get_device_)(CUdevice* device) = nullptr;
-  CUresult (*ctx_push_current_)(CUcontext ctx)  = nullptr;
-  CUresult (*ctx_pop_current_)(CUcontext* ctx)  = nullptr;
-  CUresult (*ctx_synchronize_)()                = nullptr;
+  CUresult (*ctx_get_current_)(CUcontext* ctx)                       = nullptr;
+  CUresult (*ctx_get_device_cu_12_)(CUdevice* device)                = nullptr;
+  CUresult (*ctx_get_device_cu_13_)(CUdevice* device, CUcontext ctx) = nullptr;
+  CUresult (*ctx_push_current_)(CUcontext ctx)                       = nullptr;
+  CUresult (*ctx_pop_current_)(CUcontext* ctx)                       = nullptr;
+  CUresult (*ctx_synchronize_cu_12_)()                               = nullptr;
+  CUresult (*ctx_synchronize_cu_13_)(CUcontext ctx)                  = nullptr;
 
   CUresult (*kernel_get_function_)(CUfunction* func, CUkernel kernel) = nullptr;
 
@@ -224,6 +228,37 @@ class AutoPrimaryContext {
 
  private:
   CUdevice device_{};
+  CUcontext ctx_{};
+};
+
+// ==========================================================================================
+
+/**
+ * @brief A RAII helper for managing the current context.
+ *
+ * On construction, it pushes the context onto the CUDA context stack. On destruction it pops the
+ * context off the stack.
+ */
+class AutoCUDAContext {
+ public:
+  AutoCUDAContext(const AutoCUDAContext&)            = delete;
+  AutoCUDAContext& operator=(const AutoCUDAContext&) = delete;
+  AutoCUDAContext(AutoCUDAContext&&)                 = delete;
+  AutoCUDAContext& operator=(AutoCUDAContext&&)      = delete;
+
+  /**
+   * @brief Push the context onto the stack.
+   *
+   * @param ctx The context to push onto the stack.
+   */
+  explicit AutoCUDAContext(CUcontext ctx);
+
+  /**
+   * @brief Pop the context off the stack.
+   */
+  ~AutoCUDAContext();
+
+ private:
   CUcontext ctx_{};
 };
 

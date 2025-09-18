@@ -70,7 +70,9 @@ void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_s
     //        potentially launched with different streams, within the task. Until we find
     //        the right approach, we simply synchronize the device before proceeding.
     if (kind == Processor::TOC_PROC) {
-      cuda::detail::get_cuda_driver_api()->ctx_synchronize();
+      auto&& api = cuda::detail::get_cuda_driver_api();
+
+      api->ctx_synchronize(api->ctx_get_current());
     }
   }
 
