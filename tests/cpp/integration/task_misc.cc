@@ -106,6 +106,6 @@ void test_manual_exception_unbound()
 
 TEST_F(TaskMiscTest, AutoScalarOutRed) { test_auto_scalar_out_red(); }
 
-TEST_F(TaskMiscTest, ManualExecptionUnbound) { test_manual_exception_unbound(); }
+TEST_F(TaskMiscTest, ManualExceptionUnbound) { test_manual_exception_unbound(); }
 
 }  // namespace task_misc

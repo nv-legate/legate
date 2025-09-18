@@ -221,7 +221,7 @@ run_test_or_analysis() {
               local worker_count="${4:-2}"
               LD_PRELOAD="${LEGATE_LD_PRELOAD}" \
                 LEGATE_TEST=1 \
-                LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 4000 --fbmem 1000 --auto-config=0" \
+                LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 4000 --fbmem 1000 --auto-config=0 --logging legate=debug" \
                 "${gtest_file}" \
                 --gtest_shuffle \
                 --gtest_color=yes

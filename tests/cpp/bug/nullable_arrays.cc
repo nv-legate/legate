@@ -49,29 +49,39 @@ class UnboundNullableArray : public RegisterOnceFixture<Config> {};
 
 TEST_F(UnboundNullableArray, Bug1)
 {
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(Config::LIBRARY_NAME);
+  auto* const runtime = legate::Runtime::get_runtime();
+  const auto library  = runtime->find_library(Config::LIBRARY_NAME);
+  const auto int_arr  = runtime->create_array(legate::int64(), 1, true /*nullable*/);
+  const auto list_arr =
+    runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/);
+  const auto struct_arr =
+    runtime->create_array(legate::struct_type(true, legate::int64()), 1, true /*nullable*/);
 
   auto task = runtime->create_task(library, Initialize::TASK_CONFIG.task_id());
-  task.add_output(runtime->create_array(legate::int64(), 1, true /*nullable*/));
-  task.add_output(runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/));
-  task.add_output(
-    runtime->create_array(legate::struct_type(true, legate::int64()), 1, true /*nullable*/));
+  task.add_output(int_arr);
+  task.add_output(list_arr);
+  task.add_output(struct_arr);
   runtime->submit(std::move(task));
 }
 
 TEST_F(UnboundNullableArray, Bug2)
 {
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(Config::LIBRARY_NAME);
+  auto* const runtime = legate::Runtime::get_runtime();
+  const auto library  = runtime->find_library(Config::LIBRARY_NAME);
+  const auto int_arr  = runtime->create_array(legate::int64(), 1, true /*nullable*/);
+  const auto list_arr =
+    runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/);
+  const auto struct_arr =
+    runtime->create_array(legate::struct_type(true, legate::int64()), 1, true /*nullable*/);
+  const auto dummy_arr =
+    runtime->create_array(legate::Shape{4}, legate::int64(), true /*nullable*/);
 
   auto task = runtime->create_task(library, Initialize::TASK_CONFIG.task_id());
-  task.add_output(runtime->create_array(legate::int64(), 1, true /*nullable*/));
-  task.add_output(runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/));
-  task.add_output(
-    runtime->create_array(legate::struct_type(true, legate::int64()), 1, true /*nullable*/));
+  task.add_output(int_arr);
+  task.add_output(list_arr);
+  task.add_output(struct_arr);
   // Add a dummy array argument to get the task parallelized
-  task.add_output(runtime->create_array(legate::Shape{4}, legate::int64(), true /*nullable*/));
+  task.add_output(dummy_arr);
   runtime->submit(std::move(task));
 }
 

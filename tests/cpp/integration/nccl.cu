@@ -121,8 +121,9 @@ void test_nccl_manual(std::int32_t ndim)
 
 }  // namespace
 
-// Test case with single unbound store
-TEST_F(NCCL, Auto)
+// NCCL tests have been very flakey in CI, so we disable them for now. See tracking issue
+// https://github.com/nv-legate/legate.internal/issues/2664 for further discussion.
+TEST_F(NCCL, DISABLED_Auto)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
@@ -136,7 +137,7 @@ TEST_F(NCCL, Auto)
   }
 }
 
-TEST_F(NCCL, Manual)
+TEST_F(NCCL, DISABLED_Manual)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
