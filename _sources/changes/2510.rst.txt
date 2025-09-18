@@ -18,10 +18,20 @@ Changes: 25.10
 
 .. rubric:: General
 
+- Add support for CUDA 13.
+
 C++
 ---
 
 .. rubric:: General
+
+- Remove ``legate/cuda/cuda.h``.
+- Remove ``LEGATE_CHECK_CUDA()`` and ``LegateCheckCUDA()``.
+- Remove ``LEGATE_CHECK_CUDA_STREAM()`` and ``LegateCheckCUDAStream()``.
+- Remove ``LEGATE_THREADS_PER_BLOCK``, ``LEGATE_MIN_CTAS_PER_SM``,
+  ``LEGATE_MAX_REDUCTION_CTAS``, and ``LEGATE_WARP_SIZE``. These were internal symbols
+  accidentally exposed via ``legate/cuda/cuda.h`` and have been privatized as part of its
+  removal.
 
 .. rubric:: Data
 

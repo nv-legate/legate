@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.10 &#8212; NVIDIA legate (25.10.00.dev25+g0c3f5e019)</title>
+    <title>Changes: 25.10 &#8212; NVIDIA legate (25.10.00.dev31+gd5343457a)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=5f22d633"></script>
+    <script src="../_static/documentation_options.js?v=acaacbb7"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev31+gd5343457a) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev31+gd5343457a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev25+g0c3f5e019)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev31+gd5343457a)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev25+g0c3f5e019) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev31+gd5343457a) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev31+gd5343457a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev25+g0c3f5e019)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev31+gd5343457a)</p>
   
 </a>
 
@@ -660,9 +660,21 @@ SPDX-License-Identifier: Apache-2.0
   <section id="changes-25-10">
 <h1>Changes: 25.10<a class="headerlink" href="#changes-25-10" title="Link to this heading">#</a></h1>
 <p class="rubric">General</p>
+<ul class="simple">
+<li><p>Add support for CUDA 13.</p></li>
+</ul>
 <section id="c">
 <h2>C++<a class="headerlink" href="#c" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
+<ul class="simple">
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate/cuda/cuda.h</span></code>.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">LEGATE_CHECK_CUDA()</span></code> and <code class="docutils literal notranslate"><span class="pre">LegateCheckCUDA()</span></code>.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">LEGATE_CHECK_CUDA_STREAM()</span></code> and <code class="docutils literal notranslate"><span class="pre">LegateCheckCUDAStream()</span></code>.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">LEGATE_THREADS_PER_BLOCK</span></code>, <code class="docutils literal notranslate"><span class="pre">LEGATE_MIN_CTAS_PER_SM</span></code>,
+<code class="docutils literal notranslate"><span class="pre">LEGATE_MAX_REDUCTION_CTAS</span></code>, and <code class="docutils literal notranslate"><span class="pre">LEGATE_WARP_SIZE</span></code>. These were internal symbols
+accidentally exposed via <code class="docutils literal notranslate"><span class="pre">legate/cuda/cuda.h</span></code> and have been privatized as part of its
+removal.</p></li>
+</ul>
 <p class="rubric">Data</p>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
