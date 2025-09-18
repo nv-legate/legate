@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/cuda/cuda.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/cuda/detail/cuda_util.h>
 #include <legate/data/detail/array_tasks.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/task_context.h>

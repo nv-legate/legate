@@ -8,7 +8,6 @@
 
 #include <legate_defines.h>
 
-#include <legate/cuda/cuda.h>
 #include <legate/experimental/stl/detail/config.hpp>  // includes <version>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/mdspan.h>

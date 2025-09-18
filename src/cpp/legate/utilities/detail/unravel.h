@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/cuda/cuda.h>
+#include <legate/cuda/detail/cuda_util.h>
 #include <legate/utilities/typedefs.h>
 
 #include <array>

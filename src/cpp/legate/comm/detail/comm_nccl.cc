@@ -6,8 +6,8 @@
 
 #include <legate/comm/detail/comm_nccl.h>
 
-#include <legate/cuda/cuda.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/cuda/detail/cuda_util.h>
 #include <legate/cuda/detail/nvtx.h>
 #include <legate/data/buffer.h>
 #include <legate/operation/detail/task_launcher.h>
