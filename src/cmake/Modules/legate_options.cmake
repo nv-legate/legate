@@ -183,3 +183,5 @@ endif()
 
 option(Legion_CUDA_DYNAMIC_LOAD "Load CUDA libraries at runtime" ${cuda_dyn_load})
 unset(cuda_dyn_load)
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)
