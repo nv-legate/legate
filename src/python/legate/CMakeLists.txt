@@ -94,8 +94,15 @@ function(legate_create_cython_modules)
                                INSTALL_DIR "${_cython_install_dir}")
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
+    # Do not make the Cython targets LEGATE_INTERNAL_TARGET TRUE because it causes massive
+    # binary sizes that needlessly bloat CI build times.
+    #
+    # Ideally, we could have this enabled and strip out the flags we don't want, but CMake
+    # makes it virtual impossible to remove a compile flag that comes from a transitive
+    # link dependency (in our case the sanitizer flags come from legate::legate -> legate
+    # -> legate_obj).
     set_target_properties(${target}
-                          PROPERTIES LEGATE_INTERNAL_TARGET TRUE
+                          PROPERTIES LEGATE_INTERNAL_TARGET FALSE
                                      VISIBILITY_INLINES_HIDDEN TRUE
                                      C_VISIBILITY_PRESET "hidden"
                                      CXX_VISIBILITY_PRESET "hidden")
