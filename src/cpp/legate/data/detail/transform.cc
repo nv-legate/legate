@@ -447,8 +447,11 @@ SmallVector<std::int32_t, LEGATE_MAX_DIM> Promote::invert_dims(
 
   const auto it = std::find(dims.begin(), dims.end(), extra_dim_);
 
-  LEGATE_ASSERT(it != dims.end());
-  dims.erase(it);
+  // If the dimension added by this promotion is projected in the transformation stack,
+  // the dimension index does not exist in `dims`.
+  if (it != dims.end()) {
+    dims.erase(it);
+  }
 
   std::transform(
     dims.begin(), dims.end(), dims.begin(), [&](auto d) { return d > extra_dim_ ? d - 1 : d; });
@@ -816,7 +819,15 @@ void Transpose::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>& d
 SmallVector<std::int32_t, LEGATE_MAX_DIM> Transpose::invert_dims(
   SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
-  return array_map(dims, inverse_);
+  decltype(dims) ret;
+
+  ret.reserve(dims.size());
+  std::transform(dims.begin(), dims.end(), std::back_inserter(ret), [&](std::int32_t dim) {
+    // Unlike points or shapes, whose indices correspond to dimension indices, `dims` has dimension
+    // indices as values, so the inversion is simply looking up the `axes_` using those values.
+    return axes_[dim];
+  });
+  return ret;
 }
 
 // ==========================================================================================

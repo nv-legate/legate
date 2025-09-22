@@ -208,8 +208,11 @@ std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(const Store
   } else {
     // Note that the size of dim_ordering can be smaller than the number of dimensions of the region
     // field if the store has any projections.
-    LEGATE_ASSERT(static_cast<std::int32_t>(dim_ordering.size()) ==
-                  ndim_rf - std::max<>(0, ndim_rf - store.dim()));
+    LEGATE_ASSERT(static_cast<std::int32_t>(dim_ordering.size()) <= ndim_rf);
+    // All dimension indices should be valid
+    LEGATE_ASSERT(std::all_of(dim_ordering.begin(), dim_ordering.end(), [ndim_rf](auto&& dim) {
+      return dim >= 0 && dim < ndim_rf;
+    }));
   }
 
   std::vector<Legion::DimensionKind> legion_dims{};
