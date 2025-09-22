@@ -5,6 +5,7 @@
 command script import share/legate/lldb/smallvec_formatter.py
 command script import share/legate/lldb/sharedptr_formatter.py
 command script import share/legate/lldb/span_formatter.py
+command script import share/legate/lldb/tuple_formatter.py
 
 type synthetic add --python-class smallvec_formatter.SmallVectorChildrenProvider -x "^legate::detail::SmallVector<.*>$"
 type summary add --expand -F smallvec_formatter.smallvector_summary_formatter -x "^legate::detail::SmallVector<.*>$"
@@ -14,3 +15,6 @@ type summary add --expand -F sharedptr_formatter.sharedptr_summary_formatter -x 
 
 type synthetic add --python-class span_formatter.SpanChildrenProvider -x "^legate::Span<.*>$"
 type summary add --expand -F span_formatter.span_summary_formatter -x "^legate::Span<.*>$"
+
+type synthetic add --python-class tuple_formatter.TupleChildrenProvider -x "^legate::tuple<.*>$"
+type summary add --expand -F tuple_formatter.tuple_summary_formatter -x "^legate::tuple<.*>$"
