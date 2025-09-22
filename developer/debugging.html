@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Debugging Legate Programs &#8212; NVIDIA legate (25.10.00.dev36+g06cd7229c)</title>
+    <title>Debugging Legate Programs &#8212; NVIDIA legate (25.10.00.dev39+g96c844133)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=db0203bd"></script>
+    <script src="../_static/documentation_options.js?v=71dddf35"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev36+g06cd7229c) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev36+g06cd7229c) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev39+g96c844133) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev39+g96c844133) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev36+g06cd7229c)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev39+g96c844133)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev36+g06cd7229c) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev36+g06cd7229c) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev39+g96c844133) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev39+g96c844133) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev36+g06cd7229c)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev39+g96c844133)</p>
   
 </a>
 
@@ -671,7 +671,9 @@ and <code class="docutils literal notranslate"><span class="pre">share/legate/ll
 <p>The pretty printers support the following types:
 - <code class="docutils literal notranslate"><span class="pre">legate::InternalSharedPtr</span></code>
 - <code class="docutils literal notranslate"><span class="pre">legate::SharedPtr</span></code>
-- <code class="docutils literal notranslate"><span class="pre">legate::detail::SmallVector</span></code></p>
+- <code class="docutils literal notranslate"><span class="pre">legate::detail::SmallVector</span></code>
+- <code class="docutils literal notranslate"><span class="pre">legate::Span</span></code>
+- <code class="docutils literal notranslate"><span class="pre">legate::tuple</span></code></p>
 <section id="usage">
 <h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
 <p>Commands to load these printers are provided in the <code class="docutils literal notranslate"><span class="pre">.gdbinit</span></code> and <code class="docutils literal notranslate"><span class="pre">.lldbinit</span></code>
@@ -693,9 +695,10 @@ are listed under the <code class="docutils literal notranslate"><span class="pre
 global<span class="w"> </span>pretty-printers:
 <span class="w">  </span>...
 <span class="w">  </span>legate
-<span class="w">    </span>InternalSharedPtr
 <span class="w">    </span>SharedPtr
 <span class="w">    </span>SmallVector
+<span class="w">    </span>Span
+<span class="w">    </span>Tuple
 <span class="w">  </span>...
 </pre></div>
 </div>

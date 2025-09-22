@@ -21,6 +21,8 @@ The pretty printers support the following types:
 - ``legate::InternalSharedPtr``
 - ``legate::SharedPtr``
 - ``legate::detail::SmallVector``
+- ``legate::Span``
+- ``legate::tuple``
 
 Usage
 -----
@@ -52,9 +54,10 @@ are listed under the ``legate`` category:
    global pretty-printers:
      ...
      legate
-       InternalSharedPtr
        SharedPtr
        SmallVector
+       Span
+       Tuple
      ...
 
 Similarly, you can validate the printers are loaded in LLDB by running ``type summary list``
