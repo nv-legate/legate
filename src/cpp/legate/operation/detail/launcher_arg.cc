@@ -27,7 +27,7 @@ void RegionFieldArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   auto field_id = store_->get_region_field()->field_id();
 
   buffer.pack<GlobalRedopID>(store_proj_.redop);
-  buffer.pack<std::int32_t>(region.get_dim());
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(store_->get_storage()->dim()));
   buffer.pack<std::uint32_t>(analyzer.get_index(region, privilege_, store_proj_, field_id));
   buffer.pack<std::uint32_t>(field_id);
 }

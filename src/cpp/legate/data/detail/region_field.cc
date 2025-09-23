@@ -86,6 +86,11 @@ class GetInlineAllocFn {
 
 Domain RegionField::domain() const
 {
+  // Since we use 1D region fields for 0D stores, we can't use the domain Legion returns for 0D
+  // region fields, hence the special case.
+  if (dim_ == 0) {
+    return {};
+  }
   return Legion::Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
 }
 
