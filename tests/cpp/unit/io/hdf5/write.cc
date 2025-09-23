@@ -95,9 +95,14 @@ class IotaTask : public legate::LegateTask<IotaTask> {
     {
       using T =
         std::conditional_t<CODE == legate::Type::Code::BINARY, std::byte, legate::type_of_t<CODE>>;
+      const auto shape = store->shape<DIM>();
+
+      if (shape.empty()) {
+        return;
+      }
+
       const auto acc =
         store->write_accessor<T, DIM, /* VALIDATE_TYPE */ CODE != legate::Type::Code::BINARY>();
-      const auto shape = store->shape<DIM>();
 
       for (auto it = legate::PointInRectIterator<DIM>{shape}; it.valid(); ++it) {
         const auto lin_idx = legate::detail::linearize(lo, hi, *it);

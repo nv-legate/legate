@@ -283,8 +283,9 @@ class UnwrappedDomain {
     LEGATE_CHECK(sub_domain->lo.get_dim() == static_cast<int>(extents.size()));
 
     for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(sub_domain->lo.get_dim()); ++i) {
-      start[i]   = static_cast<hsize_t>(sub_domain->lo[i]);
-      extents[i] = static_cast<hsize_t>(sub_domain->hi[i] - sub_domain->lo[i] + 1);
+      start[i] = static_cast<hsize_t>(sub_domain->lo[i]);
+      extents[i] =
+        static_cast<hsize_t>(std::max(sub_domain->hi[i] - sub_domain->lo[i] + 1, coord_t{0}));
     }
 
     vds_space.select_hyperslab(wrapper::HDF5DataSpace::SelectMode::SELECT_SET, start, extents);

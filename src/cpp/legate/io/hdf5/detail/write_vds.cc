@@ -18,6 +18,7 @@
 
 #include <H5Ppublic.h>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -66,7 +67,8 @@ namespace {
  * `extents.volume()`.
  */
 void write_hdf5_file(const std::string& filepath,
-                     Span<const hsize_t> extents,
+                     Span<const hsize_t> file_space_extents,
+                     Span<const hsize_t> mem_space_extents,
                      const std::string& dataset_name,
                      const Type& type,
                      bool gds_on,
@@ -83,13 +85,15 @@ void write_hdf5_file(const std::string& filepath,
     }
     return wrapper::HDF5File{filepath, wrapper::HDF5File::OpenMode::OVERWRITE};
   }();
-  const auto space = wrapper::HDF5DataSpace{extents};
-  const auto dset  = wrapper::HDF5DataSet{file, dataset_name, type, space};
+  const auto file_space = wrapper::HDF5DataSpace{file_space_extents};
+  const auto dset       = wrapper::HDF5DataSet{file, dataset_name, type, file_space};
+  auto mem_space        = wrapper::HDF5DataSpace{mem_space_extents};
+  const auto offsets    = legate::detail::SmallVector<hsize_t, LEGATE_MAX_DIM>{
+    legate::detail::tags::size_tag, file_space_extents.size(), 0};
 
-  dset.write(LEGATE_PURE_H5_ENUM(H5S_ALL),
-             LEGATE_PURE_H5_ENUM(H5S_ALL),
-             LEGATE_PURE_H5_ENUM(H5P_DEFAULT),
-             ptr);
+  mem_space.select_hyperslab(
+    wrapper::HDF5DataSpace::SelectMode::SELECT_SET, offsets, file_space_extents);
+  dset.write(mem_space.hid(), file_space.hid(), LEGATE_PURE_H5_ENUM(H5P_DEFAULT), ptr);
 }
 
 class HDF5WriteFn {
@@ -113,57 +117,85 @@ class HDF5WriteFn {
                   const std::string& dataset_name,
                   bool is_device) const
   {
-    const auto shape = store.shape<DIM>();
-    const auto sizes = [&] {
+    constexpr auto BINARY_TYPE = CODE == Type::Code::BINARY;
+    using T                    = std::conditional_t<BINARY_TYPE, std::byte, type_of_t<CODE>>;
+    const auto type            = store.type();
+    // If we are copying binary data, then sizeof(*tmp_ptr) will give us sizeof(std::byte),
+    // but that's not correct since the underlying binary data might be arbitrarily
+    // sized. So we need to use the type size.
+    //
+    // If not using binary type, type.size() and sizeof(*tmp_ptr) should be equivalent, but
+    // we use sizeof() as it's faster.
+    const auto type_size = BINARY_TYPE ? type.size() : sizeof(T);
+    const auto acc       = store.span_read_accessor<T,
+                                                    DIM,
+                                                    // TODO(jfaibussowit)
+                                                    // Remove this once binary type access is merged
+                                                    /* VALIDATE_TYPE */ !BINARY_TYPE>(type_size);
+
+    const auto* const ptr = acc.data_handle();
+    const auto gds_on     = legate::detail::Runtime::get_runtime().config().io_use_vfd_gds();
+    const auto file_space_extents = [&] {
       auto ret = std::array<hsize_t, DIM>{};
 
-      for (std::uint32_t i = 0; i < DIM; ++i) {
-        ret[i] = static_cast<hsize_t>(shape.hi[i] - shape.lo[i] + 1);
+      for (std::size_t i = 0; i < DIM; ++i) {
+        ret[i] = static_cast<hsize_t>(acc.extent(i));
       }
       return ret;
     }();
 
-    constexpr auto BINARY_TYPE = CODE == Type::Code::BINARY;
-    using T                    = std::conditional_t<BINARY_TYPE, std::byte, type_of_t<CODE>>;
+    if ((is_device && gds_on) || !is_device) {
+      // HDF5 requires two sizes when defining a memory space:
+      // 1. The total extent of the memory region (including unused elements).
+      // 2. The extent of the active selection (what maps to the file).
+      //
+      // The selection size matches `file_space_extents`, but the total memory region may be
+      // larger. Visually, the selection is the x's, while the memory region includes both x's
+      // and o's:
+      //
+      //     memspace.       ->  file space
+      // [ x x x x o o o o ].    [ x x x x ]
+      // [ x x x x o o o o ].    [ x x x x ]
+      // [ x x x x o o o o ].    [ x x x x ]
+      // [ x x x x o o o o ].    [ x x x x ]
+      // [ x x x x o o o o ].    [ x x x x ]
+      //
+      // Since an mdspan may not be densely packed, o's can appear. The code below uses the
+      // strides to compute the full memory shape.
+      const auto mem_space_extents = [&] {
+        auto ret = std::array<hsize_t, DIM>{};
 
-    const auto acc        = store.span_read_accessor<T,
-                                                     DIM,
-                                                     // TODO(jfaibussowit)
-                                                     // Remove this once binary type access is merged
-                                                     /* VALIDATE_TYPE */ !BINARY_TYPE>();
-    const auto* const ptr = acc.data_handle();
-    const auto type       = store.type();
+        ret[0] = static_cast<hsize_t>(acc.extent(0));
+        for (std::size_t i = 0; i < DIM - 1; ++i) {
+          using index_type = typename std::decay_t<decltype(acc)>::index_type;
+          // Strides may be zero if the size of the mdspan is 0, which could cause
+          // divide-by-zero.
+          ret[i + 1] =
+            static_cast<hsize_t>(acc.stride(i) / std::max(acc.stride(i + 1), index_type{1}));
+        }
+        return ret;
+      }();
 
-    if (is_device) {
-      const auto gds_on = legate::detail::Runtime::get_runtime().config().io_use_vfd_gds();
-
-      if (gds_on) {
-        // HDF5 can only write directly from the GPU if it has GDS enabled...
-        write_hdf5_file(filepath, sizes, dataset_name, type, gds_on, ptr);
-      } else {
-        // ...otherwise we need to copy to a temporary buffer on the host first
-        const auto size = shape.volume();
-        // If we are copying binary data, then sizeof(*tmp_ptr) will give us sizeof(std::byte),
-        // but that's not correct since the underlying binary data might be arbitrarily
-        // sized. So we need to use the type size.
-        //
-        // If not using binary type, type.size() and sizeof(*tmp_ptr) should be equivalent, but
-        // we use sizeof() as it's faster.
-        const auto type_size = BINARY_TYPE ? type.size() : sizeof(*ptr);
-        auto tmp             = create_buffer<std::byte>(size * type_size, Memory::Z_COPY_MEM);
-        auto* const tmp_ptr  = tmp.ptr(0);
-        auto stream          = context.get_task_stream();
-        auto&& api           = cuda::detail::get_cuda_driver_api();
-
-        api->mem_cpy_async(tmp_ptr, ptr, size * type_size, stream);
-        // Need to synchronize here before we pass to HDF5
-        api->stream_synchronize(stream);
-
-        write_hdf5_file(filepath, sizes, dataset_name, type, gds_on, tmp_ptr);
-      }
-    } else {
-      write_hdf5_file(filepath, sizes, dataset_name, type, /* gds_on */ false, ptr);
+      write_hdf5_file(
+        filepath, file_space_extents, mem_space_extents, dataset_name, type, gds_on, ptr);
+      return;
     }
+
+    // ...otherwise we need to copy to a temporary buffer on the host first
+    const auto size     = acc.size();
+    auto tmp            = create_buffer<std::byte>(size * type_size, Memory::Z_COPY_MEM);
+    auto* const tmp_ptr = tmp.ptr(0);
+    auto stream         = context.get_task_stream();
+    auto&& api          = cuda::detail::get_cuda_driver_api();
+    // These extents are a lie (the temp buffer is decidedly 1D), but the size is the same, so
+    // HDF5 will treat it as 1-dimensional anyways.
+    const auto mem_space_extents = file_space_extents;
+
+    api->mem_cpy_async(tmp_ptr, ptr, size * type_size, stream);
+    // Need to synchronize here before we pass to HDF5
+    api->stream_synchronize(stream);
+    write_hdf5_file(
+      filepath, file_space_extents, mem_space_extents, dataset_name, type, gds_on, tmp_ptr);
   }
 
   template <legate::Type::Code CODE,

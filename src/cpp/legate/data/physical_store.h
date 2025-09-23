@@ -73,15 +73,27 @@ class LEGATE_EXPORT PhysicalStore {
    * have suggestions for improvements, please file a bug at
    * https://github.com/nv-legate/legate/issues.
    *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
+   *
    * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default), checks that the type and rank of the mdspan
    * match that of the `PhysicalStore`.
    *
+   * @param elem_size The size (in bytes) of each element.
+   *
    * @return The read-only mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<const T, DIM> span_read_accessor() const;
+  [[nodiscard]] mdspan_type<const T, DIM> span_read_accessor(
+    std::size_t elem_size = sizeof(T)) const;
 
   /**
    * @brief Returns a write-only mdspan to the store over its entire domain. Equivalent to
@@ -103,15 +115,26 @@ class LEGATE_EXPORT PhysicalStore {
    * v = acc(0, 0); // OK, value will be 42.0
    * @endcode
    *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
+   *
    * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
    * of the mdspan match that of the `PhysicalStore`.
    *
+   * @param elem_size The size (in bytes) of each element.
+   *
    * @return The mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor();
+  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor(std::size_t elem_size = sizeof(T));
 
   /**
    * @brief Returns a read-write mdspan to the store over its entire domain. Equivalent to
@@ -122,15 +145,26 @@ class LEGATE_EXPORT PhysicalStore {
    * have suggestions for improvements, please file a bug at
    * https://github.com/nv-legate/legate/issues.
    *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
+   *
    * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
    * of the mdspan match that of the `PhysicalStore`.
    *
+   * @param elem_size The size (in bytes) of each element.
+   *
    * @return The mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor();
+  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor(std::size_t elem_size = sizeof(T));
 
   /**
    * @brief Returns a reduction mdspan to the store over its entire domain. Equivalent to
@@ -141,11 +175,22 @@ class LEGATE_EXPORT PhysicalStore {
    * have suggestions for improvements, please file a bug at
    * https://github.com/nv-legate/legate/issues.
    *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
+   *
    * @tparam Redop The reduction operator (e.g. `SumReduction`).
    * @tparam EXCLUSIVE Whether the reduction accessor has exclusive access to the buffer.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
    * of the mdspan match that of the `PhysicalStore`.
+   *
+   * @param elem_size The size (in bytes) of each element.
    *
    * @return The mdspan accessor.
    */
@@ -154,7 +199,7 @@ class LEGATE_EXPORT PhysicalStore {
             std::int32_t DIM,
             bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
   [[nodiscard]] mdspan_type<typename Redop::LHS, DIM, detail::ReductionAccessor<Redop, EXCLUSIVE>>
-  span_reduce_accessor();
+  span_reduce_accessor(std::size_t elem_size = sizeof(typename Redop::LHS));
 
   /**
    * @brief Returns a read-only mdspan to the store over the selected domain.
@@ -163,6 +208,15 @@ class LEGATE_EXPORT PhysicalStore {
    * but we are seeking user feedback on it before such time. If you encounter issues, and/or
    * have suggestions for improvements, please file a bug at
    * https://github.com/nv-legate/legate/issues.
+   *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
    *
    * @note If `bounds` is empty then the strides of the returned `mdspan` will be all 0 instead
    * of what it might normally be. The object is still perfectly usable as normal but the
@@ -174,11 +228,13 @@ class LEGATE_EXPORT PhysicalStore {
    * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
+   * @param elem_size The size (in bytes) of each element.
    *
    * @return The mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<const T, DIM> span_read_accessor(const Rect<DIM>& bounds) const;
+  [[nodiscard]] mdspan_type<const T, DIM> span_read_accessor(
+    const Rect<DIM>& bounds, std::size_t elem_size = sizeof(T)) const;
 
   /**
    * @brief Returns a write-only mdspan to the store over the selected domain.
@@ -203,17 +259,28 @@ class LEGATE_EXPORT PhysicalStore {
    * of what it might normally be. The object is still perfectly usable as normal but the
    * strides will not be correct.
    *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
+   *
    * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
    * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
+   * @param elem_size The size (in bytes) of each element.
    *
    * @return The mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor(const Rect<DIM>& bounds);
+  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor(const Rect<DIM>& bounds,
+                                                        std::size_t elem_size = sizeof(T));
 
   /**
    * @brief Returns a read-write mdspan to the store over the selected domain.
@@ -227,17 +294,28 @@ class LEGATE_EXPORT PhysicalStore {
    * of what it might normally be. The object is still perfectly usable as normal but the
    * strides will not be correct.
    *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
+   *
    * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
    * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
+   * @param elem_size The size (in bytes) of each element.
    *
    * @return The mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor(const Rect<DIM>& bounds);
+  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor(const Rect<DIM>& bounds,
+                                                             std::size_t elem_size = sizeof(T));
 
   /**
    * @brief Returns a reduction mdspan to the store over the selected domain.
@@ -251,6 +329,15 @@ class LEGATE_EXPORT PhysicalStore {
    * of what it might normally be. The object is still perfectly usable as normal but the
    * strides will not be correct.
    *
+   * `elem_size` should not normally need to be passed. It is, however, necessary for
+   * type-punning when the size of the stored type and viewed type differ. For example, a store
+   * might refer to binary data where each element is of size 10, but we wish to view it as an
+   * mspan of `std::byte`s (which would have size = 1). In this case:
+   *
+   * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
+   * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
+   * #. Pass `type().size()` as `elem_size`.
+   *
    * @tparam Redop The reduction operator (e.g. `SumReduction`).
    * @tparam EXCLUSIVE Whether the reduction accessor has exclusive access to the buffer.
    * @tparam DIM The rank of the mdspan.
@@ -258,6 +345,7 @@ class LEGATE_EXPORT PhysicalStore {
    * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
+   * @param elem_size The size (in bytes) of each element.
    *
    * @return The mdspan accessor.
    */
@@ -266,7 +354,8 @@ class LEGATE_EXPORT PhysicalStore {
             std::int32_t DIM,
             bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
   [[nodiscard]] mdspan_type<typename Redop::LHS, DIM, detail::ReductionAccessor<Redop, EXCLUSIVE>>
-  span_reduce_accessor(const Rect<DIM>& bounds);
+  span_reduce_accessor(const Rect<DIM>& bounds,
+                       std::size_t elem_size = sizeof(typename Redop::LHS));
 
   /**
    * @brief Returns a read-only accessor to the store for the entire domain.

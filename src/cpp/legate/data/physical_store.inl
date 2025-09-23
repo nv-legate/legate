@@ -49,28 +49,29 @@ class TransAccessorFn {
 namespace legate {
 
 template <typename T, std::int32_t DIM, bool VALIDATE_TYPE>
-PhysicalStore::mdspan_type<const T, DIM> PhysicalStore::span_read_accessor() const
+PhysicalStore::mdspan_type<const T, DIM> PhysicalStore::span_read_accessor(
+  std::size_t elem_size) const
 {
-  return span_read_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>());
+  return span_read_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>(), elem_size);
 }
 
 template <typename T, std::int32_t DIM, bool VALIDATE_TYPE>
-PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_write_accessor()
+PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_write_accessor(std::size_t elem_size)
 {
-  return span_write_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>());
+  return span_write_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>(), elem_size);
 }
 
 template <typename T, std::int32_t DIM, bool VALIDATE_TYPE>
-PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_read_write_accessor()
+PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_read_write_accessor(std::size_t elem_size)
 {
-  return span_read_write_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>());
+  return span_read_write_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>(), elem_size);
 }
 
 template <typename Redop, bool EXCLUSIVE, std::int32_t DIM, bool VALIDATE_TYPE>
 PhysicalStore::mdspan_type<typename Redop::LHS, DIM, detail::ReductionAccessor<Redop, EXCLUSIVE>>
-PhysicalStore::span_reduce_accessor()
+PhysicalStore::span_reduce_accessor(std::size_t elem_size)
 {
-  return span_reduce_accessor<Redop, EXCLUSIVE, DIM, VALIDATE_TYPE>(shape<DIM>());
+  return span_reduce_accessor<Redop, EXCLUSIVE, DIM, VALIDATE_TYPE>(shape<DIM>(), elem_size);
 }
 
 namespace mdspan_detail {
@@ -80,13 +81,13 @@ template <typename T,
           typename Acc,
           std::int32_t DIM>
 [[nodiscard]] PhysicalStore::mdspan_type<T, DIM, AccessorPolicy> make_accessor(
-  const Acc& legion_accessor, const Rect<DIM>& bounds)
+  const Acc& legion_accessor, const Rect<DIM>& bounds, std::size_t elem_size)
 {
   static_assert(DIM >= 0);
   static_assert(DIM <= LEGATE_MAX_DIM);
 
   auto strides    = ::cuda::std::array<std::size_t, DIM>{};
-  auto* const ptr = legion_accessor.ptr(bounds, strides.data());
+  auto* const ptr = legion_accessor.ptr(bounds, strides.data(), elem_size);
 
   using mdspan_type  = PhysicalStore::mdspan_type<T, DIM, AccessorPolicy>;
   using mapping_type = typename mdspan_type::mapping_type;
@@ -98,32 +99,35 @@ template <typename T,
 
 template <typename T, std::int32_t DIM, bool VALIDATE_TYPE>
 PhysicalStore::mdspan_type<const T, DIM> PhysicalStore::span_read_accessor(
-  const Rect<DIM>& bounds) const
+  const Rect<DIM>& bounds, std::size_t elem_size) const
 {
-  return mdspan_detail::make_accessor<const T>(read_accessor<T, DIM, VALIDATE_TYPE>(bounds),
-                                               bounds);
+  return mdspan_detail::make_accessor<const T>(
+    read_accessor<T, DIM, VALIDATE_TYPE>(bounds), bounds, elem_size);
 }
 
 template <typename T, std::int32_t DIM, bool VALIDATE_TYPE>
-PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_write_accessor(const Rect<DIM>& bounds)
+PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_write_accessor(const Rect<DIM>& bounds,
+                                                                      std::size_t elem_size)
 {
-  return mdspan_detail::make_accessor<T>(write_accessor<T, DIM, VALIDATE_TYPE>(bounds), bounds);
+  return mdspan_detail::make_accessor<T>(
+    write_accessor<T, DIM, VALIDATE_TYPE>(bounds), bounds, elem_size);
 }
 
 template <typename T, std::int32_t DIM, bool VALIDATE_TYPE>
-PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_read_write_accessor(const Rect<DIM>& bounds)
+PhysicalStore::mdspan_type<T, DIM> PhysicalStore::span_read_write_accessor(const Rect<DIM>& bounds,
+                                                                           std::size_t elem_size)
 {
-  return mdspan_detail::make_accessor<T>(read_write_accessor<T, DIM, VALIDATE_TYPE>(bounds),
-                                         bounds);
+  return mdspan_detail::make_accessor<T>(
+    read_write_accessor<T, DIM, VALIDATE_TYPE>(bounds), bounds, elem_size);
 }
 
 template <typename Redop, bool EXCLUSIVE, std::int32_t DIM, bool VALIDATE_TYPE>
 PhysicalStore::mdspan_type<typename Redop::LHS, DIM, detail::ReductionAccessor<Redop, EXCLUSIVE>>
-PhysicalStore::span_reduce_accessor(const Rect<DIM>& bounds)
+PhysicalStore::span_reduce_accessor(const Rect<DIM>& bounds, std::size_t elem_size)
 {
   return mdspan_detail::make_accessor<typename Redop::LHS,
                                       detail::ReductionAccessor<Redop, EXCLUSIVE>>(
-    reduce_accessor<Redop, EXCLUSIVE, DIM, VALIDATE_TYPE>(bounds), bounds);
+    reduce_accessor<Redop, EXCLUSIVE, DIM, VALIDATE_TYPE>(bounds), bounds, elem_size);
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>

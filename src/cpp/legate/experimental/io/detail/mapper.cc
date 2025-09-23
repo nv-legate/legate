@@ -24,6 +24,30 @@ std::vector<mapping::StoreMapping> Mapper::store_mappings(
   const mapping::Task& task, const std::vector<mapping::StoreTarget>& options)
 {
   const auto target = options.front();
+
+  switch (task.task_id()) {
+    case legate::LocalTaskID{legate::detail::CoreTask::IO_HDF5_FILE_READ}: [[fallthrough]];
+    case legate::LocalTaskID{legate::detail::CoreTask::IO_HDF5_FILE_WRITE_VDS}: [[fallthrough]];
+    case legate::LocalTaskID{legate::detail::CoreTask::IO_HDF5_FILE_COMBINE_VDS}: {
+      switch (target) {
+        case legate::mapping::StoreTarget::SYSMEM: [[fallthrough]];
+        case legate::mapping::StoreTarget::SOCKETMEM:
+          // Host-only tasks will use direct strided reads/writes
+          return {};
+        case legate::mapping::StoreTarget::FBMEM: [[fallthrough]];
+        case legate::mapping::StoreTarget::ZCMEM:
+          if (legate::detail::Runtime::get_runtime().config().io_use_vfd_gds()) {
+            // GPU tasks with GDS will also use strided reads/writes
+            return {};
+          }
+          // GPU tasks without GDS need to use a temporary buffer to stage the reads/writes and
+          // therefore need contiguous buffers
+          break;
+      }
+    } break;
+    default: break;  // legate-lint: no-switch-default
+  }
+
   // Require that all tasks get their Stores in contiguous buffers
   std::vector<mapping::StoreMapping> mappings;
 
