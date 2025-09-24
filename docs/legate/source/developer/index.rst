@@ -15,3 +15,4 @@ Developer Documentation
    Code Linting <linting>
    Debugging <debugging>
    Dimension Ordering <dimension_ordering>
+   Use of A.I. In Development <ai>
