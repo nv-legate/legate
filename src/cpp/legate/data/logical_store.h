@@ -390,6 +390,29 @@ class LEGATE_EXPORT LogicalStore {
   [[nodiscard]] LogicalStore delinearize(std::int32_t dim, std::vector<std::uint64_t> sizes) const;
 
   /**
+   * @brief Gets the current partition for the store
+   *
+   * A partition describes how the store's data is distributed across multiple processors
+   * or memory regions for parallel computation. It defines the color space (number of
+   * parallel tasks) and how the store's logical space maps to these parallel instances.
+   *
+   * Users typically need partition information when:
+   * - Creating manual tasks that must match existing partitioning schemes
+   * - Ensuring data alignment between multiple stores in the same computation
+   * - Debugging performance issues related to data distribution
+   *
+   * The partition contains the color shape (dimensions of the parallel task grid),
+   * tile shape (size of each data chunk), and the mapping between logical indices
+   * and parallel task instances.
+   *
+   * This function will flush the scheduling window to make sure the partition is up to date.
+   *
+   * @return The current partition if one exists, or std::nullopt if the store
+   *         has not been partitioned (e.g., for sequential computation)
+   */
+  [[nodiscard]] std::optional<LogicalStorePartition> get_partition() const;
+
+  /**
    * @brief Creates a tiled partition of the store
    *
    * The call can block if the store is unbound

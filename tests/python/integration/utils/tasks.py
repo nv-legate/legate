@@ -243,3 +243,20 @@ def fill_dlpack_task(store: OutputStore, val: int) -> None:
     lib = numpy_or_cupy(store.get_inline_allocation())
     arr = lib.from_dlpack(store)
     arr.fill(val)
+
+
+@task(
+    variants=tuple(VariantCode),
+    constraints=(align("input1", "input2", "output"),),
+)
+def sum_two_inputs_task(
+    input1: InputStore, input2: InputStore, output: OutputStore
+) -> None:
+    """Task that takes two inputs and outputs their sum."""
+    lib = numpy_or_cupy(input1.get_inline_allocation())
+
+    input1_arr = lib.asarray(input1.get_inline_allocation())
+    input2_arr = lib.asarray(input2.get_inline_allocation())
+    output_arr = lib.asarray(output.get_inline_allocation())
+
+    output_arr[:] = input1_arr + input2_arr

@@ -39,6 +39,9 @@ C++
 
 .. rubric:: Partitioning
 
+- Add ``LogicalStore::get_partition()``. This method allows users to access the
+  partition used by the runtime for optimizing task launches and data movement.
+
 .. rubric:: Tasks
 
 .. rubric:: Types
@@ -60,6 +63,9 @@ Python
 .. rubric:: Mapping
 
 .. rubric:: Partitioning
+
+- Add ``legate.core.LogicalStore.partition``. This property allows users to access
+  the partition used by the runtime for optimizing task launches and data movement.
 
 .. rubric:: Tasks
 

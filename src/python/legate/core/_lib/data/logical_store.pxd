@@ -36,6 +36,7 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore slice(int32_t, _Slice) except+
         _LogicalStore transpose(std_vector[int32_t]) except+
         _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
+        std_optional[_LogicalStorePartition] get_partition() except+
         _LogicalStorePartition partition_by_tiling(
             std_vector[uint64_t] tile_shape,
             std_optional[std_vector[uint64_t]] color_shape

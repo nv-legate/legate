@@ -581,6 +581,28 @@ cdef class LogicalStore(Unconstructable):
     cpdef void fill(self, object value):
         get_legate_runtime().issue_fill(self, value)
 
+    @property
+    def partition(self) -> LogicalStorePartition | None:
+        r"""
+        Get the current partition for the store created by previous operations.
+
+        Returns the current partition if one exists, or None if no partition
+        has been set for this store.
+
+        Returns
+        -------
+        LogicalStorePartition | None
+            A ``LogicalStorePartition`` object, or None if none exists
+        """
+        cdef std_optional[_LogicalStorePartition] handle
+
+        with nogil:
+            handle = self._handle.get_partition()
+
+        if handle.has_value():
+            return LogicalStorePartition.from_handle(std_move(handle.value()))
+        return None
+
     cpdef LogicalStorePartition partition_by_tiling(
         self, object tile_shape, object color_shape = None
     ):

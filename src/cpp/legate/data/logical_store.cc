@@ -73,6 +73,24 @@ LogicalStore LogicalStore::project(std::int32_t dim, std::int64_t index) const
   return LogicalStore{impl()->project(dim, index)};
 }
 
+std::optional<LogicalStorePartition> LogicalStore::get_partition() const
+{
+  // We need to flush the scheduling window to make sure the partition is up to date.
+  detail::Runtime::get_runtime().flush_scheduling_window();
+
+  auto&& key_partition = impl()->get_current_key_partition();
+
+  if (!key_partition.has_value()) {
+    return std::nullopt;
+  }
+
+  auto storage_partition =
+    create_storage_partition(impl()->get_storage(), *key_partition, /* complete */ std::nullopt);
+
+  return LogicalStorePartition{legate::make_internal_shared<detail::LogicalStorePartition>(
+    *key_partition, std::move(storage_partition), impl())};
+}
+
 LogicalStorePartition LogicalStore::partition_by_tiling(
   Span<const std::uint64_t> tile_shape, std::optional<Span<const std::uint64_t>> color_shape) const
 {

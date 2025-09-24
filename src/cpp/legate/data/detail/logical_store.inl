@@ -113,9 +113,10 @@ inline bool LogicalStore::is_mapped() const { return get_storage()->is_mapped();
 
 inline bool LogicalStore::needs_flush() const { return unbound() || is_mapped(); }
 
-inline const InternalSharedPtr<Partition>& LogicalStore::get_current_key_partition() const
+inline const std::optional<InternalSharedPtr<Partition>>& LogicalStore::get_current_key_partition()
+  const
 {
-  return key_partition_.value();  // NOLINT(bugprone-unchecked-optional-access)
+  return key_partition_;
 }
 
 // ==========================================================================================

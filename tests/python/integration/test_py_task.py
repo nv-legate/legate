@@ -516,6 +516,56 @@ class TestPyTask:
         with pytest.raises(ValueError, match=msg):
             pytask()
 
+    def test_store_get_partition(self) -> None:
+        runtime = get_legate_runtime()
+        shape = (10000 * 32,)
+        in_arr_np = np.ones(shape=shape, dtype=np.int32)
+        in_store = runtime.create_store_from_buffer(
+            ty.int32, in_arr_np.shape, in_arr_np, False
+        )
+        out_store = runtime.create_store(ty.int32, shape)
+        auto_task = runtime.create_auto_task(
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
+        )
+
+        auto_task.add_input(in_store)
+        auto_task.add_output(out_store)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+
+        sum_input1_np = np.full(shape, 2, dtype=np.int32)
+        sum_input1_store = runtime.create_store_from_buffer(
+            ty.int32, sum_input1_np.shape, sum_input1_np, False
+        )
+
+        color_shape: tuple[int, ...] = (2, 1)
+        if out_store.partition is not None:
+            partition = sum_input1_store.partition_by_tiling(
+                shape, out_store.partition.color_shape
+            )
+
+            assert partition is not None
+            assert partition.color_shape == out_store.partition.color_shape
+            color_shape = partition.color_shape
+
+        sum_output_store = runtime.create_store(ty.int32, shape)
+
+        manual_task = runtime.create_manual_task(
+            tasks.sum_two_inputs_task.library,
+            tasks.sum_two_inputs_task.task_id,
+            color_shape,
+        )
+
+        manual_task.add_input(sum_input1_store)
+        manual_task.add_input(out_store)
+        manual_task.add_output(sum_output_store)
+        manual_task.execute()
+        runtime.issue_execution_fence(block=True)
+
+        result_arr = np.asarray(sum_output_store.get_physical_store())
+        expected_arr = np.full(shape, 3, dtype=np.int32)
+        np.testing.assert_allclose(result_arr, expected_arr)
+
 
 if __name__ == "__main__":
     import sys

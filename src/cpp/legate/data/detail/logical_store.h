@@ -277,7 +277,16 @@ class LogicalStore {
     const ParallelPolicy& parallel_policy,
     const Restrictions& restrictions);
 
-  [[nodiscard]] const InternalSharedPtr<Partition>& get_current_key_partition() const;
+  /**
+   * @brief Gets the current key partition of this store if it exists. To get the most up-to-date
+   * partition, the user must call `Runtime::flush_scheduling_window()` before calling this
+   * function.
+   *
+   * @return The current key partition of this store.
+   */
+  [[nodiscard]] const std::optional<InternalSharedPtr<Partition>>& get_current_key_partition()
+    const;
+
   [[nodiscard]] bool has_key_partition(const mapping::detail::Machine& machine,
                                        const ParallelPolicy& parallel_policy,
                                        const Restrictions& restrictions) const;
