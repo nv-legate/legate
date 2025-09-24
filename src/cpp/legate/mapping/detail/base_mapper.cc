@@ -200,9 +200,15 @@ void populate_reduction_collective_regions(
       if (req.privilege & LEGION_WRITE_PRIV) {
         continue;
       }
-      if (req.handle_type == LEGION_SINGULAR_PROJECTION || req.projection != 0) {
-        check_collective_regions->insert(idx);
+      if (req.handle_type == LEGION_PARTITION_PROJECTION && req.projection == 0) {
+        // Previously, we only checked collective regions under singular projections
+        // or non-identity partition projections. However, there are cases where
+        // Legion will have some region requirements with a region projection,
+        // under which we would still like to check for collective regions.
+        continue;
       }
+
+      check_collective_regions->insert(idx);
     }
   }
 }
