@@ -101,7 +101,7 @@ jobs:
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
-      timeout: 180
+      timeout: 240
     secrets: inherit
 
   setup-profiler-test:
