@@ -84,7 +84,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   rapids_cpm_find(Legion "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
-                  GLOBAL_TARGETS Legion::Regent Legion::Legion Legion::LegionRuntime
+                  GLOBAL_TARGETS Legion::Legion Legion::LegionRuntime
                   CPM_ARGS ${legion_cpm_git_args}
                            # HACK: Legion headers contain *many* warnings, but we would
                            # like to build with -Wall -Werror. But there is a work-around.

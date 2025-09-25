@@ -708,7 +708,13 @@ foreach(target legate_obj legate)
 endforeach()
 
 # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
-foreach(target legate_obj legate LegionRuntime)
+set(LEGATE_TARGETS_TO_MODIFY legate_obj legate)
+# check if LegionRuntime is built or imported and add it to list if built here
+if(TARGET LegionRuntime)
+    list(APPEND LEGATE_TARGETS_TO_MODIFY LegionRuntime)
+endif()
+
+foreach(target ${LEGATE_TARGETS_TO_MODIFY})
   target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
   if(legate_USE_CUDA)
     # CCCL 2.7.0 (which is what we use) disables __half support if it detects that it
