@@ -41,7 +41,9 @@ function(legate_configure_test)
     set(_LEGATE_TEST_PERCENT 1)
   endif()
 
-  add_executable(${_LEGATE_TEST_NAME} ${_LEGATE_TEST_SOURCES})
+  add_executable(${_LEGATE_TEST_NAME} ${_LEGATE_TEST_SOURCES}
+                                      utilities/sanitizer_defaults.cc)
+
   set_target_properties(${_LEGATE_TEST_NAME}
                         PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"

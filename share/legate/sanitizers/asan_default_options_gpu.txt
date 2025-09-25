@@ -6,3 +6,4 @@ strict_string_checks=1
 color=always
 detect_odr_violation=2
 symbolize=1
+protect_shadow_gap=0

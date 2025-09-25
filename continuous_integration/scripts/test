@@ -43,24 +43,18 @@ set_ld_preload()
 
     export LEGATE_LD_PRELOAD="${libasan_path}:${stdlib_path}"
 
-    local asan_opts=()
-    asan_opts+=("check_initialization_order=1")
-    asan_opts+=("alloc_dealloc_mismatch=1")
-    asan_opts+=("abort_on_error=1")
-    asan_opts+=("strict_string_checks=1")
-    asan_opts+=("color=always")
-    asan_opts+=("detect_odr_violation=2")
+    local asan_opts_path
+
     if [[ -f "${CONDA_PREFIX}/bin/tests_with_gpus" ]]; then
       # GPU build
-      asan_opts+=("protect_shadow_gap=0")
+      asan_opts_path="${LEGATE_DIR}/share/legate/sanitizers/asan_default_options_gpu.txt"
+    else
+      asan_opts_path="${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt"
     fi
-    asan_opts+=("symbolize=1")
-
     # Note trailing ':' on this! This is deliberate so we can do
     # ASAN_OPTIONS+='foo:bar:baz'
-    #                                               v~~ trailing ':' here
-    ASAN_OPTIONS="$(IFS=':'; echo "${asan_opts[*]}"):"
-    export ASAN_OPTIONS
+    #                                             v~~ trailing ':' here
+    export ASAN_OPTIONS="include=${asan_opts_path}:"
     export UBSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt"
     export LSAN_OPTIONS="suppressions=${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt"
     export TSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt"

@@ -254,42 +254,6 @@ define_property(TARGET PROPERTY LEGATE_INTERNAL_TARGET
                 BRIEF_DOCS "A boolean property indicating that a target is internal to "
                            "the legate build")
 
-include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
-  DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/asan_default_options.h"
-)
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt
-  DELIM [[\n]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/lsan_suppressions.h"
-)
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
-  DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/ubsan_default_options.h"
-)
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt
-  DELIM [[\n]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/ubsan_suppressions.h"
-)
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt
-  DELIM [[\n]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/tsan_suppressions.h"
-)
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt
-  DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/tsan_default_options.h"
-)
-
 target_sources(legate_obj
                PRIVATE # core
                        legate/comm/coll.cc
@@ -476,10 +440,6 @@ if(legate_USE_HDF5)
                          legate/io/hdf5/detail/write_vds.cc
                          legate/io/hdf5/detail/combine_vds.cc
                          legate/io/hdf5/detail/hdf5_wrapper.cc)
-endif()
-
-if(legate_ENABLE_SANITIZERS)
-  target_sources(legate_obj PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
 endif()
 
 if(legate_USE_MPI)

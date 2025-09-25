@@ -15,6 +15,7 @@ path = [
     "share/legate/sanitizers/tsan_default_options.txt",
     "share/legate/sanitizers/ubsan_default_options.txt",
     "share/legate/sanitizers/asan_default_options.txt",
+    "share/legate/sanitizers/asan_default_options_gpu.txt",
     "share/legate/sanitizers/tsan_suppressions.txt",
     "src/cmake/versions/versions.json",
     "src/cmake/versions/legion_version.json",
