@@ -28,7 +28,7 @@ dependencies = [
     "numpy>=1.22,!=2.1.0",
     "zarr<3",
     "rich",
-    "nvidia-nccl-cu12; sys_platform == 'linux'",
+    "nvidia-nccl-cu12<=2.27; sys_platform == 'linux'",
     "libucx-cu12; sys_platform == 'linux'",
     "nvidia-libcal-cu12; sys_platform == 'linux'",
 ]
