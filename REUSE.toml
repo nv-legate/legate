@@ -35,7 +35,8 @@ SPDX-License-Identifier = "Apache-2.0"
 # Image files.
 [[annotations]]
 path = [
-    "docs/figures/developer-build.png",
+    "docs/figures/developer_build.png",
+    "docs/figures/streaming_example_1.png",
     "docs/legate/source/manual/usage/images/stream_activity.png",
     "docs/legate/source/manual/usage/images/cg_matmul.png",
     "docs/legate/source/manual/usage/images/profile.png",
