@@ -4,21 +4,29 @@
 
 from __future__ import annotations
 
+import os
+import sys
+import platform
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from types import ModuleType
 
 import pytest
 
+from legate.dask import main as daskexec
 from legate.dask.worker import (
     BOOTSTRAP_P2P_PLUGIN,
     DEFAULT_DASK_BASE_PORT,
     DEFAULT_SCHEDULER_PORT,
     REALM_UCP_BOOTSTRAP_MODE,
     WORKER_PEERS_INFO,
+    WORKER_SELF_INFO,
     BootstrapMode,
     BootstrapPluginKind,
+    _setenv,
+    daskrun,
     setup_worker_env,
 )
 
@@ -74,6 +82,48 @@ class TestDaskCluster:
             )
             for bootstrap_mode in peers_bootstrap_mode.values():
                 assert bootstrap_mode == BootstrapMode.P2P
+
+
+@pytest.mark.skipif(dask is None, reason="Dask is not installed")
+class TestDaskWorker:
+    @pytest.mark.parametrize("workers", range(1, 5))
+    def test_workers(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        workers: int,
+    ) -> None:
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["daskrun", "--workers-per-node", str(workers), "hostname"],
+        )
+        daskexec()
+        captured = capsys.readouterr()
+        assert captured.out.strip().split("\n") == [platform.node()] * workers
+
+    def test_daskrun(self) -> None:
+        # for code coverage purposes
+        stdout = daskrun(["hostname"])
+        assert stdout.strip() == platform.node()
+
+    @pytest.fixture
+    def preserve_env(self) -> Generator[None]:
+        env = os.environ.copy()
+        yield
+        os.environ.clear()
+        os.environ.update(env)
+
+    @pytest.mark.usefixtures("preserve_env")
+    def test_set_env(self) -> None:
+        # for code coverage purposes
+        selfaddr = "foo"
+        peersaddr = "bar"
+        _setenv(selfaddr, peersaddr)
+        assert os.environ[WORKER_SELF_INFO] == selfaddr
+        assert os.environ[WORKER_PEERS_INFO] == peersaddr
+        assert os.environ[BOOTSTRAP_P2P_PLUGIN] == BootstrapPluginKind.UCP
+        assert os.environ[REALM_UCP_BOOTSTRAP_MODE] == BootstrapMode.P2P
 
 
 if __name__ == "__main__":

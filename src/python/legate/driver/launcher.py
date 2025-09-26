@@ -325,7 +325,7 @@ class DaskLauncher(Launcher):
             msg = "Dask launcher only supports single-node runs"
             raise RuntimeError(msg)
 
-        cmd = ["dask"]
+        cmd = ["daskrun"]
         cmd += ["--workers-per-node", str(config.multi_node.ranks_per_node)]
 
         self.cmd = tuple(cmd + config.multi_node.launcher_extra)
