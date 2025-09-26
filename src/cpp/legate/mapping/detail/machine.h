@@ -135,6 +135,18 @@ class LocalMachine {
 
   [[nodiscard]] const Processor& find_first_processor_with_affinity_to(StoreTarget target) const;
   [[nodiscard]] Memory get_memory(Processor proc, StoreTarget target) const;
+  /**
+   * @brief Retrieve the memory handle for a particular kind of memory on a processor.
+   *
+   * @param proc The processor on which the memory should reside.
+   * @param kind The kind of memory to retrieve.
+   *
+   * @return The memory handle.
+   *
+   * @throw std::invalid_argument If the memory kind is invalid.
+   * @throw std::out_of_range If the processor does not support the requested memory kind.
+   */
+  [[nodiscard]] Memory get_memory(Processor proc, Memory::Kind kind) const;
   [[nodiscard]] Memory system_memory() const;
   [[nodiscard]] Memory zerocopy_memory() const;
   [[nodiscard]] const std::map<Processor, Memory>& frame_buffers() const;

@@ -57,20 +57,37 @@ LEGATE_EXPORT void check_alignment(std::size_t alignment);
 template <typename VAL, std::int32_t DIM>
 Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory::Kind kind, std::size_t alignment)
 {
+  if (Memory::Kind::NO_MEMKIND == kind) {
+    kind = find_memory_kind_for_executing_processor(/* host_accessible */ false);
+  }
+
+  return create_buffer<VAL>(extents, find_memory_from_kind(kind), alignment);
+}
+
+template <typename VAL, std::int32_t DIM>
+Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory mem, std::size_t alignment)
+{
   static_assert(DIM <= LEGATE_MAX_DIM);
   detail::check_alignment(alignment);
 
-  if (Memory::Kind::NO_MEMKIND == kind) {
-    kind = find_memory_kind_for_executing_processor(false);
-  }
   auto hi = extents - Point<DIM>::ONES();
-  return Buffer<VAL, DIM>{Rect<DIM>{Point<DIM>::ZEROES(), std::move(hi)}, kind, nullptr, alignment};
+
+  return Buffer<VAL, DIM>{Rect<DIM>{Point<DIM>::ZEROES(), std::move(hi)},
+                          mem,
+                          /* initial_value */ nullptr,
+                          alignment};
 }
 
 template <typename VAL>
 Buffer<VAL> create_buffer(std::size_t size, Memory::Kind kind, std::size_t alignment)
 {
   return create_buffer<VAL, 1>(Point<1>{size}, kind, alignment);
+}
+
+template <typename VAL>
+Buffer<VAL> create_buffer(std::size_t size, Memory mem, std::size_t alignment)
+{
+  return create_buffer<VAL, 1>(Point<1>{size}, mem, alignment);
 }
 
 }  // namespace legate

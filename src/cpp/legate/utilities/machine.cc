@@ -39,4 +39,11 @@ Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
   LEGATE_ABORT("Unknown processor kind ", kind);
 }
 
+Memory find_memory_from_kind(Memory::Kind kind)
+{
+  auto&& runtime = detail::Runtime::get_runtime();
+
+  return runtime.local_machine().get_memory(runtime.get_executing_processor(), kind);
+}
+
 }  // namespace legate

@@ -476,6 +476,54 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
   LEGATE_ABORT("invalid StoreTarget: ", legate::detail::to_underlying(target));
 }
 
+Legion::Memory LocalMachine::get_memory(Processor proc, Memory::Kind kind) const
+{
+  switch (kind) {
+    case Memory::Kind::SYSTEM_MEM: return system_memory();
+    case Memory::Kind::GPU_FB_MEM: {
+      if (const auto it = frame_buffers().find(proc); it != frame_buffers().end()) {
+        return it->second;
+      }
+
+      // frame_buffers().at() would have achieved the same thing, but the error message would
+      // have been inscrutable, so roll our own version.
+      throw legate::detail::TracedException<std::out_of_range>{
+        fmt::format("Processor {} does not support memory of type {}",
+                    fmt::streamed(proc),
+                    fmt::streamed(kind))};
+    }
+    case Memory::Kind::Z_COPY_MEM: return zerocopy_memory();
+    case Memory::Kind::SOCKET_MEM: {
+      if (const auto it = socket_memories().find(proc); it != socket_memories().end()) {
+        return it->second;
+      }
+
+      // socket_memories().at() would have achieved the same thing, but the error message would
+      // have been inscrutable, so roll our own version.
+      throw legate::detail::TracedException<std::out_of_range>{
+        fmt::format("Processor {} does not support memory of type {}",
+                    fmt::streamed(proc),
+                    fmt::streamed(kind))};
+    }
+    case Memory::Kind::NO_MEMKIND: [[fallthrough]];
+    case Memory::Kind::GLOBAL_MEM: [[fallthrough]];
+    case Memory::Kind::REGDMA_MEM: [[fallthrough]];
+    case Memory::Kind::DISK_MEM: [[fallthrough]];
+    case Memory::Kind::HDF_MEM: [[fallthrough]];
+    case Memory::Kind::FILE_MEM: [[fallthrough]];
+    case Memory::Kind::LEVEL3_CACHE: [[fallthrough]];
+    case Memory::Kind::LEVEL2_CACHE: [[fallthrough]];
+    case Memory::Kind::LEVEL1_CACHE: [[fallthrough]];
+    case Memory::Kind::GPU_MANAGED_MEM: [[fallthrough]];
+    case Memory::Kind::GPU_DYNAMIC_MEM:
+      throw legate::detail::TracedException<std::invalid_argument>{
+        fmt::format("Unhandled memory kind: {}", fmt::streamed(kind))};
+  }
+  // Use of to_underlying() is intentional. The value clearly is corrupted (or not one of the
+  // Realm enums), so going through operator<< for it is dangerous.
+  LEGATE_ABORT("Invalid Memory kind: ", legate::detail::to_underlying(kind));
+}
+
 std::uint32_t LocalMachine::g2c_multi_hop_bandwidth(Memory gpu_mem, Memory cpu_mem) const
 {
   const auto gpu_finder = g2c_multi_hop_bandwidth_.find(gpu_mem);

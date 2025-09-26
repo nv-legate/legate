@@ -220,6 +220,20 @@ template <typename VAL, std::int32_t DIM>
                                              std::size_t alignment = DEFAULT_ALIGNMENT);
 
 /**
+ * @brief Creates a \ref Buffer of specific extents.
+ *
+ * @param extents Extents of the buffer.
+ * @param mem The target memory of the buffer.
+ * @param alignment Alignment for the memory allocation (optional).
+ *
+ * @return A \ref Buffer object.
+ */
+template <typename VAL, std::int32_t DIM>
+[[nodiscard]] Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
+                                             Memory mem,
+                                             std::size_t alignment = DEFAULT_ALIGNMENT);
+
+/**
  * @brief Creates a \ref Buffer of a specific size. Always returns a 1D \ref Buffer.
  *
  * @param size Size of the \ref Buffer
@@ -232,6 +246,20 @@ template <typename VAL, std::int32_t DIM>
 template <typename VAL>
 [[nodiscard]] Buffer<VAL> create_buffer(std::size_t size,
                                         Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
+                                        std::size_t alignment = DEFAULT_ALIGNMENT);
+
+/**
+ * @brief Creates a \ref Buffer of a specific size. Always returns a 1D \ref Buffer.
+ *
+ * @param size Size of the \ref Buffer.
+ * @param mem The target memory of the buffer.
+ * @param alignment Alignment for the memory allocation (optional).
+ *
+ * @return A 1D \ref Buffer object.
+ */
+template <typename VAL>
+[[nodiscard]] Buffer<VAL> create_buffer(std::size_t size,
+                                        Memory mem,
                                         std::size_t alignment = DEFAULT_ALIGNMENT);
 
 /** @} */
