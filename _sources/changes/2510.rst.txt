@@ -52,6 +52,18 @@ C++
 
 .. rubric:: I/O
 
+- Change HDF5 Virtual File Driver (VFD) GPUDirectStorage (GDS) to enabled by default if
+  Legate was built with support for it and Legate determines that GDS is likely to
+  work. Previously this feature was disabled but could be toggled on via the
+  ``--io-use-vfd-gds`` LEGATE_CONFIG option.
+
+  Users should note that there is presently no way to reliably know ahead of time
+  (i.e. before attempting cuFile calls) whether the filesystem supports GDS. Legate
+  employs several heuristics to determine viability that -- while rare -- can provide both
+  false positives *and* false negatives. Users relying on I/O performance who want this
+  feature enabled should ensure it is on via the flag (as before), while users that
+  encounter false positives should disable it via the flag and raise a bug report at
+  https://github.com/nv-legate/legate/issues.
 
 Python
 ------

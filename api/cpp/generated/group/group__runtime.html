@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (25.10.00.dev48+gfc4bd2333)</title>
+    <title>runtime &#8212; NVIDIA legate (25.10.00.dev53+g0985ddec0)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=4c56bbf5"></script>
+    <script src="../../../../_static/documentation_options.js?v=f6b8bb96"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev48+gfc4bd2333)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev53+g0985ddec0)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev48+gfc4bd2333)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev53+g0985ddec0)</p>
   
 </a>
 
@@ -327,7 +327,11 @@ SPDX-License-Identifier: Apache-2.0
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/introduction/index.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../manual/runtime/index.html">The Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../manual/runtime/index.html">The Runtime</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/runtime/standard_execution.html">Standard Execution Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/runtime/streaming.html">Streaming Execution Model</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/tasks/index.html">Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/data/index.html">Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/mappers/index.html">Mappers</a></li>
@@ -2805,6 +2809,18 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail22is_gds_maybe_availableEv">
+<span id="_CPPv3N6legate6detail22is_gds_maybe_availableEv"></span><span id="_CPPv2N6legate6detail22is_gds_maybe_availableEv"></span><span id="legate::detail::is_gds_maybe_available"></span><span class="target" id="util_8cc_1a625261ae130e49b61c4fb51ffdfb8e0a"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">is_gds_maybe_available</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd><p>Determine whether GDS is available and usable on the system. </p>
+<p>This routine is a guess. It does not return reliable answers because there is no way to know if GDS will work until you try to use it and it either fails or succeeds. This routine tries its level best to guess based on the ability to load the cuFile driver, the existence of Linux-specific file drivers and other black magic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if GDS is available, <code class="docutils literal notranslate"><span class="pre">false</span></code> if not. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail25set_mpi_wrapper_librariesEv">
 <span id="_CPPv3N6legate6detail25set_mpi_wrapper_librariesEv"></span><span id="_CPPv2N6legate6detail25set_mpi_wrapper_librariesEv"></span><span id="legate::detail::set_mpi_wrapper_libraries"></span><span class="target" id="mpi__detection_8cc_1aabc6ad04bef57dce4359d87de42d9777"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_mpi_wrapper_libraries</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
 <dd></dd></dl>
@@ -4890,6 +4906,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail10parse_argsENSt6vectorINSt6stringEEE"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail14multi_node_jobEv"><code class="docutils literal notranslate"><span class="pre">multi_node_job()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail30deduplicate_command_line_flagsE4SpanIKNSt6stringEE"><code class="docutils literal notranslate"><span class="pre">deduplicate_command_line_flags()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail22is_gds_maybe_availableEv"><code class="docutils literal notranslate"><span class="pre">is_gds_maybe_available()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail25set_mpi_wrapper_librariesEv"><code class="docutils literal notranslate"><span class="pre">set_mpi_wrapper_libraries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail24find_projection_functionEN6Legion12ProjectionIDE"><code class="docutils literal notranslate"><span class="pre">find_projection_function()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail34register_affine_projection_functorENSt8uint32_tERKN4proj13SymbolicPointEN6Legion12ProjectionIDE"><code class="docutils literal notranslate"><span class="pre">register_affine_projection_functor()</span></code></a></li>

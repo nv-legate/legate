@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>data &#8212; NVIDIA legate (25.10.00.dev48+gfc4bd2333)</title>
+    <title>data &#8212; NVIDIA legate (25.10.00.dev53+g0985ddec0)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=4c56bbf5"></script>
+    <script src="../../../../_static/documentation_options.js?v=f6b8bb96"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,11 +134,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev48+gfc4bd2333)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev53+g0985ddec0)</p>
   
 </a></div>
     
@@ -245,11 +245,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev48+gfc4bd2333)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev53+g0985ddec0)</p>
   
 </a>
 
@@ -328,7 +328,11 @@ SPDX-License-Identifier: Apache-2.0
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/introduction/index.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../manual/runtime/index.html">The Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../manual/runtime/index.html">The Runtime</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/runtime/standard_execution.html">Standard Execution Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../manual/runtime/streaming.html">Streaming Execution Model</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/tasks/index.html">Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/data/index.html">Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../manual/mappers/index.html">Mappers</a></li>
@@ -720,6 +724,32 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIME6MemoryNSt6size_tE">
+<span id="_CPPv3I0_NSt7int32_tEE13create_bufferRK5PointI3DIME6MemoryNSt6size_tE"></span><span id="_CPPv2I0_NSt7int32_tEE13create_bufferRK5PointI3DIME6MemoryNSt6size_tE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">VAL</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">DIM</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__data_1ga8a558d80f6c2f301e72fa45d5f3b11e0"></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE6Buffer" title="Buffer"><span class="n"><span class="pre">Buffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIME6MemoryNSt6size_tE" title="create_buffer::VAL"><span class="n"><span class="pre">VAL</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIME6MemoryNSt6size_tE" title="create_buffer::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_buffer</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="group__geometry.html#_CPPv4I_i0E5Point" title="Point"><span class="n"><span class="pre">Point</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIME6MemoryNSt6size_tE" title="create_buffer::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extents</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">Memory</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mem</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">alignment</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv417DEFAULT_ALIGNMENT" title="DEFAULT_ALIGNMENT"><span class="n"><span class="pre">DEFAULT_ALIGNMENT</span></span></a></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIME6MemoryNSt6size_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a> of specific extents. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extents</strong> – Extents of the buffer. </p></li>
+<li><p><strong>mem</strong> – The target memory of the buffer. </p></li>
+<li><p><strong>alignment</strong> – Alignment for the memory allocation (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a> object. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tEN6Memory4KindENSt6size_tE">
 <span id="_CPPv3I0E13create_bufferNSt6size_tEN6Memory4KindENSt6size_tE"></span><span id="_CPPv2I0E13create_bufferNSt6size_tEN6Memory4KindENSt6size_tE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">VAL</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__data_1gacfe2f5b551ef4b660943948a3f0f4259"></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE6Buffer" title="Buffer"><span class="n"><span class="pre">Buffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tEN6Memory4KindENSt6size_tE" title="create_buffer::VAL"><span class="n"><span class="pre">VAL</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_buffer</span></span></span><span class="sig-paren">(</span>
 
@@ -741,6 +771,32 @@ SPDX-License-Identifier: Apache-2.0
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A 1D <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tE6MemoryNSt6size_tE">
+<span id="_CPPv3I0E13create_bufferNSt6size_tE6MemoryNSt6size_tE"></span><span id="_CPPv2I0E13create_bufferNSt6size_tE6MemoryNSt6size_tE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">VAL</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__data_1ga044073d7a311d7f34922c98bb608716b"></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE6Buffer" title="Buffer"><span class="n"><span class="pre">Buffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tE6MemoryNSt6size_tE" title="create_buffer::VAL"><span class="n"><span class="pre">VAL</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_buffer</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">Memory</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mem</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">alignment</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv417DEFAULT_ALIGNMENT" title="DEFAULT_ALIGNMENT"><span class="n"><span class="pre">DEFAULT_ALIGNMENT</span></span></a></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tE6MemoryNSt6size_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a> of a specific size. Always returns a 1D <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>size</strong> – Size of the <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a>. </p></li>
+<li><p><strong>mem</strong> – The target memory of the buffer. </p></li>
+<li><p><strong>alignment</strong> – Alignment for the memory allocation (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 1D <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a> object. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -4335,7 +4391,9 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#c.LEGATE_TRUE_WHEN_DEBUG"><code class="docutils literal notranslate"><span class="pre">LEGATE_TRUE_WHEN_DEBUG</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE6Buffer"><code class="docutils literal notranslate"><span class="pre">Buffer</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIMEN6Memory4KindENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIME6MemoryNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tEN6Memory4KindENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tE6MemoryNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv44nullv"><code class="docutils literal notranslate"><span class="pre">null()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv416InlineAllocationPvNSt6vectorINSt6size_tEEEN7mapping11StoreTargetE"><code class="docutils literal notranslate"><span class="pre">InlineAllocation()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv417DEFAULT_ALIGNMENT"><code class="docutils literal notranslate"><span class="pre">DEFAULT_ALIGNMENT</span></code></a></li>

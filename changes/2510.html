@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.10 &#8212; NVIDIA legate (25.10.00.dev48+gfc4bd2333)</title>
+    <title>Changes: 25.10 &#8212; NVIDIA legate (25.10.00.dev53+g0985ddec0)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4c56bbf5"></script>
+    <script src="../_static/documentation_options.js?v=f6b8bb96"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev48+gfc4bd2333)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev53+g0985ddec0)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev48+gfc4bd2333) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev53+g0985ddec0) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev48+gfc4bd2333)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev53+g0985ddec0)</p>
   
 </a>
 
@@ -327,7 +327,11 @@ SPDX-License-Identifier: Apache-2.0
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../manual/introduction/index.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../manual/runtime/index.html">The Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../manual/runtime/index.html">The Runtime</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../manual/runtime/standard_execution.html">Standard Execution Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../manual/runtime/streaming.html">Streaming Execution Model</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="../manual/tasks/index.html">Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../manual/data/index.html">Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../manual/mappers/index.html">Mappers</a></li>
@@ -688,6 +692,20 @@ partition used by the runtime for optimizing task launches and data movement.</p
 <p class="rubric">Runtime</p>
 <p class="rubric">Utilities</p>
 <p class="rubric">I/O</p>
+<ul>
+<li><p>Change HDF5 Virtual File Driver (VFD) GPUDirectStorage (GDS) to enabled by default if
+Legate was built with support for it and Legate determines that GDS is likely to
+work. Previously this feature was disabled but could be toggled on via the
+<code class="docutils literal notranslate"><span class="pre">--io-use-vfd-gds</span></code> LEGATE_CONFIG option.</p>
+<p>Users should note that there is presently no way to reliably know ahead of time
+(i.e. before attempting cuFile calls) whether the filesystem supports GDS. Legate
+employs several heuristics to determine viability that – while rare – can provide both
+false positives <em>and</em> false negatives. Users relying on I/O performance who want this
+feature enabled should ensure it is on via the flag (as before), while users that
+encounter false positives should disable it via the flag and raise a bug report at
+<a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+</li>
+</ul>
 </section>
 <section id="python">
 <h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
