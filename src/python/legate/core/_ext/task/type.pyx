@@ -59,7 +59,7 @@ cdef void add_redop_types():
 add_redop_types()
 
 
-class ReductionStore(Generic[_T], PyPhysicalStore):
+class ReductionStore(PyPhysicalStore, Generic[_T]):
     r"""Convenience class for specifying reduction stores for Legate task
     variants.
 
@@ -103,7 +103,7 @@ cdef class OutputArray(PhysicalArray):
     """
 
 
-class ReductionArray(Generic[_T], PyPhysicalArray):
+class ReductionArray(PyPhysicalArray, Generic[_T]):
     r"""Convenience class for specifying reduction arrays for Legate task
     variants.
 

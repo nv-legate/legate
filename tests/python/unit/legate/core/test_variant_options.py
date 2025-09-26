@@ -75,14 +75,7 @@ class TestVariantOptions:
         assert options.communicators == communicators
 
         options.communicators = []
-        # mypy is really off its rocker...
-        #
-        # tests/python/unit/legate/core/test_variant_options.py:80:16: error:
-        # Non-overlapping equality check (left operand type: "tuple[str, str]",
-        # right operand type: "tuple[()]")  [comparison-overlap]
-        #             assert options.communicators == ()
-        #                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-        assert options.communicators == ()  # type: ignore[comparison-overlap]
+        assert options.communicators == ()
 
         options.communicators = communicators
         # Test that re-settting them to the values does in fact re-set them

@@ -308,6 +308,7 @@ length-sort-straight = true
 combine-as-imports = true
 split-on-trailing-comma = false
 required-imports = ["from __future__ import annotations"]
+known-local-folder = ["util"]
 section-order = [
     "future",
     "standard-library",

@@ -322,7 +322,7 @@ class TestLogicalStoreOperationErrors:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int16, (1,))
         with pytest.raises(
-            ValueError, match="size.*cannot be delinearized into"
+            ValueError, match=r"size.*cannot be delinearized into"
         ):
             store.delinearize(0, (1, 2))
 
@@ -330,7 +330,8 @@ class TestLogicalStoreOperationErrors:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int16, shape=range(LEGATE_MAX_DIM))
         with pytest.raises(
-            ValueError, match="Invalid projection on dimension .* for .* store"
+            ValueError,
+            match=r"Invalid projection on dimension .* for .* store",
         ):
             store.project(LEGATE_MAX_DIM, 0)
 

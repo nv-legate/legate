@@ -78,24 +78,24 @@ repos:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes"]
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v20.1.8'
+    rev: 'v21.1.2'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
         exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
   - repo: https://github.com/fsfe/reuse-tool
-    rev: v5.0.2
+    rev: v5.1.1
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.11
+    rev: v0.13.2
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.17.1'
+    rev: 'v1.18.2'
     hooks:
       - id: mypy
         pass_filenames: false

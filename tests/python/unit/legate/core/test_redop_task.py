@@ -95,7 +95,7 @@ class TestRedopTaskStore:
             out_arr[:] = out_arr + store_arr.sum()
 
         in_arr, in_store = self.create_input_args_()
-        out_arr, out_store = self.create_output_args_()
+        _, out_store = self.create_output_args_()
 
         array_sum_task(in_store, out_store)
 
@@ -147,7 +147,7 @@ class TestRedopTaskStore:
             out_arr[:] = np.maximum(out_arr.max(), store_arr.max())
 
         in_arr, in_store = self.create_input_args_()
-        out_arr, out_store = self.create_output_args_()
+        _, out_store = self.create_output_args_()
 
         array_max_task(in_store, out_store)
 
@@ -168,7 +168,7 @@ class TestRedopTaskStore:
             out_arr[:] = np.minimum(out_arr.min(), store_arr.min())
 
         in_arr, in_store = self.create_input_args_()
-        out_arr, out_store = self.create_output_args_(init=in_arr.max() + 1)
+        _, out_store = self.create_output_args_(init=in_arr.max() + 1)
 
         array_min_task(in_store, out_store)
 
@@ -189,7 +189,7 @@ class TestRedopTaskStore:
             out_arr[:] = out_arr * np.multiply.reduce(store_arr)
 
         in_arr, in_store = self.create_input_args_()
-        out_arr, out_store = self.create_output_args_(init=1)
+        _, out_store = self.create_output_args_(init=1)
 
         array_mul_task(in_store, out_store)
 
@@ -208,7 +208,7 @@ class TestRedopTaskStore:
             out_arr[:] = out_arr | np.bitwise_or.reduce(store_arr)
 
         in_arr, in_store = self.create_input_args_()
-        out_arr, out_store = self.create_output_args_()
+        _, out_store = self.create_output_args_()
 
         array_or_task(in_store, out_store)
 
@@ -229,7 +229,7 @@ class TestRedopTaskStore:
             out_arr[:] = out_arr ^ np.bitwise_xor.reduce(store_arr)
 
         in_arr, in_store = self.create_input_args_()
-        out_arr, out_store = self.create_output_args_()
+        _, out_store = self.create_output_args_()
 
         array_xor_task(in_store, out_store)
 

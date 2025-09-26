@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from shlex import quote
 from typing import TYPE_CHECKING
@@ -133,7 +134,8 @@ class TestDriver:
         driver = m.LegateDriver(config, SYSTEM)
 
         with pytest.raises(
-            RuntimeError, match="Cannot start console with more than one node."
+            RuntimeError,
+            match=re.escape("Cannot start console with more than one node."),
         ):
             driver.run()
 

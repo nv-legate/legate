@@ -406,7 +406,7 @@ class Test_cmd_nsys:
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-s", "--sample")
-        parsed_args, unparsed = parser.parse_known_args(result)
+        parsed_args, _ = parser.parse_known_args(result)
 
         assert parsed_args.sample == "cpu"
 

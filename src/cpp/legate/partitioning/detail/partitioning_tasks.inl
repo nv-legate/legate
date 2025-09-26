@@ -19,8 +19,7 @@ template <typename OP, typename T>
 #if LEGATE_DEFINED(LEGATE_DEVICE_COMPILE)
 LEGATE_DEVICE
 #endif
-  void
-  wrap_with_cas(OP op, T& lhs, T rhs)
+  void wrap_with_cas(OP op, T& lhs, T rhs)
 {
 #if LEGATE_DEFINED(LEGATE_DEVICE_COMPILE)
   T newval = lhs, oldval;

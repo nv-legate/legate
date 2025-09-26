@@ -32,8 +32,9 @@ from legate.dask.worker import (
 
 dask: ModuleType | None
 try:
-    import dask
     from dask.distributed import Client, LocalCluster
+
+    import dask
 except ModuleNotFoundError:
     dask = None
 

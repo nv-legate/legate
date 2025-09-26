@@ -177,7 +177,7 @@ class TestToDLPackErrors:
         store.fill(3)
 
         phys = store.get_physical_store()
-        with pytest.raises(BufferError, match="^$"):
+        with pytest.raises(BufferError, match=r"^$"):
             # There are legate RuntimeError messages dumped, but the actual
             # exception is BufferError which doesn't have any messages
             phys.__dlpack__(dl_device=(-1, 0))

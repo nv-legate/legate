@@ -164,7 +164,7 @@ def convert_str_seq(
         raise ValueError(msg) from e
 
 
-class ConversionFnWithType(Generic[T], Protocol):
+class ConversionFnWithType(Protocol, Generic[T]):
     type: str
 
     def __call__(self, value: Any) -> T: ...
