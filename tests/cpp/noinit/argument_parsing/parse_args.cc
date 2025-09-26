@@ -124,7 +124,7 @@ TEST_F(ParseArgsUnit, NoArgs)
   ASSERT_THAT(parsed.field_reuse_freq, ArgumentMatches(LEGATE_FIELD_REUSE_FREQ_DEFAULT));
   ASSERT_THAT(parsed.consensus, ArgumentMatches(bool{LEGATE_CONSENSUS_DEFAULT}));
   ASSERT_THAT(parsed.disable_mpi, ArgumentMatches(::testing::IsFalse()));
-  ASSERT_THAT(parsed.io_use_vfd_gds, ArgumentMatches(::testing::IsFalse()));
+  ASSERT_THAT(parsed.io_use_vfd_gds, ArgumentMatches(legate::detail::is_gds_maybe_available()));
   ASSERT_THAT(parsed.cpus, ArgumentMatches(-1));
   ASSERT_THAT(parsed.gpus, ArgumentMatches(-1));
   ASSERT_THAT(parsed.omps, ArgumentMatches(-1));
@@ -169,7 +169,7 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   TEMP_ENV_VAR(LEGATE_FIELD_REUSE_FREQ, 88);
   TEMP_ENV_VAR(LEGATE_CONSENSUS, 1);
   TEMP_ENV_VAR(LEGATE_DISABLE_MPI, 1);
-  TEMP_ENV_VAR(LEGATE_IO_USE_VFD_GDS, 1);
+  TEMP_ENV_VAR(LEGATE_IO_USE_VFD_GDS, 0);
   TEMP_ENV_VAR(LEGATE_LOG_MAPPING, 1);
   TEMP_ENV_VAR(LEGATE_LOG_PARTITIONING, 1);
   TEMP_ENV_VAR(LEGATE_CUDA_DRIVER, libdummy_cuda_driver.so);
@@ -192,7 +192,7 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   ASSERT_THAT(parsed.field_reuse_freq, ArgumentMatches(88));
   ASSERT_THAT(parsed.consensus, ArgumentMatches(::testing::IsTrue()));
   ASSERT_THAT(parsed.disable_mpi, ArgumentMatches(::testing::IsTrue()));
-  ASSERT_THAT(parsed.io_use_vfd_gds, ArgumentMatches(::testing::IsTrue()));
+  ASSERT_THAT(parsed.io_use_vfd_gds, ArgumentMatches(legate::detail::is_gds_maybe_available()));
   ASSERT_THAT(parsed.cpus, ArgumentMatches(-1));
   ASSERT_THAT(parsed.gpus, ArgumentMatches(-1));
   ASSERT_THAT(parsed.omps, ArgumentMatches(-1));

@@ -632,7 +632,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
     parser.add_argument("--io-use-vfd-gds",
                         "Whether to enable HDF5 Virtual File Driver (VDS) GPUDirectStorage (GDS) "
                         "which may dramatically speed up file storage and extraction",
-                        LEGATE_IO_USE_VFD_GDS.get().value_or(false));
+                        LEGATE_IO_USE_VFD_GDS.get().value_or(is_gds_maybe_available()));
 
   io_use_vfd_gds.action([](std::string_view, const Argument<bool>* io_use_vfd_gds_arg) {
     const auto val = io_use_vfd_gds_arg->value();

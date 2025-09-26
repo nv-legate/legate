@@ -38,4 +38,16 @@ namespace legate::detail {
  */
 [[nodiscard]] std::vector<std::string> deduplicate_command_line_flags(Span<const std::string> args);
 
+/**
+ * @brief Determine whether GDS is available and usable on the system.
+ *
+ * This routine is a guess. It does not return reliable answers because there is no way to know
+ * if GDS will work until you try to use it and it either fails or succeeds. This routine tries
+ * its level best to guess based on the ability to load the cuFile driver, the existence of
+ * Linux-specific file drivers and other black magic.
+ *
+ * @return `true` if GDS is available, `false` if not.
+ */
+[[nodiscard]] bool is_gds_maybe_available();
+
 }  // namespace legate::detail

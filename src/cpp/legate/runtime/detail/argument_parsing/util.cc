@@ -6,8 +6,13 @@
 
 #include <legate/runtime/detail/argument_parsing/util.h>
 
+#include <legate_defines.h>
+
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/env.h>
+#include <legate/utilities/macros.h>
+
+#include <kvikio/shim/cufile.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -89,6 +94,11 @@ std::vector<std::string> deduplicate_command_line_flags(Span<const std::string> 
   }
   LEGATE_CHECK(values.empty());
   return ret;
+}
+
+bool is_gds_maybe_available()
+{
+  return LEGATE_DEFINED(LEGATE_USE_HDF5_VFD_GDS) && kvikio::is_cufile_available();
 }
 
 }  // namespace legate::detail

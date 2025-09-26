@@ -117,6 +117,9 @@ run_test_or_analysis() {
       sysctl vm.mmap_rnd_bits=28
     fi
 
+    # Otherwise cuFile errors out when trying to perform GDS on a system that isn't set up
+    # for it (which our CI runners are not).
+    export CUFILE_ALLOW_COMPAT_MODE='true'
 
     case "$2" in
       "cpu")
