@@ -6,8 +6,12 @@
 
 #include <legate.h>
 
+#include <legate/type/types.h>
+
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <stdexcept>
 #include <utilities/utilities.h>
 
 namespace scoped_allocator_test {
@@ -17,7 +21,8 @@ namespace {
 constexpr std::uint64_t ALLOCATE_BYTES = 100;
 constexpr std::uint64_t OVER_ALIGNMENT = 128;
 
-struct DeallocateTask : public legate::LegateTask<DeallocateTask> {
+class DeallocateTask : public legate::LegateTask<DeallocateTask> {
+ public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
@@ -25,7 +30,8 @@ struct DeallocateTask : public legate::LegateTask<DeallocateTask> {
   static void cpu_variant(legate::TaskContext context);
 };
 
-struct DoubleDeallocateTask : public legate::LegateTask<DoubleDeallocateTask> {
+class DoubleDeallocateTask : public legate::LegateTask<DoubleDeallocateTask> {
+ public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{2}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
@@ -33,9 +39,37 @@ struct DoubleDeallocateTask : public legate::LegateTask<DoubleDeallocateTask> {
   static void cpu_variant(legate::TaskContext context);
 };
 
-struct InvalidAllocateTask : public legate::LegateTask<InvalidAllocateTask> {
+class InvalidAllocateTask : public legate::LegateTask<InvalidAllocateTask> {
+ public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{3}};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+
+  static void cpu_variant(legate::TaskContext context);
+};
+
+class CopyAllocatorTask : public legate::LegateTask<CopyAllocatorTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{4}};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+
+  static void cpu_variant(legate::TaskContext context);
+};
+
+class AllocateTypeTask : public legate::LegateTask<AllocateTypeTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{5}};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+
+  static void cpu_variant(legate::TaskContext context);
+};
+
+class AllocateAlignedTask : public legate::LegateTask<AllocateAlignedTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{6}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
@@ -99,6 +133,75 @@ bool check_alignment(const void* buffer, std::size_t alignment)
                std::invalid_argument);
 }
 
+/*static*/ void CopyAllocatorTask::cpu_variant(legate::TaskContext context)
+{
+  const auto kind      = context.scalar(0).value<legate::Memory::Kind>();
+  const auto scoped    = context.scalar(1).value<bool>();
+  const auto alignment = context.scalar(2).value<std::uint64_t>();
+  const auto bytes     = context.scalar(3).value<std::uint64_t>();
+  auto allocator       = legate::ScopedAllocator{kind, scoped, alignment};
+  auto allocator_copy  = allocator;
+  auto* buffer         = allocator.allocate(bytes);
+
+  ASSERT_NO_THROW(allocator_copy.deallocate(buffer));
+}
+
+/*static*/ void AllocateAlignedTask::cpu_variant(legate::TaskContext context)
+{
+  const auto kind      = context.scalar(0).value<legate::Memory::Kind>();
+  const auto scoped    = context.scalar(1).value<bool>();
+  const auto alignment = context.scalar(2).value<std::uint64_t>();
+  const auto bytes     = context.scalar(3).value<std::uint64_t>();
+  auto allocator       = legate::ScopedAllocator{kind, scoped};
+
+  if (alignment > 0 && alignment == (std::uint64_t{1} << static_cast<int>(
+                                       std::log2(static_cast<double>(alignment))))) {
+    auto* buffer = allocator.allocate_aligned(bytes, alignment);
+
+    ASSERT_TRUE(check_alignment(buffer, alignment));
+
+    if (bytes == 0) {
+      ASSERT_TRUE(buffer == nullptr);
+    } else {
+      ASSERT_TRUE(buffer != nullptr);
+    }
+    ASSERT_NO_THROW(allocator.deallocate(buffer));
+  } else {
+    // check bad alignment
+    ASSERT_THAT(
+      [&] { static_cast<void>(allocator.allocate_aligned(bytes, alignment)); },
+      ::testing::ThrowsMessage<std::domain_error>(::testing::HasSubstr("invalid alignment")));
+  }
+}
+
+namespace {
+
+class AllocateTypeTaskImpl {
+ public:
+  template <legate::Type::Code CODE>
+  void operator()(legate::TaskContext context) const
+  {
+    using T              = legate::type_of_t<CODE>;
+    const auto kind      = context.scalar(0).value<legate::Memory::Kind>();
+    const auto scoped    = context.scalar(1).value<bool>();
+    const auto num_items = context.scalar(2).value<std::uint64_t>();
+    auto allocator       = legate::ScopedAllocator{kind, scoped};
+    auto* buffer         = allocator.allocate_type<T>(num_items);
+
+    std::fill(buffer, buffer + num_items, T{});
+    ASSERT_NO_THROW(allocator.deallocate(buffer));
+  }
+};
+
+}  // namespace
+
+/*static*/ void AllocateTypeTask::cpu_variant(legate::TaskContext context)
+{
+  auto code = context.scalar(3).value<legate::Type::Code>();
+
+  legate::type_dispatch(code, AllocateTypeTaskImpl{}, context);
+}
+
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "legate.scopedallocator";
@@ -108,6 +211,9 @@ class Config {
     DeallocateTask::register_variants(library);
     DoubleDeallocateTask::register_variants(library);
     InvalidAllocateTask::register_variants(library);
+    CopyAllocatorTask::register_variants(library);
+    AllocateTypeTask::register_variants(library);
+    AllocateAlignedTask::register_variants(library);
   }
 };
 
@@ -151,9 +257,7 @@ void test_deallocate(legate::LocalTaskID task_id,
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, task_id);
-  auto part    = task.declare_partition();
 
-  static_cast<void>(part);
   task.add_scalar_arg(legate::Scalar{kind});
   task.add_scalar_arg(legate::Scalar{scoped});
   task.add_scalar_arg(legate::Scalar{alignment});
@@ -176,6 +280,22 @@ TEST_P(ScopedAllocatorTask, NotScoped)
 
   test_deallocate(
     DeallocateTask::TASK_CONFIG.task_id(), false /* scoped */, kind, bytes, alignment);
+}
+
+TEST_P(ScopedAllocatorTask, CopyScoped)
+{
+  auto& [bytes, alignment, kind] = GetParam();
+
+  test_deallocate(
+    CopyAllocatorTask::TASK_CONFIG.task_id(), true /* scoped */, kind, bytes, alignment);
+}
+
+TEST_P(ScopedAllocatorTask, CopyNotScoped)
+{
+  auto& [bytes, alignment, kind] = GetParam();
+
+  test_deallocate(
+    CopyAllocatorTask::TASK_CONFIG.task_id(), false /* scoped */, kind, bytes, alignment);
 }
 
 TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
@@ -235,6 +355,98 @@ TEST_F(ScopedAllocatorUnit, DeallocateNull)
   auto alloc = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM};
 
   ASSERT_NO_THROW(alloc.deallocate(nullptr));
+}
+
+class AllocateType : public RegisterOnceFixture<Config>,
+                     public ::testing::WithParamInterface<
+                       std::tuple<std::size_t, legate::Type::Code, legate::Memory::Kind>> {};
+
+INSTANTIATE_TEST_SUITE_P(
+  ScopedAllocatorUnit,
+  AllocateType,
+  ::testing::Combine(::testing::Values(0, ALLOCATE_BYTES),
+                     ::testing::Values(legate::Type::Code::BOOL, legate::Type::Code::COMPLEX128),
+                     ::testing::Values(legate::Memory::NO_MEMKIND, legate::Memory::SYSTEM_MEM)));
+
+namespace {
+
+void test_allocate_type(legate::LocalTaskID task_id,
+                        bool scoped,
+                        legate::Type::Code code,
+                        legate::Memory::Kind kind,
+                        std::size_t num_items)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(context, task_id);
+
+  task.add_scalar_arg(legate::Scalar{kind});
+  task.add_scalar_arg(legate::Scalar{scoped});
+  task.add_scalar_arg(legate::Scalar{num_items});
+  task.add_scalar_arg(legate::Scalar{code});
+  runtime->submit(std::move(task));
+}
+
+}  // namespace
+
+TEST_P(AllocateType, Scoped)
+{
+  auto& [num_items, code, kind] = GetParam();
+
+  test_allocate_type(
+    AllocateTypeTask::TASK_CONFIG.task_id(), true /* scoped */, code, kind, num_items);
+}
+
+TEST_P(AllocateType, NotScoped)
+{
+  auto& [num_items, code, kind] = GetParam();
+
+  test_allocate_type(
+    AllocateTypeTask::TASK_CONFIG.task_id(), false /* scoped */, code, kind, num_items);
+}
+
+class AllocateAligned
+  : public RegisterOnceFixture<Config>,
+    public ::testing::WithParamInterface<std::tuple<std::size_t, legate::Memory::Kind>> {};
+
+INSTANTIATE_TEST_SUITE_P(
+  ScopedAllocatorUnit,
+  AllocateAligned,
+  ::testing::Combine(::testing::Values(1, 2, 4, alignof(std::max_align_t), OVER_ALIGNMENT),
+                     ::testing::Values(legate::Memory::NO_MEMKIND, legate::Memory::SYSTEM_MEM)));
+
+TEST_P(AllocateAligned, CheckAlignment)
+{
+  auto& [alignment, kind] = GetParam();
+
+  test_deallocate(
+    AllocateAlignedTask::TASK_CONFIG.task_id(), true /* scoped */, kind, ALLOCATE_BYTES, alignment);
+}
+
+TEST_P(AllocateAligned, ZeroBytesNullptr)
+{
+  auto& [alignment, kind] = GetParam();
+
+  test_deallocate(
+    AllocateAlignedTask::TASK_CONFIG.task_id(), true /* scoped */, kind, 0, alignment);
+}
+
+class AllocateAlignedExceptions
+  : public RegisterOnceFixture<Config>,
+    public ::testing::WithParamInterface<std::tuple<std::size_t, legate::Memory::Kind>> {};
+
+INSTANTIATE_TEST_SUITE_P(ScopedAllocatorUnit,
+                         AllocateAlignedExceptions,
+                         ::testing::Combine(::testing::Values(0, 3, 5),
+                                            ::testing::Values(legate::Memory::NO_MEMKIND,
+                                                              legate::Memory::SYSTEM_MEM)));
+
+TEST_P(AllocateAlignedExceptions, InvalidAlignment)
+{
+  auto& [alignment, kind] = GetParam();
+
+  test_deallocate(
+    AllocateAlignedTask::TASK_CONFIG.task_id(), true /* scoped */, kind, ALLOCATE_BYTES, alignment);
 }
 
 }  // namespace scoped_allocator_test

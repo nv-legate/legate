@@ -20,14 +20,27 @@
 
 namespace legate {
 
+/**
+ * @brief Detail-hiding implementation class for `ScopedAllocator`.
+ *
+ * @see ScopedAllocator
+ */
 class ScopedAllocator::Impl {
  public:
   using ByteBuffer = Buffer<std::int8_t>;
 
+  // @brief See explicit constructor of `ScopedAllocator`
   Impl(Memory::Kind kind, bool scoped, std::size_t alignment);
+
   ~Impl() noexcept;
 
+  // @brief See `ScopedAllocator::allocate()`
   [[nodiscard]] void* allocate(std::size_t bytes);
+
+  // @brief See `ScopedAllocator::allocate_aligned()`
+  [[nodiscard]] void* allocate_aligned(std::size_t bytes, std::size_t alignment);
+
+  // @brief See `ScopedAllocator::deallocate()`
   void deallocate(void* ptr);
 
  private:
@@ -37,14 +50,16 @@ class ScopedAllocator::Impl {
   std::unordered_map<const void*, ByteBuffer> buffers_{};
 };
 
+namespace {
+
+// @brief Whether `n` is a power of 2
+constexpr bool is_power_of_2(std::size_t n) { return n != 0 && ((n & (n - 1)) == 0); }
+
+}  // namespace
+
 ScopedAllocator::Impl::Impl(Memory::Kind kind, bool scoped, std::size_t alignment)
   : target_kind_{kind}, scoped_{scoped}, alignment_{alignment}
 {
-  constexpr auto is_power_of_2 = [](std::size_t n) { return (n & (n - 1)) == 0; };
-
-  if (alignment == 0) {
-    throw detail::TracedException<std::domain_error>{"alignment cannot be 0"};
-  }
   if (!is_power_of_2(alignment)) {
     throw detail::TracedException<std::domain_error>{
       fmt::format("invalid alignment {}, must be a power of 2", alignment)};
@@ -61,13 +76,17 @@ ScopedAllocator::Impl::~Impl() noexcept
   }
 }
 
-void* ScopedAllocator::Impl::allocate(std::size_t bytes)
+void* ScopedAllocator::Impl::allocate_aligned(std::size_t bytes, std::size_t alignment)
 {
+  if (!is_power_of_2(alignment)) {
+    throw detail::TracedException<std::domain_error>{
+      fmt::format("invalid alignment {}, must be a power of 2", alignment)};
+  }
   if (bytes == 0) {
     return nullptr;
   }
 
-  auto buffer = create_buffer<std::int8_t>(bytes, target_kind_, alignment_);
+  auto buffer = create_buffer<std::int8_t>(bytes, target_kind_, std::max(alignment_, alignment));
   auto* ptr   = buffer.ptr(0);
 
   try {
@@ -77,6 +96,11 @@ void* ScopedAllocator::Impl::allocate(std::size_t bytes)
     throw;
   }
   return ptr;
+}
+
+void* ScopedAllocator::Impl::allocate(std::size_t bytes)
+{
+  return allocate_aligned(bytes, alignment_);
 }
 
 void ScopedAllocator::Impl::deallocate(void* ptr)
@@ -97,11 +121,16 @@ void ScopedAllocator::Impl::deallocate(void* ptr)
 }
 
 ScopedAllocator::ScopedAllocator(Memory::Kind kind, bool scoped, std::size_t alignment)
-  : impl_{std::make_unique<Impl>(kind, scoped, alignment)}
+  : impl_{std::make_shared<Impl>(kind, scoped, alignment)}
 {
 }
 
 void* ScopedAllocator::allocate(std::size_t bytes) { return impl_->allocate(bytes); }
+
+void* ScopedAllocator::allocate_aligned(std::size_t bytes, std::size_t alignment)
+{
+  return impl_->allocate_aligned(bytes, alignment);
+}
 
 void ScopedAllocator::deallocate(void* ptr) { impl_->deallocate(ptr); }
 

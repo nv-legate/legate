@@ -727,6 +727,7 @@ install(FILES legate/comm/coll_comm.h legate/comm/coll.h legate/comm/communicato
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/comm)
 
 install(FILES legate/data/allocator.h
+              legate/data/allocator.inl
               legate/data/buffer.h
               legate/data/buffer.inl
               legate/data/external_allocation.h

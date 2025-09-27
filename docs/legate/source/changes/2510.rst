@@ -35,6 +35,10 @@ C++
 
 .. rubric:: Data
 
+- Make ``legate::ScopedAllocator`` copy-constructible.
+- Add ``legate::ScopedAllocator::allocate_aligned()``.
+- Add ``legate::ScopedAllocator::allocate_type()``.
+
 .. rubric:: Mapping
 
 .. rubric:: Partitioning
