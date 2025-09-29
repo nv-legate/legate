@@ -101,7 +101,7 @@ FlatMDSpanIterator<::cuda::std::mdspan<El, Ex, L, A>>::operator*() const noexcep
         index /= span_->extent(dim);
       }
     }
-    return (*span_)(md_idx);
+    return (*span_)[md_idx];
   }
 }
 

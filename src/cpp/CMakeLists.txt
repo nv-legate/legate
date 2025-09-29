@@ -659,29 +659,52 @@ foreach(target legate_obj legate)
   legate_add_target_compile_options("${target}" CUDA PRIVATE legate_CUDA_FLAGS)
 
   legate_add_target_link_options("${target}" PUBLIC legate_LINKER_FLAGS)
-
-  if(APPLE)
-    # See https://github.com/NVIDIA/cccl/pull/2444
-    target_compile_definitions("${target}"
-                               PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
-  endif()
 endforeach()
 
-# See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
-foreach(target legate_obj legate LegionRuntime)
+get_target_property(legion_target Legion::LegionRuntime ALIASED_TARGET)
+
+if(NOT legion_target)
+  message(FATAL_ERROR "Failed to determine underlying Legion "
+                      "target from Legion::LegionRuntime")
+endif()
+
+foreach(target legate_obj legate "${legion_target}")
+  # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
   target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
-  if(legate_USE_CUDA)
-    # CCCL 2.7.0 (which is what we use) disables __half support if it detects that it
-    # isn't being compiled with a CUDA compiler. I think this is probably a bug, because
-    # we always have __half support if you #include <cuda_fp16.h>. So we need to lie to
-    # CCCL.
+  if(legate_USE_CUDA AND ("${CCCL_VERSION}" VERSION_EQUAL "2.7.0"))
+    # CCCL 2.7.0 disables __half support if it detects that it isn't being compiled with a
+    # CUDA compiler. I think this is probably a bug, because we always have __half support
+    # if you #include <cuda_fp16.h>. So we need to lie to CCCL.
     #
     # See
     # https://github.com/NVIDIA/cccl/blob/v2.7.0/libcudacxx/include/cuda/std/detail/libcxx/include/__config#L919C11-L924
     # and
     # https://github.com/NVIDIA/cccl/blob/v2.7.0/libcudacxx/include/cuda/std/__cccl/compiler.h#L93-L94
+    #
+    # This was fixed in later releases.
     target_compile_definitions("${target}" PUBLIC _LIBCUDACXX_HAS_NVFP16=1)
   endif()
+  # libcudacxx/../../../libcudacxx/include/cuda/std/__mdspan/extents.h:289:7: error: use
+  # of undeclared identifier '__assert_fail'
+  #
+  # 289 | _CCCL_ASSERT(__i < __size_, "extents access: index must be less than rank"); | ^
+  #
+  # See https://github.com/NVIDIA/cccl/issues/6026
+  #
+  # Also:
+  #
+  # mapping: Assertion `layout_stride::mapping ctor: all strides must be greater than 0'
+  # failed.
+  #
+  # Because in
+  # https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0009r18.html#wording,
+  # section 24.7.7.3 Constructors [mdspan.layoutstride.ctor]
+  #
+  # > s[i] > 0 is true for all i in the range [0, rank_ ).
+  #
+  # (where s are the strides). But then how do you construct strides over empty
+  # dimensions???
+  target_compile_options("${target}" PUBLIC -UCCCL_ENABLE_ASSERTIONS)
   if(legate_ENABLE_SANITIZERS AND ("${CCCL_VERSION}" VERSION_EQUAL "2.7.0"))
     # /path/to/libcudacxx/../../../include/cuda/std/detail/libcxx/include/__config:1155:12:
     # error: visibility does not match previous declaration 1155 | extern "C"
@@ -1055,11 +1078,6 @@ endif()
 string(JOIN
        "\n"
        base_code_string
-       [=[
-if(NOT TARGET CCCL::Thrust)
-  thrust_create_target(CCCL::Thrust FROM_OPTIONS)
-endif()
-]=]
        # These must match the decls above BEGIN MUST MATCH
        "set(Legion_USE_CUDA ${Legion_USE_CUDA})"
        "set(legate_USE_CUDA ${legate_USE_CUDA})"

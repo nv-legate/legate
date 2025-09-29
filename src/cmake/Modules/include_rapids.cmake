@@ -21,8 +21,8 @@ function(_legate_download_rapids DEST_PATH)
     file(REMOVE "${DEST_PATH}")
   else()
     # default
-    set(rapids-cmake-version "25.04")
-    set(rapids-cmake-sha "757f9fddd00ef80c26bde4e6ecd4edcd0c7c68f5")
+    set(rapids-cmake-version "25.08")
+    set(rapids-cmake-sha "6a6cdf8eb891ef4f73190793e1d4bbcb742f786a")
 
     # These need to be seen by the include(legate_rapids_file) call
     set(rapids-cmake-version "${rapids-cmake-version}" PARENT_SCOPE)
@@ -31,7 +31,7 @@ function(_legate_download_rapids DEST_PATH)
     # This hash needs to be manually updated every time we bump rapids-cmake
     set(expected_hash
         EXPECTED_HASH
-        SHA256=8044374f0460a09792894f8390244b896a4c0ede9c8b70b0c7caa522c40a45e9)
+        SHA256=3fef838cc269635d18763b42e707e98f2417224b65842641ea2907562993f8b8)
   endif()
 
   set(file_name

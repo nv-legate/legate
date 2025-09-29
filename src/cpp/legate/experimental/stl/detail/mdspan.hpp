@@ -284,21 +284,20 @@ LEGATE_HOST_DEVICE void assign(LHS&& lhs, RHS&& rhs)
 template <typename LeftElement,
           typename RightElement,
           typename Extent,
-          typename Layout,
+          typename LeftLayout,
+          typename RightLayout,
           typename LeftAccessor,
           typename RightAccessor>
 LEGATE_HOST_DEVICE void assign(
-  ::cuda::std::mdspan<LeftElement, Extent, Layout, LeftAccessor>&& lhs,
-  ::cuda::std::mdspan<RightElement, Extent, Layout, RightAccessor>&& rhs)
+  ::cuda::std::mdspan<LeftElement, Extent, LeftLayout, LeftAccessor>&& lhs,
+  ::cuda::std::mdspan<RightElement, Extent, RightLayout, RightAccessor>&& rhs)
 {
   static_assert(
     std::is_assignable_v<typename LeftAccessor::reference, typename RightAccessor::reference>);
   LEGATE_ASSERT(lhs.extents() == rhs.extents());
 
-  const auto lhs_view = flatten(std::move(lhs));
-  const auto rhs_view = flatten(std::move(rhs));
-
-  std::copy(rhs_view.begin(), rhs_view.end(), lhs_view.begin());
+  for_each_in_extent(
+    rhs.extents(), [=](auto... indices) LEGATE_HOST_DEVICE { lhs(indices...) = rhs(indices...); });
 }
 
 }  // namespace legate::experimental::stl
