@@ -16,7 +16,7 @@ from ..data.logical_store cimport LogicalStore, _LogicalStore
 from ..data.scalar cimport Scalar, _Scalar
 from ..data.shape cimport _Shape
 from ..mapping.machine cimport Machine, _Machine
-from ..mapping.mapping cimport _Mapper
+from ..mapping.mapping cimport _Mapper, _DimOrdering
 from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
 from ..task.variant_options cimport _VariantOptions, VariantOptions
@@ -80,11 +80,13 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         _LogicalStore create_store(const _Scalar&) except+
         _LogicalStore create_store(const _Scalar&, const _Shape&) except+
         _LogicalStore create_store(
-            const _Shape&, const _Type&, const void*, bool
+            const _Shape&, const _Type&, const void*, bool, const _DimOrdering&
         ) except+
-        # TODO: dimension ordering should be added
         _LogicalStore create_store(
-            const _Shape&, const _Type&, const _ExternalAllocation&
+            const _Shape&,
+            const _Type&,
+            const _ExternalAllocation&,
+            const _DimOrdering&
         ) except+
         void prefetch_bloated_instances(
             const _LogicalStore, _tuple[uint64_t], _tuple[uint64_t], bool
@@ -205,7 +207,12 @@ cdef class Runtime(Unconstructable):
         self, Scalar scalar, object shape = *
     )
     cpdef LogicalStore create_store_from_buffer(
-        self, Type dtype, object shape, object data, bool read_only
+        self,
+        Type dtype,
+        object shape,
+        object data,
+        bool read_only,
+        object ordering = *
     )
     cpdef void prefetch_bloated_instances(
         self,

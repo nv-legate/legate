@@ -33,6 +33,7 @@ from ..data.logical_store cimport LogicalStore, _LogicalStore
 from ..data.scalar cimport Scalar
 from ..data.shape cimport Shape, _Shape
 from ..mapping.machine cimport Machine
+from ..mapping.mapping cimport _DimOrdering, DimOrdering
 from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..tuning.scope cimport Scope
 from ..type.types cimport Type
@@ -1016,6 +1017,7 @@ cdef class Runtime(Unconstructable):
         shape: Shape | Collection[int],
         object data,
         bool read_only,
+        object ordering = None,
     ):
         r"""
         Creates a Legate store from a Python object implementing the Python
@@ -1037,6 +1039,13 @@ cdef class Runtime(Unconstructable):
             or not. If ``False``, any changes made to the store will also be
             visible via the Python object.
 
+        ordering : DimOrdering, optional
+            The dimension ordering for the store. If None, defaults to C order.
+            Can be created using
+            ``DimOrdering.c_order()``,
+            ``DimOrdering.fortran_order()``, or
+            ``DimOrdering.custom_order(dims)``.
+
         Returns
         -------
         LogicalStore
@@ -1057,9 +1066,23 @@ cdef class Runtime(Unconstructable):
         """
         cdef _Shape cpp_shape = Shape.from_shape_like(shape)
         cdef _ExternalAllocation alloc
+
+        # Handle ordering parameter
+        cdef _DimOrdering cpp_ordering
+
+        if ordering is None:
+            cpp_ordering = _DimOrdering.c_order()
+        elif not isinstance(ordering, DimOrdering):
+            raise TypeError("ordering must be a DimOrdering instance")
+        else:
+            cpp_ordering = (<DimOrdering>ordering)._handle
+
         try:
             alloc = create_from_buffer(
-                data, cpp_shape.volume() * dtype.size, read_only
+                data,
+                cpp_shape.volume() * dtype.size,
+                read_only,
+                cpp_ordering.kind()
             )
         except BufferError as exn:
             raise ValueError(
@@ -1070,7 +1093,7 @@ cdef class Runtime(Unconstructable):
 
         with nogil:
             _handle = self._handle.create_store(
-                std_move(cpp_shape), dtype._handle, std_move(alloc)
+                std_move(cpp_shape), dtype._handle, std_move(alloc), cpp_ordering
             )
         return LogicalStore.from_handle(_handle)
 

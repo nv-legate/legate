@@ -12,6 +12,7 @@ import pytest
 
 from legate.core import (
     LEGATE_MAX_DIM,
+    DimOrdering,
     Scalar,
     Shape,
     get_legate_runtime,
@@ -160,6 +161,192 @@ class TestStoreCreationErrors:
         msg = "Passed buffer is too small for a store of shape .* and type .*"
         with pytest.raises(ValueError, match=msg):
             runtime.create_store_from_buffer(ty.uint64, (1024,), arr, False)
+
+
+class TestStoreCreationDimOrdering:
+    """Test DimOrdering functionality in create_store_from_buffer."""
+
+    def test_dim_ordering_basic(self) -> None:
+        """Test basic functionality."""
+        c_order = DimOrdering.c_order()
+        assert c_order is not None
+        assert c_order.kind == DimOrdering.Kind.C
+
+        fortran_order = DimOrdering.fortran_order()
+        assert fortran_order is not None
+        assert fortran_order.kind == DimOrdering.Kind.FORTRAN
+
+        custom_order = DimOrdering.custom_order([2, 0, 1])
+        assert custom_order is not None
+        assert custom_order.kind == DimOrdering.Kind.CUSTOM
+
+    @pytest.mark.parametrize("read_only", [True, False], ids=str)
+    def test_c_ordering(self, read_only: bool) -> None:
+        """Test C ordering with create_store_from_buffer."""
+        runtime = get_legate_runtime()
+
+        shape = (3, 4)
+        data = np.arange(12, dtype=np.int32).reshape(shape)
+        store_c = runtime.create_store_from_buffer(
+            ty.int32,
+            shape,
+            data,
+            read_only=read_only,
+            ordering=DimOrdering.c_order(),
+        )
+
+        assert store_c.shape == shape
+        assert store_c.type == ty.int32
+
+    @pytest.mark.parametrize("read_only", [True, False], ids=str)
+    def test_fortran_ordering(self, read_only: bool) -> None:
+        """Test Fortran ordering with create_store_from_buffer."""
+        runtime = get_legate_runtime()
+
+        shape = (3, 4)
+        data = np.arange(12, dtype=np.int32).reshape(shape).copy(order="F")
+        store_f = runtime.create_store_from_buffer(
+            ty.int32,
+            shape,
+            data,
+            read_only=read_only,
+            ordering=DimOrdering.fortran_order(),
+        )
+
+        assert store_f.shape == shape
+        assert store_f.type == ty.int32
+
+    @pytest.mark.parametrize("read_only", [True, False], ids=str)
+    def test_default_ordering(self, read_only: bool) -> None:
+        """Test that default ordering is C order."""
+        runtime = get_legate_runtime()
+
+        shape = (2, 3)
+        data = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.int32)
+        store_default = runtime.create_store_from_buffer(
+            ty.int32,
+            shape,
+            data,
+            read_only=read_only,
+            ordering=DimOrdering.custom_order([1, 0]),
+        )
+        store_c = runtime.create_store_from_buffer(
+            ty.int32,
+            shape,
+            data,
+            read_only=read_only,
+            ordering=DimOrdering.c_order(),
+        )
+
+        assert store_default.shape == shape
+        assert store_c.shape == shape
+
+    @pytest.mark.parametrize("read_only", [True, False], ids=str)
+    def test_custom_ordering(self, read_only: bool) -> None:
+        """Test custom dimension ordering."""
+        runtime = get_legate_runtime()
+
+        shape = (2, 3, 4)
+        data = np.arange(24, dtype=np.int32).reshape(shape)
+        custom_order = DimOrdering.custom_order([2, 1, 0])  # Reverse order
+        store_custom = runtime.create_store_from_buffer(
+            ty.int32, shape, data, read_only=read_only, ordering=custom_order
+        )
+
+        assert store_custom.shape == shape
+        assert store_custom.type == ty.int32
+
+    @pytest.mark.parametrize("read_only", [True, False], ids=str)
+    def test_different_data_types_with_ordering(self, read_only: bool) -> None:
+        """Test ordering with different data types."""
+        runtime = get_legate_runtime()
+
+        shape = (2, 3)
+
+        data = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float64)
+        store_float_c = runtime.create_store_from_buffer(
+            ty.float64,
+            shape,
+            data,
+            read_only=read_only,
+            ordering=DimOrdering.c_order(),
+        )
+
+        data = np.array(
+            [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float64, order="F"
+        )
+        store_float_f = runtime.create_store_from_buffer(
+            ty.float64,
+            shape,
+            data,
+            read_only=read_only,
+            ordering=DimOrdering.fortran_order(),
+        )
+
+        assert store_float_c.shape == shape
+        assert store_float_f.shape == shape
+        assert store_float_c.type == ty.float64
+        assert store_float_f.type == ty.float64
+
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    def test_ordering_with_different_shapes(
+        self, shape: tuple[int, ...]
+    ) -> None:
+        """Test ordering with various shapes."""
+        runtime = get_legate_runtime()
+
+        data = np.arange(np.prod(shape), dtype=np.int32).reshape(shape)
+        store_c = runtime.create_store_from_buffer(
+            ty.int32,
+            shape,
+            data,
+            read_only=False,
+            ordering=DimOrdering.c_order(),
+        )
+        assert store_c.shape == shape
+
+        data = (
+            np.arange(np.prod(shape), dtype=np.int32)
+            .reshape(shape)
+            .copy(order="F")
+        )
+        store_f = runtime.create_store_from_buffer(
+            ty.int32,
+            shape,
+            data,
+            read_only=False,
+            ordering=DimOrdering.fortran_order(),
+        )
+        assert store_f.shape == shape
+
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    @pytest.mark.parametrize("read_only", [True, False], ids=str)
+    def test_array_equal(
+        self, shape: tuple[int, ...], read_only: bool
+    ) -> None:
+        runtime = get_legate_runtime()
+
+        arr_np = np.random.rand(int(np.prod(shape))).reshape(shape)
+        arr_physical_store = runtime.create_store_from_buffer(
+            ty.float64,
+            shape,
+            arr_np,
+            read_only=read_only,
+            ordering=DimOrdering.c_order(),
+        ).get_physical_store()
+        assert np.array_equal(np.asarray(arr_physical_store), arr_np)
+
+        arr_np = (
+            np.random.rand(int(np.prod(shape))).reshape(shape).copy(order="F")
+        )
+        arr_physical_store = runtime.create_store_from_buffer(
+            ty.float64,
+            shape,
+            arr_np,
+            read_only=read_only,
+            ordering=DimOrdering.fortran_order(),
+        ).get_physical_store()
+        assert np.array_equal(np.asarray(arr_physical_store), arr_np)
 
 
 if __name__ == "__main__":

@@ -78,6 +78,12 @@ Python
 
 .. rubric:: Mapping
 
+- Add ``legate.core.DimOrdering`` and ``legate.core.DimOrderingKind`` for
+  dimension ordering
+- Add an optional argument of type ``DimOrderingKind`` to
+  ``legate.core.Runtime.create_from_buffer()``
+  that denotes the dimension ordering kind
+
 .. rubric:: Partitioning
 
 - Add ``legate.core.LogicalStore.partition``. This property allows users to access

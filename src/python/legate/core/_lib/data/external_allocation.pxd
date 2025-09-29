@@ -5,7 +5,7 @@
 from libcpp cimport bool
 from libcpp.optional cimport optional as std_optional
 
-from ..mapping.mapping cimport TaskTarget
+from ..mapping.mapping cimport TaskTarget, DimOrderingKind
 
 
 cdef extern from "legate/data/external_allocation.h" namespace "legate" nogil:
@@ -26,5 +26,5 @@ cdef extern from "legate/data/external_allocation.h" namespace "legate" nogil:
 
 
 cdef _ExternalAllocation create_from_buffer(
-    object obj, size_t size, bool read_only
+    object obj, size_t size, bool read_only, DimOrderingKind order_type
 )

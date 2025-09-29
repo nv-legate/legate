@@ -5,8 +5,10 @@
 
 from cpython.buffer cimport (
     Py_buffer,
-    PyBUF_CONTIG,
-    PyBUF_CONTIG_RO,
+    PyBUF_ANY_CONTIGUOUS,
+    PyBUF_STRIDED,
+    PyBUF_WRITABLE,
+    PyBuffer_IsContiguous,
     PyObject_GetBuffer,
 )
 from libcpp.memory cimport (
@@ -14,6 +16,7 @@ from libcpp.memory cimport (
     unique_ptr as std_unique_ptr,
 )
 from libcpp.optional cimport make_optional as std_make_optional
+from ..mapping.mapping cimport DimOrderingKind
 
 
 cdef extern from * namespace "legate::detail":
@@ -66,15 +69,32 @@ cdef extern from * namespace "legate::detail":
     cdef _Deleter get_python_buffer_deleter(Py_buffer*)
 
 cdef _ExternalAllocation create_from_buffer(
-    object obj, size_t size, bool read_only
+    object obj, size_t size, bool read_only, DimOrderingKind order_type,
 ):
     cdef std_unique_ptr[Py_buffer] buffer = std_make_unique[Py_buffer]()
-    cdef int return_code = PyObject_GetBuffer(
-        obj, buffer.get(), PyBUF_CONTIG_RO if read_only else PyBUF_CONTIG
-    )
+    cdef int flags = (0 if read_only else PyBUF_WRITABLE)
+
+    if order_type == DimOrderingKind.CUSTOM:
+        flags |= PyBUF_STRIDED
+    else:
+        flags |= PyBUF_ANY_CONTIGUOUS
+
+    cdef int return_code = PyObject_GetBuffer(obj, buffer.get(), flags)
     if return_code == -1:
         raise BufferError(
-            f"{type(obj)} does not support the Python buffer protocol"
+            f"{type(obj)} does not support the Python buffer protocol."
+        )
+
+    if (order_type == DimOrderingKind.FORTRAN and
+            not PyBuffer_IsContiguous(buffer.get(), "F")):
+        raise BufferError(
+            "Buffer expected to be Fortran order but is not F-Contiguous."
+        )
+
+    if (order_type == DimOrderingKind.C and
+            not PyBuffer_IsContiguous(buffer.get(), "C")):
+        raise BufferError(
+            "Buffer expected to be C order but is not C-Contiguous."
         )
 
     if size > buffer.get().len:

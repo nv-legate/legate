@@ -12,6 +12,7 @@ from ..data.logical_store import LogicalStore
 from ..data.scalar import Scalar
 from ..data.shape import Shape
 from ..mapping.machine import Machine
+from ..mapping.mapping import DimOrdering
 from ..operation.task import AutoTask, ManualTask
 from ..task.variant_options import VariantOptions
 from ..type.types import Type
@@ -114,6 +115,7 @@ class Runtime(Unconstructable):
         shape: Shape | Collection[int],
         data: object,
         read_only: bool,
+        ordering: DimOrdering | None = None,
     ) -> LogicalStore: ...
     def prefetch_bloated_instances(
         self,
