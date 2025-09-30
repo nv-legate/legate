@@ -381,10 +381,14 @@ rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
 function(legate_create_dummy_cuda_driver)
   # This library MUST be a shared library for it to work properly
   add_library(legate_dummy_cuda_driver SHARED utilities/dummy_cuda_driver.cc)
-  set_target_properties(legate_dummy_cuda_driver PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                                            LIBRARY_OUTPUT_DIRECTORY lib)
+  # cmake-format: off
+  set_target_properties(legate_dummy_cuda_driver
+                        PROPERTIES POSITION_INDEPENDENT_CODE ON
+                                   LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_INSTALL_LIBDIR})
+  # cmake-format: on
   # tests_wo_runtime contains the CUDADriverAPI test which tests whether we can
-  # successfully load a shim CUDA driver module. By adding the RPATH, we can just pass
+  # successfully load a shim CUDA driver module. By linking the library into
+  # tests_wo_runtime, it adds it to the RPATH, we can just pass
   # "liblegate_dummy_cuda_driver.so" to the loader, and because its in the RPATH, dlopen()
   # will find it.
   #
@@ -400,8 +404,7 @@ function(legate_create_dummy_cuda_driver)
   #
   # As an added bonus, CMake will also ensure this rpath gets updated when both of these
   # get installed.
-  set_property(TARGET tests_wo_runtime APPEND
-               PROPERTY BUILD_RPATH "${legate_PLATFORM_RPATH_ORIGIN}/../lib")
+  target_link_libraries(tests_wo_runtime PRIVATE legate_dummy_cuda_driver)
   install(TARGETS legate_dummy_cuda_driver DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endfunction()
 legate_create_dummy_cuda_driver()

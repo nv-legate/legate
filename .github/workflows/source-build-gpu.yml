@@ -1,0 +1,208 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+      node_type:
+        type: string
+        default: "cpu16"
+      cuda_ver:
+        type: string
+        default: "12.9.0"
+      linux_ver:
+        type: string
+        default: "rockylinux8"
+      script:
+        type: string
+        # For now, the Linux CPU/CUDA builds share the same script
+        default: "continuous_integration/scripts/source_build/linux_common.bash"
+      matrix_filter:
+        type: string
+        default: "."
+
+defaults:
+  run:
+    shell: bash -eou pipefail {0}
+
+permissions:
+  actions: read
+  checks: none
+  contents: read
+  deployments: none
+  discussions: none
+  id-token: write
+  issues: none
+  packages: none
+  pages: none
+  pull-requests: read
+  repository-projects: none
+  security-events: none
+  statuses: none
+
+jobs:
+  compute-matrix:
+    runs-on: linux-amd64-cpu4
+    timeout-minutes: 15
+    outputs:
+      MATRIX: ${{ steps.compute-matrix.outputs.MATRIX }}
+    steps:
+      - name: Compute Build Matrix
+        id: compute-matrix
+        run: |
+          set -eo pipefail
+
+          # please keep the matrices sorted in ascending order by the following:
+          #
+          #     [ARCH, GCC_VER, BUILD_MODE]
+          #
+          export MATRIX="
+          # amd64
+          - { ARCH: 'amd64', GCC_VER: '10', BUILD_MODE: 'Release CUDA' }
+          - { ARCH: 'amd64', GCC_VER: '14', BUILD_MODE: 'Release CUDA' }
+          - { ARCH: 'amd64', GCC_VER: '10', BUILD_MODE: 'Debug CUDA' }
+          - { ARCH: 'amd64', GCC_VER: '14', BUILD_MODE: 'Debug CUDA' }
+          # Only do sanitizer builds on latest compiler
+          - { ARCH: 'amd64', GCC_VER: '14', BUILD_MODE: 'Sanitizer CUDA' }
+          "
+
+          MATRIX="$(
+            yq -n -o json 'env(MATRIX)' | \
+            jq -c '${{ inputs.matrix_filter }} | if (. | length) > 0 then {include: .} else "Error: Empty matrix\n" | halt_error(1) end'
+          )"
+
+          echo "MATRIX=${MATRIX}" | tee --append "${GITHUB_OUTPUT}"
+
+  build:
+    name: ${{ matrix.ARCH }}, gcc${{ matrix.GCC_VER }}, ${{ matrix.BUILD_MODE }}
+    needs: compute-matrix
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.compute-matrix.outputs.MATRIX) }}
+    runs-on: "linux-${{ matrix.ARCH }}-${{ inputs.node_type }}"
+    container:
+      image: nvidia/cuda:${{ inputs.cuda_ver }}-devel-${{ inputs.linux_ver }}
+
+    steps:
+      - if: github.repository_owner == 'nv-legate'
+        name: Get AWS credentials for sccache bucket
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-2
+          role-duration-seconds: 28800 # 8 hours
+          role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
+
+      - uses: actions/checkout@v5
+
+      - name: Add default paths to the env
+        run: |
+          tools_dir="$(pwd)/continuous_integration/scripts/tools"
+
+          echo "${tools_dir}" >> "${GITHUB_PATH}"
+
+      - uses: actions/checkout@v5
+        with:
+          repository: rapidsai/gha-tools
+          path: gha-tools
+
+      - name: Add rapids GHA tools to path
+        run: |
+          echo "${GITHUB_WORKSPACE}/gha-tools/tools" >> "${GITHUB_PATH}"
+
+      - name: Install dependencies
+        env:
+          GCC_VER: ${{ matrix.GCC_VER }}
+          BUILD_MODE: ${{ matrix.BUILD_MODE }}
+        run: |
+          packages=(
+            gcc-toolset-"${GCC_VER}"
+            gcc-toolset-"${GCC_VER}"-libatomic-devel
+            git
+            curl
+            python3.11
+            python3.11-pip
+          )
+
+          if [[ "${BUILD_MODE}" == *"Sanitizer"* ]]; then
+            packages+=(
+              gcc-toolset-"${GCC_VER}"-libasan-devel
+              gcc-toolset-"${GCC_VER}"-libubsan-devel
+            )
+          fi
+
+          dnf install -y "${packages[@]}"
+
+          # Bootstrap CMake, rapids-pip-retry by default calls 'python -m pip', but
+          # python3.11 above installs 'python3', so have to override the default command.
+          RAPIDS_PIP_EXE='python3 -m pip' rapids-pip-retry install cmake ninja
+
+      - name: Install sccache
+        # This hash corresponds to release v0.0.9.
+        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
+        with:
+          version: "v0.10.0"
+
+      - name: Translate BUILD_MODE to CMake preset name
+        env:
+          BUILD_MODE: ${{ matrix.BUILD_MODE }}
+        id: cmake-preset
+        run: |
+          cmake_preset="$(echo "${BUILD_MODE,,}" | tr ' ' '_')"
+          cmake_preset="ci_${cmake_preset}_tests"
+
+          echo "cmake_preset=${cmake_preset}" | tee --append "${GITHUB_OUTPUT}"
+
+      - name: C++ source build
+        run: ${{ inputs.script }}
+        env:
+          # Per recommendation of https://github.com/Mozilla-Actions/sccache-action#cc-code
+          SCCACHE_GHA_ENABLED: "true"
+          GCC_VER: ${{ matrix.GCC_VER }}
+          CMAKE_PRESET: ${{ steps.cmake-preset.outputs.cmake_preset }}
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Compress build tree
+        run: |
+          tar -cpvzf \
+            build.tgz \
+            --exclude='*.o' \
+            --exclude='*.cc' \
+            --exclude='*.h' \
+            --exclude='*.hpp' \
+            --exclude='*.pc' \
+            --exclude='.git' \
+            --exclude='*.zip' \
+            --exclude='CMakeFiles' \
+            --exclude='rapids-cmake/*-exports' \
+            --exclude='rapids-cmake/*/export' \
+            --exclude='cmake_install.cmake' \
+            --exclude='*Config.cmake' \
+            --exclude='*-config.cmake' \
+            --exclude='*ConfigVersion.cmake' \
+            --exclude='*Config-version.cmake' \
+            --exclude='*-config-version.cmake' \
+            --exclude='*Targets.cmake' \
+            --exclude='*-targets.cmake' \
+            --exclude='*-dependencies.cmake' \
+            --exclude='Find*.cmake' \
+            --exclude='CPack.cmake' \
+            --exclude='_deps/*-src' \
+            --exclude='_deps/*-subbuild' \
+            build
+
+        # Use manual tar-ing as it preserves permissions and gzip offers better
+        # compression (faster and smaller size) than zlib used by actions/upload-artifact.
+      - name: C++ build upload
+        env:
+          BUILD_NAME: ${{ matrix.ARCH }}-cuda12-gcc${{ matrix.GCC_VER }}-${{ matrix.BUILD_MODE }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-build-${{ env.BUILD_NAME }}
+          # We have already compressed the artifact, no need for github to try and
+          # recompress it.
+          compression-level: 0
+          path: build.tgz

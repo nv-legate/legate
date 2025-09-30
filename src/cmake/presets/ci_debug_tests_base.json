@@ -1,0 +1,17 @@
+{
+    "configurePresets": [
+        {
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CUDA_FLAGS_DEBUG": "-g -lineinfo",
+                "CMAKE_CXX_FLAGS_DEBUG": "-Og -g3",
+                "CMAKE_C_FLAGS_DEBUG": "-Og -g3",
+                "legate_BUILD_BENCHMARKS": true,
+                "legate_BUILD_TESTS": true
+            },
+            "hidden": true,
+            "name": "ci_debug_tests_base"
+        }
+    ],
+    "version": 7
+}

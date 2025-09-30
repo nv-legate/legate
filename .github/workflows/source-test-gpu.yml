@@ -15,7 +15,7 @@ on:
         default: "rockylinux8"
       script:
         type: string
-        default: "continuous_integration/scripts/test_source_linux.bash"
+        default: "continuous_integration/scripts/source_test/linux_cuda.bash"
       matrix_filter:
         type: string
         default: "."
@@ -57,8 +57,13 @@ jobs:
           #
           export MATRIX="
           # amd64
-          - { ARCH: 'amd64', GCC_VER: '10', BUILD_MODE: 'release', GPU: 'l4' }
-          - { ARCH: 'amd64', GCC_VER: '14', BUILD_MODE: 'release', GPU: 'l4' }
+          # CUDA tests
+          - { ARCH: 'amd64', GCC_VER: '10', BUILD_MODE: 'Release CUDA', GPU: 'l4' }
+          - { ARCH: 'amd64', GCC_VER: '14', BUILD_MODE: 'Release CUDA', GPU: 'l4' }
+          - { ARCH: 'amd64', GCC_VER: '10', BUILD_MODE: 'Debug CUDA', GPU: 'l4' }
+          - { ARCH: 'amd64', GCC_VER: '14', BUILD_MODE: 'Debug CUDA', GPU: 'l4' }
+          # Only do sanitizer builds on latest compiler
+          - { ARCH: 'amd64', GCC_VER: '14', BUILD_MODE: 'Sanitizer CUDA', GPU: 'l4' }
           "
 
           MATRIX="$(
@@ -67,6 +72,7 @@ jobs:
           )"
 
           echo "MATRIX=${MATRIX}" | tee --append "${GITHUB_OUTPUT}"
+
   test:
     name: ${{ matrix.ARCH }}, gcc${{ matrix.GCC_VER }}, ${{ matrix.BUILD_MODE }}, ${{ matrix.GPU }}
     needs: compute-matrix
@@ -81,14 +87,13 @@ jobs:
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v5
 
       - name: Add default paths to the env
         run: |
-          # The || true is to satisfy the linting check, seems less readable to me.
-          echo "$(pwd)/continuous_integration/scripts/tools" >> "${GITHUB_PATH}" || true
+          tools_dir="$(pwd)/continuous_integration/scripts/tools"
+
+          echo "${tools_dir}" >> "${GITHUB_PATH}"
 
       - name: Run nvidia-smi to make sure GPU is working
         run: nvidia-smi
@@ -97,13 +102,51 @@ jobs:
         uses: nv-gha-runners/setup-proxy-cache@main
         continue-on-error: true
 
+      - uses: actions/checkout@v5
+        with:
+          repository: rapidsai/gha-tools
+          path: gha-tools
+
+      - name: Add rapids GHA tools to path
+        run: |
+          echo "${GITHUB_WORKSPACE}/gha-tools/tools" >> "${GITHUB_PATH}"
+
       - name: Download source build from the build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         env:
-          BUILD_NAME: ${{ matrix.ARCH }}-cuda12-gcc${{ matrix.GCC_VER }}
+          BUILD_NAME: ${{ matrix.ARCH }}-cuda12-gcc${{ matrix.GCC_VER }}-${{ matrix.BUILD_MODE }}
         with:
           name: source-build-${{ env.BUILD_NAME }}
           path: artifacts
+
+      - name: Untar build tree
+        run: tar -zxvf artifacts/build.tgz
+
+      - name: Inspect extracted files
+        run: ls -lhR build
+
+      - name: Install dependencies
+        env:
+          BUILD_MODE: ${{ matrix.BUILD_MODE }}
+        run: |
+          packages=(
+            libatomic
+            python3.11
+            python3.11-pip
+          )
+
+          if [[ "${BUILD_MODE}" == *"Sanitizer"* ]]; then
+            packages+=(
+              libasan8
+              libubsan
+            )
+          fi
+
+          dnf install -y "${packages[@]}"
+
+          # Bootstrap CMake, rapids-pip-retry by default calls 'python -m pip', but
+          # python3.11 above installs 'python3', so have to override the default command.
+          RAPIDS_PIP_EXE='python3 -m pip' rapids-pip-retry install cmake ninja
 
       - name: Run C++ unit tests
         run: ${{ inputs.script }}

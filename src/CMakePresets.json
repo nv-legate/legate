@@ -1,0 +1,11 @@
+{
+    "include": [
+        "cmake/presets/ci_release_cuda_tests.json",
+        "cmake/presets/ci_debug_cuda_tests.json",
+        "cmake/presets/ci_sanitizer_cuda_tests.json",
+        "cmake/presets/ci_release_cpu_tests.json",
+        "cmake/presets/ci_debug_cpu_tests.json",
+        "cmake/presets/ci_sanitizer_cpu_tests.json"
+    ],
+    "version": 7
+}

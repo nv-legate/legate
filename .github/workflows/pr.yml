@@ -24,17 +24,30 @@ defaults:
     shell: bash
 
 jobs:
-  source-build:
+  source-build-cpu:
     secrets: inherit
-    uses: ./.github/workflows/source-build.yml
+    uses: ./.github/workflows/source-build-cpu.yml
     with:
       build-type: pull-request
-  source-test:
-    needs: source-build
+  source-test-cpu:
+    needs: source-build-cpu
     secrets: inherit
-    uses: ./.github/workflows/source-test.yml
+    uses: ./.github/workflows/source-test-cpu.yml
     with:
       build-type: pull-request
+
+  source-build-gpu:
+    secrets: inherit
+    uses: ./.github/workflows/source-build-gpu.yml
+    with:
+      build-type: pull-request
+  source-test-gpu:
+    needs: source-build-gpu
+    secrets: inherit
+    uses: ./.github/workflows/source-test-gpu.yml
+    with:
+      build-type: pull-request
+
   wheels-build:
     secrets: inherit
     uses: ./.github/workflows/wheels-build.yml
@@ -46,9 +59,14 @@ jobs:
     uses: ./.github/workflows/wheels-test.yml
     with:
       build-type: pull-request
-  wheels-pass:
+
+  tests-pass:
     if: always()
     needs:
+      - source-build-cpu
+      - source-build-gpu
+      - source-test-cpu
+      - source-test-gpu
       - wheels-build
       - wheels-test
     runs-on: linux-amd64-cpu4

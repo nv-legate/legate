@@ -122,8 +122,8 @@ function(legate_configure_default_compiler_flags)
       #
       # Thanks conda, such a great help!
       "-U_FORTIFY_SOURCE")
-  set(default_cxx_flags_sanitizer "-fsanitize=address,undefined,bounds"
-                                  "-fno-omit-frame-pointer" "-g")
+  set(default_cxx_flags_sanitizer "-fsanitize=address" "-fsanitize=undefined"
+                                  "-fsanitize=bounds" "-fno-omit-frame-pointer" "-g")
   set(default_cxx_flags_release ${default_warning_flags} "-O3" "-fstack-protector-strong")
   set(default_cxx_flags_relwithdebinfo ${default_cxx_flags_debug}
                                        ${default_cxx_flags_release})
@@ -201,8 +201,8 @@ function(legate_configure_default_linker_flags)
   # There are no default linker flags currently.
   set(default_linker_flags)
   if(legate_ENABLE_SANITIZERS)
-    list(APPEND default_linker_flags "-fsanitize=address,undefined,bounds"
-         "-fno-sanitize-recover=undefined")
+    list(APPEND default_linker_flags "-fsanitize=address" "-fsanitize=undefined"
+         "-fsanitize=bounds" "-fno-sanitize-recover=undefined")
   endif()
 
   if(NOT legate_LINKER_FLAGS)

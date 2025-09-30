@@ -1,0 +1,16 @@
+{
+    "configurePresets": [
+        {
+            "cacheVariables": {
+                "legate_ENABLE_SANITIZERS": true
+            },
+            "description": "CI Debug sanitizer build with CPU-only and tests",
+            "inherits": "ci_debug_cpu_tests",
+            "name": "ci_sanitizer_cpu_tests"
+        }
+    ],
+    "include": [
+        "ci_debug_cpu_tests.json"
+    ],
+    "version": 7
+}

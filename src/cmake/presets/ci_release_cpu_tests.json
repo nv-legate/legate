@@ -1,0 +1,16 @@
+{
+    "configurePresets": [
+        {
+            "cacheVariables": {
+                "legate_USE_CUDA": false
+            },
+            "description": "CI Release build with CPU-only and tests",
+            "inherits": "ci_release_tests_base",
+            "name": "ci_release_cpu_tests"
+        }
+    ],
+    "include": [
+        "ci_release_tests_base.json"
+    ],
+    "version": 7
+}

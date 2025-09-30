@@ -6,66 +6,6 @@ set -euo pipefail
 
 export RAPIDS_SCRIPT_NAME="test"
 
-# Need to LD_PRELOAD for both C++ and Python tests now, as the legate tester transitively loads liblegate.so
-set_ld_preload()
-{
-  export LEGATE_LD_PRELOAD=""
-
-  if [[ ${LEGATE_ARCH} == *gcc-*-sanitizer* ]]; then
-    # Trying to reproduce this on macOS? See
-    # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
-    #
-    # The TL;DR is, however:
-    #
-    # asan_lib='/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib'
-    #
-    # py_paths='/path/to/legate' (optional, only if you are using a venv)
-    #
-    # DYLD_INSERT_LIBRARIES=$asan_lib PYTHONPATH=$py_paths
-    # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
-    # /path/to/your/file.py
-    # shellcheck disable=SC2154
-    local libasan_path="${CONDA_PREFIX}/lib/libasan.so"
-    # We need to preload the standard library as well, otherwise we sometimes (*) get:
-    # AddressSanitizer: CHECK failed: asan_interceptors.cpp:458 "((__interception::real___cxa_throw)) != (0)" (0x0, 0x0)
-    # This is related to an old GCC bug:
-    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=84428
-    #
-    # (*) sometimes, because we only observed it one sanitizer build with GCC 14
-    local stdlib_path="${CONDA_PREFIX}/lib/libstdc++.so"
-
-
-    if [[ ! -f "${libasan_path}" ]]; then
-      rapids-logger "Sanitizer libraries not found."
-      rapids-logger "Expected to find ${libasan_path} but this seemingly does not exist"
-      return 1
-    fi
-
-    export LEGATE_LD_PRELOAD="${libasan_path}:${stdlib_path}"
-
-    local asan_opts_path
-
-    if [[ -f "${CONDA_PREFIX}/bin/tests_with_gpus" ]]; then
-      # GPU build
-      asan_opts_path="${LEGATE_DIR}/share/legate/sanitizers/asan_default_options_gpu.txt"
-    else
-      asan_opts_path="${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt"
-    fi
-    # Note trailing ':' on this! This is deliberate so we can do
-    # ASAN_OPTIONS+='foo:bar:baz'
-    #                                             v~~ trailing ':' here
-    export ASAN_OPTIONS="include=${asan_opts_path}:"
-    export UBSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt"
-    export LSAN_OPTIONS="suppressions=${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt"
-    export TSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt"
-
-  elif [[ ${LEGATE_ARCH} == *clang-*-sanitizer* ]]; then
-    rapids-logger "Must properly implement Address sanitizer lib injection for Clang-based presets!"
-    rapids-logger "See impls for GCC above"
-    return 1
-  fi
-}
-
 run_test_or_analysis() {
     # rename
     # shellcheck disable=SC2154
@@ -110,12 +50,6 @@ run_test_or_analysis() {
     fi
 
     cd "${LEGATE_DIR}"
-
-    if [[ ${LEGATE_ARCH} == *sanitizer* ]]; then
-      # Needed to fix AddressSanitizer:DEADLYSIGNAL bug in GCC libsanitizer.
-      # See https://stackoverflow.com/questions/77894856/possible-bug-in-gcc-sanitizers
-      sysctl vm.mmap_rnd_bits=28
-    fi
 
     # Otherwise cuFile errors out when trying to perform GDS on a system that isn't set up
     # for it (which our CI runners are not).
@@ -164,16 +98,14 @@ run_test_or_analysis() {
             # https://doc.pytest.org/en/latest/explanation/ci.html
             export CI=1
 
-            set_ld_preload
-
             case "${GPUS_COUNT}" in
               "0")
                 rapids-logger "Using CPUs ..."
-                LD_PRELOAD="${LEGATE_LD_PRELOAD}" LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
+                LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
                 ;;
               "1")
                 rapids-logger "Using 1 GPU ..."
-                LD_PRELOAD="${LEGATE_LD_PRELOAD}" LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" \
+                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" \
                           pytest \
                           --color=yes \
                           tests/python \
@@ -181,7 +113,7 @@ run_test_or_analysis() {
                 ;;
               "2")
                 rapids-logger "Using 2 GPUs ..."
-                LD_PRELOAD="${LEGATE_LD_PRELOAD}" LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" \
+                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" \
                           pytest \
                           --color=yes \
                           tests/python \
@@ -216,8 +148,7 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              LD_PRELOAD="${LEGATE_LD_PRELOAD}" \
-                LEGATE_TEST=1 \
+              LEGATE_TEST=1 \
                 LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 4000 --fbmem 1000 --auto-config=0" \
                 "${gtest_file}" \
                 --gtest_shuffle \
@@ -230,7 +161,7 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              LD_PRELOAD="${LEGATE_LD_PRELOAD}" python3 "${LEGATE_DIR}/test.py" \
+              python3 "${LEGATE_DIR}/test.py" \
                         --gtest-file "${gtest_file}" \
                         --verbose \
                         --debug \
@@ -280,8 +211,6 @@ run_test_or_analysis() {
                 fi
               fi
             }
-
-            set_ld_preload
 
             if [[ "${GPUS_COUNT}" -ne 2 ]]; then
               run_sequential_tests

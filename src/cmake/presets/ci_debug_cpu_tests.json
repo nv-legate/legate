@@ -1,0 +1,16 @@
+{
+    "configurePresets": [
+        {
+            "cacheVariables": {
+                "legate_USE_CUDA": false
+            },
+            "description": "CI Debug build with CPU-only and tests",
+            "inherits": "ci_debug_tests_base",
+            "name": "ci_debug_cpu_tests"
+        }
+    ],
+    "include": [
+        "ci_debug_tests_base.json"
+    ],
+    "version": 7
+}

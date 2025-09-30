@@ -31,10 +31,6 @@ function(legate_configure_benchmark)
 
   target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE legate::legate benchmark::benchmark)
 
-  if(legate_USE_CUDA)
-    target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE NCCL::NCCL)
-  endif()
-
   legate_install_debug_symbols(TARGET ${_LEGATE_BM_TARGET}
                                INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
 

@@ -19,7 +19,9 @@ path = [
     "share/legate/sanitizers/tsan_suppressions.txt",
     "src/cmake/versions/versions.json",
     "src/cmake/versions/legion_version.json",
-    "src/python/legate/legate_jupyter.json"
+    "src/python/legate/legate_jupyter.json",
+    "src/cmake/presets/*.json",
+    "src/CMakePresets.json"
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"

@@ -1,0 +1,17 @@
+{
+    "configurePresets": [
+        {
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CUDA_FLAGS_RELEASE": "-O3 --dopt=on -DNDEBUG",
+                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
+                "CMAKE_C_FLAGS_RELEASE": "-O3 -DNDEBUG",
+                "legate_BUILD_BENCHMARKS": true,
+                "legate_BUILD_TESTS": true
+            },
+            "hidden": true,
+            "name": "ci_release_tests_base"
+        }
+    ],
+    "version": 7
+}

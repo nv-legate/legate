@@ -34,9 +34,7 @@ jobs:
           - cpu
         build-mode:
           - debug
-          - debug-sanitizer
           - release
-          - release-debug
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
