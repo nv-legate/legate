@@ -488,6 +488,12 @@ cdef class AutoTask(Unconstructable):
         """
         self.add_communicator("cpu")
 
+    cpdef void add_cal_communicator(self):
+        r"""
+        Adds a CAL communicator to the task
+        """
+        self.add_communicator("cal")
+
     @property
     def raw_handle(self) -> uintptr_t:
         r"""
@@ -763,6 +769,12 @@ cdef class ManualTask(Unconstructable):
         Adds a CPU communicator to the task
         """
         self.add_communicator("cpu")
+
+    cpdef void add_cal_communicator(self):
+        r"""
+        Adds a CAL communicator to the task
+        """
+        self.add_communicator("cal")
 
     @property
     def raw_handle(self) -> uintptr_t:

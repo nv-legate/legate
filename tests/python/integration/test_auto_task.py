@@ -310,7 +310,7 @@ class TestAutoTask:
         runtime.issue_execution_fence(block=True)
         assert obj.val == 1
 
-    @pytest.mark.parametrize("communicator", ["cpu", "nccl"])
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
     def test_add_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
@@ -332,7 +332,7 @@ class TestAutoTask:
             assert expected in raised
         auto_task.execute()
 
-    @pytest.mark.parametrize("communicator", ["cpu", "nccl"])
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
     def test_builtin_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(

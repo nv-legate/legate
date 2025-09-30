@@ -33,6 +33,7 @@ namespace legate::comm {
  *
  *   - NCCL: ncclComm_t*
  *   - CPU communicator in Legate: legate::comm::coll::CollComm*
+ *   - CAL: cal_comm_t
  */
 class LEGATE_EXPORT Communicator {
  public:

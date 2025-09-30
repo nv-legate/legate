@@ -108,6 +108,7 @@ cdef class AutoTask(Unconstructable):
     cpdef void add_broadcast(self, object array_or_store, object axes = *)
     cpdef void add_nccl_communicator(self)
     cpdef void add_cpu_communicator(self)
+    cpdef void add_cal_communicator(self)
 
 cdef class ManualTask(Unconstructable):
     cdef _ManualTask _handle
@@ -131,3 +132,4 @@ cdef class ManualTask(Unconstructable):
     cpdef void execute(self)
     cpdef void add_nccl_communicator(self)
     cpdef void add_cpu_communicator(self)
+    cpdef void add_cal_communicator(self)

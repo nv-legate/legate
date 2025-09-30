@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/comm/detail/comm_cal.h>
 #include <legate/comm/detail/comm_cpu.h>
 #include <legate/comm/detail/comm_nccl.h>
 #include <legate/runtime/detail/runtime.h>
@@ -19,6 +20,9 @@ void register_tasks(Library& library)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_NCCL)) {
     nccl::register_tasks(library);
+  }
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_CAL)) {
+    cal::register_tasks(library);
   }
 
   // Always register CPU communication tasks. The communicator factory selects
@@ -34,6 +38,9 @@ void register_builtin_communicator_factories(const Library& library)
     nccl::register_factory(library);
   }
   cpu::register_factory(library);
+  if (LEGATE_DEFINED(LEGATE_USE_CAL)) {
+    cal::register_factory(library);
+  }
 }
 
 }  // namespace legate::detail::comm

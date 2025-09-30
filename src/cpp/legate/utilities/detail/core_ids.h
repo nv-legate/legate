@@ -52,6 +52,8 @@ enum CoreTask : std::underlying_type_t<LocalTaskID> {  // NOLINT(performance-enu
   INIT_NCCL_ID,
   INIT_NCCL,
   FINALIZE_NCCL,
+  INIT_CAL,
+  FINALIZE_CAL,
   INIT_CPUCOLL_MAPPING,
   INIT_CPUCOLL,
   FINALIZE_CPUCOLL,

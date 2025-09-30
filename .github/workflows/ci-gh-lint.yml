@@ -164,6 +164,7 @@ jobs:
             --with-ucx \
             --with-hdf5 \
             --with-mpi \
+            --with-cal \
             --with-nccl \
             --with-openmp \
             --with-cuda \

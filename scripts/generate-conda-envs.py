@@ -92,6 +92,7 @@ class CUDAConfig(SectionConfig):
                 "cuda-nvtx-dev",
                 "cuda-cupti-dev",
                 "libcufile-dev",
+                "libcal-dev",
             )
             if self.cupynumeric:
                 deps += (

@@ -89,6 +89,7 @@ legate_option(legate_IGNORE_INSTALLED_PACKAGES
               LEGATE_IGNORE_INSTALLED_PACKAGES
               "When deciding to search for or download third-party packages, never search and always download"
               OFF)
+legate_option(legate_USE_CAL LEGATE_USE_CAL "Enable CAL support in Legate" OFF)
 legate_option(legate_BUILD_BENCHMARKS LEGATE_BUILD_BENCHMARKS "Build legate benchmarks"
               OFF)
 legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate" OFF)

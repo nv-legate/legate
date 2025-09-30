@@ -33,10 +33,6 @@ C++
 - Add new UCX networking backend. On supporting builds (``LEGATE_DEFINED(LEGATE_USE_UCX)``
   being ``1``), CPU collectives can be routed through UCX by disabling
   MPI (``LEGATE_CONFIG=--disable-mpi``).
-- Remove support for Cal communicator.
-- Remove ``LEGATE_USE_CAL`` macro definition.
-- Support for ``cal`` communicator via ``legate.AutoTask.add_communicator("cal")``
-  and ``legate.ManualTask.add_communicator("cal")`` have been removed.
 
 .. rubric:: Data
 
@@ -71,11 +67,6 @@ Python
 ------
 
 .. rubric:: General
-
-- Remove ``legate.core.AutoTask.add_cal_communicator()``.
-- Remove ``legate.core.ManualTask.add_cal_communicator()``.
-- Remove support for passing ``"cal"`` to ``legate.core.AutoTask.add_communicator()``
-  and ``legate.core.ManualTask.add_communicator()``.
 
 .. rubric:: Data
 

@@ -23,6 +23,8 @@ if(UNIX AND NOT APPLE)
   set(legate_USE_CUDA ON)
   set(Legion_NETWORKS ucx)
   set(legate_USE_NCCL ON)
+  # Disable CAL for now due to missing link in the wheel.
+  set(legate_USE_CAL OFF)
 endif()
 
 add_subdirectory(../../../../src legate-all)

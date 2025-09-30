@@ -37,6 +37,11 @@
                     "nargs": 0
                 }
             },
+            "find_or_configure_cal": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "find_or_configure_cccl": {
                 "pargs": {
                     "nargs": 0
