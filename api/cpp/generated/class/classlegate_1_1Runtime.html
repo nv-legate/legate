@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::Runtime &#8212; NVIDIA legate (25.10.00.dev55+gd1194f763)</title>
+    <title>legate::Runtime &#8212; NVIDIA legate (25.10.00.dev59+g8163b3bec)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=2342bb20"></script>
+    <script src="../../../../_static/documentation_options.js?v=fcb5b03f"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev55+gd1194f763) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev55+gd1194f763) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev55+gd1194f763)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev55+gd1194f763) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev55+gd1194f763) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev55+gd1194f763)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
   
 </a>
 
@@ -1238,6 +1238,37 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime21create_nullable_arrayERK12LogicalStoreRK12LogicalStore">
+<span id="_CPPv3N6legate7Runtime21create_nullable_arrayERK12LogicalStoreRK12LogicalStore"></span><span id="_CPPv2N6legate7Runtime21create_nullable_arrayERK12LogicalStoreRK12LogicalStore"></span><span id="legate::Runtime::create_nullable_array__LogicalStoreCR.LogicalStoreCR"></span><span class="target" id="classlegate_1_1Runtime_1af83154125527ab5bb52330e36db37d37"></span><a class="reference internal" href="classlegate_1_1LogicalArray.html#_CPPv4N6legate12LogicalArrayE" title="legate::LogicalArray"><span class="n"><span class="pre">LogicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_nullable_array</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="classlegate_1_1LogicalStore.html#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">store</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="classlegate_1_1LogicalStore.html#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">null_mask</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate7Runtime21create_nullable_arrayERK12LogicalStoreRK12LogicalStore" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a nullable array from a given store and null mask. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This call can block if either <code class="docutils literal notranslate"><span class="pre">store</span></code> or <code class="docutils literal notranslate"><span class="pre">null_mask</span></code> is unbound.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>store</strong> – Store for the array’s data. </p></li>
+<li><p><strong>null_mask</strong> – Store for the array’s null mask.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – When any of the following is true: #. <code class="docutils literal notranslate"><span class="pre">null_mask</span></code> is not of boolean type. #. <code class="docutils literal notranslate"><span class="pre">store</span></code> and <code class="docutils literal notranslate"><span class="pre">null_mask</span></code> have different shapes. #. <code class="docutils literal notranslate"><span class="pre">store</span></code> or <code class="docutils literal notranslate"><span class="pre">null_mask</span></code> are not top-level stores. (i.e. they must be created directly and not be transformations or subsets of other stores)) </p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Nullable logical array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime19create_string_arrayERK12LogicalArrayRK12LogicalArray">
 <span id="_CPPv3N6legate7Runtime19create_string_arrayERK12LogicalArrayRK12LogicalArray"></span><span id="_CPPv2N6legate7Runtime19create_string_arrayERK12LogicalArrayRK12LogicalArray"></span><span id="legate::Runtime::create_string_array__LogicalArrayCR.LogicalArrayCR"></span><span class="target" id="classlegate_1_1Runtime_1a80ea6722a1190e42f72fcfbf16cbf841"></span><a class="reference internal" href="classlegate_1_1StringLogicalArray.html#_CPPv4N6legate18StringLogicalArrayE" title="legate::StringLogicalArray"><span class="n"><span class="pre">StringLogicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_string_array</span></span></span><span class="sig-paren">(</span>
 
@@ -1692,6 +1723,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_arrayERK4TypeNSt8uint32_tEb"><code class="docutils literal notranslate"><span class="pre">create_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_arrayERK5ShapeRK4Typebb"><code class="docutils literal notranslate"><span class="pre">create_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime17create_array_likeERK12LogicalArrayNSt8optionalI4TypeEE"><code class="docutils literal notranslate"><span class="pre">create_array_like()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime21create_nullable_arrayERK12LogicalStoreRK12LogicalStore"><code class="docutils literal notranslate"><span class="pre">create_nullable_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime19create_string_arrayERK12LogicalArrayRK12LogicalArray"><code class="docutils literal notranslate"><span class="pre">create_string_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime17create_list_arrayERK12LogicalArrayRK12LogicalArrayNSt8optionalI4TypeEE"><code class="docutils literal notranslate"><span class="pre">create_list_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_storeERK4TypeNSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>

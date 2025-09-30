@@ -1,0 +1,6 @@
+legate.core.Runtime.create\_nullable\_array
+===========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.create_nullable_array

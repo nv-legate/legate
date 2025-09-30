@@ -1,0 +1,6 @@
+legate.core.LogicalArray.from\_store\_and\_mask
+===============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalArray.from_store_and_mask

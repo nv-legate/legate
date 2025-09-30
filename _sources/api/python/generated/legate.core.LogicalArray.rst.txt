@@ -50,6 +50,7 @@ legate.core.LogicalArray
       ~LogicalArray.fill
       ~LogicalArray.from_raw_handle
       ~LogicalArray.from_store
+      ~LogicalArray.from_store_and_mask
       ~LogicalArray.get_physical_array
       ~LogicalArray.offload_to
       ~LogicalArray.project
