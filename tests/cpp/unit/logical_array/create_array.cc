@@ -612,6 +612,43 @@ TEST_F(LogicalArrayCreateUnit, InvalidListArray)
                std::invalid_argument);
 }
 
+TEST_F(LogicalArrayCreateUnit, CreateNullableArray)
+{
+  auto runtime         = legate::Runtime::get_runtime();
+  const auto store     = runtime->create_store(legate::Shape{1}, legate::int64());
+  const auto null_mask = runtime->create_store(legate::Shape{1}, legate::bool_());
+  const auto array     = runtime->create_nullable_array(store, null_mask);
+
+  ASSERT_EQ(array.dim(), 1);
+  ASSERT_EQ(array.type(), legate::int64());
+  ASSERT_EQ(array.nullable(), true);
+  ASSERT_EQ(array.volume(), 1);
+}
+
+TEST_F(LogicalArrayCreateUnit, InvalidNullableArrayShape)
+{
+  auto runtime          = legate::Runtime::get_runtime();
+  const auto store      = runtime->create_store(legate::Shape{1}, legate::int64());
+  const auto large_mask = runtime->create_store(legate::Shape{4, 3}, legate::bool_());
+
+  // incorrect mask shape
+  ASSERT_THAT([&] { return runtime->create_nullable_array(store, large_mask); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Store and null mask must have the same shape")));
+}
+
+TEST_F(LogicalArrayCreateUnit, InvalidNullableArrayType)
+{
+  auto runtime          = legate::Runtime::get_runtime();
+  const auto store      = runtime->create_store(legate::Shape{1}, legate::int64());
+  const auto float_mask = runtime->create_store(legate::Shape{1}, legate::float64());
+
+  // incorrect mask type
+  ASSERT_THAT([&] { return runtime->create_nullable_array(store, float_mask); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Null mask must be a boolean type")));
+}
+
 TEST_P(NullableTest, PhsicalArray)
 {
   const auto nullable = GetParam();

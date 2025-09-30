@@ -40,6 +40,7 @@ cdef extern from "legate/data/logical_array.h" namespace "legate" nogil:
         void offload_to(StoreTarget) except+
         _LogicalArray()
         _LogicalArray(const _LogicalStore&) except+
+        _LogicalArray(const _LogicalStore&, const _LogicalStore&) except+
         _LogicalArray(const _LogicalArray&) except+
 
 

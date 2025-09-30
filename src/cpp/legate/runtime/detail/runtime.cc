@@ -660,6 +660,21 @@ InternalSharedPtr<LogicalArray> Runtime::create_array_like(
   return create_array(array->shape(), std::move(type), array->nullable(), optimize_scalar);
 }
 
+InternalSharedPtr<LogicalArray> Runtime::create_nullable_array(
+  const InternalSharedPtr<LogicalStore>& store, const InternalSharedPtr<LogicalStore>& null_mask)
+{
+  if (legate::Type::Code::BOOL != null_mask->type()->code) {
+    throw TracedException<std::invalid_argument>{"Null mask must be a boolean type"};
+  }
+  if ((*store->shape()) != (*null_mask->shape())) {
+    throw TracedException<std::invalid_argument>{"Store and null mask must have the same shape"};
+  }
+  if (store->transformed() || null_mask->transformed()) {
+    throw TracedException<std::invalid_argument>{"Store and null mask must be top-level stores"};
+  }
+  return make_internal_shared<BaseLogicalArray>(store, null_mask);
+}
+
 InternalSharedPtr<LogicalArray> Runtime::create_list_array(
   InternalSharedPtr<Type> type,
   const InternalSharedPtr<LogicalArray>& descriptor,

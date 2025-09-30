@@ -75,6 +75,9 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
             const _Shape&, const _Type&, bool, bool
         ) except+
         _LogicalArray create_array_like(const _LogicalArray&, _Type) except+
+        _LogicalArray create_nullable_array(
+            const _LogicalStore&, const _LogicalStore&
+        ) except+
         _LogicalStore create_store(const _Type&, uint32_t) except+
         _LogicalStore create_store(const _Shape&, const _Type&, bool) except+
         _LogicalStore create_store(const _Scalar&) except+
@@ -195,6 +198,9 @@ cdef class Runtime(Unconstructable):
     )
     cpdef LogicalArray create_array_like(
         self, LogicalArray array, Type dtype = *
+    )
+    cpdef LogicalArray create_nullable_array(
+        self, LogicalStore store, LogicalStore null_mask
     )
     cpdef LogicalStore create_store(
         self,

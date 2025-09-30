@@ -166,6 +166,23 @@ class Runtime {
                                                              bool optimize_scalar);
   [[nodiscard]] InternalSharedPtr<LogicalArray> create_array_like(
     const InternalSharedPtr<LogicalArray>& array, InternalSharedPtr<Type> type);
+  /**
+   * @brief Creates a nullable array from a given store and null mask.
+   *
+   * @param store Store for the array's data.
+   * @param null_mask Store for the array's null mask.
+   *
+   * @note This call can block if either `store` or `null_mask` is unbound.
+   *
+   * @return Nullable logical array.
+   *
+   * @throw std::invalid_argument When any of the following is true:
+   * #. `null_mask` is not of boolean type.
+   * #. `store` and `null_mask` have different shapes.
+   * #. `store` or `null_mask` are not top-level stores.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalArray> create_nullable_array(
+    const InternalSharedPtr<LogicalStore>& store, const InternalSharedPtr<LogicalStore>& null_mask);
   [[nodiscard]] InternalSharedPtr<LogicalArray> create_list_array(
     InternalSharedPtr<Type> type,
     const InternalSharedPtr<LogicalArray>& descriptor,

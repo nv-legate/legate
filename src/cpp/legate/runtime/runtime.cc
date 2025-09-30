@@ -239,6 +239,12 @@ LogicalArray Runtime::create_array_like(const LogicalArray& to_mirror, std::opti
   return LogicalArray{impl_->create_array_like(to_mirror.impl(), std::move(ty))};
 }
 
+LogicalArray Runtime::create_nullable_array(const LogicalStore& store,
+                                            const LogicalStore& null_mask)
+{
+  return LogicalArray{impl_->create_nullable_array(store.impl(), null_mask.impl())};
+}
+
 StringLogicalArray Runtime::create_string_array(const LogicalArray& descriptor,
                                                 const LogicalArray& vardata)
 {

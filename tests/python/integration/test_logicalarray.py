@@ -18,7 +18,7 @@ from legate.core import (
 )
 
 from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SHAPES
-from .utils.utils import random_array_and_store
+from .utils.utils import random_array_and_store, zero_array_and_store
 
 
 class TestArrayCreation:
@@ -42,6 +42,33 @@ class TestArrayCreation:
         assert not lg_arr2.data.equal_storage(lg_arr1.data)
         np.testing.assert_allclose(np_arr1, np_arr0)
         assert lg_arr2.volume == lg_arr1.volume
+
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    def test_nullable_array_constructor(self, shape: tuple[int, ...]) -> None:
+        _, data_store = random_array_and_store(shape)
+        _, mask_store = zero_array_and_store(ty.bool_, shape)
+        arr = LogicalArray.from_store_and_mask(data_store, mask_store)
+
+        assert arr.nullable
+        assert arr.null_mask.shape == shape
+        assert arr.null_mask.type == ty.bool_
+        assert arr.null_mask.equal_storage(mask_store)
+        assert arr.data.equal_storage(data_store)
+
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    def test_runtime_create_nullable_array(
+        self, shape: tuple[int, ...]
+    ) -> None:
+        runtime = get_legate_runtime()
+        _, data_store = random_array_and_store(shape)
+        _, mask_store = zero_array_and_store(ty.bool_, shape)
+        arr = runtime.create_nullable_array(data_store, mask_store)
+
+        assert arr.nullable
+        assert arr.null_mask.shape == shape
+        assert arr.null_mask.type == ty.bool_
+        assert arr.null_mask.equal_storage(mask_store)
+        assert arr.data.equal_storage(data_store)
 
     @pytest.mark.skipif(
         get_legate_runtime().machine.preferred_target != TaskTarget.GPU,
@@ -172,6 +199,34 @@ class TestArrayCreationErrors:
         msg = "nullable arrays don't support the array interface directly"
         with pytest.raises(ValueError, match=msg):
             np.asarray(arr.get_physical_array())
+
+    def test_runtime_create_nullable_array_invalid_type(self) -> None:
+        runtime = get_legate_runtime()
+        _, data_store = random_array_and_store(shape=(1,))
+        _, mask_store = zero_array_and_store(ty.float64, shape=(1,))
+        with pytest.raises(
+            ValueError, match="Null mask must be a boolean type"
+        ):
+            runtime.create_nullable_array(data_store, mask_store)
+
+    def test_runtime_create_nullable_array_invalid_shape(self) -> None:
+        runtime = get_legate_runtime()
+        _, data_store = random_array_and_store(shape=(1,))
+        _, mask_store = zero_array_and_store(ty.bool_, shape=(2,))
+        with pytest.raises(
+            ValueError, match="Store and null mask must have the same shape"
+        ):
+            runtime.create_nullable_array(data_store, mask_store)
+
+    def test_runtime_create_nullable_array_not_top_level(self) -> None:
+        runtime = get_legate_runtime()
+        _, data_store = random_array_and_store(shape=(2, 2))
+        _, mask_store = zero_array_and_store(ty.bool_, shape=(2, 2))
+        data_store = data_store.transpose((1, 0))
+        with pytest.raises(
+            ValueError, match="Store and null mask must be top-level stores"
+        ):
+            runtime.create_nullable_array(data_store, mask_store)
 
 
 if __name__ == "__main__":

@@ -413,6 +413,25 @@ class LEGATE_EXPORT Runtime {
                                                std::optional<Type> type = std::nullopt);
 
   /**
+   * @brief Creates a nullable array from a given store and null mask.
+   *
+   * @param store Store for the array's data.
+   * @param null_mask Store for the array's null mask.
+   *
+   * @note This call can block if either `store` or `null_mask` is unbound.
+   *
+   * @return Nullable logical array.
+   *
+   * @throw std::invalid_argument When any of the following is true:
+   * #. `null_mask` is not of boolean type.
+   * #. `store` and `null_mask` have different shapes.
+   * #. `store` or `null_mask` are not top-level stores.
+   * (i.e. they must be created directly and not be transformations or subsets of other stores))
+   */
+  [[nodiscard]] LogicalArray create_nullable_array(const LogicalStore& store,
+                                                   const LogicalStore& null_mask);
+
+  /**
    * @brief Creates a string array from the existing sub-arrays
    *
    * The caller is responsible for making sure that the vardata sub-array is valid for all the

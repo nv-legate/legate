@@ -916,6 +916,39 @@ cdef class Runtime(Unconstructable):
             )
         return LogicalArray.from_handle(_handle)
 
+    cpdef LogicalArray create_nullable_array(
+        self, LogicalStore store, LogicalStore null_mask,
+    ):
+        r"""
+        Create a nullable array from a store and a null mask.
+
+        Parameters
+        ----------
+        store : LogicalStore
+            The store to create the array from.
+        null_mask : LogicalStore
+            The store holding the null mask indicating null elements of store.
+
+        Returns
+        -------
+        LogicalArray
+            The new array.
+
+        Raises
+        ------
+        ValueError
+            If ``null_mask`` is not of boolean type.
+            Or if ``store`` and ``null_mask`` have different shapes.
+            Or if ``store`` and ``null_mask`` are not top-level stores.
+        """
+        cdef _LogicalArray _handle
+
+        with nogil:
+            _handle = self._handle.create_nullable_array(
+                store._handle, null_mask._handle
+            )
+        return LogicalArray.from_handle(_handle)
+
     cpdef LogicalStore create_store(
         self,
         Type dtype,

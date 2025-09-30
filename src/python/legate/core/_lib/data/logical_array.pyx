@@ -48,6 +48,31 @@ cdef class LogicalArray(Unconstructable):
         return LogicalArray.from_handle(std_move(handle))
 
     @staticmethod
+    def from_store_and_mask(
+        LogicalStore store, LogicalStore null_mask,
+    ) -> LogicalArray:
+        r"""
+        Create a ``LogicalArray`` from a ``LogicalStore`` and null mask.
+
+        Parameters
+        ----------
+        store : LogicalStore
+            The store to create the array from.
+        null_mask : LogicalStore
+            The store holding the null mask indicating null elements of store.
+
+        Returns
+        -------
+        LogicalArray
+            The newly created ``LogicalArray``.
+        """
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = _LogicalArray(store._handle, null_mask._handle)
+        return LogicalArray.from_handle(std_move(handle))
+
+    @staticmethod
     def from_raw_handle(uintptr_t raw_handle):
         r"""
         Create a ``LogicalArray`` from a pointer to C++ ``LogicalArray``.

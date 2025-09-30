@@ -99,6 +99,9 @@ class Runtime(Unconstructable):
     def create_array_like(
         self, array: LogicalArray, dtype: Type | None = None
     ) -> LogicalArray: ...
+    def create_nullable_array(
+        self, store: LogicalStore, null_mask: LogicalStore
+    ) -> LogicalArray: ...
     def create_store(
         self,
         dtype: Type,
