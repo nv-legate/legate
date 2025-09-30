@@ -21,14 +21,11 @@ void register_tasks(Library& library)
     nccl::register_tasks(library);
   }
 
-  // Register CPU communication tasks based on network backend availability
-  const bool mpi_disabled = Runtime::get_runtime().config().disable_mpi();
-  const bool use_mpi      = LEGATE_DEFINED(LEGATE_USE_MPI) && !mpi_disabled;
-  const bool use_ucx      = LEGATE_DEFINED(LEGATE_USE_UCX) && mpi_disabled;
-
-  if (use_mpi || use_ucx) {
-    cpu::register_tasks(library);
-  }
+  // Always register CPU communication tasks. The communicator factory selects
+  // the appropriate backend (MPI, UCX, or the local collectives implementation)
+  // internally, so even purely local builds still need these tasks registered
+  // to satisfy add_cpu_communicator() callers.
+  cpu::register_tasks(library);
 }
 
 void register_builtin_communicator_factories(const Library& library)
