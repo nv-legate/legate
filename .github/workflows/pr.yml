@@ -60,7 +60,7 @@ jobs:
     with:
       build-type: pull-request
 
-  tests-pass:
+  source-tests-pass:
     if: always()
     needs:
       - source-build-cpu
