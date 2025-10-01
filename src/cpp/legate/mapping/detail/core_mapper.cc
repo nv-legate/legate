@@ -103,9 +103,10 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
       if (memory_kind == legate::mapping::StoreTarget::FBMEM) {
         return 0;
       }
-      // We simply use twice the future size after 16-byte alignment as an upper bound
-      const auto future_size = task.impl()->legion_task().futures[0].get_untyped_size();
-      return legate::detail::round_up_to_multiple(future_size, EXTRA_SCALAR_ALIGNMENT);
+      // The pool should be big enough to hold the source future and the extracted value
+      const auto value_size  = task.scalar(1).value<std::size_t>();
+      const auto future_size = task.scalar(2).value<std::size_t>();
+      return legate::detail::round_up_to_multiple(future_size + value_size, EXTRA_SCALAR_ALIGNMENT);
     }
     case legate::detail::CoreTask::INIT_NCCL: {
       return legate::detail::Runtime::get_runtime().config().warmup_nccl() ? NCCL_WARMUP_BUFFER_SIZE

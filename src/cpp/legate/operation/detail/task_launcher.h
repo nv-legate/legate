@@ -88,6 +88,9 @@ class TaskLauncher {
   void set_side_effect(bool has_side_effect);
   void set_concurrent(bool is_concurrent);
   void set_insert_barrier(bool insert_barrier);
+  /**
+   * @brief Set the maximum future size of this task.
+   */
   void set_future_size(std::size_t future_size);
   void throws_exception(bool can_throw_exception);
   void can_elide_device_ctx_sync(bool can_elide_sync);
@@ -134,7 +137,10 @@ class TaskLauncher {
                                    const ParallelPolicy& parallel_policy);
 
   void report_interfering_stores_() const;
-  [[nodiscard]] std::size_t get_future_size_including_exception_() const;
+  /**
+   * @brief Get the maximum future size set by the caller.
+   */
+  [[nodiscard]] std::size_t get_future_size_() const;
 
   std::reference_wrapper<const Library> library_;
   LocalTaskID task_id_{};

@@ -112,8 +112,33 @@ class Task : public Operation {
   void inline_launch_() const;
   void legion_launch_(Strategy* strategy);
 
-  void demux_scalar_stores_(const Legion::Future& result);
-  void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
+  /**
+   * @brief De-multiplex a future returned by a Legion task.
+   *
+   * Because Legion allows each task to have only up to one returned future, Legate packs multiple
+   * scalars it needs to return from a Legate task into the single future, which later gets
+   * de-multiplexed by this method. Scalar output and reduction stores directly use the returned
+   * future as their backing storage, and whoever consume them offset into the right location in
+   * that future. The returned future contains a serialized exception at the end, which needs to be
+   * extracted out and converted into an exception object of the right type so it can be re-raised
+   * on the control side.
+   */
+  void demux_scalar_stores_(const Legion::Future& result, std::size_t future_size_without_exn);
+  /**
+   * @brief De-multiplex a future map returned by a Legion task.
+   *
+   * This method is an "index version" of the `demux_scalar_stores` method. This does more or less
+   * the same thing, except that it needs to reduce multiple scalars into a single scalar whenever
+   * necessary; for scalar reduction stores, the method extracts scalars holding local reduction
+   * contributions from parallel tasks (using the same `ExtractScalar` task) and passes the future
+   * map to Legion for the scalar reduction producing a final output; returned exceptions also need
+   * to be combined in a similar way, and the "reduction" operator for returned exceptions simply
+   * favors the previous one over all the later ones (i.e., if a task i returned an exception, those
+   * returned from all tasks j > i are ignored.
+   */
+  void demux_scalar_stores_(const Legion::FutureMap& result,
+                            const Domain& launch_domain,
+                            std::size_t future_size_without_exn);
 
   // Calculate the return future size excluding the size of returned exception, which can only be
   // approximate

@@ -235,11 +235,13 @@ void Task::legion_launch_(Strategy* strategy_ptr)
     }
   }
 
+  const auto future_size = calculate_future_size_();
+
   launcher.set_side_effect(has_side_effect_);
   launcher.set_concurrent(concurrent_);
   launcher.throws_exception(can_throw_exception());
   launcher.can_elide_device_ctx_sync(can_elide_device_ctx_sync());
-  launcher.set_future_size(calculate_future_size_());
+  launcher.set_future_size(future_size);
   launcher.set_streaming_generation(streaming_generation());
 
   // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
@@ -268,14 +270,14 @@ void Task::legion_launch_(Strategy* strategy_ptr)
     auto result = launcher.execute(launch_domain);
 
     if (launch_volume > 1) {
-      demux_scalar_stores_(result, launch_domain);
+      demux_scalar_stores_(result, launch_domain, future_size);
     } else {
-      demux_scalar_stores_(result.get_future(launch_domain.lo()));
+      demux_scalar_stores_(result.get_future(launch_domain.lo()), future_size);
     }
   } else {
     auto result = launcher.execute_single();
 
-    demux_scalar_stores_(result);
+    demux_scalar_stores_(result, future_size);
   }
 }
 
@@ -299,7 +301,7 @@ void Task::launch_task_(Strategy* strategy)
   }
 }
 
-void Task::demux_scalar_stores_(const Legion::Future& result)
+void Task::demux_scalar_stores_(const Legion::Future& result, std::size_t future_size)
 {
   auto num_scalar_outs  = scalar_outputs_.size();
   auto num_scalar_reds  = scalar_reductions_.size();
@@ -339,12 +341,15 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
         runtime.extract_scalar(parallel_policy(),
                                result,
                                return_layout.total_size(),
-                               legate::detail::ReturnedException::max_size()));
+                               legate::detail::ReturnedException::max_size(),
+                               future_size));
     }
   }
 }
 
-void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain)
+void Task::demux_scalar_stores_(const Legion::FutureMap& result,
+                                const Domain& launch_domain,
+                                std::size_t future_size)
 {
   auto num_scalar_outs  = scalar_outputs_.size();
   auto num_scalar_reds  = scalar_reductions_.size();
@@ -375,7 +380,8 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
     auto extract_future_map = [&](auto&& future_map, auto&& store) {
       auto size   = store->type()->size();
       auto offset = return_layout.next(size, store->type()->alignment());
-      return runtime.extract_scalar(parallel_policy(), future_map, offset, size, launch_domain);
+      return runtime.extract_scalar(
+        parallel_policy(), future_map, offset, size, future_size, launch_domain);
     };
 
     const auto compute_offset = [&](auto&& store) {
@@ -395,6 +401,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
                                            result,
                                            return_layout.total_size(),
                                            legate::detail::ReturnedException::max_size(),
+                                           future_size,
                                            launch_domain);
 
       runtime.record_pending_exception(runtime.reduce_exception_future_map(exn_fm));
@@ -418,7 +425,10 @@ std::size_t Task::calculate_future_size_() const
 
   // Align the buffer size to the 16-byte boundary (see the comment in task_return.cc for the
   // detail)
-  return round_up_to_multiple(layout.total_size(), TaskReturn::ALIGNMENT);
+  return round_up_to_multiple(
+    layout.total_size() + (static_cast<std::size_t>(can_throw_exception()) *
+                           legate::detail::ReturnedException::max_size()),
+    TaskReturn::ALIGNMENT);
 }
 
 std::string Task::to_string(bool show_provenance) const

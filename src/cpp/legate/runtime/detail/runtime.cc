@@ -1453,7 +1453,8 @@ void Runtime::dispatch(const Legion::IndexFillLauncher& launcher)
 Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                        const Legion::Future& result,
                                        std::size_t offset,
-                                       std::size_t size) const
+                                       std::size_t size,
+                                       std::size_t future_size) const
 {
   const auto& machine = get_machine();
   auto launcher       = TaskLauncher{core_library(),
@@ -1464,9 +1465,10 @@ Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                static_cast<Legion::MappingTagID>(machine.preferred_variant())};
 
   launcher.add_future(result);
-  launcher.reserve_scalars(2);
+  launcher.reserve_scalars(3);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));
   launcher.add_scalar(make_internal_shared<Scalar>(size));
+  launcher.add_scalar(make_internal_shared<Scalar>(future_size));
   launcher.set_future_size(size);
   return launcher.execute_single();
 }
@@ -1475,6 +1477,7 @@ Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                           const Legion::FutureMap& result,
                                           std::size_t offset,
                                           std::size_t size,
+                                          std::size_t future_size,
                                           const Legion::Domain& launch_domain) const
 {
   const auto& machine = get_machine();
@@ -1486,9 +1489,10 @@ Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                static_cast<Legion::MappingTagID>(machine.preferred_variant())};
 
   launcher.add_future_map(result);
-  launcher.reserve_scalars(2);
+  launcher.reserve_scalars(3);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));
   launcher.add_scalar(make_internal_shared<Scalar>(size));
+  launcher.add_scalar(make_internal_shared<Scalar>(future_size));
   launcher.set_future_size(size);
   return launcher.execute(launch_domain);
 }

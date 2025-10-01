@@ -97,7 +97,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
                                        mapper_arg.to_legion_buffer()};
 
   index_task.provenance         = provenance().as_string_view();
-  index_task.future_return_size = get_future_size_including_exception_();
+  index_task.future_return_size = get_future_size_();
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -149,7 +149,7 @@ Legion::Future TaskLauncher::execute_single()
                                    mapper_arg.to_legion_buffer()};
 
   single_task.provenance         = provenance().as_string_view();
-  single_task.future_return_size = get_future_size_including_exception_();
+  single_task.future_return_size = get_future_size_();
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -233,7 +233,7 @@ BufferBuilder TaskLauncher::pack_task_arg_(bool parallel, StoreAnalyzer* analyze
   pack_args(task_arg, *analyzer, outputs_);
   pack_args(task_arg, *analyzer, reductions_);
   pack_args(task_arg, scalars_);
-  task_arg.pack<std::size_t>(future_size_);
+  task_arg.pack<std::size_t>(get_future_size_());
   task_arg.pack<bool>(can_throw_exception_);
   task_arg.pack<bool>(can_elide_device_ctx_sync_);
   if (parallel) {
@@ -399,6 +399,7 @@ void TaskLauncher::post_process_unbound_stores_(
                                  result,
                                  static_cast<std::uint32_t>(idx) * sizeof(std::size_t),
                                  sizeof(std::size_t),
+                                 get_future_size_(),
                                  launch_domain),
           machine_,
           parallel_policy());
@@ -418,12 +419,6 @@ void TaskLauncher::report_interfering_stores_() const
     "via multiplepartitions in mixed modes, which is illegal in Legate. Make sure to make a "
     "copy "
     "of the store so there would be no interference.");
-}
-
-std::size_t TaskLauncher::get_future_size_including_exception_() const
-{
-  return future_size_ +
-         (static_cast<std::size_t>(can_throw_exception_) * ReturnedException::max_size());
 }
 
 }  // namespace legate::detail

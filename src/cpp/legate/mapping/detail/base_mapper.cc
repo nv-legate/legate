@@ -506,8 +506,10 @@ void map_unbound_stores(Span<const std::unique_ptr<StoreMapping>> mappings,
   // the total pool size for the task.
   const auto total_size = legate_task.future_size() * 2;
 
-  // If the task can raise an exception, we reserve extra space for the serialized exception
-  return total_size + (static_cast<std::size_t>(legate_task.can_raise_exception()) *
+  // If the task can raise an exception, the future size includes the max size for returned
+  // exception, which doesn't need to be doubled (because exceptions are only returned from tasks
+  // and not passed in). So, we subtract the max exception size from the calculated pool size.
+  return total_size - (static_cast<std::size_t>(legate_task.can_raise_exception()) *
                        legate::detail::ReturnedException::max_size());
 }
 

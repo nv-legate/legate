@@ -78,4 +78,6 @@ inline const std::optional<StreamingGeneration>& TaskLauncher::streaming_generat
   return streaming_gen_;
 }
 
+inline std::size_t TaskLauncher::get_future_size_() const { return future_size_; }
+
 }  // namespace legate::detail

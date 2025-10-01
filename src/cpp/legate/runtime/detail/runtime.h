@@ -344,14 +344,28 @@ class Runtime {
   void dispatch(const Legion::FillLauncher& launcher);
   void dispatch(const Legion::IndexFillLauncher& launcher);
 
+  /**
+   * @brief Extract a scalar of size `size` from a future at offset `offset` and return it in a
+   * `Future`.
+   *
+   * See `legate::detail::Task::demux_scalar_stores_`.
+   */
   [[nodiscard]] Legion::Future extract_scalar(const ParallelPolicy& parallel_policy,
                                               const Legion::Future& result,
                                               std::size_t offset,
-                                              std::size_t size) const;
+                                              std::size_t size,
+                                              std::size_t future_size) const;
+  /**
+   * @brief Extract a scalar of size `size` from each future in a `FutureMap` at offset `offset` and
+   * return them in a `FutureMap`.
+   *
+   * See `legate::detail::Task::demux_scalar_stores_`.
+   */
   [[nodiscard]] Legion::FutureMap extract_scalar(const ParallelPolicy& parallel_policy,
                                                  const Legion::FutureMap& result,
                                                  std::size_t offset,
                                                  std::size_t size,
+                                                 std::size_t future_size,
                                                  const Legion::Domain& launch_domain) const;
   [[nodiscard]] Legion::Future reduce_future_map(
     const Legion::FutureMap& future_map,
