@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::LogicalStore &#8212; NVIDIA legate (25.10.00.dev59+g8163b3bec)</title>
+    <title>legate::LogicalStore &#8212; NVIDIA legate (25.11.00.dev6+ga2d672738)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=fcb5b03f"></script>
+    <script src="../../../../_static/documentation_options.js?v=e77d3123"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@ SPDX-License-Identifier: Apache-2.0
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.10';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.11';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -134,11 +134,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a></div>
     
@@ -245,11 +245,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a>
 
@@ -871,7 +871,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – When <code class="docutils literal notranslate"><span class="pre">extra_dim</span></code> is not a valid dimension name </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – When <code class="docutils literal notranslate"><span class="pre">extra_dim</span></code> is not a valid dimension index. </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new store with an extra dimension</p>
@@ -894,10 +894,46 @@ The size and alignment of the new type must match that of the existing type.</p>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not a valid dimension name or <code class="docutils literal notranslate"><span class="pre">index</span></code> is out of bounds </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not a valid dimension index or <code class="docutils literal notranslate"><span class="pre">index</span></code> is out of bounds of the dimension. </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new store with one fewer dimension</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE">
+<span id="_CPPv3NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE"></span><span id="_CPPv2NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE"></span><span id="legate::LogicalStore::broadcast__std::int32_t.std::sC"></span><span class="target" id="classlegate_1_1LogicalStore_1ae96df6a2d7d86add72a4b9466360b277"></span><a class="reference internal" href="#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim_size</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Broadcasts a unit-size dimension of the store. </p>
+<p>The output store is a view to the input store where the dimension <code class="docutils literal notranslate"><span class="pre">dim</span></code> is broadcasted to size <code class="docutils literal notranslate"><span class="pre">dim_size</span></code>.</p>
+<p>For example, For a 2D store <code class="docutils literal notranslate"><span class="pre">A</span></code></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[[1, 2, 3]]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">A.broadcast(0,</span> <span class="pre">3)</span></code> yields the following output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[[1, 2, 3],
+ [1, 2, 3],
+ [1, 2, 3]]
+</pre></div>
+</div>
+<p>The broadcasting is logical; i.e., the broadcasted values are not materialized in the physical allocation.</p>
+<p>The call can block if the store is unbound.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> – A dimension to broadcast. Must have size 1. </p></li>
+<li><p><strong>dim_size</strong> – A new size of the chosen dimension.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not a valid dimension index. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the size of dimension <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not 1. </p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new store where the chosen dimension is logically broadcasted.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1263,6 +1299,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore14reinterpret_asERK4Type"><code class="docutils literal notranslate"><span class="pre">reinterpret_as()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore7promoteENSt7int32_tENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">promote()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore7projectENSt7int32_tENSt7int64_tE"><code class="docutils literal notranslate"><span class="pre">project()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore5sliceENSt7int32_tE5Slice"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore9transposeERRNSt6vectorINSt7int32_tEEE"><code class="docutils literal notranslate"><span class="pre">transpose()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore11delinearizeENSt7int32_tENSt6vectorINSt8uint64_tEEE"><code class="docutils literal notranslate"><span class="pre">delinearize()</span></code></a></li>

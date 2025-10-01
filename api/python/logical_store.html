@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Store &#8212; NVIDIA legate (25.10.00.dev59+g8163b3bec)</title>
+    <title>Store &#8212; NVIDIA legate (25.11.00.dev6+ga2d672738)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=fcb5b03f"></script>
+    <script src="../../_static/documentation_options.js?v=e77d3123"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.10';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.11';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a>
 
@@ -737,13 +737,16 @@ transformed store are visible via the original one and vice versa.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.project.html#legate.core.LogicalStore.project" title="legate.core.LogicalStore.project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.project</span></code></a>(self, int32_t dim, ...)</p></td>
 <td><p>Projects out a dimension of the store.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.slice.html#legate.core.LogicalStore.slice" title="legate.core.LogicalStore.slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.slice</span></code></a>(self, int32_t dim, slice sl)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.broadcast.html#legate.core.LogicalStore.broadcast" title="legate.core.LogicalStore.broadcast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.broadcast</span></code></a>(self, int32_t dim, ...)</p></td>
+<td><p>Broadcasts a unit-size dimension of the store.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.slice.html#legate.core.LogicalStore.slice" title="legate.core.LogicalStore.slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.slice</span></code></a>(self, int32_t dim, slice sl)</p></td>
 <td><p>Slices a contiguous sub-section of the store.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.transpose.html#legate.core.LogicalStore.transpose" title="legate.core.LogicalStore.transpose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.transpose</span></code></a>(self, axes)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.transpose.html#legate.core.LogicalStore.transpose" title="legate.core.LogicalStore.transpose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.transpose</span></code></a>(self, axes)</p></td>
 <td><p>Reorders dimensions of the store.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.delinearize.html#legate.core.LogicalStore.delinearize" title="legate.core.LogicalStore.delinearize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.delinearize</span></code></a>(self, int32_t dim, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.LogicalStore.delinearize.html#legate.core.LogicalStore.delinearize" title="legate.core.LogicalStore.delinearize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LogicalStore.delinearize</span></code></a>(self, int32_t dim, ...)</p></td>
 <td><p>Delinearizes a dimension into multiple dimensions.</p></td>
 </tr>
 </tbody>

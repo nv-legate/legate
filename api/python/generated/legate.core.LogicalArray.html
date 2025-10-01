@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.LogicalArray &#8212; NVIDIA legate (25.10.00.dev59+g8163b3bec)</title>
+    <title>legate.core.LogicalArray &#8212; NVIDIA legate (25.11.00.dev6+ga2d672738)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=fcb5b03f"></script>
+    <script src="../../../_static/documentation_options.js?v=e77d3123"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.10';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.11';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a>
 
@@ -741,40 +741,43 @@ SPDX-License-Identifier: Apache-2.0
 <tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.__getitem__.html#legate.core.LogicalArray.__getitem__" title="legate.core.LogicalArray.__getitem__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__getitem__</span></code></a>(self, indices)</p></td>
 <td><p>Get a subarray of this array.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.child.html#legate.core.LogicalArray.child" title="legate.core.LogicalArray.child"><code class="xref py py-obj docutils literal notranslate"><span class="pre">child</span></code></a>(self, uint32_t index)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.broadcast.html#legate.core.LogicalArray.broadcast" title="legate.core.LogicalArray.broadcast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast</span></code></a>(self, int32_t dim, size_t dim_size)</p></td>
+<td><p>Broadcasts a unit-size dimension of the store.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.child.html#legate.core.LogicalArray.child" title="legate.core.LogicalArray.child"><code class="xref py py-obj docutils literal notranslate"><span class="pre">child</span></code></a>(self, uint32_t index)</p></td>
 <td><p>Get a child array of this array.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.delinearize.html#legate.core.LogicalArray.delinearize" title="legate.core.LogicalArray.delinearize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delinearize</span></code></a>(self, int32_t dim, shape)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.delinearize.html#legate.core.LogicalArray.delinearize" title="legate.core.LogicalArray.delinearize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delinearize</span></code></a>(self, int32_t dim, shape)</p></td>
 <td><p>Delinearize a dimension into multiple dimensions.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.fill.html#legate.core.LogicalArray.fill" title="legate.core.LogicalArray.fill"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fill</span></code></a>(self, value)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.fill.html#legate.core.LogicalArray.fill" title="legate.core.LogicalArray.fill"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fill</span></code></a>(self, value)</p></td>
 <td><p>Fill the array with a value.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.from_raw_handle.html#legate.core.LogicalArray.from_raw_handle" title="legate.core.LogicalArray.from_raw_handle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_raw_handle</span></code></a>(uintptr_t raw_handle)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.from_raw_handle.html#legate.core.LogicalArray.from_raw_handle" title="legate.core.LogicalArray.from_raw_handle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_raw_handle</span></code></a>(uintptr_t raw_handle)</p></td>
 <td><p>Create a <code class="docutils literal notranslate"><span class="pre">LogicalArray</span></code> from a pointer to C++ <code class="docutils literal notranslate"><span class="pre">LogicalArray</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.from_store.html#legate.core.LogicalArray.from_store" title="legate.core.LogicalArray.from_store"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_store</span></code></a>(LogicalStore store)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.from_store.html#legate.core.LogicalArray.from_store" title="legate.core.LogicalArray.from_store"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_store</span></code></a>(LogicalStore store)</p></td>
 <td><p>Create a <code class="docutils literal notranslate"><span class="pre">LogicalArray</span></code> from a <code class="docutils literal notranslate"><span class="pre">LogicalStore</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.from_store_and_mask.html#legate.core.LogicalArray.from_store_and_mask" title="legate.core.LogicalArray.from_store_and_mask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_store_and_mask</span></code></a>(LogicalStore store, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.from_store_and_mask.html#legate.core.LogicalArray.from_store_and_mask" title="legate.core.LogicalArray.from_store_and_mask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_store_and_mask</span></code></a>(LogicalStore store, ...)</p></td>
 <td><p>Create a <code class="docutils literal notranslate"><span class="pre">LogicalArray</span></code> from a <code class="docutils literal notranslate"><span class="pre">LogicalStore</span></code> and null mask.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.get_physical_array.html#legate.core.LogicalArray.get_physical_array" title="legate.core.LogicalArray.get_physical_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_physical_array</span></code></a>(self[, target])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.get_physical_array.html#legate.core.LogicalArray.get_physical_array" title="legate.core.LogicalArray.get_physical_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_physical_array</span></code></a>(self[, target])</p></td>
 <td><p>Get a <code class="docutils literal notranslate"><span class="pre">PhysicalArray</span></code> of the data for this array.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.offload_to.html#legate.core.LogicalArray.offload_to" title="legate.core.LogicalArray.offload_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">offload_to</span></code></a>(self, StoreTarget target_mem)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.offload_to.html#legate.core.LogicalArray.offload_to" title="legate.core.LogicalArray.offload_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">offload_to</span></code></a>(self, StoreTarget target_mem)</p></td>
 <td><p>Offload array to specified target memory.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.project.html#legate.core.LogicalArray.project" title="legate.core.LogicalArray.project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project</span></code></a>(self, int32_t dim, int64_t index)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.project.html#legate.core.LogicalArray.project" title="legate.core.LogicalArray.project"><code class="xref py py-obj docutils literal notranslate"><span class="pre">project</span></code></a>(self, int32_t dim, int64_t index)</p></td>
 <td><p>Project out or &quot;flatten&quot; a dimension of the array.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.promote.html#legate.core.LogicalArray.promote" title="legate.core.LogicalArray.promote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">promote</span></code></a>(self, int32_t extra_dim, size_t dim_size)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.promote.html#legate.core.LogicalArray.promote" title="legate.core.LogicalArray.promote"><code class="xref py py-obj docutils literal notranslate"><span class="pre">promote</span></code></a>(self, int32_t extra_dim, size_t dim_size)</p></td>
 <td><p>Add an extra dimension to the array.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.slice.html#legate.core.LogicalArray.slice" title="legate.core.LogicalArray.slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slice</span></code></a>(self, int32_t dim, slice sl)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.slice.html#legate.core.LogicalArray.slice" title="legate.core.LogicalArray.slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slice</span></code></a>(self, int32_t dim, slice sl)</p></td>
 <td><p>Get a contiguous sub-section of the array.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.LogicalArray.transpose.html#legate.core.LogicalArray.transpose" title="legate.core.LogicalArray.transpose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transpose</span></code></a>(self, axes)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.LogicalArray.transpose.html#legate.core.LogicalArray.transpose" title="legate.core.LogicalArray.transpose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transpose</span></code></a>(self, axes)</p></td>
 <td><p>Get a transpose of the array.</p></td>
 </tr>
 </tbody>

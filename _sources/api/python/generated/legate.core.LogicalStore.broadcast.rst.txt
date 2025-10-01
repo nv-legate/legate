@@ -1,0 +1,6 @@
+﻿legate.core.LogicalStore.broadcast
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalStore.broadcast

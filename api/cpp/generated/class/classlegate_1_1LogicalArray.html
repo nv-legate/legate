@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::LogicalArray &#8212; NVIDIA legate (25.10.00.dev59+g8163b3bec)</title>
+    <title>legate::LogicalArray &#8212; NVIDIA legate (25.11.00.dev6+ga2d672738)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=fcb5b03f"></script>
+    <script src="../../../../_static/documentation_options.js?v=e77d3123"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.10';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.11';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev59+g8163b3bec) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev6+ga2d672738) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev59+g8163b3bec)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev6+ga2d672738)</p>
   
 </a>
 
@@ -834,6 +834,36 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalArray9broadcastENSt7int32_tENSt6size_tE">
+<span id="_CPPv3NK6legate12LogicalArray9broadcastENSt7int32_tENSt6size_tE"></span><span id="_CPPv2NK6legate12LogicalArray9broadcastENSt7int32_tENSt6size_tE"></span><span id="legate::LogicalArray::broadcast__std::int32_t.std::sC"></span><span class="target" id="classlegate_1_1LogicalArray_1ac852cb5ff52c19e9573b5aa4ffa4844a"></span><a class="reference internal" href="#_CPPv4N6legate12LogicalArrayE" title="legate::LogicalArray"><span class="n"><span class="pre">LogicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim_size</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalArray9broadcastENSt7int32_tENSt6size_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Broadcasts a unit-size dimension of the array. </p>
+<p>The call can block if the array is unbound.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1ae96df6a2d7d86add72a4b9466360b277"><span class="std std-ref">LogicalStore::broadcast</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> – A dimension to broadcast </p></li>
+<li><p><strong>dim_size</strong> – A new size of the chosen dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – When <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not a valid dimension index. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – When the size of dimension <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not 1. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the array or any of the sub-arrays is a list array.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new array where the chosen dimension is logically broadcasted</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalArray5sliceENSt7int32_tE5Slice">
 <span id="_CPPv3NK6legate12LogicalArray5sliceENSt7int32_tE5Slice"></span><span id="_CPPv2NK6legate12LogicalArray5sliceENSt7int32_tE5Slice"></span><span id="legate::LogicalArray::slice__std::int32_t.SliceC"></span><span class="target" id="classlegate_1_1LogicalArray_1a308d21541aa84d92cf9a1e4140f6aa83"></span><a class="reference internal" href="#_CPPv4N6legate12LogicalArrayE" title="legate::LogicalArray"><span class="n"><span class="pre">LogicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">slice</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>, <em class="sig-param"><a class="reference internal" href="classlegate_1_1Slice.html#_CPPv4N6legate5SliceE" title="legate::Slice"><span class="n"><span class="pre">Slice</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">sl</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalArray5sliceENSt7int32_tE5Slice" title="Link to this definition">#</a><br /></dt>
 <dd><p>Slices a contiguous sub-section of the array. </p>
@@ -1121,6 +1151,7 @@ Copies the array to the specified memory, if necessary, and marks it as the most
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray12num_childrenEv"><code class="docutils literal notranslate"><span class="pre">num_children()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray7promoteENSt7int32_tENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">promote()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray7projectENSt7int32_tENSt7int64_tE"><code class="docutils literal notranslate"><span class="pre">project()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray9broadcastENSt7int32_tENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray5sliceENSt7int32_tE5Slice"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray9transposeE4SpanIKNSt7int32_tEE"><code class="docutils literal notranslate"><span class="pre">transpose()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray11delinearizeENSt7int32_tE4SpanIKNSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">delinearize()</span></code></a></li>
