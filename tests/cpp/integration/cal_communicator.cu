@@ -83,9 +83,11 @@ TEST_P(CalCommunicatorManualTaskTest, CalCommunicator)
   auto ndim = GetParam();
 
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  // NOLINTNEXTLINE(readability-suspicious-call-argument)
-  auto store =
-    runtime->create_store(legate::Shape{legate::full<std::uint64_t>(ndim, SIZE)}, legate::int32());
+  auto store   = runtime->create_store(
+    legate::Shape{
+      legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)
+    },
+    legate::int32());
   auto launch_shape = legate::full<std::uint64_t>(ndim, 1);
   auto tile_shape   = legate::full<std::uint64_t>(ndim, 1);
   launch_shape[0]   = num_procs;
