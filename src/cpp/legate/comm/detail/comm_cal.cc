@@ -112,13 +112,16 @@ class Init : public detail::LegionTask<Init> {
     cal_comm_t cal_comm = nullptr;
     cal_comm_create_params_t params{};
 
-    params.allgather    = allgather;
-    params.req_test     = [](void*) { return CAL_OK; };
-    params.req_free     = [](void*) { return CAL_OK; };
-    params.data         = static_cast<void*>(cpu_comm);
-    params.rank         = static_cast<int>(task->index_point[0]);
-    params.nranks       = static_cast<int>(task->index_domain.get_volume());
-    params.local_device = cuda::detail::get_cuda_driver_api()->ctx_get_device();
+    params.allgather = allgather;
+    params.req_test  = [](void*) { return CAL_OK; };
+    params.req_free  = [](void*) { return CAL_OK; };
+    params.data      = static_cast<void*>(cpu_comm);
+    params.rank      = static_cast<int>(task->index_point[0]);
+    params.nranks    = static_cast<int>(task->index_domain.get_volume());
+
+    auto&& driver       = cuda::detail::get_cuda_driver_api();
+    auto cuda_context   = driver->ctx_get_current();
+    params.local_device = driver->ctx_get_device(cuda_context);
 
     CHECK_CAL(cal_comm_create(params, &cal_comm));
 

@@ -60,11 +60,11 @@ class CALCommunicator : public RegisterOnceFixture<Config> {};
 class CalCommunicatorManualTaskTest : public CALCommunicator,
                                       public ::testing::WithParamInterface<std::int32_t> {};
 
-INSTANTIATE_TEST_SUITE_P(CALCommunicator,
+INSTANTIATE_TEST_SUITE_P(CalCommunicator,
                          CalCommunicatorManualTaskTest,
                          ::testing::Values(1, 2, 3));
 
-TEST_P(CalCommunicatorManualTaskTest, CAL_communicator)
+TEST_P(CalCommunicatorManualTaskTest, CalCommunicator)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
@@ -73,7 +73,7 @@ TEST_P(CalCommunicatorManualTaskTest, CAL_communicator)
     GTEST_SKIP() << "No GPUs available. CAL communicator tests require GPUs.";
   }
 
-  legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
+  const legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
 
   const auto num_procs = runtime->get_machine().count();
   if (num_procs <= 1) {
@@ -83,6 +83,7 @@ TEST_P(CalCommunicatorManualTaskTest, CAL_communicator)
   auto ndim = GetParam();
 
   auto context = runtime->find_library(Config::LIBRARY_NAME);
+  // NOLINTNEXTLINE(readability-suspicious-call-argument)
   auto store =
     runtime->create_store(legate::Shape{legate::full<std::uint64_t>(ndim, SIZE)}, legate::int32());
   auto launch_shape = legate::full<std::uint64_t>(ndim, 1);
