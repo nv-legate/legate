@@ -228,7 +228,7 @@ class LEGATE_EXPORT LogicalStore {
    *
    * @return A new store with an extra dimension
    *
-   * @throw std::invalid_argument When `extra_dim` is not a valid dimension name
+   * @throw std::invalid_argument When `extra_dim` is not a valid dimension index.
    */
   [[nodiscard]] LogicalStore promote(std::int32_t extra_dim, std::size_t dim_size) const;
 
@@ -249,9 +249,44 @@ class LEGATE_EXPORT LogicalStore {
    *
    * @return A new store with one fewer dimension
    *
-   * @throw std::invalid_argument If `dim` is not a valid dimension name or `index` is out of bounds
+   * @throw std::invalid_argument If `dim` is not a valid dimension index or `index` is out of
+   * bounds of the dimension.
    */
   [[nodiscard]] LogicalStore project(std::int32_t dim, std::int64_t index) const;
+  /**
+   * @brief Broadcasts a unit-size dimension of the store.
+   *
+   * The output store is a view to the input store where the dimension `dim` is broadcasted to size
+   * `dim_size`.
+   *
+   * For example, For a 2D store `A`
+   *
+   * @code{.unparsed}
+   * [[1, 2, 3]]
+   * @endcode
+   *
+   * `A.broadcast(0, 3)` yields the following output:
+   *
+   * @code{.unparsed}
+   * [[1, 2, 3],
+   *  [1, 2, 3],
+   *  [1, 2, 3]]
+   * @endcode
+   *
+   * The broadcasting is logical; i.e., the broadcasted values are not materialized in the physical
+   * allocation.
+   *
+   * The call can block if the store is unbound.
+   *
+   * @param dim A dimension to broadcast. Must have size 1.
+   * @param dim_size A new size of the chosen dimension.
+   *
+   * @return A new store where the chosen dimension is logically broadcasted.
+   *
+   * @throw std::invalid_argument If `dim` is not a valid dimension index.
+   * @throw std::invalid_argument If the size of dimension `dim` is not 1.
+   */
+  [[nodiscard]] LogicalStore broadcast(std::int32_t dim, std::size_t dim_size) const;
 
   /**
    * @brief Slices a contiguous sub-section of the store.

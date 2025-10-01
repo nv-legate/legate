@@ -125,6 +125,7 @@ enum class CoreTransform : std::int8_t {
   SHIFT   = 100,
   PROMOTE,
   PROJECT,
+  BROADCAST,
   TRANSPOSE,
   DELINEARIZE,
 };

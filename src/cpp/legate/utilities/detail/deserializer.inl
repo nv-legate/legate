@@ -251,6 +251,13 @@ InternalSharedPtr<TransformStack> BaseDeserializer<Deserializer>::unpack_transfo
       return make_internal_shared<TransformStack>(std::make_unique<Project>(dim, coord),
                                                   std::move(parent));
     }
+    case CoreTransform::BROADCAST: {
+      auto dim      = unpack<std::int32_t>();
+      auto dim_size = unpack<std::uint64_t>();
+      auto parent   = unpack_transform_();
+      return make_internal_shared<TransformStack>(std::make_unique<DimBroadcast>(dim, dim_size),
+                                                  std::move(parent));
+    }
     case CoreTransform::TRANSPOSE: {
       auto axes   = unpack<SmallVector<std::int32_t, LEGATE_MAX_DIM>>();
       auto parent = unpack_transform_();

@@ -287,6 +287,9 @@ cdef class LogicalArray(Unconstructable):
         LogicalArray
             The promoted array.
         """
+        if extra_dim < 0:
+            extra_dim += self.ndim
+
         cdef _LogicalArray handle
 
         with nogil:
@@ -310,10 +313,48 @@ cdef class LogicalArray(Unconstructable):
         LogicalArray
             The array with the projected-out dimension.
         """
+        if dim < 0:
+            dim += self.ndim
+
         cdef _LogicalArray handle
 
         with nogil:
             handle = self._handle.project(dim, index)
+        return LogicalArray.from_handle(std_move(handle))
+
+    cpdef LogicalArray broadcast(self, int32_t dim, size_t dim_size):
+        r"""
+        Broadcasts a unit-size dimension of the store. This call may block if
+        the array is unbound.
+
+        Parameters
+        ----------
+        dim : int
+            A dimension to broadcast. Must have size 1.
+        dim_size : int, optional
+            A new size of the chosen dimension.
+
+        Returns
+        -------
+        LogicalArray
+            A new array where the chosen dimension is logically broadcasted.
+
+        Raises
+        ------
+        RuntimeError
+            If the array or any of the sub-arrays is a list array
+
+        See Also
+        --------
+        legate.core.LogicalStore.broadcast
+        """
+        if dim < 0:
+            dim += self.ndim
+
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = self._handle.broadcast(dim, dim_size)
         return LogicalArray.from_handle(std_move(handle))
 
     cpdef LogicalArray slice(self, int32_t dim, slice sl):
@@ -397,6 +438,8 @@ cdef class LogicalArray(Unconstructable):
         ValueError
             If ``shape`` is not iterable.
         """
+        if dim < 0:
+            dim += self.ndim
         if not is_iterable(shape):
             raise ValueError(f"Expected an iterable but got {type(shape)}")
         cdef std_vector[uint64_t] sizes = std_vector[uint64_t]()

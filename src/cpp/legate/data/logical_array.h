@@ -160,6 +160,23 @@ class LEGATE_EXPORT LogicalArray {
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
   [[nodiscard]] LogicalArray project(std::int32_t dim, std::int64_t index) const;
+  /**
+   * @brief Broadcasts a unit-size dimension of the array.
+   *
+   * The call can block if the array is unbound.
+   *
+   * @param dim A dimension to broadcast
+   * @param dim_size A new size of the chosen dimension
+   *
+   * @return A new array where the chosen dimension is logically broadcasted
+   *
+   * @throw std::invalid_argument When `dim` is not a valid dimension index.
+   * @throw std::invalid_argument When the size of dimension `dim` is not 1.
+   * @throw std::runtime_error If the array or any of the sub-arrays is a list array.
+   *
+   * @see LogicalStore::broadcast
+   */
+  [[nodiscard]] LogicalArray broadcast(std::int32_t dim, std::size_t dim_size) const;
 
   /**
    * @brief Slices a contiguous sub-section of the array.

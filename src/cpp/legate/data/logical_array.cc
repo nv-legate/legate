@@ -60,6 +60,11 @@ LogicalArray LogicalArray::project(std::int32_t dim, std::int64_t index) const
   return LogicalArray{impl()->project(dim, index)};
 }
 
+LogicalArray LogicalArray::broadcast(std::int32_t dim, std::size_t dim_size) const
+{
+  return LogicalArray{impl()->broadcast(dim, dim_size)};
+}
+
 LogicalArray LogicalArray::slice(std::int32_t dim, Slice sl) const
 {
   return LogicalArray{impl()->slice(dim, sl)};

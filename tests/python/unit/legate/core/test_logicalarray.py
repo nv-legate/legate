@@ -54,8 +54,6 @@ class TestPromoteErrors:
         arr = runtime.create_array(dtype, (1, 2, 3, 4), nullable)
         expected_msg = "Invalid promotion"
         with pytest.raises(ValueError, match=expected_msg):
-            arr.promote(-1, 3)
-        with pytest.raises(ValueError, match=expected_msg):
             arr.promote(5, 3)
         expected_msg = "can't convert negative value to size_t"
         with pytest.raises(OverflowError, match=expected_msg):
@@ -119,8 +117,6 @@ class TestProjectErrors:
         arr = runtime.create_array(dtype, (1, 2, 3, 4), nullable)
         expected_msg = "Invalid projection"
         with pytest.raises(ValueError, match=expected_msg):
-            arr.project(-1, 3)
-        with pytest.raises(ValueError, match=expected_msg):
             arr.project(5, 3)
         expected_msg = "out of bounds"
         with pytest.raises(ValueError, match=expected_msg):
@@ -135,8 +131,6 @@ class TestProjectErrors:
         ty_list = ty.struct_type([dtype])
         arr = runtime.create_array(ty_list, (1, 2, 3, 4), nullable)
         expected_msg = "Invalid projection"
-        with pytest.raises(ValueError, match=expected_msg):
-            arr.project(-1, 4)
         with pytest.raises(ValueError, match=expected_msg):
             arr.project(5, 4)
         expected_msg = "out of bounds"
@@ -382,8 +376,6 @@ class TestdDelinearizeErrors:
         expected_msg = "Invalid delinearization"
         with pytest.raises(ValueError, match=expected_msg):
             arr.delinearize(4, (3, 1))
-        with pytest.raises(ValueError, match=expected_msg):
-            arr.delinearize(-1, (3, 1))
 
         expected_msg = "cannot be delinearized into"
         with pytest.raises(ValueError, match=expected_msg):
@@ -402,8 +394,6 @@ class TestdDelinearizeErrors:
         expected_msg = "Invalid delinearization on dimension"
         with pytest.raises(ValueError, match=expected_msg):
             arr.delinearize(4, (1, 2))
-        with pytest.raises(ValueError, match=expected_msg):
-            arr.delinearize(-1, (1, 2))
         expected_msg = "cannot be delinearized"
         with pytest.raises(ValueError, match=expected_msg):
             arr.delinearize(0, (1, 2))

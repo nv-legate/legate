@@ -33,6 +33,7 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         bool transformed() except+
         _LogicalStore promote(int32_t, size_t) except+
         _LogicalStore project(int32_t, int64_t) except+
+        _LogicalStore broadcast(int32_t, size_t) except+
         _LogicalStore slice(int32_t, _Slice) except+
         _LogicalStore transpose(std_vector[int32_t]) except+
         _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
@@ -66,6 +67,7 @@ cdef class LogicalStore(Unconstructable):
 
     cpdef LogicalStore promote(self, int32_t extra_dim, size_t dim_size)
     cpdef LogicalStore project(self, int32_t dim, int64_t index)
+    cpdef LogicalStore broadcast(self, int32_t dim, size_t dim_size)
     cpdef LogicalStore slice(self, int32_t dim, slice sl)
     cpdef LogicalStore transpose(self, object axes)
     cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)

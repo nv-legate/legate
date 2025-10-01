@@ -58,6 +58,15 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::project(std::int32_t dim,
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
+InternalSharedPtr<LogicalArray> BaseLogicalArray::broadcast(std::int32_t dim,
+                                                            std::size_t dim_size) const
+{
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->broadcast(dim, dim_size)) : std::nullopt;
+  auto data = this->data()->broadcast(dim, dim_size);
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+}
+
 InternalSharedPtr<LogicalArray> BaseLogicalArray::slice(std::int32_t dim, Slice sl) const
 {
   auto null_mask =
@@ -227,6 +236,11 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::promote(std::int32_t, std::siz
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::project(std::int32_t, std::int64_t) const
+{
+  throw TracedException<std::runtime_error>{"List array does not support store transformations"};
+}
+
+InternalSharedPtr<LogicalArray> ListLogicalArray::broadcast(std::int32_t, std::size_t) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
 }
@@ -437,6 +451,17 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::project(std::int32_t dim,
     nullable() ? std::make_optional(this->null_mask()->project(dim, index)) : std::nullopt;
   auto fields =
     make_array_from_op(this->fields(), [&](auto& field) { return field->project(dim, index); });
+
+  return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
+}
+
+InternalSharedPtr<LogicalArray> StructLogicalArray::broadcast(std::int32_t dim,
+                                                              std::size_t dim_size) const
+{
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->broadcast(dim, dim_size)) : std::nullopt;
+  auto fields = make_array_from_op(this->fields(),
+                                   [&](auto& field) { return field->broadcast(dim, dim_size); });
 
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }

@@ -67,6 +67,7 @@ transformed store are visible via the original one and vice versa.
    LogicalStore.transformed
    LogicalStore.promote
    LogicalStore.project
+   LogicalStore.broadcast
    LogicalStore.slice
    LogicalStore.transpose
    LogicalStore.delinearize

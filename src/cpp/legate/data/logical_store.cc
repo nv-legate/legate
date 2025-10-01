@@ -73,6 +73,11 @@ LogicalStore LogicalStore::project(std::int32_t dim, std::int64_t index) const
   return LogicalStore{impl()->project(dim, index)};
 }
 
+LogicalStore LogicalStore::broadcast(std::int32_t dim, std::size_t dim_size) const
+{
+  return LogicalStore{impl()->broadcast(dim, dim_size)};
+}
+
 std::optional<LogicalStorePartition> LogicalStore::get_partition() const
 {
   // We need to flush the scheduling window to make sure the partition is up to date.

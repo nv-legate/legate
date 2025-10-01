@@ -225,6 +225,11 @@ class LogicalStore {
   [[nodiscard]] InternalSharedPtr<LogicalStore> promote(std::int32_t extra_dim,
                                                         std::size_t dim_size);
   [[nodiscard]] InternalSharedPtr<LogicalStore> project(std::int32_t dim, std::int64_t index);
+  /**
+   * @brief Return a view to the store where the unit-size dimension `dim` is broadcasted to a
+   * dimension of size `dim_size`.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalStore> broadcast(std::int32_t dim, std::size_t dim_size);
 
  private:
   friend InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<LogicalStore>& self,

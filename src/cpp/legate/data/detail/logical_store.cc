@@ -663,6 +663,28 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
     std::move(new_extents), std::move(substorage), type(), std::move(transform));
 }
 
+InternalSharedPtr<LogicalStore> LogicalStore::broadcast(std::int32_t bcast_dim,
+                                                        std::size_t dim_size)
+{
+  if (bcast_dim < 0 || bcast_dim >= static_cast<std::int32_t>(dim())) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Invalid broadcast on dimension {} for a {}-D store", bcast_dim, dim())};
+  }
+  if (extents()[bcast_dim] != 1) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Invalid broadcast on dimension {}: expected size 1 but got {}",
+                  bcast_dim,
+                  extents()[bcast_dim])};
+  }
+
+  auto transform   = stack(transform_, std::make_unique<DimBroadcast>(bcast_dim, dim_size));
+  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{extents()};
+
+  new_extents[bcast_dim] = dim_size;
+  return make_internal_shared<LogicalStore>(
+    std::move(new_extents), storage_, type(), std::move(transform));
+}
+
 InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<LogicalStore>& self,
                                                      std::int32_t dim,
                                                      Slice slice)

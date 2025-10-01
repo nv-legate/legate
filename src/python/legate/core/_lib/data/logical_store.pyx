@@ -372,6 +372,57 @@ cdef class LogicalStore(Unconstructable):
             handle = self._handle.project(dim, index)
         return LogicalStore.from_handle(std_move(handle))
 
+    cpdef LogicalStore broadcast(self, int32_t dim, size_t dim_size):
+        r"""
+        Broadcasts a unit-size dimension of the store. The output store is a
+        view to the input store where the dimension ``dim`` is broadcasted to
+        size ``dim_size``.
+
+        For example, For a 2D store ``A``
+
+        ::
+
+            [[1, 2, 3]]
+
+        ``A.broadcast(0, 3)`` yields the following output:
+        ::
+
+            [[1, 2, 3],
+             [1, 2, 3],
+             [1, 2, 3]]
+
+        The broadcasting is logical; i.e., the broadcasted values are not
+        materialized in the physical allocation.
+
+        The call can block if the store is unbound.
+
+        Parameters
+        ----------
+        dim : int
+            A dimension to broadcast. Must have size 1.
+        dim_size : int, optional
+            A new size of the chosen dimension.
+
+        Returns
+        -------
+        LogicalStore
+            A new store where the chosen dimension is logically broadcasted.
+
+        Raises
+        ------
+        ValueError
+            If ``dim`` is not a valid dimension index or the size of dimension
+            ``dim`` is not 1.
+        """
+        if dim < 0:
+            dim += self.ndim
+
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.broadcast(dim, dim_size)
+        return LogicalStore.from_handle(std_move(handle))
+
     cpdef LogicalStore slice(self, int32_t dim, slice sl):
         r"""
         Slices a contiguous sub-section of the store.
@@ -566,6 +617,8 @@ cdef class LogicalStore(Unconstructable):
         """
         if dim < 0:
             dim += self.ndim
+        if not is_iterable(shape):
+            raise ValueError(f"Expected an iterable but got {type(shape)}")
         cdef std_vector[uint64_t] sizes = std_vector[uint64_t]()
 
         sizes.reserve(len(shape))

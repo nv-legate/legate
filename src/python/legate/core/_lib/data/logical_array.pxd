@@ -30,6 +30,7 @@ cdef extern from "legate/data/logical_array.h" namespace "legate" nogil:
         uint32_t num_children() except+
         _LogicalArray promote(int32_t, size_t) except+
         _LogicalArray project(int32_t, int64_t) except+
+        _LogicalArray broadcast(int32_t, size_t) except+
         _LogicalArray slice(int32_t, _Slice) except+
         _LogicalArray transpose(std_vector[int32_t]) except+
         _LogicalArray delinearize(int32_t, std_vector[uint64_t]) except+
@@ -52,6 +53,7 @@ cdef class LogicalArray(Unconstructable):
 
     cpdef LogicalArray promote(self, int32_t extra_dim, size_t dim_size)
     cpdef LogicalArray project(self, int32_t dim, int64_t index)
+    cpdef LogicalArray broadcast(self, int32_t dim, size_t dim_size)
     cpdef LogicalArray slice(self, int32_t dim, slice sl)
     cpdef LogicalArray transpose(self, object axes)
     cpdef LogicalArray delinearize(self, int32_t dim, object shape)

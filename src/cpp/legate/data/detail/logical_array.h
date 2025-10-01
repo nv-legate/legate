@@ -51,9 +51,15 @@ class LogicalArray {
   [[nodiscard]] virtual bool is_mapped() const                        = 0;
 
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> promote(std::int32_t extra_dim,
-                                                                std::size_t dim_size) const     = 0;
+                                                                std::size_t dim_size) const = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> project(std::int32_t dim,
-                                                                std::int64_t index) const       = 0;
+                                                                std::int64_t index) const   = 0;
+  /**
+   * @brief Return a view to the array where the unit-size dimension `dim` is broadcasted to a
+   * dimension of size `dim_size`.
+   */
+  [[nodiscard]] virtual InternalSharedPtr<LogicalArray> broadcast(std::int32_t dim,
+                                                                  std::size_t dim_size) const   = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> transpose(
     SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const = 0;
@@ -114,6 +120,11 @@ class BaseLogicalArray final : public LogicalArray {
                                                         std::size_t dim_size) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> project(std::int32_t dim,
                                                         std::int64_t index) const override;
+  /**
+   * @brief Return a broadcasted view to this `BaseLogicalArray`.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalArray> broadcast(std::int32_t dim,
+                                                          std::size_t dim_size) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> transpose(
     SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const override;
@@ -176,6 +187,11 @@ class ListLogicalArray final : public LogicalArray {
                                                         std::size_t dim_size) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> project(std::int32_t dim,
                                                         std::int64_t index) const override;
+  /**
+   * @brief Dimension broadcasting is currently illegal for list arrays
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalArray> broadcast(std::int32_t dim,
+                                                          std::size_t dim_size) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> transpose(
     SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const override;
@@ -238,6 +254,14 @@ class StructLogicalArray final : public LogicalArray {
                                                         std::size_t dim_size) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> project(std::int32_t dim,
                                                         std::int64_t index) const override;
+  /**
+   * @brief Return a broadcasted view to this `StructLogicalArray`.
+   *
+   * The output struct array consists of sub-arrays, each of which is a broadcasted view to the
+   * corresponding sub-array of the input array.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalArray> broadcast(std::int32_t dim,
+                                                          std::size_t dim_size) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> slice(std::int32_t dim, Slice sl) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> transpose(
     SmallVector<std::int32_t, LEGATE_MAX_DIM> axes) const override;
