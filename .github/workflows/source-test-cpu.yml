@@ -136,7 +136,7 @@ jobs:
             )
           fi
 
-          dnf install -y "${packages[@]}"
+          rapids-retry dnf install -y "${packages[@]}"
 
           # Bootstrap CMake, rapids-pip-retry by default calls 'python -m pip', but
           # python3.11 above installs 'python3', so have to override the default command.

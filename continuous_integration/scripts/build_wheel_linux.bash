@@ -15,7 +15,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${PARALLEL_LEVEL:=8}
 
 if [[ "${CI:-false}" == "true" ]]; then
   rapids-logger "Installing extra system packages"
-  dnf install -y gcc-toolset-11-libatomic-devel openmpi-devel mpich-devel
+  rapids-retry dnf install -y gcc-toolset-11-libatomic-devel openmpi-devel mpich-devel
   # Enable gcc-toolset-11 environment
   source /opt/rh/gcc-toolset-11/enable
   # Verify compiler version
