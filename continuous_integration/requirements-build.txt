@@ -2,6 +2,7 @@
 --extra-index-url=https://pypi.nvidia.com
 cmake>=3.26.4,!=3.30.0
 ninja
+# If you bump this, also update get_nccl.cmake
 nvidia-nccl-cu12<=2.27
 libucx-cu12
 nvidia-libcal-cu12

@@ -29,6 +29,7 @@ dependencies = [
     "zarr<3",
     "h5py",
     "rich",
+    # If you bump this, also update get_nccl.cmake
     "nvidia-nccl-cu12<2.28.0; sys_platform == 'linux'",
     "libucx-cu12; sys_platform == 'linux'",
     "nvidia-libcal-cu12; sys_platform == 'linux'",
