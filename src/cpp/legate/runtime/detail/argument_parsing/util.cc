@@ -10,6 +10,7 @@
 
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/macros.h>
 
 #include <kvikio/shim/cufile.hpp>
@@ -25,16 +26,31 @@
 
 namespace legate::detail {
 
-bool multi_node_job()
+unsigned int num_ranks()
 {
   constexpr EnvironmentVariable<std::uint32_t> OMPI_COMM_WORLD_SIZE{"OMPI_COMM_WORLD_SIZE"};
   constexpr EnvironmentVariable<std::uint32_t> MV2_COMM_WORLD_SIZE{"MV2_COMM_WORLD_SIZE"};
   constexpr EnvironmentVariable<std::uint32_t> SLURM_NTASKS{"SLURM_NTASKS"};
 
-  return OMPI_COMM_WORLD_SIZE.get().value_or(1) > 1 ||  //
-         MV2_COMM_WORLD_SIZE.get().value_or(1) > 1 ||   //
-         SLURM_NTASKS.get().value_or(1) > 1;
+  const auto ompi_comm_world_size = OMPI_COMM_WORLD_SIZE.get().value_or(1);
+  if (ompi_comm_world_size > 1) {
+    return ompi_comm_world_size;
+  }
+
+  const auto mv2_comm_world_size = MV2_COMM_WORLD_SIZE.get().value_or(1);
+  if (mv2_comm_world_size > 1) {
+    return mv2_comm_world_size;
+  }
+
+  const auto slurm_ntasks = SLURM_NTASKS.get().value_or(1);
+  if (slurm_ntasks > 1) {
+    return slurm_ntasks;
+  }
+
+  return 1;
 }
+
+bool multi_node_job() { return num_ranks() > 1; }
 
 std::vector<std::string> deduplicate_command_line_flags(Span<const std::string> args)
 {
