@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.broadcast
+========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.broadcast

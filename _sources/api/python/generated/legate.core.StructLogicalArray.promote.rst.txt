@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.promote
+======================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.promote

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.10 &#8212; NVIDIA legate (25.11.00.dev9+gb75b5db8f)</title>
+    <title>Changes: 25.10 &#8212; NVIDIA legate (25.10.00.dev68+gd12c93068)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=44951926"></script>
+    <script src="../_static/documentation_options.js?v=534a129a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.11';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.10';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gb75b5db8f) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gb75b5db8f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gb75b5db8f)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev68+gd12c93068)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gb75b5db8f) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gb75b5db8f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gb75b5db8f)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev68+gd12c93068)</p>
   
 </a>
 
@@ -486,6 +486,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/class/classlegate_1_1Span.html">legate::Span</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/class/classlegate_1_1StringLogicalArray.html">legate::StringLogicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/class/classlegate_1_1StringPhysicalArray.html">legate::StringPhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/class/classlegate_1_1StructLogicalArray.html">legate::StructLogicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/class/classlegate_1_1StructType.html">legate::StructType</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/class/classlegate_1_1SymbolicExpr.html">legate::SymbolicExpr</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../api/cpp/generated/class/classlegate_1_1TaskConfig.html">legate::TaskConfig</a></li>
@@ -685,6 +686,8 @@ removal.</p></li>
 <li><p>Make <code class="docutils literal notranslate"><span class="pre">legate::ScopedAllocator</span></code> copy-constructible.</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::ScopedAllocator::allocate_aligned()</span></code>.</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::ScopedAllocator::allocate_type()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::LogicalArray::as_struct_array()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::StructLogicalArray</span></code>.</p></li>
 </ul>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
@@ -695,6 +698,9 @@ partition used by the runtime for optimizing task launches and data movement.</p
 <p class="rubric">Tasks</p>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Runtime::create_struct_array()</span></code>.</p></li>
+</ul>
 <p class="rubric">Utilities</p>
 <p class="rubric">I/O</p>
 <ul>
@@ -716,6 +722,10 @@ encounter false positives should disable it via the flag and raise a bug report 
 <h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
 <p class="rubric">Data</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.LogicalArray.as_struct_array()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.StructLogicalArray</span></code>.</p></li>
+</ul>
 <p class="rubric">Mapping</p>
 <ul class="simple">
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.DimOrdering</span></code> and <code class="docutils literal notranslate"><span class="pre">legate.core.DimOrderingKind</span></code> for
@@ -732,6 +742,9 @@ the partition used by the runtime for optimizing task launches and data movement
 <p class="rubric">Tasks</p>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.Runtime.create_struct_array()</span></code>.</p></li>
+</ul>
 <p class="rubric">Utilities</p>
 <p class="rubric">I/O</p>
 <ul class="simple">

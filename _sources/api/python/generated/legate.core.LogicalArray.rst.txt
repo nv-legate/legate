@@ -45,6 +45,7 @@ legate.core.LogicalArray
       :toctree: .
    
       ~LogicalArray.__getitem__
+      ~LogicalArray.as_struct_array
       ~LogicalArray.broadcast
       ~LogicalArray.child
       ~LogicalArray.delinearize

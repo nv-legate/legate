@@ -43,6 +43,7 @@ legate.core.Runtime
       ~Runtime.create_store
       ~Runtime.create_store_from_buffer
       ~Runtime.create_store_from_scalar
+      ~Runtime.create_struct_array
       ~Runtime.find_library
       ~Runtime.find_or_create_library
       ~Runtime.finish

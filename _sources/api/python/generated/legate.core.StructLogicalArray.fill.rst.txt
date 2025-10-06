@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.fill
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.fill

@@ -1,0 +1,6 @@
+legate.core.LogicalArray.as\_struct\_array
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalArray.as_struct_array

@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.volume
+=====================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.volume

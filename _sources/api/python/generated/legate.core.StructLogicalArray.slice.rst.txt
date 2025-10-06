@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.slice
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.slice

@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.ndim
+===================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.ndim

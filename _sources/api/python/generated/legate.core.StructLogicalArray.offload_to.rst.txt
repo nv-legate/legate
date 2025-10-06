@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.offload\_to
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.offload_to

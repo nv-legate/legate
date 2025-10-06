@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.data
+===================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.data

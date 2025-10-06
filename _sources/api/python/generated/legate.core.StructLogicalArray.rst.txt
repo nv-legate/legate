@@ -1,0 +1,64 @@
+﻿..
+  SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+legate.core.StructLogicalArray
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: StructLogicalArray
+
+   .. automethod:: StructLogicalArray.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~StructLogicalArray.__array_interface__
+      ~StructLogicalArray.__cuda_array_interface__
+      ~StructLogicalArray.__legate_data_interface__
+      ~StructLogicalArray.data
+      ~StructLogicalArray.extents
+      ~StructLogicalArray.ndim
+      ~StructLogicalArray.nested
+      ~StructLogicalArray.null_mask
+      ~StructLogicalArray.nullable
+      ~StructLogicalArray.num_children
+      ~StructLogicalArray.raw_handle
+      ~StructLogicalArray.shape
+      ~StructLogicalArray.size
+      ~StructLogicalArray.type
+      ~StructLogicalArray.unbound
+      ~StructLogicalArray.volume
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~StructLogicalArray.__getitem__
+      ~StructLogicalArray.as_struct_array
+      ~StructLogicalArray.broadcast
+      ~StructLogicalArray.child
+      ~StructLogicalArray.delinearize
+      ~StructLogicalArray.fields
+      ~StructLogicalArray.fill
+      ~StructLogicalArray.from_raw_handle
+      ~StructLogicalArray.from_store
+      ~StructLogicalArray.from_store_and_mask
+      ~StructLogicalArray.get_physical_array
+      ~StructLogicalArray.offload_to
+      ~StructLogicalArray.project
+      ~StructLogicalArray.promote
+      ~StructLogicalArray.slice
+      ~StructLogicalArray.transpose
+   
+   

@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.size
+===================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.size

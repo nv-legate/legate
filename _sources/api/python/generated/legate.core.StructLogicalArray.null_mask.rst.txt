@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.null\_mask
+=========================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.null_mask

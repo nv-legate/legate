@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.\_\_getitem\_\_
+==============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.__getitem__

@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.raw\_handle
+==========================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.raw_handle

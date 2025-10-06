@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.num\_children
+============================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.num_children

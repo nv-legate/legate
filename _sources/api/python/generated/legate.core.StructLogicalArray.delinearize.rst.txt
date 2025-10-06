@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.delinearize
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.delinearize

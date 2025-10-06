@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.fields
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.fields

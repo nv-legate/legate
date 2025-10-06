@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.from\_store
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.from_store

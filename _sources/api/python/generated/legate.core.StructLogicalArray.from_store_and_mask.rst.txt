@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.from\_store\_and\_mask
+=====================================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.from_store_and_mask

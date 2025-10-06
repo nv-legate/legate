@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.project
+======================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.project

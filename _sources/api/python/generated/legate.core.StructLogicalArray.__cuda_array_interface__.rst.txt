@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.\_\_cuda\_array\_interface\_\_
+=============================================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructLogicalArray.__cuda_array_interface__

@@ -1,0 +1,6 @@
+legate.core.StructLogicalArray.child
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructLogicalArray.child
