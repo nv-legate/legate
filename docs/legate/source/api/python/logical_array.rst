@@ -18,3 +18,4 @@ same size to create a masked integer array.
    :template: class.rst
 
    LogicalArray
+   StructLogicalArray

@@ -6,12 +6,16 @@ from cython.cimports.cpython.ref import PyObject
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp.map cimport map as std_map
+from libcpp.optional cimport optional as std_optional
 from libcpp.memory cimport unique_ptr as std_unique_ptr
+from libcpp.vector cimport vector as std_vector
 from libcpp cimport bool
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..data.external_allocation cimport _ExternalAllocation
-from ..data.logical_array cimport LogicalArray, _LogicalArray
+from ..data.logical_array cimport (
+    LogicalArray, _LogicalArray, StructLogicalArray, _StructLogicalArray
+)
 from ..data.logical_store cimport LogicalStore, _LogicalStore
 from ..data.scalar cimport Scalar, _Scalar
 from ..data.shape cimport _Shape
@@ -77,6 +81,9 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         _LogicalArray create_array_like(const _LogicalArray&, _Type) except+
         _LogicalArray create_nullable_array(
             const _LogicalStore&, const _LogicalStore&
+        ) except+
+        _StructLogicalArray create_struct_array(
+            std_vector[_LogicalArray], const std_optional[_LogicalStore]
         ) except+
         _LogicalStore create_store(const _Type&, uint32_t) except+
         _LogicalStore create_store(const _Shape&, const _Type&, bool) except+
@@ -201,6 +208,9 @@ cdef class Runtime(Unconstructable):
     )
     cpdef LogicalArray create_nullable_array(
         self, LogicalStore store, LogicalStore null_mask
+    )
+    cpdef StructLogicalArray create_struct_array(
+        self, tuple[LogicalArray], LogicalStore null_mask = *
     )
     cpdef LogicalStore create_store(
         self,

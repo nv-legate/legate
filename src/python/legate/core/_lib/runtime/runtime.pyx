@@ -5,6 +5,7 @@
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
+from libcpp.vector cimport vector as std_vector
 
 import atexit
 
@@ -948,6 +949,50 @@ cdef class Runtime(Unconstructable):
                 store._handle, null_mask._handle
             )
         return LogicalArray.from_handle(_handle)
+
+    cpdef StructLogicalArray create_struct_array(
+        self, tuple[LogicalArray] fields, LogicalStore null_mask = None,
+    ):
+        r"""
+        Creates a `StructLogicalArray`.
+
+        This call can block if any array from `fields` or `null_mask` are unbound.
+
+        Parameters
+        ----------
+        fields : tuple[LogicalArray]
+            The tuple of arrays representing each field in the struct.
+        null_mask : LogicalStore
+            The store representing the null mask for the `StructLogicalArray`.
+
+        Returns
+        -------
+        StructLogicalArray
+            The newly created array.
+
+        Raises
+        ------
+        ValueError
+            If `null_mask` is not of boolean type, if given.
+            Or if any of `fields` or `null_mask` have differing shapes.
+            Or if any of `fields` or `null_mask` are not top-level stores.
+        """
+
+        cdef _StructLogicalArray res_handle
+        cdef std_vector[_LogicalArray] _fields
+        cdef std_optional[_LogicalStore] _null_mask = (
+            std_optional[_LogicalStore]() if null_mask is None
+            else std_optional[_LogicalStore](null_mask._handle)
+        )
+
+        _fields.reserve(len(fields))
+        for field in fields:
+            _fields.push_back(to_cpp_logical_array(field))
+
+        with nogil:
+            res_handle = self._handle.create_struct_array(_fields, _null_mask)
+
+        return StructLogicalArray.from_handle(res_handle)
 
     cpdef LogicalStore create_store(
         self,

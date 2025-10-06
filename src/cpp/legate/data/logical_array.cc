@@ -11,6 +11,7 @@
 #include <legate/data/physical_array.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -117,6 +118,15 @@ StringLogicalArray LogicalArray::as_string_array() const
   return StringLogicalArray{impl()};
 }
 
+StructLogicalArray LogicalArray::as_struct_array() const
+{
+  if (type().code() != Type::Code::STRUCT) {
+    throw detail::TracedException<std::invalid_argument>{
+      fmt::format("Array is not a struct array, instead got array of type {}", type())};
+  }
+  return StructLogicalArray{impl()};
+}
+
 void LogicalArray::offload_to(mapping::StoreTarget target_mem) const
 {
   detail::Runtime::get_runtime().offload_to(target_mem, impl());
@@ -173,6 +183,30 @@ LogicalArray StringLogicalArray::offsets() const
 LogicalArray StringLogicalArray::chars() const
 {
   return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl().get())->vardata()};
+}
+
+// ==========================================================================================
+
+StructLogicalArray::StructLogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
+  : LogicalArray{std::move(impl)}
+{
+}
+
+StructLogicalArray::StructLogicalArray(const InternalSharedPtr<detail::StructLogicalArray>& impl)
+  : LogicalArray{static_cast<InternalSharedPtr<detail::LogicalArray>>(impl)}
+{
+}
+
+std::vector<LogicalArray> StructLogicalArray::fields() const
+{
+  auto fields = static_cast<const detail::StructLogicalArray*>(impl().get())->fields();
+  std::vector<LogicalArray> result;
+
+  result.reserve(fields.size());
+  for (auto&& field : fields) {
+    result.emplace_back(field);
+  }
+  return result;
 }
 
 }  // namespace legate

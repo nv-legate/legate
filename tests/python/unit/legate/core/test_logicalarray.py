@@ -605,6 +605,28 @@ class TestCreateErrors:
             _ = arr.null_mask
 
 
+class TestAsStructArray:
+    @pytest.mark.parametrize("nullable", {True, False})
+    def test_basic(self, nullable: bool) -> None:
+        runtime = get_legate_runtime()
+        ty_list = ty.struct_type([ty.int64, ty.uint16, ty.float32])
+        arr = runtime.create_array(ty_list, (2, 3, 4), nullable)
+        struct_arr = arr.as_struct_array()
+        assert struct_arr.nullable == nullable
+        assert len(struct_arr.fields()) == 3
+        assert struct_arr.num_children == 3
+        assert struct_arr.nested
+
+
+class TestAsStructArrayErrors:
+    def test_invalid(self) -> None:
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(ty.int32, (2, 3, 4))
+        msg = "Array is not a struct array, instead got array of type int32"
+        with pytest.raises(ValueError, match=msg):
+            _ = arr.as_struct_array()
+
+
 if __name__ == "__main__":
     import sys
 

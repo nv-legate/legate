@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from ...utils import AnyCallable, ShutdownCallback
-from ..data.logical_array import LogicalArray
+from ..data.logical_array import LogicalArray, StructLogicalArray
 from ..data.logical_store import LogicalStore
 from ..data.scalar import Scalar
 from ..data.shape import Shape
@@ -102,6 +102,11 @@ class Runtime(Unconstructable):
     def create_nullable_array(
         self, store: LogicalStore, null_mask: LogicalStore
     ) -> LogicalArray: ...
+    def create_struct_array(
+        self,
+        fields: tuple[LogicalArray, ...],
+        null_mask: LogicalStore | None = None,
+    ) -> StructLogicalArray: ...
     def create_store(
         self,
         dtype: Type,

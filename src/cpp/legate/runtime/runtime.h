@@ -475,6 +475,26 @@ class LEGATE_EXPORT Runtime {
                                                    std::optional<Type> type = std::nullopt);
 
   /**
+   * @brief Creates a struct array from existing sub-arrays and null mask.
+   *
+   * The caller is responsible for making sure that the fields sub-arrays are valid.
+   *
+   * @param fields Span of sub-arrays for fields.
+   * @param null_mask Optional null mask for the struct array.
+   *
+   * @note This call can block if either `fields` or `null_mask` is unbound.
+   *
+   * @return Struct logical array
+   *
+   * @throw std::invalid_argument When any of the following is true:
+   * #. `null_mask` is not of boolean type if provided.
+   * #.  any of `fields` or `null_mask`, if provided, have different shapes.
+   * #.  any of the `fields` or `null_mask` are not top-level stores.
+   */
+  [[nodiscard]] StructLogicalArray create_struct_array(
+    Span<const LogicalArray> fields, const std::optional<LogicalStore>& null_mask = std::nullopt);
+
+  /**
    * @brief Creates an unbound store
    *
    * @param type Element type

@@ -49,7 +49,7 @@ _libucx = _maybe_import_ucx_module()
 
 from ._lib.data.buffer import TaskLocalBuffer
 from ._lib.data.inline_allocation import InlineAllocation
-from ._lib.data.logical_array import LogicalArray
+from ._lib.data.logical_array import LogicalArray, StructLogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
 from ._lib.data.physical_array import PhysicalArray
 from ._lib.data.physical_store import PhysicalStore

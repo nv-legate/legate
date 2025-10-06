@@ -712,6 +712,60 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
     std::move(type), legate::static_pointer_cast<BaseLogicalArray>(descriptor), std::move(vardata));
 }
 
+InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(
+  SmallVector<InternalSharedPtr<LogicalArray>>&& fields,
+  const std::optional<InternalSharedPtr<LogicalStore>>& null_mask)
+{
+  if (fields.empty()) {
+    throw TracedException<std::invalid_argument>{"Struct arrays must have at least one field"};
+  }
+
+  const auto& first_field  = fields[0];
+  const auto& target_shape = first_field->shape();
+
+  // validate null mask if provided
+  if (null_mask.has_value()) {
+    const auto& mask = null_mask.value();
+
+    if (mask->type()->code != Type::Code::BOOL) {
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Null mask must be of boolean type, instead got {}", *(mask->type()))};
+    }
+    if (*mask->shape() != *target_shape) {
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Null mask has shape {} that differs from field 0 of shape {}. Null mask must "
+                    "have the same shape as all fields",
+                    *mask->shape(),
+                    *target_shape)};
+    }
+  }
+
+  // validate all fields
+  std::vector<InternalSharedPtr<Type>> field_types;
+
+  field_types.reserve(fields.size());
+  for (auto&& [i, field] : enumerate(fields)) {
+    if (*field->shape() != *target_shape) {
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Field {} has shape {} that differs from field 0 of shape {}. All fields must "
+                    "have the same shape",
+                    i,
+                    *field->shape(),
+                    *target_shape)};
+    }
+    if (field->primary_store()->transformed()) {
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Field {} is not a top-level store", i)};
+    }
+    field_types.push_back(field->type());
+  }
+
+  auto struct_type = detail::struct_type(std::move(field_types), false /*align*/);
+
+  return make_internal_shared<StructLogicalArray>(
+    std::move(struct_type), null_mask, std::move(fields));
+}
+
 InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array_(
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,

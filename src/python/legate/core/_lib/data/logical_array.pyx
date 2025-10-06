@@ -573,6 +573,27 @@ cdef class LogicalArray(Unconstructable):
         """
         return <uintptr_t> &self._handle
 
+    cpdef StructLogicalArray as_struct_array(self):
+        r"""
+        Casts and returns this array as a ``StructLogicalArray``.
+
+        Returns
+        -------
+        StructLogicalArray
+            This array casted as a ``StructLogicalArray``.
+
+        Raises
+        ------
+        ValueError
+            If this array is not a struct array.
+        """
+        cdef _StructLogicalArray struct_array
+
+        with nogil:
+            struct_array = self._handle.as_struct_array()
+
+        return StructLogicalArray.from_handle(struct_array)
+
     cpdef void offload_to(self, StoreTarget target_mem):
         r"""
         Offload array to specified target memory. This call copies the array to
@@ -619,6 +640,37 @@ cdef class LogicalArray(Unconstructable):
         """
         return self.get_physical_array(StoreTarget.FBMEM).__cuda_array_interface__
 
+cdef class StructLogicalArray(LogicalArray):
+    @staticmethod
+    cdef StructLogicalArray from_handle(_StructLogicalArray handle):
+        cdef StructLogicalArray result = (
+            StructLogicalArray.__new__(StructLogicalArray)
+        )
+        result._handle = <_LogicalArray>handle
+        return result
+
+    cpdef tuple[LogicalArray] fields(self):
+        r"""
+        Returns the fields of the ``StructLogicalArray``.
+
+        Returns
+        -------
+        tuple[LogicalArray]
+            The fields of the ``StructLogicalArray``.
+        """
+        cdef std_vector[_LogicalArray] fields_vec
+
+        with nogil:
+            fields_vec = self._handle.as_struct_array().fields()
+
+        cdef list ret = []
+        cdef size_t size = fields_vec.size()
+        cdef size_t i
+
+        for i in range(size):
+            ret.append(LogicalArray.from_handle(fields_vec[i]))
+
+        return tuple(ret)
 
 cdef _LogicalArray to_cpp_logical_array(object array_or_store):
     if isinstance(array_or_store, LogicalArray):

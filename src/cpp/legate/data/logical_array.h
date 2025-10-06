@@ -28,6 +28,7 @@
 namespace legate::detail {
 
 class LogicalArray;
+class StructLogicalArray;
 
 }  // namespace legate::detail
 
@@ -53,6 +54,7 @@ class PhysicalArray;
 
 class ListLogicalArray;
 class StringLogicalArray;
+class StructLogicalArray;
 
 /**
  * @addtogroup data
@@ -295,6 +297,15 @@ class LEGATE_EXPORT LogicalArray {
   [[nodiscard]] StringLogicalArray as_string_array() const;
 
   /**
+   * @brief Casts this array as a `StructLogicalArray`
+   *
+   * @return The array as a `StructLogicalArray`
+   *
+   * @throw std::invalid_argument If the array is not a struct array
+   */
+  [[nodiscard]] StructLogicalArray as_struct_array() const;
+
+  /**
    * @brief Offload array to specified target memory.
    *
    * @param target_mem The target memory.
@@ -448,6 +459,32 @@ class LEGATE_EXPORT StringLogicalArray : public LogicalArray {
   friend class LogicalArray;
 
   explicit StringLogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
+};
+
+/**
+ * @brief A multi-dimensional array representing a struct.
+ *
+ * The struct is defined by fields that are each represented
+ * by an `LogicalArray`. The data of the `StructLogicalArray` is
+ * represented in a struct of arrays format.
+ */
+class LEGATE_EXPORT StructLogicalArray : public LogicalArray {
+ public:
+  /**
+   * @brief Return a vector of the sub-arrays, one for each field.
+   *
+   * @return Vector of `LogicalArray`s representing the fields.
+   */
+  [[nodiscard]] std::vector<LogicalArray> fields() const;
+
+  StructLogicalArray() = LEGATE_DEFAULT_WHEN_CYTHON;
+
+  explicit StructLogicalArray(const InternalSharedPtr<detail::StructLogicalArray>& impl);
+
+ private:
+  friend class LogicalArray;
+
+  explicit StructLogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 };
 
 /** @} */

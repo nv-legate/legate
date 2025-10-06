@@ -263,6 +263,20 @@ ListLogicalArray Runtime::create_list_array(const LogicalArray& descriptor,
     .as_list_array();
 }
 
+StructLogicalArray Runtime::create_struct_array(Span<const LogicalArray> fields,
+                                                const std::optional<LogicalStore>& null_mask)
+{
+  const std::optional<InternalSharedPtr<detail::LogicalStore>> null_mask_impl =
+    null_mask ? std::make_optional(null_mask.value().impl()) : std::nullopt;
+  detail::SmallVector<InternalSharedPtr<detail::LogicalArray>> fields_impl;
+
+  fields_impl.reserve(fields.size());
+  for (auto&& field : fields) {
+    fields_impl.push_back(field.impl());
+  }
+  return StructLogicalArray{impl_->create_struct_array(std::move(fields_impl), null_mask_impl)};
+}
+
 LogicalStore Runtime::create_store(const Type& type, std::uint32_t dim)
 {
   return LogicalStore{impl_->create_store(

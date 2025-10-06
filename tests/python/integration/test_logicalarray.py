@@ -89,6 +89,25 @@ class TestArrayCreation:
         # for code coverage
         lg_arr.offload_to(StoreTarget.SYSMEM)
 
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    @pytest.mark.parametrize("nullable", {True, False})
+    def test_create_struct_array(
+        self, shape: tuple[int, ...], nullable: bool
+    ) -> None:
+        runtime = get_legate_runtime()
+        int_arr = runtime.create_array(ty.int64, shape, nullable)
+        float_arr = runtime.create_array(ty.float32, shape, nullable)
+        null_mask = runtime.create_store(ty.bool_, shape) if nullable else None
+        struct_arr = runtime.create_struct_array(
+            (int_arr, float_arr), null_mask
+        )
+
+        assert struct_arr.shape == shape
+        assert struct_arr.nullable == nullable
+        assert len(struct_arr.fields()) == 2
+        assert struct_arr.num_children == 2
+        assert struct_arr.nested
+
 
 class TestPromote:
     @pytest.mark.parametrize("dtype", ARRAY_TYPES, ids=str)
@@ -227,6 +246,25 @@ class TestArrayCreationErrors:
             ValueError, match="Store and null mask must be top-level stores"
         ):
             runtime.create_nullable_array(data_store, mask_store)
+
+    def test_create_struct_array_invalid_sizes(self) -> None:
+        runtime = get_legate_runtime()
+        small_float_arr = runtime.create_array(ty.float32, shape=(1,))
+        large_int_arr = runtime.create_array(ty.int64, shape=(4,))
+        with pytest.raises(
+            ValueError, match="All fields must have the same shape"
+        ):
+            runtime.create_struct_array((small_float_arr, large_int_arr))
+
+    def test_create_struct_array_null_mask_size(self) -> None:
+        runtime = get_legate_runtime()
+        float_arr = runtime.create_array(ty.float32, shape=(1,))
+        int_arr = runtime.create_array(ty.int64, shape=(1,))
+        null_mask = runtime.create_store(ty.int64, shape=(1,))
+        with pytest.raises(
+            ValueError, match="Null mask must be of boolean type"
+        ):
+            runtime.create_struct_array((float_arr, int_arr), null_mask)
 
 
 if __name__ == "__main__":

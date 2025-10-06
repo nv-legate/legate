@@ -38,11 +38,15 @@ cdef extern from "legate/data/logical_array.h" namespace "legate" nogil:
         _LogicalStore null_mask() except+
         _LogicalArray child(uint32_t) except+
         _PhysicalArray get_physical_array(std_optional[StoreTarget]) except+
+        _StructLogicalArray as_struct_array() except+
         void offload_to(StoreTarget) except+
         _LogicalArray()
         _LogicalArray(const _LogicalStore&) except+
         _LogicalArray(const _LogicalStore&, const _LogicalStore&) except+
         _LogicalArray(const _LogicalArray&) except+
+
+    cdef cppclass _StructLogicalArray "legate::StructLogicalArray":
+        std_vector[_LogicalArray] fields() except+
 
 
 cdef class LogicalArray(Unconstructable):
@@ -60,7 +64,14 @@ cdef class LogicalArray(Unconstructable):
     cpdef void fill(self, object value)
     cpdef LogicalArray child(self, uint32_t index)
     cpdef PhysicalArray get_physical_array(self, target: object =*)
+    cpdef StructLogicalArray as_struct_array(self)
     cpdef void offload_to(self, StoreTarget target_mem)
 
+cdef class StructLogicalArray(LogicalArray):
+
+    @staticmethod
+    cdef StructLogicalArray from_handle(_StructLogicalArray)
+
+    cpdef tuple[LogicalArray] fields(self)
 
 cdef _LogicalArray to_cpp_logical_array(object array_or_store)

@@ -341,6 +341,29 @@ TEST_P(NullableTest, CreateListArray)
   ASSERT_THROW(static_cast<void>(list_array.child(NUM_CHILDREN)), std::out_of_range);
 }
 
+TEST_P(NullableTest, CreateStructArray)
+{
+  const auto nullable   = GetParam();
+  auto runtime          = legate::Runtime::get_runtime();
+  const auto int_type   = legate::int64();
+  const auto float_type = legate::float32();
+  const auto& shape     = bound_shape_multi_dim();
+
+  auto int_array   = runtime->create_array(shape, int_type);
+  auto float_array = runtime->create_array(shape, float_type);
+  const std::optional<legate::LogicalStore> null_mask =
+    nullable ? std::make_optional(runtime->create_store(shape, legate::bool_())) : std::nullopt;
+  auto array = runtime->create_struct_array({int_array, float_array}, null_mask);
+
+  ASSERT_EQ(array.dim(), BOUND_DIM);
+  ASSERT_EQ(array.type().code(), legate::Type::Code::STRUCT);
+  ASSERT_EQ(array.extents(), shape.extents());
+  ASSERT_EQ(array.volume(), shape.volume());
+  ASSERT_EQ(array.nullable(), nullable);
+  ASSERT_EQ(array.num_children(), 2);
+  ASSERT_TRUE(array.nested());
+}
+
 TEST_P(NullableTest, CreateBoundStringArray)
 {
   const auto nullable = GetParam();
@@ -647,6 +670,19 @@ TEST_F(LogicalArrayCreateUnit, InvalidNullableArrayType)
   ASSERT_THAT([&] { return runtime->create_nullable_array(store, float_mask); },
               ::testing::ThrowsMessage<std::invalid_argument>(
                 ::testing::HasSubstr("Null mask must be a boolean type")));
+}
+
+TEST_F(LogicalArrayCreateUnit, InvalidStructArray)
+{
+  auto runtime         = legate::Runtime::get_runtime();
+  const auto arr_rect1 = runtime->create_array(legate::Shape{1}, legate::rect_type(1));
+  const auto arr_int64 = runtime->create_array(legate::Shape{2}, legate::int64());
+  const auto null_mask = runtime->create_store(legate::Shape{1}, legate::bool_());
+
+  // fields of inconsistent shape
+  ASSERT_THAT([&] { return runtime->create_struct_array({arr_rect1, arr_int64}, null_mask); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("All fields must have the same shape")));
 }
 
 TEST_P(NullableTest, PhsicalArray)

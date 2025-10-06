@@ -38,6 +38,8 @@ C++
 - Make ``legate::ScopedAllocator`` copy-constructible.
 - Add ``legate::ScopedAllocator::allocate_aligned()``.
 - Add ``legate::ScopedAllocator::allocate_type()``.
+- Add ``legate::LogicalArray::as_struct_array()``.
+- Add ``legate::StructLogicalArray``.
 
 .. rubric:: Mapping
 
@@ -51,6 +53,8 @@ C++
 .. rubric:: Types
 
 .. rubric:: Runtime
+
+- Add ``legate::Runtime::create_struct_array()``.
 
 .. rubric:: Utilities
 
@@ -76,6 +80,9 @@ Python
 
 .. rubric:: Data
 
+- Add ``legate.core.LogicalArray.as_struct_array()``.
+- Add ``legate.core.StructLogicalArray``.
+
 .. rubric:: Mapping
 
 - Add ``legate.core.DimOrdering`` and ``legate.core.DimOrderingKind`` for
@@ -94,6 +101,8 @@ Python
 .. rubric:: Types
 
 .. rubric:: Runtime
+
+- Add ``legate.core.Runtime.create_struct_array()``.
 
 .. rubric:: Utilities
 

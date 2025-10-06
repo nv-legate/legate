@@ -187,6 +187,26 @@ class Runtime {
     InternalSharedPtr<Type> type,
     const InternalSharedPtr<LogicalArray>& descriptor,
     InternalSharedPtr<LogicalArray> vardata);
+  /**
+   * @brief Creates a struct array from existing sub-arrays and null mask.
+   *
+   * The caller is responsible for making sure that the fields sub-arrays are valid.
+   *
+   * @param fields Sub-arrays for fields.
+   * @param null_mask Optional null mask for the struct array.
+   *
+   * @note This call can block if either `fields` or `null_mask` is unbound.
+   *
+   * @return Struct logical array
+   *
+   * @throw std::invalid_argument When any of the following is true:
+   * #. `null_mask` is not of boolean type if provided.
+   * #.  any of `fields` or `null_mask`, if provided, have different shapes.
+   * #.  any of the `fields` or `null_mask` are transformed (i.e., not a top-level store).
+   */
+  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
+    SmallVector<InternalSharedPtr<LogicalArray>>&& fields,
+    const std::optional<InternalSharedPtr<LogicalStore>>& null_mask);
 
  private:
   [[nodiscard]] std::pair<mapping::detail::Machine, const VariantInfo&> slice_machine_for_task_(
