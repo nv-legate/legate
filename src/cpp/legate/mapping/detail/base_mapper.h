@@ -394,10 +394,16 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   std::string mapper_name_{};
 
   // Streaming transformation related objects
-  std::uint32_t streaming_current_gen_{};
-  std::optional<DomainPoint> streaming_target_column_{};
-  std::uint32_t streaming_rows_mapped_{};
+  class ProcStreamingInfo {
+   public:
+    std::uint32_t streaming_current_gen{};
+    std::optional<DomainPoint> streaming_target_column{};
+    std::uint32_t streaming_rows_mapped{};
+  };
+
   std::queue<Legion::Mapping::MapperEvent> deferral_events_{};
+
+  std::unordered_map<Processor, ProcStreamingInfo, hasher<Processor>> streaming_info_{};
 };
 
 }  // namespace legate::mapping::detail
