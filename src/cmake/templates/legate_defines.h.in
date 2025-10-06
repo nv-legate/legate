@@ -17,10 +17,6 @@
 #include <legate/legate_exports.h>
 #include <legate/version.h>
 
-#ifndef LEGION_REDOP_HALF
-#error "Legate needs Legion to be compiled with -DLEGION_REDOP_HALF"
-#endif
-
 #cmakedefine LEGATE_USE_DEBUG @LEGATE_USE_DEBUG@
 
 #cmakedefine LEGATE_USE_CUDA @LEGATE_USE_CUDA@

@@ -81,6 +81,14 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   message(VERBOSE "legate: Legion git_branch: ${git_branch}")
   message(VERBOSE "legate: Legion exclude_from_all: ${exclude_from_all}")
 
+  # HACK: These should really be always-on (because cuPyNumeric uses half-precision), but
+  # needed to work around CCCL compilation issues with
+  # `cuda::std::atomic_ref<cuda::std::complex<__half>>` in legate-dataframe.
+  #
+  # We can remove this once https://github.com/nv-legate/legate.internal/pull/1418 lands.
+  option(Legion_REDOP_HALF "Enable Half-precision reductions" ON)
+  option(Legion_REDOP_COMPLEX "Enable complex reductions" ON)
+
   rapids_cpm_find(Legion "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
@@ -97,8 +105,8 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                            TRUE
                   EXCLUDE_FROM_ALL ${exclude_from_all}
                   OPTIONS "Legion_VERSION ${version}"
-                          "Legion_REDOP_HALF ON"
-                          "Legion_REDOP_COMPLEX ON"
+                          "Legion_REDOP_HALF ${Legion_REDOP_HALF}"
+                          "Legion_REDOP_COMPLEX ${Legion_REDOP_COMPLEX}"
                           "Legion_UCX_DYNAMIC_LOAD ON"
                           # We never want local fields
                           "Legion_DEFAULT_LOCAL_FIELDS 0"
