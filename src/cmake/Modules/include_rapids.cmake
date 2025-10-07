@@ -22,7 +22,7 @@ function(_legate_download_rapids DEST_PATH)
   else()
     # default
     set(rapids-cmake-version "25.08")
-    set(rapids-cmake-sha "6a6cdf8eb891ef4f73190793e1d4bbcb742f786a")
+    set(rapids-cmake-sha "9700194bb3f38850348a9e4a634734bc483b738d")
 
     # These need to be seen by the include(legate_rapids_file) call
     set(rapids-cmake-version "${rapids-cmake-version}" PARENT_SCOPE)
