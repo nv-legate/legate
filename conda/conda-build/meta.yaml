@@ -122,7 +122,7 @@ build:
     - libcufile
     - libcufile-dev
     # If you bump this, also update get_nccl.cmake
-    - nccl <=2.27
+    - nccl <2.28
     - cuda-nvcc
 {% if network == 'gex' %}
     # When we build packages for GEX, we expect a system provided MPI.
@@ -187,7 +187,7 @@ requirements:
     - cuda-version ={{ cuda_version }}
     # these are all constrained by cuda-version
     # If you bump this, also update get_nccl.cmake
-    - nccl <=2.27
+    - nccl <2.28
     - cuda-cudart-dev
     - cuda-nvtx-dev
     - cuda-nvml-dev
@@ -219,7 +219,7 @@ requirements:
     - {{ pin_compatible('cuda-nvtx',    min_pin='x', max_pin='x') }}
     - libcufile      >=1.0,<2
     # If you bump this, also update get_nccl.cmake
-    - nccl           >=2.0,<=2.27
+    - nccl           >=2.0,<2.28
 {% endif %}
     - rich
 {% if network == 'ucx' %}

@@ -3,7 +3,7 @@
 cmake>=3.26.4,!=3.30.0
 ninja
 # If you bump this, also update get_nccl.cmake
-nvidia-nccl-cu12<=2.27
+nvidia-nccl-cu12<2.28
 libucx-cu12
 nvidia-libcal-cu12
 scikit-build-core[pyproject]>=0.10.0
