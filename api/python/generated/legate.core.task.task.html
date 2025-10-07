@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.task.task &#8212; NVIDIA legate (25.10.00.dev68+gd12c93068)</title>
+    <title>legate.core.task.task &#8212; NVIDIA legate (25.10.00.dev70+gcfb25c19d)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=534a129a"></script>
+    <script src="../../../_static/documentation_options.js?v=9846e61e"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev70+gcfb25c19d) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev70+gcfb25c19d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev68+gd12c93068)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev70+gcfb25c19d)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev68+gd12c93068) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev70+gcfb25c19d) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev70+gcfb25c19d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev68+gd12c93068)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev70+gcfb25c19d)</p>
   
 </a>
 
@@ -700,13 +700,13 @@ finish registering the task.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>func</strong> (<em>UserFunction</em>) – The base user function to invoke in the task.</p></li>
-<li><p><strong>variants</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><em>VariantCode</em><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – The list of variants for which <code class="docutils literal notranslate"><span class="pre">func</span></code> is applicable. Defaults
+<li><p><strong>variants</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><em>VariantCode</em><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – The list of variants for which <code class="docutils literal notranslate"><span class="pre">func</span></code> is applicable. Defaults
 to <code class="docutils literal notranslate"><span class="pre">(&lt;VariantCode.CPU:</span> <span class="pre">1&gt;,)</span></code>.</p></li>
 <li><p><strong>constraints</strong> (<em>Sequence</em><em>[</em><em>DeferredConstraint</em><em> | </em><em>Sequence</em><em>[</em><em>DeferredConstraint</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – The list of constraints which are to be applied to the arguments of
 <code class="docutils literal notranslate"><span class="pre">func</span></code>, if any. Defaults to no constraints.</p></li>
 <li><p><strong>options</strong> (<a class="reference internal" href="legate.core.TaskConfig.html#legate.core.TaskConfig" title="legate.core.TaskConfig"><em>TaskConfig</em></a><em> | </em><a class="reference internal" href="legate.core.VariantOptions.html#legate.core.VariantOptions" title="legate.core.VariantOptions"><em>VariantOptions</em></a><em>, </em><em>optional</em>) – Either a <code class="docutils literal notranslate"><span class="pre">TaskConfig</span></code> or <code class="docutils literal notranslate"><span class="pre">VariantOptions</span></code> describing the task
 configuration.</p></li>
-<li><p><strong>register</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>True</em>) – Whether to immediately complete registration of the task. Deferring
+<li><p><strong>register</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>True</em>) – Whether to immediately complete registration of the task. Deferring
 registration is used to add additional variants to the task that have
 a different body. However, all variants must have identical signatures.
 The user must manually call <code class="docutils literal notranslate"><span class="pre">PyTask.complete_registration</span></code> to finish
