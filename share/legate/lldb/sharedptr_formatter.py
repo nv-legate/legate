@@ -45,9 +45,13 @@ class SharedPtrChildrenProvider:
 
     def update(self) -> None:
         """Update provider for underlying value."""
-        if SHARED_PTR_REGEX.match(self._valobj.GetType().GetName()):
+        val_type = self._valobj.GetType()
+        if val_type.IsReferenceType():
+            val_type = val_type.GetPointeeType()
+        if SHARED_PTR_REGEX.match(val_type.GetName()):
             self._valobj = self._valobj.GetChildAtIndex(0)
-        self.ptr = self._valobj.GetChildMemberWithName("ptr_")
+        ptr_type = val_type.GetTemplateArgumentType(0).GetPointerType()
+        self._ptr = self._valobj.GetChildMemberWithName("ptr_").Cast(ptr_type)
 
     def num_children(self) -> int:
         """Return number of children which are the pointer and value."""
@@ -65,9 +69,9 @@ class SharedPtrChildrenProvider:
     def get_child_at_index(self, index: int) -> SBValue:
         """Return the child at a given index."""
         if index == 0:
-            return self.ptr
+            return self._ptr
         if index == 1:
-            return self.ptr.Dereference()
+            return self._ptr.Dereference()
         error_msg = f"Expected 0 or 1, got {index}"
         raise ValueError(error_msg)
 

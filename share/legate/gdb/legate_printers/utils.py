@@ -69,9 +69,8 @@ class VectorChildrenProvider:
     def __init__(self, vector: Value):
         self._vector = vector
 
-        is_bool = (
-            self._vector.type.template_argument(0).code == gdb.TYPE_CODE_BOOL
-        )
+        vec_type = gdb.types.get_basic_type(self._vector.type)
+        is_bool = vec_type.template_argument(0).code == gdb.TYPE_CODE_BOOL
         self._provide_children = not is_bool
 
     def children(self) -> Iterator[tuple[str, Value]]:
@@ -92,3 +91,24 @@ class VectorChildrenProvider:
             finish = self._vector["_M_impl"]["_M_finish"]
             return f"{int(finish - start)}"
         return "bit-vector ?"
+
+
+def is_reference(val: Value) -> bool:
+    """Return True if the value is a reference."""
+    try:
+        _ = val.referenced_value()
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def get_type_str(val: Value) -> str:
+    """Return the string representation of the type."""
+    if is_reference(val):
+        # GDB Python API returns None for val.type.tag when
+        # val.type is a reference for some reason. As a result,
+        # we remove all qualifiers from the type to get a
+        # proper string and add back in the reference `&`
+        return f"{gdb.types.get_basic_type(val.type).tag}&"
+    return val.type.tag

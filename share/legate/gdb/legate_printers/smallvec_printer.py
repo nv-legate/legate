@@ -6,7 +6,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from legate_printers.utils import ArrayChildrenProvider, VectorChildrenProvider
+from legate_printers.utils import (
+    ArrayChildrenProvider,
+    VectorChildrenProvider,
+    get_type_str,
+)
 
 import gdb
 from gdb import Type, Value
@@ -36,7 +40,8 @@ class SmallVectorPrinter(gdb.ValuePrinter):
         self._val = val
 
         # get underlying storage value
-        template_args = get_template_args(val["data_"].type)
+        basic_var_type = gdb.types.get_basic_type(val["data_"].type)
+        template_args = get_template_args(basic_var_type)
         variant_index = int(val["data_"]["_M_index"])
         storage_type = template_args[variant_index]
         storage_addr = val["data_"]["_M_u"]["_M_first"]["_M_storage"].address
@@ -45,9 +50,9 @@ class SmallVectorPrinter(gdb.ValuePrinter):
         # get start and finish pointers and size of array
         if variant_index == 0:
             # cuda::std::inplace_vector
-            elems = storage_value["__elems_"]
-            elem_type = elems.type.target()
-            elem_ptr = elems.cast(elem_type.pointer())
+            basic_vec_type = gdb.types.get_basic_type(val.type)
+            elem_type = get_template_args(basic_vec_type)[0]
+            elem_ptr = storage_value["__elems_"].cast(elem_type.pointer())
             size = int(storage_value["__size_"])
 
             self._is_small = True
@@ -65,7 +70,7 @@ class SmallVectorPrinter(gdb.ValuePrinter):
         """Return header string representation of the small-vector."""
         mode_str = "small" if self._is_small else "BIG"
         size_str = self._children_provider.size_str()
-        return f"{self._val.type.tag} size={size_str} mode={mode_str}"
+        return f"{get_type_str(self._val)} size={size_str} mode={mode_str}"
 
     def display_hint(self) -> str:
         """Return display hint for the small-vector."""

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from legate_printers.utils import ArrayChildrenProvider
+from legate_printers.utils import ArrayChildrenProvider, get_type_str
 
 import gdb
 
@@ -33,7 +33,7 @@ class SpanPrinter(gdb.ValuePrinter):
     def to_string(self) -> str:
         """Return header string representation of the span."""
         size_str = self._children_provider.size_str()
-        return f"{self._val.type.tag} size={size_str}"
+        return f"{get_type_str(self._val)} size={size_str}"
 
     def display_hint(self) -> str:
         """Return display hint for the span."""

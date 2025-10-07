@@ -53,6 +53,11 @@ class SmallVectorChildrenProvider:
         vec_type = self._inplace_vec.GetType().GetName()
         self._is_small = INPLACE_VECTOR_REGEX.match(vec_type) is not None
 
+        val_type = self._valobj.GetType()
+        if val_type.IsReferenceType():
+            val_type = val_type.GetPointeeType()
+        self._elem_type = val_type.GetTemplateArgumentType(0)
+
     def num_children(self) -> int:
         """Return the number of children for a legate::detail::SmallVector."""
         if self._is_small:
@@ -74,6 +79,9 @@ class SmallVectorChildrenProvider:
         """Return the child at index for a legate::detail::SmallVector."""
         if self._is_small:
             elems_val = self._inplace_vec.GetChildMemberWithName("__elems_")
+            elems_val = elems_val.Cast(
+                self._elem_type.GetArrayType(self.num_children())
+            )
             return elems_val.GetChildAtIndex(index)
         return self._inplace_vec.GetChildAtIndex(index)
 
