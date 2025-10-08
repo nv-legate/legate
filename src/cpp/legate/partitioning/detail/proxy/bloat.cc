@@ -11,6 +11,7 @@
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
 
+#include <algorithm>
 #include <tuple>
 
 namespace legate::detail {
@@ -120,8 +121,14 @@ bool ProxyBloat::operator==(const ProxyConstraint& rhs) const
   if (const auto* rhsptr = dynamic_cast<const ProxyBloat*>(&rhs)) {
     return std::tie(var_source(), var_bloat()) ==
              std::tie(rhsptr->var_source(), rhsptr->var_bloat()) &&
-           low_offsets().deep_equal(rhsptr->low_offsets()) &&
-           high_offsets().deep_equal(rhsptr->high_offsets());
+           std::equal(low_offsets().begin(),
+                      low_offsets().end(),
+                      rhsptr->low_offsets().begin(),
+                      rhsptr->low_offsets().end()) &&
+           std::equal(high_offsets().begin(),
+                      high_offsets().end(),
+                      rhsptr->high_offsets().begin(),
+                      rhsptr->high_offsets().end());
   }
   return false;
 }

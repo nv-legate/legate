@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/partitioning/proxy.h>
 #include <legate/task/task.h>
 #include <legate/task/task_config.h>
 #include <legate/task/task_context.h>

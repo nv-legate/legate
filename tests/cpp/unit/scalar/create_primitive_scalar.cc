@@ -261,7 +261,7 @@ class CheckRectScalarFn {
 
     ASSERT_EQ(actual_values.size(), 1);
     ASSERT_EQ(actual_values.size(), expected_values.size());
-    ASSERT_NE(actual_values.ptr(), expected_values.ptr());
+    ASSERT_NE(actual_values.data(), expected_values.data());
     check_rect_bounds(*actual_values.begin(), *expected_values.begin());
   }
 };
@@ -363,9 +363,9 @@ TEST_F(PrimitiveScalarUnit, Empty)
   ASSERT_EQ(scalar.ptr(), nullptr);
   ASSERT_THROW(static_cast<void>(scalar.value<std::int64_t>()), std::invalid_argument);
 
-  const auto actual_values = legate::Span<const std::int64_t>{scalar.values<std::int64_t>()};
+  const auto actual_values = scalar.values<std::int64_t>();
 
-  ASSERT_EQ(actual_values.begin(), nullptr);
+  ASSERT_EQ(actual_values.data(), nullptr);
   ASSERT_EQ(actual_values.size(), 0);
 }
 
@@ -378,9 +378,9 @@ TEST_F(PrimitiveScalarUnit, Null)
   ASSERT_EQ(null_scalar.ptr(), nullptr);
   ASSERT_THROW(static_cast<void>(null_scalar.value<std::int32_t>()), std::invalid_argument);
 
-  const legate::Span actual_values{null_scalar.values<std::int64_t>()};
+  const auto actual_values = null_scalar.values<std::int64_t>();
 
-  ASSERT_EQ(actual_values.begin(), nullptr);
+  ASSERT_EQ(actual_values.data(), nullptr);
   ASSERT_EQ(actual_values.size(), 0);
 }
 

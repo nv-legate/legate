@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/utilities/cpp_version.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/hash.h>
@@ -18,6 +19,23 @@
 #include <utility>
 
 namespace legate::detail {
+
+LEGATE_CPP_VERSION_TODO(20, "Use std::to_address() instead");
+
+template <typename T>
+constexpr T* to_address(T* p) noexcept
+{
+  static_assert(!std::is_function_v<T>);
+  return p;
+}
+
+template <typename T, typename = std::void_t<decltype(std::declval<T>().operator->())>>
+constexpr auto* to_address(const T& p) noexcept
+{
+  return to_address(p.operator->());
+}
+
+// ==========================================================================================
 
 template <typename T, std::uint32_t S>
 const typename SmallVector<T, S>::storage_type& SmallVector<T, S>::storage_() const noexcept

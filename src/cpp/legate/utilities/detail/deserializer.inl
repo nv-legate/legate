@@ -35,7 +35,7 @@ template <typename Deserializer>
 template <typename T, std::enable_if_t<type_code_of_v<T> != Type::Code::NIL>*>
 void BaseDeserializer<Deserializer>::unpack_impl(T& value)
 {
-  const auto vptr          = static_cast<void*>(const_cast<std::int8_t*>(args_.ptr()));
+  const auto vptr          = static_cast<void*>(const_cast<std::int8_t*>(args_.data()));
   auto [ptr, align_offset] = align_for_unpack<T>(vptr, args_.size());
 
   // We need to align-up the incoming args_.ptr() since the value was stored according to
@@ -173,7 +173,7 @@ InternalSharedPtr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar(
     return {nullptr, 0};
   };
 
-  auto [ptr, align_offset] = unpack_scalar_value(type, args_.ptr(), args_.size());
+  auto [ptr, align_offset] = unpack_scalar_value(type, args_.data(), args_.size());
   auto result              = make_internal_shared<detail::Scalar>(type, ptr, false /*copy*/);
 
   args_ = args_.subspan(align_offset + result->size());

@@ -325,7 +325,7 @@ void StoreMapping::populate_layout_constraints(
     // We assume that all stores in the mapping have the same number of dimensions
     // at least, and that the other stores follow the dimension ordering of the
     // first store, which may be adjusted due to transforms, such as, transpose.
-    LEGATE_ASSERT(std::all_of(stores().cbegin(), stores().cend(), [&](const auto* st) {
+    LEGATE_ASSERT(std::all_of(stores().begin(), stores().end(), [&](const auto* st) {
       return st->dim() == store()->dim();
     }));
   }

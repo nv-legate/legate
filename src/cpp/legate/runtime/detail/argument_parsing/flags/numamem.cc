@@ -13,6 +13,7 @@
 #include <legate/runtime/detail/argument_parsing/flags/numamem.h>
 
 #include <legate/runtime/detail/argument_parsing/argument.h>
+#include <legate/utilities/assert.h>
 #include <legate/utilities/span.h>
 
 #include <cmath>

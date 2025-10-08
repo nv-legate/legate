@@ -143,7 +143,7 @@ Span<const VAL> Scalar::values() const
 
       return Span<const VAL>(static_cast<const VAL*>(ptr), size);
     }
-    case Type::Code::NIL: return Span<const VAL>(nullptr, 0);
+    case Type::Code::NIL: return Span<const VAL>{};
     case Type::Code::BOOL: [[fallthrough]];
     case Type::Code::INT8: [[fallthrough]];
     case Type::Code::INT16: [[fallthrough]];
@@ -172,8 +172,6 @@ Span<const VAL> Scalar::values() const
   }
   return Span<const VAL>(static_cast<const VAL*>(ptr()), 1);
 }
-
-inline const SharedPtr<detail::Scalar>& Scalar::impl() { return impl_; }
 
 inline const SharedPtr<detail::Scalar>& Scalar::impl() const { return impl_; }
 

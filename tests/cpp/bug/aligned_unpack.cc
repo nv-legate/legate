@@ -27,7 +27,7 @@ class TestDeserializer : public legate::detail::BaseDeserializer<TestDeserialize
 
 TEST_F(AlignedUnpack, Bug1)
 {
-  legate::Scalar to_pack{complex<double>{123.0, 456.0}};
+  const legate::Scalar to_pack{complex<double>{123.0, 456.0}};
 
   legate::detail::BufferBuilder buffer{};
   buffer.pack<bool>(true);

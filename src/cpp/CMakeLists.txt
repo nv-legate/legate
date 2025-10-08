@@ -828,7 +828,6 @@ install(FILES legate/utilities/dispatch.h
               legate/utilities/memory.h
               legate/utilities/memory.inl
               legate/utilities/span.h
-              legate/utilities/span.inl
               legate/utilities/mdspan.h
               legate/utilities/mdspan.inl
               legate/utilities/tuple.h

@@ -102,11 +102,11 @@ CUlibrary CUDAModuleManager::load_library(
   if (inserted) {
     try {
       it->second = get_cuda_driver_api()->library_load_data(fatbin,
-                                                            jit_options.first.begin(),
-                                                            jit_options.second.begin(),
+                                                            jit_options.first.data(),
+                                                            jit_options.second.data(),
                                                             jit_options.first.size(),
-                                                            library_options.first.begin(),
-                                                            library_options.second.begin(),
+                                                            library_options.first.data(),
+                                                            library_options.second.data(),
                                                             library_options.first.size());
     } catch (...) {
       libraries_().erase(it);

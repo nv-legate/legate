@@ -99,7 +99,7 @@ std::int32_t StructArray::dim() const { return fields().front()->dim(); }
 bool StructArray::unbound() const
 {
   return std::any_of(
-    fields().cbegin(), fields().cend(), [](const auto& field) { return field->unbound(); });
+    fields().begin(), fields().end(), [](const auto& field) { return field->unbound(); });
 }
 
 bool StructArray::valid() const

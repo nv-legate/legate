@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <legate/partitioning/proxy.h>
 #include <legate/task/task.h>
 #include <legate/task/task_config.h>
 #include <legate/task/task_signature.h>

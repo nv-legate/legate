@@ -235,7 +235,6 @@ class LEGATE_EXPORT Scalar {
   [[nodiscard]] const void* ptr() const;
 
   [[nodiscard]] const SharedPtr<detail::Scalar>& impl() const;
-  [[nodiscard]] const SharedPtr<detail::Scalar>& impl();
 
  private:
   // These *should* return SharedPtr's, but we cannot due to the large number of template

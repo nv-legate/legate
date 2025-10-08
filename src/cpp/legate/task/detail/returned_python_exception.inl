@@ -16,7 +16,7 @@ constexpr ExceptionKind ReturnedPythonException::kind() { return ExceptionKind::
 inline Span<const std::byte> ReturnedPythonException::pickle() const
 {
   return bytes_ ? Span<const std::byte>{bytes_->pkl_bytes.get(), bytes_->pkl_size}
-                : Span<const std::byte>{nullptr, 0};
+                : Span<const std::byte>{};
 }
 
 inline std::string_view ReturnedPythonException::message() const

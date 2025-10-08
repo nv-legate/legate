@@ -6,6 +6,8 @@
 
 #include <legate/utilities/detail/traced_exception.h>
 
+#include <legate/utilities/abort.h>
+#include <legate/utilities/assert.h>
 #include <legate/utilities/detail/error.h>
 #include <legate/utilities/span.h>
 

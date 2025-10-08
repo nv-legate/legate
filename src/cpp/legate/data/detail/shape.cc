@@ -110,7 +110,8 @@ bool Shape::operator==(Shape& other)
     return true;
   }
   // Otherwise, we have no choice but block waiting on the exact extents
-  return extents().deep_equal(other.extents());
+  return std::equal(
+    extents().begin(), extents().end(), other.extents().begin(), other.extents().end());
 }
 
 void Shape::ensure_binding_()

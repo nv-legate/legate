@@ -308,7 +308,6 @@ set(wo_runtime_SRC
     noinit/scope_fail.cc
     noinit/scope_guard.cc
     noinit/shared_ptr.cc
-    noinit/span.cc
     noinit/task_exception.cc
     noinit/to_domain.cc
     noinit/tuple.cc

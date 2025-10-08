@@ -91,7 +91,7 @@ void check_struct_type_scalar(T& struct_data, bool align)
   const auto expected_values = legate::Span<const T>{&struct_data, 1};
 
   ASSERT_EQ(actual_values.size(), expected_values.size());
-  ASSERT_NE(actual_values.ptr(), expected_values.ptr());
+  ASSERT_NE(actual_values.data(), expected_values.data());
   compare(actual_values.begin()->bool_data, expected_values.begin()->bool_data);
   compare(actual_values.begin()->int32_data, expected_values.begin()->int32_data);
   compare(actual_values.begin()->uint64_data, expected_values.begin()->uint64_data);

@@ -9,6 +9,7 @@
 #include <legate_defines.h>
 
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/macros.h>
 
 #include <fmt/format.h>
 

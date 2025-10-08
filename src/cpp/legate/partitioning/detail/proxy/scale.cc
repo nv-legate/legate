@@ -11,6 +11,7 @@
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
 
+#include <algorithm>
 #include <tuple>
 
 namespace legate::detail {
@@ -106,7 +107,10 @@ bool ProxyScale::operator==(const ProxyConstraint& rhs) const
   if (const auto* rhsptr = dynamic_cast<const ProxyScale*>(&rhs)) {
     return std::tie(var_smaller(), var_bigger()) ==
              std::tie(rhsptr->var_smaller(), rhsptr->var_bigger()) &&
-           factors().deep_equal(rhsptr->factors());
+           std::equal(factors().begin(),
+                      factors().end(),
+                      rhsptr->factors().begin(),
+                      rhsptr->factors().end());
   }
   return false;
 }

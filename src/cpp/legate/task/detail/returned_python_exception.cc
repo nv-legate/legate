@@ -38,7 +38,7 @@ namespace {
 {
   auto ret = std::unique_ptr<std::byte[]>{new std::byte[span.size()]};
 
-  std::memcpy(ret.get(), span.ptr(), span.size());
+  std::memcpy(ret.get(), span.data(), span.size());
   return ret;
 }
 

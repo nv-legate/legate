@@ -301,7 +301,7 @@ CopyDeserializer::CopyDeserializer(const Legion::Copy& copy,
                                    Legion::Mapping::MapperContext context)
   : BaseDeserializer{copy.mapper_data, copy.mapper_data_size},
     all_reqs_{std::move(all_requirements)},
-    curr_reqs_{all_reqs_.begin()},
+    curr_reqs_{all_reqs_.data()},
     runtime_{runtime},
     context_{context}
 {
@@ -309,7 +309,7 @@ CopyDeserializer::CopyDeserializer(const Legion::Copy& copy,
 
 void CopyDeserializer::next_requirement_list()
 {
-  LEGATE_CHECK(curr_reqs_ != all_reqs_.end());
+  LEGATE_CHECK(curr_reqs_ != all_reqs_.data() + all_reqs_.size());
   req_index_offset_ += curr_reqs_->get().size();
   ++curr_reqs_;
 }

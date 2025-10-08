@@ -10,6 +10,7 @@
 
 #include <legate/comm/detail/logger.h>
 #include <legate/comm/detail/mpi_interface.h>
+#include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
 #include <legate/utilities/scope_guard.h>
