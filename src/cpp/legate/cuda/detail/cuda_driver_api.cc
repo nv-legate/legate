@@ -16,7 +16,6 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include <dlfcn.h>
 #include <optional>
 #include <regex>
 #include <stdexcept>
@@ -127,17 +126,6 @@ namespace {
                fn_name);
 }
 
-template <typename F>
-void load_dlsym_function(void* handle, const char name[], F** dest)
-{
-  static_cast<void>(::dlerror());
-  *dest = reinterpret_cast<F*>(::dlsym(handle, name));
-  if (const char* error = ::dlerror()) {
-    throw legate::detail::TracedException<std::runtime_error>{
-      fmt::format("Failed to locate the symbol {} in the shared library: {}", name, error)};
-  }
-}
-
 using cuGetProcAddressT = CUresult (*)(const char*, void**, int, std::uint64_t);
 
 [[nodiscard]] void* load_cu_driver_function_impl(cuGetProcAddressT cu_get_proc_address,
@@ -202,7 +190,7 @@ void CUDADriverAPI::read_symbols_()
   // above, we aren't compatible with that one.
   //
   // Load this first via dlsym()...
-  load_dlsym_function(handle_.get(), "cuGetProcAddress", &get_proc_address_);
+  lib_.load_symbol_into("cuGetProcAddress", &get_proc_address_);
   // ...then get the rest through it. We do this to make sure we are always loading the latest
   // version of the API with which we are compatible.
 
@@ -340,18 +328,10 @@ void CUDADriverAPI::check_initialized_() const
 // ==========================================================================================
 
 CUDADriverAPI::CUDADriverAPI(std::string handle_path)
-  : handle_path_{std::move(handle_path)},
-    handle_{::dlopen(handle_path_.c_str(), RTLD_LAZY | RTLD_LOCAL), &::dlclose}
+  : lib_{std::move(handle_path), /* must_load */ false}
 {
-  if (!is_loaded()) {
-    return;
-  }
-  read_symbols_();
-  // Can only do this with get_proc_address_, because that's the only symbol we acquire through
-  // dlsym() directly.
-  if (::Dl_info info{}; ::dladdr(reinterpret_cast<const void*>(get_proc_address_), &info)) {
-    LEGATE_CHECK(info.dli_fname);
-    handle_path_ = info.dli_fname;
+  if (is_loaded()) {
+    read_symbols_();
   }
 }
 
@@ -638,9 +618,12 @@ std::pair<std::size_t, std::size_t> CUDADriverAPI::mem_get_info() const
 
 // ==========================================================================================
 
-std::string_view CUDADriverAPI::handle_path() const noexcept { return handle_path_; }
+legate::detail::ZStringView CUDADriverAPI::handle_path() const noexcept
+{
+  return lib_.handle_path();
+}
 
-bool CUDADriverAPI::is_loaded() const noexcept { return handle_ != nullptr; }
+bool CUDADriverAPI::is_loaded() const noexcept { return lib_.is_loaded(); }
 
 // ==========================================================================================
 

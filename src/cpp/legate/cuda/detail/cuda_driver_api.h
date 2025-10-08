@@ -9,12 +9,13 @@
 #include <legate_defines.h>
 
 #include <legate/cuda/detail/cuda_driver_types.h>
+#include <legate/utilities/detail/shared_library.h>
+#include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/macros.h>
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -108,12 +109,11 @@ class CUDADriverAPI {
 
   [[nodiscard]] std::pair<std::size_t, std::size_t> mem_get_info() const;
 
-  [[nodiscard]] std::string_view handle_path() const noexcept;
+  [[nodiscard]] legate::detail::ZStringView handle_path() const noexcept;
   [[nodiscard]] bool is_loaded() const noexcept;
 
  private:
-  std::string handle_path_{};
-  std::unique_ptr<void, int (*)(void*)> handle_;
+  legate::detail::SharedLibrary lib_;
 
   void read_symbols_();
   void check_initialized_() const;

@@ -10,6 +10,7 @@
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/shared_library.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/macros.h>
@@ -19,7 +20,6 @@
 
 #include <../../share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h>
 #include <dlfcn.h>
-#include <memory>
 #include <stdexcept>
 #include <string_view>
 #include <utility>
@@ -32,74 +32,30 @@ namespace {
 
 constexpr Legate_MPI_Kind LEGATE_MPI_KIND_UNKNOWN = -1;
 
-[[nodiscard]] std::unique_ptr<void, int (*)(void*)> lib_handle(ZStringView lib_name,
-                                                               int flags = RTLD_LAZY | RTLD_LOCAL)
-{
-  return {::dlopen(lib_name.data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
-                   flags),
-          &::dlclose};
-}
-
-[[nodiscard]] bool library_exists(ZStringView lib_name)
-{
-  if (lib_name.empty()) {
-    return false;
-  }
-
-  return lib_handle(lib_name) != nullptr;
-}
-
-[[nodiscard]] std::string get_library_path(const void* symbol)
-{
-  if (::Dl_info info{}; ::dladdr(symbol, &info) && info.dli_fname) {
-    return info.dli_fname;
-  }
-  return "";
-}
-
 [[nodiscard]] std::pair<Legate_MPI_Kind, std::optional<std::string>> detect_mpi_abi()
 {
   // try to open libmpi.so and call MPI_Get_library_version to detect MPI version
-  // clear any existing error
-  static_cast<void>(::dlerror());
 
-  const auto mpi_handle = lib_handle(SHARED_LIBRARY("mpi"),
+  const auto mpi_handle = [&] {
+    try {
+      return SharedLibrary{SHARED_LIBRARY("mpi"),
 #if LEGATE_DEFINED(LEGATE_LINUX)
-                                     // see https://github.com/jeffhammond/mukautuva/issues/32
-                                     RTLD_LAZY | RTLD_LOCAL | RTLD_DEEPBIND
+                           // see https://github.com/jeffhammond/mukautuva/issues/32
+                           RTLD_LAZY | RTLD_LOCAL | RTLD_DEEPBIND,
 #else
-                                     RTLD_LAZY | RTLD_LOCAL
+                           RTLD_LAZY | RTLD_LOCAL,
 #endif
-  );
-
-  if (mpi_handle == nullptr) {
-    const auto* error_msg = ::dlerror();
-
-    if (!error_msg) {
-      error_msg = "Unknown error occurred while loading libmpi.so";
+                           /* must_load */ true};
+    } catch (...) {
+      throw TracedException<std::runtime_error>{
+        fmt::format("Please make sure MPI is installed and {} is in your LD_LIBRARY_PATH.",
+                    SHARED_LIBRARY("mpi"))};
+      throw;
     }
-    throw TracedException<std::runtime_error>{
-      fmt::format("dlopen(\"{}\") failed: {}, please make sure MPI is installed and {} "
-                  "is in your LD_LIBRARY_PATH.",
-                  SHARED_LIBRARY("mpi"),
-                  error_msg,
-                  SHARED_LIBRARY("mpi"))};
-  }
-
-  static_cast<void>(::dlerror());
+  }();
 
   const auto mpi_get_library_version_fp =
-    reinterpret_cast<int (*)(char*, int*)>(::dlsym(mpi_handle.get(), "MPI_Get_library_version"));
-
-  if (mpi_get_library_version_fp == nullptr) {
-    const auto* error_msg = ::dlerror();
-
-    if (!error_msg) {
-      error_msg = "unknown error";
-    }
-    throw TracedException<std::runtime_error>{
-      fmt::format("dlsym(\"MPI_Get_library_version\") failed: {}", error_msg)};
-  }
+    reinterpret_cast<int (*)(char*, int*)>(mpi_handle.load_symbol("MPI_Get_library_version"));
 
   // MPICH uses 8192: https://github.com/pmodels/mpich/blob/main/src/binding/abi/mpi_abi.h#L289
   // Open MPI uses 256: https://github.com/open-mpi/ompi/blob/main/ompi/include/mpi.h.in#L549
@@ -112,7 +68,7 @@ constexpr Legate_MPI_Kind LEGATE_MPI_KIND_UNKNOWN = -1;
 
   if (rc != 0) {
     const auto mpi_error_string_fp =
-      reinterpret_cast<int (*)(int, char*, int*)>(::dlsym(mpi_handle.get(), "MPI_Error_string"));
+      reinterpret_cast<int (*)(int, char*, int*)>(mpi_handle.load_symbol("MPI_Error_string"));
     constexpr int MPI_MAX_ERROR_STRING      = 512;
     char error_string[MPI_MAX_ERROR_STRING] = {0};
 
@@ -123,7 +79,7 @@ constexpr Legate_MPI_Kind LEGATE_MPI_KIND_UNKNOWN = -1;
     }
     throw TracedException<std::runtime_error>{
       fmt::format("MPI_Get_library_version from {} failed: error: {}, error_string: {}",
-                  get_library_path(reinterpret_cast<const void*>(mpi_get_library_version_fp)),
+                  mpi_handle.handle_path(),
                   rc,
                   error_string)};
   }
@@ -143,24 +99,11 @@ constexpr Legate_MPI_Kind LEGATE_MPI_KIND_UNKNOWN = -1;
   return {LEGATE_MPI_KIND_UNKNOWN, lib_version};
 }
 
-[[nodiscard]] Legate_MPI_Kind extract_mpi_type_from_wrapper(ZStringView wrapper_name)
+[[nodiscard]] Legate_MPI_Kind extract_mpi_type_from_wrapper(std::string wrapper_name)
 {
-  static_cast<void>(::dlerror());  // clear any existing error
-  const auto handle = lib_handle(wrapper_name);
-
-  if (handle == nullptr) {
-    throw TracedException<std::runtime_error>{
-      fmt::format("dlopen(\"{}\") failed: {}", wrapper_name, ::dlerror())};
-  }
-
-  static_cast<void>(::dlerror());  // clear any existing error
+  const auto handle = SharedLibrary{std::move(wrapper_name), /* must_load */ true};
   const auto legate_mpi_wrapper_kind_fp =
-    reinterpret_cast<Legate_MPI_Kind (*)()>(::dlsym(handle.get(), "legate_mpi_wrapper_kind"));
-
-  if (legate_mpi_wrapper_kind_fp == nullptr) {
-    throw TracedException<std::runtime_error>{
-      fmt::format("Can not find legate_mpi_wrapper_kind in {}: {}", wrapper_name, ::dlerror())};
-  }
+    reinterpret_cast<Legate_MPI_Kind (*)()>(handle.load_symbol("legate_mpi_wrapper_kind"));
 
   return legate_mpi_wrapper_kind_fp();
 }
@@ -181,7 +124,7 @@ void set_mpi_wrapper_libraries()
 {
   // if liblegate_mpi_wrapper.so exists, it is a local build, so we don't need to detect MPI
   // version
-  if (library_exists(SHARED_LIBRARY("legate_mpi_wrapper"))) {
+  if (SharedLibrary::exists(SHARED_LIBRARY("legate_mpi_wrapper"))) {
     log_legate().debug() << SHARED_LIBRARY("liblegate_mpi_wrapper")
                          << " exists, skipping MPI version detection";
     return;

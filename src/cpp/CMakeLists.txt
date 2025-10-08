@@ -417,6 +417,7 @@ target_sources(legate_obj
                        legate/utilities/detail/proc_local_storage.cc
                        legate/utilities/detail/array_algorithms.cc
                        legate/utilities/detail/string_utils.cc
+                       legate/utilities/detail/shared_library.cc
                        legate/utilities/detail/dlpack/from_dlpack.cc
                        legate/utilities/detail/dlpack/to_dlpack.cc
                        legate/utilities/detail/dlpack/common.cc

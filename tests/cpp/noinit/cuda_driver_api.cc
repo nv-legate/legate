@@ -100,7 +100,7 @@ TEST_F(CUDADriverAPITest, TestLoad)
     LEGATE_SHARED_LIBRARY_PREFIX "legate_dummy_cuda_driver" LEGATE_SHARED_LIBRARY_SUFFIX;
   const legate::cuda::detail::CUDADriverAPI driver{fpath};
 
-  ASSERT_THAT(driver.handle_path(), ::testing::EndsWith(fpath));
+  ASSERT_THAT(driver.handle_path().as_string_view(), ::testing::EndsWith(fpath));
   ASSERT_TRUE(driver.is_loaded());
   ASSERT_NO_THROW(driver.init());
 }

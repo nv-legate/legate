@@ -9,6 +9,7 @@
 
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/shared_library.h>
 #include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zstring_view.h>
@@ -18,11 +19,9 @@
 #include <fmt/std.h>
 
 #include <cctype>
-#include <dlfcn.h>
 #include <filesystem>
 #include <iterator>
 #include <legate_mpi_wrapper/mpi_wrapper.h>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -94,12 +93,10 @@ class MPIInterface::Impl {
 
  private:
   [[nodiscard]] static std::filesystem::path get_wrapper_path_();
-  [[nodiscard]] static std::optional<std::unique_ptr<void, int (*)(void*)>> try_load_handle_(
-    const std::filesystem::path& path);
-  [[nodiscard]] static std::unique_ptr<void, int (*)(void*)> load_handle_();
+  [[nodiscard]] static SharedLibrary load_handle_();
   void load_wrapper_();
 
-  std::unique_ptr<void, int (*)(void*)> handle_;
+  SharedLibrary lib_;
 };
 
 // ==========================================================================================-
@@ -157,43 +154,26 @@ class LEGATE_EXPORT HandleLoadError : public std::invalid_argument {
   return resolved_path;
 }
 
-/*static*/ std::optional<std::unique_ptr<void, int (*)(void*)>>
-MPIInterface::Impl::try_load_handle_(const std::filesystem::path& path)
-{
-  static_cast<void>(::dlerror());
-  if (auto* const handle = ::dlopen(path.c_str(), RTLD_NOW)) {
-    return {{handle, &(::dlclose)}};
-  }
-  return std::nullopt;
-}
-
-/*static*/ std::unique_ptr<void, int (*)(void*)> MPIInterface::Impl::load_handle_()
+/*static*/ SharedLibrary MPIInterface::Impl::load_handle_()
 {
   const auto wrapper_lib = get_wrapper_path_();
 
-  if (auto handle = try_load_handle_(wrapper_lib); handle.has_value()) {
-    return *std::move(handle);
+  try {
+    return SharedLibrary{wrapper_lib, /* must_load */ true};
+  } catch (...) {
+    throw legate::detail::TracedException<HandleLoadError>{
+      fmt::format("failed to load MPI wrapper '{}'", wrapper_lib)};
   }
-
-  throw legate::detail::TracedException<HandleLoadError>{
-    fmt::format("failed to load MPI wrapper '{}': {}", wrapper_lib, ::dlerror())};
 }
 
 void MPIInterface::Impl::load_wrapper_()
 {
-#define LEGATE_LOAD_FN(dest, src)                                                             \
-  do {                                                                                        \
-    using dest_type = std::decay_t<decltype(this->dest)>;                                     \
-    static_assert(std::is_same_v<dest_type, std::decay_t<decltype(src)>>);                    \
-                                                                                              \
-    static_cast<void>(::dlerror());                                                           \
-                                                                                              \
-    if (const auto ret = ::dlsym(this->handle_.get(), LEGATE_STRINGIZE(src))) {               \
-      this->dest = reinterpret_cast<dest_type>(ret); /* NOLINT(bugprone-macro-parentheses) */ \
-    } else {                                                                                  \
-      throw legate::detail::TracedException<std::runtime_error>{                              \
-        fmt::format("dlsym(" LEGATE_STRINGIZE(src) ") failed: {}", ::dlerror())};             \
-    }                                                                                         \
+#define LEGATE_LOAD_FN(dest, src)                                                       \
+  do {                                                                                  \
+    static_assert(                                                                      \
+      std::is_same_v<std::decay_t<decltype(this->dest)>, std::decay_t<decltype(src)>>); \
+                                                                                        \
+    lib_.load_symbol_into(LEGATE_STRINGIZE(src), &(this->dest));                        \
   } while (0)
 
   LEGATE_LOAD_FN(MPI_COMM_WORLD, legate_mpi_comm_world);
@@ -237,7 +217,7 @@ void MPIInterface::Impl::load_wrapper_()
 
 // ==========================================================================================
 
-MPIInterface::Impl::Impl() : handle_{load_handle_()} { load_wrapper_(); }
+MPIInterface::Impl::Impl() : lib_{load_handle_()} { load_wrapper_(); }
 
 // ==========================================================================================
 

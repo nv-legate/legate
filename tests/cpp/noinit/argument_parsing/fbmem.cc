@@ -122,8 +122,10 @@ TEST_F(ConfigureFBMemUnit, AutoConfigCUDA)
    public:
     AutoDriverAPIMock()
     {
-      // can be anything, so long as it isn't NULL (to defeat the "are we initialized" checks)
-      api_->handle_                     = {this, [](void*) { return 0; }};
+      // Can be anything, so long as it loads (to defeat the "are we initialized" checks). We
+      // use nullptr to load the current shared library, which is -- by definition --
+      // guaranteed to exist.
+      api_->lib_                        = legate::detail::SharedLibrary{nullptr};
       api_->device_primary_ctx_retain_  = mock_device_primary_ctx_retain_;
       api_->ctx_push_current_           = mock_ctx_push_current_;
       api_->ctx_pop_current_            = mock_ctx_pop_current_;
@@ -176,8 +178,10 @@ TEST_F(ConfigureFBMemUnit, AutoConfigFail)
    public:
     AutoDriverAPIMock()
     {
-      // can be anything, so long as it isn't NULL (to defeat the "are we initialized" checks)
-      api_->handle_                    = {this, [](void*) { return 0; }};
+      // Can be anything, so long as it loads (to defeat the "are we initialized" checks). We
+      // use nullptr to load the current shared library, which is -- by definition --
+      // guaranteed to exist.
+      api_->lib_                       = legate::detail::SharedLibrary{nullptr};
       api_->device_primary_ctx_retain_ = [](CUcontext*, CUdevice) -> CUresult {
         throw std::exception{};
       };
