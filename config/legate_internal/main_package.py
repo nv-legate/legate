@@ -24,10 +24,12 @@ from aedifix.packages.cmake import CMake
 from aedifix.packages.cuda import CUDA
 from aedifix.packages.python import Python
 
+from .packages.gasnet import GASNet
 from .packages.hdf5 import HDF5
 from .packages.legion import Legion
 from .packages.mpi import MPI
 from .packages.nccl import NCCL
+from .packages.realm import Realm
 from .packages.ucx import UCX
 
 if TYPE_CHECKING:
@@ -37,7 +39,18 @@ if TYPE_CHECKING:
 class Legate(MainPackage):
     name = "Legate"
 
-    dependencies = (CMake, Legion, Python, HDF5, NCCL, UCX, CUDA, MPI)
+    dependencies = (
+        CMake,
+        Realm,
+        Legion,
+        Python,
+        HDF5,
+        GASNet,
+        NCCL,
+        UCX,
+        CUDA,
+        MPI,
+    )
 
     legate_BUILD_DOCS: Final = ConfigArgument(
         name="--with-docs",
@@ -169,10 +182,20 @@ class Legate(MainPackage):
         ),
         cmake_var=CMAKE_VARIABLE("legate_USE_HDF5_VFD_GDS", CMakeBool),
     )
+    legate_USE_GASNET: Final = CMAKE_VARIABLE("legate_USE_GASNET", CMakeBool)
     legate_USE_NCCL: Final = CMAKE_VARIABLE("legate_USE_NCCL", CMakeBool)
     legate_USE_UCX: Final = CMAKE_VARIABLE("legate_USE_UCX", CMakeBool)
     legate_USE_CUDA: Final = CMAKE_VARIABLE("legate_USE_CUDA", CMakeBool)
     legate_USE_MPI: Final = CMAKE_VARIABLE("legate_USE_MPI", CMakeBool)
+    legate_BUILD_MPI_WRAPPER: Final = ConfigArgument(
+        name="--with-mpi-wrapper",
+        spec=ArgSpec(
+            dest="with_mpi_wrapper",
+            type=bool,
+            help="Build Legate's MPI wrapper shared libraries.",
+        ),
+        cmake_var=CMAKE_VARIABLE("legate_BUILD_MPI_WRAPPER", CMakeBool),
+    )
 
     def __init__(
         self, manager: ConfigurationManager, argv: Sequence[str]
@@ -359,6 +382,9 @@ class Legate(MainPackage):
             self.legate_BUILD_BENCHMARKS, self.cl_args.with_benchmarks
         )
         self.set_flag_if_user_set(self.BUILD_MARCH, self.cl_args.build_march)
+        self.set_flag_if_user_set(
+            self.legate_BUILD_MPI_WRAPPER, self.cl_args.with_mpi_wrapper
+        )
         build_type = self.cl_args.build_type
         if "sanitizer" in build_type.value:
             self.manager.set_cmake_variable(
@@ -472,6 +498,14 @@ class Legate(MainPackage):
             self.legate_USE_HDF5_VFD_GDS, self.cl_args.with_hdf5_vfd_gds
         )
 
+    def configure_gasnet(self) -> None:
+        r"""Configure GASNet variables."""
+        state = self.deps.GASNet.state
+        if state.enabled():
+            self.manager.set_cmake_variable(self.legate_USE_GASNET, True)
+        elif state.explicitly_disabled():
+            self.manager.set_cmake_variable(self.legate_USE_GASNET, False)
+
     def configure_nccl(self) -> None:
         r"""Configure NCCL variables."""
         state = self.deps.NCCL.state
@@ -513,6 +547,7 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_clang_tidy)
         self.log_execute_func(self.configure_cprofile)
         self.log_execute_func(self.configure_hdf5)
+        self.log_execute_func(self.configure_gasnet)
         self.log_execute_func(self.configure_nccl)
         self.log_execute_func(self.configure_ucx)
         self.log_execute_func(self.configure_cuda)
@@ -554,10 +589,15 @@ class Legate(MainPackage):
                 "HDF5 VFD GDS",
                 m.get_cmake_variable(self.legate_USE_HDF5_VFD_GDS),
             ),
+            ("GASNet", m.get_cmake_variable(self.legate_USE_GASNET)),
             ("NCCL", m.get_cmake_variable(self.legate_USE_NCCL)),
             ("UCX", m.get_cmake_variable(self.legate_USE_UCX)),
             ("CUDA", m.get_cmake_variable(self.legate_USE_CUDA)),
             ("MPI", m.get_cmake_variable(self.legate_USE_MPI)),
+            (
+                "MPI wrapper",
+                m.get_cmake_variable(self.legate_BUILD_MPI_WRAPPER),
+            ),
         ]
 
     def summarize(self) -> str:

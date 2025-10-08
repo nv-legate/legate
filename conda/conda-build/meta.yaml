@@ -152,6 +152,7 @@ requirements:
     - rust
     - ninja
     - cmake {{ cmake_version }}
+    - pkg-config
     - {{ stdlib("c") }}
     - {{ compiler('c') }} ={{ compiler_version }}    # [linux]
     - {{ compiler('cxx') }} ={{ compiler_version }}  # [linux]

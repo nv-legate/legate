@@ -61,6 +61,7 @@
 #include <legate/utilities/detail/env_defaults.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/linearize.h>
+#include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/hash.h>
@@ -1823,8 +1824,9 @@ void handle_realm_default_args(bool need_network_init)
       const auto realm_ucp_bootstrap_mode = REALM_UCP_BOOTSTRAP_MODE.get();
 
       if (realm_ucp_bootstrap_mode == "p2p") {
-        const auto workers_peer_info = WORKER_PEERS_INFO.get();
-        ranks                        = string_split(workers_peer_info).size();
+        if (const auto workers_peer_info = WORKER_PEERS_INFO.get(); workers_peer_info.has_value()) {
+          ranks = string_split(*workers_peer_info).size();
+        }
       }
     }
     const auto obcount = 4 * ranks + 2 * num_gpus;

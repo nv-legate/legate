@@ -51,13 +51,13 @@ LEGATE_ARCH: str = "@LEGATE_ARCH@"
 libpath: str = get_libpath("@legate_LIB_NAME@", "@legate_FULL_LIB_NAME@")
 
 # wrap in str to placate pyright
-networks: list[str] = str("@Legion_NETWORKS@").split()
+networks: list[str] = str("@LEGATE_INSTALL_INFO_NETWORKS@").split()
 
 max_dim: int = int("@Legion_MAX_DIM@")
 
 max_fields: int = int("@Legion_MAX_FIELDS@")
 
-conduit: str = "@GASNet_CONDUIT@"
+conduit: str = "@LEGATE_INSTALL_INFO_CONDUIT@"
 
 build_type: str = "@CMAKE_BUILD_TYPE@"
 

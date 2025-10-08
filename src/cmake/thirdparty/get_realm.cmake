@@ -15,6 +15,7 @@ function(find_or_configure_realm)
   option(REALM_ENABLE_NVTX "Enabled NVTX" OFF)
   option(REALM_ENABLE_PAPI "Use PAPI for thread profiling" OFF)
   option(REALM_ENABLE_PREALM "Build Realm with support for PRealm" OFF)
+  option(REALM_ENABLE_GASNETEX_WRAPPER "Enable Realm GASNetEx ABI wrapper" OFF)
 
   if(legate_ENABLE_SANITIZERS)
     # You can enable more than one sanitizer at a time (for example, ASAN+UBSAN), but
@@ -39,10 +40,11 @@ function(find_or_configure_realm)
                           "REALM_ENABLE_UCX ${legate_USE_UCX}"
                           # "REALM_INSTALL_UCX_BOOTSTRAPS ${legate_USE_UCX}"
                           "UCX_BOOTSTRAP_ENABLE_MPI ${legate_USE_UCX}"
-                          "REALM_ENABLE_GASNETEX ${Legion_USE_GASNet}"
+                          "REALM_ENABLE_GASNETEX ${legate_USE_GASNET}"
                           "GASNet_ROOT ${GASNet_ROOT}"
                           "GASNET_CONDUIT ${GASNet_CONDUIT}"
-                          "REALM_ENABLE_GASNETEX_WRAPPER ${Legion_USE_GASNETEX_WRAPPER}"
+                          "REALM_ENABLE_GASNETEX_WRAPPER ${REALM_ENABLE_GASNETEX_WRAPPER}"
+                          "REALM_INSTALL_GASNETEX_WRAPPER OFF"
                           "REALM_MAX_DIM ${Legion_MAX_DIM}"
                           "REALM_ENABLE_CUDA ${legate_USE_CUDA}"
                           "REALM_CUDA_DYNAMIC_LOAD ${Legion_CUDA_DYNAMIC_LOAD}"

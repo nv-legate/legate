@@ -21,7 +21,7 @@ set(LEGATE_BUILD_PIP_WHEELS ON)
 # Set defaults for the wheels build.
 if(UNIX AND NOT APPLE)
   set(legate_USE_CUDA ON)
-  set(Legion_NETWORKS ucx)
+  set(legate_USE_UCX ON)
   set(legate_USE_NCCL ON)
 endif()
 
@@ -40,6 +40,7 @@ if(UNIX AND NOT APPLE)
   set(rpaths "$ORIGIN/../../nvidia/nccl/lib")
   set_property(TARGET legate PROPERTY INSTALL_RPATH ${rpaths} APPEND)
   set(rpaths "$ORIGIN/../../nvidia/libcal/cu12/lib")
+  set_property(TARGET legate PROPERTY INSTALL_RPATH ${rpaths} APPEND)
   set_property(TARGET ${REALM_TARGET} PROPERTY INSTALL_RPATH ${rpaths} APPEND)
 endif()
 

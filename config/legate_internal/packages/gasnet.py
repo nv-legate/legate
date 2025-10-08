@@ -39,7 +39,7 @@ class GASNet(Package):
             # TODO: To support UDP conduit, we would need to add a special case
             # on the legate launcher. See
             # https://github.com/nv-legate/legate.core/issues/294.
-            choices=("ibv", "ucx", "aries", "mpi", "ofi"),
+            choices=("ibv", "ucx", "aries", "mpi", "ofi", "smp"),
             help="Build with specified GASNet conduit.",
         ),
         cmake_var=CMAKE_VARIABLE("GASNet_CONDUIT", CMakeString),
@@ -54,6 +54,7 @@ class GASNet(Package):
         cmake_var=CMAKE_VARIABLE("GASNet_SYSTEM", CMakeString),
         enables_package=True,
     )
+    GASNet_ROOT: Final = CMAKE_VARIABLE("GASNet_ROOT", CMakePath)
 
     def configure(self) -> None:
         r"""Configure GASNet."""
@@ -64,12 +65,14 @@ class GASNet(Package):
         self.set_flag_if_user_set(
             self.GASNet_ROOT_DIR, self.cl_args.gasnet_dir
         )
+        self.set_flag_if_user_set(self.GASNet_ROOT, self.cl_args.gasnet_dir)
         self.set_flag_if_user_set(
             self.GASNet_CONDUIT, self.cl_args.gasnet_conduit
         )
         self.set_flag_if_user_set(
             self.GASNet_SYSTEM, self.cl_args.gasnet_system
         )
+        # Note: gasnet wrapper wiring is handled by the Realm package
 
     def summarize(self) -> str:
         r"""Summarize GASNet.
