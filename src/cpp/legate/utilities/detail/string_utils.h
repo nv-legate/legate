@@ -49,6 +49,16 @@ namespace legate::detail {
 [[nodiscard]] std::string string_strip(std::string s);
 
 /**
+ * @brief Remove a prefix from a string_view.
+ *
+ * @param s Input string.
+ * @param prefix The prefix to remove.
+ *
+ * @return `s` without `prefix` if it was found, otherwise `s` unchanged.
+ */
+[[nodiscard]] std::string_view string_remove_prefix(std::string_view s, std::string_view prefix);
+
+/**
  * @brief Split a string into substrings using a specified delimiter.
  *
  * `sep` must not be `'` or `"`.

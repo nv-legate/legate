@@ -24,31 +24,33 @@ TYPED_TEST(ScaledUnit, DefaultConstructNoScale)
 {
   constexpr auto VALUE = 123;
   constexpr auto SCALE = 1;
-  auto scal            = legate::detail::Scaled<TypeParam>{VALUE, SCALE};
+  auto scal            = legate::detail::Scaled<TypeParam>{VALUE, SCALE, "SomeUnit"};
 
   ASSERT_EQ(scal.unscaled_value(), VALUE);
   ASSERT_EQ(scal.unscaled_value_mut(), VALUE);
   ASSERT_EQ(scal.scaled_value(), VALUE * SCALE);
   ASSERT_EQ(scal.scale(), SCALE);
+  ASSERT_EQ(scal.unit(), "SomeUnit");
 }
 
 TYPED_TEST(ScaledUnit, DefaultConstructScale)
 {
   constexpr auto VALUE = 123;
   constexpr auto SCALE = 10;
-  auto scal            = legate::detail::Scaled<TypeParam>{VALUE, SCALE};
+  auto scal            = legate::detail::Scaled<TypeParam>{VALUE, SCALE, "SomeUnit"};
 
   ASSERT_EQ(scal.unscaled_value(), VALUE);
   ASSERT_EQ(scal.unscaled_value_mut(), VALUE);
   ASSERT_EQ(scal.scaled_value(), VALUE * SCALE);
   ASSERT_EQ(scal.scale(), SCALE);
+  ASSERT_EQ(scal.unit(), "SomeUnit");
 }
 
 TYPED_TEST(ScaledUnit, Mutate)
 {
   constexpr auto DEFAULT_VALUE = 123;
   constexpr auto SCALE         = 10;
-  auto scal                    = legate::detail::Scaled<TypeParam>{DEFAULT_VALUE, SCALE};
+  auto scal = legate::detail::Scaled<TypeParam>{DEFAULT_VALUE, SCALE, "SomeUnit"};
 
   constexpr auto NEW_VALUE = 345;
 
@@ -58,13 +60,14 @@ TYPED_TEST(ScaledUnit, Mutate)
   ASSERT_EQ(scal.unscaled_value_mut(), NEW_VALUE);
   ASSERT_EQ(scal.scaled_value(), NEW_VALUE * SCALE);
   ASSERT_EQ(scal.scale(), SCALE);
+  ASSERT_EQ(scal.unit(), "SomeUnit");
 }
 
 TYPED_TEST(ScaledUnit, ToString)
 {
   constexpr auto VALUE = 123;
   constexpr auto SCALE = 10;
-  const auto scal      = legate::detail::Scaled<TypeParam>{VALUE, SCALE};
+  const auto scal      = legate::detail::Scaled<TypeParam>{VALUE, SCALE, "SomeUnit"};
 
   std::stringstream ss;
   std::stringstream ss_expected;

@@ -26,46 +26,11 @@
 
 #include <realm/runtime.h>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
-
-namespace {
-
-template <typename T>
-class ArgView {
- public:
-  const legate::detail::Argument<T>& arg;
-};
-
-template <typename T>
-ArgView(const legate::detail::Argument<T>&) -> ArgView<T>;
-
-}  // namespace
-
-namespace fmt {
-
-template <typename T>
-struct formatter<ArgView<T>> : public formatter<std::string_view> {
-  format_context::iterator format(const ArgView<T>& view, format_context& ctx) const
-  {
-    return format_to(ctx.out(), "{}={}", view.arg.flag(), view.arg.value());
-  }
-};
-
-template <typename T>
-struct formatter<ArgView<legate::detail::Scaled<T>>> : public formatter<std::string_view> {
-  format_context::iterator format(const ArgView<legate::detail::Scaled<T>>& view,
-                                  format_context& ctx) const
-  {
-    return format_to(
-      ctx.out(), "{}={}", view.arg.flag(), fmt::group_digits(view.arg.value().scaled_value()));
-  }
-};
-
-}  // namespace fmt
 
 namespace legate::detail {
 
@@ -192,28 +157,7 @@ Config handle_legate_args()
   autoconfigure(&parsed, &cfg);
   if (cfg.show_config()) {
     // Can't use a logger, since Realm hasn't been initialized yet.
-    fmt::println(
-      "Legate hardware configuration: "
-      "{} "
-      "{} "
-      "{} "
-      "{} "
-      "{} "
-      "{} "
-      "{} "
-      "{} "
-      "{} "
-      "{}",
-      ArgView{parsed.cpus},
-      ArgView{parsed.gpus},
-      ArgView{parsed.omps},
-      ArgView{parsed.ompthreads},
-      ArgView{parsed.util},
-      ArgView{parsed.sysmem},
-      ArgView{parsed.numamem},
-      ArgView{parsed.fbmem},
-      ArgView{parsed.zcmem},
-      ArgView{parsed.regmem});
+    fmt::println(parsed.config_summary());
   }
 
   // These config flags are set by the autoconfigure call above, but allow the user to be able

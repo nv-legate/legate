@@ -7,18 +7,20 @@
 #pragma once
 
 #include <legate/runtime/detail/argument_parsing/argument.h>
+#include <legate/utilities/detail/string_utils.h>
 
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
 namespace legate::detail {
 
 template <typename T>
-Scaled<T>::Scaled(T value, type_identity_t<T> scale)
-  : value_{std::move(value)}, scale_{std::move(scale)}
+Scaled<T>::Scaled(T value, type_identity_t<T> scale, std::string_view unit)
+  : value_{std::move(value)}, scale_{std::move(scale)}, unit_{unit}
 {
 }
 
@@ -44,6 +46,12 @@ template <typename T>
 T Scaled<T>::scale() const
 {
   return scale_;
+}
+
+template <typename T>
+std::string_view Scaled<T>::unit() const
+{
+  return unit_;
 }
 
 // ------------------------------------------------------------------------------------------
@@ -73,6 +81,12 @@ template <typename T>
 std::string_view Argument<T>::flag() const
 {
   return flag_;
+}
+
+template <typename T>
+std::string_view Argument<T>::name() const
+{
+  return string_remove_prefix(flag(), "--");
 }
 
 template <typename T>

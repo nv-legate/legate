@@ -34,7 +34,7 @@ TEST_P(ConfigureNUMAMemUnit, Preset)
 {
   constexpr auto NUMA_SIZE = 128;
   const auto omps          = OpenMPsType{nullptr, "--omps", 1};
-  auto numamem             = NUMAMemType{nullptr, "--numamems", ScaledType{NUMA_SIZE, MB}};
+  auto numamem             = NUMAMemType{nullptr, "--numamems", ScaledType{NUMA_SIZE, MB, "MiB"}};
 
   legate::detail::configure_numamem(
     /* auto_config */ GetParam(), /* numa_mems */ {}, omps, &numamem);
@@ -44,7 +44,7 @@ TEST_P(ConfigureNUMAMemUnit, Preset)
 TEST_P(ConfigureNUMAMemUnit, NoOpenMP)
 {
   const auto omps = OpenMPsType{nullptr, "--omps", 0};
-  auto numamem    = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB}};
+  auto numamem    = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB, "MiB"}};
 
   legate::detail::configure_numamem(
     /* auto_config */ GetParam(), /* numa_mems */ {}, omps, &numamem);
@@ -54,7 +54,7 @@ TEST_P(ConfigureNUMAMemUnit, NoOpenMP)
 TEST_P(ConfigureNUMAMemUnit, NoNUMAMem)
 {
   const auto omps = OpenMPsType{nullptr, "--omps", 10};
-  auto numamem    = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB}};
+  auto numamem    = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB, "MiB"}};
 
   legate::detail::configure_numamem(
     /* auto_config */ GetParam(), /* numa_mems */ {}, omps, &numamem);
@@ -65,7 +65,7 @@ TEST_P(ConfigureNUMAMemUnit, NUMAMemNotDivisible)
 {
   const auto omps      = OpenMPsType{nullptr, "--omps", 10};
   const auto numa_mems = std::vector<std::size_t>(static_cast<std::size_t>(omps.value() + 1), 0);
-  auto numamem         = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB}};
+  auto numamem         = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB, "MiB"}};
 
   // NUMA mems aren't neatly divisible by the number of openmp threads
   ASSERT_NE(omps.value() % numa_mems.size(), 0);
@@ -79,7 +79,7 @@ TEST_F(ConfigureNUMAMemUnit, NoAutoConfig)
   constexpr auto MINIMAL_MEM = 256;
   const auto omps            = OpenMPsType{nullptr, "--omps", 10};
   const auto numa_mems       = std::vector<std::size_t>(static_cast<std::size_t>(omps.value()), 0);
-  auto numamem               = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB}};
+  auto numamem               = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB, "MiB"}};
 
   legate::detail::configure_numamem(
     /* auto_config */ false, numa_mems, omps, &numamem);
@@ -98,7 +98,7 @@ TEST_F(ConfigureNUMAMemUnit, AutoConfig)
   const auto auto_numamem =
     static_cast<std::int64_t>(std::floor(SYSMEM_FRACTION * static_cast<double>(numa_mem_size) / MB /
                                          static_cast<double>(omps_per_numa)));
-  auto numamem = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB}};
+  auto numamem = NUMAMemType{nullptr, "--numamems", ScaledType{-1, MB, "MiB"}};
 
   legate::detail::configure_numamem(
     /* auto_config */ true, numa_mems, omps, &numamem);

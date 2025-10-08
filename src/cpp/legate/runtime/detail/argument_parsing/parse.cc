@@ -19,6 +19,7 @@
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <fmt/std.h>
 
 #include <argparse/argparse.hpp>
 
@@ -34,7 +35,96 @@
 #include <string_view>
 #include <type_traits>
 
+namespace {
+
+template <typename T>
+class ArgView {
+ public:
+  const legate::detail::Argument<T>& arg;
+};
+
+template <typename T>
+ArgView(const legate::detail::Argument<T>&) -> ArgView<T>;
+
+}  // namespace
+
+namespace fmt {
+
+template <typename T>
+struct formatter<ArgView<T>> : public formatter<std::string_view> {
+  format_context::iterator format(const ArgView<T>& view, format_context& ctx) const
+  {
+    return format_to(ctx.out(), "{} = {}", view.arg.name(), view.arg.value());
+  }
+};
+
+template <typename T>
+struct formatter<ArgView<legate::detail::Scaled<T>>> : public formatter<std::string_view> {
+  format_context::iterator format(const ArgView<legate::detail::Scaled<T>>& view,
+                                  format_context& ctx) const
+  {
+    return format_to(ctx.out(),
+                     "{} = {} ({} {})",
+                     view.arg.name(),
+                     fmt::group_digits(view.arg.value().scaled_value()),
+                     fmt::group_digits(view.arg.value().unscaled_value()),
+                     view.arg.value().unit());
+  }
+};
+
+}  // namespace fmt
+
 namespace legate::detail {
+
+std::string ParsedArgs::config_summary() const
+{
+  auto ret             = std::string{};
+  const auto print_var = [&](const auto& var) {
+    fmt::format_to(std::back_inserter(ret), "- {}\n", ArgView{var});
+  };
+
+  fmt::format_to(std::back_inserter(ret),
+                 "==============================================\n"
+                 "Legate configuration summary:\n");
+  print_var(auto_config);
+  print_var(show_progress);
+  print_var(empty_task);
+  print_var(warmup_nccl);
+  print_var(inline_task_launch);
+  // No point printing this one, obviously we are showing usage
+  // print_var(show_usage);
+  print_var(max_exception_size);
+  print_var(min_cpu_chunk);
+  print_var(min_gpu_chunk);
+  print_var(min_omp_chunk);
+  print_var(window_size);
+  print_var(field_reuse_frac);
+  print_var(field_reuse_freq);
+  print_var(consensus);
+  print_var(disable_mpi);
+  print_var(io_use_vfd_gds);
+  print_var(cpus);
+  print_var(gpus);
+  print_var(ompthreads);
+  print_var(util);
+  print_var(sysmem);
+  print_var(numamem);
+  print_var(fbmem);
+  print_var(zcmem);
+  print_var(regmem);
+  print_var(profile);
+  print_var(profile_name);
+  print_var(provenance);
+  print_var(log_levels);
+  print_var(log_dir);
+  print_var(log_to_file);
+  print_var(freeze_on_error);
+  print_var(cuda_driver_path);
+  ret += "==============================================";
+  return ret;
+}
+
+// ==========================================================================================
 
 namespace {
 
@@ -424,23 +514,24 @@ ParsedArgs parse_args(std::vector<std::string> args)
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Memory allocation");
 
-  auto sysmem = parser.add_scaled_argument(
-    "--sysmem", "Size (in MiB) of DRAM memory to reserve per rank", Scaled{DEFAULT_SYSMEM, MB});
+  auto sysmem  = parser.add_scaled_argument("--sysmem",
+                                           "Size (in MiB) of DRAM memory to reserve per rank",
+                                           Scaled{DEFAULT_SYSMEM, MB, "MiB"});
   auto numamem = parser.add_scaled_argument(
     "--numamem",
     "Size (in MiB) of NUMA-specific DRAM memory to reserve per NUMA domain",
-    Scaled{DEFAULT_NUMAMEM, MB});
+    Scaled{DEFAULT_NUMAMEM, MB, "MiB"});
   auto fbmem = parser.add_scaled_argument(
     "--fbmem",
     "Size (in MiB) of GPU (or \"framebuffer\") memory to reserve per GPU",
-    Scaled{DEFAULT_FBMEM, MB});
+    Scaled{DEFAULT_FBMEM, MB, "MiB"});
   auto zcmem = parser.add_scaled_argument(
     "--zcmem",
     "Size (in MiB) of GPU-registered (or \"zero-copy\") DRAM memory to reserve per GPU",
-    Scaled{DEFAULT_ZCMEM, MB});
+    Scaled{DEFAULT_ZCMEM, MB, "MiB"});
   auto regmem             = parser.add_scaled_argument("--regmem",
                                            "Size (in MiB) of NIC-registered DRAM memory to reserve",
-                                           Scaled{DEFAULT_REGMEM, MB});
+                                           Scaled{DEFAULT_REGMEM, MB, "MiB"});
   auto max_exception_size = parser.add_argument(
     "--max-exception-size",
     "Maximum size (in bytes) to allocate for exception messages.\n"

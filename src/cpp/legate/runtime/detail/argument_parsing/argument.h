@@ -37,7 +37,7 @@ class Scaled {
    * @param value The unscaled value (e.g. 10).
    * @param scale The scale to apply (e.g. 1,000,000).
    */
-  Scaled(T value, type_identity_t<T> scale);
+  Scaled(T value, type_identity_t<T> scale, std::string_view unit);
 
   /**
    * @return The unscaled value.
@@ -59,9 +59,12 @@ class Scaled {
    */
   [[nodiscard]] T scale() const;
 
+  [[nodiscard]] std::string_view unit() const;
+
  private:
   T value_{};
   T scale_{};
+  std::string_view unit_{};
 };
 
 template <typename T>
@@ -104,6 +107,11 @@ class Argument {
    * @return The command-line flag for this argument.
    */
   [[nodiscard]] std::string_view flag() const;
+
+  /**
+   * @return The name of this argument, usually flag without leading "--".
+   */
+  [[nodiscard]] std::string_view name() const;
 
   /**
    * @return A reference to the value of the argument.

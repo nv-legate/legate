@@ -47,6 +47,14 @@ std::string string_rstrip(std::string s)
 
 std::string string_strip(std::string s) { return string_lstrip(string_rstrip(std::move(s))); }
 
+std::string_view string_remove_prefix(std::string_view s, std::string_view prefix)
+{
+  if (const auto pos = s.find(prefix); pos == 0) {
+    s.remove_prefix(prefix.size());
+  }
+  return s;
+}
+
 template <typename StringType>
 std::vector<StringType> string_split(std::string_view sv, const char sep)
 {
