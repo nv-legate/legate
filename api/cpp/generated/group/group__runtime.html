@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (25.10.00.dev71+gaf86b262b)</title>
+    <title>runtime &#8212; NVIDIA legate (25.10.00.dev76+g92fcb8d08)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=68c253d1"></script>
+    <script src="../../../../_static/documentation_options.js?v=04c53042"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev71+gaf86b262b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev71+gaf86b262b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev71+gaf86b262b)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev76+g92fcb8d08)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev71+gaf86b262b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev71+gaf86b262b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev71+gaf86b262b)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev76+g92fcb8d08)</p>
   
 </a>
 
@@ -4431,6 +4431,30 @@ The enumerator is classed as a bidirectional iterator, so can be both incremente
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail20string_remove_prefixENSt11string_viewENSt11string_viewE">
+<span id="_CPPv3N6legate6detail20string_remove_prefixENSt11string_viewENSt11string_viewE"></span><span id="_CPPv2N6legate6detail20string_remove_prefixENSt11string_viewENSt11string_viewE"></span><span id="legate::detail::string_remove_prefix__std::string_view.std::string_view"></span><span class="target" id="string__utils_8cc_1af83c3f1f0b468e3e0d92da063879bc3f"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">string_remove_prefix</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">s</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">prefix</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><br /></dt>
+<dd><p>Remove a prefix from a string_view. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> – Input string. </p></li>
+<li><p><strong>prefix</strong> – The prefix to remove.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">s</span></code> without <code class="docutils literal notranslate"><span class="pre">prefix</span></code> if it was found, otherwise <code class="docutils literal notranslate"><span class="pre">s</span></code> unchanged. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4I0EN6legate6detail12string_splitENSt6vectorI10StringTypeEENSt11string_viewEc">
 <span id="_CPPv3I0EN6legate6detail12string_splitENSt11string_viewEc"></span><span id="_CPPv2I0EN6legate6detail12string_splitENSt11string_viewEc"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">StringType</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="string__utils_8cc_1aec4739fba2770f25a89e163f45ad2c69"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="group__partitioning.html#_CPPv4I0EN6legate6detail12string_splitENSt6vectorI10StringTypeEENSt11string_viewEc" title="legate::detail::string_split::StringType"><span class="n"><span class="pre">StringType</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">string_split</span></span></span><span class="sig-paren">(</span>
 
@@ -5137,6 +5161,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13string_lstripENSt6stringE"><code class="docutils literal notranslate"><span class="pre">string_lstrip()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13string_rstripENSt6stringE"><code class="docutils literal notranslate"><span class="pre">string_rstrip()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail12string_stripENSt6stringE"><code class="docutils literal notranslate"><span class="pre">string_strip()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail20string_remove_prefixENSt11string_viewENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">string_remove_prefix()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail12string_splitENSt6vectorI10StringTypeEENSt11string_viewEc"><code class="docutils literal notranslate"><span class="pre">string_split()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail12safe_strtollE1TPKcPPc"><code class="docutils literal notranslate"><span class="pre">safe_strtoll()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail25install_terminate_handlerEv"><code class="docutils literal notranslate"><span class="pre">install_terminate_handler()</span></code></a></li>
