@@ -85,11 +85,11 @@ repos:
         types_or: []
         exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
   - repo: https://github.com/fsfe/reuse-tool
-    rev: v5.1.1
+    rev: v6.1.2
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.2
+    rev: v0.14.0
     hooks:
       - id: ruff-format
       - id: ruff
@@ -113,7 +113,7 @@ repos:
           "git+https://github.com/nv-legate/aedifix@1.10.0"
         ]
   - repo: https://github.com/MarcoGorelli/cython-lint
-    rev: v0.16.7
+    rev: v0.17.0
     hooks:
       - id: cython-lint
       - id: double-quote-cython-strings
