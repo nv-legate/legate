@@ -12,6 +12,20 @@
 
 #include <utilities/utilities.h>
 
+namespace {
+
+class ThrowListener : public ::testing::EmptyTestEventListener {
+ public:
+  void OnTestPartResult(const ::testing::TestPartResult& result) override
+  {
+    if (result.type() == ::testing::TestPartResult::kFatalFailure) {
+      throw testing::AssertionException{result};
+    }
+  }
+};
+
+}  // namespace
+
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
@@ -30,6 +44,8 @@ int main(int argc, char** argv)
     [&] { FAIL() << "Legate STL failed to start: " << exn.what(); }();
     return 1;
   }
+
+  ::testing::UnitTest::GetInstance()->listeners().Append(new ThrowListener);
 
   auto result = RUN_ALL_TESTS();
 
