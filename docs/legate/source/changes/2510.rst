@@ -102,6 +102,13 @@ Python
 
 .. rubric:: Tasks
 
+- Change registration of tasks to now be performed lazily. It is no longer necessary to
+  call ``task.complete_registration()``.
+- Accessing the task ID of a task (i.e. invoking ``task.task_id``) now registers the task
+  if it wasn't already.
+- Remove the ``register`` optional argument from ``legate.core.task.task``
+  decorator.
+
 .. rubric:: Types
 
 .. rubric:: Runtime

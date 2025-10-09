@@ -32,9 +32,9 @@ cdef class PyTask:
 
     cpdef _LocalTaskID complete_registration(self)
     cdef void _update_variant(self, func: UserFunction, VariantCode variant)
-    cpdef void cpu_variant(self, func: UserFunction)
-    cpdef void gpu_variant(self, func: UserFunction)
-    cpdef void omp_variant(self, func: UserFunction)
+    cpdef object cpu_variant(self, func: UserFunction)
+    cpdef object gpu_variant(self, func: UserFunction)
+    cpdef object omp_variant(self, func: UserFunction)
     cdef VariantMapping _init_variants(
         self,
         func: UserFunction,

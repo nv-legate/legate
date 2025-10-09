@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from libcpp cimport bool
-
 from collections.abc import Callable, Sequence
 
 from ..._lib.partitioning.constraint cimport DeferredConstraint
@@ -50,7 +48,6 @@ def task(
         DeferredConstraint | Sequence[DeferredConstraint]
     ] | None = None,
     options: TaskConfig | VariantOptions | None = None,
-    register: bool = True,
 ) -> Callable[[UserFunction], PyTask] | PyTask:
     r"""Convert a Python function to a Legate task.
 
@@ -59,11 +56,6 @@ def task(
     task themselves, while additionally setting variant options via the
     ``TaskConfig.variant_options`` property. If the latter, then a new, unique
     task ID will be automatically generated.
-
-    Deferring registration is used to add additional variants to the task that
-    have a different body. However, all variants must have identical
-    signatures. The user must manually call ``PyTask.complete_registration`` to
-    finish registering the task.
 
     Parameters
     ----------
@@ -78,12 +70,6 @@ def task(
     options : TaskConfig | VariantOptions, optional
         Either a ``TaskConfig`` or ``VariantOptions`` describing the task
         configuration.
-    register : bool, True
-        Whether to immediately complete registration of the task. Deferring
-        registration is used to add additional variants to the task that have
-        a different body. However, all variants must have identical signatures.
-        The user must manually call ``PyTask.complete_registration`` to finish
-        registering the task.
 
     Returns
     -------
@@ -118,9 +104,31 @@ def task(
             raise RuntimeError("Exceptional!")
 
 
+    By default, the ``@task`` decorator registers the wrapped callable for
+    all variants. It is possible, however, to select additional functions
+    to act as specific variants. Variants must have identical calling
+    signatures to the original function and inherit the same constraints and
+    options.
+
+    The original function is used for any unspecified variants.
+    ::
+
+        from legate.core.task import task
+
+        # Acts as the CPU and OMP variant as these were not specified
+        # separately
+        @task
+        def my_task() -> None:
+            ...
+
+        @my_task.gpu_variant
+        def gpu_task_variant() -> None:
+            ...
+
+
     See Also
     --------
-    legate.core.task.task.PyTask.__init__
+    legate.core.task.PyTask.__init__
     """  # noqa: E501
 
     def decorator(f: UserFunction) -> PyTask:
@@ -140,7 +148,6 @@ def task(
             variants=variants,
             constraints=flat,
             options=options,
-            register=register,
         )
 
     return decorator(func) if func else decorator

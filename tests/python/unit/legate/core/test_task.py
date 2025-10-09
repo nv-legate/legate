@@ -107,12 +107,6 @@ class BaseTest:
     def check_valid_unregistered_task(self, task: PyTask) -> None:
         self.check_valid_task(task)
         assert not task.registered
-        m = re.escape(
-            "Task must complete registration "
-            "(via task.complete_registration()) before receiving a task id"
-        )
-        with pytest.raises(RuntimeError, match=m):
-            _ = task.task_id  # must complete registration first
 
     def check_valid_invoker(
         self, invoker: VariantInvoker, func: TestFunction[_P, None]
@@ -132,6 +126,7 @@ class TestTask(BaseTest):
 
         variants = (VariantCode.CPU,)
         task = PyTask(func=foo, variants=variants)
+        task.complete_registration()
         self.check_valid_registered_task(task)
 
     def test_construct_with_args(self) -> None:
@@ -152,22 +147,17 @@ class TestTask(BaseTest):
                 may_throw_exception=True, has_side_effect=True
             ),
             library=lib,
-            register=False,
         )
 
         self.check_valid_unregistered_task(task)
         assert task.library == lib
 
     @pytest.mark.parametrize("func", USER_FUNCS)
-    @pytest.mark.parametrize("register", [True, False])
-    def test_create_auto(
-        self, func: TestFunction[_P, None], register: bool
-    ) -> None:
-        task = lct.task(register=register)(func)
+    def test_create_auto(self, func: TestFunction[_P, None]) -> None:
+        task = lct.task(func)
 
-        if not register:
-            self.check_valid_unregistered_task(task)
-            task.complete_registration()
+        self.check_valid_unregistered_task(task)
+        task.complete_registration()
         self.check_valid_registered_task(task)
 
     # This test is parameterized on checking whether the function was called
@@ -178,38 +168,26 @@ class TestTask(BaseTest):
     @pytest.mark.parametrize(
         ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
-    @pytest.mark.parametrize("register", [True, False])
     def test_executable_auto(
-        self, func: TestFunction[_P, None], func_args: ArgDescr, register: bool
+        self, func: TestFunction[_P, None], func_args: ArgDescr
     ) -> None:
-        task = lct.task(register=register)(func)
+        task = lct.task(func)
 
-        if not register:
-            self.check_valid_unregistered_task(task)
-            with pytest.raises(RuntimeError):
-                task(*func_args.args())
-
-            task.complete_registration()
-
+        self.check_valid_unregistered_task(task)
+        task.complete_registration()
         self.check_valid_registered_task(task)
         task(*func_args.args())
 
     @pytest.mark.parametrize(
         ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
-    @pytest.mark.parametrize("register", [True, False])
     def test_executable_prepare_call(
-        self, func: TestFunction[_P, None], func_args: ArgDescr, register: bool
+        self, func: TestFunction[_P, None], func_args: ArgDescr
     ) -> None:
-        task = lct.task(register=register)(func)
+        task = lct.task(func)
 
-        if not register:
-            self.check_valid_unregistered_task(task)
-            with pytest.raises(RuntimeError):
-                task(*func_args.args())
-
-            task.complete_registration()
-
+        self.check_valid_unregistered_task(task)
+        task.complete_registration()
         self.check_valid_registered_task(task)
         task_inst = task.prepare_call(*func_args.args())
 
@@ -281,6 +259,7 @@ class TestTask(BaseTest):
         self, func: TestFunction[_P, None], func_args: ArgDescr
     ) -> None:
         task = lct.task()(func)
+        task.complete_registration()
         self.check_valid_registered_task(task)
         # arguments correct, but we have an extra kwarg
 
@@ -321,21 +300,7 @@ class TestTask(BaseTest):
         def foo() -> None:
             pass
 
-        self.check_valid_registered_task(foo)
         foo()
-
-    @pytest.mark.parametrize("register", [True, False])
-    def test_decorator_kwargs(self, register: bool) -> None:
-        @lct.task(register=register)
-        def bar() -> None:
-            pass
-
-        if not register:
-            self.check_valid_unregistered_task(bar)
-            bar.complete_registration()
-
-        self.check_valid_registered_task(bar)
-        bar()
 
     @pytest.mark.parametrize(
         "ExnType",
@@ -985,6 +950,7 @@ class TestVariantInvoker(BaseTest):
     def test_prepare_call_constraints(self) -> None:
         runtime = get_legate_runtime()
         task = lct.task()(single_input)
+        task.complete_registration()
         auto_task = runtime.create_auto_task(
             runtime.core_library, task.task_id
         )

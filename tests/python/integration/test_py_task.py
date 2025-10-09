@@ -497,8 +497,9 @@ class TestPyTask:
             pass
 
         msg = "Task has no registered variants"
+        task = PyTask(func=foo, variants=[])
         with pytest.raises(ValueError, match=msg):
-            PyTask(func=foo, variants=[])
+            _ = task.complete_registration()
 
     @pytest.mark.skipif(
         get_legate_runtime().machine.preferred_target == TaskTarget.OMP,

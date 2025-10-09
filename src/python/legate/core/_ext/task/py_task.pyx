@@ -45,7 +45,6 @@ cdef class PyTask:
         options: TaskConfig | VariantOptions | None = None,
         invoker: object = None,
         library: object = None,
-        register: bool = True,
     ) -> None:
         r"""Construct a ``PyTask``.
 
@@ -65,10 +64,6 @@ cdef class PyTask:
         library
             The library context under which to register the new task. Defaults
             to the core context.
-        register
-            Whether to immediately register the task with ``library``. If
-            ``False``, the user must manually register the task (via
-            ``PyTask.complete_registration()``) before use.
         """
         if library is None:
             library = get_legate_runtime().core_library
@@ -90,8 +85,6 @@ cdef class PyTask:
         self._variants = self._init_variants(func, variants)
         self._config = config
         self._library = library
-        if register:
-            self.complete_registration()
 
     @property
     def registered(self) -> bool:
@@ -106,17 +99,12 @@ cdef class PyTask:
     def task_id(self) -> _LocalTaskID:
         r"""Return the context-local task ID for this task.
 
+        Calling this routine registers the task if it hasn't been already.
+
         :return: The local task ID of the task.
         :rtype: LocalTaskID
-
-        :raises RuntimeError: If the task has not completed registration.
         """
-        if not self.registered:
-            raise RuntimeError(
-                "Task must complete registration "
-                "(via task.complete_registration()) before receiving a task id"
-            )
-        return self._config.task_id
+        return self.complete_registration()
 
     @property
     def library(self) -> Library:
@@ -162,6 +150,10 @@ cdef class PyTask:
 
         The user is not allowed to add any additional inputs, outputs, scalars
         or reductions to `task` after this routine returns.
+
+        Calling this routine for the first time will complete the registration
+        process of the task. This means it is not possible to add additional
+        variants after this point.
 
         See Also
         --------
@@ -221,8 +213,12 @@ cdef class PyTask:
         It is safe to call this method on an already registered task (it does
         nothing).
         """
-        if self.registered:
-            return self.task_id
+        # complete_registration() is called every time the task is launched,
+        # which would be on the hot-path. So access the cdef-ed members directly
+        # (which Cython emits as direct struct member accesses) instead of
+        # going through the properties.
+        if self._registered:
+            return self._config.task_id
 
         cdef dict proc_kind_to_variant = {
             VariantCode.CPU: self._cpu_variant,
@@ -261,13 +257,18 @@ cdef class PyTask:
         self._invoker.validate_signature(func)
         self._variants[variant] = func
 
-    cpdef void cpu_variant(self, func: UserFunction):
+    cpdef object cpu_variant(self, func: UserFunction):
         r"""Register a CPU variant for this task
 
         Parameters
         ----------
         func : UserFunction
             The new CPU variant function to call for all CPU executions.
+
+        Returns
+        -------
+        UserFunction
+            ``func`` unmodified.
 
         Raises
         ------
@@ -281,14 +282,20 @@ cdef class PyTask:
         update variants as well as add new ones.
         """
         self._update_variant(func, VariantCode.CPU)
+        return func
 
-    cpdef void gpu_variant(self, func: UserFunction):
+    cpdef object gpu_variant(self, func: UserFunction):
         r"""Register a GPU variant for this task
 
         Parameters
         ----------
         func : UserFunction
             The new GPU variant function to call for all GPU executions.
+
+        Returns
+        -------
+        UserFunction
+            ``func`` unmodified.
 
         Raises
         ------
@@ -302,14 +309,20 @@ cdef class PyTask:
         update variants as well as add new ones.
         """
         self._update_variant(func, VariantCode.GPU)
+        return func
 
-    cpdef void omp_variant(self, func: UserFunction):
+    cpdef object omp_variant(self, func: UserFunction):
         r"""Register an OpenMP variant for this task
 
         Parameters
         ----------
         func : UserFunction
             The new OpenMP variant function to call for all OpenMP executions.
+
+        Returns
+        -------
+        UserFunction
+            ``func`` unmodified.
 
         Raises
         ------
@@ -323,6 +336,7 @@ cdef class PyTask:
         update variants as well as add new ones.
         """
         self._update_variant(func, VariantCode.OMP)
+        return func
 
     cdef VariantMapping _init_variants(
         self,

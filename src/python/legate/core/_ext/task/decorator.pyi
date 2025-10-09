@@ -21,5 +21,4 @@ def task(
     constraints: Sequence[DeferredConstraint | Sequence[DeferredConstraint]]
     | None = None,
     options: TaskConfig | VariantOptions | None = None,
-    register: bool = True,
 ) -> Callable[[UserFunction], PyTask]: ...
