@@ -58,6 +58,10 @@ C++
 
 .. rubric:: Utilities
 
+- Switch ``legate::Span`` to being an alias to ``cuda::std::span`` instead of the
+  homegrown implementation. As ``legate::Span`` mirrored the interface of ``std::span``
+  (which ``cuda::std::span`` does as well), this change should be invisible to users.
+
 .. rubric:: I/O
 
 - Change HDF5 Virtual File Driver (VFD) GPUDirectStorage (GDS) to enabled by default if
@@ -97,6 +101,13 @@ Python
   the partition used by the runtime for optimizing task launches and data movement.
 
 .. rubric:: Tasks
+
+- Change registration of tasks to now be performed lazily. It is no longer necessary to
+  call ``task.complete_registration()``.
+- Accessing the task ID of a task (i.e. invoking ``task.task_id``) now registers the task
+  if it wasn't already.
+- Remove the ``register`` optional argument from ``legate.core.task.task``
+  decorator.
 
 .. rubric:: Types
 

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>data &#8212; NVIDIA legate (25.10.00.dev76+g92fcb8d08)</title>
+    <title>data &#8212; NVIDIA legate (25.10.00.dev81+g3b4f06865)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=04c53042"></script>
+    <script src="../../../../_static/documentation_options.js?v=223a66f0"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,11 +134,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev76+g92fcb8d08)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev81+g3b4f06865)</p>
   
 </a></div>
     
@@ -245,11 +245,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev76+g92fcb8d08) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev76+g92fcb8d08)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev81+g3b4f06865)</p>
   
 </a>
 
@@ -484,7 +484,6 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Shape.html">legate::Shape</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1SharedPtr.html">legate::SharedPtr</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Slice.html">legate::Slice</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Span.html">legate::Span</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1StringLogicalArray.html">legate::StringLogicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1StringPhysicalArray.html">legate::StringPhysicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1StructLogicalArray.html">legate::StructLogicalArray</a></li>
@@ -694,6 +693,11 @@ SPDX-License-Identifier: Apache-2.0
 <p>Note on using temporary buffers in CUDA tasks:</p>
 <p>We use <code class="docutils literal notranslate"><span class="pre">Legion::DeferredBuffer</span></code>, whose lifetime is not connected with the CUDA stream(s) used to launch kernels. The buffer is allocated immediately at the point when <a class="reference internal" href="#group__data_1gad11ba71b6c0221f16f936ffd10eaa811"><span class="std std-ref">create_buffer()</span></a> is called, whereas the kernel that uses it is placed on a stream, and may run at a later point. Normally a <code class="docutils literal notranslate"><span class="pre">Legion::DeferredBuffer</span></code> is deallocated automatically by Legion once all the kernels launched in the task are complete. However, a <code class="docutils literal notranslate"><span class="pre">Legion::DeferredBuffer</span></code> can also be deallocated immediately using <code class="docutils literal notranslate"><span class="pre">Legion::DeferredBuffer::destroy()</span></code>, which is useful for operations that want to deallocate intermediate memory as soon as possible. This deallocation is not synchronized with the task stream, i.e. it may happen before a kernel which uses the buffer has actually completed. This is safe as long as we use the same stream on all GPU tasks running on the same device (which is guaranteed by the current implementation of <a class="reference internal" href="group__task.html#classlegate_1_1TaskContext_1a305d568f9f3439d1b998328f90d2ed6a"><span class="std std-ref">TaskContext::get_task_stream()</span></a>), because then all the actual uses of the buffer are done in order on the one stream. It is important that all library CUDA code uses <a class="reference internal" href="group__task.html#classlegate_1_1TaskContext_1a305d568f9f3439d1b998328f90d2ed6a"><span class="std std-ref">TaskContext::get_task_stream()</span></a>, and all CUDA operations (including library calls) are enqueued on that stream exclusively. This analysis additionally assumes that no code outside of Legate is concurrently allocating from the eager pool, and that it’s OK for kernels to access a buffer even after it’s technically been deallocated. </p>
 </dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0_NSt6size_tEE4Span">
+<span id="_CPPv3I0_NSt6size_tEE4Span"></span><span id="_CPPv2I0_NSt6size_tEE4Span"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">N</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">dynamic_extent</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__data_1ga7b7d13053e65ca6aed572369ae6ec5b6"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Span</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">cuda</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span::N"><span class="n"><span class="pre">N</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0_NSt6size_tEE4Span" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
 
 </div>
 <div class="breathe-sectiondef docutils container">
@@ -1020,7 +1024,7 @@ The input pointer must be one that was previously returned by an <code class="do
 
 <dl>
 <dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1Type.html#_CPPv4N6legate4TypeE" title="legate::Type"><span class="n"><span class="pre">Type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">type</span></span></em>,</dd>
-<dd><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bounds</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bounds</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">StoreTarget</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mem_kind</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em></dd>
 </dl>
 
@@ -1686,7 +1690,7 @@ The input pointer must be one that was previously returned by an <code class="do
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalArray9transposeE4SpanIKNSt7int32_tEE">
-<span id="_CPPv3NK6legate12LogicalArray9transposeE4SpanIKNSt7int32_tEE"></span><span id="_CPPv2NK6legate12LogicalArray9transposeE4SpanIKNSt7int32_tEE"></span><span id="legate::LogicalArray::transpose__Span:std::int32_tC:C"></span><span class="target" id="classlegate_1_1LogicalArray_1a8fd4c2dda872ac496c778f3918c901cd"></span><a class="reference internal" href="../class/classlegate_1_1LogicalArray.html#_CPPv4N6legate12LogicalArrayE" title="legate::LogicalArray"><span class="n"><span class="pre">LogicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transpose</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">axes</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<span id="_CPPv3NK6legate12LogicalArray9transposeE4SpanIKNSt7int32_tEE"></span><span id="_CPPv2NK6legate12LogicalArray9transposeE4SpanIKNSt7int32_tEE"></span><span id="legate::LogicalArray::transpose__Span:std::int32_tC:C"></span><span class="target" id="classlegate_1_1LogicalArray_1a8fd4c2dda872ac496c778f3918c901cd"></span><a class="reference internal" href="../class/classlegate_1_1LogicalArray.html#_CPPv4N6legate12LogicalArrayE" title="legate::LogicalArray"><span class="n"><span class="pre">LogicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transpose</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">axes</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
 <dd><p>Reorders dimensions of the array. </p>
 <p>The call can block if the array is unbound</p>
 <dl class="field-list simple">
@@ -1711,7 +1715,7 @@ The input pointer must be one that was previously returned by an <code class="do
 
 <dl>
 <dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>,</dd>
-<dd><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sizes</span></span></em></dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sizes</span></span></em></dd>
 </dl>
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
@@ -2447,8 +2451,8 @@ The size and alignment of the new type must match that of the existing type.</p>
 <span id="_CPPv3NK6legate12LogicalStore19partition_by_tilingE4SpanIKNSt8uint64_tEENSt8optionalI4SpanIKNSt8uint64_tEEEE"></span><span id="_CPPv2NK6legate12LogicalStore19partition_by_tilingE4SpanIKNSt8uint64_tEENSt8optionalI4SpanIKNSt8uint64_tEEEE"></span><span id="legate::LogicalStore::partition_by_tiling__Span:std::uint64_tC:.std::optional:Span:std::uint64_tC::C"></span><span class="target" id="classlegate_1_1LogicalStore_1a421a74212719bc9246b877da37eded6a"></span><a class="reference internal" href="../class/classlegate_1_1LogicalStorePartition.html#_CPPv4N6legate21LogicalStorePartitionE" title="legate::LogicalStorePartition"><span class="n"><span class="pre">LogicalStorePartition</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">partition_by_tiling</span></span></span><span class="sig-paren">(</span>
 
 <dl>
-<dd><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tile_shape</span></span></em>,</dd>
-<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">color_shape</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em></dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tile_shape</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">color_shape</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em></dd>
 </dl>
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
@@ -3820,8 +3824,8 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4I0EN6legate6Scalar6ScalarE4SpanIK1TE">
-<span id="_CPPv3I0EN6legate6Scalar6ScalarE4SpanIK1TE"></span><span id="_CPPv2I0EN6legate6Scalar6ScalarE4SpanIK1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Scalar_1acb424b16f14c1b4259ef541e6f0a73fa"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scalar</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1Scalar.html#_CPPv4I0EN6legate6Scalar6ScalarE4SpanIK1TE" title="legate::Scalar::Scalar::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">values</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Creates an owned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> from a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Span"><span class="std std-ref"><span class="pre">Span</span></span></a></code> of scalars. The values in the input span will be copied. </p>
+<span id="_CPPv3I0EN6legate6Scalar6ScalarE4SpanIK1TE"></span><span id="_CPPv2I0EN6legate6Scalar6ScalarE4SpanIK1TE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Scalar_1acb424b16f14c1b4259ef541e6f0a73fa"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scalar</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1Scalar.html#_CPPv4I0EN6legate6Scalar6ScalarE4SpanIK1TE" title="legate::Scalar::Scalar::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">values</span></span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Creates an owned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">Span</span></code> of scalars. The values in the input span will be copied. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>values</strong> – Values to create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> with in a vector. </p>
@@ -3935,7 +3939,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv">
-<span id="_CPPv3I0ENK6legate6Scalar6valuesEv"></span><span id="_CPPv2I0ENK6legate6Scalar6valuesEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">VAL</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Scalar_1a2b2d2da382e63b2488a3ed4524bef3fc"></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1Scalar.html#_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv" title="legate::Scalar::values::VAL"><span class="n"><span class="pre">VAL</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">values</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<span id="_CPPv3I0ENK6legate6Scalar6valuesEv"></span><span id="_CPPv2I0ENK6legate6Scalar6valuesEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">VAL</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Scalar_1a2b2d2da382e63b2488a3ed4524bef3fc"></span><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1Scalar.html#_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv" title="legate::Scalar::values::VAL"><span class="n"><span class="pre">VAL</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">values</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
 <dd><p>Returns values stored in the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code>. If the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> does not have a fixed array type, a unit span will be returned. </p>
 <p>
 1) the scalar has a fixed array type whose element type has a different size from <code class="docutils literal notranslate"><span class="pre">VAL</span></code>, 2) the scalar holds a string and size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> isn’t 1 byte, 3) the scalar’s type isn’t a fixed array type and the size is different from size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> </p>
@@ -3984,8 +3988,8 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate5Shape5ShapeE4SpanIKNSt8uint64_tEE">
-<span id="_CPPv3N6legate5Shape5ShapeE4SpanIKNSt8uint64_tEE"></span><span id="_CPPv2N6legate5Shape5ShapeE4SpanIKNSt8uint64_tEE"></span><span id="legate::Shape::Shape__Span:std::uint64_tC:"></span><span class="target" id="classlegate_1_1Shape_1a677b58ad5ee3f949859cc334abd401c7"></span><span class="sig-name descname"><span class="n"><span class="pre">Shape</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">extents</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Constructs a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code> from a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Span"><span class="std std-ref"><span class="pre">Span</span></span></a></code> of extents. </p>
+<span id="_CPPv3N6legate5Shape5ShapeE4SpanIKNSt8uint64_tEE"></span><span id="_CPPv2N6legate5Shape5ShapeE4SpanIKNSt8uint64_tEE"></span><span id="legate::Shape::Shape__Span:std::uint64_tC:"></span><span class="target" id="classlegate_1_1Shape_1a677b58ad5ee3f949859cc334abd401c7"></span><span class="sig-name descname"><span class="n"><span class="pre">Shape</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">extents</span></span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Constructs a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">Span</span></code> of extents. </p>
 <p>The constructed <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code> is immediately ready</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -4187,317 +4191,6 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 </div>
 </dd></dl>
 
-<dl class="cpp class">
-<dt class="sig sig-object cpp" id="_CPPv4I0EN6legate4SpanE">
-<span id="_CPPv3I0EN6legate4SpanE"></span><span id="_CPPv2I0EN6legate4SpanE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Span"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Span</span></span></span><br /></dt>
-<dd><div class="docutils container">
-<em>#include &lt;legate/utilities/span.h&gt;</em></div>
-<p>A simple span implementation used in Legate. </p>
-<p>Should eventually be replaced with std::span once we bump up the C++ standard version to C++20. </p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4I00EN6legate4Span4SpanER1C">
-<span id="_CPPv3I00EN6legate4Span4SpanER1C"></span><span id="_CPPv2I00EN6legate4Span4SpanER1C"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">C</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">enable_if_t</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="group__partitioning.html#_CPPv4N6legate6detailE" title="legate::detail"><span class="n"><span class="pre">detail</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="group__partitioning.html#_CPPv4I0EN6legate6detail14is_container_vE" title="legate::detail::is_container_v"><span class="n"><span class="pre">is_container_v</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I00EN6legate4Span4SpanER1C" title="legate::Span::Span::C"><span class="n"><span class="pre">C</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="o"><span class="pre">&amp;&amp;</span></span><span class="w"> </span><span class="o"><span class="pre">!</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">is_same_v</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I00EN6legate4Span4SpanER1C" title="legate::Span::Span::C"><span class="n"><span class="pre">C</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">initializer_list</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="o"><span class="pre">&amp;&amp;</span></span><span class="w"> </span><span class="o"><span class="pre">!</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">is_same_v</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I00EN6legate4Span4SpanER1C" title="legate::Span::Span::C"><span class="n"><span class="pre">C</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1tuple.html#_CPPv4I0EN6legate5tupleE" title="legate::tuple"><span class="n"><span class="pre">tuple</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">value_type</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Span_1ad584ea9526ac5911fa0fedd71b4c3930"></span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Span</span></span></span><span class="sig-paren">(</span>
-
-<dl>
-<dd><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I00EN6legate4Span4SpanER1C" title="legate::Span::Span::C"><span class="n"><span class="pre">C</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">container</span></span></em></dd>
-</dl>
-
-<span class="sig-paren">)</span><br /></dt>
-<dd><p>Construct a span from a container-like object. </p>
-<p>This overload only participates in overload resolution if C satisfies <em>ContainerLike</em>. It must have a valid overload of <code class="docutils literal notranslate"><span class="pre">std::data()</span></code> and <code class="docutils literal notranslate"><span class="pre">std::size()</span></code> which refer to a contiguous buffer of data and its size respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>container</strong> – The container-like object. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span4SpanERK5tupleI10value_typeE">
-<span id="_CPPv3N6legate4Span4SpanERK5tupleI10value_typeE"></span><span id="_CPPv2N6legate4Span4SpanERK5tupleI10value_typeE"></span><span id="legate::Span::Span__tuple:value_type:CRCE"></span><span class="target" id="classlegate_1_1Span_1a1cff01d8a176c3a3caa3b6d4afc543df"></span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Span</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1tuple.html#_CPPv4I0EN6legate5tupleE" title="legate::tuple"><span class="n"><span class="pre">tuple</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">value_type</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">tup</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Construct a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Span"><span class="std std-ref"><span class="pre">Span</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">tuple</span></code>. </p>
-<p>This overload must exist because <code class="docutils literal notranslate"><span class="pre">tuple::data()</span></code> returns a reference to the underlying container, not the underlying pointer (as is usually expected by <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Span_1a8959a1914793755ef8f55300d010210a"><span class="std std-ref"><span class="pre">data()</span></span></a></code>) which causes the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Span"><span class="std std-ref"><span class="pre">Span</span></span></a><span class="pre">(C&amp;</span> <span class="pre">container)</span></code> overload to brick.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>tup</strong> – The tuple to construct the span from. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span4SpanENSt16initializer_listI1TEE">
-<span id="_CPPv3N6legate4Span4SpanENSt16initializer_listI1TEE"></span><span id="_CPPv2N6legate4Span4SpanENSt16initializer_listI1TEE"></span><span id="legate::Span::Span__std::initializer_list:T:CE"></span><span class="target" id="classlegate_1_1Span_1abab96cb2494771e374aa47ecbee7efaf"></span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Span</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">initializer_list</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">il</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Construct a span from an initializer list of items directly. </p>
-<p>This overload is relatively dangerous insofar that the span can very easily outlive the initializer list. It is generally only preferred to target this overload when taking a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Span"><span class="std std-ref"><span class="pre">Span</span></span></a></code> as a function argument where the ability to simply do <code class="docutils literal notranslate"><span class="pre">foo({1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4})</span></code> is preferred.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>il</strong> – The initializer list. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span4SpanEP1T9size_type">
-<span id="_CPPv3N6legate4Span4SpanEP1T9size_type"></span><span id="_CPPv2N6legate4Span4SpanEP1T9size_type"></span><span id="legate::Span::Span__TP.size_typeCE"></span><span class="target" id="classlegate_1_1Span_1a4b43b63cbf36d1c4d59adee93d23fbb6"></span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Span</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_type</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Creates a span with an existing pointer and a size. </p>
-<p>The caller must guarantee that the allocation is big enough (i.e., bigger than or equal to <code class="docutils literal notranslate"><span class="pre">sizeof(T)</span> <span class="pre">*</span> <span class="pre">size</span></code>) and that the allocation is alive while the span is alive.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Pointer to the data. </p></li>
-<li><p><strong>size</strong> – Number of elements. </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4sizeEv">
-<span id="_CPPv3NK6legate4Span4sizeEv"></span><span id="_CPPv2NK6legate4Span4sizeEv"></span><span id="legate::Span::sizeC"></span><span class="target" id="classlegate_1_1Span_1a75a0996d82b2ac3949b4661f7061092e"></span><span class="n"><span class="pre">size_type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Returns the number of elements. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The number of elements. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span5emptyEv">
-<span id="_CPPv3NK6legate4Span5emptyEv"></span><span id="_CPPv2NK6legate4Span5emptyEv"></span><span id="legate::Span::emptyC"></span><span class="target" id="classlegate_1_1Span_1a7c0f930fb013f1de67fd2eb58be4f23c"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">empty</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if the span has size 0, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span2atE9size_type">
-<span id="_CPPv3NK6legate4Span2atE9size_type"></span><span id="_CPPv2NK6legate4Span2atE9size_type"></span><span id="legate::Span::at__size_typeC"></span><span class="target" id="classlegate_1_1Span_1a5a995ea0ed39260852cd93a28f8936aa"></span><span class="n"><span class="pre">reference</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">at</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_type</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Access an element with bounds checking. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>pos</strong> – The index of the element to access.</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">out_of_range</span></span></span> – if <code class="docutils literal notranslate"><span class="pre">pos</span></code> is not in bounds of the span. </p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A reference to the element as index <code class="docutils literal notranslate"><span class="pre">pos</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span6cbeginEv">
-<span id="_CPPv3NK6legate4Span6cbeginEv"></span><span id="_CPPv2NK6legate4Span6cbeginEv"></span><span id="legate::Span::cbeginC"></span><span class="target" id="classlegate_1_1Span_1ad13e8b387f9485628dc00605bca1be2c"></span><span class="n"><span class="pre">const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
-<dd><p>Returns the pointer to the first element. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the first element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4cendEv">
-<span id="_CPPv3NK6legate4Span4cendEv"></span><span id="_CPPv2NK6legate4Span4cendEv"></span><span id="legate::Span::cendC"></span><span class="target" id="classlegate_1_1Span_1a6f4b22c31148b5b826810e6f261e583f"></span><span class="n"><span class="pre">const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
-<dd><p>Returns the pointer to the end of allocation. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the end of allocation. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span5beginEv">
-<span id="_CPPv3NK6legate4Span5beginEv"></span><span id="_CPPv2NK6legate4Span5beginEv"></span><span id="legate::Span::beginC"></span><span class="target" id="classlegate_1_1Span_1ad41b5148b6830941cbf53212f1a2aa30"></span><span class="n"><span class="pre">const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">begin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Returns the pointer to the first element. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the first element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span3endEv">
-<span id="_CPPv3NK6legate4Span3endEv"></span><span id="_CPPv2NK6legate4Span3endEv"></span><span id="legate::Span::endC"></span><span class="target" id="classlegate_1_1Span_1a8965e3f404430b8404f36ae15b8a0361"></span><span class="n"><span class="pre">const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">end</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Returns the pointer to the end of allocation. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the end of allocation. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span5beginEv">
-<span id="_CPPv3N6legate4Span5beginEv"></span><span id="_CPPv2N6legate4Span5beginEv"></span><span id="legate::Span::begin"></span><span class="target" id="classlegate_1_1Span_1ab867cf204e5e2e5abfaba8c6c82f9bbd"></span><span class="n"><span class="pre">iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">begin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
-<dd><p>Returns the pointer to the first element. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the first element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span3endEv">
-<span id="_CPPv3N6legate4Span3endEv"></span><span id="_CPPv2N6legate4Span3endEv"></span><span id="legate::Span::end"></span><span class="target" id="classlegate_1_1Span_1a9ddc7b5726204fb3581f1284e90b557a"></span><span class="n"><span class="pre">iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">end</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
-<dd><p>Returns the pointer to the end of allocation. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the end of allocation. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span7crbeginEv">
-<span id="_CPPv3NK6legate4Span7crbeginEv"></span><span id="_CPPv2NK6legate4Span7crbeginEv"></span><span id="legate::Span::crbeginC"></span><span class="target" id="classlegate_1_1Span_1ae3397adc390b5fc030a8d908f61d68c0"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">crbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator to the last element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span5crendEv">
-<span id="_CPPv3NK6legate4Span5crendEv"></span><span id="_CPPv2NK6legate4Span5crendEv"></span><span id="legate::Span::crendC"></span><span class="target" id="classlegate_1_1Span_1af80772f2811abc9eb00cd183872d59e5"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">crend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator to the location preceding the first element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span6rbeginEv">
-<span id="_CPPv3NK6legate4Span6rbeginEv"></span><span id="_CPPv2NK6legate4Span6rbeginEv"></span><span id="legate::Span::rbeginC"></span><span class="target" id="classlegate_1_1Span_1a1aabe67dbd5cbb3872634e7ce7306b30"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator to the last element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4rendEv">
-<span id="_CPPv3NK6legate4Span4rendEv"></span><span id="_CPPv2NK6legate4Span4rendEv"></span><span id="legate::Span::rendC"></span><span class="target" id="classlegate_1_1Span_1a87f4643e5ef66abd41451dd97bfb8833"></span><span class="n"><span class="pre">const_reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator to the location preceding the first element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span6rbeginEv">
-<span id="_CPPv3N6legate4Span6rbeginEv"></span><span id="_CPPv2N6legate4Span6rbeginEv"></span><span id="legate::Span::rbegin"></span><span class="target" id="classlegate_1_1Span_1adfe81528e00a498f54004a4786cbaae4"></span><span class="n"><span class="pre">reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator to the last element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span4rendEv">
-<span id="_CPPv3N6legate4Span4rendEv"></span><span id="_CPPv2N6legate4Span4rendEv"></span><span id="legate::Span::rend"></span><span class="target" id="classlegate_1_1Span_1a07f10262abc82ce5379ee0bc0777d860"></span><span class="n"><span class="pre">reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>An iterator to the location preceding the first element. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span5frontEv">
-<span id="_CPPv3NK6legate4Span5frontEv"></span><span id="_CPPv2NK6legate4Span5frontEv"></span><span id="legate::Span::frontC"></span><span class="target" id="classlegate_1_1Span_1aec4affb9d1a16ddd51e630b656f2f69d"></span><span class="n"><span class="pre">reference</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">front</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A reference to the first element in the span. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4backEv">
-<span id="_CPPv3NK6legate4Span4backEv"></span><span id="_CPPv2NK6legate4Span4backEv"></span><span id="legate::Span::backC"></span><span class="target" id="classlegate_1_1Span_1ae42e1050b3c0cd6e91b68265ff02a3f5"></span><span class="n"><span class="pre">reference</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">back</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A reference to the last element in the span. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span7subspanE9size_type">
-<span id="_CPPv3N6legate4Span7subspanE9size_type"></span><span id="_CPPv2N6legate4Span7subspanE9size_type"></span><span id="legate::Span::subspan__size_type"></span><span class="target" id="classlegate_1_1Span_1a43bc2588a7416bfdeb837ee6a6644582"></span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subspan</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_type</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">off</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Slices off the first <code class="docutils literal notranslate"><span class="pre">off</span></code> elements. Passing an <code class="docutils literal notranslate"><span class="pre">off</span></code> greater than the size will fail with an assertion failure. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>off</strong> – Number of elements to skip.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A span for range <code class="docutils literal notranslate"><span class="pre">[off,</span> <a class="reference internal" href="#classlegate_1_1Span_1a75a0996d82b2ac3949b4661f7061092e"><span class="std std-ref"><span class="pre">size()</span></span></a><span class="pre">)</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span3ptrEv">
-<span id="_CPPv3NK6legate4Span3ptrEv"></span><span id="_CPPv2NK6legate4Span3ptrEv"></span><span id="legate::Span::ptrC"></span><span class="target" id="classlegate_1_1Span_1aa69e36162ca044ccf9f1bb544a5f036d"></span><span class="n"><span class="pre">const_pointer</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ptr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Returns a <code class="docutils literal notranslate"><span class="pre">const</span></code> pointer to the data. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the data </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4dataEv">
-<span id="_CPPv3NK6legate4Span4dataEv"></span><span id="_CPPv2NK6legate4Span4dataEv"></span><span id="legate::Span::dataC"></span><span class="target" id="classlegate_1_1Span_1a8959a1914793755ef8f55300d010210a"></span><span class="n"><span class="pre">pointer</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">data</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Returns a pointer to the data. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Pointer to the data. </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span10deep_equalERK4SpanIK10value_typeE">
-<span id="_CPPv3NK6legate4Span10deep_equalERK4SpanIK10value_typeE"></span><span id="_CPPv2NK6legate4Span10deep_equalERK4SpanIK10value_typeE"></span><span id="legate::Span::deep_equal__Span:value_typeC:CRC"></span><span class="target" id="classlegate_1_1Span_1a7de9e4a12bd4458aa6cf81d3a27ad62f"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">deep_equal</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1Span.html#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">value_type</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Compare the values of the span for equality. </p>
-<p>Since span is fundamentally a “view” or “handle” type, when a user writes: <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">span</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">other_span</span>
-</pre></div>
-</div>
- It is not immediately clear what they mean to compare. Should <code class="docutils literal notranslate"><span class="pre">operator==()</span></code> behave like <code class="docutils literal notranslate"><span class="pre">std::shared_ptr</span></code> and compare the pointer values? Should it compare the container values? For this reason, the standard does not actually define <code class="docutils literal notranslate"><span class="pre">operator==()</span></code> (or any of the other comparison operators) for <code class="docutils literal notranslate"><span class="pre">std::span</span></code>, and we don’t either. Instead, we provide this helper function to make the comparison explicit.</p>
-<p>If we ever have need for pointer comparisons, we could add <code class="docutils literal notranslate"><span class="pre">shallow_compare()</span></code>, but then it’s just as easy (and expressive) for the user to write <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">span</span><span class="p">.</span><span class="n">data</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">other_span</span><span class="p">.</span><span class="n">data</span><span class="p">()</span>
-</pre></div>
-</div>
-</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>other</strong> – The span to compare against.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if all values of this span are equal to that of <code class="docutils literal notranslate"><span class="pre">other</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. </p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
-</dd></dl>
-
 </dd></dl>
 
 </section>
@@ -4553,6 +4246,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#c.LEGATE_TRUE_WHEN_DEBUG"><code class="docutils literal notranslate"><span class="pre">LEGATE_TRUE_WHEN_DEBUG</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE6Buffer"><code class="docutils literal notranslate"><span class="pre">Buffer</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt6size_tEE4Span"><code class="docutils literal notranslate"><span class="pre">Span</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIMEN6Memory4KindENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIME6MemoryNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tEN6Memory4KindENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create_buffer()</span></code></a></li>
@@ -4779,34 +4473,6 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Slice5SliceENSt8optionalINSt7int64_tEEENSt8optionalINSt7int64_tEEE"><code class="docutils literal notranslate"><span class="pre">Slice()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Slice5startE"><code class="docutils literal notranslate"><span class="pre">start</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Slice4stopE"><code class="docutils literal notranslate"><span class="pre">stop</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate4SpanE"><code class="docutils literal notranslate"><span class="pre">legate::Span</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00EN6legate4Span4SpanER1C"><code class="docutils literal notranslate"><span class="pre">Span()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span4SpanERK5tupleI10value_typeE"><code class="docutils literal notranslate"><span class="pre">Span()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span4SpanENSt16initializer_listI1TEE"><code class="docutils literal notranslate"><span class="pre">Span()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span4SpanEP1T9size_type"><code class="docutils literal notranslate"><span class="pre">Span()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4sizeEv"><code class="docutils literal notranslate"><span class="pre">size()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span5emptyEv"><code class="docutils literal notranslate"><span class="pre">empty()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span2atE9size_type"><code class="docutils literal notranslate"><span class="pre">at()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span6cbeginEv"><code class="docutils literal notranslate"><span class="pre">cbegin()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4cendEv"><code class="docutils literal notranslate"><span class="pre">cend()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span5beginEv"><code class="docutils literal notranslate"><span class="pre">begin()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span3endEv"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span5beginEv"><code class="docutils literal notranslate"><span class="pre">begin()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span3endEv"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span7crbeginEv"><code class="docutils literal notranslate"><span class="pre">crbegin()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span5crendEv"><code class="docutils literal notranslate"><span class="pre">crend()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span6rbeginEv"><code class="docutils literal notranslate"><span class="pre">rbegin()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4rendEv"><code class="docutils literal notranslate"><span class="pre">rend()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span6rbeginEv"><code class="docutils literal notranslate"><span class="pre">rbegin()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span4rendEv"><code class="docutils literal notranslate"><span class="pre">rend()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span5frontEv"><code class="docutils literal notranslate"><span class="pre">front()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4backEv"><code class="docutils literal notranslate"><span class="pre">back()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span7subspanE9size_type"><code class="docutils literal notranslate"><span class="pre">subspan()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span3ptrEv"><code class="docutils literal notranslate"><span class="pre">ptr()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4dataEv"><code class="docutils literal notranslate"><span class="pre">data()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span10deep_equalERK4SpanIK10value_typeE"><code class="docutils literal notranslate"><span class="pre">deep_equal()</span></code></a></li>
 </ul>
 </li>
 </ul>

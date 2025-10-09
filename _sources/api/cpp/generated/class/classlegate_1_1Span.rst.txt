@@ -1,4 +1,0 @@
-legate::Span
-============
-
-.. doxygenclass:: legate::Span
