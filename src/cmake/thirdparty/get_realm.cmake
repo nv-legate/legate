@@ -9,8 +9,9 @@ include_guard(GLOBAL)
 function(find_or_configure_realm)
   list(APPEND CMAKE_MESSAGE_CONTEXT "realm")
 
-  include("${rapids-cmake-dir}/cpm/detail/package_details.cmake")
-  rapids_cpm_package_details(Realm version git_url git_tag git_shallow exclude_from_all)
+  legate_maybe_override_package_info(Realm "${legate_REALM_BRANCH}")
+  legate_load_overrideable_package_info(Realm version git_repo git_tag git_shallow
+                                        exclude_from_all)
 
   option(REALM_ENABLE_NVTX "Enabled NVTX" OFF)
   option(REALM_ENABLE_PAPI "Use PAPI for thread profiling" OFF)
@@ -32,9 +33,9 @@ function(find_or_configure_realm)
                   GLOBAL_TARGETS Realm::Realm
                   CPM_ARGS
                   GIT_SHALLOW "${git_shallow}"
-                  GIT_REPOSITORY "${git_url}" SYSTEM TRUE
+                  GIT_REPOSITORY "${git_repo}" SYSTEM TRUE
                   GIT_TAG "${git_tag}"
-                  EXCLUDE_FROM_ALL ${exclude_from_all}
+                  EXCLUDE_FROM_ALL "${exclude_from_all}"
                   OPTIONS "REALM_ENABLE_INSTALL ON"
                           "REALM_SANITIZER ${REALM_SANITIZER}"
                           "REALM_ENABLE_UCX ${legate_USE_UCX}"

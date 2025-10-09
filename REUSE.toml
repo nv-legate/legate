@@ -17,7 +17,7 @@ path = [
     "share/legate/sanitizers/asan_default_options.txt",
     "share/legate/sanitizers/asan_default_options_gpu.txt",
     "share/legate/sanitizers/tsan_suppressions.txt",
-    "src/cmake/versions/versions.json",
+    "src/cmake/versions/*.json",
     "src/cmake/versions/legion_version.json",
     "src/python/legate/legate_jupyter.json",
     "src/cmake/presets/*.json",

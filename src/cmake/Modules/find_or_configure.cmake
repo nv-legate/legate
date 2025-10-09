@@ -179,3 +179,78 @@ macro(legate_find_or_configure)
   unset(_LEGATE_FOC_FOUND)
   list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endmacro()
+
+function(legate_maybe_override_package_info package user_branch)
+  # CPM_ARGS GIT_TAG and GIT_REPOSITORY don't do anything if you have already overridden
+  # those options via a rapids_cpm_package_override() call. So we have to conditionally
+  # override the defaults (by creating a temporary json file in build dir) only if the
+  # user sets them.
+
+  # See https://github.com/rapidsai/rapids-cmake/issues/575. Specifically, this function
+  # is pretty much identical to
+  # https://github.com/rapidsai/rapids-cmake/issues/575#issuecomment-2045374410.
+  string(TOLOWER "${package}" package_lo)
+  cmake_path(SET overrides_json NORMALIZE
+             "${LEGATE_CMAKE_DIR}/versions/${package_lo}_version.json")
+  if(user_branch)
+    # The user has set either one of these, time to create our cludge.
+    file(READ "${overrides_json}" json_data)
+
+    string(JSON old_branch GET "${json_data}" "packages" "${package}" "git_tag")
+    if(NOT ("${old_branch}" STREQUAL "${user_branch}"))
+      string(JSON json_data SET "${json_data}" "packages" "${package}" "git_tag"
+             "\"${user_branch}\"")
+
+      cmake_path(SET overrides_json NORMALIZE
+                 "${CMAKE_CURRENT_BINARY_DIR}/${package_lo}_version.json")
+      file(WRITE "${overrides_json}" "${json_data}")
+    endif()
+  endif()
+  rapids_cpm_package_override("${overrides_json}")
+endfunction()
+
+include("${rapids-cmake-dir}/cpm/detail/package_details.cmake")
+
+# cmake-lint: disable=R0913
+function(legate_load_overrideable_package_info package version_var git_repo_var
+         git_branch_var shallow_var exclude_from_all_var)
+  rapids_cpm_package_details("${package}" version git_repo git_branch shallow
+                             exclude_from_all)
+  # https://docs.rapids.ai/api/rapids-cmake/stable/command/rapids_cpm_package_override/
+  #
+  # > Added in version v23.10.00: When the variable CPM_<package_name>_SOURCE exists, any
+  # > override entries for package_name will be ignored.
+  #
+  # This means that our above call to maybe_override Legion might have been completely
+  # pointless, and all of the below information is stale. So we have to manually read the
+  # override file ourselves.
+  if(NOT version)
+    if(NOT CPM_${package}_SOURCE)
+      # If we don't have a version, and we haven't set the source, then idk why this would
+      # fail, but likely the issue isn't on our side
+      message(FATAL_ERROR "rapids-cmake failed to set version information (and likely "
+                          "all the rest of the fields from the override). Please open a "
+                          "bug report at https://github.com/rapidsai/rapids-cmake/issues "
+                          "to report this issue.")
+    endif()
+    string(TOLOWER "${package}" package_lo)
+    file(READ "${LEGATE_CMAKE_DIR}/versions/${package_lo}_version.json" json_data)
+    string(JSON version GET "${json_data}" "packages" "${package}" "version")
+    string(JSON shallow ERROR_VARIABLE err GET "${json_data}" "packages" "${package}"
+           "git_shallow")
+    if(err)
+      set(shallow FALSE)
+    endif()
+    string(JSON exclude_from_all ERROR_VARIABLE err GET "${json_data}" "packages"
+           "${package}" "exclude_from_all")
+    if(err)
+      set(exclude_from_all OFF)
+    endif()
+  endif()
+
+  set(${version_var} "${version}" PARENT_SCOPE)
+  set(${git_repo_var} "${git_repo}" PARENT_SCOPE)
+  set(${git_branch_var} "${git_branch}" PARENT_SCOPE)
+  set(${shallow_var} "${shallow}" PARENT_SCOPE)
+  set(${exclude_from_all_var} "${exclude_from_all}" PARENT_SCOPE)
+endfunction()

@@ -436,7 +436,17 @@
                     "nargs": 2
                 }
             },
+            "legate_load_overrideable_package_info": {
+                "pargs": {
+                    "nargs": 6
+                }
+            },
             "legate_maybe_override_legion": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "legate_maybe_override_package_info": {
                 "pargs": {
                     "nargs": 2
                 }

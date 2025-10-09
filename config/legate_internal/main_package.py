@@ -125,11 +125,11 @@ class Legate(MainPackage):
         ),
         cmake_var=CMAKE_VARIABLE("legate_FAKE_FATBINS_FOR_TIDY", CMakeBool),
     )
-    legate_LEGION_REPOSITORY: Final = CMAKE_VARIABLE(
-        "legate_LEGION_REPOSITORY", CMakeString
-    )
     legate_LEGION_BRANCH: Final = CMAKE_VARIABLE(
         "legate_LEGION_BRANCH", CMakeString
+    )
+    legate_REALM_BRANCH: Final = CMAKE_VARIABLE(
+        "legate_REALM_BRANCH", CMakeString
     )
     legate_ENABLE_SANITIZERS: Final = CMAKE_VARIABLE(
         "legate_ENABLE_SANITIZERS", CMakeBool
@@ -456,6 +456,12 @@ class Legate(MainPackage):
             "before continuing."
         )
 
+    def configure_realm(self) -> None:
+        r"""Configure Realm for use with Legate."""
+        self.set_flag_if_user_set(
+            self.legate_REALM_BRANCH, self.cl_args.realm_branch
+        )
+
     def configure_legion(self) -> None:
         r"""Configure Legion for use with Legate."""
         self.set_flag_if_user_set(
@@ -543,6 +549,7 @@ class Legate(MainPackage):
         super().configure()
         self.log_execute_func(self.check_min_cmake_version)
         self.log_execute_func(self.configure_legate_variables)
+        self.log_execute_func(self.configure_realm)
         self.log_execute_func(self.configure_legion)
         self.log_execute_func(self.configure_clang_tidy)
         self.log_execute_func(self.configure_cprofile)
