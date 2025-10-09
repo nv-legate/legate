@@ -45,46 +45,81 @@ def is_multi_gpu_ci() -> bool:
 MULTI_GPU_CI = is_multi_gpu_ci()
 
 
-@pytest.mark.parametrize(*shape_chunks)
-@pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
-@pytest.mark.skipif(
-    MULTI_GPU_CI,
-    reason=(
-        "Intermittent failures in CI for multi-gpu, "
-        "see https://github.com/nv-legate/legate.internal/issues/2326"
-    ),
+@pytest.mark.xfail(
+    int(zarr.__version__.split(".")[0]) >= 3,
+    reason="tests do not support zarr v3",
 )
-def test_write_array(
-    tmp_path: Path, shape: tuple[int, ...], chunks: tuple[int, ...], dtype: str
-) -> None:
-    """Test write of a Zarr array."""
-    a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
-    store = get_legate_runtime().create_store_from_buffer(
-        Type.from_numpy_dtype(a.dtype), a.shape, a, False
+class TestZarrV2:
+    @pytest.mark.parametrize(*shape_chunks)
+    @pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
+    @pytest.mark.skipif(
+        MULTI_GPU_CI,
+        reason=(
+            "Intermittent failures in CI for multi-gpu, "
+            "see https://github.com/nv-legate/legate.internal/issues/2326"
+        ),
     )
-    array = LogicalArray.from_store(store)
+    def test_write_array(
+        self,
+        tmp_path: Path,
+        shape: tuple[int, ...],
+        chunks: tuple[int, ...],
+        dtype: str,
+    ) -> None:
+        """Test write of a Zarr array."""
+        a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
+        store = get_legate_runtime().create_store_from_buffer(
+            Type.from_numpy_dtype(a.dtype), a.shape, a, False
+        )
+        array = LogicalArray.from_store(store)
 
-    write_array(ary=array, dirpath=tmp_path, chunks=chunks)
-    get_legate_runtime().issue_execution_fence(block=True)
+        write_array(ary=array, dirpath=tmp_path, chunks=chunks)
+        get_legate_runtime().issue_execution_fence(block=True)
 
-    b = zarr.open_array(tmp_path, mode="r")
-    assert_array_equal(a, b)
+        b = zarr.open_array(tmp_path, mode="r")
+        assert_array_equal(a, b)
+
+    @pytest.mark.parametrize(*shape_chunks)
+    @pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
+    def test_read_array(
+        self,
+        tmp_path: Path,
+        shape: tuple[int, ...],
+        chunks: tuple[int, ...],
+        dtype: str,
+    ) -> None:
+        """Test read of a Zarr array."""
+        a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
+        zarr.open_array(
+            tmp_path, mode="w", shape=shape, chunks=chunks, compressor=None
+        )[...] = a
+
+        array = read_array(dirpath=tmp_path)
+        b = np.asarray(array.get_physical_array())
+        assert_array_equal(a, b)
+
+    def test_read_compressor(self, tmp_path: Path) -> None:
+        """Test read of a Zarr array with compressor."""
+        a = np.array((1, 2, 3))
+        zarr.open_array(tmp_path, mode="w", shape=a.shape)[...] = a
+        msg = "compressor isn't supported"
+        with pytest.raises(NotImplementedError, match=msg):
+            read_array(dirpath=tmp_path)
 
 
-@pytest.mark.parametrize(*shape_chunks)
-@pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
-def test_read_array(
-    tmp_path: Path, shape: tuple[int, ...], chunks: tuple[int, ...], dtype: str
-) -> None:
-    """Test read of a Zarr array."""
-    a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
-    zarr.open_array(
-        tmp_path, mode="w", shape=shape, chunks=chunks, compressor=None
-    )[...] = a
-
-    array = read_array(dirpath=tmp_path)
-    b = np.asarray(array.get_physical_array())
-    assert_array_equal(a, b)
+@pytest.mark.skipif(
+    int(zarr.__version__.split(".")[0]) < 3, reason="zarr v3 only tests"
+)
+class TestZarrV3:
+    def test_read_array_v3(self, tmp_path: Path) -> None:
+        """Test read of a v3 format Zarr array."""
+        a = np.array((1, 2, 3))
+        zarr.open_array(tmp_path, mode="w", shape=a.shape, zarr_format=3)[
+            ...
+        ] = a
+        msg = "Zarr v3 support is not implemented yet"
+        with pytest.raises(NotImplementedError, match=msg):
+            read_array(dirpath=tmp_path)
 
 
 if __name__ == "__main__":

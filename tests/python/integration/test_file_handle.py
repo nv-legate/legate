@@ -42,6 +42,7 @@ def test_read_write(tmp_path: Path, size: int) -> None:
     ):
         f.read(ty.int32)
 
+    assert f.size == Type.from_numpy_dtype(a.dtype).size * size
     # Close file
     f.close()
     assert f.closed
@@ -144,6 +145,18 @@ def test_bad_array_dims(tmp_path: Path) -> None:
         f.write(data)
 
 
+def test_write_readonly(tmp_path: Path) -> None:
+    filename = tmp_path / "test-file"
+    filename.touch()
+    with (
+        FileHandle(filename, "r") as f,
+        pytest.raises(
+            ValueError, match="Cannot write to a file opened with flags=r"
+        ),
+    ):
+        f.write(get_legate_runtime().create_array(ty.int32))
+
+
 def test_closed_file(tmp_path: Path) -> None:
     filename = tmp_path / "test-file"
     with FileHandle(filename, "w+") as f:
@@ -151,6 +164,9 @@ def test_closed_file(tmp_path: Path) -> None:
 
     with pytest.raises(RuntimeError, match="file is closed"):
         f.read(ty.int32)
+
+    with pytest.raises(RuntimeError, match="file is closed"):
+        f.write(get_legate_runtime().create_array(ty.int32))
 
 
 if __name__ == "__main__":
