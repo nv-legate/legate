@@ -18,13 +18,25 @@ fi
 # If run through CI, BUILD_MARCH is set externally. If it is not set, try to set it.
 ARCH=$(uname -m)
 if [[ -z "${BUILD_MARCH}" ]]; then
-    if [[ "${ARCH}" = "aarch64" ]]; then
-        # Use the gcc march value used by aarch64 Ubuntu.
-        BUILD_MARCH=armv8-a
-    else
-        # Use uname -m otherwise
-        BUILD_MARCH=$(uname -m | tr '_' '-')
-    fi
+    # Get the machine architecture
+    ARCH=$(uname -m)
+
+    case "${ARCH}" in
+        aarch64)
+            # Use the gcc march value used by aarch64 Ubuntu.
+            BUILD_MARCH=armv8-a
+            ;;
+        x86_64)
+            # Use haswell for all x86 variants
+            BUILD_MARCH=haswell
+            ;;
+        *)
+            # Use uname -m otherwise
+            BUILD_MARCH=$(echo "${ARCH}" | tr '_' '-')
+            ;;
+    esac
+
+    export BUILD_MARCH
 fi
 
 . continuous_integration/scripts/tools/pretty_printing.bash
