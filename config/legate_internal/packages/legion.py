@@ -12,7 +12,6 @@ from aedifix.cmake import (
     CMakeInt,
     CMakeList,
     CMakePath,
-    CMakeSemiColonList,
 )
 from aedifix.package import Package
 from aedifix.packages.cuda import CUDA
@@ -133,9 +132,6 @@ class Legion(Package):
     Legion_USE_CUDA: Final = CMAKE_VARIABLE("Legion_USE_CUDA", CMakeBool)
     Legion_USE_OpenMP: Final = CMAKE_VARIABLE("Legion_USE_OpenMP", CMakeBool)
     Legion_USE_Python: Final = CMAKE_VARIABLE("Legion_USE_Python", CMakeBool)
-    Legion_NETWORKS: Final = CMAKE_VARIABLE(
-        "Legion_NETWORKS", CMakeSemiColonList
-    )
     Legion_BUILD_JUPYTER: Final = CMAKE_VARIABLE(
         "Legion_BUILD_JUPYTER", CMakeBool
     )
@@ -143,7 +139,6 @@ class Legion(Package):
         "CPM_DOWNLOAD_Legion", CMakeBool
     )
     Legion_DIR: Final = CMAKE_VARIABLE("Legion_DIR", CMakePath)
-    Legion_USE_GASNet: Final = CMAKE_VARIABLE("Legion_USE_GASNet", CMakeBool)
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a Legion Package.
@@ -237,15 +232,7 @@ class Legion(Package):
         elif cuda_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_CUDA, False)
 
-    def configure_gasnet(self) -> None:
-        r"""Configure Legion to use GASNet. Does nothing if GASNet is not
-        enabled.
-        """
-        state = self.deps.GASNet.state
-        if state.enabled():
-            self.manager.set_cmake_variable(self.Legion_USE_GASNet, True)
-        elif state.explicitly_disabled():
-            self.manager.set_cmake_variable(self.Legion_USE_GASNet, False)
+    # GASNet is configured via Realm; no Legion GASNet configuration.
 
     def configure_openmp(self) -> None:
         r"""Configure Legion to use OpenMP. Does nothing if OpenMP is not
@@ -274,10 +261,8 @@ class Legion(Package):
         self.log_execute_func(self.configure_root_dirs)
         self.log_execute_func(self.configure_variables)
         self.log_execute_func(self.configure_cuda)
-        self.log_execute_func(self.configure_gasnet)
         self.log_execute_func(self.configure_openmp)
         self.log_execute_func(self.configure_python)
-        self.log_execute_func(self.configure_gasnet)
 
     def summarize(self) -> str:
         r"""Summarize Legion.
@@ -328,10 +313,6 @@ class Legion(Package):
         if cuda_flags := m.get_cmake_variable(self.Legion_CUDA_FLAGS):
             lines.append(("CUDA flags", cuda_flags))
 
-        networks = m.get_cmake_variable(self.Legion_NETWORKS)
-        if not networks:
-            networks = "None"
-        lines.append(("Networks", networks))
         lines.append(
             ("Bounds checks", m.get_cmake_variable(self.Legion_BOUNDS_CHECKS))
         )

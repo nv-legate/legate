@@ -7,9 +7,16 @@ include_guard(GLOBAL)
 
 function(legate_generate_install_info_py)
   list(APPEND CMAKE_MESSAGE_CONTEXT "generate_install_info_py")
-  # Legion sets this to "OFF" if not enabled, normalize it to an empty list instead
-  if(NOT Legion_NETWORKS)
-    set(Legion_NETWORKS "")
+  set(LEGATE_INSTALL_INFO_NETWORKS "")
+  set(LEGATE_INSTALL_INFO_CONDUIT "")
+
+  if(legate_USE_GASNET)
+    set(LEGATE_INSTALL_INFO_NETWORKS "gasnetex")
+    set(LEGATE_INSTALL_INFO_CONDUIT "${GASNet_CONDUIT}")
+  elseif(legate_USE_UCX)
+    set(LEGATE_INSTALL_INFO_NETWORKS "ucx")
+  elseif(legate_USE_MPI)
+    set(LEGATE_INSTALL_INFO_NETWORKS "mpi")
   endif()
 
   # Set by the pip wheels if they are being built, set to OFF if not

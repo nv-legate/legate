@@ -17,7 +17,7 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_CUDA 1)
   endif()
 
-  if(Legion_NETWORKS)
+  if(legate_USE_GASNET OR legate_USE_UCX OR legate_USE_MPI)
     set(LEGATE_USE_NETWORK 1)
   endif()
 
@@ -45,7 +45,7 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_UCX 1)
   endif()
 
-  if(legate_USE_MPI)
+  if(legate_USE_MPI OR legate_USE_GASNET)
     set(LEGATE_USE_MPI 1)
   endif()
 

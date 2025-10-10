@@ -138,8 +138,8 @@ if(Legion_USE_Python)
 endif()
 
 # If we find Legion already configured on the system, it will report whether it was
-# compiled with Python (Legion_USE_PYTHON), CUDA (Legion_USE_CUDA), OpenMP
-# (Legion_USE_OpenMP), and networking (Legion_NETWORKS).
+# compiled with Python (Legion_USE_PYTHON), CUDA (Legion_USE_CUDA), and OpenMP
+# (Legion_USE_OpenMP).
 legate_find_or_configure(PACKAGE Legion)
 
 # If Legion_USE_Python was toggled ON by find_package(Legion), find Python3
@@ -174,10 +174,6 @@ endif()
 # * UCX ----------------------------------------------------------------
 
 if(legate_USE_UCX)
-  if(NOT legate_USE_MPI)
-    message(FATAL_ERROR "UCX is not supported without MPI. Please enable MPI support.")
-  endif()
-
   # UCX is not supported on macOS.
   if(APPLE)
     message(FATAL_ERROR "UCX is not supported on macOS. Please disable UCX support.")
@@ -449,26 +445,26 @@ if(legate_USE_HDF5)
                          legate/io/hdf5/detail/hdf5_wrapper.cc)
 endif()
 
-if(legate_USE_MPI)
-  target_sources(legate_obj
-                 PRIVATE legate/comm/detail/mpi_network.cc
-                         legate/comm/detail/mpi_interface.cc
-                         legate/comm/detail/comm_mpi.cc)
-  if(NOT TARGET legate::mpi_wrapper)
-    # The MPI wrapper's headers are needed for some symbols, no link.
-    target_include_directories(legate_obj
-                               PRIVATE "${legate_cpp_SOURCE_DIR}/../share/legate/mpi_wrapper/src"
-    )
-    # This is needed to tell mpi_wrapper.h not to
-    #
-    # #include <legate_mpi_wrapper_exports.h>
-    #
-    # Normally, we need to ensure that the MPI wrappers symbols are publicly visible, but
-    # in this case when we just need the header to define the symbols for us (and never
-    # intend to actually load the wrapper), we don't care about visibility.
-    target_compile_definitions(legate_obj
-                               PRIVATE LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER=1)
-  endif()
+target_sources(legate_obj PRIVATE legate/comm/detail/mpi_interface.cc)
+if(NOT TARGET legate::mpi_wrapper)
+  # The MPI wrapper's headers are needed for some symbols, no link.
+  target_include_directories(legate_obj
+                             PRIVATE "${legate_cpp_SOURCE_DIR}/../share/legate/mpi_wrapper/src"
+  )
+  # This is needed to tell mpi_wrapper.h not to
+  #
+  # #include <legate_mpi_wrapper_exports.h>
+  #
+  # Normally, we need to ensure that the MPI wrapper's symbols are publicly visible, but
+  # in this case when we just need the header to define the symbols for us (and never
+  # intend to actually load the wrapper), we don't care about visibility.
+  target_compile_definitions(legate_obj
+                             PRIVATE LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER=1)
+endif()
+
+if(legate_USE_MPI OR legate_USE_GASNET)
+  target_sources(legate_obj PRIVATE legate/comm/detail/mpi_network.cc
+                                    legate/comm/detail/comm_mpi.cc)
 endif()
 
 if(legate_USE_UCX)
@@ -1060,7 +1056,6 @@ if(NOT PROJECT_IS_TOP_LEVEL)
   set_parent_scope(Legion_USE_OpenMP)
   set_parent_scope(Legion_USE_Python)
   set_parent_scope(Legion_CUDA_ARCH)
-  set_parent_scope(Legion_NETWORKS)
   set_parent_scope(Legion_BOUNDS_CHECKS)
   set_parent_scope(Legion_MAX_DIM)
   set_parent_scope(Legion_MAX_FIELDS)
@@ -1081,7 +1076,6 @@ endif()
        "set(Legion_USE_OpenMP ${Legion_USE_OpenMP})"
        "set(Legion_USE_Python ${Legion_USE_Python})"
        "set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH})"
-       "set(Legion_NETWORKS ${Legion_NETWORKS})"
        "set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS})"
        "set(Legion_MAX_DIM ${Legion_MAX_DIM})"
        "set(Legion_MAX_FIELDS ${Legion_MAX_FIELDS})"

@@ -94,8 +94,8 @@ case "${LEGATE_NETWORK}" in
     ;;
   "gex")
     configure_args+=(--with-gasnet)
-    configure_args+=(--)
-    configure_args+=(-DLegion_USE_GASNETEX_WRAPPER=ON)
+    configure_args+=(--with-gasnet-wrapper)
+    configure_args+=(--with-mpi-wrapper=0)
     ;;
   *)
     echo "${LEGATE_NETWORK} is not a valid choice for the network interface"
@@ -192,11 +192,6 @@ function pip_install_legate()
   # shellcheck disable=SC2154
   rm -rf "${SP_DIR}"/legion*egg-info
 
-  # If building gex, for now remove legate MPI wrapper. This should be handled more completely
-  # with a configure option in the future.
-  if [[ ${LEGATE_NETWORK} == "gex" ]]; then
-    find "${PREFIX}" -name "*legate*mpi*.so*" -exec rm {} \;
-  fi
 }
 
 build_start=$(date)

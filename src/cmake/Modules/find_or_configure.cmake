@@ -129,6 +129,11 @@ macro(legate_find_or_configure)
 
   cmake_language(CALL "find_or_configure_${_LEGATE_FOC_PACKAGE_LOWER}")
 
+  if(NOT LEGATE_SKIP_PATCH_STATUS)
+    include("${rapids-cmake-dir}/cpm/detail/display_patch_status.cmake")
+    rapids_cpm_display_patch_status("${_LEGATE_FOC_PACKAGE}")
+  endif()
+
   if(${_LEGATE_FOC_PACKAGE}_DIR)
     message(STATUS "Found external ${_LEGATE_FOC_PACKAGE}_DIR = ${${_LEGATE_FOC_PACKAGE}_DIR}"
     )

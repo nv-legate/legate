@@ -95,39 +95,16 @@ legate_option(legate_BUILD_BENCHMARKS LEGATE_BUILD_BENCHMARKS "Build legate benc
 legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate" OFF)
 legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" OFF)
 legate_option(legate_USE_UCX LEGATE_USE_UCX "Enable UCX support" OFF)
-legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" ${legate_USE_UCX})
+legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" OFF)
 legate_option(legate_FAKE_FATBINS_FOR_TIDY LEGATE_FAKE_FATBINS_FOR_TIDY
               "Emit stub fatbins for clang-tidy (avoids building CUDA/Legion during tidy)"
               OFF)
-legate_option(Legion_USE_GASNet LEGION_USE_GASNET "Enable GASNet support in Legion" OFF)
-
-set(legion_networks)
-
-if(legate_USE_UCX)
-  list(APPEND legion_networks "ucx")
-endif()
-if(legate_USE_MPI)
-  list(APPEND legion_networks "mpi")
-endif()
-if(Legion_USE_GASNet)
-  list(APPEND legion_networks "gasnetex")
-endif()
-
-legate_setting(Legion_NETWORKS NETWORKS
-               "Networking backends to use (semicolon-separated)" "${legion_networks}")
-
-unset(legion_networks)
-
-if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
-  legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)
-  legate_setting(GASNet_CONDUIT CONDUIT "Default GASNet conduit" "mpi")
-  option(Legion_USE_GASNETEX_WRAPPER "Enable gasnetex wrapper" OFF)
-
-  if(NOT GASNet_ROOT_DIR)
-    legate_option(Legion_EMBED_GASNet LEGION_EMBED_GASNET
-                  "Embed a custom GASNet build into Legion" ON)
-  endif()
-endif()
+# Realm/GASNet controls
+legate_option(legate_USE_GASNET LEGATE_USE_GASNET "Enable GASNet via Realm" OFF)
+legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)
+legate_setting(GASNet_CONDUIT CONDUIT "Default GASNet conduit" "mpi")
+legate_option(LEGATE_SKIP_PATCH_STATUS LEGATE_SKIP_PATCH_STATUS
+              "Skip printing patch application status for third-party dependencies" OFF)
 
 legate_setting(Legion_MAX_DIM LEGION_MAX_DIM "Maximum dimension" 6)
 
@@ -164,15 +141,17 @@ legate_setting(Legion_LINKER_FLAGS LEGION_LD_FLAGS "Linker flags for Legion"
 legate_option(LEGATE_BUILD_PIP_WHEELS LEGATE_BUILD_PIP_WHEELS
               "Set a number of options better suited for standalone pip wheel builds" OFF)
 
-if(Legion_NETWORKS AND NOT LEGATE_BUILD_PIP_WHEELS)
-  set(build_mpi_wrapper ON)
-else()
-  set(build_mpi_wrapper OFF)
+set(build_mpi_wrapper_default OFF)
+if(legate_USE_MPI OR legate_USE_UCX OR legate_USE_GASNET)
+  set(build_mpi_wrapper_default ON)
+endif()
+if(LEGATE_BUILD_PIP_WHEELS)
+  set(build_mpi_wrapper_default OFF)
 endif()
 
 legate_option(legate_BUILD_MPI_WRAPPER LEGATE_BUILD_MPI_WRAPPER
-              "Build the Legate MPI shim library" ${build_mpi_wrapper})
-unset(build_mpi_wrapper)
+              "Build the Legate MPI shim library" ${build_mpi_wrapper_default})
+unset(build_mpi_wrapper_default)
 
 if(LEGATE_BUILD_PIP_WHEELS)
   set(cuda_dyn_load OFF)
