@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.10 &#8212; NVIDIA legate (25.10.00.dev81+g3b4f06865)</title>
+    <title>Changes: 25.10 &#8212; NVIDIA legate (25.10.00.dev83+g2ca0aea70)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=223a66f0"></script>
+    <script src="../_static/documentation_options.js?v=c9a3b646"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,8 +62,8 @@ SPDX-License-Identifier: Apache-2.0
     <link rel="icon" href="../_static/favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Changes: 25.09" href="2509.html" />
-    <link rel="prev" title="Change Log" href="index.html" />
+    <link rel="next" title="Changes: 25.08" href="2508.html" />
+    <link rel="prev" title="Changes: 25.11" href="2511.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev83+g2ca0aea70) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev83+g2ca0aea70) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev81+g3b4f06865)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev83+g2ca0aea70)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev81+g3b4f06865) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.10.00.dev83+g2ca0aea70) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.10.00.dev83+g2ca0aea70) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.10.00.dev81+g3b4f06865)</p>
+    <p class="title logo__title">NVIDIA legate (25.10.00.dev83+g2ca0aea70)</p>
   
 </a>
 
@@ -570,8 +570,8 @@ SPDX-License-Identifier: Apache-2.0
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../versions.html">Versions</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Changelog</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="2511.html">2511</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">2510</a></li>
-<li class="toctree-l2"><a class="reference internal" href="2509.html">2509</a></li>
 <li class="toctree-l2"><a class="reference internal" href="2508.html">2508</a></li>
 <li class="toctree-l2"><a class="reference internal" href="2507.html">2507</a></li>
 <li class="toctree-l2"><a class="reference internal" href="2503.html">2503</a></li>
@@ -667,11 +667,23 @@ SPDX-License-Identifier: Apache-2.0
 <p class="rubric">General</p>
 <ul class="simple">
 <li><p>Add support for CUDA 13.</p></li>
+<li><p>Define <code class="docutils literal notranslate"><span class="pre">LEGION_DISABLE_DEPRECATED_ENUMS</span></code> in <code class="docutils literal notranslate"><span class="pre">legate_defines.h</span></code>, which disables the
+use of deprecated Legion enum values. Uses of these values will now result in
+compile-time errors.</p></li>
 </ul>
 <section id="c">
 <h2>C++<a class="headerlink" href="#c" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
 <ul class="simple">
+<li><p>Add config option <code class="docutils literal notranslate"><span class="pre">--profile-name</span></code> to customize the base filename for profiling
+output.</p></li>
+<li><p>Add new UCX networking backend. On supporting builds (<code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINED(LEGATE_USE_UCX)</span></code>
+being <code class="docutils literal notranslate"><span class="pre">1</span></code>), CPU collectives can be routed through UCX by disabling
+MPI (<code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG=--disable-mpi</span></code>).</p></li>
+<li><p>Remove support for Cal communicator.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">LEGATE_USE_CAL</span></code> macro definition.</p></li>
+<li><p>Support for <code class="docutils literal notranslate"><span class="pre">cal</span></code> communicator via <code class="docutils literal notranslate"><span class="pre">legate.AutoTask.add_communicator(&quot;cal&quot;)</span></code>
+and <code class="docutils literal notranslate"><span class="pre">legate.ManualTask.add_communicator(&quot;cal&quot;)</span></code> have been removed.</p></li>
 <li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate/cuda/cuda.h</span></code>.</p></li>
 <li><p>Remove <code class="docutils literal notranslate"><span class="pre">LEGATE_CHECK_CUDA()</span></code> and <code class="docutils literal notranslate"><span class="pre">LegateCheckCUDA()</span></code>.</p></li>
 <li><p>Remove <code class="docutils literal notranslate"><span class="pre">LEGATE_CHECK_CUDA_STREAM()</span></code> and <code class="docutils literal notranslate"><span class="pre">LegateCheckCUDAStream()</span></code>.</p></li>
@@ -691,6 +703,12 @@ removal.</p></li>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
 <ul class="simple">
+<li><p>Add overload of <code class="docutils literal notranslate"><span class="pre">legate::align()</span></code> that takes a span of variables to align as a
+convenience for aligning multiple task arguments.</p></li>
+<li><p>Add overload of <code class="docutils literal notranslate"><span class="pre">legate::broadcast()</span></code> that takes a span of variables to broadcast as a
+convenience for broadcasting multiple task arguments.</p></li>
+<li><p>Add overload of <code class="docutils literal notranslate"><span class="pre">legate::broadcast()</span></code> that takes a span of pairs of variables and axes
+to broadcast as a convenience for broadcasting multiple task arguments.</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">LogicalStore::get_partition()</span></code>. This method allows users to access the
 partition used by the runtime for optimizing task launches and data movement.</p></li>
 </ul>
@@ -705,6 +723,8 @@ partition used by the runtime for optimizing task launches and data movement.</p
 <li><p>Switch <code class="docutils literal notranslate"><span class="pre">legate::Span</span></code> to being an alias to <code class="docutils literal notranslate"><span class="pre">cuda::std::span</span></code> instead of the
 homegrown implementation. As <code class="docutils literal notranslate"><span class="pre">legate::Span</span></code> mirrored the interface of <code class="docutils literal notranslate"><span class="pre">std::span</span></code>
 (which <code class="docutils literal notranslate"><span class="pre">cuda::std::span</span></code> does as well), this change should be invisible to users.</p></li>
+<li><p>Remove previously deprecated classes <code class="docutils literal notranslate"><span class="pre">legate::cuda::StreamPool</span></code> and
+<code class="docutils literal notranslate"><span class="pre">legate::cuda::StreamView</span></code>.</p></li>
 </ul>
 <p class="rubric">I/O</p>
 <ul>
@@ -720,11 +740,19 @@ feature enabled should ensure it is on via the flag (as before), while users tha
 encounter false positives should disable it via the flag and raise a bug report at
 <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
 </li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::io::hdf5::to_file()</span></code> to write a <code class="docutils literal notranslate"><span class="pre">legate::LogicalArray()</span></code> to file using
+HDF5.</p></li>
 </ul>
 </section>
 <section id="python">
 <h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
+<ul class="simple">
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate.core.AutoTask.add_cal_communicator()</span></code>.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate.core.ManualTask.add_cal_communicator()</span></code>.</p></li>
+<li><p>Remove support for passing <code class="docutils literal notranslate"><span class="pre">&quot;cal&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">legate.core.AutoTask.add_communicator()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">legate.core.ManualTask.add_communicator()</span></code>.</p></li>
+</ul>
 <p class="rubric">Data</p>
 <ul class="simple">
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.LogicalArray.as_struct_array()</span></code>.</p></li>
@@ -740,6 +768,10 @@ that denotes the dimension ordering kind</p></li>
 </ul>
 <p class="rubric">Partitioning</p>
 <ul class="simple">
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate.core.align()</span></code> to return an iterable of constraints instead of a single
+value.</p></li>
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate.core.broadcast()</span></code> to return an iterable of constraints instead of a
+single value.</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.LogicalStore.partition</span></code>. This property allows users to access
 the partition used by the runtime for optimizing task launches and data movement.</p></li>
 </ul>
@@ -755,12 +787,20 @@ decorator.</p></li>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
 <ul class="simple">
+<li><p>Expose profiling range functions to Python: <code class="docutils literal notranslate"><span class="pre">legate.core.start_profiling_range()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">legate.core.stop_profiling_range()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.runtime.config</span></code> property to access runtime configuration. Note that this
+API is considered an implementation detail and has no guarantee of stability.</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.Runtime.create_struct_array()</span></code>.</p></li>
 </ul>
 <p class="rubric">Utilities</p>
 <p class="rubric">I/O</p>
 <ul class="simple">
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.io.hdf5.from_file_batched()</span></code> to read a HDF5 file in batches.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate.io.hdf5.kerchunk_read()</span></code>. Legate has had first-class support for HDF5
+reads for a while, making this function obsolete.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.io.hdf5.to_file()</span></code> to write a <code class="docutils literal notranslate"><span class="pre">legate.core.LogicalArray</span></code> to file using
+HDF5.</p></li>
 </ul>
 </section>
 </section>
@@ -776,20 +816,20 @@ decorator.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="index.html"
+       href="2511.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Change Log</p>
+        <p class="prev-next-title">Changes: 25.11</p>
       </div>
     </a>
     <a class="right-next"
-       href="2509.html"
+       href="2508.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Changes: 25.09</p>
+        <p class="prev-next-title">Changes: 25.08</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
