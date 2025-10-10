@@ -30,19 +30,19 @@
         "version": "25.08"
     },
     {
-        "name": "25.09",
-        "url": "https://docs.nvidia.com/legate/25.09/",
-        "version": "25.09"
-    },
-    {
         "name": "dev",
         "url": "https://nv-legate.github.io/legate/",
         "version": "dev"
     },
     {
         "name": "25.10",
-        "preferred": true,
         "url": "https://docs.nvidia.com/legate/25.10/",
         "version": "25.10"
+    },
+    {
+        "name": "25.11",
+        "preferred": true,
+        "url": "https://docs.nvidia.com/legate/25.11/",
+        "version": "25.11"
     }
 ]

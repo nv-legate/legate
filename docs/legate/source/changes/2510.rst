@@ -19,12 +19,24 @@ Changes: 25.10
 .. rubric:: General
 
 - Add support for CUDA 13.
+- Define ``LEGION_DISABLE_DEPRECATED_ENUMS`` in ``legate_defines.h``, which disables the
+  use of deprecated Legion enum values. Uses of these values will now result in
+  compile-time errors.
 
 C++
 ---
 
 .. rubric:: General
 
+- Add config option ``--profile-name`` to customize the base filename for profiling
+  output.
+- Add new UCX networking backend. On supporting builds (``LEGATE_DEFINED(LEGATE_USE_UCX)``
+  being ``1``), CPU collectives can be routed through UCX by disabling
+  MPI (``LEGATE_CONFIG=--disable-mpi``).
+- Remove support for Cal communicator.
+- Remove ``LEGATE_USE_CAL`` macro definition.
+- Support for ``cal`` communicator via ``legate.AutoTask.add_communicator("cal")``
+  and ``legate.ManualTask.add_communicator("cal")`` have been removed.
 - Remove ``legate/cuda/cuda.h``.
 - Remove ``LEGATE_CHECK_CUDA()`` and ``LegateCheckCUDA()``.
 - Remove ``LEGATE_CHECK_CUDA_STREAM()`` and ``LegateCheckCUDAStream()``.
@@ -45,6 +57,12 @@ C++
 
 .. rubric:: Partitioning
 
+- Add overload of ``legate::align()`` that takes a span of variables to align as a
+  convenience for aligning multiple task arguments.
+- Add overload of ``legate::broadcast()`` that takes a span of variables to broadcast as a
+  convenience for broadcasting multiple task arguments.
+- Add overload of ``legate::broadcast()`` that takes a span of pairs of variables and axes
+  to broadcast as a convenience for broadcasting multiple task arguments.
 - Add ``LogicalStore::get_partition()``. This method allows users to access the
   partition used by the runtime for optimizing task launches and data movement.
 
@@ -61,6 +79,8 @@ C++
 - Switch ``legate::Span`` to being an alias to ``cuda::std::span`` instead of the
   homegrown implementation. As ``legate::Span`` mirrored the interface of ``std::span``
   (which ``cuda::std::span`` does as well), this change should be invisible to users.
+- Remove previously deprecated classes ``legate::cuda::StreamPool`` and
+  ``legate::cuda::StreamView``.
 
 .. rubric:: I/O
 
@@ -76,11 +96,18 @@ C++
   feature enabled should ensure it is on via the flag (as before), while users that
   encounter false positives should disable it via the flag and raise a bug report at
   https://github.com/nv-legate/legate/issues.
+- Add ``legate::io::hdf5::to_file()`` to write a ``legate::LogicalArray()`` to file using
+  HDF5.
 
 Python
 ------
 
 .. rubric:: General
+
+- Remove ``legate.core.AutoTask.add_cal_communicator()``.
+- Remove ``legate.core.ManualTask.add_cal_communicator()``.
+- Remove support for passing ``"cal"`` to ``legate.core.AutoTask.add_communicator()``
+  and ``legate.core.ManualTask.add_communicator()``.
 
 .. rubric:: Data
 
@@ -97,6 +124,10 @@ Python
 
 .. rubric:: Partitioning
 
+- Change ``legate.core.align()`` to return an iterable of constraints instead of a single
+  value.
+- Change ``legate.core.broadcast()`` to return an iterable of constraints instead of a
+  single value.
 - Add ``legate.core.LogicalStore.partition``. This property allows users to access
   the partition used by the runtime for optimizing task launches and data movement.
 
@@ -113,6 +144,10 @@ Python
 
 .. rubric:: Runtime
 
+- Expose profiling range functions to Python: ``legate.core.start_profiling_range()`` and
+  ``legate.core.stop_profiling_range()``.
+- Add ``legate.core.runtime.config`` property to access runtime configuration. Note that this
+  API is considered an implementation detail and has no guarantee of stability.
 - Add ``legate.core.Runtime.create_struct_array()``.
 
 .. rubric:: Utilities
@@ -120,3 +155,7 @@ Python
 .. rubric:: I/O
 
 - Add ``legate.io.hdf5.from_file_batched()`` to read a HDF5 file in batches.
+- Remove ``legate.io.hdf5.kerchunk_read()``. Legate has had first-class support for HDF5
+  reads for a while, making this function obsolete.
+- Add ``legate.io.hdf5.to_file()`` to write a ``legate.core.LogicalArray`` to file using
+  HDF5.
