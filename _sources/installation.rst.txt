@@ -42,11 +42,12 @@ Legate, e.g. `cuPyNumeric <https://docs.nvidia.com/cupynumeric>`_:
    pip wheels only), supporting Python versions 3.11 to 3.13. Windows is only
    supported through WSL.
 
-Nightly top-of-tree builds of Legate are available under the "experimental" label:
+Nightly top-of-tree builds of Legate are available on a separate channel,
+`legate-nightly`:
 
 .. code-block:: bash
 
-   $ conda install -c conda-forge -c legate/label/experimental legate
+   $ conda install -c conda-forge -c legate-nightly legate
 
 Refer to the `nightly docs <https://nv-legate.github.io/legate>`_ when using these.
 

@@ -50,8 +50,7 @@ full QA validation, and thus may contain functional and performance regressions.
 Nightly builds
 ______________
 
-Nightly builds are uploaded under the non-default label
-`legate/label/experimental`. Please be aware that these packages are not
-validated at all.
+Nightly builds are uploaded to a separate channel, `legate-nightly`. Please be
+aware that these packages are not validated at all.
 
 .. _CalVer: https://calver.org/
