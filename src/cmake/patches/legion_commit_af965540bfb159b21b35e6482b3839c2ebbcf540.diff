@@ -1,0 +1,61 @@
+# Emergency release fix for branch-25.10; dev tree will pick this up via
+# a future Legion update.
+# Full hash: af965540bfb159b21b35e6482b3839c2ebbcf540
+# Upstream MR: https://gitlab.com/StanfordLegion/legion/-/merge_requests/1933
+diff --git a/tools/legion_prof_rs/src/backend/data_source.rs b/tools/legion_prof_rs/src/backend/data_source.rs
+index 74c2a878616bcd5227c6a71ffe3e650ec5ff7d03..52d4190d1f99c4893c33713f34c46c132e6c677c 100644
+--- a/tools/legion_prof_rs/src/backend/data_source.rs
++++ b/tools/legion_prof_rs/src/backend/data_source.rs
+@@ -255,16 +255,14 @@ impl StateDataSource {
+                 kind_index += 1;
+ 
+                 let color = match (kind, device) {
+-                    (ProcKind::GPU, Some(DeviceKind::Device)) => Color::OLIVEDRAB,
+-                    (ProcKind::GPU, Some(DeviceKind::Host)) => Color::ORANGERED,
+-                    (ProcKind::CPU, None) => Color::STEELBLUE,
+-                    (ProcKind::Utility, None) => Color::CRIMSON,
+-                    (ProcKind::IO, None) => Color::ORANGERED,
+-                    (ProcKind::ProcGroup, None) => Color::ORANGERED,
+-                    (ProcKind::ProcSet, None) => Color::ORANGERED,
+-                    (ProcKind::OpenMP, None) => Color::ORANGERED,
+-                    (ProcKind::Python, None) => Color::OLIVEDRAB,
+-                    _ => unreachable!(),
++                    // All Device timelines get the same color
++                    (_, Some(DeviceKind::Device)) => Color::OLIVEDRAB,
++                    // Some processors get special colors
++                    (ProcKind::CPU, _) => Color::STEELBLUE,
++                    (ProcKind::Utility, _) => Color::CRIMSON,
++                    (ProcKind::Python, _) => Color::DARKGOLDENROD,
++                    // Everything else gets the standard color
++                    _ => Color::ORANGERED,
+                 };
+                 let color: Color32 = color.into();
+ 
+diff --git a/tools/legion_prof_rs/src/state.rs b/tools/legion_prof_rs/src/state.rs
+index 4807654176dcb774e0bdc9b24727cfadc1f76b66..a544ab9a7c2754d8790a0e6ebc66cd0256c0b484 100644
+--- a/tools/legion_prof_rs/src/state.rs
++++ b/tools/legion_prof_rs/src/state.rs
+@@ -1002,6 +1002,8 @@ impl Proc {
+         self.max_levels_device = max_levels_device;
+         self.time_points_device = points_device;
+         self.util_time_points_device = util_points_device;
++        // These should be in alignment in order for has_device_timepoints to work
++        assert!((self.max_levels_device == 0) == self.time_points_device.is_empty());
+     }
+ 
+     fn stack_time_points(&mut self) {
+@@ -1019,7 +1021,13 @@ impl Proc {
+     }
+ 
+     pub fn has_device_timepoints(&self) -> bool {
+-        !self.time_points_device.is_empty()
++        // Use this instead of looking at time_points_device because it could
++        // be queried either before or after we call stack_time_points which
++        // will swap out time_points_device for time_points_stacked_device.
++        // We also cannot use time_points_stacked_device because it always
++        // has at least one level even if the there are no points due to
++        // the implementation of the stack method.
++        self.max_levels_device > 0
+     }
+ 
+     pub fn find_executing_entry(

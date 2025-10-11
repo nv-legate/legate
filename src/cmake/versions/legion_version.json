@@ -34,6 +34,12 @@
                     "fixed_in": "",
                     "issue": "legion fix invalidating WRITE_ONLY_DISCARD",
                     "required": true
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_commit_af965540bfb159b21b35e6482b3839c2ebbcf540.diff",
+                    "fixed_in": "af965540bfb159b21b35e6482b3839c2ebbcf540",
+                    "issue": "legion_prof processor color defaults (MR !1933)",
+                    "required": true
                 }
             ],
             "version": "25.10.0"
