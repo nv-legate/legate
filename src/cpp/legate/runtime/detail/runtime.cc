@@ -1731,6 +1731,7 @@ void handle_realm_default_args(bool need_network_init)
         "Legate was run on multiple nodes but was not built with networking support. Please "
         "install Legate again with networking support (e.g. configured \"--with-ucx\")"};
     }
+
     // We have to pass an explicit `-ll:networks` flag, otherwise Realm will silently continue with
     // single-node execution if network initialization fails. Therefore, even though Realm's default
     // priority list for network modules is good enough for us, we have to duplicate it here.
