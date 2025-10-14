@@ -97,12 +97,18 @@ class CUDAConfig(SectionConfig):
             if self.cupynumeric:
                 deps += (
                     "cuda-cudart-static",
-                    "cutensor>=2",
+                    # cuTensor 2.3 drops support for Volta, which is within
+                    # our support matrix for 12.X
+                    (
+                        "cutensor>=2,<2.3"
+                        if V(self.ctk_version) < (13, 0, 0)
+                        else "cutensor>=2"
+                    ),
                     "libcublas-dev",
                     "libcufft-dev",
                     "libcurand-dev",
                     "libcusolver-dev",
-                    "libcusolvermp-dev",
+                    "libcusolvermp-dev>=0.7",  # pre-0.7 uses UCC, not NCCL
                     "libcusparse-dev",
                     "libnvjitlink-dev",
                 )
@@ -224,9 +230,6 @@ class RuntimeConfig(SectionConfig):
         )
         if self.sanitizers:
             pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
-        if self.openmpi:
-            # see https://github.com/spack/spack/issues/18084
-            pkgs += ("openssh",)
         return pkgs
 
 
