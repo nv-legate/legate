@@ -8,3 +8,7 @@ LEGION_GIT_SHALLOW:
   - false
 rust_min_version:
   - "1.84"
+c_stdlib:
+  - sysroot
+c_stdlib_version:
+  - "2.28"
