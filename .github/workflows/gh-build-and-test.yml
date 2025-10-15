@@ -194,7 +194,7 @@ jobs:
     secrets: inherit
 
   upload:
-    needs: test-within-container
+    needs: build
     # The use of always() below, ensures the step will run even on failure of the tests
     # before if other conditionals are all true.
     # We use the package with tests to test and then upload corresponding package without test.
@@ -213,7 +213,7 @@ jobs:
       legate-gh-ci-tag: "v1.41"
       build-mode: ${{ inputs.build-mode }}
       network: ${{ inputs.network }}
-      upload-action: ${{ needs.test-within-container.result == 'failure' && 'upload-package-Anaconda' || 'upload-package-Anaconda-tested' }}
+      upload-action: 'upload-package-Anaconda'
       pkgSubString: "legate"
       repos-Root: "legate"
       python-version: ${{ inputs.python-version }}
