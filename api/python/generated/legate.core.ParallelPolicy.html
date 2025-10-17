@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.ParallelPolicy &#8212; NVIDIA legate (25.11.00.dev5+g10ce49a82)</title>
+    <title>legate.core.ParallelPolicy &#8212; NVIDIA legate (25.11.00.dev9+gfc1626613)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=3c3cf4a5"></script>
+    <script src="../../../_static/documentation_options.js?v=b5069742"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev5+g10ce49a82)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gfc1626613)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev5+g10ce49a82)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gfc1626613)</p>
   
 </a>
 
@@ -678,7 +678,7 @@ SPDX-License-Identifier: Apache-2.0
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">legate.core.</span></span><span class="sig-name descname"><span class="pre">ParallelPolicy</span></span><span class="sig-paren">(</span>
 
 <dl>
-<dd><em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">streaming:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">StreamingMode</span> <span class="pre">streaming_mode:</span> <span class="pre">StreamingMode</span> <span class="pre">=</span> <span class="pre">StreamingMode.OFF</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">uint32_t</span> <span class="pre">overdecompose_factor:</span> <span class="pre">uint32_t</span> <span class="pre">=</span> <span class="pre">1</span></span></em>,</dd>
 </dl>
@@ -690,8 +690,10 @@ SPDX-License-Identifier: Apache-2.0
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>streaming</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to enable streaming.</p></li>
-<li><p><strong>overdecompose_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – The overdecomposition factor.</p></li>
+<li><p><strong>streaming_mode</strong> (<em>StreamingMode</em>) – Enum that enables streaming in STRICT or RELAXED mode.
+Default = OFF</p></li>
+<li><p><strong>overdecompose_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – The overdecomposition factor.
+Default = 1</p></li>
 </ul>
 </dd>
 </dl>
@@ -705,6 +707,9 @@ SPDX-License-Identifier: Apache-2.0
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="legate.core.ParallelPolicy.streaming.html#legate.core.ParallelPolicy.streaming" title="legate.core.ParallelPolicy.streaming"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streaming</span></code></a></p></td>
 <td><p>bool</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.ParallelPolicy.streaming_mode.html#legate.core.ParallelPolicy.streaming_mode" title="legate.core.ParallelPolicy.streaming_mode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streaming_mode</span></code></a></p></td>
+<td><p>StreamingMode</p></td>
 </tr>
 </tbody>
 </table>

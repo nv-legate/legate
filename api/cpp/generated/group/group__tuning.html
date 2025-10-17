@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tuning &#8212; NVIDIA legate (25.11.00.dev5+g10ce49a82)</title>
+    <title>tuning &#8212; NVIDIA legate (25.11.00.dev9+gfc1626613)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=3c3cf4a5"></script>
+    <script src="../../../../_static/documentation_options.js?v=b5069742"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev5+g10ce49a82)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gfc1626613)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev5+g10ce49a82)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gfc1626613)</p>
   
 </a>
 
@@ -674,6 +674,37 @@ SPDX-License-Identifier: Apache-2.0
 <dt class="sig sig-object cpp">
 <span class="target" id="group__tuning"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">Tuning</span></span></dt>
 <dd><p>Classes and utilities to define tuning inside a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv413StreamingMode">
+<span id="_CPPv313StreamingMode"></span><span id="_CPPv213StreamingMode"></span><span class="target" id="group__tuning_1ga6de0ae1305b045b90d6c1a137ee3e7c8"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">StreamingMode</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><a class="headerlink" href="#_CPPv413StreamingMode" title="Link to this definition">#</a><br /></dt>
+<dd><p>Streaming modes for ParllelPolicy. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13StreamingMode3OFFE">
+<span id="_CPPv3N13StreamingMode3OFFE"></span><span id="_CPPv2N13StreamingMode3OFFE"></span><span class="target" id="group__tuning_1gga6de0ae1305b045b90d6c1a137ee3e7c8a88559a0cfd8250c9d65970cc145c92d4"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">OFF</span></span></span><a class="headerlink" href="#_CPPv4N13StreamingMode3OFFE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Disable Streaming. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13StreamingMode6STRICTE">
+<span id="_CPPv3N13StreamingMode6STRICTE"></span><span id="_CPPv2N13StreamingMode6STRICTE"></span><span class="target" id="group__tuning_1gga6de0ae1305b045b90d6c1a137ee3e7c8a4c50b1af679a751969aaad2881a34bef"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">STRICT</span></span></span><a class="headerlink" href="#_CPPv4N13StreamingMode6STRICTE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Stream all the tasks created and submitted in the scope as a single group. </p>
+<p>If any task in the scope is not ‘Streamable’, the runtime will throw a <code class="docutils literal notranslate"><span class="pre">std::invalid_argument</span></code> exception.</p>
+<p>Users may use this mode when it is necessary that all tasks in the scope are streamable, e.g., when the memory savings from streaming need to be maximized. Users may also use this mode for debugging to catch non-streamable tasks. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N13StreamingMode7RELAXEDE">
+<span id="_CPPv3N13StreamingMode7RELAXEDE"></span><span id="_CPPv2N13StreamingMode7RELAXEDE"></span><span class="target" id="group__tuning_1gga6de0ae1305b045b90d6c1a137ee3e7c8a670d62a4760f78db660720886bf6a698"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RELAXED</span></span></span><a class="headerlink" href="#_CPPv4N13StreamingMode7RELAXEDE" title="Link to this definition">#</a><br /></dt>
+<dd><p>All tasks created and submitted in the scope need not stream as a single group. </p>
+<p>This mode allows the runtime to break the tasks in a streaming scope into multiple groups and add mapping fences between after every group. Users can add this mode when it is not guaranteed or required that all tasks in the scope are streamed as one group. This leaves some memory savings on the table due to splitting the scope, but potentially allows third party library code to be used inside a scope, for example. </p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate14ParallelPolicyE">
 <span id="_CPPv3N6legate14ParallelPolicyE"></span><span id="_CPPv2N6legate14ParallelPolicyE"></span><span id="legate::ParallelPolicy"></span><span class="target" id="classlegate_1_1ParallelPolicy"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ParallelPolicy</span></span></span><br /></dt>
@@ -682,19 +713,24 @@ SPDX-License-Identifier: Apache-2.0
 <p>A helper class that describes parallelization policies for tasks. </p>
 <p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy"><span class="std std-ref"><span class="pre">ParallelPolicy</span></span></a></code> consists of knobs to control the parallelization policy for tasks in a given scope. To change the parallelization policy of the scope, a new <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref"><span class="pre">Scope</span></span></a></code> must be created with a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy"><span class="std std-ref"><span class="pre">ParallelPolicy</span></span></a></code>. Currently, the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy"><span class="std std-ref"><span class="pre">ParallelPolicy</span></span></a></code> class provides the following parameters:</p>
 <p><ul class="simple">
-<li><p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> (default: <code class="docutils literal notranslate"><span class="pre">false</span></code>): When the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> in a scope, the runtime executes the tasks in a streaming fashion. For example, if there are two tasks <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code> in the scope, the normal execution would run all parallel instances of <code class="docutils literal notranslate"><span class="pre">T1</span></code> before it would move on to <code class="docutils literal notranslate"><span class="pre">T2</span></code>’s, whereas the streaming execution would alternative between <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code>, launching a subset of parallel instances at a time that would fit to the memory. The granularity of tasks can be configured by the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> (see below), and if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, no streaming would happen even if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">streaming(StreamingMode)</span></code> (default: <code class="docutils literal notranslate"><span class="pre">OFF</span></code>): When the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is not <code class="docutils literal notranslate"><span class="pre">OFF</span></code> in a scope, the runtime executes the tasks in a streaming fashion. For example, if there are two tasks <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code> in the scope, the normal execution would run all parallel instances of <code class="docutils literal notranslate"><span class="pre">T1</span></code> before it would move on to <code class="docutils literal notranslate"><span class="pre">T2</span></code>’s, whereas the streaming execution would alternative between <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code>, launching a subset of parallel instances at a time that would fit to the memory. The granularity of tasks can be configured by the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> (see below), and if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, no streaming would happen even if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> (default: <code class="docutils literal notranslate"><span class="pre">1</span></code>): When the value is greater than <code class="docutils literal notranslate"><span class="pre">1</span></code>, the auto-partitioner will over-decompose the stores when partitioning them; by default, the auto-partitioner creates <code class="docutils literal notranslate"><span class="pre">N</span></code> chunks in a store partition when there are <code class="docutils literal notranslate"><span class="pre">N</span></code> processors, but if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">k</span></code> in the scope, it would create <code class="docutils literal notranslate"><span class="pre">kN</span></code> chunks in the partition. </p></li>
 </ul>
 </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate14ParallelPolicy14with_streamingEb">
-<span id="_CPPv3N6legate14ParallelPolicy14with_streamingEb"></span><span id="_CPPv2N6legate14ParallelPolicy14with_streamingEb"></span><span id="legate::ParallelPolicy::with_streaming__b"></span><span class="target" id="classlegate_1_1ParallelPolicy_1a3f67d0b0e0dfac5cfdc7a2d90549031a"></span><a class="reference internal" href="../class/classlegate_1_1ParallelPolicy.html#_CPPv4N6legate14ParallelPolicyE" title="legate::ParallelPolicy"><span class="n"><span class="pre">ParallelPolicy</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_streaming</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">streaming</span></span></em><span class="sig-paren">)</span><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14ParallelPolicy14with_streamingE13StreamingMode">
+<span id="_CPPv3N6legate14ParallelPolicy14with_streamingE13StreamingMode"></span><span id="_CPPv2N6legate14ParallelPolicy14with_streamingE13StreamingMode"></span><span id="legate::ParallelPolicy::with_streaming__StreamingMode"></span><span class="target" id="classlegate_1_1ParallelPolicy_1a93dabd13700e8c2f8b47bfa52b85af78"></span><a class="reference internal" href="../class/classlegate_1_1ParallelPolicy.html#_CPPv4N6legate14ParallelPolicyE" title="legate::ParallelPolicy"><span class="n"><span class="pre">ParallelPolicy</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_streaming</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv413StreamingMode" title="StreamingMode"><span class="n"><span class="pre">StreamingMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><br /></dt>
 <dd><p>Sets the flag that indicates whether tasks in a given scope should be streamed. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__tuning_1ga6de0ae1305b045b90d6c1a137ee3e7c8"><span class="std std-ref">StreamingMode</span></a>. </p>
+</div>
+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>streaming</strong> – A boolean value to set to the streaming flag. </p>
+<dd class="field-odd"><p><strong>mode</strong> – An enum of type <a class="reference internal" href="#group__tuning_1ga6de0ae1305b045b90d6c1a137ee3e7c8"><span class="std std-ref">StreamingMode</span></a> that determines the mode of streaming.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -731,6 +767,17 @@ SPDX-License-Identifier: Apache-2.0
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>false If the streaming is not enabled. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate14ParallelPolicy14streaming_modeEv">
+<span id="_CPPv3NK6legate14ParallelPolicy14streaming_modeEv"></span><span id="_CPPv2NK6legate14ParallelPolicy14streaming_modeEv"></span><span id="legate::ParallelPolicy::streaming_modeC"></span><span class="target" id="classlegate_1_1ParallelPolicy_1af208de7a75a70268c631636b838fdf43"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv413StreamingMode" title="StreamingMode"><span class="n"><span class="pre">StreamingMode</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">streaming_mode</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<dd><p>Returns the streaming mode. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>enum value of type <a class="reference internal" href="#group__tuning_1ga6de0ae1305b045b90d6c1a137ee3e7c8"><span class="std std-ref">StreamingMode</span></a>. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1176,10 +1223,17 @@ The given machine is intersected with the machine from the outer scope</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv413StreamingMode"><code class="docutils literal notranslate"><span class="pre">StreamingMode</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N13StreamingMode3OFFE"><code class="docutils literal notranslate"><span class="pre">OFF</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N13StreamingMode6STRICTE"><code class="docutils literal notranslate"><span class="pre">STRICT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N13StreamingMode7RELAXEDE"><code class="docutils literal notranslate"><span class="pre">RELAXED</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicyE"><code class="docutils literal notranslate"><span class="pre">legate::ParallelPolicy</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy14with_streamingEb"><code class="docutils literal notranslate"><span class="pre">with_streaming()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy14with_streamingE13StreamingMode"><code class="docutils literal notranslate"><span class="pre">with_streaming()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy25with_overdecompose_factorENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">with_overdecompose_factor()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicy9streamingEv"><code class="docutils literal notranslate"><span class="pre">streaming()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicy14streaming_modeEv"><code class="docutils literal notranslate"><span class="pre">streaming_mode()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicy20overdecompose_factorEv"><code class="docutils literal notranslate"><span class="pre">overdecompose_factor()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicyeqERK14ParallelPolicy"><code class="docutils literal notranslate"><span class="pre">operator==()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicyneERK14ParallelPolicy"><code class="docutils literal notranslate"><span class="pre">operator!=()</span></code></a></li>

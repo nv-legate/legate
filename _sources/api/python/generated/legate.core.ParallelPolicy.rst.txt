@@ -20,6 +20,7 @@ legate.core.ParallelPolicy
    
       ~ParallelPolicy.overdecompose_factor
       ~ParallelPolicy.streaming
+      ~ParallelPolicy.streaming_mode
    
    
 

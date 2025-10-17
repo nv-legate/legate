@@ -70,6 +70,11 @@ C++
 
 .. rubric:: Types
 
+.. rubric:: Tuning
+
+- Change ``legate::ParallelPolicy`` to take an enum type ``legate::StreamingMode``
+  instead of a boolean flag for streaming task execution.
+
 .. rubric:: Runtime
 
 - Add ``legate::Runtime::create_struct_array()``.
@@ -141,6 +146,11 @@ Python
   decorator.
 
 .. rubric:: Types
+
+.. rubric:: Tuning
+
+- Change ``legate.core.ParallelPolicy`` to take an  enum type ``legate.core.StreamingMode``
+  instead of a boolean flag for streaming task execution.
 
 .. rubric:: Runtime
 

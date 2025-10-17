@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.10 &#8212; NVIDIA legate (25.11.00.dev5+g10ce49a82)</title>
+    <title>Changes: 25.10 &#8212; NVIDIA legate (25.11.00.dev9+gfc1626613)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=3c3cf4a5"></script>
+    <script src="../_static/documentation_options.js?v=b5069742"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev5+g10ce49a82)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gfc1626613)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev5+g10ce49a82) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev9+gfc1626613) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev5+g10ce49a82)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev9+gfc1626613)</p>
   
 </a>
 
@@ -714,6 +714,11 @@ partition used by the runtime for optimizing task launches and data movement.</p
 </ul>
 <p class="rubric">Tasks</p>
 <p class="rubric">Types</p>
+<p class="rubric">Tuning</p>
+<ul class="simple">
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate::ParallelPolicy</span></code> to take an enum type <code class="docutils literal notranslate"><span class="pre">legate::StreamingMode</span></code>
+instead of a boolean flag for streaming task execution.</p></li>
+</ul>
 <p class="rubric">Runtime</p>
 <ul class="simple">
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::Runtime::create_struct_array()</span></code>.</p></li>
@@ -785,6 +790,11 @@ if it wasn’t already.</p></li>
 decorator.</p></li>
 </ul>
 <p class="rubric">Types</p>
+<p class="rubric">Tuning</p>
+<ul class="simple">
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">legate.core.ParallelPolicy</span></code> to take an  enum type <code class="docutils literal notranslate"><span class="pre">legate.core.StreamingMode</span></code>
+instead of a boolean flag for streaming task execution.</p></li>
+</ul>
 <p class="rubric">Runtime</p>
 <ul class="simple">
 <li><p>Expose profiling range functions to Python: <code class="docutils literal notranslate"><span class="pre">legate.core.start_profiling_range()</span></code> and
