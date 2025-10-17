@@ -24,10 +24,10 @@ class ConstraintSolver;
 class Strategy {
  public:
   Strategy() = default;
-  // Make Strategy move-only because it is expensive to copy. There's no real reason it can't
-  // or shouldn't be copied, so if that needs to be done, these can be removed.
-  Strategy(const Strategy&)                = delete;
-  Strategy& operator=(const Strategy&)     = delete;
+  // TODO(amberhassaan): Copying is expensive. Convert uses to a pointer type.
+  Strategy(const Strategy&)            = default;
+  Strategy& operator=(const Strategy&) = default;
+
   Strategy(Strategy&&) noexcept            = default;
   Strategy& operator=(Strategy&&) noexcept = default;
 

@@ -31,9 +31,10 @@ Gather::Gather(InternalSharedPtr<LogicalStore> target,
     constraint_(align(target_.variable, source_indirect_.variable)),
     redop_kind_{redop_kind}
 {
-  record_partition_(target_.variable, std::move(target));
-  record_partition_(source_.variable, std::move(source));
-  record_partition_(source_indirect_.variable, std::move(source_indirect));
+  record_partition_(
+    target_.variable, std::move(target), redop_kind_ ? AccessMode::REDUCE : AccessMode::WRITE);
+  record_partition_(source_.variable, std::move(source), AccessMode::READ);
+  record_partition_(source_indirect_.variable, std::move(source_indirect), AccessMode::READ);
 }
 
 void Gather::validate()
@@ -88,6 +89,7 @@ void Gather::launch(Strategy* p_strategy)
   }
 }
 
+// TODO(amberhassaan): could move all instances of add_to_solver to base class Operation
 void Gather::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));

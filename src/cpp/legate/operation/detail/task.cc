@@ -501,7 +501,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
-    record_partition_(symb, store);
+    record_partition_(symb, store, AccessMode::READ);
   }
 }
 
@@ -516,7 +516,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
-    record_partition_(symb, store);
+    record_partition_(symb, store, AccessMode::WRITE);
   }
 }
 
@@ -540,7 +540,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
-    record_partition_(symb, store);
+    record_partition_(symb, store, AccessMode::REDUCE);
   }
 }
 
@@ -573,7 +573,9 @@ void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint, bool byp
 void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 {
   for (auto&& constraint : constraints_) {
-    solver.add_constraint(std::move(constraint));
+    // Do not use std::move here as the streaming analysis may call add_to_solver
+    // multiple times
+    solver.add_constraint(constraint);
   }
   for (auto&& output : outputs_) {
     for (auto&& [store, symb] : output.mapping) {
@@ -749,6 +751,27 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
     priv, make_internal_shared<BaseLogicalArray>(store), std::move(projection));
   const auto unbound = store->unbound();
 
+  const auto privelege_to_access_mode = [](Legion::PrivilegeMode p) {
+    switch (p) {
+      case LEGION_READ_ONLY: [[fallthrough]];
+      case LEGION_READ_DISCARD: return AccessMode::READ;
+      case LEGION_REDUCE: return AccessMode::REDUCE;
+      case LEGION_WRITE_ONLY: [[fallthrough]];
+      case LEGION_READ_WRITE: [[fallthrough]];
+      case LEGION_WRITE_DISCARD: [[fallthrough]];
+      case LEGION_WRITE_PRIV: return AccessMode::WRITE;
+      case LEGION_NO_ACCESS: [[fallthrough]];
+      case LEGION_DISCARD_MASK: [[fallthrough]];
+      case LEGION_DISCARD_OUTPUT_MASK:
+        LEGATE_ABORT(fmt::format("No way to convert privilege {} to AccessMode", p));
+        return AccessMode::REDUCE;
+    }
+    LEGATE_ABORT(fmt::format("No way to convert privilege {} to AccessMode", p));
+    return AccessMode::WRITE;
+  };
+
+  record_partition_(partition_symbol, store, privelege_to_access_mode(priv));
+
   arg.mapping.insert({store, partition_symbol});
   if (unbound) {
     auto&& runtime   = detail::Runtime::get_runtime();
@@ -763,5 +786,7 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
 }
 
 void ManualTask::launch() { launch_task_(&strategy_); }
+
+Strategy ManualTask::copy_strategy() const { return strategy_; }
 
 }  // namespace legate::detail

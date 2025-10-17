@@ -6,6 +6,7 @@
 
 #include <legate/operation/detail/operation.h>
 
+#include <legate/operation/detail/access_mode.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/runtime.h>
@@ -109,14 +110,22 @@ const InternalSharedPtr<LogicalStore>& Operation::find_store(const Variable* var
 void Operation::record_partition_(
   const Variable* variable,
   // Obviously, it is moved, but clang-tidy does not see that...
-  InternalSharedPtr<LogicalStore> store  // NOLINT(performance-unnecessary-value-param)
-)
+  InternalSharedPtr<LogicalStore> store,  // NOLINT(performance-unnecessary-value-param)
+  AccessMode access_mode)
 {
   const auto sid            = store->id();
   const auto [it, inserted] = store_mappings_.try_emplace(*variable, std::move(store));
   const auto& mapped_store  = it->second;
 
   if (inserted) {
+    switch (access_mode) {
+      case AccessMode::READ: input_args_.emplace_back(StoreArg{mapped_store, variable}); break;
+      case AccessMode::WRITE: output_args_.emplace_back(StoreArg{mapped_store, variable}); break;
+      case AccessMode::REDUCE:
+        reduction_args_.emplace_back(StoreArg{mapped_store, variable});
+        break;
+    }
+
     try {
       part_mappings_.try_emplace(mapped_store, variable);
     } catch (...) {

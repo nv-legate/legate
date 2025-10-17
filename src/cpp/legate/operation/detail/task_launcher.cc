@@ -416,7 +416,7 @@ void TaskLauncher::report_interfering_stores_() const
     "Task ",
     library_.get().get_task_name(task_id_),
     " has interfering store arguments. This means the task tries to access the same store"
-    "via multiplepartitions in mixed modes, which is illegal in Legate. Make sure to make a "
+    "via multiple partitions in mixed modes, which is illegal in Legate. Make sure to make a "
     "copy "
     "of the store so there would be no interference.");
 }

@@ -206,4 +206,26 @@ format_context::iterator formatter<legate::detail::LogicalStore>::format(
   return formatter<std::string>::format(store.to_string(), ctx);
 }
 
+format_context::iterator formatter<legion_privilege_mode_t>::format(legion_privilege_mode_t mode,
+                                                                    format_context& ctx) const
+{
+  string_view name = "(unknown)";
+  switch (mode) {
+#define LEGION_PRIVILEGE_MODE_CASE(x) \
+  case x: name = #x; break
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_READ_ONLY);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_READ_DISCARD);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_REDUCE);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_WRITE_ONLY);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_READ_WRITE);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_WRITE_DISCARD);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_WRITE_PRIV);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_NO_ACCESS);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_DISCARD_MASK);
+    LEGION_PRIVILEGE_MODE_CASE(LEGION_DISCARD_OUTPUT_MASK);
+#undef LEGION_PRIVILEGE_MODE_CASE
+  }
+  return formatter<string_view>::format(name, ctx);
+}
+
 }  // namespace fmt

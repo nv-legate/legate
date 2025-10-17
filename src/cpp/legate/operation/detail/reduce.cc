@@ -40,8 +40,8 @@ Reduce::Reduce(const Library& library,
     input_part_{find_or_declare_partition(input_)},
     output_part_{declare_partition()}
 {
-  record_partition_(input_part_, input_);
-  record_partition_(output_part_, output_);
+  record_partition_(input_part_, input_, AccessMode::READ);
+  record_partition_(output_part_, output_, AccessMode::WRITE);
 }
 
 void Reduce::launch(Strategy* p_strategy)

@@ -33,9 +33,10 @@ Scatter::Scatter(InternalSharedPtr<LogicalStore> target,
     constraint_{align(source_.variable, target_indirect_.variable)},
     redop_kind_{redop_kind}
 {
-  record_partition_(target_.variable, std::move(target));
-  record_partition_(target_indirect_.variable, std::move(target_indirect));
-  record_partition_(source_.variable, std::move(source));
+  record_partition_(
+    target_.variable, std::move(target), redop_kind_ ? AccessMode::REDUCE : AccessMode::WRITE);
+  record_partition_(target_indirect_.variable, std::move(target_indirect), AccessMode::READ);
+  record_partition_(source_.variable, std::move(source), AccessMode::READ);
 }
 
 void Scatter::validate()

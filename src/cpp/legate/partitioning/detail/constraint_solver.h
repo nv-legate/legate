@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/operation/detail/access_mode.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/ordered_set.h>
@@ -21,12 +22,6 @@
 namespace legate::detail {
 
 class Strategy;
-
-enum class AccessMode : std::uint8_t {
-  READ   = 0,
-  REDUCE = 1,
-  WRITE  = 2,
-};
 
 class ConstraintSolver {
  public:

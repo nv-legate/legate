@@ -28,7 +28,7 @@ Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
     lhs_{std::move(lhs)},
     value_{std::move(value)}
 {
-  store_mappings_[*lhs_var_] = lhs_;
+  record_partition_(lhs_var_, lhs_, AccessMode::WRITE);
 }
 
 Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
@@ -41,7 +41,7 @@ Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
     lhs_{std::move(lhs)},
     value_{std::move(value)}
 {
-  store_mappings_[*lhs_var_] = lhs_;
+  record_partition_(lhs_var_, lhs_, AccessMode::WRITE);
 }
 
 void Fill::validate()

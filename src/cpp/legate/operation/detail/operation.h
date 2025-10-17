@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/logical_store.h>
 #include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/access_mode.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/tuning/parallel_policy.h>
@@ -28,19 +29,42 @@ namespace legate::detail {
 class ConstraintSolver;
 class Strategy;
 
+enum class AccessMode : std::uint8_t;
+
 class Operation {
  protected:
+  /**
+   * @brief Construct an Operation.
+   * @param unique_id Runtime assigned dynamic unique id for each instance.
+   */
+  explicit Operation(std::uint64_t unique_id);
+
+  /**
+   * @brief Construct an Operation.
+   * @param unique_id Runtime assigned dynamic unique id for each instance.
+   * @param priority Scheduling Priority. @see legate::Scope
+   * @machine Machine subset to schedule the operation on.
+   */
+  Operation(std::uint64_t unique_id, std::int32_t priority, mapping::detail::Machine machine);
+
+ public:
+  /**
+   * @brief
+   * Class to pair stores and their associated variable symbols.
+   */
   class StoreArg {
    public:
+    /**
+     * @return true if store needs flush.
+     */
     [[nodiscard]] bool needs_flush() const;
     InternalSharedPtr<LogicalStore> store{};
     const Variable* variable{};
   };
 
-  explicit Operation(std::uint64_t unique_id);
-  Operation(std::uint64_t unique_id, std::int32_t priority, mapping::detail::Machine machine);
-
- public:
+  /**
+   * @brief. Operation kind assigned for each subclass.
+   */
   enum class Kind : std::uint8_t {
     ATTACH,
     AUTO_TASK,
@@ -130,8 +154,42 @@ class Operation {
   [[nodiscard]] const ParallelPolicy& parallel_policy() const;
   [[nodiscard]] ZStringView provenance() const;
 
+  /**
+   * @brief Return all the stores read by this operation.
+   *
+   * @return a vector of input StoreArg objects.
+   */
+  [[nodiscard]] const SmallVector<StoreArg>& input_stores() const;
+  /**
+   * @brief Return all the stores written by this operation.
+   *
+   * @return a vector of output StoreArg objects.
+   */
+  [[nodiscard]] const SmallVector<StoreArg>& output_stores() const;
+  /**
+   * @brief Return all the stores reduced by this operation.
+   *
+   * @return a vector of StoreArg objects used in reductions.
+   */
+  [[nodiscard]] const SmallVector<StoreArg>& reduction_stores() const;
+
  protected:
-  void record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store);
+  /**
+   * @brief Register a store access with the base class.
+   *
+   * Derived classes must call this method for every store that they access so that
+   * the dependencies can be tracked accurately.
+   *
+   * @param variable pointer to the symbol created for the store being accessed.
+   *
+   * @param store pointer to the store being accessed.
+   *
+   * @param access_mode the mode of access.
+   */
+  void record_partition_(const Variable* variable,
+                         InternalSharedPtr<LogicalStore> store,
+                         AccessMode access_mode);
+
   // Helper methods
   [[nodiscard]] static StoreProjection create_store_projection_(const Strategy& strategy,
                                                                 const Domain& launch_domain,
@@ -144,6 +202,12 @@ class Operation {
   std::unordered_map<std::reference_wrapper<const Variable>, InternalSharedPtr<LogicalStore>>
     store_mappings_{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};
+
+  // Derived classes populate these vectors via calls to record_partition_
+  SmallVector<StoreArg> input_args_{};
+  SmallVector<StoreArg> output_args_{};
+  SmallVector<StoreArg> reduction_args_{};
+
   std::string provenance_{};
   mapping::detail::Machine machine_{};
   ParallelPolicy parallel_policy_{};

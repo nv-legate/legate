@@ -62,4 +62,6 @@ inline Operation::Kind ManualTask::kind() const { return Kind::MANUAL_TASK; }
 
 inline bool ManualTask::needs_partitioning() const { return false; }
 
+inline bool ManualTask::supports_streaming() const { return true; }
+
 }  // namespace legate::detail

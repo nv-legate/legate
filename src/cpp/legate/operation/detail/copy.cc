@@ -31,8 +31,9 @@ Copy::Copy(InternalSharedPtr<LogicalStore> target,
     constraint_{align(target_.variable, source_.variable)},
     redop_kind_{redop_kind}
 {
-  record_partition_(target_.variable, target_.store);
-  record_partition_(source_.variable, source_.store);
+  record_partition_(
+    target_.variable, target_.store, redop_kind_ ? AccessMode::REDUCE : AccessMode::WRITE);
+  record_partition_(source_.variable, source_.store, AccessMode::READ);
 }
 
 void Copy::validate()

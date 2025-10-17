@@ -30,4 +30,19 @@ inline const ParallelPolicy& Operation::parallel_policy() const { return paralle
 
 inline ZStringView Operation::provenance() const { return provenance_; }
 
+inline const SmallVector<Operation::StoreArg>& Operation::input_stores() const
+{
+  return input_args_;
+}
+
+inline const SmallVector<Operation::StoreArg>& Operation::output_stores() const
+{
+  return output_args_;
+}
+
+inline const SmallVector<Operation::StoreArg>& Operation::reduction_stores() const
+{
+  return reduction_args_;
+}
+
 }  // namespace legate::detail

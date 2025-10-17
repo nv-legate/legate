@@ -319,6 +319,16 @@ class ManualTask final : public Task {
    */
   [[nodiscard]] bool needs_partitioning() const override;
 
+  /**
+   * @see Operation::supports_streaming
+   */
+  [[nodiscard]] bool supports_streaming() const override;
+
+  /**
+   * Provide a copy of internal Strategy
+   */
+  [[nodiscard]] Strategy copy_strategy() const;
+
  private:
   Strategy strategy_{};
 };
