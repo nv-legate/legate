@@ -127,6 +127,10 @@ python -m auditwheel repair \
   --exclude libnccl.so.* \
   --exclude libopen-*.so.* \
   --exclude libucc.so.* \
+  --exclude libucs.so.* \
+  --exclude libuct.so.* \
+  --exclude libucm.so.* \
+  --exclude libucp.so.* \
   -w "${LEGATE_DIR}/final-dist" \
   "${LEGATE_DIR}"/dist/*.whl
 
