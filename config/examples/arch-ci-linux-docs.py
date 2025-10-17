@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -17,12 +18,20 @@ from config.legate_internal.main_package import Legate  # noqa: E402
 
 from aedifix.main import basic_configure
 
+DEFAULT_BUILD_MODE = "release"
+
+
+def resolve_build_type() -> str:
+    build_mode = os.environ.get("LEGATE_BUILD_MODE", "").strip()
+    return build_mode.lower() if build_mode else DEFAULT_BUILD_MODE
+
 
 def main() -> int:
+    build_type = resolve_build_type()
     argv = [
         # legate args
         f"--LEGATE_ARCH={Path(__file__).stem}",
-        "--build-type=debug",
+        f"--build-type={build_type}",
         "--cmake-generator=Ninja",
         # common options
         "--with-cuda=0",
