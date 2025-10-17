@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from legate.core import ParallelPolicy, Scope
+from legate.core import ParallelPolicy, Scope, StreamingMode
 
 OVERDECOMPOSE_FACTOR = 42
 
@@ -32,12 +32,13 @@ class TestParallelPolicy:
         assert a.overdecompose_factor == OVERDECOMPOSE_FACTOR
 
     def test_streaming(self) -> None:
-        a = ParallelPolicy(streaming=True)
+        a = ParallelPolicy(streaming_mode=StreamingMode.RELAXED)
         assert a.streaming
 
     def test_streaming_and_overdecomposition_factor(self) -> None:
         a = ParallelPolicy(
-            streaming=True, overdecompose_factor=OVERDECOMPOSE_FACTOR
+            streaming_mode=StreamingMode.STRICT,
+            overdecompose_factor=OVERDECOMPOSE_FACTOR,
         )
         assert a.streaming
         assert a.overdecompose_factor == OVERDECOMPOSE_FACTOR

@@ -10,38 +10,44 @@ cdef class ParallelPolicy:
     def __init__(
         self,
         *,
-        streaming: bool = False,
+        streaming_mode: StreamingMode = StreamingMode.OFF,
         overdecompose_factor: uint32_t = 1,
     ) -> None:
         """
         Parameters
         ----------
-        streaming: bool
-            Whether to enable streaming.
+        streaming_mode: StreamingMode
+            Enum that enables streaming in STRICT or RELAXED mode.
+            Default = OFF
         overdecompose_factor: int
             The overdecomposition factor.
+            Default = 1
         """
         self._handle = _ParallelPolicy()
-        self.streaming = streaming
+        self.streaming_mode = streaming_mode
         self.overdecompose_factor = overdecompose_factor
 
     @property
     def streaming(self) -> bool:
         """
-        :returns: The current value of the streaming flag.
+        :returns: True if streaming has been enabled
         :rtype: bool
         """
         return self._handle.streaming()
 
-    @streaming.setter
-    def streaming(self, streaming: bool) -> None:
+    @property
+    def streaming_mode(self) -> StreamingMode:
+        return self._handle.streaming_mode()
+
+    @streaming_mode.setter
+    def streaming_mode(self, mode: StreamingMode) -> None:
         """
-        :param streaming: The value to set for the streaming flag.
-        :type streaming: bool
+        :param mode: The value to set for the streaming flag.
+        :type mode: StreamingMode
         :returns: None
         :rtype: None
         """
-        self._handle.with_streaming(streaming)
+        self._handle.with_streaming(mode)
 
     @property
     def overdecompose_factor(self) -> uint32_t:

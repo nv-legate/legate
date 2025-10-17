@@ -19,6 +19,7 @@ from legate.core import (
     LogicalArray,
     ParallelPolicy,
     Scope,
+    StreamingMode,
     Type,
     get_legate_runtime,
     types as ty,
@@ -198,7 +199,9 @@ def test_array_write(
     dataset_name = "foo"
 
     with Scope(
-        parallel_policy=ParallelPolicy(streaming=True, overdecompose_factor=8)
+        parallel_policy=ParallelPolicy(
+            streaming_mode=StreamingMode.RELAXED, overdecompose_factor=8
+        )
     ):
         array = runtime.create_array(dtype=dtype, shape=shape)
         runtime.issue_fill(array, 1)

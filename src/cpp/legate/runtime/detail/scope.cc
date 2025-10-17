@@ -14,6 +14,9 @@ namespace legate::detail {
 
 ParallelPolicy Scope::exchange_parallel_policy(ParallelPolicy parallel_policy)
 {
+  // TODO(amberhassaan): with the introduction of StreamingMode, we could allow the
+  // case where STRICT scope is nested inside a RELAXED scope. In such a case,
+  // don't issue a mapping fence and don't flush the window.
   if (parallel_policy != parallel_policy_) {
     auto&& rt = Runtime::get_runtime();
 

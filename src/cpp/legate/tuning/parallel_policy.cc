@@ -10,9 +10,9 @@
 
 namespace legate {
 
-ParallelPolicy& ParallelPolicy::with_streaming(bool streaming)
+ParallelPolicy& ParallelPolicy::with_streaming(StreamingMode mode)
 {
-  streaming_ = streaming;
+  streaming_mode_ = mode;
   return *this;
 }
 
@@ -24,7 +24,8 @@ ParallelPolicy& ParallelPolicy::with_overdecompose_factor(std::uint32_t overdeco
 
 bool ParallelPolicy::operator==(const ParallelPolicy& other) const
 {
-  return streaming() == other.streaming() && overdecompose_factor() == other.overdecompose_factor();
+  return streaming_mode() == other.streaming_mode() &&
+         overdecompose_factor() == other.overdecompose_factor();
 }
 
 bool ParallelPolicy::operator!=(const ParallelPolicy& other) const { return !(*this == other); }

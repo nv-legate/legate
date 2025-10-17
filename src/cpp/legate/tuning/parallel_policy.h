@@ -25,16 +25,51 @@ namespace legate {
  */
 
 /**
+ * @brief Streaming modes for ParllelPolicy
+ */
+enum class StreamingMode : std::uint8_t {
+  /**
+   * @brief Disable Streaming.
+   */
+  OFF,
+  /**
+   * @brief Stream all the tasks created and submitted in the scope as a single
+   * group.
+   *
+   * If any task in the scope is not 'Streamable', the runtime will throw a
+   * `std::invalid_argument` exception.
+   *
+   * Users may use this mode when it is necessary that all tasks in the scope are
+   * streamable, e.g., when the memory savings from streaming need to be maximized.
+   * Users may also use this mode for debugging to catch non-streamable tasks.
+   */
+  STRICT,
+  /**
+   * @brief All tasks created and submitted in the scope need not stream as a
+   * single group.
+   *
+   * This mode allows the runtime to break the tasks in a streaming scope into
+   * multiple groups and add mapping fences between after every group. Users can
+   * add this mode when it is not guaranteed or required that all tasks in the
+   * scope are streamed as one group. This leaves some memory savings on the table
+   * due to splitting the scope, but potentially allows third party library code to
+   * be used inside a scope, for example.
+   *
+   */
+  RELAXED,
+};
+
+/**
  * @brief A helper class that describes parallelization policies for tasks.
  *
  * A `ParallelPolicy` consists of knobs to control the parallelization policy for tasks in a given
  * scope. To change the parallelization policy of the scope, a new `Scope` must be created with a
  * `ParallelPolicy`. Currently, the `ParallelPolicy` class provides the following parameters:
  *
- *   - `streaming()` (default: `false`): When the `streaming()` is `true` in a scope, the runtime
- *   executes the tasks in a streaming fashion. For example, if there are two tasks `T1` and `T2` in
- *   the scope, the normal execution would run all parallel instances of `T1` before it would move
- *   on to `T2`'s, whereas the streaming execution would alternative between `T1` and `T2`,
+ *   - `streaming(StreamingMode)` (default: `OFF`): When the `streaming()` is not `OFF` in a scope,
+ * the runtime executes the tasks in a streaming fashion. For example, if there are two tasks `T1`
+ * and `T2` in the scope, the normal execution would run all parallel instances of `T1` before it
+ * would move on to `T2`'s, whereas the streaming execution would alternative between `T1` and `T2`,
  *   launching a subset of parallel instances at a time that would fit to the memory. The
  *   granularity of tasks can be configured by the `overdecompose_factor()` (see below), and if the
  *   `overdecompose_factor()` is `1`, no streaming would happen even if the `streaming()` is `true`.
@@ -49,9 +84,12 @@ class LEGATE_EXPORT ParallelPolicy {
   /**
    * @brief Sets the flag that indicates whether tasks in a given scope should be streamed.
    *
-   * @param streaming A boolean value to set to the streaming flag.
+   * @param mode An enum of type StreamingMode that determines the mode of
+   * streaming.
+   *
+   * @see StreamingMode.
    */
-  ParallelPolicy& with_streaming(bool streaming);
+  ParallelPolicy& with_streaming(StreamingMode mode);
   /**
    * @brief Sets the over-decomposing factor.
    *
@@ -67,6 +105,14 @@ class LEGATE_EXPORT ParallelPolicy {
    * @return false If the streaming is not enabled.
    */
   [[nodiscard]] bool streaming() const;
+
+  /**
+   * @brief Returns the streaming mode.
+   *
+   * @return enum value of type StreamingMode.
+   */
+  [[nodiscard]] StreamingMode streaming_mode() const;
+
   /**
    * @brief Returns the over-decomposing factor.
    *
@@ -93,7 +139,7 @@ class LEGATE_EXPORT ParallelPolicy {
   [[nodiscard]] bool operator!=(const ParallelPolicy& other) const;
 
  private:
-  bool streaming_{false};
+  StreamingMode streaming_mode_{StreamingMode::OFF};
   std::uint32_t overdecompose_factor_{1};
 };
 

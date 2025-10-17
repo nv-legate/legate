@@ -358,7 +358,8 @@ TEST_F(ScopeTest, StreamingSchedulingWindow)
   const auto window_size = runtime.scope().scheduling_window_size();
 
   {
-    const auto _        = legate::Scope{legate::ParallelPolicy{}.with_streaming(true)};
+    const auto _ =
+      legate::Scope{legate::ParallelPolicy{}.with_streaming(legate::StreamingMode::RELAXED)};
     const auto new_size = runtime.scope().scheduling_window_size();
     // Big window size is the arbitrary large window size chosen in
     // Scope::Impl::set_parallel_policy().
@@ -377,7 +378,8 @@ TEST_F(ScopeTest, StreamingSchedulingWindowNested)
   const auto window_size = runtime.scope().scheduling_window_size();
 
   {
-    const auto _        = legate::Scope{legate::ParallelPolicy{}.with_streaming(true)};
+    const auto _ =
+      legate::Scope{legate::ParallelPolicy{}.with_streaming(legate::StreamingMode::RELAXED)};
     const auto new_size = runtime.scope().scheduling_window_size();
     // Big window size is the arbitrary large window size chosen in
     // Scope::Impl::set_parallel_policy().
@@ -387,8 +389,8 @@ TEST_F(ScopeTest, StreamingSchedulingWindowNested)
     // big window.
     ASSERT_GE(new_size, BIG_WINDOW);
     {
-      const auto _2 =
-        legate::Scope{}.with_parallel_policy(legate::ParallelPolicy{}.with_streaming(true));
+      const auto _2 = legate::Scope{}.with_parallel_policy(
+        legate::ParallelPolicy{}.with_streaming(legate::StreamingMode::RELAXED));
       const auto nested_new_size = runtime.scope().scheduling_window_size();
 
       ASSERT_GE(nested_new_size, BIG_WINDOW);

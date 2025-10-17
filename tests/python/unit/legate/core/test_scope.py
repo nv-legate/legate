@@ -6,7 +6,13 @@ from __future__ import annotations
 
 import pytest
 
-from legate.core import ExceptionMode, Machine, ParallelPolicy, Scope
+from legate.core import (
+    ExceptionMode,
+    Machine,
+    ParallelPolicy,
+    Scope,
+    StreamingMode,
+)
 
 MAGIC_PRIORITY1 = 42
 MAGIC_PRIORITY2 = 43
@@ -23,13 +29,15 @@ OVERDECOMPOSE_FACTOR_B = 43
 
 def par_policy_a() -> ParallelPolicy:
     return ParallelPolicy(
-        streaming=True, overdecompose_factor=OVERDECOMPOSE_FACTOR_A
+        streaming_mode=StreamingMode.OFF,
+        overdecompose_factor=OVERDECOMPOSE_FACTOR_A,
     )
 
 
 def par_policy_b() -> ParallelPolicy:
     return ParallelPolicy(
-        streaming=False, overdecompose_factor=OVERDECOMPOSE_FACTOR_B
+        streaming_mode=StreamingMode.RELAXED,
+        overdecompose_factor=OVERDECOMPOSE_FACTOR_B,
     )
 
 

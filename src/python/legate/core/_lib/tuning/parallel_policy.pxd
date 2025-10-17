@@ -5,16 +5,21 @@
 from libc.stdint cimport uint32_t
 from libcpp cimport bool
 
-
 cdef extern from "legate/tuning/parallel_policy.h" namespace "legate" nogil:
+    cpdef enum class StreamingMode:
+        OFF
+        STRICT
+        RELAXED
+
     cdef cppclass _ParallelPolicy "legate::ParallelPolicy":
         _ParallelPolicy() except+
 
-        _ParallelPolicy& with_streaming(bool streaming) except+
+        _ParallelPolicy& with_streaming(StreamingMode mode) except+
         _ParallelPolicy& with_overdecompose_factor(
                 uint32_t overdecompose_factor) except+
 
         bool streaming() except+
+        StreamingMode streaming_mode() except+
         uint32_t overdecompose_factor() except+
 
         bool operator==(const _ParallelPolicy&) except+

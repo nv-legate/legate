@@ -10,7 +10,9 @@
 
 namespace legate {
 
-inline bool ParallelPolicy::streaming() const { return streaming_; }
+inline bool ParallelPolicy::streaming() const { return streaming_mode() != StreamingMode::OFF; }
+
+inline StreamingMode ParallelPolicy::streaming_mode() const { return streaming_mode_; }
 
 inline std::uint32_t ParallelPolicy::overdecompose_factor() const { return overdecompose_factor_; }
 

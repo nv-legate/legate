@@ -271,8 +271,9 @@ TEST_F(StreamingUnit, Basic)
   GLOBAL_EXEC_ORDER().clear();
   {
     const auto _ =
-      legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(
-        static_cast<std::uint32_t>(shape.volume()))};
+      legate::Scope{legate::ParallelPolicy{}
+                      .with_streaming(legate::StreamingMode::RELAXED)
+                      .with_overdecompose_factor(static_cast<std::uint32_t>(shape.volume()))};
 
     // This is a dummy "dependency" store. It's sole purpose is to make sure the following 4
     // tasks execute in order. Each task takes this store as both an input and an output, so
@@ -336,8 +337,9 @@ TEST_F(StreamingUnit, RecursiveFlush)
   GLOBAL_EXEC_ORDER().clear();
   {
     const auto _ =
-      legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(
-        static_cast<std::uint32_t>(shape.volume()))};
+      legate::Scope{legate::ParallelPolicy{}
+                      .with_streaming(legate::StreamingMode::RELAXED)
+                      .with_overdecompose_factor(static_cast<std::uint32_t>(shape.volume()))};
 
     // This is a dummy "dependency" store. It's sole purpose is to make sure the following 4
     // tasks execute in order. Each task takes this store as both an input and an output, so
@@ -399,8 +401,9 @@ TEST_F(StreamingUnit, RecursiveFlushAndAppend)
   GLOBAL_EXEC_ORDER().clear();
   {
     const auto _ =
-      legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(
-        static_cast<std::uint32_t>(shape.volume()))};
+      legate::Scope{legate::ParallelPolicy{}
+                      .with_streaming(legate::StreamingMode::RELAXED)
+                      .with_overdecompose_factor(static_cast<std::uint32_t>(shape.volume()))};
 
     // This is a dummy "dependency" store. It's sole purpose is to make sure the following 4
     // tasks execute in order. Each task takes this store as both an input and an output, so
@@ -486,8 +489,9 @@ TEST_F(StreamingUnit, Pointwise)
   runtime->issue_fill(array, legate::Scalar{MAGIC});
 
   {
-    const auto scope =
-      legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(2)};
+    const auto scope = legate::Scope{legate::ParallelPolicy{}
+                                       .with_streaming(legate::StreamingMode::RELAXED)
+                                       .with_overdecompose_factor(2)};
 
     for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
       const auto nested = legate::Scope{"Task " + std::to_string(idx)};
@@ -510,8 +514,9 @@ TEST_F(StreamingUnit, SumAfterPointwise)
   runtime->issue_fill(output, legate::Scalar{std::int64_t{0}});
 
   {
-    const auto scope =
-      legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(2)};
+    const auto scope = legate::Scope{legate::ParallelPolicy{}
+                                       .with_streaming(legate::StreamingMode::RELAXED)
+                                       .with_overdecompose_factor(2)};
 
     for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
       const auto nested = legate::Scope{"Task " + std::to_string(idx)};
@@ -533,8 +538,9 @@ TEST_F(StreamingUnit, DISABLED_SumForTemporary)
   runtime->issue_fill(output, legate::Scalar{std::int64_t{0}});
 
   {
-    const auto scope =
-      legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(2)};
+    const auto scope = legate::Scope{legate::ParallelPolicy{}
+                                       .with_streaming(legate::StreamingMode::RELAXED)
+                                       .with_overdecompose_factor(2)};
     const auto input = runtime->create_array(legate::Shape{EXT, EXT}, legate::int64());
 
     runtime->issue_fill(input, legate::Scalar{MAGIC});
@@ -561,8 +567,9 @@ TEST_F(StreamingUnit, NestedPolicy)
   GLOBAL_EXEC_ORDER().clear();
   {
     const auto _ =
-      legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(
-        static_cast<std::uint32_t>(shape.volume()))};
+      legate::Scope{legate::ParallelPolicy{}
+                      .with_streaming(legate::StreamingMode::RELAXED)
+                      .with_overdecompose_factor(static_cast<std::uint32_t>(shape.volume()))};
 
     // This is a dummy "dependency" store. It's sole purpose is to make sure the following 4
     // tasks execute in order. Each task takes this store as both an input and an output, so
@@ -577,8 +584,9 @@ TEST_F(StreamingUnit, NestedPolicy)
     }
     {
       const auto s =
-        legate::Scope{legate::ParallelPolicy{}.with_streaming(true).with_overdecompose_factor(
-          static_cast<std::uint32_t>(shape.volume()))};
+        legate::Scope{legate::ParallelPolicy{}
+                        .with_streaming(legate::StreamingMode::RELAXED)
+                        .with_overdecompose_factor(static_cast<std::uint32_t>(shape.volume()))};
       const auto store = make_store(shape);
 
       launch_output_task(store, dep_store);
