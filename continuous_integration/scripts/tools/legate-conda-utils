@@ -29,7 +29,7 @@ generate_yaml_file() {
     output=$("${REPO_DIR}/scripts/generate-conda-envs.py" \
                --os "${OS_SHORT_NAME}" \
                --compilers             \
-               --ctk "${CUDA_VERSION}" \
+               --ctk "${LEGATE_CUDA_VERSION}" \
                --openmpi               \
                --ucx)
 

@@ -19,7 +19,8 @@ permissions:
   contents: write
 
 jobs:
-  build-and-test:
+  cu129-tests:
+    name: CUDA 12.9 tests
     strategy:
       fail-fast: false
       matrix:
@@ -29,9 +30,6 @@ jobs:
         target-device:
           - gpu
           - cpu
-        build-mode:
-          - release
-          - release-debug
         network:
           - ucx
           - gex
@@ -39,22 +37,125 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-        build-has-tests:
-          - true
-          - false
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
       ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
-      build-mode: ${{ matrix.build-mode }}
+      build-mode: release
       build-type: nightly
-      build-has-tests: ${{ matrix.build-has-tests }}
-      upload-action: ${{ (matrix.build-mode == 'release' && 'upload-package-Anaconda' || 'upload-package-None') }}
+      build-has-tests: true
+      upload-action: upload-package-None
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
       refname: ${{ github.ref_name }}
+      cuda-version: "12.9.0"
+      default-branch: ${{ github.event.repository.default_branch }}
+    secrets: inherit
+
+  cu129:
+    name: CUDA 12.9 packages
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux
+          - linux-aarch64
+        target-device:
+          - gpu
+          - cpu
+        network:
+          - ucx
+          - gex
+        python-version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+    uses:
+      ./.github/workflows/gh-build-and-test.yml
+    with:
+      platform: ${{ matrix.platform }}
+      ref-sha: ${{ github.event.inputs.ref-sha }}
+      target-device: ${{ matrix.target-device }}
+      build-mode: release
+      build-type: nightly
+      build-has-tests: false
+      upload-action: upload-package-Anaconda
+      python-version: ${{ matrix.python-version }}
+      network: ${{ matrix.network }}
+      refname: ${{ github.ref_name }}
+      cuda-version: "12.9.0"
+      default-branch: ${{ github.event.repository.default_branch }}
+    secrets: inherit
+
+  cu130-tests:
+    name: CUDA 13.0 tests
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux
+          - linux-aarch64
+        target-device:
+          - gpu
+          - cpu
+        network:
+          - ucx
+          - gex
+        python-version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+    uses:
+      ./.github/workflows/gh-build-and-test.yml
+    with:
+      platform: ${{ matrix.platform }}
+      ref-sha: ${{ github.event.inputs.ref-sha }}
+      target-device: ${{ matrix.target-device }}
+      build-mode: release
+      build-type: nightly
+      build-has-tests: true
+      upload-action: upload-package-None
+      python-version: ${{ matrix.python-version }}
+      network: ${{ matrix.network }}
+      refname: ${{ github.ref_name }}
+      cuda-version: "13.0.0"
+      default-branch: ${{ github.event.repository.default_branch }}
+    secrets: inherit
+
+  cu130:
+    name: CUDA 13.0 packages
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux
+          - linux-aarch64
+        target-device:
+          - gpu
+          - cpu
+        network:
+          - ucx
+          - gex
+        python-version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+    uses:
+      ./.github/workflows/gh-build-and-test.yml
+    with:
+      platform: ${{ matrix.platform }}
+      ref-sha: ${{ github.event.inputs.ref-sha }}
+      target-device: ${{ matrix.target-device }}
+      build-mode: release
+      build-type: nightly
+      build-has-tests: false
+      upload-action: upload-package-Anaconda
+      python-version: ${{ matrix.python-version }}
+      network: ${{ matrix.network }}
+      refname: ${{ github.ref_name }}
+      cuda-version: "13.0.0"
       default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit
 
@@ -82,7 +183,7 @@ jobs:
   push_code:
     name: Nightly source release
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-push-code.yml@v1.38
+      nv-legate/legate-gh-ci/.github/workflows/gh-push-code.yml@v1.42
     with:
       runs-on: linux-amd64-cpu4
       source-repo: "${{ github.repository_owner }}/legate.internal"

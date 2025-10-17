@@ -21,7 +21,10 @@
 {% set git_shallow = environ.get('LEGION_GIT_SHALLOW', true) %}
 {% set git_describe_hash = environ.get('LEGATE_GIT_DESCRIBE_HASH', '0') %}
 
-{% set cuda_version=environ.get('CUDA_VERSION', '12.2.2') %}
+{% set cuda_version=environ.get('LEGATE_CUDA_VERSION') %}
+{% if not cuda_version %}
+invalid_yaml_missing_cuda_version: LEGATE_CUDA_VERSION must be set
+{% endif %}
 {% set cuda_major=cuda_version.split('.')[0]|int %}
 {% set py_version=environ.get('CONDA_PY', 36) %}
 

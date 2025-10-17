@@ -19,7 +19,11 @@
 {% else %}
     {% set version = environ.get('GIT_DESCRIBE_TAG', default_env_var).lstrip('v') %}
 {% endif %}
-{% set cuda_version='.'.join(environ.get('CUDA_VERSION', '12.2.2').split('.')[:2]) %}
+{% set legate_cuda_version = environ.get('LEGATE_CUDA_VERSION') %}
+{% if not legate_cuda_version %}
+invalid_yaml_missing_cuda_version: LEGATE_CUDA_VERSION must be set
+{% endif %}
+{% set cuda_version='.'.join(legate_cuda_version.split('.')[:2]) %}
 {% set cuda_major=cuda_version.split('.')[0]|int %}
 {% set py_version=environ.get('CONDA_PY', 36) %}
 

@@ -99,6 +99,7 @@ function(legate_set_default_cuda_arch)
 
   # Remove < sm_70 as that is the lowest version supported by the project.
   list(FILTER arch_list EXCLUDE REGEX [=[^[0-6][0-9]$]=])
+  list(GET arch_list 0 min_supported_arch)
   if(ONLY_MAJOR)
     # Remove any non-major architectures, they should all numeric-only except for Hopper,
     # which strangely has sm_90a.
@@ -113,6 +114,12 @@ function(legate_set_default_cuda_arch)
     #
     # arch_list = [90, 100, 120]
     #
+    # CUDA toolkits can raise the minimum supported arch (e.g. CUDA 13 drops sm_70 and
+    # starts at sm_75). Preserve that minimum even if it is not a "major" arch so builds
+    # remain compatible with the toolkit floor.
+    if(NOT min_supported_arch IN_LIST arch_list)
+      list(PREPEND arch_list ${min_supported_arch})
+    endif()
   endif()
 
   # A CMake architecture list entry of "80" means to build both compute and sm. What we

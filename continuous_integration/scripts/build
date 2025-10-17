@@ -186,6 +186,7 @@ build_project() {
   export PATH="${PATH}:${rapids_gha_tools_dir}/tools:${REPO_DIR}/continuous_integration/scripts/tools"
 
   run_command "Source setup-util" . setup-utils
+
   run_command "Init build environment" init_build_env "$@"
   run_command "Setup Legate Env" setup_legate_env
 

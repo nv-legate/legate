@@ -22,12 +22,15 @@ on:
         type: boolean
         required: false
         default: false
+      cuda-version:
+        type: string
+        required: false
 
 jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.40
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.42
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
@@ -37,11 +40,12 @@ jobs:
       build-type: docs
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.40"
+      legate-gh-ci-tag: "v1.42"
       build-mode: ${{ inputs.build-mode }}
       network: "ucx"
       setup-python-proxy-cache: true
       timeout: 30
+      cuda-version: ${{ inputs.cuda-version }}
     secrets: inherit
 
   upload-docs-to-gh-pages:

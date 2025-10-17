@@ -208,8 +208,8 @@ optionally some downstream libraries, e.g. cuPyNumeric). For example:
 
 .. code-block:: sh
 
-   $ ./scripts/generate-conda-envs.py --ctk 12.2.2 --ucx
-   --- generating: environment-test-linux-cuda-12.2.2-ucx.yaml
+   $ ./scripts/generate-conda-envs.py --ctk 13.0.0 --ucx
+   --- generating: environment-test-linux-cuda-13.0.0-ucx.yaml
 
 
 Run this script with ``--help`` to see all available configuration options for the
