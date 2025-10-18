@@ -29,12 +29,18 @@ namespace legate::detail {
 unsigned int num_ranks()
 {
   constexpr EnvironmentVariable<std::uint32_t> OMPI_COMM_WORLD_SIZE{"OMPI_COMM_WORLD_SIZE"};
+  constexpr EnvironmentVariable<std::uint32_t> PMI_SIZE{"PMI_SIZE"};
   constexpr EnvironmentVariable<std::uint32_t> MV2_COMM_WORLD_SIZE{"MV2_COMM_WORLD_SIZE"};
   constexpr EnvironmentVariable<std::uint32_t> SLURM_NTASKS{"SLURM_NTASKS"};
 
   const auto ompi_comm_world_size = OMPI_COMM_WORLD_SIZE.get().value_or(1);
   if (ompi_comm_world_size > 1) {
     return ompi_comm_world_size;
+  }
+
+  const auto pmi_size = PMI_SIZE.get().value_or(1);
+  if (pmi_size > 1) {
+    return pmi_size;
   }
 
   const auto mv2_comm_world_size = MV2_COMM_WORLD_SIZE.get().value_or(1);

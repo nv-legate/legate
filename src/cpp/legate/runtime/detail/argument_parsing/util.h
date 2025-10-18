@@ -15,7 +15,7 @@ namespace legate::detail {
 
 /**
  * @brief Determine the number of ranks in use based on environment variables
- * OMPI_COMM_WORLD_SIZE, MV2_COMM_WORLD_SIZE, and SLURM_NTASKS.
+ * OMPI_COMM_WORLD_SIZE, PMI_SIZE, MV2_COMM_WORLD_SIZE, and SLURM_NTASKS.
  *
  * @return the number of ranks in use
  */

@@ -72,9 +72,36 @@ def _get_ompi_config() -> tuple[int, int] | None:
 
     if ranks % ranks_per_node != 0:
         msg = (
-            "Detected incompatible ranks and ranks-per-node from "
-            f"OMPI_COMM_WORLD_SIZE={ranks} and "
-            f"OMPI_COMM_WORLD_LOCAL_SIZE={ranks_per_node}"
+            f"Number of ranks = {ranks} not evenly divisible by ranks per "
+            f"node = {ranks_per_node} (inferred from OMPI_COMM_WORLD_SIZE and "
+            "OMPI_COMM_WORLD_LOCAL_SIZE)"
+        )
+        raise ValueError(msg)
+
+    return ranks // ranks_per_node, ranks_per_node
+
+
+def _get_pmi_config() -> tuple[int, int] | None:
+    if not (ranks_env := getenv("PMI_SIZE")):
+        return None
+
+    if not (ranks_per_node_env := getenv("PMI_LOCAL_SIZE")):
+        return None
+
+    try:
+        ranks, ranks_per_node = int(ranks_env), int(ranks_per_node_env)
+    except ValueError:
+        msg = (
+            "Expected PMI_SIZE and PMI_LOCAL_SIZE to be integers, got "
+            f"PMI_SIZE={ranks_env} and PMI_LOCAL_SIZE={ranks_per_node_env}"
+        )
+        raise ValueError(msg)
+
+    if ranks % ranks_per_node != 0:
+        msg = (
+            f"Number of ranks = {ranks} not evenly divisible by ranks per "
+            f"node = {ranks_per_node} (inferred from PMI_SIZE and "
+            "PMI_LOCAL_SIZE)"
         )
         raise ValueError(msg)
 
@@ -100,9 +127,9 @@ def _get_mv2_config() -> tuple[int, int] | None:
 
     if ranks % ranks_per_node != 0:
         msg = (
-            "Detected incompatible ranks and ranks-per-node from "
-            f"MV2_COMM_WORLD_SIZE={ranks} and "
-            f"MV2_COMM_WORLD_LOCAL_SIZE={ranks_per_node}"
+            f"Number of ranks = {ranks} not evenly divisible by ranks per "
+            f"node = {ranks_per_node} (inferred from MV2_COMM_WORLD_SIZE and "
+            "MV2_COMM_WORLD_LOCAL_SIZE)"
         )
         raise ValueError(msg)
 
@@ -157,9 +184,9 @@ def _get_slurm_config() -> tuple[int, int] | None:  # noqa: C901, PLR0911
 
         if ranks % nodes != 0:
             msg = (
-                "Detected incompatible ranks and ranks-per-node from "
-                f"SLURM_JOB_NUM_NODES={nodes} and "
-                f"SLURM_NTASKS={ranks}"
+                f"Number of ranks = {ranks} not evenly divisible by number of "
+                f"nodes = {nodes} (inferred from SLURM_NTASKS and "
+                "SLURM_JOB_NUM_NODES)"
             )
             raise ValueError(msg)
 
@@ -179,9 +206,9 @@ def _get_slurm_config() -> tuple[int, int] | None:  # noqa: C901, PLR0911
 
         if ranks % nodes != 0:
             msg = (
-                "Detected incompatible ranks and ranks-per-node from "
-                f"SLURM_JOB_NUM_NODES={nodes} and "
-                f"SLURM_NPROCS={ranks}"
+                f"Number of ranks = {ranks} not evenly divisible by number of "
+                f"nodes = {nodes} (inferred from SLURM_NPROCS and "
+                "SLURM_JOB_NUM_NODES)"
             )
             raise ValueError(msg)
 
@@ -197,6 +224,8 @@ def detect_multi_node_defaults() -> tuple[dict[str, Any], dict[str, Any]]:
 
     if config := _get_ompi_config():
         where = "OMPI"
+    elif config := _get_pmi_config():
+        where = "PMI"
     elif config := _get_mv2_config():
         where = "MV2"
     elif config := _get_slurm_config():

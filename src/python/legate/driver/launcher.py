@@ -114,6 +114,8 @@ class Launcher:  # noqa: PLW1641
                 return MPILauncher(config, system)
             case "jsrun":
                 return JSRunLauncher(config, system)
+            case "aprun":
+                return APRunLauncher(config, system)
             case "srun":
                 return SRunLauncher(config, system)
             case "dask":
@@ -283,6 +285,25 @@ class JSRunLauncher(Launcher):
         cmd += ["-c", "ALL_CPUS"]
         cmd += ["-g", "ALL_GPUS"]
         cmd += ["-b", "none"]
+
+        self.cmd = tuple(cmd + config.multi_node.launcher_extra)
+
+
+class APRunLauncher(Launcher):
+    """A Launcher subclass to use aprun [1] for launching Legate processes.
+
+    [1] https://support.hpe.com/hpesc/public/docDisplay?docId=a00114008en_us&page=Run_Applications_Using_the_aprun_Command.html
+    """
+
+    kind: LauncherType = "aprun"
+
+    def __init__(self, config: ConfigProtocol, system: System) -> None:
+        super().__init__(config, system)
+
+        ranks = config.multi_node.ranks
+        ranks_per_node = config.multi_node.ranks_per_node
+
+        cmd = ["aprun", "-n", str(ranks), "-N", str(ranks_per_node)]
 
         self.cmd = tuple(cmd + config.multi_node.launcher_extra)
 

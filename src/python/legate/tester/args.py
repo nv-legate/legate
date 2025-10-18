@@ -230,7 +230,7 @@ multi_node.add_argument(
 multi_node.add_argument(
     "--launcher",
     dest="launcher",
-    choices=["mpirun", "jsrun", "srun", "dask", "none"],
+    choices=["mpirun", "jsrun", "aprun", "srun", "dask", "none"],
     default="none",
     help='launcher program to use (set to "none" for local runs, or if '
     "the launch has already happened by the time legate is invoked)",

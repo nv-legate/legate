@@ -94,7 +94,9 @@ class Test_cmd_bind:
             "--",
         )
 
-    @pytest.mark.parametrize("launch", ("none", "mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize(
+        "launch", ("none", "mpirun", "jsrun", "aprun", "srun")
+    )
     def test_combo_local(self, genobjs: GenObjs, launch: LauncherType) -> None:
         all_binds = [
             "--cpu-bind",
@@ -150,7 +152,9 @@ class Test_cmd_bind:
         ):
             assert f"{name} {binding}" in "--cpus 1 --gpus 1 --nics 1 --mems 1"
 
-    @pytest.mark.parametrize("launch", ("none", "mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize(
+        "launch", ("none", "mpirun", "jsrun", "aprun", "srun")
+    )
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     @pytest.mark.parametrize("kind", ("cpu", "gpu", "mem", "nic"))
     def test_ranks_good(
@@ -208,7 +212,9 @@ class Test_cmd_bind:
         with pytest.raises(RuntimeError, match=msg):
             m.cmd_bind(config, system, launcher)
 
-    @pytest.mark.parametrize("launch", ("none", "mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize(
+        "launch", ("none", "mpirun", "jsrun", "aprun", "srun")
+    )
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     def test_no_networking_error(
         self,
@@ -342,7 +348,7 @@ class Test_cmd_nvprof:
         )
         assert result == ("nvprof", "-o", log_path)
 
-    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "aprun", "srun"))
     def test_multi_rank_with_launcher(
         self, genobjs: GenObjs, launch: str
     ) -> None:
@@ -410,7 +416,7 @@ class Test_cmd_nsys:
 
         assert parsed_args.sample == "cpu"
 
-    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "aprun", "srun"))
     def test_multi_rank_with_launcher(
         self, genobjs: GenObjs, launch: str
     ) -> None:

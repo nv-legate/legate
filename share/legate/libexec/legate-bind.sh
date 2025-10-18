@@ -64,19 +64,15 @@ do
 done
 
 case "${launcher}" in
-  mpirun)
-    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-unknown}}"
+  mpirun | jsrun | aprun)
+    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-${PMI_LOCAL_RANK:-unknown}}}"
     global_rank="${OMPI_COMM_WORLD_RANK:-${PMI_RANK:-unknown}}"
     ;;
-  jsrun )
-    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-unknown}}"
-    global_rank="${OMPI_COMM_WORLD_RANK:-${PMI_RANK:-unknown}}"
-    ;;
-  srun  )
+  srun)
     local_rank="${SLURM_LOCALID:-unknown}"
     global_rank="${SLURM_PROCID:-unknown}"
     ;;
-  dask  )
+  dask)
     local_rank="unknown"
     global_rank="unknown"
     # Find rank from worker info if present
@@ -91,11 +87,11 @@ case "${launcher}" in
         done
     fi
     ;;
-  auto  )
-    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MV2_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-${SLURM_LOCALID:-unknown}}}}"
+  auto)
+    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-${PMI_LOCAL_RANK:-${MV2_COMM_WORLD_LOCAL_RANK:-${SLURM_LOCALID:-unknown}}}}}"
     global_rank="${OMPI_COMM_WORLD_RANK:-${PMI_RANK:-${MV2_COMM_WORLD_RANK:-${SLURM_PROCID:-unknown}}}}"
     ;;
-  local )
+  local)
     local_rank="0"
     global_rank="0"
     ;;

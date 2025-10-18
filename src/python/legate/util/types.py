@@ -52,7 +52,9 @@ class GPUInfo:
 
 
 #: Define the available launcher for the driver to use
-LauncherType: TypeAlias = Literal["mpirun", "jsrun", "srun", "dask", "none"]
+LauncherType: TypeAlias = Literal[
+    "mpirun", "jsrun", "aprun", "srun", "dask", "none"
+]
 
 
 #: Represent command line arguments

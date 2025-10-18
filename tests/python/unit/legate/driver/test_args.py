@@ -196,9 +196,12 @@ class TestMultiNodeDefaults:
 
         with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
-
-        assert "OMPI_COMM_WORLD_SIZE=5" in str(e.value)
-        assert "OMPI_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
+        assert (
+            "Number of ranks = 5 not evenly divisible by ranks per node = 3"
+            in str(e.value)
+        )
+        assert "OMPI_COMM_WORLD_SIZE" in str(e.value)
+        assert "OMPI_COMM_WORLD_LOCAL_SIZE" in str(e.value)
 
     def test_with_OMPI_bad_world_size(
         self, monkeypatch: pytest.MonkeyPatch
@@ -242,8 +245,12 @@ class TestMultiNodeDefaults:
 
         with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
-        assert "MV2_COMM_WORLD_SIZE=5" in str(e.value)
-        assert "MV2_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
+        assert (
+            "Number of ranks = 5 not evenly divisible by ranks per node = 3"
+            in str(e.value)
+        )
+        assert "MV2_COMM_WORLD_SIZE" in str(e.value)
+        assert "MV2_COMM_WORLD_LOCAL_SIZE" in str(e.value)
 
     def test_with_MV2_bad_world_size(
         self, monkeypatch: pytest.MonkeyPatch
@@ -348,17 +355,6 @@ class TestMultiNodeDefaults:
         assert ranks_per_node_kw["default"] == 3
         assert "SLURM" in ranks_per_node_kw["help"]
 
-    def test_with_SLURM_incompatible_num_nodes(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setenv("SLURM_NTASKS", "5")
-        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
-
-        with pytest.raises(ValueError) as e:  # noqa: PT011
-            m.detect_multi_node_defaults()
-        assert "SLURM_NTASKS=5" in str(e.value)
-        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
-
     def test_with_SLURM_bad_num_nodes(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -389,8 +385,12 @@ class TestMultiNodeDefaults:
 
         with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
-        assert "SLURM_NTASKS=5" in str(e.value)
-        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
+        assert (
+            "Number of ranks = 5 not evenly divisible by number of nodes = 3"
+            in str(e.value)
+        )
+        assert "SLURM_NTASKS" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES" in str(e.value)
 
     def test_with_SLURM_bad_nprocs(
         self, monkeypatch: pytest.MonkeyPatch
@@ -411,8 +411,12 @@ class TestMultiNodeDefaults:
 
         with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
-        assert "SLURM_NPROCS=5" in str(e.value)
-        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
+        assert (
+            "Number of ranks = 5 not evenly divisible by number of nodes = 3"
+            in str(e.value)
+        )
+        assert "SLURM_NPROCS" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES" in str(e.value)
 
     # test same as no_env -- auto-detect for PMI is unsupported
     def test_with_PMI(self, monkeypatch: pytest.MonkeyPatch) -> None:

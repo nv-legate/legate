@@ -124,7 +124,7 @@ class TestDriver:
         )
 
     # skip simple launcher for this test
-    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "aprun", "srun"))
     def test_run_bad(
         self, genconfig: GenConfig, mocker: MockerFixture, launch: LauncherType
     ) -> None:

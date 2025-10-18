@@ -92,6 +92,13 @@ class TestLauncher:
 
         assert isinstance(launcher, m.JSRunLauncher)
 
+    def test_create_launcher_aprun(self, genconfig: GenConfig) -> None:
+        config = genconfig(["--launcher", "aprun"])
+
+        launcher = m.Launcher.create(config, SYSTEM)
+
+        assert isinstance(launcher, m.APRunLauncher)
+
     def test_create_launcher_srun(self, genconfig: GenConfig) -> None:
         config = genconfig(["--launcher", "srun"])
 
@@ -589,6 +596,81 @@ class TestJSRunLauncher:
                 "foo",
                 "bar",
             )
+        )
+
+
+class TestAPRunLauncher:
+    def test_single_rank(self, genconfig: GenConfig) -> None:
+        config = genconfig(["--launcher", "aprun"])
+
+        launcher = m.Launcher.create(config, SYSTEM)
+
+        assert launcher.detected_rank_id == "0"
+        assert launcher.cmd == (("aprun", "-n", "1", "-N", "1"))
+
+    def test_single_rank_launcher_extra(self, genconfig: GenConfig) -> None:
+        config = genconfig(
+            [
+                "--launcher",
+                "aprun",
+                "--launcher-extra",
+                "foo",
+                "--launcher-extra",
+                "bar",
+            ]
+        )
+
+        launcher = m.Launcher.create(config, SYSTEM)
+
+        assert launcher.detected_rank_id == "0"
+        assert launcher.cmd == (("aprun", "-n", "1", "-N", "1", "foo", "bar"))
+
+    @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
+    def test_multi_rank(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        genconfig: GenConfig,
+        rank_var: str,
+    ) -> None:
+        for name in m.RANK_ENV_VARS:
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv(name, "123")
+
+        config = genconfig(["--launcher", "aprun"], multi_rank=(100, 2))
+        system = System()
+        launcher = m.Launcher.create(config, system)
+
+        assert launcher.detected_rank_id == "123"
+        assert launcher.cmd == (("aprun", "-n", "200", "-N", "2"))
+
+    @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
+    def test_multi_rank_launcher_extra(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        genconfig: GenConfig,
+        rank_var: str,
+    ) -> None:
+        for name in m.RANK_ENV_VARS:
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv(name, "123")
+
+        config = genconfig(
+            [
+                "--launcher",
+                "aprun",
+                "--launcher-extra",
+                "foo",
+                "--launcher-extra",
+                "bar",
+            ],
+            multi_rank=(100, 2),
+        )
+        system = System()
+        launcher = m.Launcher.create(config, system)
+
+        assert launcher.detected_rank_id == "123"
+        assert launcher.cmd == (
+            ("aprun", "-n", "200", "-N", "2", "foo", "bar")
         )
 
 

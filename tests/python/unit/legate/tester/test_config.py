@@ -214,7 +214,7 @@ class TestConfig:
         with pytest.raises(RuntimeError, match=msg):
             m.Config(["test.py", "--nodes", "4"], project=PROJECT)
 
-    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "aprun", "srun"))
     def test_multi_ranks_good_launcher(self, launch: str) -> None:
         c = m.Config(
             ["test.py", "--ranks-per-node", "4", "--launcher", launch],
@@ -223,7 +223,7 @@ class TestConfig:
         assert c.multi_node.launcher == launch
         assert c.multi_node.ranks_per_node == 4
 
-    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "aprun", "srun"))
     def test_multi_nodes_good_launcher(self, launch: str) -> None:
         c = m.Config(
             ["test.py", "--nodes", "4", "--launcher", launch], project=PROJECT

@@ -49,6 +49,7 @@ __all__ = (
 LAUNCHERS: tuple[LauncherType, ...] = (
     "mpirun",
     "jsrun",
+    "aprun",
     "srun",
     "dask",
     "none",
