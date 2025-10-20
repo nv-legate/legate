@@ -33,7 +33,8 @@ class TestInlineAllocation:
     @pytest.mark.parametrize("dtype", (ty.int8, ty.int16, ty.int32, ty.int64))
     @pytest.mark.parametrize("shape", ((1,), (1, 2, 3), (1, 2, 3, 4)))
     def test_basic(self, dtype: Type, shape: tuple[int, ...]) -> None:
-        store = get_legate_runtime().create_store(dtype=dtype, shape=shape)
+        runtime = get_legate_runtime()
+        store = runtime.create_store(dtype=dtype, shape=shape)
         store.fill(0)
         alloc = store.get_physical_store().get_inline_allocation()
         strides = compute_strides(shape, dtype)
@@ -43,7 +44,11 @@ class TestInlineAllocation:
         assert alloc.ptr > 0
         assert alloc.strides == strides
         assert alloc.shape == shape
-        assert alloc.target == StoreTarget.SYSMEM
+
+        if runtime.machine.preferred_target == TaskTarget.OMP:
+            assert alloc.target == StoreTarget.SOCKETMEM
+        else:
+            assert alloc.target == StoreTarget.SYSMEM
         assert alloc.__array_interface__ == {
             "version": 3,
             "shape": shape,

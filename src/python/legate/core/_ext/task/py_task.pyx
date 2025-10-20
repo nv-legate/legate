@@ -249,7 +249,7 @@ cdef class PyTask:
     cdef void _update_variant(self, func: UserFunction, VariantCode variant):
         if self.registered:
             raise RuntimeError(
-                f"Task (id: {self._task_id}) has already completed "
+                f"Task (id: {self.task_id}) has already completed "
                 "registration and cannot update its variants"
             )
 
@@ -352,8 +352,8 @@ cdef class PyTask:
 
     cdef void _invoke_variant(self, TaskContext ctx, VariantCode variant):
         variant_impl = self._variants[variant]
-        assert variant_impl is not None, (
-            f"Task has no variant for kind: {variant}"
+        assert variant_impl is not None, (  # pragma: no cover
+            f"Task has no variant for kind: {variant}"  # pragma: no cover
         )
         self._invoker(ctx, variant_impl)
 

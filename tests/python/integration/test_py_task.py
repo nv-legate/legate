@@ -22,6 +22,7 @@ from legate.core import (
     ImageComputationHint,
     LogicalArray,
     Scalar,
+    TaskConfig,
     TaskTarget,
     Type,
     VariantCode,
@@ -492,6 +493,55 @@ class TestPyTask:
             def fill_task(val: int, out: OutputStore) -> None:
                 pass
 
+    def test_different_variant_func(self) -> None:
+        runtime = get_legate_runtime()
+        task_id = runtime.core_library.get_new_task_id()
+        tc = TaskConfig(task_id, options=VariantOptions(has_allocations=True))
+
+        shape = (3, 5, 2)
+
+        def bind(out: tasks.OutputStore) -> None:
+            pytest.fail("should never reach here")
+
+        def bind_cpu(out: OutputStore) -> None:
+            buf = out.create_output_buffer(shape)
+            tasks.asarray(buf).fill(int(TaskTarget.CPU))
+
+        def bind_gpu(out: OutputStore) -> None:
+            buf = out.create_output_buffer(shape)
+            tasks.asarray(buf).fill(int(TaskTarget.GPU))
+
+        def bind_omp(out: OutputStore) -> None:
+            buf = out.create_output_buffer(shape)
+            tasks.asarray(buf).fill(int(TaskTarget.OMP))
+
+        out_store = runtime.create_store(ty.int32, ndim=len(shape))
+
+        bind_task = PyTask(func=bind, variants=[], options=tc)
+        bind_task.cpu_variant(bind_cpu)
+        bind_task.gpu_variant(bind_gpu)
+        bind_task.omp_variant(bind_omp)
+        exp_arr: NDArray[Any] = np.ndarray(shape, dtype=np.int32)
+        exp_arr.fill(int(runtime.machine.preferred_target))
+        bind_task(out_store)
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(
+            np.asarray(out_store.get_physical_store()), exp_arr
+        )
+
+    def test_update_variants_on_completed_task(self) -> None:
+        def foo() -> None:
+            pass
+
+        task = PyTask(func=foo, variants=[VariantCode.CPU])
+        task.complete_registration()
+        msg = re.escape(
+            f"Task (id: {task.task_id}) has already completed "
+            "registration and cannot update its variants"
+        )
+        with pytest.raises(RuntimeError, match=msg):
+            task.gpu_variant(print)
+
     def test_empty_variants(self) -> None:
         def foo() -> None:
             pass
@@ -502,7 +552,7 @@ class TestPyTask:
             _ = task.complete_registration()
 
     @pytest.mark.skipif(
-        get_legate_runtime().machine.preferred_target == TaskTarget.OMP,
+        TaskTarget.OMP in get_legate_runtime().machine.valid_targets,
         reason="CPU/GPU only test",
     )
     def test_unregistered_variant(self) -> None:
