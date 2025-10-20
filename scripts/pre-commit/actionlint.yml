@@ -7,3 +7,4 @@ self-hosted-runner:
     - linux-amd64-cpu4
     - linux-amd64-cpu16
     - linux-amd64-gpu-l4-latest-1
+    - mac-arm64-llr

@@ -59,7 +59,11 @@ jobs:
     uses: ./.github/workflows/wheels-test.yml
     with:
       build-type: pull-request
-
+  wheels-mac:
+    secrets: inherit
+    uses: ./.github/workflows/wheels-mac.yml
+    with:
+      build-type: pull-request
   source-tests-pass:
     if: always()
     needs:
