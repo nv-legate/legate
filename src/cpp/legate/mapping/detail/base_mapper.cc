@@ -525,7 +525,11 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
   auto&& maybe_vinfo =
     library.find_task(legate_task->task_id())->find_variant(to_variant_code(legate_task->target()));
 
-  LEGATE_CHECK(maybe_vinfo.has_value());
+  if (!maybe_vinfo.has_value()) {
+    LEGATE_ABORT(fmt::format("Task {}: Missing variant for {}",
+                             legate_task->legion_task().get_task_name(),
+                             legate_task->target()));
+  }
 
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   auto&& vinfo = maybe_vinfo->get();
