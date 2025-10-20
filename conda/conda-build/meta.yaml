@@ -198,7 +198,7 @@ requirements:
     - ucx
     - ucc
 {% endif %}
-    - openmpi <5
+    - openmpi <6
 
   # Runtime python dependencies
   run:
