@@ -122,8 +122,6 @@ set(with_runtime_SRC
     bug/remap_double_detach.cc
     bug/singleton_index_task.cc
     bug/projection_c_order.cc
-    bug/transpose_c_order.cc
-    bug/transpose_fortran_order.cc
     bug/temporary_logical_store.cc
     bug/string_physical_array_owner.cc
     bug/private_scalar_copy.cc
@@ -174,7 +172,6 @@ set(with_runtime_SRC
     integration/tasks/task_simple.cc
     integration/task_store/auto_task_tests.cc
     integration/task_store/manual_task_tests.cc
-    integration/transpose_dim_order.cc
     integration/tree_reduce.cc
     integration/tree_reduce_unique.cc
     integration/tunable.cc

@@ -119,7 +119,6 @@ std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(std::uint32
 {
   std::vector<Legion::DimensionKind> ordering;
 
-  LEGATE_ASSERT(ndim > 0);
   ordering.reserve(static_cast<std::size_t>(ndim) + 1);
   switch (kind) {
     case Kind::C: {
@@ -339,7 +338,7 @@ void StoreMapping::populate_layout_constraints(
   // ...would result in not 1, not 2, but 3 deep copies of our vector! Now it's a 0-copy
   // operation (a move)
   layout_constraints.ordering_constraint.ordering =
-    policy().ordering.impl()->generate_legion_dims(*store());
+    policy().ordering.impl()->generate_legion_dims(store()->region_field().dim());
   layout_constraints.ordering_constraint.contiguous = false;
   layout_constraints.add_constraint(Legion::MemoryConstraint{to_kind(policy().target)});
 

@@ -109,7 +109,7 @@ class TestToDLPack:
         assert (x == VALUE).all()
 
         NEW_VALUE = 4
-        x[:] = x.dtype.type(NEW_VALUE)
+        x[:] = x.dtype.type(NEW_VALUE)  # type: ignore[call-arg]
 
         assert (x == NEW_VALUE).all()
 
@@ -141,7 +141,7 @@ class TestToDLPack:
         assert (x == VALUE).all()
 
         NEW_VALUE = 4
-        x[:] = x.dtype.type(NEW_VALUE)
+        x[:] = x.dtype.type(NEW_VALUE)  # type: ignore[call-arg]
 
         assert (x == NEW_VALUE).all()
 
