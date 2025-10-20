@@ -25,6 +25,9 @@ namespace legate::detail::comm::coll {
 // called from main thread
 void init()
 {
+  // NOLINTBEGIN(bugprone-branch-clone)
+  // The branch bodies may appear identical when certain compile-time flags are not defined,
+  // but they serve different purposes based on LEGATE_USE_MPI and LEGATE_USE_UCX configuration.
   if (LEGATE_DEFINED(LEGATE_USE_MPI) && Runtime::get_runtime().config().need_network() &&
       !Runtime::get_runtime().config().disable_mpi()) {
 #if LEGATE_DEFINED(LEGATE_USE_MPI)
@@ -37,6 +40,7 @@ void init()
   } else {
     BackendNetwork::create_network(std::make_unique<detail::comm::coll::LocalNetwork>());
   }
+  // NOLINTEND(bugprone-branch-clone)
   // Make sure our nasty hack returned the right answer initially
   LEGATE_CHECK(BackendNetwork::get_network()->comm_type == BackendNetwork::guess_comm_type_());
 }

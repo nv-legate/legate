@@ -55,7 +55,8 @@ function(legate_generate_fatbin_modules)
   set(src_list)
   set(seen_fatbin_vars)
   foreach(src IN LISTS _LEGATE_SOURCES)
-    legate_add_tidy_target(SOURCE "${src}")
+    # Skip clang-tidy for fatbin files - they use NVCC-specific flags that clang-tidy
+    # cannot parse
     if(legate_FAKE_FATBINS_FOR_TIDY)
       # Generate stub header and skip real fatbin work
       cmake_path(GET src STEM fatbin_var_name)
