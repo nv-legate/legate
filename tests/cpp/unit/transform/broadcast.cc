@@ -193,4 +193,14 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertExtents)
   ASSERT_EQ(extents, expected);
 }
 
+TEST_F(TransformBroadcastUnit, BroadcastFindImaginaryDims)
+{
+  auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
+  auto dims      = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{};
+  auto expected  = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{1};
+
+  transform->find_imaginary_dims(dims);
+  ASSERT_EQ(dims, expected);
+}
+
 }  // namespace transform_broadcast_test

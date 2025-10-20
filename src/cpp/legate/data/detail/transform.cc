@@ -742,6 +742,11 @@ void DimBroadcast::print(std::ostream& out) const
   out << "dim_size: " << dim_size_ << ")";
 }
 
+void DimBroadcast::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>& dims) const
+{
+  dims.push_back(dim_);
+}
+
 // ==========================================================================================
 
 Transpose::Transpose(SmallVector<std::int32_t, LEGATE_MAX_DIM>&& axes) : axes_{std::move(axes)}

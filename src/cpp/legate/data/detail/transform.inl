@@ -180,8 +180,6 @@ inline std::int32_t DimBroadcast::target_ndim(std::int32_t source_ndim) const
   return source_ndim;
 }
 
-inline void DimBroadcast::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const {}
-
 inline SmallVector<std::int32_t, LEGATE_MAX_DIM> DimBroadcast::invert_dims(
   SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
