@@ -142,6 +142,11 @@ class TaskLauncher {
    */
   [[nodiscard]] std::size_t get_future_size_() const;
 
+  /**
+   * @return The task info for the task being launched.
+   */
+  [[nodiscard]] const TaskInfo* task_info_() const;
+
   std::reference_wrapper<const Library> library_;
   LocalTaskID task_id_{};
   Legion::MappingTagID tag_{};

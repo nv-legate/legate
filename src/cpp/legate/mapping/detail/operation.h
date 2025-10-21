@@ -80,6 +80,11 @@ class Task : public Mappable {
   [[nodiscard]] legate::detail::Library& library();
   [[nodiscard]] const legate::detail::Library& library() const;
 
+  /**
+   * @return The task info for the Legate task being mapped.
+   */
+  [[nodiscard]] const legate::detail::TaskInfo& task_info() const;
+
   [[nodiscard]] Span<const InternalSharedPtr<Array>> inputs() const;
   [[nodiscard]] Span<const InternalSharedPtr<Array>> outputs() const;
   [[nodiscard]] Span<const InternalSharedPtr<Array>> reductions() const;
@@ -110,6 +115,10 @@ class Task : public Mappable {
   //
   // Doesn't work. But it is for all intents and purposes a reference wrapper.
   legate::detail::Library* library_{};
+
+  // Add TaskInfo as argument to avoid reading from library_ and
+  // thus producing a race between the top-level task and mapper threads.
+  legate::detail::TaskInfo* task_info_{};
 
   legate::detail::SmallVector<InternalSharedPtr<Array>> inputs_{};
   legate::detail::SmallVector<InternalSharedPtr<Array>> outputs_{};

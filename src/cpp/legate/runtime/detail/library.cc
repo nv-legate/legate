@@ -172,8 +172,6 @@ void Library::register_task(
                          << legate::TaskInfo{task_info};
   }
 
-  const std::scoped_lock<std::mutex> guard{task_table_lock_};
-
   const auto [it, inserted] = tasks_.try_emplace(local_task_id, std::move(task_info));
 
   if (!inserted) {
@@ -191,8 +189,6 @@ void Library::register_task(
 
 const InternalSharedPtr<TaskInfo>& Library::find_task(LocalTaskID local_task_id) const
 {
-  const std::scoped_lock<std::mutex> guard{task_table_lock_};
-
   const auto it = tasks_.find(local_task_id);
 
   if (tasks_.end() == it) {

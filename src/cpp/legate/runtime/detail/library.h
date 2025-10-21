@@ -112,14 +112,6 @@ class Library {
   std::unique_ptr<mapping::Mapper> mapper_{};
   std::map<VariantCode, VariantOptions> default_options_{};
 
-  // This mutex protects the task table that can be accessed in parallel by the toplevel task and
-  // the mapper.
-  //
-  // FIXME(wonchanl): This lock shouldn't be necessary because the mapper can't see any task that is
-  // not yet added to this table. If we change the calling convention such that we pass a TaskInfo*
-  // directly to the mapper, we can remove the `find_task()` call from the mapper, which would
-  // obviate this lock.
-  mutable std::mutex task_table_lock_{};
   std::unordered_map<LocalTaskID, InternalSharedPtr<TaskInfo>> tasks_{};
 };
 

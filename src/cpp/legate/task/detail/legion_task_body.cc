@@ -47,6 +47,7 @@ namespace {
   TaskDeserializer dez{task, regions};
 
   static_cast<void>(dez.unpack<Library*>());
+  static_cast<void>(dez.unpack<TaskInfo*>());
   ret.inputs     = dez.unpack_arrays();
   ret.outputs    = dez.unpack_arrays();
   ret.reductions = dez.unpack_arrays();

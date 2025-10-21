@@ -229,6 +229,7 @@ BufferBuilder TaskLauncher::pack_task_arg_(bool parallel, StoreAnalyzer* analyze
   BufferBuilder task_arg;
 
   task_arg.pack(library_);
+  task_arg.pack(task_info_());
   pack_args(task_arg, *analyzer, inputs_);
   pack_args(task_arg, *analyzer, outputs_);
   pack_args(task_arg, *analyzer, reductions_);
@@ -419,6 +420,11 @@ void TaskLauncher::report_interfering_stores_() const
     "via multiple partitions in mixed modes, which is illegal in Legate. Make sure to make a "
     "copy "
     "of the store so there would be no interference.");
+}
+
+const TaskInfo* TaskLauncher::task_info_() const
+{
+  return library_.get().find_task(task_id_).get();
 }
 
 }  // namespace legate::detail

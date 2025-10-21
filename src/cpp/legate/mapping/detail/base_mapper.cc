@@ -522,10 +522,9 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
                           Task* legate_task,
                           Legion::Mapping::Mapper::MapTaskOutput* output)
 {
-  auto&& library = legate_task->library();
   // TODO(mpapadakis): Unify the variant finding with BaseMapper::find_variant_
   auto&& maybe_vinfo =
-    library.find_task(legate_task->task_id())->find_variant(to_variant_code(legate_task->target()));
+    legate_task->task_info().find_variant(to_variant_code(legate_task->target()));
 
   LEGATE_CHECK(maybe_vinfo.has_value());
 
@@ -552,6 +551,7 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
     return;
   }
 
+  auto&& library       = legate_task->library();
   auto&& legate_mapper = library.get_mapper();
   for (auto&& target : allocation_pool_targets) {
     const auto size   = legate_mapper.allocation_pool_size(mapping::Task{legate_task}, target);

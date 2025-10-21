@@ -51,6 +51,7 @@ Task::Task(const Legion::Task& task,
 {
   TaskDeserializer dez{task, runtime, context};
   library_             = dez.unpack<legate::detail::Library*>();
+  task_info_           = dez.unpack<legate::detail::TaskInfo*>();
   inputs_              = dez.unpack_arrays();
   outputs_             = dez.unpack_arrays();
   reductions_          = dez.unpack_arrays();
