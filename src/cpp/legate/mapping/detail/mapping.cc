@@ -119,115 +119,76 @@ std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(std::uint32
 {
   std::vector<Legion::DimensionKind> ordering;
 
-  ordering.reserve(static_cast<std::size_t>(ndim) + 1);
   switch (kind) {
     case Kind::C: {
+      LEGATE_ASSERT(ndim > 0);
+      ordering.reserve(ndim);
       for (auto dim = static_cast<std::int32_t>(ndim) - 1; dim >= 0; --dim) {
         ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
     case Kind::FORTRAN: {
+      LEGATE_ASSERT(ndim > 0);
+      ordering.reserve(ndim);
       for (std::uint32_t dim = 0; dim < ndim; ++dim) {
         ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
     case Kind::CUSTOM: {
-      LEGATE_CHECK(ndim == dims.size());
+      ordering.reserve(dims.size());
       for (auto dim : dims) {
         ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
   }
-  // After listing all dimension names, we add the field dimension as the last one so the instance
-  // will have an SOA layout
-  ordering.push_back(LEGION_DIM_F);
 
   return ordering;
 }
 
-std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(const Store& store) const
+legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> DimOrdering::generate_integer_dims(
+  std::uint32_t ndim) const
 {
-  // If the store is not transformed, we don't have to go through the complex inversion logic below
-  if (!store.transformed()) {
-    return generate_legion_dims(std::max<>(std::int32_t{1}, store.dim()));
-  }
+  legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> ret;
 
-  // We want to enforce user's intent by using the LogicalStore's dimension
-  // ordering to determine RegionField's dimension ordering. A compelling example
-  // being the desire to reorder the dims of a transposed store such that the new
-  // lowest dimension is physically contiguous. To achieve this:
-  // 1. We generate initial integer dims using the LogicalStore's dim count
-  // 2. Feed them through the store's transform stack via invert_dims(). This is
-  //    needed because LogicalStore's dim ordering and count can be different from the
-  //    RegionField due to store transforms.
-  // 3. Convert the resulting integer dims to Legion dims
-
-  // Generates a tuple of dimension indices in the order in which they should be laid out in the
-  // instance. A tuple (0, 1, ..., N - 1) denotes that dimension 0 is the most rapidly changing
-  // dimension in the layout; i.e., store[i, j, k, ...] and store[i + 1, j, k, ...] locate
-  // contiguously in the instance (called "Fortran order").
-  auto dim_ordering = [&] {
-    const auto ndim = store.dim();
-    legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> ret;
-
-    ret.reserve(ndim);
-    switch (kind) {
-      case Kind::C: {
-        for (std::int32_t dim = ndim - 1; dim >= 0; --dim) {
-          ret.push_back(dim);
-        }
-        return ret;
+  ret.reserve(ndim);
+  switch (kind) {
+    case Kind::C: [[fallthrough]];
+    case Kind::FORTRAN: {
+      for (std::int32_t dim = 0; static_cast<std::uint32_t>(dim) < ndim; ++dim) {
+        ret.push_back(dim);
       }
-      case Kind::FORTRAN: {
-        for (std::int32_t dim = 0; dim < ndim; ++dim) {
-          ret.push_back(dim);
-        }
-        return ret;
-      }
-      case Kind::CUSTOM: {
-        for (auto dim : dims) {
-          ret.push_back(dim);
-        }
-        return ret;
-      }
+      return ret;
     }
-
-    return ret;
-  }();
-
-  const auto ndim_rf = store.region_field().dim();
-
-  dim_ordering = store.invert_dims(std::move(dim_ordering));
-  if (dim_ordering.empty() && ndim_rf == 1) {
-    // Special case where empty store is represented by a 1D region field
-    dim_ordering.push_back(0);
-  } else {
-    // Note that the size of dim_ordering can be smaller than the number of dimensions of the region
-    // field if the store has any projections.
-    LEGATE_ASSERT(static_cast<std::int32_t>(dim_ordering.size()) <= ndim_rf);
-    // All dimension indices should be valid
-    LEGATE_ASSERT(std::all_of(dim_ordering.begin(), dim_ordering.end(), [ndim_rf](auto&& dim) {
-      return dim >= 0 && dim < ndim_rf;
-    }));
+    case Kind::CUSTOM: {
+      for (auto dim : dims) {
+        ret.push_back(dim);
+      }
+      return ret;
+    }
   }
 
-  std::vector<Legion::DimensionKind> legion_dims{};
+  LEGATE_ABORT("Unhandled dimension ordering kind: ", legate::detail::to_underlying(kind));
+}
 
-  legion_dims.reserve(dim_ordering.size() + 1);
-  std::transform(
-    dim_ordering.begin(),
-    dim_ordering.end(),
-    std::back_inserter(legion_dims),
-    [](const std::int32_t d) { return static_cast<Legion::DimensionKind>(d + LEGION_DIM_X); });
+void DimOrdering::integer_to_legion_dims(Span<const std::int32_t> int_dims,
+                                         std::vector<Legion::DimensionKind>* legion_dims) const
+{
+  LEGATE_ASSERT(legion_dims);
 
-  // After listing all dimension names, we add the field dimension as the last one so the instance
-  // will have an SOA layout
-  legion_dims.push_back(LEGION_DIM_F);
+  const auto convert_fn = [legion_dims](const auto& beg, const auto& end) {
+    std::transform(beg, end, std::back_inserter(*legion_dims), [](const std::int32_t d) {
+      return static_cast<Legion::DimensionKind>(d + LEGION_DIM_X);
+    });
+  };
 
-  return legion_dims;
+  switch (kind) {
+    case Kind::C: convert_fn(int_dims.crbegin(), int_dims.crend()); break;
+    case Kind::FORTRAN: [[fallthrough]];
+    case Kind::CUSTOM: convert_fn(int_dims.cbegin(), int_dims.cend()); break;
+  }
 }
 
 // ==========================================================================================
@@ -328,6 +289,37 @@ void StoreMapping::populate_layout_constraints(
       return st->dim() == store()->dim();
     }));
   }
+  auto&& first_region_field = store()->region_field();
+  std::vector<Legion::DimensionKind> dimension_ordering{};
+
+  if (LEGATE_DEFINED(LEGATE_ENABLE_INVERT_DIMS)) {
+    // We want to enforce user's intent by using the LogicalStore's dimension
+    // ordering to determine RegionField's dimension ordering. A compelling example
+    // being the desire to reorder the dims of a transposed store such that the new
+    // lowest dimension is physically contiguous. To achieve this:
+    // 1. We generate initial integer dims using the LogicalStore's dim count
+    // 2. Feed them through the store's transform stack via invert_dims(). This is
+    //    needed because LogicalStore's dim ordering and count can be different from the
+    //    RegionField due to store transforms.
+    // 3. Convert the resulting integer dims to Legion dims
+    auto int_dims = policy().ordering.impl()->generate_integer_dims(store()->dim());
+
+    int_dims = store()->invert_dims(std::move(int_dims));
+
+    if (int_dims.empty() && first_region_field.dim() == 1) {
+      // Special case where empty store is represented by a 1D region field
+      int_dims.push_back(0);
+    } else {
+      LEGATE_ASSERT(static_cast<std::int32_t>(int_dims.size()) == first_region_field.dim());
+    }
+    dimension_ordering.reserve(int_dims.size() + 1);
+    policy().ordering.impl()->integer_to_legion_dims(int_dims, &dimension_ordering);
+
+  } else {
+    dimension_ordering = policy().ordering.impl()->generate_legion_dims(first_region_field.dim());
+  }
+
+  dimension_ordering.push_back(LEGION_DIM_F);
 
   // This 2-step is necessary because Legion::OrderingConstraint constructor takes the vector
   // by const-ref. Similarly, layout_constraints.add_constraint() ALSO takes its
@@ -337,8 +329,7 @@ void StoreMapping::populate_layout_constraints(
   //
   // ...would result in not 1, not 2, but 3 deep copies of our vector! Now it's a 0-copy
   // operation (a move)
-  layout_constraints.ordering_constraint.ordering =
-    policy().ordering.impl()->generate_legion_dims(store()->region_field().dim());
+  layout_constraints.ordering_constraint.ordering   = std::move(dimension_ordering);
   layout_constraints.ordering_constraint.contiguous = false;
   layout_constraints.add_constraint(Legion::MemoryConstraint{to_kind(policy().target)});
 
@@ -362,7 +353,7 @@ void StoreMapping::populate_layout_constraints(
   // when implementing it like:
   // layout_constraints.field_constraint.field_set  = {first_region_field.field_id()};
   layout_constraints.field_constraint.field_set.clear();
-  layout_constraints.field_constraint.field_set.push_back(store()->region_field().field_id());
+  layout_constraints.field_constraint.field_set.push_back(first_region_field.field_id());
   layout_constraints.field_constraint.contiguous = false;
   layout_constraints.field_constraint.inorder    = false;
 }

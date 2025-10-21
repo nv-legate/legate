@@ -14,5 +14,4 @@ Developer Documentation
    Running the Test Suite <testing>
    Code Linting <linting>
    Debugging <debugging>
-   Dimension Ordering <dimension_ordering>
    Use of A.I. In Development <ai>

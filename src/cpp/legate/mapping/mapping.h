@@ -153,10 +153,6 @@ class LEGATE_EXPORT DimOrdering {
   /**
    * @brief Creates a custom ordering object
    *
-   * Dimension indices in the vector should be listed from the most rapidly changing one to the
-   * least rapidly changing one. For 3D stores, a custom order `{0, 1, 2}` is equivalent to Fortran
-   * order and `{2, 1, 0}` is equivalent to C order.
-   *
    * @param dims A vector that stores the order of dimensions.
    *
    * @return A `DimOrdering` object

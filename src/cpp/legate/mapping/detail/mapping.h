@@ -54,13 +54,28 @@ class DimOrdering {
   [[nodiscard]] std::vector<Legion::DimensionKind> generate_legion_dims(std::uint32_t ndim) const;
 
   /**
-   * @brief Generates a vector of Legion dimensions for a given Store
+   * Generates a tuple of integer dimensions in the range [0..ndim), in an
+   * order dependent on `kind`.
    *
-   * @param store The store for which the Legion dimensions is created
+   * @param ndim number of dimensions.
    *
-   * @returns a vector of Legion dimensions.
+   * @returns a tuple of integers in the range [0..ndim).
    */
-  [[nodiscard]] std::vector<Legion::DimensionKind> generate_legion_dims(const Store& store) const;
+  [[nodiscard]] legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> generate_integer_dims(
+    std::uint32_t ndim) const;
+
+  /**
+   * convert integer dimensions into Legion::DimensionKind, and in some cases,
+   * re-order based on `kind`.
+   *
+   * @param int_dims tuple of integer dims in the range [0..int_dims.size()).
+   *
+   * @param legion_dims vector of Legion::DimensionKind that is populated with the
+   *        output.
+   *
+   */
+  void integer_to_legion_dims(Span<const std::int32_t> int_dims,
+                              std::vector<Legion::DimensionKind>* legion_dims) const;
 
   Kind kind{};
   std::vector<std::int32_t> dims{};

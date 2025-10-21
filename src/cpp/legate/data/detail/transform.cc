@@ -447,11 +447,8 @@ SmallVector<std::int32_t, LEGATE_MAX_DIM> Promote::invert_dims(
 
   const auto it = std::find(dims.begin(), dims.end(), extra_dim_);
 
-  // If the dimension added by this promotion is projected in the transformation stack,
-  // the dimension index does not exist in `dims`.
-  if (it != dims.end()) {
-    dims.erase(it);
-  }
+  LEGATE_ASSERT(it != dims.end());
+  dims.erase(it);
 
   std::transform(
     dims.begin(), dims.end(), dims.begin(), [&](auto d) { return d > extra_dim_ ? d - 1 : d; });
@@ -613,28 +610,11 @@ void Project::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>& dim
 SmallVector<std::int32_t, LEGATE_MAX_DIM> Project::invert_dims(
   SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
-  // Renumber dims > projected dim_
+  // Add back the projected dimension and renumber dims > projected dim_
   std::transform(
     dims.begin(), dims.end(), dims.begin(), [&](auto&& d) { return d >= dim_ ? d + 1 : d; });
 
-  // Ordering for the projected dimension is left unspecified because the input dimension ordering
-  // carries no information to determine the right ordering for it.
-  //
-  // The partial ordering also allows the mapper to reuse instances of the original store to map the
-  // store with projected dimensions. Here's an example to understand why this is the case: Suppose
-  // we have a 2D store constructed from a 3D store by projecting the first dimension and want to
-  // create an instance with C ordering. The `invert_dims()` call would get an ordering (1, 0) and
-  // generate (2, 1), ultimately mapped into (LEGION_DIM_Z, LEGION_DIM_Y). This partial ordering is
-  // consistent with the original store's C ordering (LEGION_DIM_Z, LEGION_DIM_Y, LEGION_DIM_X), and
-  // thus the projected store can reuse any C instance created for the original store. Let's now say
-  // that we added the projected dimension as the first one like the code was previously doing.
-  // Then, the dimension ordering we get would be (LEGION_DIM_X, LEGION_DIM_Z, LEGION_DIM_Y),
-  // which it contradicts the C ordering of the original store.
-  //
-  // Technically, we can filter out any unit-extent dimensions from the dimension orderings before
-  // we do an entailment check, but that would make the entailment check fairly complicated for no
-  // meaningful benefits.
-
+  dims.insert(dims.begin() + dim_, dim_);
   return dims;
 }
 
@@ -819,15 +799,7 @@ void Transpose::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>& d
 SmallVector<std::int32_t, LEGATE_MAX_DIM> Transpose::invert_dims(
   SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
-  decltype(dims) ret;
-
-  ret.reserve(dims.size());
-  std::transform(dims.begin(), dims.end(), std::back_inserter(ret), [&](std::int32_t dim) {
-    // Unlike points or shapes, whose indices correspond to dimension indices, `dims` has dimension
-    // indices as values, so the inversion is simply looking up the `axes_` using those values.
-    return axes_[dim];
-  });
-  return ret;
+  return array_map(dims, inverse_);
 }
 
 // ==========================================================================================

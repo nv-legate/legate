@@ -103,12 +103,6 @@ class Store {
   [[nodiscard]] bool valid() const;
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const;
-  /**
-   * @brief Returns if the store is transformed
-   *
-   * @returns true if the store is transformed
-   */
-  [[nodiscard]] bool transformed() const;
 
   [[nodiscard]] bool is_reduction() const;
   [[nodiscard]] GlobalRedopID redop() const;
