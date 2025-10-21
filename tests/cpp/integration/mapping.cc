@@ -19,10 +19,9 @@ namespace {
 using MappingIntegrationTests = DefaultFixture;
 using MappingDeathTest        = MappingIntegrationTests;
 
-auto LIBRARY_NAME = "legate.mapping.integration";
-
 // A tiny task that does nothing; we only need mapping to run
-struct DummyTask : public legate::LegateTask<DummyTask> {
+class DummyTask : public legate::LegateTask<DummyTask> {
+ public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}}.with_signature(legate::TaskSignature{}.inputs(1));
 
@@ -30,7 +29,8 @@ struct DummyTask : public legate::LegateTask<DummyTask> {
 };
 
 // A reduction task to exercise reduction instance mapping paths
-struct ReduceTask : public legate::LegateTask<ReduceTask> {
+class ReduceTask : public legate::LegateTask<ReduceTask> {
+ public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}}.with_signature(legate::TaskSignature{}.redops(1));
 
@@ -41,9 +41,20 @@ struct ReduceTask : public legate::LegateTask<ReduceTask> {
 };
 
 // CPU-only reduction task (registers only CPU variant) so it always runs on CPU
-struct ReduceTaskCPUOnly : public legate::LegateTask<ReduceTaskCPUOnly> {
+class ReduceTaskCPUOnly : public legate::LegateTask<ReduceTaskCPUOnly> {
+ public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}}.with_signature(legate::TaskSignature{}.redops(1));
+
+  static void cpu_variant(legate::TaskContext /*context*/) {}
+};
+
+// Task with multiple stores, used to test partial mapping failure scenarios
+class MultiStoreTask : public legate::LegateTask<MultiStoreTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}}.with_signature(
+      legate::TaskSignature{}.inputs(1).redops(1));
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
@@ -123,31 +134,33 @@ class GpuRedMapper final : public legate::mapping::Mapper {
   legate::Scalar tunable_value(legate::TunableID) override { return {}; }
 };
 
-}  // namespace
-
-// A simple write task to exercise tighten retry path
-struct WriteTask : public legate::LegateTask<WriteTask> {
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{2}}.with_signature(legate::TaskSignature{}.outputs(1));
-
-  static void cpu_variant(legate::TaskContext /*context*/) {}
-};
-
-namespace {
-
-// Mapper for write task using C-order (default) to create a large instance
-class CpuWriteMapperC final : public legate::mapping::Mapper {
+// Custom mapper: first store uses small exact policy, second store uses very large non-exact policy
+class PartialFailMapper final : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    std::vector<legate::mapping::StoreMapping> v;
-    auto st  = task.output(0).data();
-    auto pol = legate::mapping::InstanceMappingPolicy{}
-                 .with_target(legate::mapping::StoreTarget::SYSMEM)
-                 .with_ordering(legate::mapping::DimOrdering::c_order());
-    v.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
-    return v;
+    std::vector<legate::mapping::StoreMapping> mappings;
+
+    // First store (input): use exact=true to ensure successful mapping
+    if (!task.inputs().empty()) {
+      auto st  = task.input(0).data();
+      auto pol = legate::mapping::InstanceMappingPolicy{}
+                   .with_target(legate::mapping::StoreTarget::SYSMEM)
+                   .with_exact(true);
+      mappings.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
+    }
+
+    // Second store (reduction): use exact=false, may fail
+    if (!task.reductions().empty()) {
+      auto st  = task.reduction(0).data();
+      auto pol = legate::mapping::InstanceMappingPolicy{}
+                   .with_target(legate::mapping::StoreTarget::SYSMEM)
+                   .with_exact(false);
+      mappings.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
+    }
+
+    return mappings;
   }
 
   std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task&,
@@ -159,19 +172,24 @@ class CpuWriteMapperC final : public legate::mapping::Mapper {
   legate::Scalar tunable_value(legate::TunableID) override { return {}; }
 };
 
-// Mapper for write task using FORTRAN-order to avoid cache reuse on second map
-class CpuWriteMapperF final : public legate::mapping::Mapper {
+// Custom mapper: use exact=false for read-only inputs
+class ReadOnlyNonExactMapper final : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    std::vector<legate::mapping::StoreMapping> v;
-    auto st  = task.output(0).data();
-    auto pol = legate::mapping::InstanceMappingPolicy{}
-                 .with_target(legate::mapping::StoreTarget::SYSMEM)
-                 .with_ordering(legate::mapping::DimOrdering::fortran_order());
-    v.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
-    return v;
+    std::vector<legate::mapping::StoreMapping> mappings;
+
+    // Use exact=false for input store
+    if (!task.inputs().empty()) {
+      auto st  = task.input(0).data();
+      auto pol = legate::mapping::InstanceMappingPolicy{}
+                   .with_target(legate::mapping::StoreTarget::SYSMEM)
+                   .with_exact(false);
+      mappings.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
+    }
+
+    return mappings;
   }
 
   std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task&,
@@ -185,12 +203,13 @@ class CpuWriteMapperF final : public legate::mapping::Mapper {
 
 }  // namespace
 
-// Covers BaseMapper::handle_client_mappings duplicate-future-mapping check (L324-L331)
+// Covers BaseMapper::handle_client_mappings duplicate-future-mapping check
 TEST_F(MappingDeathTest, DupFutureStoreMappings)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(
-    LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<DupFutureMapper>());
+  auto library = runtime->create_library("legate.mapping.dup_future_store_mapping",
+                                         legate::ResourceConfig{},
+                                         std::make_unique<DupFutureMapper>());
   DummyTask::register_variants(library);
   constexpr auto scalar_value = 42;
   auto scalar_store           = runtime->create_store(legate::Scalar{scalar_value});
@@ -208,7 +227,7 @@ TEST_F(MappingDeathTest, DupFutureStoreMappings)
     "returned duplicate store mappings");
 }
 
-// Covers reduction instance creation path (L886-L917, L930-L936) on CPU
+// Covers reduction instance creation path on CPU
 TEST_F(MappingIntegrationTests, ReductionCreateCPU)
 {
   auto* rt = legate::Runtime::get_runtime();
@@ -228,7 +247,7 @@ TEST_F(MappingIntegrationTests, ReductionCreateCPU)
   rt->issue_execution_fence(true);
 }
 
-// Covers reduction cache reuse path on GPU if available (L842-L857 and need_acquire=true)
+// Covers reduction cache reuse path on GPU if available
 TEST_F(MappingIntegrationTests, ReductionReuseGPU)
 {
   if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) == 0) {
@@ -260,6 +279,84 @@ TEST_F(MappingIntegrationTests, ReductionReuseGPU)
     rt->submit(std::move(t2));
     rt->issue_execution_fence(true);
   }
+}
+
+TEST_F(MappingDeathTest, MapSingleStoreFail)
+{
+  auto* rt = legate::Runtime::get_runtime();
+  auto lib = rt->create_library("legate.mapping.single_store_mapping_fail",
+                                legate::ResourceConfig{},
+                                std::make_unique<CpuRedMapper>());
+  ReduceTaskCPUOnly::register_variants(lib);
+
+  constexpr std::uint64_t huge_size = 1ULL << 40;  // 1TB
+  auto store                        = rt->create_store(legate::Shape{huge_size}, legate::int32());
+  rt->issue_fill(store, legate::Scalar{0});
+
+  const legate::tuple<std::uint64_t> launch{1};
+  auto task = rt->create_task(lib, ReduceTaskCPUOnly::TASK_CONFIG.task_id(), launch);
+  task.add_reduction(store, legate::ReductionOpKind::ADD);
+  ASSERT_DEATH(
+    {
+      rt->submit(std::move(task));
+      rt->issue_execution_fence(true);
+    },
+    "Out of memory");
+}
+
+TEST_F(MappingDeathTest, MapMultipleStoresPartialFail)
+{
+  auto* rt = legate::Runtime::get_runtime();
+  auto lib = rt->create_library("legate.mapping.multiple_stores_mapping_fail",
+                                legate::ResourceConfig{},
+                                std::make_unique<PartialFailMapper>());
+  MultiStoreTask::register_variants(lib);
+
+  // Create a small input store (will succeed in mapping)
+  constexpr std::uint64_t SHAPE_SIZE = 1000;
+  auto input_store                   = rt->create_store(legate::Shape{SHAPE_SIZE}, legate::int32());
+  rt->issue_fill(input_store, legate::Scalar{0});
+
+  // Create a very large reduction store (will fail in mapping)
+  constexpr std::uint64_t huge_size = 1ULL << 40;  // 1TB
+  auto reduction_store              = rt->create_store(legate::Shape{huge_size}, legate::int32());
+  rt->issue_fill(reduction_store, legate::Scalar{0});
+
+  const legate::tuple<std::uint64_t> launch{1};
+  auto task = rt->create_task(lib, MultiStoreTask::TASK_CONFIG.task_id(), launch);
+  task.add_input(input_store);
+  task.add_reduction(reduction_store, legate::ReductionOpKind::ADD);
+  ASSERT_DEATH(
+    {
+      rt->submit(std::move(task));
+      rt->issue_execution_fence(true);
+    },
+    "Out of memory");  // Expected output contains "Out of memory"
+}
+
+// Use read-only input + exact=false, read-only store will be skipped during tighten
+TEST_F(MappingDeathTest, MapLegateStoresReadOnlyNonExact)
+{
+  auto* rt = legate::Runtime::get_runtime();
+  auto lib = rt->create_library("legate.mapping.readonly_nonexact",
+                                legate::ResourceConfig{},
+                                std::make_unique<ReadOnlyNonExactMapper>());
+  DummyTask::register_variants(lib);
+
+  // Create a very large read-only store
+  constexpr std::uint64_t huge_size = 1ULL << 40;  // 1TB
+  auto store                        = rt->create_store(legate::Shape{huge_size}, legate::int32());
+  rt->issue_fill(store, legate::Scalar{0});
+
+  const legate::tuple<std::uint64_t> launch{1};
+  auto task = rt->create_task(lib, DummyTask::TASK_CONFIG.task_id(), launch);
+  task.add_input(store);  // Read-only input
+  ASSERT_DEATH(
+    {
+      rt->submit(std::move(task));
+      rt->issue_execution_fence(true);
+    },
+    "Out of memory");
 }
 
 }  // namespace mapping_integration_test
