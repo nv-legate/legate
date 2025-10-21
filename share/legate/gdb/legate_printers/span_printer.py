@@ -23,7 +23,7 @@ class SpanPrinter(gdb.ValuePrinter):
     def __init__(self, val: Value):
         self._val = val
         self._children_provider = ArrayChildrenProvider(
-            val["data_"], int(val["size_"])
+            val["__data_"], int(val["__size_"])
         )
 
     def children(self) -> Iterator[tuple[str, Value]]:
@@ -42,4 +42,4 @@ class SpanPrinter(gdb.ValuePrinter):
 
 def register_printer(pp: RegexpCollectionPrettyPrinter) -> None:
     """Register the legate::Span printer."""
-    pp.add_printer("Span", "^legate::Span<.*>$", SpanPrinter)
+    pp.add_printer("Span", "^cuda::std::.*span<.*>$", SpanPrinter)

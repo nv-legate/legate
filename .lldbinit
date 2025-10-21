@@ -13,8 +13,8 @@ type summary add --skip-pointers --expand -F smallvec_formatter.smallvector_summ
 type synthetic add --python-class sharedptr_formatter.SharedPtrChildrenProvider -x "^legate::(Internal)?SharedPtr<.*>$"
 type summary add --skip-pointers --expand -F sharedptr_formatter.sharedptr_summary_formatter -x "^legate::(Internal)?SharedPtr<.*>$"
 
-type synthetic add --python-class span_formatter.SpanChildrenProvider -x "^legate::Span<.*>$"
-type summary add --skip-pointers --expand -F span_formatter.span_summary_formatter -x "^legate::Span<.*>$"
+type synthetic add --python-class span_formatter.SpanChildrenProvider -x "^cuda::std::.*span<.*>$"
+type summary add --skip-pointers --expand -F span_formatter.span_summary_formatter -x "^cuda::std::.*span<.*>$"
 
 type synthetic add --python-class tuple_formatter.TupleChildrenProvider -x "^legate::tuple<.*>$"
 type summary add --skip-pointers --expand -F tuple_formatter.tuple_summary_formatter -x "^legate::tuple<.*>$"

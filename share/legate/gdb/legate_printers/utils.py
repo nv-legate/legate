@@ -111,4 +111,8 @@ def get_type_str(val: Value) -> str:
         # we remove all qualifiers from the type to get a
         # proper string and add back in the reference `&`
         return f"{gdb.types.get_basic_type(val.type).tag}&"
-    return val.type.tag
+    if val.type.tag is not None:
+        return val.type.tag
+    if val.type.name is not None:
+        return val.type.name
+    return gdb.types.get_basic_type(val.type).tag

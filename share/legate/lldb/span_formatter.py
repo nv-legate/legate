@@ -17,9 +17,9 @@ class SpanChildrenProvider:
 
     def update(self) -> None:
         """Update underlying span implementation details for printing."""
-        self._start = self._valobj.GetChildMemberWithName("data_")
+        self._start = self._valobj.GetChildMemberWithName("__data_")
         self._size = self._valobj.GetChildMemberWithName(
-            "size_"
+            "__size_"
         ).GetValueAsUnsigned(0)
 
     def num_children(self) -> int:
