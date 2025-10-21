@@ -113,6 +113,7 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
 
         void* get_cuda_stream() except+
         int32_t get_current_cuda_device() except+
+        void synchronize_cuda_stream(void*) except+
         void begin_trace(uint32_t) except+
         void end_trace(uint32_t) except+
         const _Config& config() except+
@@ -246,6 +247,7 @@ cdef class Runtime(Unconstructable):
     cpdef void stop_profiling_range(self, str provenance)
     cdef void* get_cuda_stream(self)
     cdef int32_t get_current_cuda_device(self)
+    cdef void synchronize_cuda_stream(self, void* stream)
     cdef void begin_trace(self, uint32_t)
     cdef void end_trace(self, uint32_t)
     cpdef Config config(self)

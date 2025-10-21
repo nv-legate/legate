@@ -6,6 +6,7 @@
 
 #include <legate/runtime/runtime.h>
 
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/data/detail/shape.h>
 #include <legate/operation/detail/task.h>
 #include <legate/runtime/detail/runtime.h>
@@ -374,6 +375,14 @@ Processor Runtime::get_executing_processor() const { return impl()->get_executin
 void* Runtime::get_cuda_stream() const { return impl()->get_cuda_stream(); }
 
 CUdevice Runtime::get_current_cuda_device() const { return impl()->get_current_cuda_device(); }
+
+// This method can be static in theory, but is made a proper member so users can call this only
+// after the runtime is started.
+void Runtime::synchronize_cuda_stream(
+  void* stream) const  // NOLINT(readability-convert-member-functions-to-static)
+{
+  cuda::detail::get_cuda_driver_api()->stream_synchronize(static_cast<CUstream>(stream));
+}
 
 const detail::Config& Runtime::config() const { return impl()->config(); }
 

@@ -4,7 +4,6 @@
 
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
-from libc.stdint cimport uintptr_t
 
 from cpython cimport PyCapsule_IsValid, PyCapsule_GetPointer, PyCapsule_SetName
 
@@ -48,31 +47,29 @@ cdef DLPackTensor get_dlpack_tensor(object capsule):
     raise ValueError(m)
 
 
-cdef object get_stream(object device):
+cdef bool check_device_type(object device):
+    """
+    Check if the device is one of supported device types and returns ``True``
+    if the device is GPU.
+    """
     if device is None:
-        return None
+        return False
 
     cdef DLDeviceType device_type = device[0]
-
     cdef tuple HOST_TYPES = (
         DLDeviceType.kDLCPU,
         DLDeviceType.kDLCUDAHost,
     )
-
-    if device_type in HOST_TYPES:
-        return None
-
-    cdef void *cu_stream = NULL
-    cdef tuple CUDA_TYPES = (
+    cdef tuple GPU_DEVICE_TYPES = (
         DLDeviceType.kDLCUDA,
         DLDeviceType.kDLCUDAManaged,
     )
 
-    if device_type in CUDA_TYPES:
-        cu_stream = get_legate_runtime().get_cuda_stream()
-        if cu_stream == NULL:
-            return None  # legacy default stream
-        return <uintptr_t>cu_stream
+    if device_type in HOST_TYPES:
+        return False
+
+    if device_type in GPU_DEVICE_TYPES:
+        return True
 
     m = f"Unhandled DLPack device type: {device_type}"
     raise BufferError(m)
@@ -88,13 +85,17 @@ def from_dlpack(
     if (device is None) and hasattr(x, "__dlpack_device__"):
         device = x.__dlpack_device__()
 
-    cdef object stream = get_stream(device)
+    is_device_gpu = check_device_type(device)
     # We don't check for attribute presence. The AttributeError that may be
     # raised below is part of the DLPack Python API standard:
     # https://data-apis.org/array-api/latest/API_specification/generated/array_api.from_dlpack.html#array_api.from_dlpack
     try:
         capsule = x.__dlpack__(
-            stream=stream,
+            # Passing a null stream as a consuming stream, as we don't know
+            # which task will consume this store later and where it will run
+            # (which is even less obvious if the store gets partitioned across
+            # multiple GPUs).
+            stream=None,
             max_version=(DLPACK_MAJOR_VERSION, DLPACK_MINOR_VERSION),
             dl_device=device,
             copy=copy
@@ -109,6 +110,12 @@ def from_dlpack(
         # So we try again, only this time we pass in exactly what the user gave
         # us so that they can correct the error on their end.
         capsule = x.__dlpack__(dl_device=device, copy=copy)
+
+    if is_device_gpu:
+        # Since we pass a null stream above to extract the capsule, we should
+        # synchronize it here. Otherwise, non-blocking streams used in
+        # downstream GPU tasks are not properly synchronized.
+        get_legate_runtime().synchronize_cuda_stream(NULL)
 
     cdef DLPackTensor dl_tensor
 

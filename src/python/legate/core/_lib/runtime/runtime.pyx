@@ -1401,6 +1401,9 @@ cdef class Runtime(Unconstructable):
     cdef int32_t get_current_cuda_device(self):
         return self._handle.get_current_cuda_device()
 
+    cdef void synchronize_cuda_stream(self, void* stream):
+        self._handle.synchronize_cuda_stream(stream)
+
     cdef void begin_trace(self, uint32_t trace_id):
         self._handle.begin_trace(trace_id)
 

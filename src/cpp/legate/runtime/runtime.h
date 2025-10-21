@@ -738,6 +738,7 @@ class LEGATE_EXPORT Runtime {
   // Intentionally not documented, these are only exposed for the python bindings.
   [[nodiscard]] LEGATE_PYTHON_EXPORT void* get_cuda_stream() const;
   [[nodiscard]] LEGATE_PYTHON_EXPORT CUdevice get_current_cuda_device() const;
+  LEGATE_PYTHON_EXPORT void synchronize_cuda_stream(void* stream) const;
   LEGATE_PYTHON_EXPORT void begin_trace(std::uint32_t trace_id);
   LEGATE_PYTHON_EXPORT void end_trace(std::uint32_t trace_id);
   [[nodiscard]] LEGATE_PYTHON_EXPORT const detail::Config& config() const;
