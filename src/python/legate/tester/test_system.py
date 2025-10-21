@@ -13,7 +13,8 @@ import os
 import multiprocessing
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from subprocess import PIPE, STDOUT, TimeoutExpired, run as stdlib_run
+from signal import SIGINT
+from subprocess import PIPE, STDOUT, Popen, TimeoutExpired
 from typing import TYPE_CHECKING
 
 import psutil
@@ -134,39 +135,41 @@ class TestSystem(System):
         full_env.update(env)
 
         start = datetime.now()
-        try:
-            proc = stdlib_run(
-                cmd,
-                cwd=cwd,
-                env=full_env,
-                stdout=PIPE,
-                stderr=STDOUT,
-                timeout=timeout,
-                check=False,
-            )
-        except TimeoutExpired as te_exn:
-            if te_exn.stdout is None:
-                output = ""
-            else:
-                output = te_exn.stdout.decode(errors="replace")
+        with Popen(
+            cmd,
+            cwd=cwd,
+            env=full_env,
+            stdout=PIPE,
+            stderr=STDOUT,
+            errors="replace",
+        ) as proc:
+            try:
+                proc.wait(timeout=timeout)
+            except TimeoutExpired:
+                os.kill(proc.pid, SIGINT)
 
-            assert timeout is not None  # mypy
+                # wait on process to exit via communicate, don't use
+                # wait() due to potential deadlock with pipes
+                output, _ = proc.communicate()
+
+                assert timeout is not None  # mypy
+                assert output is not None  # mypy
+                return ProcessResult(
+                    invocation,
+                    test_display,
+                    start=start,
+                    end=start + timedelta(seconds=timeout),
+                    timeout=True,
+                    output=output,
+                )
+
+            end = datetime.now()
+            assert proc.stdout is not None  # mypy
             return ProcessResult(
                 invocation,
                 test_display,
                 start=start,
-                end=start + timedelta(seconds=timeout),
-                timeout=True,
-                output=output,
+                end=end,
+                returncode=proc.returncode,
+                output=proc.stdout.read(),
             )
-
-        end = datetime.now()
-
-        return ProcessResult(
-            invocation,
-            test_display,
-            start=start,
-            end=end,
-            returncode=proc.returncode,
-            output=proc.stdout.decode(errors="replace"),
-        )

@@ -7,8 +7,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from subprocess import CompletedProcess
+from subprocess import PIPE, STDOUT
 from typing import TYPE_CHECKING
+from unittest.mock import ANY
 
 import psutil
 
@@ -52,8 +53,8 @@ class TestProcessResult:
 
 
 @pytest.fixture
-def mock_subprocess_run(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch.object(m, "stdlib_run")
+def mock_popen(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch.object(m, "Popen")
 
 
 CMD = "legate script.py --cpus 4"
@@ -64,15 +65,18 @@ class TestSystem:
         s = m.TestSystem()
         assert s.dry_run is False
 
-    def test_run(self, mock_subprocess_run: MagicMock) -> None:
+    def test_run(self, mock_popen: MagicMock) -> None:
         s = m.TestSystem()
 
-        mock_subprocess_run.return_value = CompletedProcess(
-            CMD, 10, stdout=b"<output>"
-        )
-
         result = s.run(CMD.split(), "test/file")
-        mock_subprocess_run.assert_called()
+        mock_popen.assert_called_once_with(
+            CMD.split(),
+            cwd=None,
+            env=ANY,
+            stdout=PIPE,
+            stderr=STDOUT,
+            errors="replace",
+        )
 
         assert result.invocation == CMD
         assert result.test_display == "test/file"
@@ -80,38 +84,44 @@ class TestSystem:
         assert result.time > timedelta(0)
         assert not result.skipped
         assert not result.timeout
-        assert result.returncode == 10
-        assert result.output == "<output>"
-        assert not result.passed
 
-    def test_run_with_stdout_decode_errors(
-        self, mock_subprocess_run: MagicMock
-    ) -> None:
+    def test_run_with_returncode(self) -> None:
         s = m.TestSystem()
 
-        bad_stdout = b"\xfe\xb1a"
-        mock_subprocess_run.return_value = CompletedProcess(
-            CMD, 10, stdout=bad_stdout
-        )
+        false_cmd = "false"
+        result = s.run(false_cmd.split(), "test/file")
 
-        result = s.run(CMD.split(), "test/file")
-        mock_subprocess_run.assert_called()
-
-        assert result.invocation == CMD
+        assert result.invocation == false_cmd
         assert result.test_display == "test/file"
         assert result.time is not None
         assert result.time > timedelta(0)
         assert not result.skipped
         assert not result.timeout
-        assert result.returncode == 10
-        assert result.output == bad_stdout.decode(errors="replace")
+        assert result.returncode != 0
+        assert result.output is not None
         assert not result.passed
 
-    def test_dry_run(self, mock_subprocess_run: MagicMock) -> None:
+    def test_run_with_stdout(self) -> None:
+        s = m.TestSystem()
+
+        echo_cmd = "echo Hello"
+        result = s.run(echo_cmd.split(), "test/file")
+
+        assert result.invocation == echo_cmd
+        assert result.test_display == "test/file"
+        assert result.time is not None
+        assert result.time > timedelta(0)
+        assert not result.skipped
+        assert not result.timeout
+        assert result.returncode == 0
+        assert result.output == "Hello\n"
+        assert result.passed
+
+    def test_dry_run(self, mock_popen: MagicMock) -> None:
         s = m.TestSystem(dry_run=True)
 
         result = s.run(CMD.split(), "test/file")
-        mock_subprocess_run.assert_not_called()
+        mock_popen.assert_not_called()
 
         assert result.output == ""
         assert result.skipped
@@ -123,8 +133,9 @@ class TestSystem:
 
         assert result.timeout
         assert not result.skipped
+        assert not result.passed
 
-    def test_memort(self) -> None:
+    def test_memory(self) -> None:
         s = m.TestSystem()
 
         assert s.memory == psutil.virtual_memory().total

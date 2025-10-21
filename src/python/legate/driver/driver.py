@@ -4,11 +4,12 @@
 
 from __future__ import annotations
 
+import os
 import sys
+import signal
 from dataclasses import dataclass
 from datetime import datetime
 from shlex import quote
-from signal import SIGINT
 from subprocess import Popen
 from typing import TYPE_CHECKING, Any
 
@@ -24,6 +25,7 @@ from .launcher import Launcher
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from types import FrameType
 
     from rich.console import RenderableType
 
@@ -32,6 +34,13 @@ if TYPE_CHECKING:
     from .config import ConfigProtocol
 
 __all__ = ("LegateDriver", "format_verbose")
+
+_EXTERNAL_KILL_SIGNALS: tuple[signal.Signals, ...] = (
+    signal.SIGINT,
+    signal.SIGTERM,
+    signal.SIGQUIT,
+    signal.SIGHUP,
+)
 
 
 @dataclass(frozen=True)
@@ -124,6 +133,24 @@ class LegateDriver:
         if self.config.other.timing:
             self.print_on_head_node(f"Legate start: {datetime.now()}")
 
+        # note: there is potential race with setting proc_pid and reading
+        # it in the signal handler that could leave child process alive
+        proc_pid: int = -1
+
+        def forward_signal(signum: int, _: FrameType | None) -> None:
+            if proc_pid > 0:
+                # Propagate kill signal to the child process, and wait for it
+                # to die.
+                os.kill(proc_pid, signum)
+            else:
+                # Got this signal before spawning the child process.
+                # Restore default signal handler and raise same signal.
+                signal.signal(signum, signal.SIG_DFL)
+                signal.raise_signal(signum)
+
+        for signum in _EXTERNAL_KILL_SIGNALS:
+            signal.signal(signum, forward_signal)
+
         proc = Popen(
             self.cmd,
             env=self.env,
@@ -132,13 +159,8 @@ class LegateDriver:
             stdout=sys.stdout,
             stderr=sys.stderr,
         )
-        while True:
-            try:
-                proc.wait()
-            except KeyboardInterrupt:
-                proc.send_signal(SIGINT)
-                continue
-            break
+        proc_pid = proc.pid
+        proc.wait()
         ret = proc.returncode
 
         if self.config.other.timing:
