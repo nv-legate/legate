@@ -51,6 +51,10 @@ class FieldManager {
     Legion::LogicalRegion region,
     Legion::FieldID field_id);
   virtual void free_field(FreeFieldInfo info, bool unordered);
+  /**
+   * @brief Issue a consesus match on discarded fields in multi-rank runs.
+   */
+  virtual void issue_field_match();
 
  protected:
   [[nodiscard]] std::optional<InternalSharedPtr<LogicalRegionField>> try_reuse_field_(
@@ -89,6 +93,20 @@ class ConsensusMatchingFieldManager final : public FieldManager {
     Legion::LogicalRegion region,
     Legion::FieldID field_id) override;
   void free_field(FreeFieldInfo info, bool unordered) override;
+  /**
+   * @brief Issue a consesus match on discarded fields in multi-rank runs.
+   *
+   * Due to the non-deterministic nature of garbage collection in managed language like
+   * Python, in a multi-process run different top-level processes (Python interpreters)
+   * may delete the same Legate Store at different points in time. Legate tries to
+   * reuse the backing RegionFields of deleted Stores, but to do this safely all
+   * instances of the Legate runtime must agree on the set of RegionFields that have been freed.
+   *
+   * This function issues an asynchronous collective operation, whereby all processes
+   * will agree on the set of RegionFields that have been freed across all of them, so
+   * they can be safely reused.
+   */
+  void issue_field_match() override;
 
  private:
   [[nodiscard]] std::uint32_t calculate_match_credit_(const InternalSharedPtr<Shape>& shape,

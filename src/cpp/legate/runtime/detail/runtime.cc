@@ -1600,6 +1600,8 @@ void Runtime::issue_discard_field(const Legion::LogicalRegion& region, Legion::F
 
 void Runtime::issue_mapping_fence() { submit(make_internal_shared<MappingFence>(new_op_id())); }
 
+void Runtime::issue_field_match() { field_manager_->issue_field_match(); }
+
 void Runtime::issue_execution_fence(bool block /*=false*/)
 {
   submit(make_internal_shared<ExecutionFence>(new_op_id(), block));

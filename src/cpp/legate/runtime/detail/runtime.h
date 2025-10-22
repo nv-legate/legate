@@ -400,6 +400,10 @@ class Runtime {
   void issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void issue_mapping_fence();
+  /**
+   * @brief Issue a consesus match on discarded fields in multi-rank runs.
+   */
+  void issue_field_match();
   void issue_execution_fence(bool block = false);
   [[nodiscard]] InternalSharedPtr<LogicalStore> get_timestamp(Timing::Precision precision);
   // NOTE: If the type T contains any padding bits, make sure the entries *in the vector* are

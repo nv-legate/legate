@@ -61,6 +61,8 @@ void FieldManager::free_field(FreeFieldInfo info, bool /*unordered*/)
   }
 }
 
+void FieldManager::issue_field_match() {}
+
 std::optional<InternalSharedPtr<LogicalRegionField>> FieldManager::try_reuse_field_(
   const InternalSharedPtr<Shape>& shape, std::uint32_t field_size)
 {
@@ -182,6 +184,15 @@ std::uint32_t ConsensusMatchingFieldManager::calculate_match_credit_(
   return 1;
 }
 
+void ConsensusMatchingFieldManager::issue_field_match()
+{
+  if (field_match_counter_ >= Runtime::get_runtime().field_reuse_freq()) {
+    process_outstanding_match_();
+    issue_field_match_();
+    field_match_counter_ = 0;
+  }
+}
+
 void ConsensusMatchingFieldManager::maybe_issue_field_match_(const InternalSharedPtr<Shape>& shape,
                                                              std::uint32_t field_size)
 {
@@ -192,10 +203,11 @@ void ConsensusMatchingFieldManager::maybe_issue_field_match_(const InternalShare
   // of "wasted" space (instances that we can't discard because, even though we have freed the
   // corresponding fields locally, we don't know that all nodes have freed them) somewhat bounded.
   field_match_counter_ += calculate_match_credit_(shape, field_size);
-  if (field_match_counter_ >= Runtime::get_runtime().field_reuse_freq()) {
-    process_outstanding_match_();
-    issue_field_match_();
-    field_match_counter_ = 0;
+  // We refrain from consensus matching on discarded fields when inside a streaming section.
+  // We do this as this operation is blocking and flushes the current scheduling window
+  // which breaks the steaming section.
+  if (!Runtime::get_runtime().scope().parallel_policy().streaming()) {
+    issue_field_match();
   }
 }
 

@@ -26,6 +26,12 @@ ParallelPolicy Scope::exchange_parallel_policy(ParallelPolicy parallel_policy)
       // change. See discussion in `BaseMapping::select_streaming_tasks_to_map()` for why this
       // fence is needed.
       rt.issue_mapping_fence();
+      // In a multi-rank run when we're inside a streaming scope we stop consensus matching
+      // discarded fields as that ends up flushing the current scheduling window and
+      // waits on existing matches. This results in breaking the streaming window. We issue
+      // a match at the end of a streaming scope in case there are outstanding matches
+      // that might have triggered inside the scope.
+      rt.issue_field_match();
     }
     rt.flush_scheduling_window();
   }
