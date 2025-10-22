@@ -135,11 +135,12 @@ repos:
       - id: shellcheck
         args: ['--rcfile', './scripts/pre-commit/shellcheckrc']
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
+    rev: v1.7.8
     hooks:
       - id: actionlint
         types: [yaml]
         files: ^\.github/workflows/
+        exclude: ^\.github/workflows/ci-gh-nightly-release\.yml$  # YAML anchors unsupported by actionlint yet (see rhysd/actionlint#133)
         args: [-config-file=scripts/pre-commit/actionlint.yml]
         entry: env SHELLCHECK_OPTS="--enable=all --severity=style" actionlint
   - repo: local
