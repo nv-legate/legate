@@ -68,10 +68,10 @@ class InitMapping : public legate::detail::LegionTask<InitMapping> {
 #endif
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  static int cuda_variant(const Legion::Task* task,
-                          const std::vector<Legion::PhysicalRegion>& regions,
-                          Legion::Context context,
-                          Legion::Runtime* runtime)
+  static int gpu_variant(const Legion::Task* task,
+                         const std::vector<Legion::PhysicalRegion>& regions,
+                         Legion::Context context,
+                         Legion::Runtime* runtime)
   {
     return cpu_variant(task, regions, context, runtime);
   }
@@ -124,7 +124,7 @@ class Init : public detail::LegionTask<Init> {
 #endif
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  static legate::comm::coll::CollComm cuda_variant(
+  static legate::comm::coll::CollComm gpu_variant(
     const Legion::Task* task,
     const std::vector<Legion::PhysicalRegion>& regions,
     Legion::Context context,
