@@ -515,8 +515,8 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
     case mapping::TaskTarget::OMP: break;
   }
 
-  const auto scope = legate::Scope{legate::mapping::Machine{get_machine()}.only(target_proc)};
-  auto task        = create_task(core_library(), OffloadTo::TASK_CONFIG.task_id());
+  const auto scp = legate::Scope{legate::mapping::Machine{get_machine()}.only(target_proc)};
+  auto task      = create_task(core_library(), OffloadTo::TASK_CONFIG.task_id());
 
   task->add_scalar_arg(legate::Scalar{target_mem}.impl());
 
@@ -526,13 +526,19 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
   std::ignore = task->add_output(array);
 
   submit(std::move(task));
-  // A mapping fence is issued here to prevent subsequent tasks from being mapped
-  // and possibly creating new allocations on target_mem before the offload task
-  // has had a chance to run. The fence is necessary because downstream tasks may
-  // not have any data dependencies with the offload task and therefore, have no
-  // guarantees on their mapping order.
-  issue_mapping_fence();
-}  // namespace
+  // We issue a mapping fence here because downstream tasks that do not access
+  // `array` do not have mapping order dependency on the offload task. Such tasks
+  // may allocate data on the `target_mem` ahead of the offload task thus
+  // preventing the offloading from happening at the right time.
+  //
+  // However, we do not need to and should not issue the mapping fence inside a
+  // streaming scope because mapping fence breaks the streaming scope into two
+  // sets. Further, each streaming scope already has a mapping fence at the end, so
+  // that should suffice.
+  if (!scope().parallel_policy().streaming()) {
+    issue_mapping_fence();
+  }
+}
 
 void Runtime::flush_scheduling_window()
 {
