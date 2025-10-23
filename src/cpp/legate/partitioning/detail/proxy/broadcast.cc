@@ -11,6 +11,7 @@
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
 #include <legate/partitioning/proxy.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <cstdint>
 #include <optional>
@@ -38,7 +39,13 @@ void do_broadcast(const TaskArrayArg* arg,
                   const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes,
                   AutoTask* task)
 {
-  do_broadcast_final(task->find_or_declare_partition(arg->array), axes, task);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+                        do_broadcast_final(task->find_or_declare_partition(arr), axes, task);
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             arg->array);
 }
 
 void do_broadcast(Span<const TaskArrayArg> args,

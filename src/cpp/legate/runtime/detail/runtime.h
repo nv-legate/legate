@@ -32,6 +32,7 @@
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
+#include <atomic>
 #include <list>
 #include <map>
 #include <memory>
@@ -72,6 +73,7 @@ class AutoTask;
 class BaseLogicalArray;
 class LogicalArray;
 class ManualTask;
+class PhysicalTask;
 class StructLogicalArray;
 class LogicalStore;
 class LogicalStorePartition;
@@ -124,6 +126,39 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library& library,
                                                           LocalTaskID task_id,
                                                           const Domain& launch_domain);
+  /**
+   * @brief Creates a PhysicalTask using top-level machine context.
+   *
+   * This method creates a PhysicalTask that will execute on the machine determined by the
+   * runtime's top-level context. This is appropriate for tasks launched from the main
+   * execution context, not from within other tasks.
+   *
+   * PhysicalTasks are designed for direct, inline execution with pre-partitioned physical
+   * arrays. They bypass Legate's automatic partitioning and are executed immediately
+   * without going through Legion's task scheduling.
+   *
+   * @param library The library containing the task implementation
+   * @param task_id Local task identifier within the library
+   * @return A shared pointer to the created PhysicalTask
+   */
+  [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task(const Library& library,
+                                                                     LocalTaskID task_id);
+
+  /**
+   * @brief Creates a PhysicalTask using TaskContext machine for correct allocation in nested tasks.
+   *
+   * This method creates a PhysicalTask that will execute on the machine associated with the
+   * provided TaskContext. This is the correct method to use when creating PhysicalTasks from
+   * within other tasks (nested execution), as it ensures the new task uses the appropriate
+   * machine context from the parent task.
+   *
+   * @param context The TaskContext from the parent task, providing machine and execution context
+   * @param library The library containing the task implementation
+   * @param task_id Local task identifier within the library
+   * @return A shared pointer to the created PhysicalTask
+   */
+  [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task(
+    const legate::TaskContext& context, const Library& library, LocalTaskID task_id);
   void issue_copy(InternalSharedPtr<LogicalStore> target,
                   InternalSharedPtr<LogicalStore> source,
                   std::optional<std::int32_t> redop);
@@ -529,7 +564,7 @@ class Runtime {
     registered_shardings_{};
 
   std::queue<InternalSharedPtr<Operation>> operations_{};
-  std::uint64_t cur_op_id_{};
+  std::atomic<std::uint64_t> cur_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::uint64_t next_store_id_{1};
@@ -545,7 +580,10 @@ class Runtime {
     reduction_ops_{};
 
   std::vector<std::variant<Legion::Future, ReturnedException>> pending_exceptions_{};
-  bool executing_inline_task_{};
+  // Thread-local flag to track whether the current thread is executing an inline task.
+  // This must be thread-local because multiple Legion tasks can run in parallel,
+  // each potentially launching PhysicalTasks inline on different threads.
+  static thread_local bool executing_inline_task_;
 
   std::optional<MapperManager> mapper_manager_{};
 

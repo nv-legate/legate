@@ -10,6 +10,7 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <tuple>
 
@@ -26,27 +27,70 @@ void do_align_final(const Variable* left, const Variable* right, AutoTask* task)
 
 void do_align(const TaskArrayArg* left, const TaskArrayArg* right, AutoTask* task)
 {
-  do_align_final(task->find_or_declare_partition(left->array),
-                 task->find_or_declare_partition(right->array),
-                 task);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& left_arr) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& right_arr) {
+                                              do_align_final(
+                                                task->find_or_declare_partition(left_arr),
+                                                task->find_or_declare_partition(right_arr),
+                                                task);
+                                            },
+                                            [&](const InternalSharedPtr<PhysicalArray>&) {
+                                              // Do nothing for PhysicalArray
+                                            }},
+                                   right->array);
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             left->array);
 }
 
 void do_align(const TaskArrayArg* left, Span<const TaskArrayArg> right, AutoTask* task)
 {
-  const auto* left_part = task->find_or_declare_partition(left->array);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& left_arr) {
+                        const auto* left_part = task->find_or_declare_partition(left_arr);
 
-  for (auto&& right_arg : right) {
-    do_align_final(left_part, task->find_or_declare_partition(right_arg.array), task);
-  }
+                        for (auto&& right_arg : right) {
+                          std::visit(
+                            Overload{[&](const InternalSharedPtr<LogicalArray>& right_arr) {
+                                       do_align_final(left_part,
+                                                      task->find_or_declare_partition(right_arr),
+                                                      task);
+                                     },
+                                     [&](const InternalSharedPtr<PhysicalArray>&) {
+                                       // Do nothing for PhysicalArray
+                                     }},
+                            right_arg.array);
+                        }
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             left->array);
 }
 
 void do_align(Span<const TaskArrayArg> left, const TaskArrayArg* right, AutoTask* task)
 {
-  const auto* right_part = task->find_or_declare_partition(right->array);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& right_arr) {
+                        const auto* right_part = task->find_or_declare_partition(right_arr);
 
-  for (auto&& left_arg : left) {
-    do_align_final(task->find_or_declare_partition(left_arg.array), right_part, task);
-  }
+                        for (auto&& left_arg : left) {
+                          std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& left_arr) {
+                                                do_align_final(
+                                                  task->find_or_declare_partition(left_arr),
+                                                  right_part,
+                                                  task);
+                                              },
+                                              [&](const InternalSharedPtr<PhysicalArray>&) {
+                                                // Do nothing for PhysicalArray
+                                              }},
+                                     left_arg.array);
+                        }
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             right->array);
 }
 
 void do_align(Span<const TaskArrayArg> left, Span<const TaskArrayArg> right, AutoTask* task)

@@ -160,6 +160,7 @@ set(with_runtime_SRC
     integration/mixed_dim.cc
     integration/multi_scalar_out.cc
     integration/partitioner.cc
+    integration/physical_task.cc
     integration/projection.cc
     integration/proc_local_storage.cc
     integration/provenance.cc
@@ -174,6 +175,10 @@ set(with_runtime_SRC
     integration/tasks/task_simple.cc
     integration/task_store/auto_task_tests.cc
     integration/task_store/manual_task_tests.cc
+    integration/task_store/physical_task/physical_task_basic_tests.cc
+    integration/task_store/physical_task/physical_task_context_tests.cc
+    integration/task_store/physical_task/physical_task_nested_tests.cc
+    integration/task_store/physical_task/physical_task_error_tests.cc
     integration/transpose_dim_order.cc
     integration/tree_reduce.cc
     integration/tree_reduce_unique.cc
@@ -278,6 +283,7 @@ set(with_runtime_SRC
     unit/dlpack/from_dlpack/unversioned.cc
     unit/dlpack/to_dlpack/to_dlpack.cc
     unit/streaming/process_streaming_run.cc
+    unit/task/physical_task.cc
     # experimental
     experimental/stl/elementwise.cc
     experimental/stl/fill.cc

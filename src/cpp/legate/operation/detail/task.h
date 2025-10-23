@@ -22,6 +22,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 
 namespace legate {
 
@@ -39,7 +40,7 @@ class VariantInfo;
 class TaskArrayArg {
  public:
   /**
-   * @brief Construct a TaskArrayArg.
+   * @brief Construct a TaskArrayArg for LogicalArray.
    *
    * `priv` should be initialized to the following values based on whether the argument as an
    * input, output, or reduction:
@@ -53,96 +54,48 @@ class TaskArrayArg {
    * member should *not* be considered stable until the task is sent to Legion.
    *
    * @param priv The access privilege for this task argument.
-   * @param _array The array for this argument.
+   * @param _array The LogicalArray for this argument.
    * @param _projection An optional projection for the argument.
    */
   TaskArrayArg(Legion::PrivilegeMode priv,
                InternalSharedPtr<LogicalArray> _array,
                std::optional<SymbolicPoint> _projection = std::nullopt);
+
+  /**
+   * @brief Construct a TaskArrayArg for PhysicalArray.
+   *
+   * @param priv The access privilege for this task argument.
+   * @param _array The PhysicalArray for this argument.
+   */
+  TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalArray> _array);
   [[nodiscard]] bool needs_flush() const;
 
   Legion::PrivilegeMode privilege{Legion::PrivilegeMode::LEGION_NO_ACCESS};
-  InternalSharedPtr<LogicalArray> array{};
-  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> mapping{};
+  std::variant<InternalSharedPtr<LogicalArray>, InternalSharedPtr<PhysicalArray>> array{};
+  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>
+    mapping{};  // Only used for LogicalArray
   std::optional<SymbolicPoint> projection{};
 };
 
-class Task : public Operation {
+class TaskBase : public Operation {
  protected:
-  Task(const Library& library,
-       const VariantInfo& variant_info,
-       LocalTaskID task_id,
-       std::uint64_t unique_id,
-       std::int32_t priority,
-       mapping::detail::Machine machine,
-       bool can_inline_launch);
+  TaskBase(const Library& library,
+           const VariantInfo& variant_info,
+           LocalTaskID task_id,
+           std::uint64_t unique_id,
+           std::int32_t priority,
+           mapping::detail::Machine machine,
+           bool can_inline_launch);
 
  public:
+  void validate() override;
   void add_scalar_arg(InternalSharedPtr<Scalar> scalar);
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);
   void throws_exception(bool can_throw_exception);
-  /**
-   * @brief Set the streaming generation for this task.
-   *
-   * This marks a task as part of a set of streaming tasks. Among other effects, this informs
-   * the mapper that this task should be mapped "vertically", i.e. map each "column" of index
-   * points of a streaming generation at a time before mapping new tasks. See
-   * `BaseMapper::select_tasks_to_map()` for more information.
-   *
-   * If `streaming_gen` is `std::nullopt`, the task is no longer considered to be part of a
-   * streaming generation. It will be eagerly (i.e. horizontally) mapped by the mapper.
-   *
-   * @param streaming_gen The streaming generation.
-   */
-  void set_streaming_generation(std::optional<StreamingGeneration> streaming_gen);
-  void add_communicator(std::string_view name, bool bypass_signature_check = false);
-
-  void record_scalar_output(InternalSharedPtr<LogicalStore> store);
-  void record_unbound_output(InternalSharedPtr<LogicalStore> store);
-  void record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
-                               GlobalRedopID legion_redop_id);
-
-  void validate() override;
 
  protected:
-  void launch_task_(Strategy* strategy);
-
- private:
   void inline_launch_() const;
-  void legion_launch_(Strategy* strategy);
-
-  /**
-   * @brief De-multiplex a future returned by a Legion task.
-   *
-   * Because Legion allows each task to have only up to one returned future, Legate packs multiple
-   * scalars it needs to return from a Legate task into the single future, which later gets
-   * de-multiplexed by this method. Scalar output and reduction stores directly use the returned
-   * future as their backing storage, and whoever consume them offset into the right location in
-   * that future. The returned future contains a serialized exception at the end, which needs to be
-   * extracted out and converted into an exception object of the right type so it can be re-raised
-   * on the control side.
-   */
-  void demux_scalar_stores_(const Legion::Future& result, std::size_t future_size_without_exn);
-  /**
-   * @brief De-multiplex a future map returned by a Legion task.
-   *
-   * This method is an "index version" of the `demux_scalar_stores` method. This does more or less
-   * the same thing, except that it needs to reduce multiple scalars into a single scalar whenever
-   * necessary; for scalar reduction stores, the method extracts scalars holding local reduction
-   * contributions from parallel tasks (using the same `ExtractScalar` task) and passes the future
-   * map to Legion for the scalar reduction producing a final output; returned exceptions also need
-   * to be combined in a similar way, and the "reduction" operator for returned exceptions simply
-   * favors the previous one over all the later ones (i.e., if a task i returned an exception, those
-   * returned from all tasks j > i are ignored.
-   */
-  void demux_scalar_stores_(const Legion::FutureMap& result,
-                            const Domain& launch_domain,
-                            std::size_t future_size_without_exn);
-
-  // Calculate the return future size excluding the size of returned exception, which can only be
-  // approximate
-  [[nodiscard]] std::size_t calculate_future_size_() const;
 
  public:
   [[nodiscard]] std::string to_string(bool show_provenance) const override;
@@ -150,11 +103,6 @@ class Task : public Operation {
   [[nodiscard]] bool supports_replicated_write() const override;
   [[nodiscard]] bool can_throw_exception() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const;
-
-  /**
-   * @return The streaming generation if the task is a streaming task, `std::nullopt` otherwise.
-   */
-  [[nodiscard]] const std::optional<StreamingGeneration>& streaming_generation() const;
 
   /**
    * @return The scalar arguments for the task.
@@ -176,24 +124,12 @@ class Task : public Operation {
    */
   [[nodiscard]] Span<const TaskArrayArg> reductions() const;
 
-  /**
-   * @return The scalar output arguments for the task.
-   */
-  [[nodiscard]] Span<const InternalSharedPtr<LogicalStore>> scalar_outputs() const;
-
-  /**
-   * @return The scalar reductions for the task.
-   */
-  [[nodiscard]] Span<const std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>
-  scalar_reductions() const;
-
   [[nodiscard]] const Library& library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
  protected:
   [[nodiscard]] const VariantInfo& variant_info_() const;
 
- private:
   std::reference_wrapper<const Library> library_;
   std::reference_wrapper<const VariantInfo> vinfo_;
   LocalTaskID task_id_{};
@@ -201,24 +137,73 @@ class Task : public Operation {
   bool has_side_effect_{};
   bool can_throw_exception_{};
   bool can_elide_device_ctx_sync_{};
-  std::optional<StreamingGeneration> streaming_gen_{};
   SmallVector<InternalSharedPtr<Scalar>> scalars_{};
-
- protected:
   SmallVector<TaskArrayArg> inputs_{};
   SmallVector<TaskArrayArg> outputs_{};
   SmallVector<TaskArrayArg> reductions_{};
   SmallVector<GlobalRedopID> reduction_ops_{};
+  bool can_inline_launch_{};
+};
+
+class LogicalTask : public TaskBase {
+ protected:
+  LogicalTask(const Library& library,
+              const VariantInfo& variant_info,
+              LocalTaskID task_id,
+              std::uint64_t unique_id,
+              std::int32_t priority,
+              mapping::detail::Machine machine,
+              bool can_inline_launch);
+
+ public:
+  // LogicalTask-specific scalar methods (non-virtual)
+  [[nodiscard]] Span<const InternalSharedPtr<LogicalStore>> scalar_outputs() const;
+  [[nodiscard]] Span<const std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>
+  scalar_reductions() const;
+
+  /**
+   * @brief Set the streaming generation for this task.
+   *
+   * This marks a task as part of a set of streaming tasks. Among other effects, this informs
+   * the mapper that this task should be mapped "vertically", i.e. map each "column" of index
+   * points of a streaming generation at a time before mapping new tasks. See
+   * `BaseMapper::select_tasks_to_map()` for more information.
+   *
+   * If `streaming_gen` is `std::nullopt`, the task is no longer considered to be part of a
+   * streaming generation. It will be eagerly (i.e. horizontally) mapped by the mapper.
+   *
+   * @param streaming_gen The streaming generation.
+   */
+  void set_streaming_generation(std::optional<StreamingGeneration> streaming_gen);
+  void add_communicator(std::string_view name, bool bypass_signature_check = false);
+
+  /**
+   * @return The streaming generation if the task is a streaming task, `std::nullopt` otherwise.
+   */
+  [[nodiscard]] const std::optional<StreamingGeneration>& streaming_generation() const;
+
+  void record_scalar_output(InternalSharedPtr<LogicalStore> store);
+  void record_unbound_output(InternalSharedPtr<LogicalStore> store);
+  void record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
+                               GlobalRedopID legion_redop_id);
+
+ protected:
+  void launch_task_(Strategy* strategy);
 
  private:
+  void legion_launch_(Strategy* strategy);
+  void demux_scalar_stores_(const Legion::Future& result);
+  void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
+  [[nodiscard]] std::size_t calculate_future_size_() const;
+
   SmallVector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
   SmallVector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
   SmallVector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
   SmallVector<std::reference_wrapper<CommunicatorFactory>> communicator_factories_{};
-  bool can_inline_launch_{};
+  std::optional<StreamingGeneration> streaming_gen_{};
 };
 
-class AutoTask final : public Task {
+class AutoTask final : public LogicalTask {
  public:
   AutoTask(const Library& library,
            const VariantInfo& variant_info,
@@ -263,7 +248,7 @@ class AutoTask final : public Task {
   SmallVector<LogicalArray*> arrays_to_fixup_{};
 };
 
-class ManualTask final : public Task {
+class ManualTask final : public LogicalTask {
  public:
   ManualTask(const Library& library,
              const VariantInfo& variant_info,
@@ -331,6 +316,148 @@ class ManualTask final : public Task {
 
  private:
   Strategy strategy_{};
+};
+
+/**
+ * @brief A task that operates directly on physical data arrays with explicit memory layouts.
+ *
+ * PhysicalTask represents the leaf level of task execution in Legate, where tasks work
+ * directly with physical memory representations of data. Unlike AutoTask and ManualTask
+ * which work with logical arrays, PhysicalTask requires explicit physical array inputs
+ * and outputs with known memory layouts and partitioning.
+ *
+ * Physical tasks are typically created by top-level tasks (AutoTask/ManualTask) during their
+ * execution phase when the logical-to-physical mapping has already been determined by the
+ * runtime.
+ */
+class PhysicalTask final : public TaskBase {
+ public:
+  /**
+   * @brief Constructs a new PhysicalTask.
+   *
+   * @param library The library containing the task implementation
+   * @param variant_info Information about the specific task variant to execute
+   * @param task_id Local task identifier within the library
+   * @param unique_id Globally unique identifier for this task instance
+   * @param machine Target machine/processor for task execution
+   */
+  PhysicalTask(const Library& library,
+               const VariantInfo& variant_info,
+               LocalTaskID task_id,
+               std::uint64_t unique_id,
+               mapping::detail::Machine machine);
+
+  /**
+   * @brief Adds a read-only input array to the task.
+   *
+   * The input array will be available for reading during task execution.
+   * The array's physical layout and partitioning must already be determined.
+   *
+   * @param array Physical array to add as input with read-only access
+   */
+  void add_input(InternalSharedPtr<PhysicalArray> array);
+
+  /**
+   * @brief Adds a write-only output array to the task.
+   *
+   * The output array will be available for writing during task execution.
+   * The array's physical layout and partitioning must already be determined.
+   *
+   * @param array Physical array to add as output with write-only access
+   */
+  void add_output(InternalSharedPtr<PhysicalArray> array);
+
+  /**
+   * @brief Adds a reduction array to the task with a specific reduction operator.
+   *
+   * The reduction array will be available for reduction operations during task execution.
+   * Multiple tasks can perform reductions on the same array, with the runtime handling
+   * the combination of partial results using the specified reduction operator.
+   *
+   * @param array Physical array to add as reduction target
+   * @param redop_kind Reduction operator kind (e.g., sum, max, min, product)
+   */
+  void add_reduction(InternalSharedPtr<PhysicalArray> array, std::int32_t redop_kind);
+
+  // Note: PhysicalTask uses physical_scalar_outputs() and physical_scalar_reductions()
+  // instead of the LogicalStore-based methods in LogicalTask
+
+  /**
+   * @brief Launches the physical task for execution.
+   *
+   * Submits the task to the Legion runtime for execution on the target machine.
+   * All input, output, and reduction arrays must be added before launching.
+   * This is a non-blocking operation that returns immediately.
+   *
+   * @throws std::runtime_error if the task cannot be launched
+   */
+  void launch() override;
+
+  /**
+   * @brief Returns the kind of task.
+   *
+   * @return Always returns Kind::PHYSICAL for PhysicalTask instances
+   */
+  [[nodiscard]] Kind kind() const override;
+
+  /**
+   * @brief Indicates whether this task needs runtime partitioning.
+   *
+   * PhysicalTask operations work with pre-partitioned physical arrays, so they
+   * do not require additional partitioning by the runtime.
+   *
+   * @return Always returns `false` for PhysicalTask instances
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
+  /**
+   * @brief Adds a scalar output to the task.
+   *
+   * Scalar outputs are backed by futures and need special handling during task completion.
+   * The scalar will be available as a future after task execution completes.
+   *
+   * @param store Physical store representing the scalar output
+   */
+  void add_scalar_output(InternalSharedPtr<PhysicalStore> store);
+
+  /**
+   * @brief Adds a scalar reduction to the task.
+   *
+   * Scalar reductions combine results from multiple task instances using the specified
+   * reduction operator. The final result will be available as a future.
+   *
+   * @param store Physical store representing the scalar reduction
+   * @param redop_id Global reduction operator ID
+   */
+  void add_scalar_reduction(InternalSharedPtr<PhysicalStore> store, GlobalRedopID redop_id);
+
+  /**
+   * @brief Access PhysicalTask's scalar outputs (PhysicalStore-based).
+   *
+   * This method provides access to the PhysicalStore-based scalar outputs,
+   * which is needed by the template specialization in handle_return_values.
+   *
+   * @return Span of PhysicalStore scalar outputs
+   */
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> physical_scalar_outputs() const;
+
+  /**
+   * @brief Access PhysicalTask's scalar reductions (PhysicalStore-based).
+   *
+   * This method provides access to the PhysicalStore-based scalar reductions,
+   * which is needed by the template specialization in handle_return_values.
+   *
+   * @return Span of PhysicalStore scalar reductions with their reduction operators
+   */
+  [[nodiscard]] Span<const std::pair<InternalSharedPtr<PhysicalStore>, GlobalRedopID>>
+  physical_scalar_reductions() const;
+
+ private:
+  void fixup_ranges_(Strategy& strategy);
+
+  // Storage for scalar outputs and reductions (PhysicalTask-specific)
+  SmallVector<InternalSharedPtr<PhysicalStore>> scalar_outputs_{};
+  SmallVector<std::pair<InternalSharedPtr<PhysicalStore>, GlobalRedopID>> scalar_reductions_{};
 };
 
 }  // namespace legate::detail

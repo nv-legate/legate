@@ -34,6 +34,7 @@ namespace {
     case Operation::Kind::INDEX_ATTACH: return "IndexAttach";
     case Operation::Kind::MANUAL_TASK: return "ManualTask";
     case Operation::Kind::MAPPING_FENCE: return "MappingFence";
+    case Operation::Kind::PHYSICAL_TASK: return "PhysicalTask";
     case Operation::Kind::REDUCE: return "Reduce";
     case Operation::Kind::SCATTER: return "Scatter";
     case Operation::Kind::SCATTER_GATHER: return "ScatterGather";

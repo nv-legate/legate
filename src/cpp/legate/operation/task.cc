@@ -6,6 +6,7 @@
 
 #include <legate/operation/task.h>
 
+#include <legate/data/physical_array.h>
 #include <legate/operation/detail/task.h>
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -113,60 +114,45 @@ Variable AutoTask::add_reduction(LogicalArray array,
   return partition_symbol;
 }
 
-void AutoTask::add_scalar_arg(  // NOLINT(readability-make-member-function-const)
-  const Scalar& scalar)
+void AutoTask::add_scalar_arg(const Scalar& scalar) const
 {
   impl_()->add_scalar_arg(scalar.impl());
 }
 
-void AutoTask::add_constraint(  // NOLINT(readability-make-member-function-const)
-  const Constraint& constraint)
+void AutoTask::add_constraint(const Constraint& constraint) const
 {
   impl_()->add_constraint(constraint.impl());
 }
 
-void AutoTask::add_constraints(Span<const Constraint> constraints)
+void AutoTask::add_constraints(Span<const Constraint> constraints) const
 {
   for (auto&& c : constraints) {
     add_constraint(c);
   }
 }
 
-Variable AutoTask::find_or_declare_partition(  // NOLINT(readability-make-member-function-const)
-  const LogicalArray& array)
+Variable AutoTask::find_or_declare_partition(const LogicalArray& array) const
 {
   return Variable{impl_()->find_or_declare_partition(array.impl())};
 }
 
-Variable AutoTask::declare_partition()  // NOLINT(readability-make-member-function-const)
-{
-  return Variable{impl_()->declare_partition()};
-}
+Variable AutoTask::declare_partition() const { return Variable{impl_()->declare_partition()}; }
 
 std::string_view AutoTask::provenance() const { return impl_()->provenance().as_string_view(); }
 
-void AutoTask::set_concurrent(bool concurrent)  // NOLINT(readability-make-member-function-const)
-{
-  impl_()->set_concurrent(concurrent);
-}
+void AutoTask::set_concurrent(bool concurrent) const { impl_()->set_concurrent(concurrent); }
 
-void AutoTask::set_side_effect(  // NOLINT(readability-make-member-function-const)
-  bool has_side_effect)
+void AutoTask::set_side_effect(bool has_side_effect) const
 {
   impl_()->set_side_effect(has_side_effect);
 }
 
-void AutoTask::throws_exception(  // NOLINT(readability-make-member-function-const)
-  bool can_throw_exception)
+void AutoTask::throws_exception(bool can_throw_exception) const
 {
   impl_()->throws_exception(can_throw_exception);
 }
 
-void AutoTask::add_communicator(  // NOLINT(readability-make-member-function-const)
-  std::string_view name)
-{
-  impl_()->add_communicator(name);
-}
+void AutoTask::add_communicator(std::string_view name) const { impl_()->add_communicator(name); }
 
 AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl)
   : pimpl_{make_internal_shared<Impl>(std::move(impl))}
@@ -315,5 +301,49 @@ ManualTask::ManualTask(InternalSharedPtr<detail::ManualTask> impl)
 }
 
 ManualTask::~ManualTask() noexcept = default;
+
+////////////////////////////////////////////////////
+// legate::PhysicalTask
+////////////////////////////////////////////////////
+
+PhysicalTask::PhysicalTask(const Key&, InternalSharedPtr<detail::PhysicalTask> impl)
+  : pimpl_{std::move(impl)}
+{
+}
+
+PhysicalTask::~PhysicalTask() noexcept = default;
+
+const SharedPtr<detail::PhysicalTask>& PhysicalTask::impl_() const { return pimpl_; }
+
+SharedPtr<detail::PhysicalTask> PhysicalTask::release_(const Key&) { return std::move(pimpl_); }
+
+void PhysicalTask::add_input(const PhysicalArray& array) const { impl_()->add_input(array.impl()); }
+
+void PhysicalTask::add_output(const PhysicalArray& array) const
+{
+  impl_()->add_output(array.impl());
+}
+
+void PhysicalTask::add_reduction(const PhysicalArray& array, std::int32_t redop_kind) const
+{
+  impl_()->add_reduction(array.impl(), redop_kind);
+}
+
+void PhysicalTask::add_scalar_arg(const Scalar& scalar) const
+{
+  impl_()->add_scalar_arg(scalar.impl());
+}
+
+void PhysicalTask::set_concurrent(bool concurrent) const { impl_()->set_concurrent(concurrent); }
+
+void PhysicalTask::set_side_effect(bool has_side_effect) const
+{
+  impl_()->set_side_effect(has_side_effect);
+}
+
+void PhysicalTask::throws_exception(bool can_throw_exception) const
+{
+  impl_()->throws_exception(can_throw_exception);
+}
 
 }  // namespace legate

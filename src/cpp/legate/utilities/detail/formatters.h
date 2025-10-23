@@ -44,7 +44,7 @@ class LogicalRegionField;
 class Storage;
 class VariantInfo;
 class TaskInfo;
-class Task;
+class LogicalTask;
 class LogicalStore;
 
 template <typename CharT, typename TraitsT>
@@ -188,16 +188,17 @@ struct formatter<legate::mapping::StoreTarget> : formatter<std::string_view> {
 };
 
 template <>
-struct formatter<legate::detail::Task> : formatter<std::string> {
-  format_context::iterator format(const legate::detail::Task& task, format_context& ctx) const;
+struct formatter<legate::detail::LogicalTask> : formatter<std::string> {
+  format_context::iterator format(const legate::detail::LogicalTask& task,
+                                  format_context& ctx) const;
 };
 
 template <typename T, typename Char>
-struct formatter<T, Char, std::enable_if_t<std::is_base_of_v<legate::detail::Task, T>>>
-  : formatter<legate::detail::Task, Char> {
+struct formatter<T, Char, std::enable_if_t<std::is_base_of_v<legate::detail::LogicalTask, T>>>
+  : formatter<legate::detail::LogicalTask, Char> {
   format_context::iterator format(const T& task, format_context& ctx) const
   {
-    return formatter<legate::detail::Task, Char>::format(task, ctx);
+    return formatter<legate::detail::LogicalTask, Char>::format(task, ctx);
   }
 };
 

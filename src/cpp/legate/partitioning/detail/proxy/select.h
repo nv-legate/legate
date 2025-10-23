@@ -22,7 +22,6 @@ class ProxyReductionArguments;
 namespace legate::detail {
 
 class TaskArrayArg;
-class AutoTask;
 
 /**
  * @brief A visitor used to select a particular argument, or argument group from a task.

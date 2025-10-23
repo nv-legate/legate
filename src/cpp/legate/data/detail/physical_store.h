@@ -126,6 +126,16 @@ class PhysicalStore {
   [[nodiscard]] bool on_target(mapping::StoreTarget target) const;
   void unmap();
 
+  /**
+   * @brief Updates the future associated with this PhysicalStore.
+   *
+   * This method is used by handle_return_values to update scalar output futures
+   * after task execution completes. Only valid for future-backed PhysicalStores.
+   *
+   * @param future New future to associate with this store
+   */
+  void set_future(Legion::Future future);
+
  private:
   friend class legate::PhysicalStore;
   friend class legate::detail::BasePhysicalArray;

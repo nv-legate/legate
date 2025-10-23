@@ -48,7 +48,7 @@ namespace {
  *
  * @return `true` if the task will definitely be a singleton task, `false` if not.
  */
-[[nodiscard]] bool is_singleton_task(const Task& task)
+[[nodiscard]] bool is_singleton_task(const LogicalTask& task)
 {
   if (task.kind() != Operation::Kind::MANUAL_TASK) {
     // Cannot yet predict launch domain of AutoTask.
@@ -112,7 +112,7 @@ void maybe_update_task_discards(
 }
 
 void scan_task_discards(
-  Task* task,
+  LogicalTask* task,
   std::unordered_map<std::pair<Legion::FieldID, Legion::LogicalRegion>, std::uint32_t, hasher<>>*
     discard_regions,
   SmallVector<std::uint32_t>* discard_ops)
@@ -210,12 +210,13 @@ void scan_task_discards(
 
         // Only user tasks need their privileges fixed
       case Operation::Kind::AUTO_TASK: [[fallthrough]];
-      case Operation::Kind::MANUAL_TASK: break;
+      case Operation::Kind::MANUAL_TASK: [[fallthrough]];
+      case Operation::Kind::PHYSICAL_TASK: break;
     }
 
-    LEGATE_ASSERT(dynamic_cast<Task*>(op) != nullptr);
+    LEGATE_ASSERT(dynamic_cast<LogicalTask*>(op) != nullptr);
 
-    auto* const task = static_cast<Task*>(op);
+    auto* const task = static_cast<LogicalTask*>(op);
 
     // Don't count tasks that already have a generation assigned.
     if (task->streaming_generation().has_value()) {
@@ -295,7 +296,7 @@ void assign_streaming_generation(std::uint32_t generation_size,
   // We know that any new streaming generations, by virtue of being new, must only have been
   // *appended* to the operations queue. So we can search the container backwards.
   for (auto rit = ops->rbegin(); rit != ops->rend(); ++rit) {
-    auto* const task = dynamic_cast<Task*>(rit->get());
+    auto* const task = dynamic_cast<LogicalTask*>(rit->get());
 
     if (!task) {
       continue;
@@ -327,6 +328,7 @@ void assign_streaming_generation(std::uint32_t generation_size,
             case Operation::Kind::TIMING: [[fallthrough]];
             case Operation::Kind::AUTO_TASK: [[fallthrough]];
             case Operation::Kind::MANUAL_TASK: [[fallthrough]];
+            case Operation::Kind::PHYSICAL_TASK: [[fallthrough]];
             case Operation::Kind::RELEASE_REGION_FIELD: {
               return false;
             }

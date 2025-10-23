@@ -183,6 +183,28 @@ class LEGATE_EXPORT Runtime {
                                        LocalTaskID task_id,
                                        const Domain& launch_domain);
   /**
+   * @brief Creates a PhysicalTask
+   *
+   * @param library Library to query the task
+   * @param task_id Library-local Task ID
+   *
+   * @return Task object
+   */
+  [[nodiscard]] PhysicalTask create_physical_task(Library library, LocalTaskID task_id);
+
+  /**
+   * @brief Creates a PhysicalTask with TaskContext for correct machine allocation
+   *
+   * @param context Current task context (provides correct machine)
+   * @param library Library to query the task
+   * @param task_id Library-local Task ID
+   *
+   * @return Task object
+   */
+  [[nodiscard]] PhysicalTask create_physical_task(const TaskContext& context,
+                                                  Library library,
+                                                  LocalTaskID task_id);
+  /**
    * @brief Issues a copy between stores.
    *
    * The source and target stores must have the same shape.
@@ -371,6 +393,18 @@ class LEGATE_EXPORT Runtime {
    * @param task A ManualTask to execute
    */
   void submit(ManualTask&& task);
+  /**
+   * @brief Submits a PhysicalTask for execution
+   *
+   * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
+   * for execution. It's not guaranteed that the submitted operation starts executing immediately.
+   *
+   * The runtime takes the ownership of the submitted task. Once submitted, the task becomes invalid
+   * and is not reusable.
+   *
+   * @param task A PhysicalTask to execute
+   */
+  void submit(PhysicalTask&& task);
 
   /**
    * @brief Creates an unbound array

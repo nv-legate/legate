@@ -29,6 +29,7 @@ namespace legate::detail {
 
 class AutoTask;
 class ManualTask;
+class PhysicalTask;
 
 }  // namespace legate::detail
 
@@ -150,7 +151,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(const Scalar& scalar);
+  void add_scalar_arg(const Scalar& scalar) const;
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -167,7 +168,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param constraint A partitioning constraint
    */
-  void add_constraint(const Constraint& constraint);
+  void add_constraint(const Constraint& constraint) const;
 
   /**
    * @brief Adds multiple partitioning constraints to the task.
@@ -197,7 +198,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @see add_constraint(const Constraint&)
    */
-  void add_constraints(Span<const Constraint> constraints);
+  void add_constraints(Span<const Constraint> constraints) const;
 
   /**
    * @brief Finds or creates a partition symbol for the given array
@@ -206,13 +207,13 @@ class LEGATE_EXPORT AutoTask {
    *
    * @return The existing symbol if there is one for the array, a fresh symbol otherwise
    */
-  [[nodiscard]] Variable find_or_declare_partition(const LogicalArray& array);
+  [[nodiscard]] Variable find_or_declare_partition(const LogicalArray& array) const;
   /**
    * @brief Declares partition symbol
    *
    * @return A new symbol that can be used when passing an array to an operation
    */
-  [[nodiscard]] Variable declare_partition();
+  [[nodiscard]] Variable declare_partition() const;
   /**
    * @brief Returns the provenance information of this operation
    *
@@ -229,7 +230,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param concurrent A boolean value indicating whether the task needs a concurrent task launch
    */
-  void set_concurrent(bool concurrent);
+  void set_concurrent(bool concurrent) const;
   /**
    * @brief Sets whether the task has side effects or not.
    *
@@ -237,19 +238,19 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param has_side_effect A boolean value indicating whether the task has side effects
    */
-  void set_side_effect(bool has_side_effect);
+  void set_side_effect(bool has_side_effect) const;
   /**
    * @brief Sets whether the task can throw an exception or not.
    *
    * @param can_throw_exception A boolean value indicating whether the task can throw an exception
    */
-  void throws_exception(bool can_throw_exception);
+  void throws_exception(bool can_throw_exception) const;
   /**
    * @brief Requests a communicator for this task.
    *
    * @param name The name of the communicator to use for this task
    */
-  void add_communicator(std::string_view name);
+  void add_communicator(std::string_view name) const;
 
   AutoTask() = LEGATE_DEFAULT_WHEN_CYTHON;
 
@@ -273,6 +274,122 @@ class LEGATE_EXPORT AutoTask {
 
   class Impl;
   InternalSharedPtr<Impl> pimpl_{};
+};
+
+/**
+ * @brief A class for physical task descriptors
+ */
+class LEGATE_EXPORT PhysicalTask {
+ public:
+  /**
+   * @brief Adds an array to the task as input
+   *
+   * @param array An array to add to the task as input
+   */
+  void add_input(const PhysicalArray& array) const;
+  /**
+   * @brief Adds an array to the task as output
+   *
+   * @param array An array to add to the task as output
+   */
+  void add_output(const PhysicalArray& array) const;
+
+  /**
+   * @brief Adds an array to the task for reductions
+   *
+   * @param array An array to add to the task for reductions
+   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * operator.
+   */
+  void add_reduction(const PhysicalArray& array, std::int32_t redop_kind) const;
+
+  /**
+   * @brief Adds a by-value scalar argument to the task
+   *
+   * @param scalar The Scalar to add to the task
+   */
+  void add_scalar_arg(const Scalar& scalar) const;
+  /**
+   * @brief Adds a by-value scalar argument to the task
+   *
+   * @tparam T The scalar value's type. Scalar must be constructible from a value of T
+   * @param value The scalar value to convert to Scalar and add to the task
+   */
+  template <typename T,
+            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, Scalar> &&
+                                        std::is_constructible_v<Scalar, T>>>
+  void add_scalar_arg(T&& value) const;
+
+  /*
+   * TODO: Declares partition symbol
+   *
+   * @return A new symbol that can be used when passing an array to an operation
+   */
+  // [[nodiscard]] Variable declare_partition();
+  /*
+   * TODO: Returns the provenance information of this operation
+   *
+   * @return Provenance
+   */
+  // [[nodiscard]] std::string_view provenance() const;
+
+  /**
+   * @brief Sets whether the task needs a concurrent task launch.
+   *
+   * Any task with at least one communicator will implicitly use concurrent task launch, so this
+   * method is to be used when the task needs a concurrent task launch for a reason unknown to
+   * Legate.
+   *
+   * @param concurrent A boolean value indicating whether the task needs a concurrent task launch
+   */
+  void set_concurrent(bool concurrent) const;
+  /**
+   * @brief Sets whether the task has side effects or not.
+   *
+   * A task is assumed to be free of side effects by default if the task only has scalar arguments.
+   *
+   * @param has_side_effect A boolean value indicating whether the task has side effects
+   */
+  void set_side_effect(bool has_side_effect) const;
+  /**
+   * @brief Sets whether the task can throw an exception or not.
+   *
+   * @param can_throw_exception A boolean value indicating whether the task can throw an exception
+   */
+  void throws_exception(bool can_throw_exception) const;
+  /*
+   * TODO: Requests a communicator for this task.
+   *
+   * @param name The name of the communicator to use for this task
+   */
+  // void add_communicator(std::string_view name);
+
+  PhysicalTask() = LEGATE_DEFAULT_WHEN_CYTHON;
+
+  PhysicalTask(PhysicalTask&&) noexcept            = default;
+  PhysicalTask& operator=(PhysicalTask&&) noexcept = default;
+  PhysicalTask(const PhysicalTask&)                = default;
+  PhysicalTask& operator=(const PhysicalTask&)     = default;
+  ~PhysicalTask() noexcept;
+
+  // Purposefully not documented, it is only exposed for the tests
+  [[nodiscard]] const SharedPtr<detail::PhysicalTask>&
+  impl_()  // NOLINT(readability-identifier-naming)
+    const;
+
+ private:
+  friend class Runtime;
+
+  class Key {
+    friend class Runtime;
+    Key() = default;
+  };
+
+  explicit PhysicalTask(const Key&, InternalSharedPtr<detail::PhysicalTask> impl);
+  [[nodiscard]] SharedPtr<detail::PhysicalTask> release_(
+    const Key&);  // NOLINT(readability-identifier-naming)
+
+  SharedPtr<detail::PhysicalTask> pimpl_{};
 };
 
 /**

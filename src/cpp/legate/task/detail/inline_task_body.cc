@@ -18,16 +18,17 @@
 #include <legate/task/task_context.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/store_iterator_cache.h>
+#include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/scope_guard.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <optional>
 #include <string_view>
 #include <utility>
-#include <vector>
 
 namespace legate::detail {
 
@@ -40,7 +41,7 @@ class InlineTaskContext final : public TaskContext {
                     SmallVector<InternalSharedPtr<PhysicalArray>> outputs,
                     SmallVector<InternalSharedPtr<PhysicalArray>> reductions,
                     SmallVector<InternalSharedPtr<Scalar>> scalars,
-                    const Task* task);
+                    const TaskBase* task);
 
   [[nodiscard]] GlobalTaskID task_id() const noexcept override;
   [[nodiscard]] bool is_single_task() const noexcept override;
@@ -50,14 +51,14 @@ class InlineTaskContext final : public TaskContext {
   [[nodiscard]] const mapping::detail::Machine& machine() const noexcept override;
 
  private:
-  [[nodiscard]] const Task& task_() const;
+  [[nodiscard]] const TaskBase& task_() const;
 
-  const Task* op_task_{};
+  const TaskBase* op_task_{};
 };
 
 // ==========================================================================================
 
-const Task& InlineTaskContext::task_() const { return *op_task_; }
+const TaskBase& InlineTaskContext::task_() const { return *op_task_; }
 
 // ==========================================================================================
 
@@ -66,7 +67,7 @@ InlineTaskContext::InlineTaskContext(VariantCode variant_code,
                                      SmallVector<InternalSharedPtr<PhysicalArray>> outputs,
                                      SmallVector<InternalSharedPtr<PhysicalArray>> reductions,
                                      SmallVector<InternalSharedPtr<Scalar>> scalars,
-                                     const Task* task)
+                                     const TaskBase* task)
   : TaskContext{{variant_code,
                  task->can_throw_exception(),
                  task->can_elide_device_ctx_sync(),
@@ -124,8 +125,20 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
   dest.reserve(src.size());
   for (auto&& elem : src) {
-    auto&& phys_array = dest.emplace_back(elem.array->get_physical_array(
-      legate::mapping::StoreTarget::SYSMEM, ignore_future_mutability));
+    const auto phys_array = std::visit(
+      Overload{
+        [&](const InternalSharedPtr<LogicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
+          // For LogicalArray (AutoTask/ManualTask), convert to PhysicalArray
+          return arr->get_physical_array(legate::mapping::StoreTarget::SYSMEM,
+                                         ignore_future_mutability);
+        },
+        [&](const InternalSharedPtr<PhysicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
+          // For PhysicalArray (PhysicalTask), use directly
+          return arr;
+        }},
+      elem.array);
+
+    dest.emplace_back(phys_array);
 
     if (!ignore_future_mutability) {
       continue;
@@ -143,7 +156,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 }
 
 [[nodiscard]] InlineTaskContext make_inline_task_context(
-  const Task& task,
+  const TaskBase& task,
   VariantCode variant_code,
   SmallVector<Legion::UntypedDeferredValue>* deferred_buffers)
 {
@@ -173,7 +186,15 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   // return stores in the same order (and similarly for reductions). If this is no longer the
   // case, then the set of "scalar_set_future()" loops in the task body will no longer be
   // correct.
-  deferred_buffers->reserve(task.scalar_outputs().size() + task.scalar_reductions().size());
+
+  // Reserve space for scalar outputs and reductions based on task type
+  if (const auto* logical_task = dynamic_cast<const LogicalTask*>(&task)) {
+    deferred_buffers->reserve(logical_task->scalar_outputs().size() +
+                              logical_task->scalar_reductions().size());
+  } else if (const auto* physical_task = dynamic_cast<const PhysicalTask*>(&task)) {
+    deferred_buffers->reserve(physical_task->physical_scalar_outputs().size() +
+                              physical_task->physical_scalar_reductions().size());
+  }
   auto outputs    = fill_vector(task.outputs(), true, get_stores_cache, deferred_buffers);
   auto reductions = fill_vector(task.reductions(), true, get_stores_cache, deferred_buffers);
 
@@ -187,7 +208,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
 template <typename F>
 [[nodiscard]] std::pair<std::optional<ReturnedException>, SmallVector<Legion::UntypedDeferredValue>>
-execute_task(const Task& task,
+execute_task(const TaskBase& task,
              VariantCode variant_code,
              VariantImpl variant_impl,
              F&& get_task_name)
@@ -200,8 +221,15 @@ execute_task(const Task& task,
   return {std::move(exn), std::move(deferred_buffers)};
 }
 
-void handle_return_values(const Task& task,
-                          Span<const Legion::UntypedDeferredValue> deferred_buffers)
+// Function overloads for different task types (replaces template specializations)
+void handle_return_values_impl(const LogicalTask& task,
+                               Span<const Legion::UntypedDeferredValue> deferred_buffers);
+void handle_return_values_impl(const PhysicalTask& task,
+                               Span<const Legion::UntypedDeferredValue> deferred_buffers);
+
+// Implementation for LogicalTask (AutoTask/ManualTask behavior)
+void handle_return_values_impl(const LogicalTask& task,
+                               Span<const Legion::UntypedDeferredValue> deferred_buffers)
 {
   // Order of deferred_buffers and scalar_outputs, scalar_reductions must be the same. See
   // make_inline_task_context() for more details.
@@ -234,9 +262,63 @@ void handle_return_values(const Task& task,
   }
 }
 
+// Implementation for PhysicalTask (PhysicalStore behavior)
+void handle_return_values_impl(const PhysicalTask& task,
+                               Span<const Legion::UntypedDeferredValue> deferred_buffers)
+{
+  // Direct access to PhysicalTask - no casting needed
+
+  const auto scalar_set_future = [&](const InternalSharedPtr<PhysicalStore>& scal,
+                                     const Legion::UntypedDeferredValue& buf) {
+    // Create a future from the deferred buffer and update the PhysicalStore
+    const auto size = scal->type()->size();  // PhysicalStore uses type()->size()
+    auto* ptr       = AccessorRO<std::int8_t, 1>{buf, size}.ptr(0);
+    auto fut        = Legion::Future::from_untyped_pointer(
+      ptr,
+      size,
+      // Don't take ownership because Legion already "owns" the
+      // deferred value, we wouldn't want to double-free it.
+      false,
+      // task.provenance() is a ZStringView
+      task.provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+    );
+
+    // Update the PhysicalStore with the new future
+    scal->set_future(std::move(fut));
+  };
+  std::size_t idx = 0;
+
+  // Access PhysicalTask's scalar data directly
+  const auto& scalar_outputs    = task.physical_scalar_outputs();
+  const auto& scalar_reductions = task.physical_scalar_reductions();
+
+  LEGATE_ASSERT(deferred_buffers.size() == scalar_outputs.size() + scalar_reductions.size());
+
+  for (auto&& scal : scalar_outputs) {
+    scalar_set_future(scal, deferred_buffers[idx++]);
+  }
+  for (auto&& [scal, _] : scalar_reductions) {
+    scalar_set_future(scal, deferred_buffers[idx++]);
+  }
+}
+
+// Dispatcher function - determines which overload to use
+void handle_return_values(const TaskBase& task,
+                          Span<const Legion::UntypedDeferredValue> deferred_buffers)
+{
+  // Runtime type check to dispatch to correct overload
+  if (const auto* physical_task = dynamic_cast<const PhysicalTask*>(&task)) {
+    handle_return_values_impl(*physical_task, deferred_buffers);
+  } else if (const auto* logical_task = dynamic_cast<const LogicalTask*>(&task)) {
+    handle_return_values_impl(*logical_task, deferred_buffers);
+  } else {
+    LEGATE_ABORT("Unknown task type in handle_return_values");
+  }
+}
+
 }  // namespace
 
-void inline_task_body(const Task& task, VariantCode variant_code, VariantImpl variant_impl)
+void inline_task_body(const TaskBase& task, VariantCode variant_code, VariantImpl variant_impl)
 {
   const auto _ = [] {
     Runtime::get_runtime().inline_task_start();

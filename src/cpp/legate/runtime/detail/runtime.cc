@@ -90,6 +90,9 @@ LEGATE_PRAGMA_POP();
 
 namespace legate::detail {
 
+// Thread-local flag to track inline task execution state per thread
+thread_local bool Runtime::executing_inline_task_ = false;
+
 Logger& log_legate()
 {
   static Logger log{"legate"};
@@ -287,6 +290,38 @@ InternalSharedPtr<ManualTask> Runtime::create_task(const Library& library,
   auto&& [machine, vinfo] = slice_machine_for_task_(*library.find_task(task_id));
   return make_internal_shared<ManualTask>(
     library, vinfo, task_id, launch_domain, new_op_id(), scope().priority(), std::move(machine));
+}
+
+InternalSharedPtr<PhysicalTask> Runtime::create_physical_task(const Library& library,
+                                                              LocalTaskID task_id)
+{
+  if (legate::is_running_in_task()) {
+    throw TracedException<std::invalid_argument>{
+      "Cannot call create_physical_task(Library, LocalTaskID) from within a task. "
+      "Use create_physical_task(TaskContext, Library, LocalTaskID) instead."};
+  }
+  auto&& [machine, vinfo] = slice_machine_for_task_(*library.find_task(task_id));
+  return make_internal_shared<PhysicalTask>(
+    library, vinfo, task_id, new_op_id(), std::move(machine));
+}
+
+InternalSharedPtr<PhysicalTask> Runtime::create_physical_task(const legate::TaskContext& context,
+                                                              const Library& library,
+                                                              LocalTaskID task_id)
+{
+  // Use machine from current task context instead of slice_machine_for_task_()
+  auto machine            = context.machine();
+  const auto& task_info   = *library.find_task(task_id);
+  const auto variant_code = context.variant_kind();
+  const auto variant      = task_info.find_variant(variant_code);
+
+  if (!variant.has_value()) {
+    throw TracedException<std::invalid_argument>{fmt::format(
+      "Task {} does not have a valid variant for target {}", task_info, context.variant_kind())};
+  }
+
+  return make_internal_shared<PhysicalTask>(
+    library, *variant, task_id, new_op_id(), *machine.impl());
 }
 
 void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,

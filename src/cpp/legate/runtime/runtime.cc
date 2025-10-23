@@ -91,6 +91,19 @@ ManualTask Runtime::create_task(Library library, LocalTaskID task_id, const Doma
   return ManualTask{impl_->create_task(*library.impl(), task_id, launch_domain)};
 }
 
+PhysicalTask Runtime::create_physical_task(Library library, LocalTaskID task_id)
+{
+  return PhysicalTask{PhysicalTask::Key{}, impl_->create_physical_task(*library.impl(), task_id)};
+}
+
+PhysicalTask Runtime::create_physical_task(const TaskContext& context,
+                                           Library library,
+                                           LocalTaskID task_id)
+{
+  return PhysicalTask{PhysicalTask::Key{},
+                      impl_->create_physical_task(context, *library.impl(), task_id)};
+}
+
 void Runtime::issue_copy(LogicalStore& target,
                          const LogicalStore& source,
                          std::optional<ReductionOpKind> redop_kind)
@@ -207,6 +220,15 @@ void Runtime::submit(ManualTask&& task)
   // initialized by discard operations as part of their deallocation even before the reader task
   // runs, leading to an uninitialized access error.
   task.clear_user_refs_();
+}
+
+void Runtime::submit(PhysicalTask&& task)
+{
+  // PhysicalTask uses direct execution.
+  // Bypass the queuing/scheduling pipeline and execute immediately
+  auto impl = task.release_(PhysicalTask::Key{});
+  impl->validate();
+  impl->launch();
 }
 
 LogicalArray Runtime::create_array(const Type& type, std::uint32_t dim, bool nullable)

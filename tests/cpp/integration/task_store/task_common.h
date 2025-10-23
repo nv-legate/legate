@@ -12,7 +12,6 @@
 
 #include <gtest/gtest.h>
 
-#include <map>
 #include <utilities/utilities.h>
 
 namespace test_task_store {

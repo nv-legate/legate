@@ -11,6 +11,7 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <tuple>
 
@@ -42,10 +43,23 @@ void do_image(const TaskArrayArg* var_function,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  do_image_final(task->find_or_declare_partition(var_function->array),
-                 task->find_or_declare_partition(var_range->array),
-                 hint,
-                 task);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& function_arr) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& range_arr) {
+                                              do_image_final(
+                                                task->find_or_declare_partition(function_arr),
+                                                task->find_or_declare_partition(range_arr),
+                                                hint,
+                                                task);
+                                            },
+                                            [&](const InternalSharedPtr<PhysicalArray>&) {
+                                              // Do nothing for PhysicalArray
+                                            }},
+                                   var_range->array);
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_function->array);
 }
 
 void do_image(const TaskArrayArg* var_function,
@@ -53,11 +67,26 @@ void do_image(const TaskArrayArg* var_function,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  const auto* func_part = task->find_or_declare_partition(var_function->array);
+  std::visit(
+    Overload{[&](const InternalSharedPtr<LogicalArray>& function_arr) {
+               const auto* func_part = task->find_or_declare_partition(function_arr);
 
-  for (auto&& range : var_ranges) {
-    do_image_final(func_part, task->find_or_declare_partition(range.array), hint, task);
-  }
+               for (auto&& range : var_ranges) {
+                 std::visit(
+                   Overload{[&](const InternalSharedPtr<LogicalArray>& range_arr) {
+                              do_image_final(
+                                func_part, task->find_or_declare_partition(range_arr), hint, task);
+                            },
+                            [&](const InternalSharedPtr<PhysicalArray>&) {
+                              // Do nothing for PhysicalArray
+                            }},
+                   range.array);
+               }
+             },
+             [&](const InternalSharedPtr<PhysicalArray>&) {
+               // Do nothing for PhysicalArray
+             }},
+    var_function->array);
 }
 
 void do_image(Span<const TaskArrayArg> var_functions,
@@ -65,11 +94,27 @@ void do_image(Span<const TaskArrayArg> var_functions,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  const auto* range_part = task->find_or_declare_partition(var_range->array);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& range_arr) {
+                        const auto* range_part = task->find_or_declare_partition(range_arr);
 
-  for (auto&& func : var_functions) {
-    do_image_final(task->find_or_declare_partition(func.array), range_part, hint, task);
-  }
+                        for (auto&& func : var_functions) {
+                          std::visit(
+                            Overload{[&](const InternalSharedPtr<LogicalArray>& function_arr) {
+                                       do_image_final(task->find_or_declare_partition(function_arr),
+                                                      range_part,
+                                                      hint,
+                                                      task);
+                                     },
+                                     [&](const InternalSharedPtr<PhysicalArray>&) {
+                                       // Do nothing for PhysicalArray
+                                     }},
+                            func.array);
+                        }
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_range->array);
 }
 
 void do_image(Span<const TaskArrayArg> var_functions,

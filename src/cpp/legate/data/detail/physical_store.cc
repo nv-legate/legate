@@ -253,4 +253,17 @@ void PhysicalStore::update_num_elements_(std::size_t num_elements)
   unbound_field_.set_bound(true);
 }
 
+void PhysicalStore::set_future(Legion::Future future)
+{
+  LEGATE_ASSERT(is_future());
+  // Update the FutureWrapper with the new future
+  // We need to preserve the existing properties but update the future
+  future_ = FutureWrapper{future_.is_read_only(),
+                          future_.field_size(),
+                          static_cast<std::uint32_t>(type_->alignment()),  // field_alignment
+                          future_.field_offset(),
+                          future_.domain(),
+                          std::move(future)};
+}
+
 }  // namespace legate::detail

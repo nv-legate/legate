@@ -9,6 +9,7 @@
 #include <legate_defines.h>
 
 #include <legate/data/detail/array_tasks.h>
+#include <legate/data/detail/physical_array.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/task_launcher.h>
@@ -30,6 +31,7 @@
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/detail/zip.h>
 
 #include <fmt/format.h>
@@ -40,6 +42,11 @@
 
 namespace legate::detail {
 
+////////////////////////////////////////////////////
+// legate::TaskArrayArg
+////////////////////////////////////////////////////
+
+// TaskArrayArg implementations for LogicalArray
 TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv,
                            InternalSharedPtr<LogicalArray> _array,
                            std::optional<SymbolicPoint> _projection)
@@ -54,17 +61,40 @@ TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv,
                 privilege == LEGION_REDUCE);
 }
 
+// TaskArrayArg implementations for PhysicalArray
+TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalArray> _array)
+  : privilege{priv}, array{std::move(_array)}
+{
+  // These objects should only be constructed from add_input(), add_output(), or
+  // add_reduction(), so the incoming privilege should only ever be these base privileges. The
+  // privilege coalescing code (and by extension streaming code) assumes this is the case, with
+  // the only addition being that these privileges are additionally fixed up with
+  // LEGION_DISCARD_OUTPUT_MASK.
+  LEGATE_ASSERT(privilege == LEGION_READ_ONLY || privilege == LEGION_WRITE_ONLY ||
+                privilege == LEGION_REDUCE);
+}
+
+bool TaskArrayArg::needs_flush() const
+{
+  return std::visit(
+    Overload{[](const InternalSharedPtr<LogicalArray>& arr) -> bool { return arr->needs_flush(); },
+             [](const InternalSharedPtr<PhysicalArray>&) -> bool {
+               return false;  // PhysicalArray doesn't need flush
+             }},
+    array);
+}
+
 ////////////////////////////////////////////////////
-// legate::Task
+// legate::TaskBase
 ////////////////////////////////////////////////////
 
-Task::Task(const Library& library,
-           const VariantInfo& variant_info,
-           LocalTaskID task_id,
-           std::uint64_t unique_id,
-           std::int32_t priority,
-           mapping::detail::Machine machine,
-           bool can_inline_launch)
+TaskBase::TaskBase(const Library& library,
+                   const VariantInfo& variant_info,
+                   LocalTaskID task_id,
+                   std::uint64_t unique_id,
+                   std::int32_t priority,
+                   mapping::detail::Machine machine,
+                   bool can_inline_launch)
   : Operation{unique_id, priority, std::move(machine)},
     library_{library},
     vinfo_{variant_info},
@@ -75,16 +105,6 @@ Task::Task(const Library& library,
     can_elide_device_ctx_sync_{variant_info.options.elide_device_ctx_sync},
     can_inline_launch_{can_inline_launch}
 {
-  if (const auto& communicators = variant_info.options.communicators; communicators.has_value()) {
-    for (auto&& comm : *communicators) {
-      if (comm.empty()) {
-        LEGATE_CPP_VERSION_TODO(20, "No need to use empty comm as sentinel value anymore");
-        break;
-      }
-      add_communicator(comm, /* bypass_signature_check */ true);
-    }
-  }
-
   if (const auto& signature = variant_info.signature; signature.has_value()) {
     constexpr auto nargs_upper_limit = [](const std::optional<TaskSignature::Nargs>& nargs) {
       return nargs.has_value() ? nargs->upper_limit() : 0;
@@ -103,26 +123,91 @@ Task::Task(const Library& library,
   }
 }
 
-void Task::add_scalar_arg(InternalSharedPtr<Scalar> scalar)
+void TaskBase::add_scalar_arg(InternalSharedPtr<Scalar> scalar)
 {
   scalars_.emplace_back(std::move(scalar));
 }
 
-void Task::set_concurrent(bool concurrent) { concurrent_ = concurrent; }
+void TaskBase::set_concurrent(bool concurrent) { concurrent_ = concurrent; }
 
-void Task::set_side_effect(bool has_side_effect) { has_side_effect_ = has_side_effect; }
+void TaskBase::set_side_effect(bool has_side_effect) { has_side_effect_ = has_side_effect; }
 
-void Task::throws_exception(bool can_throw_exception)
+void TaskBase::throws_exception(bool can_throw_exception)
 {
   can_throw_exception_ = can_throw_exception;
 }
 
-void Task::set_streaming_generation(std::optional<StreamingGeneration> streaming_generation)
+void TaskBase::validate()
+{
+  Operation::validate();
+  if (const auto& signature = variant_info_().signature) {
+    (*signature)->check_signature(*this);
+  }
+}
+
+void TaskBase::inline_launch_() const
+{
+  const auto processor_kind = Runtime::get_runtime().get_executing_processor().kind();
+  const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
+  const auto body           = [&] {
+    const auto variant = library().find_task(local_task_id())->find_variant(variant_code);
+
+    LEGATE_ASSERT(variant.has_value());
+    return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
+  }();
+
+  inline_task_body(*this, variant_code, body);
+}
+
+std::string TaskBase::to_string(bool show_provenance) const
+{
+  auto result = fmt::format("{}:{}", library().get_task_name(local_task_id()), unique_id_);
+
+  if (!provenance().empty() && show_provenance) {
+    fmt::format_to(std::back_inserter(result), "[{}]", provenance());
+  }
+  return result;
+}
+
+bool TaskBase::needs_flush() const
+{
+  constexpr auto needs_flush = [](auto&& array_arg) { return array_arg.needs_flush(); };
+  return can_throw_exception() || std::any_of(inputs_.begin(), inputs_.end(), needs_flush) ||
+         std::any_of(outputs_.begin(), outputs_.end(), needs_flush) ||
+         std::any_of(reductions_.begin(), reductions_.end(), needs_flush);
+}
+
+////////////////////////////////////////////////////
+// legate::LogicalTask
+////////////////////////////////////////////////////
+
+LogicalTask::LogicalTask(const Library& library,
+                         const VariantInfo& variant_info,
+                         LocalTaskID task_id,
+                         std::uint64_t unique_id,
+                         std::int32_t priority,
+                         mapping::detail::Machine machine,
+                         bool can_inline_launch)
+  : TaskBase{
+      library, variant_info, task_id, unique_id, priority, std::move(machine), can_inline_launch}
+{
+  if (const auto& communicators = variant_info.options.communicators; communicators.has_value()) {
+    for (auto&& comm : *communicators) {
+      if (comm.empty()) {
+        LEGATE_CPP_VERSION_TODO(20, "No need to use empty comm as sentinel value anymore");
+        break;
+      }
+      add_communicator(comm, /* bypass_signature_check */ true);
+    }
+  }
+}
+
+void LogicalTask::set_streaming_generation(std::optional<StreamingGeneration> streaming_generation)
 {
   streaming_gen_ = std::move(streaming_generation);
 }
 
-void Task::add_communicator(std::string_view name, bool bypass_signature_check)
+void LogicalTask::add_communicator(std::string_view name, bool bypass_signature_check)
 {
   if (const auto& comms = variant_info_().options.communicators; comms.has_value()) {
     if (!bypass_signature_check) {
@@ -145,45 +230,48 @@ void Task::add_communicator(std::string_view name, bool bypass_signature_check)
   }
 }
 
-void Task::record_scalar_output(InternalSharedPtr<LogicalStore> store)
+void LogicalTask::record_scalar_output(InternalSharedPtr<LogicalStore> store)
 {
   scalar_outputs_.push_back(std::move(store));
 }
 
-void Task::record_unbound_output(InternalSharedPtr<LogicalStore> store)
+void LogicalTask::record_unbound_output(InternalSharedPtr<LogicalStore> store)
 {
   unbound_outputs_.push_back(std::move(store));
 }
 
-void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
-                                   GlobalRedopID legion_redop_id)
+void LogicalTask::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
+                                          GlobalRedopID legion_redop_id)
 {
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
 
-void Task::validate()
+void LogicalTask::launch_task_(Strategy* strategy)
 {
-  Operation::validate();
-  if (const auto& signature = variant_info_().signature) {
-    (*signature)->check_signature(*this);
+  auto launch_fast = can_inline_launch_;
+
+  if (launch_fast) {
+    // TODO(jfaibussowit)
+    // Inline launch not yet supported for unbound arrays. Not yet clear what to do to
+    // materialize the buffers (as sizes aren't yet known).
+    launch_fast = std::none_of(outputs_.begin(), outputs_.end(), [](const TaskArrayArg& array_arg) {
+      return std::visit(
+        Overload{[](const InternalSharedPtr<LogicalArray>& arr) -> bool { return arr->unbound(); },
+                 [](const InternalSharedPtr<PhysicalArray>&) -> bool {
+                   return false;  // PhysicalArray is never unbound
+                 }},
+        array_arg.array);
+    });
+  }
+
+  if (launch_fast) {
+    inline_launch_();
+  } else {
+    legion_launch_(strategy);
   }
 }
 
-void Task::inline_launch_() const
-{
-  const auto processor_kind = Runtime::get_runtime().get_executing_processor().kind();
-  const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
-  const auto body           = [&] {
-    const auto variant = library().find_task(local_task_id())->find_variant(variant_code);
-
-    LEGATE_ASSERT(variant.has_value());
-    return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
-  }();
-
-  inline_task_body(*this, variant_code, body);
-}
-
-void Task::legion_launch_(Strategy* strategy_ptr)
+void LogicalTask::legion_launch_(Strategy* strategy_ptr)
 {
   auto& strategy = *strategy_ptr;
   auto launcher =
@@ -195,23 +283,65 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   launcher.set_priority(priority());
 
   launcher.reserve_inputs(inputs_.size());
-  for (auto&& [privilege, arr, mapping, projection] : inputs_) {
-    launcher.add_input(variant_cast(arr->to_launcher_arg(
-      mapping, strategy, launch_domain, projection, privilege, GlobalRedopID{-1})));
+  for (auto&& task_arg : inputs_) {
+    std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+                          launcher.add_input(variant_cast(arr->to_launcher_arg(task_arg.mapping,
+                                                                               strategy,
+                                                                               launch_domain,
+                                                                               task_arg.projection,
+                                                                               task_arg.privilege,
+                                                                               GlobalRedopID{-1})));
+                        },
+                        [&](const InternalSharedPtr<PhysicalArray>&) {
+                          LEGATE_ABORT(
+                            "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
+                            "PhysicalArrays should never go through Legion launch mechanisms, use "
+                            "PhysicalTask instead");
+                        }},
+               task_arg.array);
   }
 
   launcher.reserve_outputs(outputs_.size());
-  for (auto&& [privilege, arr, mapping, projection] : outputs_) {
-    launcher.add_output(variant_cast(arr->to_launcher_arg(
-      mapping, strategy, launch_domain, projection, privilege, GlobalRedopID{-1})));
+  for (auto&& task_arg : outputs_) {
+    std::visit(
+      Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+                 launcher.add_output(variant_cast(arr->to_launcher_arg(task_arg.mapping,
+                                                                       strategy,
+                                                                       launch_domain,
+                                                                       task_arg.projection,
+                                                                       task_arg.privilege,
+                                                                       GlobalRedopID{-1})));
+               },
+               [&](const InternalSharedPtr<PhysicalArray>&) {
+                 LEGATE_ABORT(
+                   "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
+                   "PhysicalArrays should never go through Legion launch mechanisms, use "
+                   "PhysicalTask instead");
+               }},
+      task_arg.array);
   }
 
   launcher.reserve_reductions(reductions_.size());
-  for (auto&& [redop, rest] : legate::detail::zip_equal(reduction_ops_, reductions_)) {
-    auto&& [privilege, arr, mapping, projection] = rest;
-
-    launcher.add_reduction(variant_cast(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop)));
+  for (auto&& [task_arg, redop] : zip_equal(reductions_, reduction_ops_)) {
+    LEGATE_CPP_VERSION_TODO(20, "Use original structured binding capture");
+    const auto& task_arg_ref = task_arg;
+    const auto redop_copy    = redop;
+    std::visit(
+      Overload{[&, redop_copy](const InternalSharedPtr<LogicalArray>& arr) {
+                 launcher.add_reduction(variant_cast(arr->to_launcher_arg(task_arg_ref.mapping,
+                                                                          strategy,
+                                                                          launch_domain,
+                                                                          task_arg_ref.projection,
+                                                                          task_arg_ref.privilege,
+                                                                          redop_copy)));
+               },
+               [&](const InternalSharedPtr<PhysicalArray>&) {
+                 LEGATE_ABORT(
+                   "PhysicalArray passed to LogicalTask::legion_launch_() for reductions - "
+                   "PhysicalArrays should never go through Legion launch mechanisms, use "
+                   "PhysicalTask instead");
+               }},
+      task_arg_ref.array);
   }
 
   // Add by-value scalars
@@ -270,38 +400,18 @@ void Task::legion_launch_(Strategy* strategy_ptr)
     auto result = launcher.execute(launch_domain);
 
     if (launch_volume > 1) {
-      demux_scalar_stores_(result, launch_domain, future_size);
+      demux_scalar_stores_(result, launch_domain);
     } else {
-      demux_scalar_stores_(result.get_future(launch_domain.lo()), future_size);
+      demux_scalar_stores_(result.get_future(launch_domain.lo()));
     }
   } else {
     auto result = launcher.execute_single();
 
-    demux_scalar_stores_(result, future_size);
+    demux_scalar_stores_(result);
   }
 }
 
-void Task::launch_task_(Strategy* strategy)
-{
-  auto launch_fast = can_inline_launch_;
-
-  if (launch_fast) {
-    // TODO(jfaibussowit)
-    // Inline launch not yet supported for unbound arrays. Not yet clear what to do to
-    // materialize the buffers (as sizes aren't yet known).
-    launch_fast = std::none_of(outputs_.begin(), outputs_.end(), [](const TaskArrayArg& array_arg) {
-      return array_arg.array->unbound();
-    });
-  }
-
-  if (launch_fast) {
-    inline_launch_();
-  } else {
-    legion_launch_(strategy);
-  }
-}
-
-void Task::demux_scalar_stores_(const Legion::Future& result, std::size_t future_size)
+void LogicalTask::demux_scalar_stores_(const Legion::Future& result)
 {
   auto num_scalar_outs  = scalar_outputs_.size();
   auto num_scalar_reds  = scalar_reductions_.size();
@@ -337,6 +447,7 @@ void Task::demux_scalar_stores_(const Legion::Future& result, std::size_t future
       store->set_future(result, compute_offset(store));
     }
     if (can_throw_exception()) {
+      const auto future_size = calculate_future_size_();
       runtime.record_pending_exception(
         runtime.extract_scalar(parallel_policy(),
                                result,
@@ -347,9 +458,7 @@ void Task::demux_scalar_stores_(const Legion::Future& result, std::size_t future
   }
 }
 
-void Task::demux_scalar_stores_(const Legion::FutureMap& result,
-                                const Domain& launch_domain,
-                                std::size_t future_size)
+void LogicalTask::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain)
 {
   auto num_scalar_outs  = scalar_outputs_.size();
   auto num_scalar_reds  = scalar_reductions_.size();
@@ -361,7 +470,8 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result,
     return;
   }
 
-  auto&& runtime = detail::Runtime::get_runtime();
+  const auto future_size = calculate_future_size_();
+  auto&& runtime         = detail::Runtime::get_runtime();
   if (1 == total) {
     if (1 == num_scalar_outs) {
       scalar_outputs_.front()->set_future_map(result);
@@ -409,7 +519,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result,
   }
 }
 
-std::size_t Task::calculate_future_size_() const
+std::size_t LogicalTask::calculate_future_size_() const
 {
   // Here we calculate the total size of buffers created for scalar stores and unbound stores in the
   // following way: each output or reduction scalar store embeds a buffer to hold the update; each
@@ -419,7 +529,17 @@ std::size_t Task::calculate_future_size_() const
 
   for (auto&& array_args : {inputs(), outputs(), reductions()}) {
     for (auto&& [priv, arr, mapping, projection] : array_args) {
-      arr->calculate_pack_size(&layout);
+      std::visit(
+        Overload{
+          [&](const InternalSharedPtr<LogicalArray>& logical_arr) {
+            logical_arr->calculate_pack_size(&layout);
+          },
+          [&](const InternalSharedPtr<PhysicalArray>&) {
+            LEGATE_ABORT(
+              "PhysicalArray passed to LogicalTask::calculate_future_size_() - "
+              "LogicalTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
+          }},
+        arr);
     }
   }
 
@@ -429,24 +549,6 @@ std::size_t Task::calculate_future_size_() const
     layout.total_size() + (static_cast<std::size_t>(can_throw_exception()) *
                            legate::detail::ReturnedException::max_size()),
     TaskReturn::ALIGNMENT);
-}
-
-std::string Task::to_string(bool show_provenance) const
-{
-  auto result = fmt::format("{}:{}", library().get_task_name(local_task_id()), unique_id_);
-
-  if (!provenance().empty() && show_provenance) {
-    fmt::format_to(std::back_inserter(result), "[{}]", provenance());
-  }
-  return result;
-}
-
-bool Task::needs_flush() const
-{
-  constexpr auto needs_flush = [](auto&& array_arg) { return array_arg.needs_flush(); };
-  return can_throw_exception() || std::any_of(inputs_.begin(), inputs_.end(), needs_flush) ||
-         std::any_of(outputs_.begin(), outputs_.end(), needs_flush) ||
-         std::any_of(reductions_.begin(), reductions_.end(), needs_flush);
 }
 
 ////////////////////////////////////////////////////
@@ -459,13 +561,13 @@ AutoTask::AutoTask(const Library& library,
                    std::uint64_t unique_id,
                    std::int32_t priority,
                    mapping::detail::Machine machine)
-  : Task{library,
-         variant_info,
-         task_id,
-         unique_id,
-         priority,
-         std::move(machine),
-         /* can_inline_launch */ Runtime::get_runtime().config().enable_inline_task_launch()}
+  : LogicalTask{library,
+                variant_info,
+                task_id,
+                unique_id,
+                priority,
+                std::move(machine),
+                /* can_inline_launch */ Runtime::get_runtime().config().enable_inline_task_launch()}
 {
 }
 
@@ -499,7 +601,16 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
 
   auto& arg = inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(array));
 
-  arg.array->generate_constraints(this, arg.mapping, partition_symbol);
+  std::visit(
+    Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+               arr->generate_constraints(this, arg.mapping, partition_symbol);
+             },
+             [&](const InternalSharedPtr<PhysicalArray>&) {
+               LEGATE_ABORT(
+                 "PhysicalArray passed to AutoTask::add_input() - "
+                 "AutoTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
+             }},
+    arg.array);
   for (auto&& [store, symb] : arg.mapping) {
     record_partition_(symb, store, AccessMode::READ);
   }
@@ -514,7 +625,16 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
   }
   auto& arg = outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(array));
 
-  arg.array->generate_constraints(this, arg.mapping, partition_symbol);
+  std::visit(
+    Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+               arr->generate_constraints(this, arg.mapping, partition_symbol);
+             },
+             [&](const InternalSharedPtr<PhysicalArray>&) {
+               LEGATE_ABORT(
+                 "PhysicalArray passed to AutoTask::add_output() - "
+                 "AutoTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
+             }},
+    arg.array);
   for (auto&& [store, symb] : arg.mapping) {
     record_partition_(symb, store, AccessMode::WRITE);
   }
@@ -538,7 +658,16 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
 
   auto& arg = reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, std::move(array));
 
-  arg.array->generate_constraints(this, arg.mapping, partition_symbol);
+  std::visit(
+    Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+               arr->generate_constraints(this, arg.mapping, partition_symbol);
+             },
+             [&](const InternalSharedPtr<PhysicalArray>&) {
+               LEGATE_ABORT(
+                 "PhysicalArray passed to AutoTask::add_reduction() - "
+                 "AutoTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
+             }},
+    arg.array);
   for (auto&& [store, symb] : arg.mapping) {
     record_partition_(symb, store, AccessMode::REDUCE);
   }
@@ -599,7 +728,7 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 
 void AutoTask::validate()
 {
-  Task::validate();
+  LogicalTask::validate();
   if (const auto& signature = variant_info_().signature) {
     (*signature)->apply_constraints(this);
   }
@@ -651,13 +780,13 @@ ManualTask::ManualTask(const Library& library,
                        std::uint64_t unique_id,
                        std::int32_t priority,
                        mapping::detail::Machine machine)
-  : Task{library,
-         variant_info,
-         task_id,
-         unique_id,
-         priority,
-         std::move(machine),
-         /* can_inline_launch */ false}
+  : LogicalTask{library,
+                variant_info,
+                task_id,
+                unique_id,
+                priority,
+                std::move(machine),
+                /* can_inline_launch */ false}
 {
   strategy_.set_launch_domain(*this, launch_domain);
 }
@@ -788,5 +917,66 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
 void ManualTask::launch() { launch_task_(&strategy_); }
 
 Strategy ManualTask::copy_strategy() const { return strategy_; }
+
+////////////////////////////////////////////////////
+// legate::detail::PhysicalTask
+////////////////////////////////////////////////////
+
+PhysicalTask::PhysicalTask(const Library& library,
+                           const VariantInfo& variant_info,
+                           LocalTaskID task_id,
+                           std::uint64_t unique_id,
+                           mapping::detail::Machine machine)
+  : TaskBase{library,
+             variant_info,
+             task_id,
+             unique_id,
+             /*priority=*/0,
+             std::move(machine),
+             /*can_inline_launch=*/true}
+{
+}
+
+void PhysicalTask::add_input(InternalSharedPtr<PhysicalArray> array)
+{
+  inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(array));
+}
+
+void PhysicalTask::add_output(InternalSharedPtr<PhysicalArray> array)
+{
+  outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(array));
+}
+
+void PhysicalTask::add_reduction(InternalSharedPtr<PhysicalArray> array, std::int32_t redop_kind)
+{
+  auto legion_redop_id = array->type()->find_reduction_operator(redop_kind);
+
+  reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, std::move(array));
+  reduction_ops_.emplace_back(legion_redop_id);
+}
+
+void PhysicalTask::add_scalar_output(InternalSharedPtr<PhysicalStore> store)
+{
+  scalar_outputs_.emplace_back(std::move(store));
+}
+
+void PhysicalTask::add_scalar_reduction(InternalSharedPtr<PhysicalStore> store,
+                                        GlobalRedopID redop_id)
+{
+  scalar_reductions_.emplace_back(std::move(store), redop_id);
+}
+
+void PhysicalTask::launch()
+{
+  // PhysicalTask always uses inline launch - never goes through Legion
+  inline_launch_();
+}
+
+// Note: PhysicalTask doesn't need launch_task_() - it uses inline_launch_() directly
+
+void PhysicalTask::fixup_ranges_(Strategy&)
+{
+  // TODO(sbahirnv): Implement PhysicalTask::fixup_ranges_ stub
+}
 
 }  // namespace legate::detail

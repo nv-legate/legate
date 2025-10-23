@@ -10,6 +10,7 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <algorithm>
 #include <tuple>
@@ -35,10 +36,23 @@ void do_scale(Span<const std::uint64_t> factors,
               const TaskArrayArg* var_bigger,
               AutoTask* task)
 {
-  do_scale_final(factors,
-                 task->find_or_declare_partition(var_smaller->array),
-                 task->find_or_declare_partition(var_bigger->array),
-                 task);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& smaller_arr) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bigger_arr) {
+                                              do_scale_final(
+                                                factors,
+                                                task->find_or_declare_partition(smaller_arr),
+                                                task->find_or_declare_partition(bigger_arr),
+                                                task);
+                                            },
+                                            [&](const InternalSharedPtr<PhysicalArray>&) {
+                                              // Do nothing for PhysicalArray
+                                            }},
+                                   var_bigger->array);
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_smaller->array);
 }
 
 void do_scale(Span<const std::uint64_t> factors,
@@ -46,11 +60,27 @@ void do_scale(Span<const std::uint64_t> factors,
               Span<const TaskArrayArg> var_bigger,
               AutoTask* task)
 {
-  const auto* small_part = task->find_or_declare_partition(var_smaller->array);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& smaller_arr) {
+                        const auto* small_part = task->find_or_declare_partition(smaller_arr);
 
-  for (auto&& big : var_bigger) {
-    do_scale_final(factors, small_part, task->find_or_declare_partition(big.array), task);
-  }
+                        for (auto&& big : var_bigger) {
+                          std::visit(
+                            Overload{[&](const InternalSharedPtr<LogicalArray>& bigger_arr) {
+                                       do_scale_final(factors,
+                                                      small_part,
+                                                      task->find_or_declare_partition(bigger_arr),
+                                                      task);
+                                     },
+                                     [&](const InternalSharedPtr<PhysicalArray>&) {
+                                       // Do nothing for PhysicalArray
+                                     }},
+                            big.array);
+                        }
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_smaller->array);
 }
 
 void do_scale(Span<const std::uint64_t> factors,
@@ -58,11 +88,27 @@ void do_scale(Span<const std::uint64_t> factors,
               const TaskArrayArg* var_bigger,
               AutoTask* task)
 {
-  const auto* big_part = task->find_or_declare_partition(var_bigger->array);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bigger_arr) {
+                        const auto* big_part = task->find_or_declare_partition(bigger_arr);
 
-  for (auto&& small : var_smaller) {
-    do_scale_final(factors, task->find_or_declare_partition(small.array), big_part, task);
-  }
+                        for (auto&& small : var_smaller) {
+                          std::visit(
+                            Overload{[&](const InternalSharedPtr<LogicalArray>& smaller_arr) {
+                                       do_scale_final(factors,
+                                                      task->find_or_declare_partition(smaller_arr),
+                                                      big_part,
+                                                      task);
+                                     },
+                                     [&](const InternalSharedPtr<PhysicalArray>&) {
+                                       // Do nothing for PhysicalArray
+                                     }},
+                            small.array);
+                        }
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_bigger->array);
 }
 
 void do_scale(Span<const std::uint64_t> factors,

@@ -21,7 +21,7 @@
 namespace legate::detail {
 
 class AutoTask;
-class Task;
+class TaskBase;
 
 /**
  * @brief The private TaskSignature implementation.
@@ -151,7 +151,15 @@ class TaskSignature {
    *
    * @throw std::out_of_range If the task arguments are not the proscribed size.
    */
-  void check_signature(const Task& task) const;
+
+  /**
+   * @brief Check that a task's signature matches the expected signature.
+   *
+   * @param task The task object to check.
+   *
+   * @throw std::out_of_range If the task arguments are not the proscribed size.
+   */
+  void check_signature(const TaskBase& task) const;
 
   /**
    * @brief Apply constraints detailed in `this` on `task`.

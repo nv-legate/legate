@@ -194,8 +194,8 @@ format_context::iterator formatter<legate::mapping::StoreTarget>::format(
   return formatter<string_view>::format(name, ctx);
 }
 
-format_context::iterator formatter<legate::detail::Task>::format(const legate::detail::Task& task,
-                                                                 format_context& ctx) const
+format_context::iterator formatter<legate::detail::LogicalTask>::format(
+  const legate::detail::LogicalTask& task, format_context& ctx) const
 {
   return formatter<std::string>::format(task.to_string(/* show provenance */ false), ctx);
 }

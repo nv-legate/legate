@@ -10,6 +10,7 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <algorithm>
 #include <tuple>
@@ -39,11 +40,24 @@ void do_bloat(const TaskArrayArg* var_source,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  do_bloat_final(task->find_or_declare_partition(var_source->array),
-                 task->find_or_declare_partition(var_bloat->array),
-                 low_offsets,
-                 high_offsets,
-                 task);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& source_arr) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bloat_arr) {
+                                              do_bloat_final(
+                                                task->find_or_declare_partition(source_arr),
+                                                task->find_or_declare_partition(bloat_arr),
+                                                low_offsets,
+                                                high_offsets,
+                                                task);
+                                            },
+                                            [&](const InternalSharedPtr<PhysicalArray>&) {
+                                              // Do nothing for PhysicalArray
+                                            }},
+                                   var_bloat->array);
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_source->array);
 }
 
 void do_bloat(const TaskArrayArg* var_source,
@@ -52,12 +66,28 @@ void do_bloat(const TaskArrayArg* var_source,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  const auto* source_part = task->find_or_declare_partition(var_source->array);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& source_arr) {
+                        const auto* source_part = task->find_or_declare_partition(source_arr);
 
-  for (auto&& bloat : var_bloat) {
-    do_bloat_final(
-      source_part, task->find_or_declare_partition(bloat.array), low_offsets, high_offsets, task);
-  }
+                        for (auto&& bloat : var_bloat) {
+                          std::visit(
+                            Overload{[&](const InternalSharedPtr<LogicalArray>& bloat_arr) {
+                                       do_bloat_final(source_part,
+                                                      task->find_or_declare_partition(bloat_arr),
+                                                      low_offsets,
+                                                      high_offsets,
+                                                      task);
+                                     },
+                                     [&](const InternalSharedPtr<PhysicalArray>&) {
+                                       // Do nothing for PhysicalArray
+                                     }},
+                            bloat.array);
+                        }
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_source->array);
 }
 
 void do_bloat(Span<const TaskArrayArg> var_source,
@@ -66,12 +96,28 @@ void do_bloat(Span<const TaskArrayArg> var_source,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  const auto* bloat_part = task->find_or_declare_partition(var_bloat->array);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bloat_arr) {
+                        const auto* bloat_part = task->find_or_declare_partition(bloat_arr);
 
-  for (auto&& src : var_source) {
-    do_bloat_final(
-      task->find_or_declare_partition(src.array), bloat_part, low_offsets, high_offsets, task);
-  }
+                        for (auto&& src : var_source) {
+                          std::visit(
+                            Overload{[&](const InternalSharedPtr<LogicalArray>& source_arr) {
+                                       do_bloat_final(task->find_or_declare_partition(source_arr),
+                                                      bloat_part,
+                                                      low_offsets,
+                                                      high_offsets,
+                                                      task);
+                                     },
+                                     [&](const InternalSharedPtr<PhysicalArray>&) {
+                                       // Do nothing for PhysicalArray
+                                     }},
+                            src.array);
+                        }
+                      },
+                      [&](const InternalSharedPtr<PhysicalArray>&) {
+                        // Do nothing for PhysicalArray
+                      }},
+             var_bloat->array);
 }
 
 void do_bloat(Span<const TaskArrayArg> var_source,

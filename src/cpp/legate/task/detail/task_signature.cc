@@ -125,7 +125,7 @@ void TaskSignature::validate(std::string_view task_name) const
   }
 }
 
-void TaskSignature::check_signature(const Task& task) const
+void TaskSignature::check_signature(const TaskBase& task) const
 {
   constexpr auto check_arg_sizes = [](const std::optional<Nargs>& sig_value,
                                       std::size_t task_arg_size,
