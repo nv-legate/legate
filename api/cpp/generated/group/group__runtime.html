@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (25.11.00.dev27+g45a432f7a)</title>
+    <title>runtime &#8212; NVIDIA legate (25.11.00.dev32+gf95105131)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=73c3f77a"></script>
+    <script src="../../../../_static/documentation_options.js?v=69393539"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a>
 
@@ -473,6 +473,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalTask.html">legate::PhysicalTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalTask_1_1Key.html">legate::PhysicalTask::Key</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProdReduction.html">legate::ProdReduction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProdReduction_3_01Complex_3_01Half_01_4_01_4.html">legate::ProdReduction&lt; Complex&lt; Half &gt; &gt;</a></li>
@@ -1223,6 +1225,56 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime20create_physical_taskE7Library11LocalTaskID">
+<span id="_CPPv3N6legate7Runtime20create_physical_taskE7Library11LocalTaskID"></span><span id="_CPPv2N6legate7Runtime20create_physical_taskE7Library11LocalTaskID"></span><span id="legate::Runtime::create_physical_task__Library.LocalTaskID"></span><span class="target" id="classlegate_1_1Runtime_1a727d01de32fa2b7abea54c043d8e6695"></span><a class="reference internal" href="../class/classlegate_1_1PhysicalTask.html#_CPPv4N6legate12PhysicalTaskE" title="legate::PhysicalTask"><span class="n"><span class="pre">PhysicalTask</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_physical_task</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Library.html#_CPPv4N6legate7LibraryE" title="legate::Library"><span class="n"><span class="pre">Library</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">library</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="group__util.html#_CPPv411LocalTaskID" title="LocalTaskID"><span class="n"><span class="pre">LocalTaskID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">task_id</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><br /></dt>
+<dd><p>Creates a <a class="reference internal" href="group__task.html#classlegate_1_1PhysicalTask"><span class="std std-ref">PhysicalTask</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>library</strong> – <a class="reference internal" href="#classlegate_1_1Library"><span class="std std-ref">Library</span></a> to query the task </p></li>
+<li><p><strong>task_id</strong> – Library-local Task ID</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Task object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime20create_physical_taskERK11TaskContext7Library11LocalTaskID">
+<span id="_CPPv3N6legate7Runtime20create_physical_taskERK11TaskContext7Library11LocalTaskID"></span><span id="_CPPv2N6legate7Runtime20create_physical_taskERK11TaskContext7Library11LocalTaskID"></span><span id="legate::Runtime::create_physical_task__TaskContextCR.Library.LocalTaskID"></span><span class="target" id="classlegate_1_1Runtime_1a89d14ef6a3153ff71fd32e044c59c18c"></span><a class="reference internal" href="../class/classlegate_1_1PhysicalTask.html#_CPPv4N6legate12PhysicalTaskE" title="legate::PhysicalTask"><span class="n"><span class="pre">PhysicalTask</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_physical_task</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1TaskContext.html#_CPPv4N6legate11TaskContextE" title="legate::TaskContext"><span class="n"><span class="pre">TaskContext</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">context</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1Library.html#_CPPv4N6legate7LibraryE" title="legate::Library"><span class="n"><span class="pre">Library</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">library</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="group__util.html#_CPPv411LocalTaskID" title="LocalTaskID"><span class="n"><span class="pre">LocalTaskID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">task_id</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><br /></dt>
+<dd><p>Creates a <a class="reference internal" href="group__task.html#classlegate_1_1PhysicalTask"><span class="std std-ref">PhysicalTask</span></a> with <a class="reference internal" href="group__task.html#classlegate_1_1TaskContext"><span class="std std-ref">TaskContext</span></a> for correct machine allocation. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> – Current task context (provides correct machine) </p></li>
+<li><p><strong>library</strong> – <a class="reference internal" href="#classlegate_1_1Library"><span class="std std-ref">Library</span></a> to query the task </p></li>
+<li><p><strong>task_id</strong> – Library-local Task ID</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Task object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime10issue_copyER12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE">
 <span id="_CPPv3N6legate7Runtime10issue_copyER12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE"></span><span id="_CPPv2N6legate7Runtime10issue_copyER12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE"></span><span id="legate::Runtime::issue_copy__LogicalStoreR.LogicalStoreCR.std::optional:ReductionOpKind:"></span><span class="target" id="classlegate_1_1Runtime_1ae6fb4040fd1e779153880e4f21b2f0d6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">issue_copy</span></span></span><span class="sig-paren">(</span>
 
@@ -1529,6 +1581,19 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>task</strong> – A <a class="reference internal" href="group__task.html#classlegate_1_1ManualTask"><span class="std std-ref">ManualTask</span></a> to execute </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime6submitERR12PhysicalTask">
+<span id="_CPPv3N6legate7Runtime6submitERR12PhysicalTask"></span><span id="_CPPv2N6legate7Runtime6submitERR12PhysicalTask"></span><span id="legate::Runtime::submit__PhysicalTaskRR"></span><span class="target" id="classlegate_1_1Runtime_1a3ec922d843105403e5f9e1d7c3ac8463"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">submit</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="../class/classlegate_1_1PhysicalTask.html#_CPPv4N6legate12PhysicalTaskE" title="legate::PhysicalTask"><span class="n"><span class="pre">PhysicalTask</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">task</span></span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Submits a <a class="reference internal" href="group__task.html#classlegate_1_1PhysicalTask"><span class="std std-ref">PhysicalTask</span></a> for execution. </p>
+<p>Each submitted operation goes through multiple pipeline steps to eventually get scheduled for execution. It’s not guaranteed that the submitted operation starts executing immediately.</p>
+<p>The runtime takes the ownership of the submitted task. Once submitted, the task becomes invalid and is not reusable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task</strong> – A <a class="reference internal" href="group__task.html#classlegate_1_1PhysicalTask"><span class="std std-ref">PhysicalTask</span></a> to execute </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3117,11 +3182,11 @@ SPDX-License-Identifier: Apache-2.0
 <dd></dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl">
-<span id="_CPPv3N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl"></span><span id="_CPPv2N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl"></span><span id="legate::detail::inline_task_body__TaskCR.VariantCode.VariantImpl"></span><span class="target" id="inline__task__body_8cc_1abb2a71feb96029fc43d7740b2b9e7bef"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">inline_task_body</span></span></span><span class="sig-paren">(</span>
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl">
+<span id="_CPPv3N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl"></span><span id="_CPPv2N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl"></span><span id="legate::detail::inline_task_body__TaskBaseCR.VariantCode.VariantImpl"></span><span class="target" id="inline__task__body_8cc_1a4ae8ddb8739b6ac8dee444278848b246"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">inline_task_body</span></span></span><span class="sig-paren">(</span>
 
 <dl>
-<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Task</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">task</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">TaskBase</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">task</span></span></em>,</dd>
 <dd><em class="sig-param"><a class="reference internal" href="group__util.html#_CPPv411VariantCode" title="VariantCode"><span class="n"><span class="pre">VariantCode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">variant_code</span></span></em>,</dd>
 <dd><em class="sig-param"><a class="reference internal" href="group__util.html#_CPPv411VariantImpl" title="VariantImpl"><span class="n"><span class="pre">VariantImpl</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">variant_impl</span></span></em></dd>
 </dl>
@@ -4915,6 +4980,8 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime11create_taskE7Library11LocalTaskID"><code class="docutils literal notranslate"><span class="pre">create_task()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime11create_taskE7Library11LocalTaskIDRK5tupleINSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">create_task()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime11create_taskE7Library11LocalTaskIDRK6Domain"><code class="docutils literal notranslate"><span class="pre">create_task()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime20create_physical_taskE7Library11LocalTaskID"><code class="docutils literal notranslate"><span class="pre">create_physical_task()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime20create_physical_taskERK11TaskContext7Library11LocalTaskID"><code class="docutils literal notranslate"><span class="pre">create_physical_task()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime10issue_copyER12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE"><code class="docutils literal notranslate"><span class="pre">issue_copy()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime10issue_copyER12LogicalStoreRK12LogicalStoreNSt8optionalINSt7int32_tEEE"><code class="docutils literal notranslate"><span class="pre">issue_copy()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12issue_gatherER12LogicalStoreRK12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE"><code class="docutils literal notranslate"><span class="pre">issue_gather()</span></code></a></li>
@@ -4928,6 +4995,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime11tree_reduceE7Library11LocalTaskIDRK12LogicalStoreNSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">tree_reduce()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime6submitERR8AutoTask"><code class="docutils literal notranslate"><span class="pre">submit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime6submitERR10ManualTask"><code class="docutils literal notranslate"><span class="pre">submit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime6submitERR12PhysicalTask"><code class="docutils literal notranslate"><span class="pre">submit()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_arrayERK4TypeNSt8uint32_tEb"><code class="docutils literal notranslate"><span class="pre">create_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_arrayERK5ShapeRK4Typebb"><code class="docutils literal notranslate"><span class="pre">create_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime17create_array_likeERK12LogicalArrayNSt8optionalI4TypeEE"><code class="docutils literal notranslate"><span class="pre">create_array_like()</span></code></a></li>
@@ -5086,7 +5154,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail40create_sharding_functor_using_projectionEN6Legion10ShardingIDEN6Legion12ProjectionIDERKN7mapping14ProcessorRangeE"><code class="docutils literal notranslate"><span class="pre">create_sharding_functor_using_projection()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail21process_streaming_runEPNSt5dequeI17InternalSharedPtrI9OperationEEE"><code class="docutils literal notranslate"><span class="pre">process_streaming_run()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail27register_reduction_callbackEvRKN6Legion24RegistrationCallbackArgsE"><code class="docutils literal notranslate"><span class="pre">register_reduction_callback()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl"><code class="docutils literal notranslate"><span class="pre">inline_task_body()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl"><code class="docutils literal notranslate"><span class="pre">inline_task_body()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail16legion_task_bodyE11VariantImpl11VariantCodeNSt8optionalINSt11string_viewEEEPKvNSt6size_tE9Processor"><code class="docutils literal notranslate"><span class="pre">legion_task_body()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13show_progressERK11DomainPointNSt11string_viewENSt11string_viewEN6Legion7ContextEPN6Legion7RuntimeE"><code class="docutils literal notranslate"><span class="pre">show_progress()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detaileqERK10TaskConfigRK10TaskConfig"><code class="docutils literal notranslate"><span class="pre">operator==()</span></code></a></li>

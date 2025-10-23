@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>partitioning &#8212; NVIDIA legate (25.11.00.dev27+g45a432f7a)</title>
+    <title>partitioning &#8212; NVIDIA legate (25.11.00.dev32+gf95105131)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=73c3f77a"></script>
+    <script src="../../../../_static/documentation_options.js?v=69393539"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,11 +134,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a></div>
     
@@ -245,11 +245,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a>
 
@@ -474,6 +474,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalTask.html">legate::PhysicalTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalTask_1_1Key.html">legate::PhysicalTask::Key</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProdReduction.html">legate::ProdReduction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProdReduction_3_01Complex_3_01Half_01_4_01_4.html">legate::ProdReduction&lt; Complex&lt; Half &gt; &gt;</a></li>
@@ -2410,16 +2412,16 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <dd></dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl">
-<span id="_CPPv3N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl"></span><span id="_CPPv2N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl"></span><span id="legate::detail::inline_task_body__TaskCR.VariantCode.VariantImpl"></span><span class="target" id="inline__task__body_8cc_1abb2a71feb96029fc43d7740b2b9e7bef"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">inline_task_body</span></span></span><span class="sig-paren">(</span>
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl">
+<span id="_CPPv3N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl"></span><span id="_CPPv2N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl"></span><span id="legate::detail::inline_task_body__TaskBaseCR.VariantCode.VariantImpl"></span><span class="target" id="inline__task__body_8cc_1a4ae8ddb8739b6ac8dee444278848b246"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">inline_task_body</span></span></span><span class="sig-paren">(</span>
 
 <dl>
-<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Task</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">task</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">TaskBase</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">task</span></span></em>,</dd>
 <dd><em class="sig-param"><a class="reference internal" href="group__util.html#_CPPv411VariantCode" title="VariantCode"><span class="n"><span class="pre">VariantCode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">variant_code</span></span></em>,</dd>
 <dd><em class="sig-param"><a class="reference internal" href="group__util.html#_CPPv411VariantImpl" title="VariantImpl"><span class="n"><span class="pre">VariantImpl</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">variant_impl</span></span></em></dd>
 </dl>
 
-<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl" title="Link to this definition">#</a><br /></dt>
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl" title="Link to this definition">#</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp function">
@@ -4353,7 +4355,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail40create_sharding_functor_using_projectionEN6Legion10ShardingIDEN6Legion12ProjectionIDERKN7mapping14ProcessorRangeE"><code class="docutils literal notranslate"><span class="pre">create_sharding_functor_using_projection()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail21process_streaming_runEPNSt5dequeI17InternalSharedPtrI9OperationEEE"><code class="docutils literal notranslate"><span class="pre">process_streaming_run()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail27register_reduction_callbackEvRKN6Legion24RegistrationCallbackArgsE"><code class="docutils literal notranslate"><span class="pre">register_reduction_callback()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail16inline_task_bodyERK4Task11VariantCode11VariantImpl"><code class="docutils literal notranslate"><span class="pre">inline_task_body()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail16inline_task_bodyERK8TaskBase11VariantCode11VariantImpl"><code class="docutils literal notranslate"><span class="pre">inline_task_body()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail16legion_task_bodyE11VariantImpl11VariantCodeNSt8optionalINSt11string_viewEEEPKvNSt6size_tE9Processor"><code class="docutils literal notranslate"><span class="pre">legion_task_body()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13show_progressERK11DomainPointNSt11string_viewENSt11string_viewEN6Legion7ContextEPN6Legion7RuntimeE"><code class="docutils literal notranslate"><span class="pre">show_progress()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detaileqERK10TaskConfigRK10TaskConfig"><code class="docutils literal notranslate"><span class="pre">operator==()</span></code></a></li>

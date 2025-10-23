@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::PhysicalStore &#8212; NVIDIA legate (25.11.00.dev27+g45a432f7a)</title>
+    <title>legate::PhysicalStore &#8212; NVIDIA legate (25.11.00.dev32+gf95105131)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=73c3f77a"></script>
+    <script src="../../../../_static/documentation_options.js?v=69393539"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,7 +62,7 @@ SPDX-License-Identifier: Apache-2.0
     <link rel="icon" href="../../../../_static/favicon.png"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="legate::ProcLocalStorage" href="classlegate_1_1ProcLocalStorage.html" />
+    <link rel="next" title="legate::PhysicalTask" href="classlegate_1_1PhysicalTask.html" />
     <link rel="prev" title="legate::PhysicalArray" href="classlegate_1_1PhysicalArray.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a>
 
@@ -473,6 +473,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
 <li class="toctree-l4 current active"><a class="current reference internal" href="#">legate::PhysicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalTask.html">legate::PhysicalTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalTask_1_1Key.html">legate::PhysicalTask::Key</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction.html">legate::ProdReduction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction_3_01Complex_3_01Half_01_4_01_4.html">legate::ProdReduction&lt; Complex&lt; Half &gt; &gt;</a></li>
@@ -1622,11 +1624,11 @@ The user may read from a write-only accessor, but must write to the read-from lo
       </div>
     </a>
     <a class="right-next"
-       href="classlegate_1_1ProcLocalStorage.html"
+       href="classlegate_1_1PhysicalTask.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">legate::ProcLocalStorage</p>
+        <p class="prev-next-title">legate::PhysicalTask</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::TaskSignature &#8212; NVIDIA legate (25.11.00.dev27+g45a432f7a)</title>
+    <title>legate::TaskSignature &#8212; NVIDIA legate (25.11.00.dev32+gf95105131)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=73c3f77a"></script>
+    <script src="../../../../_static/documentation_options.js?v=69393539"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev32+gf95105131) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev32+gf95105131)</p>
   
 </a>
 
@@ -473,6 +473,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalTask.html">legate::PhysicalTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalTask_1_1Key.html">legate::PhysicalTask::Key</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction.html">legate::ProdReduction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction_3_01Complex_3_01Half_01_4_01_4.html">legate::ProdReduction&lt; Complex&lt; Half &gt; &gt;</a></li>
@@ -958,7 +960,7 @@ SPDX-License-Identifier: Apache-2.0
 <li><p>Passing an empty range signifies that exactly 0 constraints of the given type must be imposed on the task during launch.</p></li>
 </ul>
 </p>
-<p>If any constraints are imposed via the use of this API (including empty ranges), tasks are no longer allowed to add constraints dynamically during task construction. <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__task.html#classlegate_1_1AutoTask_1a2572f015cf9efe0a2cbd8bd8189b3fe7"><span class="std std-ref"><span class="pre">AutoTask::add_constraint()</span></span></a></code> will raise an exception in this case.</p>
+<p>If any constraints are imposed via the use of this API (including empty ranges), tasks are no longer allowed to add constraints dynamically during task construction. <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__task.html#classlegate_1_1AutoTask_1a3bb0e82f521339382797b5c068da6d06"><span class="std std-ref"><span class="pre">AutoTask::add_constraint()</span></span></a></code> will raise an exception in this case.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>constraints</strong> – The constraints, or <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> if none are imposed.</p>
