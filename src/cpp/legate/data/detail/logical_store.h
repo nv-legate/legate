@@ -128,12 +128,51 @@ class Storage {
   [[nodiscard]] std::string to_string() const;
 
  private:
+  // Private getters for member variables
+  /**
+   * @brief Return a const reference to the region field optional of this storage.
+   *
+   * @throw std::bad_variant_access if the underlying storage variant is not a region field.
+   */
+  [[nodiscard]] const std::optional<InternalSharedPtr<LogicalRegionField>>& region_field_() const;
+  /**
+   * @brief Return the region field optional of this storage.
+   *
+   * @throw std::bad_variant_access if the underlying storage variant is not a region field.
+   */
+  [[nodiscard]] std::optional<InternalSharedPtr<LogicalRegionField>>& region_field_();
+
+  /**
+   * @brief Return a const reference to the future optional of this storage.
+   *
+   * @throw std::bad_variant_access if the underlying storage variant is not a future.
+   */
+  [[nodiscard]] const std::optional<Legion::Future>& future_() const;
+  /**
+   * @brief Return the future optional of this storage.
+   *
+   * @throw std::bad_variant_access if the underlying storage variant is not a future.
+   */
+  [[nodiscard]] std::optional<Legion::Future>& future_();
+
+  /**
+   * @brief Return a const reference to the future map optional of this storage.
+   *
+   * @throw std::bad_variant_access if the underlying storage variant is not a future map.
+   */
+  [[nodiscard]] const std::optional<Legion::FutureMap>& future_map_() const;
+  /**
+   * @brief Return the future map optional of this storage.
+   *
+   * @throw std::bad_variant_access if the underlying storage variant is not a future map.
+   */
+  [[nodiscard]] std::optional<Legion::FutureMap>& future_map_();
+
   std::uint64_t storage_id_{};
   bool replicated_{};
   bool unbound_{};
   bool destroyed_out_of_order_{};  // only relevant on the root Storage
   InternalSharedPtr<Shape> shape_{};
-  Kind kind_{Kind::REGION_FIELD};
   std::string_view provenance_{};  // only relevant on the root Storage
 
   std::int32_t level_{};
@@ -142,9 +181,17 @@ class Storage {
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
 
   std::size_t scalar_offset_{};
-  std::optional<InternalSharedPtr<LogicalRegionField>> region_field_{};
-  std::optional<Legion::Future> future_{};
-  std::optional<Legion::FutureMap> future_map_{};
+
+  // Storage is backed by one of three different types of data
+  // noted in the variant below. However, the underlying types are optional because
+  // Storage can take a two-stage initialization process where, first, the constructor
+  // determines the type of backing for the Storage, and then, the user may set
+  // the backing data later via the set_region_field, set_future, etc methods.
+  // std::optional allows us to specify whether the specific variant alternative is set or not.
+  std::variant<std::optional<InternalSharedPtr<LogicalRegionField>>,
+               std::optional<Legion::Future>,
+               std::optional<Legion::FutureMap>>
+    storage_data_{std::optional<InternalSharedPtr<LogicalRegionField>>{}};
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};

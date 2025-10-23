@@ -28,8 +28,6 @@ inline std::size_t Storage::volume() const { return shape()->volume(); }
 
 inline std::uint32_t Storage::dim() const { return shape()->ndim(); }
 
-inline Storage::Kind Storage::kind() const { return kind_; }
-
 inline std::int32_t Storage::level() const { return level_; }
 
 inline std::size_t Storage::scalar_offset() const { return scalar_offset_; }
