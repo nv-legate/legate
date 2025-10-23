@@ -29,9 +29,9 @@ constexpr float FLOAT_VALUE          = 1.23F;
 constexpr double DOUBLE_VALUE        = -4.567;
 // NOLINTBEGIN(cert-err58-cpp)
 const std::string STRING_VALUE = "123";
-const __half FLOAT16_VALUE(0.1F);
-const complex<float> COMPLEX_FLOAT_VALUE{0, 1};
-const complex<double> COMPLEX_DOUBLE_VALUE{0, 1};
+const legate::Half FLOAT16_VALUE{0.1F};
+constexpr legate::Complex<float> COMPLEX_FLOAT_VALUE{0, 1};
+constexpr legate::Complex<double> COMPLEX_DOUBLE_VALUE{0, 1};
 // NOLINTEND(cert-err58-cpp)
 constexpr std::uint32_t DATA_SIZE = 10;
 

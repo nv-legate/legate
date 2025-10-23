@@ -186,4 +186,13 @@ class Overload : public T... {
 template <typename... T>
 Overload(T...) -> Overload<T...>;
 
+template <typename T, template <typename...> typename U>
+struct is_instance_of : std::false_type {};
+
+template <typename... T, template <typename...> typename U>
+struct is_instance_of<U<T...>, U> : std::true_type {};
+
+template <typename T, template <typename...> typename U>
+inline constexpr bool is_instance_of_v = is_instance_of<T, U>::value;
+
 }  // namespace legate::detail

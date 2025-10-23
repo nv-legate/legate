@@ -16,8 +16,9 @@ from libcpp cimport bool as cpp_bool
 from libcpp.complex cimport complex as std_complex
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
+
+from ..type.half cimport _Half
 from ..type.types cimport _Type
-from ..utilities.typedefs cimport __half
 
 
 cdef extern from "legate/data/scalar.h" namespace "legate" nogil:
@@ -32,7 +33,7 @@ cdef extern from "legate/data/scalar.h" namespace "legate" nogil:
         _Scalar(uint16_t, _Type) except+
         _Scalar(uint32_t, _Type) except+
         _Scalar(uint64_t, _Type) except+
-        _Scalar(__half, _Type) except+
+        _Scalar(_Half, _Type) except+
         _Scalar(float, _Type) except+
         _Scalar(double, _Type) except+
         _Scalar(std_complex[float], _Type) except+

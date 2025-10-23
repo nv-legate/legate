@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate.h>
-
+#include <legate/redop/redop.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/zip.h>
 

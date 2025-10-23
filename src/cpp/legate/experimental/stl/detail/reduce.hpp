@@ -9,6 +9,7 @@
 #include <legate/experimental/stl/detail/elementwise.hpp>
 #include <legate/experimental/stl/detail/launch_task.hpp>
 #include <legate/experimental/stl/detail/store.hpp>
+#include <legate/redop/redop.h>
 #include <legate/utilities/assert.h>
 
 // Include this last:
@@ -244,7 +245,7 @@ template <typename ValueType = void, typename T>
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::ReductionWrapper{legate::SumReduction<Type>()};
+  return detail::ReductionWrapper{legate::SumReduction<Type>{}};
 }
 
 template <typename ValueType = void, typename T>
@@ -253,7 +254,7 @@ template <typename ValueType = void, typename T>
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::ReductionWrapper{legate::DiffReduction<Type>()};
+  return detail::ReductionWrapper{Legion::DiffReduction<Type>{}};
 }
 
 template <typename ValueType = void, typename T>
@@ -262,7 +263,7 @@ template <typename ValueType = void, typename T>
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::ReductionWrapper{legate::ProdReduction<Type>()};
+  return detail::ReductionWrapper{legate::ProdReduction<Type>{}};
 }
 
 template <typename ValueType = void, typename T>
@@ -271,7 +272,7 @@ template <typename ValueType = void, typename T>
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::ReductionWrapper{legate::DivReduction<Type>()};
+  return detail::ReductionWrapper{Legion::DivReduction<Type>{}};
 }
 
 // TODO(ericniebler): min and max reductions
@@ -282,7 +283,7 @@ template <typename ValueType = void, typename T>
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::ReductionWrapper{legate::OrReduction<Type>()};
+  return detail::ReductionWrapper{legate::OrReduction<Type>{}};
 }
 
 template <typename ValueType = void, typename T>
@@ -291,7 +292,7 @@ template <typename ValueType = void, typename T>
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::ReductionWrapper{legate::AndReduction<Type>()};
+  return detail::ReductionWrapper{legate::AndReduction<Type>{}};
 }
 
 // TODO(ericniebler): logical xor

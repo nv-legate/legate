@@ -27,7 +27,7 @@ constexpr std::string_view LIBRARY_NAME = "test_tunable";
     legate::Scalar{std::uint16_t{78}},
     legate::Scalar{std::uint64_t{91011}},
     legate::Scalar{123.0},
-    legate::Scalar{complex<float>{10.0F, 20.0F}},
+    legate::Scalar{legate::Complex<float>{10.0F, 20.0F}},
   };
   return tunables;
 }

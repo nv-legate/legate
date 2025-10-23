@@ -76,7 +76,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
       auto tgt      = target.read_accessor<VAL, DIM>(shape);
       std::size_t i = 1;
       for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it, ++i) {
-        ASSERT_EQ(src[*it] + i * seed.value<VAL>(), tgt[*it]);
+        ASSERT_EQ(src[*it] + (i * seed.value<VAL>()), tgt[*it]);
       }
     }
 

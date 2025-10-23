@@ -6,6 +6,7 @@
 
 #include <legate/partitioning/detail/partitioning_tasks.h>
 
+#include <legate/redop/redop.h>
 #include <legate/task/task_context.h>
 #include <legate/utilities/dispatch.h>
 

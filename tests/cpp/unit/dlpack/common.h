@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/type/complex.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/dlpack/dlpack.h>
 #include <legate/utilities/typedefs.h>
@@ -28,8 +29,8 @@ using AllTypes = ::testing::Types<std::int8_t,
                                   std::uint64_t,
                                   float,
                                   double,
-                                  complex<float>,
-                                  complex<double>>;
+                                  legate::Complex<float>,
+                                  legate::Complex<double>>;
 
 using SignedIntTypes = ::testing::Types<std::int8_t, std::int16_t, std::int32_t, std::int64_t>;
 
@@ -92,9 +93,9 @@ class NameGenerator {
           static_assert(sizeof(T*) != sizeof(T*));  // NOLINT
         }
       } else {
-        if constexpr (std::is_same_v<T, complex<float>>) {
+        if constexpr (std::is_same_v<T, legate::Complex<float>>) {
           return "complex(float)";
-        } else if constexpr (std::is_same_v<T, complex<double>>) {
+        } else if constexpr (std::is_same_v<T, legate::Complex<double>>) {
           return "complex(double)";
         } else {
           static_assert(sizeof(T*) != sizeof(T*));  // NOLINT

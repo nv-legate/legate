@@ -7,6 +7,7 @@
 #include <legate.h>
 
 #include <legate/operation/detail/task.h>
+#include <legate/redop/redop.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/variant_info.h>
 #include <legate/utilities/detail/formatters.h>

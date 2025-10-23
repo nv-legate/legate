@@ -23,7 +23,8 @@ set(BASE_CLANG_TIDY_COMMAND
     --use-color #
     --quiet #
     --extra-arg=-Wno-error=unused-command-line-argument #
-    --extra-arg=-UNDEBUG)
+    --extra-arg=-UNDEBUG #
+    --extra-arg=-DLEGATE_CLANG_TIDY=1)
 
 function(_legate_ensure_tidy_target)
   if(TARGET tidy)

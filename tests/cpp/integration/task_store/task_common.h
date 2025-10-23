@@ -8,6 +8,8 @@
 
 #include <legate.h>
 
+#include <legate/redop/redop.h>
+
 #include <gtest/gtest.h>
 
 #include <map>

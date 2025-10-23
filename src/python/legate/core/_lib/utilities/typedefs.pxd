@@ -2,19 +2,11 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 from libc.stddef cimport size_t
-from libc.stdint cimport int32_t, int64_t, uint16_t
+from libc.stdint cimport int32_t, int64_t
 from libcpp cimport bool
 
 from ..task.task_context cimport _TaskContext
 
-
-cdef extern from "legion.h" nogil:
-    cdef cppclass __half:
-        __half()
-        __half(float)
-        uint16_t raw() const
-
-    float __convert_halfint_to_float(uint16_t)
 
 cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
     ctypedef unsigned int _Legion_TaskID "Legion::TaskID"
@@ -84,16 +76,3 @@ cdef _DomainPoint domain_point_from_iterable(object iterable)
 cdef DomainPoint_t domain_point_to_py(const _DomainPoint& point)
 cdef _Domain domain_from_iterables(object low, object high)
 cdef Domain_t domain_to_py(const _Domain& domain)
-
-cdef extern from * nogil:
-    """
-    namespace {
-
-    [[nodiscard]] float half_to_float(__half h)
-    {
-      return static_cast<float>(h);
-    }
-
-    } // namespace
-    """
-    float half_to_float(__half)

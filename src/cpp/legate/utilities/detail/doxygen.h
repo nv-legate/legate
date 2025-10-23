@@ -68,8 +68,8 @@
  * @defgroup reduction Built-in reduction operators
  *
  * All built-in operators are defined for signed and unsigned integer types. Floating point
- * types (`__half`, `float`, and `double`) are supported by all but bitwise operators. Arithmetic
- * operators also cover complex types `complex<__half>` and `complex<float>`.
+ * types (`Half`, `float`, and `double`) are supported by all but bitwise operators. Arithmetic
+ * operators also cover complex types `Complex<Half>` and `Complex<float>`.
  *
  * For details about reduction operators, See Library::register_reduction_operator.
  */

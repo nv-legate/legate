@@ -8,6 +8,8 @@
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/deserializer.h>
 
+#include <cuda/std/complex>
+
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -27,7 +29,7 @@ class TestDeserializer : public legate::detail::BaseDeserializer<TestDeserialize
 
 TEST_F(AlignedUnpack, Bug1)
 {
-  const legate::Scalar to_pack{complex<double>{123.0, 456.0}};
+  const legate::Scalar to_pack{legate::Complex<double>{123.0, 456.0}};
 
   legate::detail::BufferBuilder buffer{};
   buffer.pack<bool>(true);
@@ -35,10 +37,10 @@ TEST_F(AlignedUnpack, Bug1)
 
   auto legion_buffer = buffer.to_legion_buffer();
   TestDeserializer dez{legion_buffer.get_ptr(), legion_buffer.get_size()};
-  (void)dez.unpack<bool>();
+  static_cast<void>(dez.unpack<bool>());
   auto unpacked = legate::Scalar{dez.unpack_scalar()};
 
-  EXPECT_EQ(unpacked.value<complex<double>>(), to_pack.value<complex<double>>());
+  EXPECT_EQ(unpacked.value<legate::Complex<double>>(), to_pack.value<legate::Complex<double>>());
 }
 
 // NOLINTEND(readability-magic-numbers)

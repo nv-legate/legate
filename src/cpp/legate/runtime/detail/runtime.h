@@ -119,8 +119,6 @@ class Runtime {
   [[nodiscard]] GlobalRedopID find_reduction_operator(std::uint32_t type_uid,
                                                       std::int32_t op_kind) const;
 
-  void initialize(Legion::Context legion_context);
-
   [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library& library,
                                                         LocalTaskID task_id);
   [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library& library,

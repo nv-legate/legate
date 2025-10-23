@@ -24,8 +24,8 @@ namespace index_attach {
 
 namespace {
 
-constexpr std::size_t TILE_SIZE    = 5;
-constexpr std::uint64_t INIT_VALUE = 10;
+constexpr std::size_t TILE_SIZE   = 5;
+constexpr std::int32_t INIT_VALUE = 10;
 
 class AccessStoreFn {
  public:
@@ -356,9 +356,9 @@ TEST_F(IndexAttach, SysmemAccessByTask)
   do_test<std::int16_t>(/* value */ -10);
   do_test<float>(100.0F);
   do_test<double>(/* value */ 10000.8);
-  do_test<__half>(static_cast<__half>(/* value */ 0.9F));
-  do_test<complex<float>>(/* value */ {15, 20});
-  do_test<complex<double>>(/* value */ {-3.9, 5.8});
+  do_test<legate::Half>(static_cast<legate::Half>(/* value */ 0.9F));
+  do_test<legate::Complex<float>>(/* value */ {15, 20});
+  do_test<legate::Complex<double>>(/* value */ {-3.9, 5.8});
   // NOLINTEND(readability-magic-numbers)
 }
 

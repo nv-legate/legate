@@ -38,11 +38,11 @@ INSTANTIATE_TEST_SUITE_P(
                     legate::Scalar{static_cast<std::uint16_t>(6), legate::uint16()},
                     legate::Scalar{static_cast<std::uint32_t>(7), legate::uint32()},
                     legate::Scalar{static_cast<std::uint64_t>(8), legate::uint64()},
-                    legate::Scalar{static_cast<__half>(FLOAT_VALUE), legate::float16()},
+                    legate::Scalar{static_cast<legate::Half>(FLOAT_VALUE), legate::float16()},
                     legate::Scalar{FLOAT_VALUE, legate::float32()},
                     legate::Scalar{DOUBLE_VALUE, legate::float64()},
-                    legate::Scalar{complex<float>{FLOAT_VALUE, FLOAT_VALUE}},
-                    legate::Scalar{complex<double>{FLOAT_VALUE, FLOAT_VALUE},
+                    legate::Scalar{legate::Complex<float>{FLOAT_VALUE, FLOAT_VALUE}},
+                    legate::Scalar{legate::Complex<double>{FLOAT_VALUE, FLOAT_VALUE},
                                    legate::complex128()}));
 
 INSTANTIATE_TEST_SUITE_P(

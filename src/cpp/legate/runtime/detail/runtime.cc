@@ -38,6 +38,7 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/partitioning/detail/partitioning_tasks.h>
+#include <legate/redop/detail/register.h>
 #include <legate/runtime/detail/argument_parsing/legate_args.h>
 #include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/runtime/detail/config.h>
@@ -244,43 +245,6 @@ GlobalRedopID Runtime::find_reduction_operator(std::uint32_t type_uid, std::int3
                          << " (type_uid: " << type_uid << ", op_kind: " << op_kind << ")";
   }
   return finder->second;
-}
-
-void Runtime::initialize(Legion::Context legion_context)
-{
-  if (initialized()) {
-    if (get_legion_context() == legion_context) {
-      static_assert(std::is_pointer_v<Legion::Context>);
-      LEGATE_CHECK(legion_context != nullptr);
-      // OK to call initialize twice if it's the same context.
-      return;
-    }
-    throw TracedException<std::runtime_error>{"Legate runtime has already been initialized"};
-  }
-
-  LEGATE_SCOPE_FAIL(
-    // de-initialize everything in reverse order
-    scope_ = Scope{};
-    partition_manager_.reset();
-    communicator_manager_.reset();
-    field_manager_.reset();
-    core_library_.reset();
-    comm::coll::finalize();
-    cu_mod_manager_.reset();
-    legion_context_ = {};
-    initialized_    = false;);
-
-  initialized_    = true;
-  legion_context_ = std::move(legion_context);
-  cu_mod_manager_.emplace(cuda::detail::get_cuda_driver_api());
-  comm::coll::init();
-  field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
-                                              : std::make_unique<FieldManager>();
-  communicator_manager_.emplace();
-  partition_manager_.emplace();
-  static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
-
-  comm::register_builtin_communicator_factories(core_library());
 }
 
 std::pair<mapping::detail::Machine, const VariantInfo&> Runtime::slice_machine_for_task_(
@@ -1958,18 +1922,14 @@ void set_env_vars()
       fmt::format("Legion Runtime failed to start, error code: {}", result)};
   }
 
-  auto& runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
+  auto&& ctx     = Legion::Runtime::get_runtime()->begin_implicit_task(CoreTask::TOPLEVEL,
+                                                                   runtime.mapper_id(),
+                                                                   Processor::LOC_PROC,
+                                                                   TOPLEVEL_NAME,
+                                                                   true /*control replicable*/);
 
-  // Get the runtime now that we've started it
-  auto* const legion_context =
-    Legion::Runtime::get_runtime()->begin_implicit_task(CoreTask::TOPLEVEL,
-                                                        runtime.mapper_id(),
-                                                        Processor::LOC_PROC,
-                                                        TOPLEVEL_NAME,
-                                                        true /*control replicable*/);
-
-  // We can now initialize the Legate runtime with the Legion context
-  runtime.initialize(legion_context);
+  runtime.legion_context_ = ctx;
 }
 
 void Runtime::start_profiling_range()
@@ -2116,13 +2076,13 @@ std::int32_t Runtime::finish()
   communicator_manager_.reset();
   partition_manager_.reset();
   scope_ = Scope{};
-  core_library_.reset();
   comm::coll::finalize();
   // Mappers get raw pointers to Libraries, so just in case any of the above launched residual
   // cleanup tasks, we issue another fence here before we clear the Libraries.
   issue_execution_fence(true);
   mapper_manager_.reset();
   libraries_.clear();
+  core_library_.reset();
   // Reset this here and now (instead of waiting to destroy it when Runtime gets destroyed)
   // because the dtor of the module manager tries to get the runtime, which it should not do if
   // we are in the middle of self-destructing.
@@ -2149,7 +2109,7 @@ std::int32_t Runtime::finish()
   the_runtime.reset();
   return ret;
   // END DO NOT MODIFY
-}  // namespace
+}
 
 namespace {
 
@@ -2197,74 +2157,6 @@ void register_legate_core_tasks(Library& core_lib)
   OffloadTo::register_variants(pub_core_lib);
 }
 
-[[nodiscard]] constexpr GlobalRedopID builtin_redop_id(ReductionOpKind op, Type::Code type_code)
-{
-  return static_cast<GlobalRedopID>(
-    LEGION_REDOP_BASE +
-    // FIXME(wonchanl): It's beyond my comprehension why this issue hasn't been triggered by any of
-    // our tests until now, cause these reduction op IDs haven't changed since the beginning. In the
-    // long run, we should register these built-in operators ourselves in Legate, instead of relying
-    // on an equation that is loosely shared by Legate and Legion.
-    //
-    // We need to special-case the logical-AND reduction for booleans, as it is registered as a
-    // prod reduction on the Legion side...
-    (to_underlying(
-       (type_code == Type::Code::BOOL && op == ReductionOpKind::AND) ? ReductionOpKind::MUL : op) *
-     LEGION_TYPE_TOTAL) +
-    to_underlying(type_code));
-}
-
-#define RECORD(OP, TYPE_CODE)                         \
-  PrimitiveType{TYPE_CODE}.record_reduction_operator( \
-    to_underlying(ReductionOpKind::OP), builtin_redop_id(ReductionOpKind::OP, TYPE_CODE));
-
-#define RECORD_INT(OP)           \
-  RECORD(OP, Type::Code::BOOL)   \
-  RECORD(OP, Type::Code::INT8)   \
-  RECORD(OP, Type::Code::INT16)  \
-  RECORD(OP, Type::Code::INT32)  \
-  RECORD(OP, Type::Code::INT64)  \
-  RECORD(OP, Type::Code::UINT8)  \
-  RECORD(OP, Type::Code::UINT16) \
-  RECORD(OP, Type::Code::UINT32) \
-  RECORD(OP, Type::Code::UINT64)
-
-#define RECORD_FLOAT(OP)          \
-  RECORD(OP, Type::Code::FLOAT16) \
-  RECORD(OP, Type::Code::FLOAT32) \
-  RECORD(OP, Type::Code::FLOAT64)
-
-#define RECORD_COMPLEX(OP) RECORD(OP, Type::Code::COMPLEX64)
-
-#define RECORD_ALL(OP) \
-  RECORD_INT(OP)       \
-  RECORD_FLOAT(OP)     \
-  RECORD_COMPLEX(OP)
-
-void register_builtin_reduction_ops()
-{
-  RECORD_ALL(ADD)
-  RECORD(ADD, Type::Code::COMPLEX128)
-  RECORD_ALL(MUL)
-
-  RECORD_INT(MAX)
-  RECORD_FLOAT(MAX)
-
-  RECORD_INT(MIN)
-  RECORD_FLOAT(MIN)
-
-  RECORD_INT(OR)
-  RECORD_INT(AND)
-  RECORD_INT(XOR)
-}
-
-#undef RECORD_ALL
-#undef RECORD_COMPLEX
-#undef RECORD_FLOAT
-#undef RECORD_INT
-#undef RECORD
-#undef BUILTIN_REDOP_ID
-
 }  // namespace
 
 extern void register_exception_reduction_op(const Library& context);
@@ -2296,6 +2188,19 @@ extern void register_exception_reduction_op(const Library& context);
   runtime.core_library_ = core_lib;
   runtime.mapper_manager_.emplace();
 
+  // These must occur here in case the task registration routines below need to access the CUDA
+  // driver API
+  runtime.cu_mod_manager_.emplace(cuda::detail::get_cuda_driver_api());
+  comm::coll::init();
+  runtime.field_manager_ = runtime.consensus_match_required()
+                             ? std::make_unique<ConsensusMatchingFieldManager>()
+                             : std::make_unique<FieldManager>();
+  runtime.communicator_manager_.emplace();
+  runtime.partition_manager_.emplace();
+  static_cast<void>(runtime.scope_.exchange_machine(runtime.create_toplevel_machine()));
+
+  comm::register_builtin_communicator_factories(runtime.core_library());
+
   register_legate_core_tasks(core_lib);
 
   register_builtin_reduction_ops();
@@ -2303,6 +2208,8 @@ extern void register_exception_reduction_op(const Library& context);
   register_exception_reduction_op(core_lib);
 
   register_legate_core_sharding_functors(core_lib);
+
+  runtime.initialized_ = true;
 }
 
 CUstream Runtime::get_cuda_stream() const
@@ -2372,6 +2279,7 @@ const MapperManager& Runtime::get_mapper_manager_() const
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     return mapper_manager_.value();
   }
+
   return *mapper_manager_;
   // NOLINTEND(bugprone-unchecked-optional-access)
 }

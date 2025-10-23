@@ -38,6 +38,8 @@
 #include <legate/task/variant_options.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/tuning/scope.h>
+#include <legate/type/complex.h>
+#include <legate/type/half.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/mdspan.h>

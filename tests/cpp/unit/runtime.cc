@@ -29,26 +29,6 @@ TEST_F(Runtime, CreateUnbound)
                std::invalid_argument);
 }
 
-TEST_F(Runtime, InitializeWithLegionContext)
-{
-  auto runtime        = legate::Runtime::get_runtime();
-  auto runtime_impl   = runtime->impl();
-  auto legion_context = runtime_impl->get_legion_context();
-
-  ASSERT_NO_THROW(runtime_impl->initialize(legion_context));
-}
-
-TEST_F(Runtime, InitializeWithDifferentLegionContext)
-{
-  auto runtime        = legate::Runtime::get_runtime();
-  auto runtime_impl   = runtime->impl();
-  auto legion_context = Legion::Context{};
-
-  ASSERT_THAT([&] { runtime_impl->initialize(legion_context); },
-              ::testing::ThrowsMessage<std::runtime_error>(
-                ::testing::HasSubstr("Legate runtime has already been initialized")));
-}
-
 TEST_F(Runtime, IndexSpaceTooManyDims)
 {
   auto runtime      = legate::Runtime::get_runtime();

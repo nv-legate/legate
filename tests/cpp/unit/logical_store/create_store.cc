@@ -80,12 +80,13 @@ INSTANTIATE_TEST_SUITE_P(
     std::make_tuple(legate::uint16(), legate::Scalar{static_cast<std::uint16_t>(6)}),
     std::make_tuple(legate::uint32(), legate::Scalar{static_cast<std::uint32_t>(7)}),
     std::make_tuple(legate::uint64(), legate::Scalar{static_cast<std::uint64_t>(8)}),
-    std::make_tuple(legate::float16(), legate::Scalar{static_cast<__half>(FLOAT_VALUE)}),
+    std::make_tuple(legate::float16(), legate::Scalar{static_cast<legate::Half>(FLOAT_VALUE)}),
     std::make_tuple(legate::float32(), legate::Scalar{FLOAT_VALUE}),
     std::make_tuple(legate::float64(), legate::Scalar{DOUBLE_VALUE}),
-    std::make_tuple(legate::complex64(), legate::Scalar{complex<float>{FLOAT_VALUE, FLOAT_VALUE}}),
+    std::make_tuple(legate::complex64(),
+                    legate::Scalar{legate::Complex<float>{FLOAT_VALUE, FLOAT_VALUE}}),
     std::make_tuple(legate::complex128(),
-                    legate::Scalar{complex<double>{DOUBLE_VALUE, DOUBLE_VALUE}})));
+                    legate::Scalar{legate::Complex<double>{DOUBLE_VALUE, DOUBLE_VALUE}})));
 
 INSTANTIATE_TEST_SUITE_P(LogicalStoreCreateUnit,
                          CreateScalarStoreWithExtentsTest,

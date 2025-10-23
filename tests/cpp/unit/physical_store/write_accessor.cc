@@ -226,7 +226,9 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> write_acces
   std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> cases = {
     {legate::Shape{1}, legate::uint32(), legate::Scalar{std::uint32_t{1}}},
     {legate::Shape{2, 2}, legate::bool_(), legate::Scalar{true}},
-    {legate::Shape{1, 2, 4}, legate::float16(), legate::Scalar{static_cast<__half>(FLOAT_VALUE)}},
+    {legate::Shape{1, 2, 4},
+     legate::float16(),
+     legate::Scalar{static_cast<legate::Half>(FLOAT_VALUE)}},
     {legate::Shape{1, 4, 2, 3}, legate::float32(), legate::Scalar{float{FLOAT_VALUE}}},
   };
 
@@ -237,12 +239,12 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> write_acces
 #if LEGATE_MAX_DIM >= 6
   cases.emplace_back(legate::Shape{1, 2, 3, 4, 5, 6},
                      legate::complex64(),
-                     legate::Scalar{complex<float>{FLOAT_VALUE, FLOAT_VALUE}});
+                     legate::Scalar{legate::Complex<float>{FLOAT_VALUE, FLOAT_VALUE}});
 #endif
 #if LEGATE_MAX_DIM >= 7
   cases.emplace_back(legate::Shape{1, 1, 1, 1, 1, 1, 1},
                      legate::complex128(),
-                     legate::Scalar{complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
+                     legate::Scalar{legate::Complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
 #endif
 
   return cases;

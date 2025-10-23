@@ -32,6 +32,18 @@ class CUDAModuleManager {
 
   [[nodiscard]] CUkernel load_kernel_from_fatbin(const void* fatbin, const char* kernel_name);
 
+  /**
+   * @brief Loads a CUDA kernel function from a fat binary image.
+   *
+   * @param fatbin Pointer to the fatbin image in memory.
+   * @param kernel_name Name of the kernel function to load.
+   *
+   * @return Handle to the loaded CUDA function.
+   *
+   * @throw std::invalid_argument If `fatbin` or `kernel_name` are NULL.
+   */
+  [[nodiscard]] CUfunction load_function_from_fatbin(const void* fatbin, const char* kernel_name);
+
  private:
   [[nodiscard]] const std::unordered_map<const void*, CUlibrary>& libraries_() const noexcept;
   [[nodiscard]] std::unordered_map<const void*, CUlibrary>& libraries_() noexcept;

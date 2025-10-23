@@ -6,7 +6,7 @@
 
 #include <legate.h>
 
-#include <cuda/std/complex>
+#include <legate/redop/redop.h>
 
 #include <gtest/gtest.h>
 
@@ -244,7 +244,7 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> reduce_acce
 #if LEGATE_MAX_DIM >= 7
   cases.emplace_back(legate::Shape{5, 1, 5, 1, 6, 1, 6},
                      legate::complex128(),
-                     legate::Scalar{complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
+                     legate::Scalar{Complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
 #endif
 
   return cases;

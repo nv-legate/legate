@@ -340,6 +340,9 @@ target_sources(legate_obj
                        legate/partitioning/detail/proxy/scale.cc
                        legate/partitioning/detail/proxy/bloat.cc
                        legate/partitioning/detail/proxy/validate.cc
+                       legate/redop/complex.cc
+                       legate/redop/half.cc
+                       legate/redop/detail/register.cc
                        legate/runtime/library.cc
                        legate/runtime/runtime.cc
                        legate/runtime/detail/communicator_manager.cc
@@ -394,6 +397,7 @@ target_sources(legate_obj
                        legate/task/detail/task_signature.cc
                        legate/task/detail/task_config.cc
                        legate/type/types.cc
+                       legate/type/half.cc
                        legate/type/detail/types.cc
                        legate/utilities/machine.cc
                        legate/utilities/internal_shared_ptr.cc
@@ -489,6 +493,8 @@ if(legate_USE_CUDA)
                                          legate/data/detail/offsets_to_ranges_fatbin.cu
                                          legate/data/detail/ranges_to_offsets_fatbin.cu
                                          legate/partitioning/detail/partitioning_tasks_fatbin.cu
+                                         legate/redop/detail/redop_half_fatbin.cu
+                                         legate/redop/detail/redop_complex_fatbin.cu
                                  EXTRA_FLAGS ${legate_CUDA_FLAGS})
 
   target_sources(legate_obj PRIVATE ${fatbin_src})
@@ -630,7 +636,8 @@ foreach(target legate_obj legate)
   endif()
 
   if(legate_USE_CUDA)
-    target_link_libraries("${target}" PRIVATE CUDA::nvtx3)
+    target_link_libraries("${target}" PRIVATE CUDA::nvtx3
+                                              $<COMPILE_ONLY:CUDA::cuda_driver>)
   endif()
 
   if(legate_USE_HDF5_VFD_GDS)
@@ -790,6 +797,18 @@ install(FILES legate/partitioning/constraint.h legate/partitioning/constraint.in
               legate/partitioning/proxy.h legate/partitioning/proxy.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/partitioning)
 
+install(FILES legate/redop/redop.h legate/redop/base.h legate/redop/complex.h
+              legate/redop/half.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/redop)
+
+# These headers are technically private, but are exported transitively through the public
+# headers. I couldn't think of a good way to decouple them, and they don't really deserve
+# to live in the "public" directory...
+install(FILES legate/redop/detail/base.h legate/redop/detail/base.inl
+              legate/redop/detail/complex.h legate/redop/detail/complex.inl
+              legate/redop/detail/atomic_wrapper.h legate/redop/detail/atomic_wrapper.inl
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/redop/detail)
+
 install(FILES legate/runtime/exception_mode.h legate/runtime/library.h
               legate/runtime/library.inl legate/runtime/resource.h
               legate/runtime/runtime.h legate/runtime/runtime.inl
@@ -820,6 +839,7 @@ install(FILES legate/tuning/parallel_policy.h legate/tuning/parallel_policy.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tuning)
 
 install(FILES legate/type/types.h legate/type/types.inl legate/type/type_traits.h
+              legate/type/half.h legate/type/half.inl legate/type/complex.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/type)
 
 install(FILES legate/utilities/dispatch.h

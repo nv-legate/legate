@@ -63,6 +63,7 @@ template <typename... T>
   do {                                                                                        \
     LEGATE_PRAGMA_PUSH();                                                                     \
     LEGATE_PRAGMA_CLANG_IGNORE("-Wgnu-zero-variadic-macro-arguments");                        \
+    LEGATE_PRAGMA_CLANG_IGNORE("-Wvariadic-macro-arguments-omitted");                         \
     NV_IF_TARGET(                                                                             \
       NV_IS_HOST,                                                                             \
       (legate::detail::abort_handler_tpl(__FILE__, __func__, __LINE__, __VA_ARGS__);),        \

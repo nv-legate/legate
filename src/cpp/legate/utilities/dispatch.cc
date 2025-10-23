@@ -10,7 +10,7 @@
 
 #include <stdexcept>
 
-// Include detail/type_info (even though we only use public Type stuff) because that contains
+// Include detail/types (even though we only use public Type stuff) because that contains
 // the formatter for Type::Code
 #include <legate/type/detail/types.h>
 #include <legate/type/types.h>

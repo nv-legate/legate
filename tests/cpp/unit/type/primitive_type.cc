@@ -93,8 +93,11 @@ INSTANTIATE_TEST_SUITE_P(
                     "uint64",
                     sizeof(std::uint64_t),
                     alignof(std::uint64_t)),
-    std::make_tuple(
-      legate::float16(), legate::Type::Code::FLOAT16, "float16", sizeof(__half), alignof(__half)),
+    std::make_tuple(legate::float16(),
+                    legate::Type::Code::FLOAT16,
+                    "float16",
+                    sizeof(legate::Half),
+                    alignof(legate::Half)),
     std::make_tuple(
       legate::float32(), legate::Type::Code::FLOAT32, "float32", sizeof(float), alignof(float)),
     std::make_tuple(
@@ -102,13 +105,13 @@ INSTANTIATE_TEST_SUITE_P(
     std::make_tuple(legate::complex64(),
                     legate::Type::Code::COMPLEX64,
                     "complex64",
-                    sizeof(complex<float>),
-                    alignof(complex<float>)),
+                    sizeof(legate::Complex<float>),
+                    alignof(legate::Complex<float>)),
     std::make_tuple(legate::complex128(),
                     legate::Type::Code::COMPLEX128,
                     "complex128",
-                    sizeof(complex<double>),
-                    alignof(complex<double>))));
+                    sizeof(legate::Complex<double>),
+                    alignof(legate::Complex<double>))));
 
 INSTANTIATE_TEST_SUITE_P(PrimitiveTypeUnit,
                          NegativeTypeTest,

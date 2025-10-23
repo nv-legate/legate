@@ -34,7 +34,7 @@ from ..type.types cimport Type, _Type
 
 from ..type.types import null_type
 
-from ..utilities.typedefs cimport __half, half_to_float
+from ..type.half cimport _Half, half_to_float
 from ..utilities.utils cimport is_iterable
 
 
@@ -118,7 +118,7 @@ cpdef void from_uint64(Scalar scalar, object value, Type dtype):
 
 cpdef void from_float16(Scalar scalar, object value, Type dtype):
     try:
-        scalar._handle = _Scalar(__half(<float> value), dtype._handle)
+        scalar._handle = _Scalar(_Half(<float> value), dtype._handle)
     except TypeError:
         from_buffer(scalar, value, dtype)
 
@@ -254,12 +254,12 @@ cdef dict _GETTERS = {
     _Type.Code.UINT64 : lambda Scalar result: result._handle.value[uint64_t](),
     # We have to go through this song and dance because:
     #
-    # 1. Cython cannot convert the C++ __half class to a python object (lambdas
+    # 1. Cython cannot convert the C++ _Half class to a python object (lambdas
     #    cannot return non-Python types)
-    # 2. Even though __half has a operator float() (and implicit conversion to
+    # 2. Even though _Half has a operator float() (and implicit conversion to
     #    it), Cython (3.0.3) does not yet support defining it for C++ classes.
     _Type.Code.FLOAT16 : lambda Scalar result: half_to_float(
-        result._handle.value[__half]()
+        result._handle.value[_Half]()
     ),
     _Type.Code.FLOAT32 : lambda Scalar result: result._handle.value[float](),
     _Type.Code.FLOAT64 : lambda Scalar result: result._handle.value[double](),

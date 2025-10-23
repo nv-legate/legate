@@ -169,6 +169,7 @@ build_docs() {
   run_command 'Configure Legate' "./config/examples/${LEGATE_ARCH}.py"
   # Install Legate Python bindings so the Python docs build works
   run_command 'pip install Legate' rapids-pip-retry install . -v
+  LEGATE_AUTO_CONFIG=0 run_command 'check installed Legate' python3 -c 'import legate.core'
   run_command 'Build Documentation' make docs
   run_command 'Copy Artifacts' copy_docs_artifacts
 }

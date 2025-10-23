@@ -2,40 +2,8 @@
     "packages": {
         "Legion": {
             "git_shallow": false,
-            "git_tag": "bded7848c35c6bcaa09ab94263d8b9b132671941",
+            "git_tag": "241951db88a0daf841b0cef1fb23b8742a88b7d6",
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
-            "patches": [
-                {
-                    "file": "${current_json_dir}/../patches/legion_half.diff",
-                    "fixed_in": "",
-                    "issue": "legion half",
-                    "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_complex_half.diff",
-                    "fixed_in": "",
-                    "issue": "legion half",
-                    "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_redop.diff",
-                    "fixed_in": "",
-                    "issue": "legion half",
-                    "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_commit_3c3809eb60092816a8c81264f7a31adc986e8940.diff",
-                    "fixed_in": "",
-                    "issue": "legion suppress warning WRITE_ONLY|DISCARD",
-                    "required": true
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_commit_9d7823eca34c5d225311a23629534d1d3533a9bd.diff",
-                    "fixed_in": "",
-                    "issue": "legion fix invalidating WRITE_ONLY_DISCARD",
-                    "required": true
-                }
-            ],
             "version": "25.11.0"
         }
     }

@@ -128,4 +128,11 @@ CUkernel CUDAModuleManager::load_kernel_from_fatbin(const void* fatbin, const ch
   return get_cuda_driver_api()->library_get_kernel(lib, kernel_name);
 }
 
+CUfunction CUDAModuleManager::load_function_from_fatbin(const void* fatbin, const char* kernel_name)
+{
+  const auto kern = load_kernel_from_fatbin(fatbin, kernel_name);
+
+  return get_cuda_driver_api()->kernel_get_function(kern);
+}
+
 }  // namespace legate::cuda::detail

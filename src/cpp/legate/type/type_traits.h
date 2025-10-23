@@ -8,29 +8,16 @@
 
 #include <legate_defines.h>
 
+#include <legate/type/complex.h>
+#include <legate/type/half.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/macros.h>
 
-#include <climits>
+#include <complex>
 #include <cstdint>
 #include <string>
 #include <type_traits>
-
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include <complex>
-#endif
-
-#ifdef LEGION_REDOP_COMPLEX
-#ifdef LEGION_REDOP_HALF
-#define COMPLEX_HALF
-#endif
-#include <mathtypes/complex.h>
-#endif
-
-#ifdef LEGION_REDOP_HALF
-#include <mathtypes/half.h>
-#endif
 
 /**
  * @file
@@ -55,7 +42,7 @@ struct type_code_of  // NOLINT(readability-identifier-naming)
   : std::integral_constant<Type::Code, Type::Code::NIL> {};
 
 template <>
-struct type_code_of<__half> : std::integral_constant<Type::Code, Type::Code::FLOAT16> {};
+struct type_code_of<Half> : std::integral_constant<Type::Code, Type::Code::FLOAT16> {};
 
 template <>
 struct type_code_of<float> : std::integral_constant<Type::Code, Type::Code::FLOAT32> {};
@@ -109,23 +96,17 @@ template <>
 struct type_code_of<std::string> : std::integral_constant<Type::Code, Type::Code::STRING> {};
 
 template <>
-struct type_code_of<complex<float>> : std::integral_constant<Type::Code, Type::Code::COMPLEX64> {};
+struct type_code_of<Complex<float>> : std::integral_constant<Type::Code, Type::Code::COMPLEX64> {};
 
 template <>
-struct type_code_of<complex<double>> : std::integral_constant<Type::Code, Type::Code::COMPLEX128> {
+struct type_code_of<Complex<double>> : std::integral_constant<Type::Code, Type::Code::COMPLEX128> {
 };
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-template <>
-struct type_code_of<std::complex<float>>
-  : std::integral_constant<Type::Code, Type::Code::COMPLEX64> {};
-
-template <>
-struct type_code_of<std::complex<double>>
-  : std::integral_constant<Type::Code, Type::Code::COMPLEX128> {};
-#endif
 
 template <typename T>
-struct type_code_of<T*> : std::integral_constant<Type::Code, Type::Code::UINT64> {
+struct type_code_of<std::complex<T>> : type_code_of<Complex<T>> {};
+
+template <typename T>
+struct type_code_of<T*> : type_code_of<std::uint64_t> {
   static_assert(sizeof(T*) == sizeof(std::uint64_t));
   static_assert(alignof(T*) == alignof(std::uint64_t));
 };
@@ -206,7 +187,7 @@ struct type_of<Type::Code::UINT64> {
 
 template <>
 struct type_of<Type::Code::FLOAT16> {
-  using type = __half;
+  using type = Half;
 };
 
 template <>
@@ -221,12 +202,12 @@ struct type_of<Type::Code::FLOAT64> {
 
 template <>
 struct type_of<Type::Code::COMPLEX64> {
-  using type = complex<float>;
+  using type = Complex<float>;
 };
 
 template <>
 struct type_of<Type::Code::COMPLEX128> {
-  using type = complex<double>;
+  using type = Complex<double>;
 };
 
 template <>
@@ -293,20 +274,11 @@ struct is_complex<Type::Code::COMPLEX128> : std::true_type {};
 template <typename T>
 struct is_complex_type : std::false_type {};
 
-template <>
-struct is_complex_type<complex<float>> : std::true_type {};
+template <typename T>
+struct is_complex_type<Complex<T>> : std::true_type {};
 
-template <>
-struct is_complex_type<complex<double>> : std::true_type {};
-
-// When the CUDA build is off, complex<T> is an alias to std::complex<T>
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-template <>
-struct is_complex_type<std::complex<float>> : std::true_type {};
-
-template <>
-struct is_complex_type<std::complex<double>> : std::true_type {};
-#endif
+template <typename T>
+struct is_complex_type<std::complex<T>> : std::true_type {};
 
 /** @} */
 

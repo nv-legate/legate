@@ -6,6 +6,8 @@
 
 #include <legate.h>
 
+#include <legate/redop/redop.h>
+
 #include <gtest/gtest.h>
 
 #include <numeric>
@@ -215,7 +217,9 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> read_access
   std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> cases = {
     {legate::Shape{1}, legate::uint32(), legate::Scalar{std::uint32_t{100}, legate::uint32()}},
     {legate::Shape{3, 3}, legate::bool_(), legate::Scalar{true}},
-    {legate::Shape{2, 1, 5}, legate::float16(), legate::Scalar{static_cast<__half>(FLOAT_VALUE)}},
+    {legate::Shape{2, 1, 5},
+     legate::float16(),
+     legate::Scalar{static_cast<legate::Half>(FLOAT_VALUE)}},
     {legate::Shape{3, 4, 1, 2}, legate::float32(), legate::Scalar{FLOAT_VALUE}},
   };
 
@@ -230,7 +234,7 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> read_access
 #if LEGATE_MAX_DIM >= 7
   cases.emplace_back(legate::Shape{1, 1, 1, 1, 1, 1, 1},
                      legate::complex128(),
-                     legate::Scalar{complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
+                     legate::Scalar{legate::Complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
 #endif
 
   return cases;
