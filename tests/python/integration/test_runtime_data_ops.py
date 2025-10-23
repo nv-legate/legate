@@ -326,7 +326,7 @@ class TestStoreOpsErrors:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.float64, (1, 1, 1))
         val = runtime.create_store(ty.float64, (1, 1))
-        msg = "Fill value should be a Future-back store"
+        msg = "Fill value should be a Future-backed scalar store"
         with pytest.raises(ValueError, match=msg):
             runtime.issue_fill(store, val)
 

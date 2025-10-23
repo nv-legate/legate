@@ -428,10 +428,11 @@ void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar valu
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->unbound()) {
-    throw TracedException<std::invalid_argument>{"Fill lhs must be a normal store"};
+    throw TracedException<std::invalid_argument>{"Fill lhs cannot be an unbound store"};
   }
   if (!value->has_scalar_storage()) {
-    throw TracedException<std::invalid_argument>{"Fill value should be a Future-back store"};
+    throw TracedException<std::invalid_argument>{
+      "Fill value should be a Future-backed scalar store"};
   }
 
   submit(make_internal_shared<Fill>(
@@ -441,7 +442,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
 {
   if (lhs->unbound()) {
-    throw TracedException<std::invalid_argument>{"Fill lhs must be a normal store"};
+    throw TracedException<std::invalid_argument>{"Fill lhs cannot be an unbound store"};
   }
 
   submit(make_internal_shared<Fill>(
@@ -455,7 +456,9 @@ void Runtime::tree_reduce(const Library& library,
                           std::int32_t radix)
 {
   if (store->dim() != 1) {
-    throw TracedException<std::runtime_error>{"Multi-dimensional stores are not supported"};
+    throw TracedException<std::runtime_error>{
+      fmt::format("Multi-dimensional stores are not supported and got input store of shape {}",
+                  *store->shape())};
   }
 
   auto&& [machine, _] = slice_machine_for_task_(*library.find_task(task_id));
@@ -629,7 +632,8 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
 
   if (type->variable_size()) {
     if (shape->ndim() != 1) {
-      throw TracedException<std::invalid_argument>{"List/string arrays can only be 1D"};
+      throw TracedException<std::invalid_argument>{
+        fmt::format("List/string arrays can only have 1D shapes, instead got shape {}", *shape)};
     }
 
     auto elem_type  = Type::Code::STRING == type->code
@@ -670,13 +674,20 @@ InternalSharedPtr<LogicalArray> Runtime::create_nullable_array(
   const InternalSharedPtr<LogicalStore>& store, const InternalSharedPtr<LogicalStore>& null_mask)
 {
   if (legate::Type::Code::BOOL != null_mask->type()->code) {
-    throw TracedException<std::invalid_argument>{"Null mask must be a boolean type"};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Null mask must be a boolean type, instead got {}", *(null_mask->type()))};
   }
   if ((*store->shape()) != (*null_mask->shape())) {
-    throw TracedException<std::invalid_argument>{"Store and null mask must have the same shape"};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Store and null mask must have the same shape, instead got store of shape {} and "
+                  "null mask of shape {}",
+                  *store->shape(),
+                  *null_mask->shape())};
   }
   if (store->transformed() || null_mask->transformed()) {
-    throw TracedException<std::invalid_argument>{"Store and null mask must be top-level stores"};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Store and null mask must be top-level stores, but input {} was not top-level",
+                  store->transformed() ? "store" : "null mask")};
   }
   return make_internal_shared<BaseLogicalArray>(store, null_mask);
 }
@@ -691,10 +702,17 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
       fmt::format("Expected a list type but got {}", *type)};
   }
   if (descriptor->unbound() || vardata->unbound()) {
-    throw TracedException<std::invalid_argument>("Sub-arrays should not be unbound");
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Descriptor and vardata should not be unbound, but input {} was unbound",
+                  descriptor->unbound() ? "descriptor" : "vardata")};
   }
   if (descriptor->dim() != 1 || vardata->dim() != 1) {
-    throw TracedException<std::invalid_argument>("Sub-arrays should be 1D");
+    auto&& fault_array = descriptor->dim() != 1 ? "descriptor" : "vardata";
+    auto&& fault_dim   = descriptor->dim() != 1 ? descriptor->dim() : vardata->dim();
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Descriptor and vardata should be 1D, but input {} has {} dimensions",
+                  fault_array,
+                  fault_dim)};
   }
   if (!is_rect_type(descriptor->type(), 1)) {
     throw TracedException<std::invalid_argument>{"Descriptor array does not have a 1D rect type"};
@@ -857,7 +875,10 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
 {
   validate_store_shape(shape, scalar.type());
   if (shape->volume() != 1) {
-    throw TracedException<std::invalid_argument>{"Scalar stores must have a shape of volume 1"};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Scalar stores must have a shape of volume 1, instead got shape {} of volume {}",
+                  *shape,
+                  shape->volume())};
   }
   auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
   auto storage = make_internal_shared<detail::Storage>(

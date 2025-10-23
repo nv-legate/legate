@@ -561,7 +561,7 @@ class TestCreate:
 class TestCreateErrors:
     def test_string_type_ndim(self) -> None:
         runtime = get_legate_runtime()
-        msg = "List/string arrays can only be 1D"
+        msg = "List/string arrays can only have 1D shapes"
         with pytest.raises(ValueError, match=msg):
             runtime.create_array(ty.string_type, (1, 1, 1))
 

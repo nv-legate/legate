@@ -324,7 +324,7 @@ TEST_F(FillTests, FillUnboundStoreWithScalar)
 
   ASSERT_THAT([&] { runtime->issue_fill(store, value); },
               ::testing::ThrowsMessage<std::invalid_argument>(
-                ::testing::HasSubstr("Fill lhs must be a normal store")));
+                ::testing::HasSubstr("Fill lhs cannot be an unbound store")));
 }
 
 TEST_F(FillTests, FillUnboundStoreWithStore)
@@ -335,7 +335,7 @@ TEST_F(FillTests, FillUnboundStoreWithStore)
 
   ASSERT_THAT([&] { runtime->issue_fill(store, value); },
               ::testing::ThrowsMessage<std::invalid_argument>(
-                ::testing::HasSubstr("Fill lhs must be a normal store")));
+                ::testing::HasSubstr("Fill lhs cannot be an unbound store")));
 }
 
 TEST_F(FillTests, FillStructArrayWithScalar)
