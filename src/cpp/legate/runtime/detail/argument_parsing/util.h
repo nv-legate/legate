@@ -14,14 +14,6 @@
 namespace legate::detail {
 
 /**
- * @brief Determine the number of ranks in use based on environment variables
- * OMPI_COMM_WORLD_SIZE, MV2_COMM_WORLD_SIZE, and SLURM_NTASKS.
- *
- * @return the number of ranks in use
- */
-[[nodiscard]] std::uint32_t num_ranks();
-
-/**
  * @return `true` when Legate is being invoked as a multi-node job, `false` otherwise.
  */
 [[nodiscard]] bool multi_node_job();

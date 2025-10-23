@@ -61,7 +61,6 @@
 #include <legate/utilities/detail/env_defaults.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/linearize.h>
-#include <legate/utilities/detail/string_utils.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/hash.h>
@@ -1731,7 +1730,6 @@ void handle_realm_default_args(bool need_network_init)
         "Legate was run on multiple nodes but was not built with networking support. Please "
         "install Legate again with networking support (e.g. configured \"--with-ucx\")"};
     }
-
     // We have to pass an explicit `-ll:networks` flag, otherwise Realm will silently continue with
     // single-node execution if network initialization fails. Therefore, even though Realm's default
     // priority list for network modules is good enough for us, we have to duplicate it here.
@@ -1740,25 +1738,6 @@ void handle_realm_default_args(bool need_network_init)
 #endif
 #ifdef REALM_USE_GASNETEX
     ss << " -ll:networks gasnetex";
-
-    // Need to set -gex:obcount appropriately, see
-    // https://github.com/StanfordLegion/realm/issues/239
-    const auto num_gpus = Runtime::get_runtime().local_machine().total_gpu_count();
-    auto ranks          = num_ranks();
-
-    if (ranks == 1) {
-      constexpr EnvironmentVariable<std::string> WORKER_PEERS_INFO{"WORKER_PEERS_INFO"};
-      const auto realm_ucp_bootstrap_mode = REALM_UCP_BOOTSTRAP_MODE.get();
-
-      if (realm_ucp_bootstrap_mode == "p2p") {
-        if (const auto workers_peer_info = WORKER_PEERS_INFO.get(); workers_peer_info.has_value()) {
-          ranks = string_split(*workers_peer_info).size();
-        }
-      }
-    }
-    const auto obcount = 4 * ranks + 2 * num_gpus;
-
-    ss << " -gex:obcount " << obcount;
 #endif
 #ifdef REALM_USE_GASNET1
     ss << " -ll:networks gasnet1";

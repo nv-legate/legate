@@ -38,9 +38,7 @@ cmake_install_args=(--install "${script_dir}/build")
 
 if [[ "${prefix}" != "" ]]; then
   cmake_configure_args+=("-DCMAKE_INSTALL_PREFIX=${prefix}")
-  # Export the same value as all 3
   export CMAKE_INSTALL_PREFIX="${prefix}"
-  export DESTDIR="${prefix}"
   export PREFIX="${prefix}"
 fi
 
