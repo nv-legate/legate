@@ -1,0 +1,4 @@
+legate::ProdReduction< Half >
+=============================
+
+.. doxygenclass:: legate::ProdReduction< Half >

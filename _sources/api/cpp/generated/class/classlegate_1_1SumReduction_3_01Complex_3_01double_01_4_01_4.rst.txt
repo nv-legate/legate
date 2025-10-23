@@ -1,0 +1,4 @@
+legate::SumReduction< Complex< double > >
+=========================================
+
+.. doxygenclass:: legate::SumReduction< Complex< double > >

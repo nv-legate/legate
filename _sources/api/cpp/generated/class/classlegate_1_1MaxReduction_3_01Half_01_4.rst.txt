@@ -1,0 +1,4 @@
+legate::MaxReduction< Half >
+============================
+
+.. doxygenclass:: legate::MaxReduction< Half >

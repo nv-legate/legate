@@ -1,0 +1,4 @@
+legate::ProdReduction< Complex< float > >
+=========================================
+
+.. doxygenclass:: legate::ProdReduction< Complex< float > >

@@ -1,0 +1,4 @@
+legate::SumReduction< Half >
+============================
+
+.. doxygenclass:: legate::SumReduction< Half >

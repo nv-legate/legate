@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::is_complex_type&lt; complex&lt; float &gt; &gt; &#8212; NVIDIA legate (25.11.00.dev26+g75cbe6eb8)</title>
+    <title>legate::SumReduction &#8212; NVIDIA legate (25.11.00.dev27+g45a432f7a)</title>
   
   
   
@@ -46,12 +46,12 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=e508faaa"></script>
+    <script src="../../../../_static/documentation_options.js?v=73c3f77a"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=4ea706d9"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/generated/struct/structlegate_1_1is__complex__type_3_01complex_3_01float_01_4_01_4';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/generated/class/classlegate_1_1SumReduction';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
@@ -62,8 +62,8 @@ SPDX-License-Identifier: Apache-2.0
     <link rel="icon" href="../../../../_static/favicon.png"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="legate::is_floating_point" href="structlegate_1_1is__floating__point.html" />
-    <link rel="prev" title="legate::is_complex_type&lt; complex&lt; double &gt; &gt;" href="structlegate_1_1is__complex__type_3_01complex_3_01double_01_4_01_4.html" />
+    <link rel="next" title="legate::SumReduction&lt; Complex&lt; Half &gt; &gt;" href="classlegate_1_1SumReduction_3_01Complex_3_01Half_01_4_01_4.html" />
+    <link rel="prev" title="legate::StructType" href="classlegate_1_1StructType.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev26+g75cbe6eb8) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev26+g75cbe6eb8) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev26+g75cbe6eb8)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev26+g75cbe6eb8) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev26+g75cbe6eb8) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev27+g45a432f7a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev26+g75cbe6eb8)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev27+g45a432f7a)</p>
   
 </a>
 
@@ -437,129 +437,145 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../group/group__util.html">util</a></li>
 </ul>
 </details></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../classlist.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlaunch__task.html">launch_task</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1AutoTask.html">legate::AutoTask</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1AutoTask_1_1Impl.html">legate::AutoTask::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1BadInternalWeakPtr.html">legate::BadInternalWeakPtr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Constraint.html">legate::Constraint</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1DefaultDelete.html">legate::DefaultDelete</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1EnableSharedFromThis.html">legate::EnableSharedFromThis</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ExternalAllocation.html">legate::ExternalAllocation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1FixedArrayType.html">legate::FixedArrayType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1InlineAllocation.html">legate::InlineAllocation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1InternalSharedPtr.html">legate::InternalSharedPtr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1InternalWeakPtr.html">legate::InternalWeakPtr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1LegateTask.html">legate::LegateTask</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Library.html">legate::Library</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ListLogicalArray.html">legate::ListLogicalArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ListPhysicalArray.html">legate::ListPhysicalArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ListType.html">legate::ListType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1LogicalArray.html">legate::LogicalArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1LogicalArray_1_1Impl.html">legate::LogicalArray::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1LogicalStore.html">legate::LogicalStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1LogicalStorePartition.html">legate::LogicalStorePartition</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1LogicalStorePartition_1_1Impl.html">legate::LogicalStorePartition::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1LogicalStore_1_1Impl.html">legate::LogicalStore::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ManualTask.html">legate::ManualTask</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ManualTask_1_1Impl.html">legate::ManualTask::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProxyArrayArgument.html">legate::ProxyArrayArgument</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProxyConstraint.html">legate::ProxyConstraint</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProxyInputArguments.html">legate::ProxyInputArguments</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProxyOutputArguments.html">legate::ProxyOutputArguments</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ProxyReductionArguments.html">legate::ProxyReductionArguments</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Runtime.html">legate::Runtime</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Scalar.html">legate::Scalar</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Scope.html">legate::Scope</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ScopeFail.html">legate::ScopeFail</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ScopeGuard.html">legate::ScopeGuard</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Scope_1_1Impl.html">legate::Scope::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ScopedAllocator.html">legate::ScopedAllocator</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ScopedAllocator_1_1Impl.html">legate::ScopedAllocator::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Shape.html">legate::Shape</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1SharedPtr.html">legate::SharedPtr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Slice.html">legate::Slice</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1StringLogicalArray.html">legate::StringLogicalArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1StringPhysicalArray.html">legate::StringPhysicalArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1StructLogicalArray.html">legate::StructLogicalArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1StructType.html">legate::StructType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1SymbolicExpr.html">legate::SymbolicExpr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskConfig.html">legate::TaskConfig</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskContext.html">legate::TaskContext</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskException.html">legate::TaskException</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskInfo.html">legate::TaskInfo</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskInfo_1_1AddVariantKey.html">legate::TaskInfo::AddVariantKey</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskLocalBuffer.html">legate::TaskLocalBuffer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskRegistrar.html">legate::TaskRegistrar</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskRegistrar_1_1Impl.html">legate::TaskRegistrar::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskRegistrar_1_1RecordTaskKey.html">legate::TaskRegistrar::RecordTaskKey</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1TaskSignature.html">legate::TaskSignature</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Type.html">legate::Type</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1Variable.html">legate::Variable</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1VariantInfo.html">legate::VariantInfo</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1VariantOptions.html">legate::VariantOptions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1VariantOptions_1_1WithCommunicatorsAccessKey.html">legate::VariantOptions::WithCommunicatorsAccessKey</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1comm_1_1Communicator.html">legate::comm::Communicator</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1comm_1_1coll_1_1Coll__Comm.html">legate::comm::coll::Coll_Comm</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1Trace.html">legate::experimental::Trace</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1Trace_1_1Impl.html">legate::experimental::Trace::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1stl_1_1affine__map.html">legate::experimental::stl::affine_map</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1stl_1_1affine__map_1_1mixin.html">legate::experimental::stl::affine_map::mixin</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1stl_1_1initialize__library.html">legate::experimental::stl::initialize_library</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1stl_1_1iterator.html">legate::experimental::stl::iterator</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1stl_1_1iterator_1_1pointer.html">legate::experimental::stl::iterator::pointer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1experimental_1_1stl_1_1logical__store.html">legate::experimental::stl::logical_store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError.html">legate::io::hdf5::InvalidDataSetError</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1io_1_1hdf5_1_1UnsupportedHDF5DataTypeError.html">legate::io::hdf5::UnsupportedHDF5DataTypeError</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1Array.html">legate::mapping::Array</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1DimOrdering.html">legate::mapping::DimOrdering</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1InstanceMappingPolicy.html">legate::mapping::InstanceMappingPolicy</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1Machine.html">legate::mapping::Machine</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1MachineQueryInterface.html">legate::mapping::MachineQueryInterface</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1Mapper.html">legate::mapping::Mapper</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1NodeRange.html">legate::mapping::NodeRange</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1ProcessorRange.html">legate::mapping::ProcessorRange</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1Store.html">legate::mapping::Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1StoreMapping.html">legate::mapping::StoreMapping</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1StoreMapping_1_1ReleaseKey.html">legate::mapping::StoreMapping::ReleaseKey</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1mapping_1_1Task.html">legate::mapping::Task</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ordered__set.html">legate::ordered_set</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1proj_1_1SymbolicExpr.html">legate::proj::SymbolicExpr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1timing_1_1Time.html">legate::timing::Time</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1timing_1_1Time_1_1Impl.html">legate::timing::Time::Impl</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1tuple.html">legate::tuple</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../class/classnvtx3_1_1scoped__range.html">nvtx3::scoped_range</a></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../classlist.html">Classes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="classlaunch__task.html">launch_task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1AndReduction.html">legate::AndReduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1AutoTask.html">legate::AutoTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1AutoTask_1_1Impl.html">legate::AutoTask::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1BadInternalWeakPtr.html">legate::BadInternalWeakPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Constraint.html">legate::Constraint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1DefaultDelete.html">legate::DefaultDelete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1EnableSharedFromThis.html">legate::EnableSharedFromThis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ExternalAllocation.html">legate::ExternalAllocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1FixedArrayType.html">legate::FixedArrayType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Half.html">legate::Half</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1InlineAllocation.html">legate::InlineAllocation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1InternalSharedPtr.html">legate::InternalSharedPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1InternalWeakPtr.html">legate::InternalWeakPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LegateTask.html">legate::LegateTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Library.html">legate::Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ListLogicalArray.html">legate::ListLogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ListPhysicalArray.html">legate::ListPhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ListType.html">legate::ListType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalArray.html">legate::LogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalArray_1_1Impl.html">legate::LogicalArray::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStore.html">legate::LogicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStorePartition.html">legate::LogicalStorePartition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStorePartition_1_1Impl.html">legate::LogicalStorePartition::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1LogicalStore_1_1Impl.html">legate::LogicalStore::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ManualTask.html">legate::ManualTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ManualTask_1_1Impl.html">legate::ManualTask::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1MaxReduction.html">legate::MaxReduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1MaxReduction_3_01Half_01_4.html">legate::MaxReduction&lt; Half &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1MinReduction.html">legate::MinReduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1MinReduction_3_01Half_01_4.html">legate::MinReduction&lt; Half &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1OrReduction.html">legate::OrReduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProcLocalStorage.html">legate::ProcLocalStorage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction.html">legate::ProdReduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction_3_01Complex_3_01Half_01_4_01_4.html">legate::ProdReduction&lt; Complex&lt; Half &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction_3_01Complex_3_01float_01_4_01_4.html">legate::ProdReduction&lt; Complex&lt; float &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProdReduction_3_01Half_01_4.html">legate::ProdReduction&lt; Half &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyArrayArgument.html">legate::ProxyArrayArgument</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyConstraint.html">legate::ProxyConstraint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyInputArguments.html">legate::ProxyInputArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyOutputArguments.html">legate::ProxyOutputArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ProxyReductionArguments.html">legate::ProxyReductionArguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Runtime.html">legate::Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Scalar.html">legate::Scalar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Scope.html">legate::Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopeFail.html">legate::ScopeFail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopeGuard.html">legate::ScopeGuard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Scope_1_1Impl.html">legate::Scope::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopedAllocator.html">legate::ScopedAllocator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ScopedAllocator_1_1Impl.html">legate::ScopedAllocator::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Shape.html">legate::Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SharedPtr.html">legate::SharedPtr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Slice.html">legate::Slice</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1StringLogicalArray.html">legate::StringLogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1StringPhysicalArray.html">legate::StringPhysicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1StructLogicalArray.html">legate::StructLogicalArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1StructType.html">legate::StructType</a></li>
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">legate::SumReduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SumReduction_3_01Complex_3_01Half_01_4_01_4.html">legate::SumReduction&lt; Complex&lt; Half &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SumReduction_3_01Complex_3_01double_01_4_01_4.html">legate::SumReduction&lt; Complex&lt; double &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SumReduction_3_01Complex_3_01float_01_4_01_4.html">legate::SumReduction&lt; Complex&lt; float &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SumReduction_3_01Half_01_4.html">legate::SumReduction&lt; Half &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1SymbolicExpr.html">legate::SymbolicExpr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskConfig.html">legate::TaskConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskContext.html">legate::TaskContext</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskException.html">legate::TaskException</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskInfo.html">legate::TaskInfo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskInfo_1_1AddVariantKey.html">legate::TaskInfo::AddVariantKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskLocalBuffer.html">legate::TaskLocalBuffer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskRegistrar.html">legate::TaskRegistrar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskRegistrar_1_1Impl.html">legate::TaskRegistrar::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskRegistrar_1_1RecordTaskKey.html">legate::TaskRegistrar::RecordTaskKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1TaskSignature.html">legate::TaskSignature</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Type.html">legate::Type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1Variable.html">legate::Variable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1VariantInfo.html">legate::VariantInfo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1VariantOptions.html">legate::VariantOptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1VariantOptions_1_1WithCommunicatorsAccessKey.html">legate::VariantOptions::WithCommunicatorsAccessKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1XORReduction.html">legate::XORReduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1comm_1_1Communicator.html">legate::comm::Communicator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1comm_1_1coll_1_1Coll__Comm.html">legate::comm::coll::Coll_Comm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1Trace.html">legate::experimental::Trace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1Trace_1_1Impl.html">legate::experimental::Trace::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1affine__map.html">legate::experimental::stl::affine_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1affine__map_1_1mixin.html">legate::experimental::stl::affine_map::mixin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1initialize__library.html">legate::experimental::stl::initialize_library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1iterator.html">legate::experimental::stl::iterator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1iterator_1_1pointer.html">legate::experimental::stl::iterator::pointer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1experimental_1_1stl_1_1logical__store.html">legate::experimental::stl::logical_store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError.html">legate::io::hdf5::InvalidDataSetError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1io_1_1hdf5_1_1UnsupportedHDF5DataTypeError.html">legate::io::hdf5::UnsupportedHDF5DataTypeError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Array.html">legate::mapping::Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1DimOrdering.html">legate::mapping::DimOrdering</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1InstanceMappingPolicy.html">legate::mapping::InstanceMappingPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Machine.html">legate::mapping::Machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1MachineQueryInterface.html">legate::mapping::MachineQueryInterface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Mapper.html">legate::mapping::Mapper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1NodeRange.html">legate::mapping::NodeRange</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1ProcessorRange.html">legate::mapping::ProcessorRange</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Store.html">legate::mapping::Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1StoreMapping.html">legate::mapping::StoreMapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1StoreMapping_1_1ReleaseKey.html">legate::mapping::StoreMapping::ReleaseKey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1mapping_1_1Task.html">legate::mapping::Task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ordered__set.html">legate::ordered_set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1proj_1_1SymbolicExpr.html">legate::proj::SymbolicExpr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1timing_1_1Time.html">legate::timing::Time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1timing_1_1Time_1_1Impl.html">legate::timing::Time::Impl</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1tuple.html">legate::tuple</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classnvtx3_1_1scoped__range.html">nvtx3::scoped_range</a></li>
 </ul>
 </details></li>
-<li class="toctree-l3 current active has-children"><a class="reference internal" href="../structlist.html">Structs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="structDLDataType.html">DLDataType</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structDLDevice.html">DLDevice</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structDLManagedTensor.html">DLManagedTensor</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structDLManagedTensorVersioned.html">DLManagedTensorVersioned</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structDLPackVersion.html">DLPackVersion</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structDLTensor.html">DLTensor</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1ResourceConfig.html">legate::ResourceConfig</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1experimental_1_1stl_1_1iteration__kind.html">legate::experimental::stl::iteration_kind</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1experimental_1_1stl_1_1reduction__kind.html">legate::experimental::stl::reduction_kind</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1has__hash__member.html">legate::has_hash_member</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1hasher.html">legate::hasher</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1hasher_3_01void_01_4.html">legate::hasher&lt; void &gt;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__complex.html">legate::is_complex</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX128_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX128 &gt;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX64_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX64 &gt;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__complex__type.html">legate::is_complex_type</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__complex__type_3_01complex_3_01double_01_4_01_4.html">legate::is_complex_type&lt; complex&lt; double &gt; &gt;</a></li>
-<li class="toctree-l4 current active"><a class="current reference internal" href="#">legate::is_complex_type&lt; complex&lt; float &gt; &gt;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__floating__point.html">legate::is_floating_point</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__floating__point_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_floating_point&lt; Type::Code::FLOAT16 &gt;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__integral.html">legate::is_integral</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__signed.html">legate::is_signed</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__signed_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_signed&lt; Type::Code::FLOAT16 &gt;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="structlegate_1_1is__unsigned.html">legate::is_unsigned</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../structlist.html">Structs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLDataType.html">DLDataType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLDevice.html">DLDevice</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLManagedTensor.html">DLManagedTensor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html">DLManagedTensorVersioned</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLPackVersion.html">DLPackVersion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structDLTensor.html">DLTensor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1ResourceConfig.html">legate::ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1experimental_1_1stl_1_1iteration__kind.html">legate::experimental::stl::iteration_kind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1experimental_1_1stl_1_1reduction__kind.html">legate::experimental::stl::reduction_kind</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1has__hash__member.html">legate::has_hash_member</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1hasher.html">legate::hasher</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1hasher_3_01void_01_4.html">legate::hasher&lt; void &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex.html">legate::is_complex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX128_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX128 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex_3_01Type_1_1Code_1_1COMPLEX64_01_4.html">legate::is_complex&lt; Type::Code::COMPLEX64 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex__type.html">legate::is_complex_type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__complex__type_3_01Complex_3_01T_01_4_01_4.html">legate::is_complex_type&lt; Complex&lt; T &gt; &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__floating__point.html">legate::is_floating_point</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__floating__point_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_floating_point&lt; Type::Code::FLOAT16 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__integral.html">legate::is_integral</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__signed.html">legate::is_signed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__signed_3_01Type_1_1Code_1_1FLOAT16_01_4.html">legate::is_signed&lt; Type::Code::FLOAT16 &gt;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../struct/structlegate_1_1is__unsigned.html">legate::is_unsigned</a></li>
 </ul>
 </details></li>
 </ul>
@@ -649,9 +665,9 @@ SPDX-License-Identifier: Apache-2.0
     <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">C++ API Reference</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../structlist.html" class="nav-link">Struct list</a></li>
+    <li class="breadcrumb-item"><a href="../classlist.html" class="nav-link">Class list</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate::is_complex_type&lt; complex&lt; float &gt; &gt;</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate::SumReduction</span></li>
   </ul>
 </nav>
 </div>
@@ -668,12 +684,14 @@ SPDX-License-Identifier: Apache-2.0
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="legate-is-complex-type-complex-float">
-<h1>legate::is_complex_type&lt; complex&lt; float &gt; &gt;<a class="headerlink" href="#legate-is-complex-type-complex-float" title="Link to this heading">#</a></h1>
-<dl class="cpp struct">
-<dt class="sig sig-object cpp" id="_CPPv4IEN6legate15is_complex_typeI7complexIfEEE">
-<span id="_CPPv3IEN6legate15is_complex_typeI7complexIfEEE"></span><span id="_CPPv2IEN6legate15is_complex_typeI7complexIfEEE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structlegate_1_1is__complex__type_3_01complex_3_01float_01_4_01_4"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">is_complex_type</span></span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">complex</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">float</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">false_type</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">true_type</span></span><br /></dt>
-<dd></dd></dl>
+  <section id="legate-sumreduction">
+<h1>legate::SumReduction<a class="headerlink" href="#legate-sumreduction" title="Link to this heading">#</a></h1>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6legate12SumReductionE">
+<span id="_CPPv3I0EN6legate12SumReductionE"></span><span id="_CPPv2I0EN6legate12SumReductionE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1SumReduction"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">SumReduction</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">Legion</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">SumReduction</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN6legate12SumReductionE" title="legate::SumReduction::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN6legate12SumReductionE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Reduction with addition. </p>
+<p>See <a class="reference external" href="http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L46-L285">Legion::SumReduction</a>. </p>
+</dd></dl>
 
 </section>
 
@@ -688,20 +706,20 @@ SPDX-License-Identifier: Apache-2.0
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="structlegate_1_1is__complex__type_3_01complex_3_01double_01_4_01_4.html"
+       href="classlegate_1_1StructType.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">legate::is_complex_type&lt; complex&lt; double &gt; &gt;</p>
+        <p class="prev-next-title">legate::StructType</p>
       </div>
     </a>
     <a class="right-next"
-       href="structlegate_1_1is__floating__point.html"
+       href="classlegate_1_1SumReduction_3_01Complex_3_01Half_01_4_01_4.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">legate::is_floating_point</p>
+        <p class="prev-next-title">legate::SumReduction&lt; Complex&lt; Half &gt; &gt;</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -726,7 +744,7 @@ SPDX-License-Identifier: Apache-2.0
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4IEN6legate15is_complex_typeI7complexIfEEE"><code class="docutils literal notranslate"><span class="pre">legate::is_complex_type&lt;</span> <span class="pre">complex&lt;</span> <span class="pre">float</span> <span class="pre">&gt;</span> <span class="pre">&gt;</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate12SumReductionE"><code class="docutils literal notranslate"><span class="pre">legate::SumReduction</span></code></a></li>
 </ul>
   </nav></div>
 

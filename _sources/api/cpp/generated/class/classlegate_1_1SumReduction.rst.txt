@@ -1,0 +1,4 @@
+legate::SumReduction
+====================
+
+.. doxygenclass:: legate::SumReduction

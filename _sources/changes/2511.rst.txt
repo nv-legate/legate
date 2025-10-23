@@ -18,6 +18,10 @@ Changes: 25.11
 
 .. rubric:: General
 
+- Legate no longer supports being used with Legion that has ``LEGION_REDOP_HALF`` and
+  ``LEGION_REDOP_COMPLEX`` enabled. These have been ported natively to Legate and
+  therefore conflict.
+
 C++
 ---
 
@@ -29,9 +33,17 @@ C++
 
 .. rubric:: Partitioning
 
+.. rubric:: Reduction Operators
+
+- Move definition of reduction operators from ``legate/utilities/tyepdefs.h`` to
+  ``legate/redop/redop.h``.
+
 .. rubric:: Tasks
 
 .. rubric:: Types
+
+- Add ``legate::Half`` to replace Legion's ``__half`` type.
+- Add ``legate::Complex`` to replace Legion's ``complex`` type.
 
 .. rubric:: Runtime
 

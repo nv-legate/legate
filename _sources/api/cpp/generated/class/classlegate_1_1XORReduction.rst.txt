@@ -1,0 +1,4 @@
+legate::XORReduction
+====================
+
+.. doxygenclass:: legate::XORReduction

@@ -136,7 +136,7 @@ Element types
 
 The permissible element types for ``logical_store`` objects are:
 
-   - ``__half``
+   - ``legate::Half``
    - ``float``
    - ``double``
    - ``std::int8_t``
@@ -148,8 +148,9 @@ The permissible element types for ``logical_store`` objects are:
    - ``std::uint32_t``
    - ``std::uint64_t``
    - ``bool``
-   - ``std::complex<float>``
-   - ``std::complex<double>``
+   - ``legate::Complex<legate::Half>``
+   - ``legate::Complex<float>``
+   - ``legate::Complex<double>``
    - ``std::string``
 
 

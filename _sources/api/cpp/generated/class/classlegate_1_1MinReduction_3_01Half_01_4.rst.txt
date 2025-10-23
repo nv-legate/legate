@@ -1,0 +1,4 @@
+legate::MinReduction< Half >
+============================
+
+.. doxygenclass:: legate::MinReduction< Half >

@@ -1,0 +1,4 @@
+legate::OrReduction
+===================
+
+.. doxygenclass:: legate::OrReduction

@@ -1,0 +1,4 @@
+legate::Half
+============
+
+.. doxygenclass:: legate::Half

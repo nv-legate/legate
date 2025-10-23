@@ -1,0 +1,4 @@
+legate::AndReduction
+====================
+
+.. doxygenclass:: legate::AndReduction

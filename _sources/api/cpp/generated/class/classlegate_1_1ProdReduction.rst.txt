@@ -1,0 +1,4 @@
+legate::ProdReduction
+=====================
+
+.. doxygenclass:: legate::ProdReduction
