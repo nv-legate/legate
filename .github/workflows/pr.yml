@@ -60,6 +60,7 @@ jobs:
     with:
       build-type: pull-request
   wheels-mac:
+    name: wheels-mac (optional)
     secrets: inherit
     uses: ./.github/workflows/wheels-mac.yml
     with:
