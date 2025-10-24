@@ -54,7 +54,14 @@ class TestProcessResult:
 
 @pytest.fixture
 def mock_popen(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch.object(m, "Popen")
+    mock_popen = mocker.patch.object(m, "Popen")
+
+    # Configure the mock to return a tuple from communicate()
+    # and configure the context manager return value
+    mock_proc = mock_popen.return_value.__enter__.return_value
+    mock_proc.communicate.return_value = ("", None)
+    mock_proc.returncode = 0
+    return mock_popen
 
 
 CMD = "legate script.py --cpus 4"

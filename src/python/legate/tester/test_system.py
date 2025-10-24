@@ -144,12 +144,11 @@ class TestSystem(System):
             errors="replace",
         ) as proc:
             try:
-                proc.wait(timeout=timeout)
-            except TimeoutExpired:
-                os.kill(proc.pid, SIGINT)
-
                 # wait on process to exit via communicate, don't use
                 # wait() due to potential deadlock with pipes
+                output, _ = proc.communicate(timeout=timeout)
+            except TimeoutExpired:
+                os.kill(proc.pid, SIGINT)
                 output, _ = proc.communicate()
 
                 assert timeout is not None  # mypy
@@ -171,5 +170,5 @@ class TestSystem(System):
                 start=start,
                 end=end,
                 returncode=proc.returncode,
-                output=proc.stdout.read(),
+                output=output,
             )
