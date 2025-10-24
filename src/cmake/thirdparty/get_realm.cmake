@@ -49,6 +49,7 @@ function(find_or_configure_realm)
                           "REALM_MAX_DIM ${Legion_MAX_DIM}"
                           "REALM_ENABLE_CUDA ${legate_USE_CUDA}"
                           "REALM_CUDA_DYNAMIC_LOAD ${Legion_CUDA_DYNAMIC_LOAD}"
+                          "REALM_ENABLE_CPPTRACE ON"
                           "REALM_ENABLE_NVTX ${REALM_ENABLE_NVTX}"
                           "REALM_ENABLE_HIP OFF"
                           "REALM_ENABLE_LLVM OFF"
