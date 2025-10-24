@@ -10,6 +10,8 @@
 #include <legate/operation/detail/execution_fence.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/detail/constraint.h>
+#include <legate/utilities/detail/dlpack/common.h>
+#include <legate/utilities/detail/dlpack/dlpack.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -69,6 +71,14 @@ class FormatTaskTarget : public DefaultFixture,
 class FormatStoreTarget : public DefaultFixture,
                           public ::testing::WithParamInterface<
                             std::tuple<legate::mapping::StoreTarget, std::string_view>> {};
+
+class FormatDLPackTypeCode
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<DLDataTypeCode, std::string_view>> {};
+
+class FormatDLPackDeviceType
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<DLDeviceType, std::string_view>> {};
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
@@ -149,6 +159,47 @@ INSTANTIATE_TEST_SUITE_P(
                     std::make_tuple(legate::mapping::StoreTarget::ZCMEM, "ZCMEM"),
                     std::make_tuple(legate::mapping::StoreTarget::SOCKETMEM, "SOCKETMEM")));
 
+INSTANTIATE_TEST_SUITE_P(
+  FormatterUnit,
+  FormatDLPackTypeCode,
+  ::testing::Values(std::make_tuple(DLDataTypeCode::kDLInt, "Int"),
+                    std::make_tuple(DLDataTypeCode::kDLUInt, "UInt"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat, "Float"),
+                    std::make_tuple(DLDataTypeCode::kDLOpaqueHandle, "OpaqueHandle"),
+                    std::make_tuple(DLDataTypeCode::kDLBfloat, "Bfloat"),
+                    std::make_tuple(DLDataTypeCode::kDLComplex, "Complex"),
+                    std::make_tuple(DLDataTypeCode::kDLBool, "Bool"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e3m4, "Float8_e3m4"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e4m3, "Float8_e4m3"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e4m3b11fnuz, "Float8_e4m3b11fnuz"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e4m3fn, "Float8_e4m3fn"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e4m3fnuz, "Float8_e4m3fnuz"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e5m2, "Float8_e5m2"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e5m2fnuz, "Float8_e5m2fnuz"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat8_e8m0fnu, "Float8_e8m0fnu"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat6_e2m3fn, "Float6_e2m3fn"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat6_e3m2fn, "Float6_e3m2fn"),
+                    std::make_tuple(DLDataTypeCode::kDLFloat4_e2m1fn, "Float4_e2m1fn")));
+
+INSTANTIATE_TEST_SUITE_P(FormatterUnit,
+                         FormatDLPackDeviceType,
+                         ::testing::Values(std::make_tuple(DLDeviceType::kDLCPU, "CPU"),
+                                           std::make_tuple(DLDeviceType::kDLCUDA, "CUDA"),
+                                           std::make_tuple(DLDeviceType::kDLCUDAHost, "CUDAHost"),
+                                           std::make_tuple(DLDeviceType::kDLOpenCL, "OpenCL"),
+                                           std::make_tuple(DLDeviceType::kDLVulkan, "Vulkan"),
+                                           std::make_tuple(DLDeviceType::kDLMetal, "Metal"),
+                                           std::make_tuple(DLDeviceType::kDLVPI, "VPI"),
+                                           std::make_tuple(DLDeviceType::kDLROCM, "ROCM"),
+                                           std::make_tuple(DLDeviceType::kDLROCMHost, "ROCMHost"),
+                                           std::make_tuple(DLDeviceType::kDLExtDev, "ExtDev"),
+                                           std::make_tuple(DLDeviceType::kDLCUDAManaged,
+                                                           "CUDAManaged"),
+                                           std::make_tuple(DLDeviceType::kDLOneAPI, "OneAPI"),
+                                           std::make_tuple(DLDeviceType::kDLWebGPU, "WebGPU"),
+                                           std::make_tuple(DLDeviceType::kDLHexagon, "Hexagon"),
+                                           std::make_tuple(DLDeviceType::kDLMAIA, "MAIA")));
+
 template <typename>
 using FormatID = ::testing::Test;
 
@@ -197,6 +248,46 @@ TEST_P(FormatStoreTarget, Basic)
 {
   auto& [format_obj, expect_result] = GetParam();
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
+TEST_P(FormatDLPackTypeCode, Basic)
+{
+  auto& [format_obj, expect_result] = GetParam();
+
+  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
+TEST_P(FormatDLPackDeviceType, Basic)
+{
+  auto& [format_obj, expect_result] = GetParam();
+
+  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
+TEST_F(FormatterUnit, InvalidDLPackTypeCode)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of DLDataTypeCode";
+  }
+
+  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto type_code = static_cast<DLDataTypeCode>(99);  // Invalid data type code
+  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+
+  ASSERT_EQ(fmt::format("{}", type_code), "Unknown DLPack data type");
+}
+
+TEST_F(FormatterUnit, InvalidDLPackDeviceType)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of DLDeviceType";
+  }
+
+  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto device_type = static_cast<DLDeviceType>(99);  // Invalid device type
+  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+
+  ASSERT_EQ(fmt::format("{}", device_type), "Unknown DLPack device type");
 }
 
 TEST_F(FormatterUnit, ExecutionFence)

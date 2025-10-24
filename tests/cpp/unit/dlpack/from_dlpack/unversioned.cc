@@ -39,6 +39,20 @@ TEST_F(FromDLPackUnVersionedUnit, BadDim)
       LEGATE_MAX_DIM))));
 }
 
+TEST_F(FromDLPackUnVersionedUnit, NULLPointer)
+{
+  DLManagedTensor** dlm_tensor_ptr_ptr = nullptr;
+  DLManagedTensor* dlm_tensor_ptr      = nullptr;
+
+  ASSERT_THAT([&] { std::ignore = legate::detail::from_dlpack(dlm_tensor_ptr_ptr); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("DLManagedTensor** argument must not be NULL")));
+
+  ASSERT_THAT([&] { std::ignore = legate::detail::from_dlpack(&dlm_tensor_ptr); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("DLManagedTensor* must not be NULL")));
+}
+
 namespace {
 
 template <typename T>
@@ -101,6 +115,36 @@ template <typename T, std::size_t DIM = 3>
   return uniq.release();
 }
 
+template <typename T, std::size_t DIM = 3>
+void check_store(const legate::LogicalStore& store, const DLTensor& tensor)
+{
+  ASSERT_EQ(store.dim(), tensor.ndim);
+  ASSERT_EQ(store.type(), legate::primitive_type(legate::type_code_of_v<T>));
+  ASSERT_EQ(store.type().size(), tensor.dtype.bits / CHAR_BIT);
+
+  const auto shape = store.shape();
+  auto&& extents   = shape.extents();
+
+  ASSERT_EQ(shape.volume(), 1 << DIM);
+  ASSERT_THAT(extents.data(), ::testing::ElementsAreArray(tensor.shape, tensor.ndim));
+
+  {
+    const auto phys = store.get_physical_store();
+    const auto acc  = phys.template span_read_accessor<T, DIM>();
+    T value         = T{1};
+
+    static_assert(DIM == 3, "Need to fix up below check for DIM != 3");
+    for (legate::coord_t k = 0; k < acc.extent(2); ++k) {
+      for (legate::coord_t j = 0; j < acc.extent(1); ++j) {
+        for (legate::coord_t i = 0; i < acc.extent(0); ++i) {
+          ASSERT_EQ(acc(i, j, k), value) << "i " << i << ", j " << j << ", k " << k;
+          value += T{1};
+        }
+      }
+    }
+  }
+}
+
 }  // namespace
 
 TEST_F(FromDLPackUnVersionedUnit, BadLanes)
@@ -137,6 +181,26 @@ TYPED_TEST(FromDLPackUnVersionedUnitBadTypeSize, Basic)
   ASSERT_THAT([&] { std::ignore = legate::detail::from_dlpack(&dlm_tensor); },
               ::testing::ThrowsMessage<std::out_of_range>(::testing::ContainsRegex(
                 fmt::format("Number of bits {} for .*type is not supported", BAD_BITS))));
+}
+
+class FromDLPackUnVersionedUnitUnsupportedTyped : public FromDLPackUnVersionedUnit {};
+
+class UnVersionedUnsupportedInput : public FromDLPackUnVersionedUnit,
+                                    public ::testing::WithParamInterface<DLDataTypeCode> {};
+
+INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitUnsupportedTyped,
+                         UnVersionedUnsupportedInput,
+                         ::testing::ValuesIn(dlpack_common::GetUnsupportedDataTypeCodes()));
+
+TEST_P(UnVersionedUnsupportedInput, Basic)
+{
+  auto* dlm_tensor = make_tensor<float>();
+
+  dlm_tensor->dl_tensor.dtype.code = GetParam();
+
+  ASSERT_THAT([&] { std::ignore = legate::detail::from_dlpack(&dlm_tensor); },
+              ::testing::ThrowsMessage<std::invalid_argument>(::testing::ContainsRegex(
+                "Conversion of DLPack type code .* to Legate not yet supported")));
 }
 
 TEST_F(FromDLPackUnVersionedUnit, BadTypeSizeBool)
@@ -184,13 +248,12 @@ template <typename T>
 class FromDLPackUnVersionedUnitTyped : public FromDLPackUnVersionedUnit {};
 
 TYPED_TEST_SUITE(FromDLPackUnVersionedUnitTyped,
-                 dlpack_common::SignedIntTypes,
+                 dlpack_common::AllTypes,
                  dlpack_common::NameGenerator);
 
 TYPED_TEST(FromDLPackUnVersionedUnitTyped, Basic)
 {
-  constexpr auto DIM       = 3;
-  constexpr auto TYPE_CODE = legate::type_code_of_v<TypeParam>;
+  constexpr auto DIM = 3;
 
   auto* dlm_tensor = make_tensor<TypeParam, DIM>();
   auto store       = [&] {
@@ -200,8 +263,25 @@ TYPED_TEST(FromDLPackUnVersionedUnitTyped, Basic)
 
   const auto& tensor = dlm_tensor->dl_tensor;
 
+  check_store<TypeParam, DIM>(store, tensor);
+}
+
+TEST_F(FromDLPackUnVersionedUnit, OpaqueDataType)
+{
+  constexpr auto DIM = 3;
+  auto* dlm_tensor   = make_tensor<std::int8_t, DIM>();
+
+  dlm_tensor->dl_tensor.dtype.code = DLDataTypeCode::kDLOpaqueHandle;
+
+  auto store = [&] {
+    auto* ptr = dlm_tensor;
+    return legate::detail::from_dlpack(&ptr);
+  }();
+
+  const auto& tensor = dlm_tensor->dl_tensor;
+
   ASSERT_EQ(store.dim(), tensor.ndim);
-  ASSERT_EQ(store.type(), legate::primitive_type(TYPE_CODE));
+  ASSERT_EQ(store.type().code(), legate::Type::Code::BINARY);
   ASSERT_EQ(store.type().size(), tensor.dtype.bits / CHAR_BIT);
 
   const auto shape = store.shape();
@@ -209,21 +289,148 @@ TYPED_TEST(FromDLPackUnVersionedUnitTyped, Basic)
 
   ASSERT_EQ(shape.volume(), 1 << DIM);
   ASSERT_THAT(extents.data(), ::testing::ElementsAreArray(tensor.shape, tensor.ndim));
+}
 
-  {
-    const auto phys = store.get_physical_store();
-    const auto acc  = phys.template span_read_accessor<TypeParam, DIM>();
-    TypeParam value = 1;
+class FromDLPackUnVersionedUnitDeviceType : public FromDLPackUnVersionedUnit {};
 
-    for (legate::coord_t k = 0; k < acc.extent(2); ++k) {
-      for (legate::coord_t j = 0; j < acc.extent(1); ++j) {
-        for (legate::coord_t i = 0; i < acc.extent(0); ++i) {
-          ASSERT_EQ(acc(i, j, k), value) << "i " << i << ", j " << j << ", k " << k;
-          ++value;
-        }
-      }
-    }
+class FromDLPackUnVersionedCPUInput : public FromDLPackUnVersionedUnit,
+                                      public ::testing::WithParamInterface<DLDeviceType> {};
+
+class FromDLPackUnVersionedGPUInput : public FromDLPackUnVersionedUnit,
+                                      public ::testing::WithParamInterface<DLDeviceType> {};
+
+class FromDLPackUnVersionedUnsupportedDeviceInput
+  : public FromDLPackUnVersionedUnit,
+    public ::testing::WithParamInterface<DLDeviceType> {};
+
+INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitDeviceType,
+                         FromDLPackUnVersionedCPUInput,
+                         ::testing::ValuesIn(dlpack_common::GetCPUDeviceTypes()));
+
+INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitDeviceType,
+                         FromDLPackUnVersionedGPUInput,
+                         ::testing::ValuesIn(dlpack_common::GetGPUDeviceTypes()));
+
+INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitDeviceType,
+                         FromDLPackUnVersionedUnsupportedDeviceInput,
+                         ::testing::ValuesIn(dlpack_common::GetUnsupportedDeviceTypes()));
+
+TEST_P(FromDLPackUnVersionedCPUInput, Basic)
+{
+  constexpr auto DIM = 3;
+  using data_type    = std::int8_t;
+
+  auto* dlm_tensor = make_tensor<data_type, DIM>();
+
+  dlm_tensor->dl_tensor.device.device_type = GetParam();
+
+  auto store = [&] {
+    auto* ptr = dlm_tensor;
+    return legate::detail::from_dlpack(&ptr);
+  }();
+
+  const auto& tensor = dlm_tensor->dl_tensor;
+
+  check_store<data_type, DIM>(store, tensor);
+}
+
+TEST_P(FromDLPackUnVersionedGPUInput, Basic)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
+
+  if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
+    GTEST_SKIP() << "Skipping test due to no GPU available";
   }
+
+  constexpr auto DIM = 3;
+  using data_type    = std::int8_t;
+
+  auto* dlm_tensor = make_tensor<data_type, DIM>();
+
+  dlm_tensor->dl_tensor.device.device_type = GetParam();
+
+  auto store = [&] {
+    auto* ptr = dlm_tensor;
+    return legate::detail::from_dlpack(&ptr);
+  }();
+
+  const auto& tensor = dlm_tensor->dl_tensor;
+
+  check_store<data_type, DIM>(store, tensor);
+}
+
+TEST_P(FromDLPackUnVersionedUnsupportedDeviceInput, Basic)
+{
+  auto* dlm_tensor = make_tensor<std::int8_t>();
+
+  dlm_tensor->dl_tensor.device.device_type = GetParam();
+
+  ASSERT_THAT([&] { std::ignore = legate::detail::from_dlpack(&dlm_tensor); },
+              ::testing::ThrowsMessage<std::invalid_argument>(::testing::ContainsRegex(
+                "Conversion from DLPack device type .* to Legate store is not yet supported.")));
+}
+
+using FromDLPackUnVersionedDeathTest = FromDLPackUnVersionedUnit;
+
+TEST_F(FromDLPackUnVersionedDeathTest, InvalidDataType)
+{
+  // Skip this test if LEGATE_USE_DEBUG is not defined
+  if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    GTEST_SKIP() << "Skipping test due to verifying logic in LEGATE_ASSERT()";
+  }
+
+  auto* dlm_tensor     = make_tensor<std::int8_t>();
+  auto uniq_dlm_tensor = std::unique_ptr<DLManagedTensor, std::function<void(void*)>>{
+    dlm_tensor, [tptr = dlm_tensor](void*) {
+      if (tptr->deleter) {
+        tptr->deleter(tptr);
+      }
+    }};
+
+  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  uniq_dlm_tensor->dl_tensor.dtype.code =
+    static_cast<DLDataTypeCode>(99);  // Invalid data type code
+  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+  auto* raw_ptr = uniq_dlm_tensor.get();
+  ASSERT_DEATH(static_cast<void>(legate::detail::from_dlpack(&raw_ptr)),
+               ::testing::AnyOf(
+                 // Normal exception raised
+                 ::testing::HasSubstr("Unhandled DLPack type code"),
+                 // Error from UBSAN, if we are running with it
+                 ::testing::HasSubstr("runtime error: load of value 99")));
+}
+
+TEST_F(FromDLPackUnVersionedDeathTest, InvalidDeviceType)
+{
+  // Skip this test if LEGATE_USE_DEBUG is not defined
+  if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    GTEST_SKIP() << "Skipping test due to verifying logic in LEGATE_ASSERT()";
+  }
+
+  auto* dlm_tensor     = make_tensor<std::int8_t>();
+  auto uniq_dlm_tensor = std::unique_ptr<DLManagedTensor, std::function<void(void*)>>{
+    dlm_tensor, [tptr = dlm_tensor](void*) {
+      if (tptr->deleter) {
+        tptr->deleter(tptr);
+      }
+    }};
+
+  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  uniq_dlm_tensor->dl_tensor.device.device_type =
+    static_cast<DLDeviceType>(99);  // Invalid device type
+  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+  auto* raw_ptr = uniq_dlm_tensor.get();
+  ASSERT_DEATH(static_cast<void>(legate::detail::from_dlpack(&raw_ptr)),
+               ::testing::AnyOf(
+                 // Normal exception raised
+                 ::testing::HasSubstr("Unhandled device type"),
+                 // Error from UBSAN, if we are running with it
+                 ::testing::HasSubstr("runtime error: load of value 99")));
 }
 
 }  // namespace test_from_dlpack_unversioned

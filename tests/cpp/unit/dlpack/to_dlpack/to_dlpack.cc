@@ -46,9 +46,9 @@ void check_basic(
   ASSERT_EQ(dlpack->deleter, dlpack.get_deleter());
 }
 
-void check_device(const DLDevice& device)
+void check_device(const DLDevice& device, const DLDeviceType& expected_device_type)
 {
-  ASSERT_EQ(device.device_type, DLDeviceType::kDLCPU);
+  ASSERT_EQ(device.device_type, expected_device_type);
   ASSERT_EQ(device.device_id, 0);
 }
 
@@ -123,7 +123,7 @@ TYPED_TEST(ToDLPackUnitTyped, Basic)
     std::fill(span.begin(), span.end(), SET_VALUE);
   }
 
-  check_device(tensor.device);
+  check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCPU);
   check_dtype<TypeParam>(tensor.dtype, ty);
   check_shape(tensor, shape);
   check_strides(tensor);
@@ -168,7 +168,7 @@ TYPED_TEST(ToDLPackUnitTyped, MustCopy)
     std::fill(span.begin(), span.end(), SET_VALUE);
   }
 
-  check_device(tensor.device);
+  check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCPU);
   check_dtype<TypeParam>(tensor.dtype, ty);
   check_shape(tensor, shape);
   check_strides(tensor);
@@ -181,6 +181,81 @@ TYPED_TEST(ToDLPackUnitTyped, MustCopy)
       ASSERT_EQ(acc(i, j), FILL_VALUE);
     }
   }
+}
+
+TYPED_TEST(ToDLPackUnitTyped, CopyZCMEM)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
+
+  if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
+    GTEST_SKIP() << "Skipping test due to no GPU available";
+  }
+
+  const auto FILL_VALUE  = TypeParam{7};
+  const auto shape       = legate::Shape{2, 2};
+  const auto [store, ty] = make_store<TypeParam>(shape, FILL_VALUE);
+  const auto phys        = store.get_physical_store(legate::mapping::StoreTarget::ZCMEM);
+  const auto dlpack      = phys.to_dlpack(/* copy */ true);
+
+  check_basic(dlpack);
+
+  ASSERT_EQ(dlpack->flags, DLPACK_FLAG_BITMASK_IS_COPIED);
+
+  const auto& tensor = dlpack->dl_tensor;
+
+  check_tensor_basic(tensor, store);
+
+  {
+    auto* const data = static_cast<TypeParam*>(tensor.data);
+    const auto alloc = phys.get_inline_allocation();
+
+    // We did copy, so the pointer from the inline allocation should NOT be the same as the one
+    // we get from the dlpack export.
+    ASSERT_NE(alloc.ptr, data);
+  }
+
+  check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCUDAHost);
+  check_dtype<TypeParam>(tensor.dtype, ty);
+  check_shape(tensor, shape);
+  check_strides(tensor);
+}
+
+TYPED_TEST(ToDLPackUnitTyped, CopyFBMEM)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
+  if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
+    GTEST_SKIP() << "Skipping test due to no GPU available";
+  }
+
+  const auto FILL_VALUE  = TypeParam{7};
+  const auto shape       = legate::Shape{2, 2};
+  const auto [store, ty] = make_store<TypeParam>(shape, FILL_VALUE);
+  const auto phys        = store.get_physical_store(legate::mapping::StoreTarget::FBMEM);
+  const auto dlpack      = phys.to_dlpack(/* copy */ true);
+
+  check_basic(dlpack);
+
+  ASSERT_EQ(dlpack->flags, DLPACK_FLAG_BITMASK_IS_COPIED);
+
+  const auto& tensor = dlpack->dl_tensor;
+
+  check_tensor_basic(tensor, store);
+
+  {
+    auto* const data = static_cast<TypeParam*>(tensor.data);
+    const auto alloc = phys.get_inline_allocation();
+
+    // We did copy, so the pointer from the inline allocation should NOT be the same as the one
+    // we get from the dlpack export.
+    ASSERT_NE(alloc.ptr, data);
+  }
+
+  check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCUDA);
+  check_dtype<TypeParam>(tensor.dtype, ty);
+  check_shape(tensor, shape);
+  check_strides(tensor);
 }
 
 TYPED_TEST(ToDLPackUnitTyped, NeverCopy)
@@ -213,7 +288,7 @@ TYPED_TEST(ToDLPackUnitTyped, NeverCopy)
     std::fill(span.begin(), span.end(), SET_VALUE);
   }
 
-  check_device(tensor.device);
+  check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCPU);
   check_dtype<TypeParam>(tensor.dtype, ty);
   check_shape(tensor, shape);
   check_strides(tensor);
@@ -254,6 +329,44 @@ TEST_P(ToDLPackUnitVersion, Supported)
 
   ASSERT_EQ(dlpack->version.major, expected.major);
   ASSERT_EQ(dlpack->version.minor, expected.minor);
+}
+
+class ToDLPackUnitUnsupportedLegateTypeInput
+  : public ToDLPackUnit,
+    public ::testing::WithParamInterface<legate::Type::Code> {};
+
+INSTANTIATE_TEST_SUITE_P(ToDLPackUnitLegateType,
+                         ToDLPackUnitUnsupportedLegateTypeInput,
+                         ::testing::ValuesIn(dlpack_common::GetUnsupportedLegateTypes()));
+
+TEST_P(ToDLPackUnitUnsupportedLegateTypeInput, Unsupported)
+{
+  auto create_store = [&](legate::Type::Code code) {
+    auto* const runtime = legate::Runtime::get_runtime();
+
+    const auto ty = [&]() -> legate::Type {
+      if (code == legate::Type::Code::FIXED_ARRAY) {
+        return legate::fixed_array_type(legate::int64(), 2);
+      }
+      if (code == legate::Type::Code::STRUCT) {
+        return legate::struct_type({legate::int64(), legate::int64()});
+      }
+      return legate::null_type();
+    }();
+
+    return runtime->create_store(legate::Shape{0}, ty);
+  };
+
+  auto store      = create_store(GetParam());
+  const auto phys = store.get_physical_store();
+
+  ASSERT_THAT(
+    [&] {
+      std::ignore = legate::detail::to_dlpack(
+        phys, /* copy */ std::nullopt, /* stream */ std::nullopt, /* max_version */ std::nullopt);
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(::testing::ContainsRegex(
+      fmt::format("Conversion of .* type to DLPack is not yet supported"))));
 }
 
 TEST_F(ToDLPackUnit, BadVersion)
@@ -297,6 +410,73 @@ TEST_F(ToDLPackUnit, BadDevice)
                   BAD_DEVICE.device_id,
                   DLDeviceType::kDLCPU,
                   0))));
+}
+
+TEST_F(ToDLPackUnit, BadTypeSize)
+{
+  // Test the case where the type size exceeds the maximum value of std::uint8_t
+  constexpr auto BINARY_SIZE =
+    static_cast<std::size_t>(std::numeric_limits<std::uint8_t>::max() + 1);
+  auto binary_ty = legate::binary_type(BINARY_SIZE);
+
+  auto runtime    = legate::Runtime::get_runtime();
+  auto store      = runtime->create_store(legate::Shape{1}, binary_ty);
+  const auto phys = store.get_physical_store();
+
+  ASSERT_THAT(
+    [&] {
+      std::ignore = legate::detail::to_dlpack(phys,
+                                              /* copy */ std::nullopt,
+                                              /* stream */ std::nullopt,
+                                              /* max_version */ std::nullopt,
+                                              /* device */ DLDevice{DLDeviceType::kDLCPU, 0});
+    },
+    ::testing::ThrowsMessage<std::domain_error>(
+      ::testing::ContainsRegex("Cannot convert Legate type .* to DLPack type. "
+                               "The number of bits required to represent an element of the type .* "
+                               "> max size of DLPack bits datatype .*")));
+}
+
+TEST_F(ToDLPackUnit, BinaryTypeNeverCopy)
+{
+  auto runtime     = legate::Runtime::get_runtime();
+  const auto shape = legate::Shape{2, 2};
+  auto store       = runtime->create_store(shape, legate::binary_type(8));
+  const auto phys  = store.get_physical_store();
+
+  const auto dlpack = phys.to_dlpack();
+
+  check_basic(dlpack);
+  ASSERT_EQ(dlpack->flags, 0);
+
+  const auto& tensor = dlpack->dl_tensor;
+
+  check_tensor_basic(tensor, store);
+  check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCPU);
+  ASSERT_EQ(tensor.dtype.code, DLDataTypeCode::kDLOpaqueHandle);
+  check_shape(tensor, shape);
+  check_strides(tensor);
+}
+
+TEST_F(ToDLPackUnit, BinaryTypeMustCopy)
+{
+  auto runtime     = legate::Runtime::get_runtime();
+  const auto shape = legate::Shape{2, 2};
+  auto store       = runtime->create_store(shape, legate::binary_type(8));
+  const auto phys  = store.get_physical_store();
+
+  const auto dlpack = phys.to_dlpack(/* copy */ true);
+
+  check_basic(dlpack);
+  ASSERT_EQ(dlpack->flags, DLPACK_FLAG_BITMASK_IS_COPIED);
+
+  const auto& tensor = dlpack->dl_tensor;
+
+  check_tensor_basic(tensor, store);
+  check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCPU);
+  ASSERT_EQ(tensor.dtype.code, DLDataTypeCode::kDLOpaqueHandle);
+  check_shape(tensor, shape);
+  check_strides(tensor);
 }
 
 TEST_F(ToDLPackUnit, Release)

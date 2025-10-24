@@ -77,7 +77,7 @@ format_context::iterator formatter<DLDataTypeCode>::format(DLDataTypeCode code,
 
 #undef LEGATE_DATA_TYPE_CODE_CASE
 
-  return formatter<string_view>::format("Unknown DLPack data type ", ctx);
+  return formatter<string_view>::format("Unknown DLPack data type", ctx);
 }
 
 }  // namespace fmt

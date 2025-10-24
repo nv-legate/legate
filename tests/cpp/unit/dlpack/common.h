@@ -27,12 +27,60 @@ using AllTypes = ::testing::Types<std::int8_t,
                                   std::uint16_t,
                                   std::uint32_t,
                                   std::uint64_t,
+                                  __half,
                                   float,
                                   double,
                                   legate::Complex<float>,
                                   legate::Complex<double>>;
 
 using SignedIntTypes = ::testing::Types<std::int8_t, std::int16_t, std::int32_t, std::int64_t>;
+
+inline constexpr std::array<DLDataTypeCode, 11> GetUnsupportedDataTypeCodes()
+{
+  return std::array<DLDataTypeCode, 11>{DLDataTypeCode::kDLFloat8_e3m4,
+                                        DLDataTypeCode::kDLFloat8_e4m3,
+                                        DLDataTypeCode::kDLFloat8_e4m3b11fnuz,
+                                        DLDataTypeCode::kDLFloat8_e4m3fn,
+                                        DLDataTypeCode::kDLFloat8_e4m3fnuz,
+                                        DLDataTypeCode::kDLFloat8_e5m2,
+                                        DLDataTypeCode::kDLFloat8_e5m2fnuz,
+                                        DLDataTypeCode::kDLFloat8_e8m0fnu,
+                                        DLDataTypeCode::kDLFloat6_e2m3fn,
+                                        DLDataTypeCode::kDLFloat6_e3m2fn,
+                                        DLDataTypeCode::kDLFloat4_e2m1fn};
+}
+
+inline constexpr std::array<DLDeviceType, 1> GetCPUDeviceTypes()
+{
+  return std::array<DLDeviceType, 1>{DLDeviceType::kDLCPU};
+}
+
+inline constexpr std::array<DLDeviceType, 3> GetGPUDeviceTypes()
+{
+  return std::array<DLDeviceType, 3>{
+    DLDeviceType::kDLCUDA, DLDeviceType::kDLCUDAHost, DLDeviceType::kDLCUDAManaged};
+}
+
+inline constexpr std::array<DLDeviceType, 11> GetUnsupportedDeviceTypes()
+{
+  return std::array<DLDeviceType, 11>{DLDeviceType::kDLOpenCL,
+                                      DLDeviceType::kDLVulkan,
+                                      DLDeviceType::kDLMetal,
+                                      DLDeviceType::kDLVPI,
+                                      DLDeviceType::kDLROCM,
+                                      DLDeviceType::kDLROCMHost,
+                                      DLDeviceType::kDLExtDev,
+                                      DLDeviceType::kDLOneAPI,
+                                      DLDeviceType::kDLWebGPU,
+                                      DLDeviceType::kDLHexagon,
+                                      DLDeviceType::kDLMAIA};
+}
+
+inline constexpr std::array<legate::Type::Code, 3> GetUnsupportedLegateTypes()
+{
+  return std::array<legate::Type::Code, 3>{
+    legate::Type::Code::NIL, legate::Type::Code::FIXED_ARRAY, legate::Type::Code::STRUCT};
+}
 
 template <typename T>
 [[nodiscard]] DLDataTypeCode to_dlpack_code()
@@ -43,6 +91,8 @@ template <typename T>
     return std::is_signed_v<T> ? DLDataTypeCode::kDLInt : DLDataTypeCode::kDLUInt;
   } else if constexpr (std::is_floating_point_v<T>) {
     return DLDataTypeCode::kDLFloat;
+  } else if constexpr (legate::type_code_of_v<T> == legate::Type::Code::FLOAT16) {
+    return DLDataTypeCode::kDLBfloat;
   } else if constexpr (legate::is_complex_type<T>::value) {
     return DLDataTypeCode::kDLComplex;
   } else {
@@ -97,6 +147,8 @@ class NameGenerator {
           return "complex(float)";
         } else if constexpr (std::is_same_v<T, legate::Complex<double>>) {
           return "complex(double)";
+        } else if constexpr (legate::type_code_of_v<T> == legate::Type::Code::FLOAT16) {
+          return "float16";
         } else {
           static_assert(sizeof(T*) != sizeof(T*));  // NOLINT
         }
