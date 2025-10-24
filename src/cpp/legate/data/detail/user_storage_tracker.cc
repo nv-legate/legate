@@ -6,6 +6,8 @@
 
 #include <legate/data/detail/user_storage_tracker.h>
 
+#include <legate/utilities/abort.h>
+
 namespace legate::detail {
 
 UserStorageTracker::UserStorageTracker(const InternalSharedPtr<LogicalStore>& store)
@@ -19,7 +21,11 @@ UserStorageTracker::UserStorageTracker(const InternalSharedPtr<LogicalStore>& st
 UserStorageTracker::~UserStorageTracker() noexcept
 {
   if (storage_.user_ref_count() == 1) {
-    storage_->free_early();
+    try {
+      storage_->free_early();
+    } catch (const std::exception& e) {
+      LEGATE_ABORT(e.what());
+    }
   }
 }
 

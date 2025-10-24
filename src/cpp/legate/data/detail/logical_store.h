@@ -96,7 +96,7 @@ class Storage {
     const InternalSharedPtr<const Storage>& self) const;
   [[nodiscard]] InternalSharedPtr<Storage> get_root(const InternalSharedPtr<Storage>& self);
 
-  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const noexcept;
+  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
   [[nodiscard]] Legion::Future get_future() const;
   [[nodiscard]] Legion::FutureMap get_future_map() const;
   [[nodiscard]] std::variant<Legion::Future, Legion::FutureMap> get_future_or_future_map(
@@ -109,7 +109,7 @@ class Storage {
   [[nodiscard]] RegionField map(legate::mapping::StoreTarget target);
   void unmap();
   void allow_out_of_order_destruction();
-  void free_early() noexcept;
+  void free_early();
 
   [[nodiscard]] Restrictions compute_restrictions() const;
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(

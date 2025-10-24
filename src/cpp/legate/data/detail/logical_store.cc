@@ -114,7 +114,11 @@ Storage::Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
 // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 Storage::~Storage()
 {
-  if (!has_started()) {
+  if (has_started()) {
+    return;
+  }
+
+  try {
     std::visit(
       Overload{
         [&](std::optional<Legion::Future>& future) {
@@ -135,6 +139,8 @@ Storage::~Storage()
         },
       },
       storage_data_);
+  } catch (const std::exception& e) {
+    LEGATE_ABORT(e.what());
   }
 }
 
@@ -311,7 +317,7 @@ InternalSharedPtr<Storage> Storage::get_root(const InternalSharedPtr<Storage>& s
   return parent_.has_value() ? (*parent_)->get_root(*parent_) : self;
 }
 
-const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field() const noexcept
+const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field() const
 {
   auto&& rf = region_field_();
 
@@ -430,7 +436,9 @@ void Storage::set_future_map(Legion::FutureMap future_map, std::size_t scalar_of
              storage_data_);
 }
 
-RegionField Storage::map(legate::mapping::StoreTarget target)
+// Mapping is a logically non-const operation
+RegionField Storage::map(  // NOLINT(readability-make-member-function-const)
+  legate::mapping::StoreTarget target)
 {
   LEGATE_ASSERT(Kind::REGION_FIELD == kind());
   auto&& region_field = get_region_field();
@@ -440,7 +448,8 @@ RegionField Storage::map(legate::mapping::StoreTarget target)
   return mapped;
 }
 
-void Storage::unmap()
+// Unmapping is a logically non-const operation
+void Storage::unmap()  // NOLINT(readability-make-member-function-const)
 {
   LEGATE_ASSERT(Kind::REGION_FIELD == kind());
   get_region_field()->unmap();
@@ -465,7 +474,7 @@ void Storage::allow_out_of_order_destruction()
   }
 }
 
-void Storage::free_early() noexcept
+void Storage::free_early()
 {
   std::visit(Overload{
                [&](std::optional<InternalSharedPtr<LogicalRegionField>>&) {
