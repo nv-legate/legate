@@ -51,8 +51,42 @@ class LocalNetwork : public BackendNetwork {
                   legate::comm::coll::CollDataType type,
                   legate::comm::coll::CollComm global_comm) override;
 
+  /**
+   * @brief Perform an all-reduce operation among the ranks of the global communicator using local
+   * memory reductions.
+   *
+   * @param sendbuf The source buffer to reduce. This buffer must be of size count x CollDataType
+   * size.
+   * @param recvbuf The destination buffer to receive the reduced result into. This buffer must be
+   * of size count x CollDataType size.
+   * @param count The number of elements to reduce.
+   * @param type The data type of the elements.
+   * @param op The reduction operation to perform.
+   * @param global_comm The global communicator.
+   */
+  void all_reduce(const void* sendbuf,
+                  void* recvbuf,
+                  int count,
+                  legate::comm::coll::CollDataType type,
+                  ReductionOpKind op,
+                  legate::comm::coll::CollComm global_comm) override;
+
  protected:
   [[nodiscard]] static std::size_t get_dtype_size_(legate::comm::coll::CollDataType dtype);
+
+  /** @brief Apply a reduction operation for each index in destination and source buffer. Store
+   * result in destination buffer.
+   *
+   * @param dst Destination buffer (also serves as one input, modified in-place).
+   * @param src Source buffer.
+   * @param count Number of elements.
+   * @param op Reduction operation to apply.
+   */
+  static void apply_reduction_(void* dst,
+                               const void* src,
+                               int count,
+                               legate::comm::coll::CollDataType type,
+                               ReductionOpKind op);
 
   void reset_local_buffer_(legate::comm::coll::CollComm global_comm);
 

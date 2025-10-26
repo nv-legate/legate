@@ -34,6 +34,28 @@ LEGATE_EXPORT void collAlltoall(
 
 LEGATE_EXPORT void collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm);
+
+/**
+ * @brief Perform an all-reduce operation among the ranks of the global communicator.
+ * Bitwise and logical operations are not supported for floating point types.
+ *
+ * @param sendbuf  The source buffer to reduce. This buffer must be of size count x CollDataType
+ * size.
+ * @param recvbuf The destination buffer to receive the reduced result into. This buffer must be of
+ * size count x CollDataType size.
+ * @param count The number of elements to reduce.
+ * @param type The data type of the elements.
+ * @param op The reduction operation to perform.
+ * @param global_comm The global communicator.
+ *
+ * @throw std::invalid_argument if the reduction operation is not supported for the data type.
+ */
+LEGATE_EXPORT void collAllreduce(const void* sendbuf,
+                                 void* recvbuf,
+                                 int count,
+                                 CollDataType type,
+                                 ReductionOpKind op,
+                                 CollComm global_comm);
 // NOLINTEND(readability-identifier-naming)
 
 }  // namespace legate::comm::coll

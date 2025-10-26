@@ -128,4 +128,49 @@ void collAllgather(
     sendbuf, recvbuf, count, type, global_comm);
 }
 
+void collAllreduce(const void* sendbuf,
+                   void* recvbuf,
+                   int count,
+                   CollDataType type,
+                   ReductionOpKind op,
+                   CollComm global_comm)
+{
+  if (sendbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid sendbuf: nullptr"};
+  }
+  if (recvbuf == nullptr) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid recvbuf: nullptr"};
+  }
+  if (count <= 0) {
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid count: <= 0"};
+  }
+
+  switch (op) {
+    case legate::ReductionOpKind::ADD: [[fallthrough]];
+    case legate::ReductionOpKind::MUL: [[fallthrough]];
+    case legate::ReductionOpKind::MAX: [[fallthrough]];
+    case legate::ReductionOpKind::MIN: break;
+    case legate::ReductionOpKind::OR: [[fallthrough]];
+    case legate::ReductionOpKind::XOR: [[fallthrough]];
+    case legate::ReductionOpKind::AND:
+      if (type == legate::comm::coll::CollDataType::CollFloat ||
+          type == legate::comm::coll::CollDataType::CollDouble) {
+        throw legate::detail::TracedException<std::invalid_argument>{
+          "all_reduce does not support float or double reduction with bitwise operations"};
+      }
+      break;
+  }
+
+  coll_detail::logger().debug() << "Allreduce: global_rank " << global_comm->global_rank
+                                << ", mpi_rank " << global_comm->mpi_rank << ", unique_id "
+                                << global_comm->unique_id << ", comm_size "
+                                << global_comm->global_comm_size << ", mpi_comm_size "
+                                << global_comm->mpi_comm_size << ' '
+                                << global_comm->mpi_comm_size_actual << ", nb_threads "
+                                << global_comm->nb_threads;
+
+  coll_detail::BackendNetwork::get_network()->all_reduce(
+    sendbuf, recvbuf, count, type, op, global_comm);
+}
+
 }  // namespace legate::comm::coll

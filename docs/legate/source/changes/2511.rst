@@ -26,6 +26,7 @@ C++
 ---
 
 .. rubric:: General
+  - Add `legate::comm::coll::collAllreduce()` to the collective communication library.
 
 .. rubric:: Data
 

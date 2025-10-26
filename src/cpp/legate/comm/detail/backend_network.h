@@ -51,6 +51,25 @@ class BackendNetwork {
                           legate::comm::coll::CollDataType type,
                           legate::comm::coll::CollComm global_comm) = 0;
 
+  /**
+   * @brief Perform an all-reduce operation.
+   *
+   * @param sendbuf The source buffer to reduce. This buffer must be of size count x CollDataType
+   * size.
+   * @param recvbuf The destination buffer to receive the reduced result into. This buffer must be
+   * of size count x CollDataType size.
+   * @param count The number of elements to reduce.
+   * @param type The data type of the elements.
+   * @param op The reduction operation to perform.
+   * @param global_comm The global communicator.
+   */
+  virtual void all_reduce(const void* sendbuf,
+                          void* recvbuf,
+                          int count,
+                          legate::comm::coll::CollDataType type,
+                          ReductionOpKind op,
+                          legate::comm::coll::CollComm global_comm) = 0;
+
   static void create_network(std::unique_ptr<BackendNetwork>&& network);
   [[nodiscard]] static std::unique_ptr<BackendNetwork>& get_network();
   [[nodiscard]] static bool has_network();

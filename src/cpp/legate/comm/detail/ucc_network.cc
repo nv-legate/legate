@@ -256,6 +256,24 @@ class UCCNetwork::Impl {
                   legate::comm::coll::CollDataType type,
                   legate::comm::coll::CollComm global_comm);
 
+  /**
+   * @brief Perform an all-reduce operation.
+   *
+   * @param sendbuf The buffer to reduce from
+   * @param recvbuf The buffer to receive the reduced result into. This buffer must be of size count
+   * x dtype_size.
+   * @param count The number of elements to reduce
+   * @param type The data type of the elements
+   * @param op The reduction operation to perform
+   * @param global_comm The global communicator, this holds the unique id.
+   */
+  void all_reduce(const void* sendbuf,
+                  void* recvbuf,
+                  int count,
+                  legate::comm::coll::CollDataType type,
+                  ReductionOpKind op,
+                  legate::comm::coll::CollComm global_comm);
+
  private:
   /**
    * @brief Initialize UCC library, this will call ucc_init() and abort the program if the UCC
@@ -273,6 +291,15 @@ class UCCNetwork::Impl {
   [[nodiscard]] static ucc_datatype_t dtype_to_ucc_dtype_(legate::comm::coll::CollDataType dtype);
 
   /**
+   * @brief Get the UCC reduction operation from the Legate reduction operation
+   *
+   * @param op The Legate reduction operation
+   *
+   * @return The UCC reduction operation
+   */
+  [[nodiscard]] static ucc_reduction_op_t redop_to_ucc_redop_(ReductionOpKind op);
+
+  /**
    * @brief Get the size of the UCC data type
    *
    * @param dtype The Legate data type
@@ -280,6 +307,26 @@ class UCCNetwork::Impl {
    * @return The size of the UCC data type
    */
   [[nodiscard]] static std::size_t get_dtype_size_(legate::comm::coll::CollDataType dtype);
+
+  /**
+   * @brief Make a UCC collectives arguments for the given parameters.
+   *
+   * @param sendbuf The buffer to send from.
+   * @param recvbuf The buffer to receive into.
+   * @param send_count The number of elements to send.
+   * @param recv_count The number of elements to receive.
+   * @param recv_count The number of elements to receive.
+   * @param coll_type The type of collective to perform.
+   * @param type The data type of the elements.
+   *
+   * @return The UCC collectives arguments.
+   */
+  [[nodiscard]] ucc_coll_args_t make_ucc_coll_args_(const void* sendbuf,
+                                                    void* recvbuf,
+                                                    std::uint64_t send_count,
+                                                    std::uint64_t recv_count,
+                                                    ucc_coll_type_t coll_type,
+                                                    legate::comm::coll::CollDataType type);
 
   // This is the UCC library handle, it is initialized when the UCCNetwork is created.
   // this should be available for the entire lifetime of the UCCNetwork.
@@ -468,6 +515,30 @@ void UCCNetwork::Impl::all_to_all_v(const void* sendbuf,
   LEGATE_CHECK_UCC(ucc_comm->ucc_collective(&coll_args));
 }
 
+ucc_coll_args_t UCCNetwork::Impl::make_ucc_coll_args_(const void* sendbuf,
+                                                      void* recvbuf,
+                                                      std::uint64_t send_count,
+                                                      std::uint64_t recv_count,
+                                                      ucc_coll_type_t coll_type,
+                                                      legate::comm::coll::CollDataType type)
+{
+  ucc_coll_args_t coll_args{};
+  const auto ucc_dtype = dtype_to_ucc_dtype_(type);
+
+  coll_args.mask              = UCC_COLL_ARGS_FIELD_FLAGS;
+  coll_args.flags             = UCC_COLL_ARGS_FLAG_COUNT_64BIT;
+  coll_args.coll_type         = coll_type;
+  coll_args.src.info.mem_type = UCC_MEMORY_TYPE_HOST;
+  coll_args.src.info.buffer   = const_cast<void*>(sendbuf);
+  coll_args.src.info.count    = send_count;
+  coll_args.src.info.datatype = ucc_dtype;
+  coll_args.dst.info.buffer   = recvbuf;
+  coll_args.dst.info.count    = recv_count;
+  coll_args.dst.info.datatype = ucc_dtype;
+
+  return coll_args;
+}
+
 void UCCNetwork::Impl::all_to_all(const void* sendbuf,
                                   void* recvbuf,
                                   int count,
@@ -491,20 +562,8 @@ void UCCNetwork::Impl::all_to_all(const void* sendbuf,
     return it->second.get();
   }();
 
-  const auto ucc_dtype = dtype_to_ucc_dtype_(type);
-  ucc_coll_args_t coll_args{};
-
-  coll_args.mask              = UCC_COLL_ARGS_FIELD_FLAGS;
-  coll_args.flags             = UCC_COLL_ARGS_FLAG_COUNT_64BIT;
-  coll_args.coll_type         = UCC_COLL_TYPE_ALLTOALL;
-  coll_args.src.info.mem_type = UCC_MEMORY_TYPE_HOST;
-  coll_args.src.info.buffer   = const_cast<void*>(sendbuf);
-  coll_args.src.info.count    = count;
-  coll_args.src.info.datatype = ucc_dtype;
-  coll_args.dst.info.buffer   = recvbuf;
-  coll_args.dst.info.count    = count;
-  coll_args.dst.info.datatype = ucc_dtype;
-
+  ucc_coll_args_t coll_args =
+    make_ucc_coll_args_(sendbuf, recvbuf, count, count, UCC_COLL_TYPE_ALLTOALL, type);
   LEGATE_CHECK_UCC(ucc_comm->ucc_collective(&coll_args));
 }
 
@@ -530,20 +589,45 @@ void UCCNetwork::Impl::all_gather(const void* sendbuf,
     return it->second.get();
   }();
 
-  const auto ucc_dtype = dtype_to_ucc_dtype_(type);
-  ucc_coll_args_t coll_args{};
+  ucc_coll_args_t coll_args =
+    make_ucc_coll_args_(sendbuf,
+                        recvbuf,
+                        count,
+                        static_cast<std::uint64_t>(count) * ucc_comm->get_size(),
+                        UCC_COLL_TYPE_ALLGATHER,
+                        type);
 
-  coll_args.mask              = UCC_COLL_ARGS_FIELD_FLAGS;
-  coll_args.flags             = UCC_COLL_ARGS_FLAG_COUNT_64BIT;
-  coll_args.coll_type         = UCC_COLL_TYPE_ALLGATHER;
-  coll_args.src.info.mem_type = UCC_MEMORY_TYPE_HOST;
-  coll_args.src.info.buffer   = const_cast<void*>(sendbuf);
-  coll_args.src.info.count    = count;
-  coll_args.src.info.datatype = ucc_dtype;
-  coll_args.dst.info.buffer   = recvbuf;
-  coll_args.dst.info.count    = static_cast<std::uint64_t>(count) * ucc_comm->get_size();
-  coll_args.dst.info.datatype = ucc_dtype;
+  LEGATE_CHECK_UCC(ucc_comm->ucc_collective(&coll_args));
+}
 
+void UCCNetwork::Impl::all_reduce(const void* sendbuf,
+                                  void* recvbuf,
+                                  int count,
+                                  legate::comm::coll::CollDataType type,
+                                  ReductionOpKind op,
+                                  legate::comm::coll::CollComm global_comm)
+{
+  LEGATE_CHECK(lib_.has_value());
+  LEGATE_CHECK(global_comm != nullptr);
+  LEGATE_CHECK(sendbuf != nullptr);
+  LEGATE_CHECK(recvbuf != nullptr);
+  LEGATE_CHECK(count >= 0);
+
+  UCCCommunicator* ucc_comm = [&]() -> UCCCommunicator* {
+    const std::scoped_lock<std::mutex> lock{ucc_comms_lock_};
+    const auto it = ucc_comms_.find(global_comm->global_rank);
+
+    if (it == ucc_comms_.end()) {
+      LEGATE_ABORT(
+        fmt::format("Invalid communicator for all_reduce, rank: {}", global_comm->global_rank));
+    }
+
+    return it->second.get();
+  }();
+
+  ucc_coll_args_t coll_args =
+    make_ucc_coll_args_(sendbuf, recvbuf, count, count, UCC_COLL_TYPE_ALLREDUCE, type);
+  coll_args.op = redop_to_ucc_redop_(op);
   LEGATE_CHECK_UCC(ucc_comm->ucc_collective(&coll_args));
 }
 
@@ -619,6 +703,16 @@ void UCCNetwork::all_gather(const void* sendbuf,
                             legate::comm::coll::CollComm global_comm)
 {
   impl_->all_gather(sendbuf, recvbuf, count, type, global_comm);
+}
+
+void UCCNetwork::all_reduce(const void* sendbuf,
+                            void* recvbuf,
+                            int count,
+                            legate::comm::coll::CollDataType type,
+                            ReductionOpKind op,
+                            legate::comm::coll::CollComm global_comm)
+{
+  impl_->all_reduce(sendbuf, recvbuf, count, type, op, global_comm);
 }
 
 void UCCNetwork::shutdown() { impl_->shutdown(); }
@@ -773,6 +867,20 @@ ucc_datatype_t UCCNetwork::Impl::dtype_to_ucc_dtype_(legate::comm::coll::CollDat
     case legate::comm::coll::CollDataType::CollDouble: return UCC_DT_FLOAT64;
   }
   LEGATE_ABORT("Unknown datatype");
+}
+
+ucc_reduction_op_t UCCNetwork::Impl::redop_to_ucc_redop_(ReductionOpKind op)
+{
+  switch (op) {
+    case legate::ReductionOpKind::ADD: return UCC_OP_SUM;
+    case legate::ReductionOpKind::MUL: return UCC_OP_PROD;
+    case legate::ReductionOpKind::MAX: return UCC_OP_MAX;
+    case legate::ReductionOpKind::MIN: return UCC_OP_MIN;
+    case legate::ReductionOpKind::AND: return UCC_OP_BAND;
+    case legate::ReductionOpKind::OR: return UCC_OP_BOR;
+    case legate::ReductionOpKind::XOR: return UCC_OP_BXOR;
+  }
+  LEGATE_ABORT(fmt::format("Unknown reduction operation: {}", static_cast<std::int32_t>(op)));
 }
 
 std::size_t UCCNetwork::Impl::get_dtype_size_(legate::comm::coll::CollDataType dtype)

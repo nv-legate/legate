@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/type/types.h>
 #include <legate/utilities/macros.h>
 
 #include <cstddef>

@@ -10,7 +10,9 @@
 
 #include <legate/comm/coll.h>
 #include <legate/comm/detail/logger.h>
+#include <legate/comm/detail/reduction_helpers.h>
 #include <legate/utilities/assert.h>
+#include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
 
 #include <cstdio>
@@ -218,6 +220,74 @@ void LocalNetwork::all_gather(const void* sendbuf,
   barrier_local_(global_comm);
 }
 
+void LocalNetwork::all_reduce(const void* sendbuf,
+                              void* recvbuf,
+                              int count,
+                              legate::comm::coll::CollDataType type,
+                              ReductionOpKind op,
+                              legate::comm::coll::CollComm global_comm)
+{
+  switch (op) {
+    case legate::ReductionOpKind::ADD: [[fallthrough]];
+    case legate::ReductionOpKind::MUL: [[fallthrough]];
+    case legate::ReductionOpKind::MAX: [[fallthrough]];
+    case legate::ReductionOpKind::MIN: break;
+    case legate::ReductionOpKind::OR: [[fallthrough]];
+    case legate::ReductionOpKind::XOR: [[fallthrough]];
+    case legate::ReductionOpKind::AND:
+      if (type == legate::comm::coll::CollDataType::CollFloat ||
+          type == legate::comm::coll::CollDataType::CollDouble) {
+        throw legate::detail::TracedException<std::invalid_argument>{
+          "LocalNetwork::all_reduce does not support float or double reduction with bitwise "
+          "operations"};
+      }
+      break;
+  }
+  LEGATE_CHECK(count >= 0);
+
+  const auto total_size   = global_comm->global_comm_size;
+  const auto global_rank  = global_comm->global_rank;
+  const auto type_extent  = get_dtype_size_(type);
+  const auto num_bytes    = type_extent * static_cast<std::size_t>(count);
+  const auto* sendbuf_tmp = sendbuf;
+  auto* buffers           = global_comm->local_comm->buffers();
+
+  if (sendbuf == recvbuf) {
+    sendbuf_tmp = allocate_inplace_buffer_(recvbuf, num_bytes);
+  }
+
+  std::memcpy(recvbuf, sendbuf_tmp, num_bytes);
+  buffers[global_rank] = sendbuf_tmp;
+
+  // Wait for all threads to publish their buffers and then reduce data from each rank
+  for (int source_rank = 0; source_rank < total_size; source_rank++) {
+    if (source_rank == global_rank) {
+      continue;
+    }
+
+    // wait for other threads to update the buffer address
+    while (buffers[source_rank] == nullptr) {}
+    const void* src = buffers[source_rank];
+
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      logger().debug() << "AllreduceLocal rank " << source_rank << " === global_rank "
+                       << global_rank << ", dtype " << type_extent << ", reduce from rank "
+                       << source_rank << " (" << src << ") to rank " << global_rank << " ("
+                       << recvbuf << ')';
+    }
+
+    apply_reduction_(recvbuf, src, count, type, op);
+  }
+
+  barrier_local_(global_comm);
+  if (sendbuf == recvbuf) {
+    delete_inplace_buffer_(const_cast<void*>(sendbuf_tmp), num_bytes);
+  }
+  __sync_synchronize();
+  reset_local_buffer_(global_comm);
+  barrier_local_(global_comm);
+}
+
 // protected functions start from here
 
 std::size_t LocalNetwork::get_dtype_size_(legate::comm::coll::CollDataType dtype)
@@ -250,6 +320,49 @@ std::size_t LocalNetwork::get_dtype_size_(legate::comm::coll::CollDataType dtype
     }
   }
   LEGATE_ABORT("Unknown datatype");
+}
+
+void LocalNetwork::apply_reduction_(
+  void* dst, const void* src, int count, legate::comm::coll::CollDataType type, ReductionOpKind op)
+{
+  switch (type) {
+    case legate::comm::coll::CollDataType::CollInt8: {
+      apply_reduction_typed<std::int8_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollChar: {
+      apply_reduction_typed<char>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollUint8: {
+      apply_reduction_typed<std::uint8_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollInt: {
+      apply_reduction_typed<int>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollUint32: {
+      apply_reduction_typed<std::uint32_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollInt64: {
+      apply_reduction_typed<std::int64_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollUint64: {
+      apply_reduction_typed<std::uint64_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollFloat: {
+      apply_reduction_typed<float>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollDouble: {
+      apply_reduction_typed<double>(dst, src, count, op);
+      break;
+    }
+  }
 }
 
 void LocalNetwork::reset_local_buffer_(legate::comm::coll::CollComm global_comm)

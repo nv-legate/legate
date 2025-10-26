@@ -26,8 +26,9 @@ class OOBAllgather;
  * AllGather implementation. The default implementation uses MPI for the allgather operation
  * (MPIOOBAllgather). Future work will bring in other mechanisms such as TCP/IP or third party
  * services for the allgather operation. This AllGather function is used at UCC context creation,
- * team creation, and team destruction. The UCCNetwork implements the three collective operations:
- * alltoallv, alltoall, and allgather. They use the UCC functions directly for these operations.
+ * team creation, and team destruction. The UCCNetwork implements the collective operations:
+ * alltoallv, alltoall, allgather, and allreduce. They use the UCC functions directly for these
+ * operations.
  */
 class UCCNetwork final : public BackendNetwork {
  public:
@@ -155,6 +156,24 @@ class UCCNetwork final : public BackendNetwork {
                   void* recvbuf,
                   int count,
                   legate::comm::coll::CollDataType type,
+                  legate::comm::coll::CollComm global_comm) override;
+
+  /**
+   * @brief Perform allreduce operation using UCC. This performs a reduction operation across all
+   * ranks and distributes the result to all ranks.
+   *
+   * @param sendbuf Input buffer containing data to be reduced from this rank.
+   * @param recvbuf Output buffer to receive reduced data.
+   * @param count Number of elements to reduce.
+   * @param type Data type of the elements.
+   * @param op Reduction operation to perform.
+   * @param global_comm Global communicator.
+   */
+  void all_reduce(const void* sendbuf,
+                  void* recvbuf,
+                  int count,
+                  legate::comm::coll::CollDataType type,
+                  ReductionOpKind op,
                   legate::comm::coll::CollComm global_comm) override;
 
   /**

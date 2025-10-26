@@ -10,6 +10,7 @@
 
 #include <legate/comm/detail/logger.h>
 #include <legate/comm/detail/mpi_interface.h>
+#include <legate/comm/detail/reduction_helpers.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
@@ -342,6 +343,55 @@ void MPINetwork::all_gather(const void* sendbuf,
   bcast_(recvbuf, count * total_size, type, 0, global_comm);
 }
 
+void MPINetwork::all_reduce(const void* sendbuf,
+                            void* recvbuf,
+                            int count,
+                            legate::comm::coll::CollDataType type,
+                            ReductionOpKind op,
+                            legate::comm::coll::CollComm global_comm)
+{
+  switch (op) {
+    case legate::ReductionOpKind::ADD: [[fallthrough]];
+    case legate::ReductionOpKind::MUL: [[fallthrough]];
+    case legate::ReductionOpKind::MAX: [[fallthrough]];
+    case legate::ReductionOpKind::MIN: break;
+    case legate::ReductionOpKind::OR: [[fallthrough]];
+    case legate::ReductionOpKind::XOR: [[fallthrough]];
+    case legate::ReductionOpKind::AND:
+      if (type == legate::comm::coll::CollDataType::CollFloat ||
+          type == legate::comm::coll::CollDataType::CollDouble) {
+        throw legate::detail::TracedException<std::invalid_argument>{
+          "MPINetwork::all_reduce does not support float or double reduction with bitwise "
+          "operations"};
+      }
+      break;
+  }
+  LEGATE_CHECK(count >= 0);
+
+  const auto mpi_type = dtype_to_mpi_dtype_(type);
+  auto sendbuf_tmp    = const_cast<void*>(sendbuf);
+  MPIInterface::MPI_Aint lb, type_extent;
+
+  LEGATE_CHECK_MPI(MPIInterface::mpi_type_get_extent(mpi_type, &lb, &type_extent));
+
+  const auto num_bytes = static_cast<std::size_t>(type_extent * count);
+  // MPI_IN_PLACE
+  if (sendbuf == recvbuf) {
+    sendbuf_tmp = allocate_inplace_buffer_(recvbuf, num_bytes);
+  }
+  // For some reason clang-format like to pack this one along one line...
+  // clang-format off
+  LEGATE_SCOPE_GUARD(
+    if (sendbuf == recvbuf) {
+      delete_inplace_buffer_(sendbuf_tmp, num_bytes);
+    }
+  );
+  // clang-format on
+
+  reduce_(sendbuf_tmp, recvbuf, count, type, op, /* root rank */ 0, global_comm);
+  bcast_(recvbuf, count, type, /* root rank */ 0, global_comm);
+}
+
 void MPINetwork::gather_(const void* sendbuf,
                          void* recvbuf,
                          int count,
@@ -454,7 +504,121 @@ void MPINetwork::bcast_(void* buf,
   }
 }
 
+void MPINetwork::reduce_(const void* sendbuf,
+                         void* recvbuf,
+                         int count,
+                         legate::comm::coll::CollDataType type,
+                         ReductionOpKind op,
+                         int root,
+                         legate::comm::coll::CollComm global_comm)
+{
+  MPIInterface::MPI_Status status;
+  const int total_size  = global_comm->global_comm_size;
+  const int global_rank = global_comm->global_rank;
+  const auto mpi_type   = dtype_to_mpi_dtype_(type);
+  MPIInterface::MPI_Aint lb, type_extent;
+
+  LEGATE_CHECK_MPI(MPIInterface::mpi_type_get_extent(mpi_type, &lb, &type_extent));
+
+  // Should not see inplace here
+  if (sendbuf == recvbuf) {
+    throw legate::detail::TracedException<std::invalid_argument>{
+      "MPINetwork::reduce_() does not support inplace reduce"};
+  }
+
+  const int root_mpi_rank = global_comm->mapping_table.mpi_rank[root];
+  LEGATE_CHECK(root == global_comm->mapping_table.global_rank[root]);
+
+  const auto num_bytes = static_cast<std::size_t>(type_extent * count);
+
+  // non-root
+  if (global_rank != root) {
+    const auto tag = generate_reduce_tag_(global_rank, global_comm);
+
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      logger().debug() << "ReduceMPI: non-root send global_rank " << global_rank << ", mpi rank "
+                       << global_comm->mpi_rank << ", send to " << root << " (" << root_mpi_rank
+                       << "), tag " << tag;
+    }
+    LEGATE_CHECK_MPI(
+      MPIInterface::mpi_send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
+    return;
+  }
+
+  // root - copy own data first
+  std::memcpy(recvbuf, sendbuf, num_bytes);
+
+  // root - receive and reduce from all other ranks
+  // Allocate temporary buffer for receiving data
+  auto temp_buffer = std::make_unique<char[]>(num_bytes);
+
+  for (int i = 0; i < total_size; i++) {
+    if (i == global_rank) {
+      // already copied own data
+      continue;
+    }
+
+    const auto recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[i];
+    LEGATE_CHECK(i == global_comm->mapping_table.global_rank[i]);
+    const auto tag = generate_reduce_tag_(i, global_comm);
+
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      logger().debug() << "ReduceMPI: root i " << i << " === global_rank " << global_rank
+                       << ", mpi rank " << global_comm->mpi_rank << ", recv from " << i << " ("
+                       << recvfrom_mpi_rank << "), tag " << tag;
+    }
+
+    LEGATE_CHECK_MPI(MPIInterface::mpi_recv(
+      temp_buffer.get(), count, mpi_type, recvfrom_mpi_rank, tag, global_comm->mpi_comm, &status));
+
+    apply_reduction_(recvbuf, temp_buffer.get(), count, type, op);
+  }
+}
+
 // protected functions start from here
+
+void MPINetwork::apply_reduction_(
+  void* dst, const void* src, int count, legate::comm::coll::CollDataType type, ReductionOpKind op)
+{
+  switch (type) {
+    case legate::comm::coll::CollDataType::CollInt8: {
+      apply_reduction_typed<std::int8_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollChar: {
+      apply_reduction_typed<char>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollUint8: {
+      apply_reduction_typed<std::uint8_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollInt: {
+      apply_reduction_typed<int>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollUint32: {
+      apply_reduction_typed<std::uint32_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollInt64: {
+      apply_reduction_typed<std::int64_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollUint64: {
+      apply_reduction_typed<std::uint64_t>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollFloat: {
+      apply_reduction_typed<float>(dst, src, count, op);
+      break;
+    }
+    case legate::comm::coll::CollDataType::CollDouble: {
+      apply_reduction_typed<double>(dst, src, count, op);
+      break;
+    }
+  }
+}
 
 mpi::detail::MPIInterface::MPI_Datatype MPINetwork::dtype_to_mpi_dtype_(
   legate::comm::coll::CollDataType dtype)
@@ -469,6 +633,7 @@ mpi::detail::MPIInterface::MPI_Datatype MPINetwork::dtype_to_mpi_dtype_(
     case legate::comm::coll::CollDataType::CollUint8: {
       return MPIInterface::MPI_UINT8_T();
     }
+
     case legate::comm::coll::CollDataType::CollInt: {
       return MPIInterface::MPI_INT();
     }
@@ -498,6 +663,7 @@ enum CollTag : std::uint8_t {
   GATHER_TAG    = 1,
   ALLTOALL_TAG  = 2,
   ALLTOALLV_TAG = 3,
+  REDUCE_TAG    = 4,
   MAX_TAG       = 10,
 };
 
@@ -570,6 +736,14 @@ int MPINetwork::generate_bcast_tag_(int rank, legate::comm::coll::CollComm /*glo
 int MPINetwork::generate_gather_tag_(int rank, legate::comm::coll::CollComm /*global_comm*/) const
 {
   const int tag = (rank * CollTag::MAX_TAG) + CollTag::GATHER_TAG;
+  LEGATE_CHECK(tag <= mpi_tag_ub_ && tag > 0);
+  return tag;
+}
+
+int MPINetwork::generate_reduce_tag_(int rank, legate::comm::coll::CollComm /*global_comm*/) const
+{
+  const int tag = (rank * CollTag::MAX_TAG) + CollTag::REDUCE_TAG;
+
   LEGATE_CHECK(tag <= mpi_tag_ub_ && tag > 0);
   return tag;
 }

@@ -438,6 +438,144 @@ class UCCIntegrationTypedTest : public UCCIntegrationTest {
       }
     }
   }
+
+  /**
+   * @brief Performs all-reduce operation with verification for a specific rank
+   *
+   * Test Pattern:
+   * - Each rank contributes data to a reduction operation
+   * - We test the SUM reduction operation
+   * - Each rank sends 8 elements with value equal to (global_rank + 1)
+   * - The expected result is the sum across all ranks: sum((r+1)) for r in [0..global_size-1]
+   * - For global_size=3: expected = (0+1) + (1+1) + (2+1) = 1 + 2 + 3 = 6
+   *
+   * @param global_rank The rank performing the operation
+   */
+  void perform_allreduce_sum_test_(int global_rank)
+  {
+    constexpr std::int32_t num_elements = 8;
+    std::vector<T> send_data(num_elements);
+
+    // Each rank fills its data with (rank + 1)
+    std::fill(send_data.begin(), send_data.end(), static_cast<T>(global_rank + 1));
+
+    std::vector<T> recv_data(num_elements);
+
+    this->ucc_network_->all_reduce(send_data.data(),
+                                   recv_data.data(),
+                                   num_elements,
+                                   COLL_TYPE,
+                                   legate::ReductionOpKind::ADD,
+                                   this->comms_[global_rank].get());
+
+    constexpr double tolerance   = 1e-10;
+    constexpr double sum_divisor = 2;
+    // Calculate expected sum: 1 + 2 + 3 + ... + global_size
+    // This is the sum of (rank + 1) for all ranks
+    T expected_sum = static_cast<T>((this->global_size_ * (this->global_size_ + 1)) / sum_divisor);
+
+    // Verify that all elements have the expected sum
+    for (int i = 0; i < num_elements; i++) {
+      if constexpr (std::is_same_v<T, double> || std::is_same_v<T, float>) {
+        EXPECT_NEAR(recv_data[i], expected_sum, tolerance);
+      } else {
+        EXPECT_EQ(recv_data[i], expected_sum);
+      }
+    }
+  }
+
+  /**
+   * @brief Performs all-reduce PROD (multiply) operation with verification
+   *
+   * Test Pattern:
+   * - Each rank contributes data to a product reduction operation
+   * - Each rank sends 8 elements with value 2
+   * - The expected result is 2^global_size (2 multiplied global_size times)
+   * - For global_size=3: expected = 2 * 2 * 2 = 8
+   *
+   * @param global_rank The rank performing the operation
+   */
+  void perform_allreduce_prod_test_(int global_rank)
+  {
+    constexpr std::int32_t num_elements = 8;
+    std::vector<T> send_data(num_elements);
+
+    // Each rank fills its data with 2
+    std::fill(send_data.begin(), send_data.end(), static_cast<T>(2));
+
+    std::vector<T> recv_data(num_elements);
+
+    this->ucc_network_->all_reduce(send_data.data(),
+                                   recv_data.data(),
+                                   num_elements,
+                                   COLL_TYPE,
+                                   legate::ReductionOpKind::MUL,
+                                   this->comms_[global_rank].get());
+
+    constexpr double tolerance = 1e-10;
+
+    // Calculate expected product: 2^global_size
+    T expected_prod = static_cast<T>(1);
+    for (int i = 0; i < this->global_size_; i++) {
+      expected_prod *= static_cast<T>(2);
+    }
+
+    // Verify that all elements have the expected product
+    for (int i = 0; i < num_elements; i++) {
+      if constexpr (std::is_same_v<T, double> || std::is_same_v<T, float>) {
+        EXPECT_NEAR(recv_data[i], expected_prod, tolerance);
+      } else {
+        EXPECT_EQ(recv_data[i], expected_prod);
+      }
+    }
+  }
+
+  /**
+   * @brief Performs all-reduce BOR (bitwise OR) operation with verification
+   *
+   * Test Pattern:
+   * - Each rank contributes data to a bitwise OR reduction operation
+   * - Each rank sends 8 elements with value (1 << global_rank), setting a unique bit
+   * - The expected result is the bitwise OR of all values: (1<<0) | (1<<1) | ... |
+   * (1<<(global_size-1))
+   * - For global_size=3: expected = 1 | 2 | 4 = 7 (binary: 0111)
+   * - For global_size=4: expected = 1 | 2 | 4 | 8 = 15 (binary: 1111)
+   *
+   * Note: This test is only applicable to integer types
+   *
+   * @param global_rank The rank performing the operation
+   */
+  void perform_allreduce_bor_test_(int global_rank)
+  {
+    // Only test for integer types
+    if constexpr (std::is_integral_v<T>) {
+      constexpr std::int32_t num_elements = 8;
+      std::vector<T> send_data(num_elements);
+
+      // Each rank sets a unique bit: rank 0 sets bit 0, rank 1 sets bit 1, etc.
+      T rank_bit = static_cast<T>(1) << global_rank;
+      std::fill(send_data.begin(), send_data.end(), rank_bit);
+
+      std::vector<T> recv_data(num_elements);
+
+      this->ucc_network_->all_reduce(send_data.data(),
+                                     recv_data.data(),
+                                     num_elements,
+                                     COLL_TYPE,
+                                     legate::ReductionOpKind::OR,
+                                     this->comms_[global_rank].get());
+
+      // Calculate expected result: bitwise OR of all rank bits
+      // (1 << 0) | (1 << 1) | ... | (1 << (global_size-1))
+      // This equals (2^global_size - 1)
+      T expected_bor = static_cast<T>((1 << this->global_size_) - 1);
+
+      // Verify that all elements have the expected bitwise OR result
+      for (int i = 0; i < num_elements; i++) {
+        EXPECT_EQ(recv_data[i], expected_bor);
+      }
+    }
+  }
 };
 
 TYPED_TEST_SUITE(UCCIntegrationTypedTest, TestTypes, ::testing::internal::DefaultNameGenerator);
@@ -482,6 +620,54 @@ TYPED_TEST(UCCIntegrationTypedTest, AllToAllV)
        global_rank < this->local_rank_start_ + this->num_threads_;
        global_rank++) {
     std::thread t{[this, global_rank]() { this->perform_alltoallv_test_(global_rank); }};
+    threads.push_back(std::move(t));
+  }
+
+  for (auto& t : threads) {
+    t.join();
+  }
+}
+
+TYPED_TEST(UCCIntegrationTypedTest, AllReduceSum)
+{
+  std::vector<std::thread> threads;
+  // create threads for each rank for allreduce sum
+  for (int global_rank = this->local_rank_start_;
+       global_rank < this->local_rank_start_ + this->num_threads_;
+       global_rank++) {
+    std::thread t{[this, global_rank]() { this->perform_allreduce_sum_test_(global_rank); }};
+    threads.push_back(std::move(t));
+  }
+
+  for (auto& t : threads) {
+    t.join();
+  }
+}
+
+TYPED_TEST(UCCIntegrationTypedTest, AllReduceProd)
+{
+  std::vector<std::thread> threads;
+  // create threads for each rank for allreduce prod
+  for (int global_rank = this->local_rank_start_;
+       global_rank < this->local_rank_start_ + this->num_threads_;
+       global_rank++) {
+    std::thread t{[this, global_rank]() { this->perform_allreduce_prod_test_(global_rank); }};
+    threads.push_back(std::move(t));
+  }
+
+  for (auto& t : threads) {
+    t.join();
+  }
+}
+
+TYPED_TEST(UCCIntegrationTypedTest, AllReduceBor)
+{
+  std::vector<std::thread> threads;
+  // create threads for each rank for allreduce bor (bitwise OR)
+  for (int global_rank = this->local_rank_start_;
+       global_rank < this->local_rank_start_ + this->num_threads_;
+       global_rank++) {
+    std::thread t{[this, global_rank]() { this->perform_allreduce_bor_test_(global_rank); }};
     threads.push_back(std::move(t));
   }
 
