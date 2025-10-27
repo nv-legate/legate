@@ -8,52 +8,12 @@
 
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/shape.h>
+#include <legate/data/detail/storage.h>
 #include <legate/data/detail/transform.h>
 
 #include <utility>
 
 namespace legate::detail {
-
-inline std::uint64_t Storage::id() const { return storage_id_; }
-
-inline bool Storage::replicated() const { return replicated_; }
-
-inline bool Storage::unbound() const { return unbound_; }
-
-inline const InternalSharedPtr<Shape>& Storage::shape() const { return shape_; }
-
-inline Span<const std::uint64_t> Storage::extents() const { return shape()->extents(); }
-
-inline std::size_t Storage::volume() const { return shape()->volume(); }
-
-inline std::uint32_t Storage::dim() const { return shape()->ndim(); }
-
-inline std::int32_t Storage::level() const { return level_; }
-
-inline std::size_t Storage::scalar_offset() const { return scalar_offset_; }
-
-inline std::string_view Storage::provenance() const { return provenance_; }
-
-// ==========================================================================================
-
-inline StoragePartition::StoragePartition(InternalSharedPtr<Storage> parent,
-                                          InternalSharedPtr<Partition> partition,
-                                          bool complete)
-  : complete_{complete},
-    level_{parent->level() + 1},
-    parent_{std::move(parent)},
-    partition_{std::move(partition)}
-{
-}
-
-inline const InternalSharedPtr<Partition>& StoragePartition::partition() const
-{
-  return partition_;
-}
-
-inline std::int32_t StoragePartition::level() const { return level_; }
-
-// ==========================================================================================
 
 inline bool LogicalStore::unbound() const { return get_storage()->unbound(); }
 
@@ -117,70 +77,11 @@ inline const std::optional<InternalSharedPtr<Partition>>& LogicalStore::get_curr
   return key_partition_;
 }
 
-// ==========================================================================================
-
-inline LogicalStorePartition::LogicalStorePartition(
-  InternalSharedPtr<Partition> partition,
-  InternalSharedPtr<StoragePartition> storage_partition,
-  InternalSharedPtr<LogicalStore> store)
-  : partition_{std::move(partition)},
-    storage_partition_{std::move(storage_partition)},
-    store_{std::move(store)}
-{
-}
-
-inline const InternalSharedPtr<Partition>& LogicalStorePartition::partition() const
-{
-  return partition_;
-}
-
-inline const InternalSharedPtr<StoragePartition>& LogicalStorePartition::storage_partition() const
-{
-  return storage_partition_;
-}
-
-inline const InternalSharedPtr<LogicalStore>& LogicalStorePartition::store() const
-{
-  return store_;
-}
-
-inline InternalSharedPtr<StoragePartition> create_storage_partition(
-  const InternalSharedPtr<Storage>& self,
-  InternalSharedPtr<Partition> partition,
-  std::optional<bool> complete)
-{
-  return self->create_partition(self, std::move(partition), std::move(complete));
-}
-
-inline InternalSharedPtr<Storage> slice_storage(
-  const InternalSharedPtr<Storage>& self,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
-{
-  return self->slice(self, std::move(tile_shape), std::move(offsets));
-}
-
 inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<LogicalStore>& self,
                                                    std::int32_t dim,
                                                    Slice sl)
 {
   return self->slice_(self, dim, std::move(sl));
-}
-
-inline InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
-  const InternalSharedPtr<LogicalStore>& self,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape)
-{
-  return self->partition_by_tiling_(self, std::move(tile_shape), std::move(color_shape));
-}
-
-inline InternalSharedPtr<LogicalStorePartition> create_store_partition(
-  const InternalSharedPtr<LogicalStore>& self,
-  InternalSharedPtr<Partition> partition,
-  std::optional<bool> complete)
-{
-  return self->create_partition_(self, std::move(partition), std::move(complete));
 }
 
 inline StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStore>& self,

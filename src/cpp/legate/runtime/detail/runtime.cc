@@ -14,6 +14,7 @@
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/logical_store_partition.h>
 #include <legate/experimental/io/detail/task.h>
 #include <legate/mapping/detail/core_mapper.h>
 #include <legate/mapping/detail/default_mapper.h>

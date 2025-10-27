@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/constraint.h>

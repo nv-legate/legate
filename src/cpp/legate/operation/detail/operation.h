@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/logical_store_partition.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/access_mode.h>
 #include <legate/operation/detail/store_projection.h>

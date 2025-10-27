@@ -7,6 +7,7 @@
 #include <legate/operation/detail/reduce.h>
 
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/logical_store_partition.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/operation/detail/task_launcher.h>
 #include <legate/operation/projection.h>

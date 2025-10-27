@@ -278,6 +278,9 @@ target_sources(legate_obj
                        legate/data/detail/logical_array.cc
                        legate/data/detail/logical_region_field.cc
                        legate/data/detail/logical_store.cc
+                       legate/data/detail/logical_store_partition.cc
+                       legate/data/detail/storage.cc
+                       legate/data/detail/storage_partition.cc
                        legate/data/detail/scalar.cc
                        legate/data/detail/physical_array.cc
                        legate/data/detail/physical_store.cc
