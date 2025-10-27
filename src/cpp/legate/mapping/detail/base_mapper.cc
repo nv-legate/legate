@@ -1430,6 +1430,84 @@ void find_source_instance_bandwidth(const Legion::Mapping::PhysicalInstance& sou
   all_sources->emplace_back(source_instance, bandwidth);
 }
 
+/**
+ * @brief Determines optimal copy settings for Legion copy operations based on runtime conditions
+ *
+ * This function implements performance heuristics to decide whether to enable compute_preimages
+ * and shadow_indirections for Legion copy operations. The decision is based on:
+ * - Experimental copy path configuration flag (--experimental-copy-path)
+ * - Target processor type (GPU vs CPU)
+ * - Estimated data size of the copy operation
+ * - Number of nodes in the cluster
+ *
+ * Performance rationale:
+ * - compute_preimages: Beneficial for large GPU operations (>10MB) as precomputation
+ *   amortizes over data size, but might be not slower for small operations or CPU operations
+ *   where address splitting is faster
+ * - shadow_indirections: Only beneficial on multi-node runs when compute_preimages is enabled;
+ *   can add unnecessary overhead on single-node runs with NVLink
+ *
+ * @param target_proc The target processor for the copy operation
+ * @param src_requirements Source region requirements for size estimation
+ * @param dst_requirements Destination region requirements for size estimation
+ * @param runtime Legion mapper runtime for querying region metadata
+ * @param ctx Legion mapper context for runtime queries
+ * @param local_machine Local machine configuration containing node count
+ *
+ * @return std::pair<bool, bool> {compute_preimages, shadow_indirections}
+ */
+[[nodiscard]] std::pair<bool, bool> determine_copy_settings(
+  const Processor& target_proc,
+  Span<const Legion::RegionRequirement> src_requirements,
+  Span<const Legion::RegionRequirement> dst_requirements,
+  Legion::Mapping::MapperRuntime* runtime,
+  Legion::Mapping::MapperContext ctx,
+  const LocalMachine& local_machine)
+{
+  // Check experimental copy path configuration flag (defaults to false)
+  // When false (default), always disable preimages and shadow indirections for performance
+  if (!legate::detail::Runtime::get_runtime().config().experimental_copy_path() ||
+      target_proc.kind() != Processor::Kind::TOC_PROC || (local_machine.total_nodes <= 1)) {
+    return {/* compute_preimages */ false, /* shadow_indirections */ false};
+  }
+  // experimental_copy_path is true, proceed with conditional logic based on processor type and
+  // data size
+  std::size_t total_data_size = 0;
+
+  // Estimate total data size from copy requirements
+  const auto estimate_size = [&](Span<const Legion::RegionRequirement> reqs) {
+    std::size_t size = 0;
+    for (const auto& req : reqs) {
+      // Check if this is a valid region requirement
+      if (req.region != Legion::LogicalRegion::NO_REGION) {
+        // Get the domain and multiply by approximate element size
+        // Using a conservative estimate of 8 bytes per element for simplicity
+        const auto domain = runtime->get_index_space_domain(ctx, req.region.get_index_space());
+
+        if (domain.get_dim() > 0) {
+          size += domain.get_volume() * 8;  // 8 bytes per element estimate
+        }
+      }
+    }
+    return size;
+  };
+
+  total_data_size += estimate_size(src_requirements);
+  total_data_size += estimate_size(dst_requirements);
+
+  // Simple threshold: disable preimages for small data (< 10MB)
+  // This is a conservative heuristic that can be tuned based on performance measurements
+  static constexpr std::size_t PREIMAGE_SIZE_THRESHOLD = 1024 * 1024 * 10;  // 10MB
+
+  const auto compute_preimages = (total_data_size >= PREIMAGE_SIZE_THRESHOLD);
+
+  // Determine shadow_indirections setting based on node count
+  // Only enable on multi-node runs as they're not necessary on single-node runs with NVLink
+  const auto shadow_indirections = compute_preimages;
+
+  return {compute_preimages, shadow_indirections};
+}
+
 }  // namespace
 
 void BaseMapper::legate_select_sources_(
@@ -1566,33 +1644,23 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   output.copy_fill_priority = legate_copy.priority();
 
   auto& machine_desc = legate_copy.machine();
-  auto copy_target   = [&]() {
-    // If we're mapping an indirect copy and have data resident in GPU memory,
-    // map everything to CPU memory, as indirect copies on GPUs are currently
-    // extremely slow.
-    const auto indirect =
-      !copy.src_indirect_requirements.empty() || !copy.dst_indirect_requirements.empty();
 
-    const auto choose_target = [&](Span<const TaskTarget> valid_targets) {
-      // However, if the machine in the scope doesn't have any CPU or OMP as a fallback for
-      // indirect copies, we have no choice but using GPUs
-      if (valid_targets.empty()) {
-        LEGATE_ASSERT(indirect);
-        return machine_desc.valid_targets().front();
-      }
-      return valid_targets.front();
-    };
-
-    if (indirect) {
-      auto&& targets = machine_desc.valid_targets_except({TaskTarget::GPU});
-
-      return choose_target(targets);
-    }
-    return choose_target(machine_desc.valid_targets());
-  }();
+  // Determine the target processor for the main copy operation.
+  // Prefer GPU if available.
+  const auto copy_target = machine_desc.valid_targets().front();
 
   auto local_range = local_machine_.slice(copy_target, machine_desc, true);
-  Processor target_proc;
+
+  LEGATE_ASSERT(!local_range.empty());
+  // Determine the target processor for indirect requirements, which are typically
+  // on host memory.
+  const auto host_target = machine_desc.valid_targets_except({TaskTarget::GPU}).front();
+  const auto host_range  = local_machine_.slice(host_target, machine_desc, true);
+  LEGATE_ASSERT(!host_range.empty());
+
+  Processor target_proc = Processor::NO_PROC;
+  Processor host_proc   = Processor::NO_PROC;
+
   if (copy.is_index_space) {
     Domain sharding_domain = copy.index_domain;
     if (copy.sharding_space.exists()) {
@@ -1607,17 +1675,36 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     auto hi           = key_functor->project_point(sharding_domain.hi());
     auto p            = key_functor->project_point(copy.index_point);
 
-    const std::uint32_t start_proc_id     = machine_desc.processor_range().low;
     const std::uint32_t total_tasks_count = legate::detail::linearize(lo, hi, hi) + 1;
-    auto idx =
+
+    // Calculate index for target processor (e.g., GPU)
+    const std::uint32_t target_start_proc_id = machine_desc.processor_range(copy_target).low;
+    auto target_idx =
       (legate::detail::linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) +
-      start_proc_id;
-    target_proc = local_range[idx];
+      target_start_proc_id;
+    target_proc = local_range[static_cast<std::uint32_t>(target_idx)];
+
+    // Calculate index for host processor (e.g., CPU)
+    const std::uint32_t host_start_proc_id = machine_desc.processor_range(host_target).low;
+    auto host_idx =
+      (legate::detail::linearize(lo, hi, p) * host_range.total_proc_count() / total_tasks_count) +
+      host_start_proc_id;
+    host_proc = host_range[static_cast<std::uint32_t>(host_idx)];
   } else {
     target_proc = local_range.first();
+    host_proc   = host_range.first();
   }
 
-  auto store_target = default_store_targets(target_proc.kind()).front();
+  auto store_target      = default_store_targets(target_proc.kind()).front();
+  auto host_store_target = default_store_targets(host_proc.kind()).front();
+
+  // Determine copy operation settings based on environment and workload characteristics
+  auto [compute_preimages, shadow_indirections] = determine_copy_settings(
+    target_proc, copy.src_requirements, copy.dst_requirements, runtime, ctx, local_machine_);
+
+  // Set the final output values
+  output.compute_preimages   = compute_preimages;
+  output.shadow_indirections = shadow_indirections;
 
   OutputMap output_map;
   auto add_to_output_map =
@@ -1649,11 +1736,15 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   auto&& input_ind  = legate_copy.input_indirections();
   auto&& output_ind = legate_copy.output_indirections();
 
-  const auto stores_to_copy = {
-    std::ref(inputs), std::ref(outputs), std::ref(input_ind), std::ref(output_ind)};
+  const auto stores_to_copy = {std::ref(inputs), std::ref(outputs)};
+
+  const auto indirect_stores = {std::ref(input_ind), std::ref(output_ind)};
 
   std::size_t reserve_size = 0;
   for (auto&& store : stores_to_copy) {
+    reserve_size += store.get().size();
+  }
+  for (auto&& store : indirect_stores) {
     reserve_size += store.get().size();
   }
 
@@ -1662,9 +1753,19 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   mappings.reserve(reserve_size);
   for (auto&& store_set : stores_to_copy) {
     for (auto&& store : store_set.get()) {
-      mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false));
+      if (compute_preimages) {
+        mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false));
+      } else {
+        mappings.emplace_back(StoreMapping::default_mapping(&store, host_store_target, false));
+      }
     }
   }
+  for (auto&& store_set : indirect_stores) {
+    for (auto&& store : store_set.get()) {
+      mappings.emplace_back(StoreMapping::default_mapping(&store, host_store_target, false));
+    }
+  }
+
   map_legate_stores_(ctx, copy, mappings, target_proc, output_map);
 }
 

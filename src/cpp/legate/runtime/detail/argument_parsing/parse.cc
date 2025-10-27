@@ -735,6 +735,17 @@ ParsedArgs parse_args(std::vector<std::string> args)
     return val;
   });
 
+  auto experimental_copy_path = parser.add_argument(
+    "--experimental-copy-path",
+    "Enable conditional copy optimizations based on workload characteristics.\n"
+
+    "This feature is currently marked experimental, and should not be relied upon. The current "
+    "implementation may offer performance improvements in some circumstances, but it may also "
+    "lead to slowdowns in others. Future improvements will seek to optimize this further.",
+    false);
+
+  experimental_copy_path.argparse_argument().hidden();
+
   parser.parse_args(std::move(args));
 
   const auto add_logger = [&](std::string_view logger, std::string_view level = "info") {
@@ -794,7 +805,8 @@ ParsedArgs parse_args(std::vector<std::string> args)
           /* log_dir */ std::move(log_dir),
           /* log_to_file */ std::move(log_to_file),
           /* freeze_on_error */ std::move(freeze_on_error),
-          /* cuda_driver_path */ std::move(cuda_driver_path)};
+          /* cuda_driver_path */ std::move(cuda_driver_path),
+          /* experimental_copy_path */ std::move(experimental_copy_path)};
 }
 
 }  // namespace legate::detail

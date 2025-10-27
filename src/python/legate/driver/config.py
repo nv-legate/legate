@@ -159,6 +159,7 @@ class Other(DataclassMixin):
     disable_mpi: bool
     inline_task_launch: bool
     io_use_vfd_gds: bool
+    experimental_copy_path: bool
 
 
 class ConfigProtocol(Protocol):

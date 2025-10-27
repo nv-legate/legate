@@ -114,3 +114,6 @@ other.add_argument(sa.WARMUP_NCCL.name, **sa.WARMUP_NCCL.kwargs)
 other.add_argument(sa.DISABLE_MPI.name, **sa.DISABLE_MPI.kwargs)
 other.add_argument(sa.INLINE_TASK_LAUNCH.name, **sa.INLINE_TASK_LAUNCH.kwargs)
 other.add_argument(sa.IO_USE_VFD_GDS.name, **sa.IO_USE_VFD_GDS.kwargs)
+other.add_argument(
+    sa.EXPERIMENTAL_COPY_PATH.name, **sa.EXPERIMENTAL_COPY_PATH.kwargs
+)

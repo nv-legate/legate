@@ -243,6 +243,7 @@ class TestOther:
             "disable_mpi",
             "inline_task_launch",
             "io_use_vfd_gds",
+            "experimental_copy_path",
         }
 
     def test_mixin(self) -> None:
@@ -326,6 +327,7 @@ class TestConfig:
             disable_mpi=False,
             inline_task_launch=False,
             io_use_vfd_gds=False,
+            experimental_copy_path=False,
         )
 
     def test_arg_conversions(self, mocker: MockerFixture) -> None:

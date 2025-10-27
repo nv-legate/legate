@@ -20,6 +20,7 @@ from ..util.shared_args import (
     CONSENSUS,
     CPUS,
     DISABLE_MPI,
+    EXPERIMENTAL_COPY_PATH,
     FBMEM,
     FIELD_REUSE_FRACTION,
     FIELD_REUSE_FREQUENCY,
@@ -548,6 +549,9 @@ other.add_argument(WARMUP_NCCL.name, **WARMUP_NCCL.kwargs)
 other.add_argument(DISABLE_MPI.name, **DISABLE_MPI.kwargs)
 other.add_argument(INLINE_TASK_LAUNCH.name, **INLINE_TASK_LAUNCH.kwargs)
 other.add_argument(IO_USE_VFD_GDS.name, **IO_USE_VFD_GDS.kwargs)
+other.add_argument(
+    EXPERIMENTAL_COPY_PATH.name, **EXPERIMENTAL_COPY_PATH.kwargs
+)
 
 other.add_argument(
     "--timing",

@@ -55,6 +55,7 @@ class ParsedArgs {
   Argument<bool> log_to_file;
   Argument<bool> freeze_on_error;
   Argument<std::string> cuda_driver_path;
+  Argument<bool> experimental_copy_path;
 
   /**
    * @brief Return a summary of the current configuration options suitable for printing.

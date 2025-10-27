@@ -145,6 +145,7 @@ TEST_F(ParseArgsUnit, NoArgs)
   ASSERT_THAT(parsed.cuda_driver_path,
               ArgumentMatches(std::string{LEGATE_SHARED_LIBRARY_PREFIX
                                           "cuda" LEGATE_SHARED_LIBRARY_SUFFIX ".1"}));
+  ASSERT_THAT(parsed.experimental_copy_path, ArgumentMatches(::testing::IsFalse()));
 }
 
 TEST_F(ParseArgsUnitNoEnv, NoArgs)
@@ -212,6 +213,7 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   ASSERT_THAT(parsed.log_to_file, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.freeze_on_error, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.cuda_driver_path, ArgumentMatches(std::string{"libdummy_cuda_driver.so"}));
+  ASSERT_THAT(parsed.experimental_copy_path, ArgumentMatches(::testing::IsFalse()));
 
 #undef TEMP_ENV_VAR
 }
@@ -657,6 +659,15 @@ TEST_F(ParseArgsUnit, CUDADriverPath)
   const auto parsed = legate::detail::parse_args({"dummy", "--cuda-driver-path", path});
 
   ASSERT_THAT(parsed.cuda_driver_path, ArgumentMatches(path));
+}
+
+TEST_P(BoolArgs, ExperimentalCopyPath)
+{
+  const auto [arg_value, expected] = GetParam();
+  const auto parsed =
+    legate::detail::parse_args({"dummy", "--experimental-copy-path", std::string{arg_value}});
+
+  ASSERT_THAT(parsed.experimental_copy_path, ArgumentMatches(expected));
 }
 
 TEST_F(ParseArgsUnit, Deduplication)

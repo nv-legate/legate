@@ -17,6 +17,7 @@ __all__ = (
     "CONSENSUS",
     "CPUS",
     "DISABLE_MPI",
+    "EXPERIMENTAL_COPY_PATH",
     "FBMEM",
     "FIELD_REUSE_FRACTION",
     "FIELD_REUSE_FREQUENCY",
@@ -372,6 +373,15 @@ IO_USE_VFD_GDS = Argument(
     "--io-use-vfd-gds",
     ArgSpec(
         dest="io_use_vfd_gds",
+        action="store_true",
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+EXPERIMENTAL_COPY_PATH = Argument(
+    "--experimental-copy-path",
+    ArgSpec(
+        dest="experimental_copy_path",
         action="store_true",
         help="Set LEGATE_CONFIG='--help' for information on this option.",
     ),

@@ -11,6 +11,7 @@ from ..util.shared_args import (
     AUTO_CONFIG,
     CONSENSUS,
     DISABLE_MPI,
+    EXPERIMENTAL_COPY_PATH,
     FIELD_REUSE_FRACTION,
     FIELD_REUSE_FREQUENCY,
     INLINE_TASK_LAUNCH,
@@ -186,6 +187,14 @@ def env_io_use_vfd_gds(config: ConfigProtocol) -> EnvPart:
     return (IO_USE_VFD_GDS.name,) if config.other.io_use_vfd_gds else ()
 
 
+def env_experimental_copy_path(config: ConfigProtocol) -> EnvPart:
+    return (
+        (EXPERIMENTAL_COPY_PATH.name,)
+        if config.other.experimental_copy_path
+        else ()
+    )
+
+
 ENV_PARTS_LEGATE = (
     env_cpus,
     env_gpus,
@@ -220,4 +229,5 @@ ENV_PARTS_LEGATE = (
     env_disable_mpi,
     env_inline_task_launch,
     env_io_use_vfd_gds,
+    env_experimental_copy_path,
 )

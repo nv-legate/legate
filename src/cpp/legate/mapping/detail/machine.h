@@ -89,6 +89,13 @@ class LocalProcessorRange {
   [[nodiscard]] bool empty() const;
   [[nodiscard]] std::string to_string() const;
   [[nodiscard]] std::uint32_t total_proc_count() const;
+  /**
+   * @brief Returns the starting index offset for this processor range within the global processor
+   * space.
+   *
+   * @return The offset value used for indexing processors in the range.
+   */
+  [[nodiscard]] std::uint32_t offset() const;
 
   friend std::ostream& operator<<(std::ostream& os, const LocalProcessorRange& range);
 

@@ -109,6 +109,7 @@ class TestConfig:
             disable_mpi=False,
             inline_task_launch=False,
             io_use_vfd_gds=False,
+            experimental_copy_path=False,
         )
 
     def test_arg_conversions(self, mocker: MockerFixture) -> None:

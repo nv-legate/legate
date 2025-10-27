@@ -77,6 +77,7 @@ Config prefill_config(const ParsedArgs& args)
   cfg.set_consensus(args.consensus.value());
   cfg.set_disable_mpi(args.disable_mpi.value());
   cfg.set_io_use_vfd_gds(args.io_use_vfd_gds.value());
+  cfg.set_experimental_copy_path(args.experimental_copy_path.value());
   // Disable MPI in legate if the network bootstrap is p2p
   if (REALM_UCP_BOOTSTRAP_MODE.get() == "p2p") {
     cfg.set_disable_mpi(true);

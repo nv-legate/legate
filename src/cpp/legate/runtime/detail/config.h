@@ -50,6 +50,7 @@ class LEGATE_PYTHON_EXPORT Config {
   LEGATE_CONFIG_VAR(bool, profile, false);
   LEGATE_CONFIG_VAR(std::string, profile_name, std::string{"legate"});
   LEGATE_CONFIG_VAR(bool, provenance, false);
+  LEGATE_CONFIG_VAR(bool, experimental_copy_path, false);
 };
 
 #undef LEGATE_CONFIG_VAR

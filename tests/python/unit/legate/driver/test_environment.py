@@ -54,6 +54,7 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_disable_mpi,
         m.env_inline_task_launch,
         m.env_io_use_vfd_gds,
+        m.env_experimental_copy_path,
     ) == m.ENV_PARTS_LEGATE
 
 

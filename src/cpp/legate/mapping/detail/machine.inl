@@ -53,6 +53,8 @@ inline bool LocalProcessorRange::empty() const { return procs_.empty(); }
 
 inline std::uint32_t LocalProcessorRange::total_proc_count() const { return total_proc_count_; }
 
+inline std::uint32_t LocalProcessorRange::offset() const { return offset_; }
+
 // ==========================================================================================
 
 inline const std::vector<Processor>& LocalMachine::cpus() const { return cpus_; }

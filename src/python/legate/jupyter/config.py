@@ -115,6 +115,7 @@ class Config:
             disable_mpi=args.disable_mpi,
             inline_task_launch=args.inline_task_launch,
             io_use_vfd_gds=args.io_use_vfd_gds,
+            experimental_copy_path=args.experimental_copy_path,
         )
 
     @cached_property
