@@ -4,10 +4,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, Protocol, TypedDict
+from typing import TYPE_CHECKING, Final, Protocol, TypeAlias, TypedDict
+
+from ._lib.data.logical_array import LogicalArray
+from ._lib.data.logical_store import LogicalStore
 
 if TYPE_CHECKING:
-    from ._lib.data.logical_array import LogicalArray
+    from . import StoreTarget
     from ._lib.type.types import Type
 
 
@@ -25,6 +28,111 @@ class LegateDataInterface(Protocol):
     def __legate_data_interface__(  # noqa: D105
         self,
     ) -> LegateDataInterfaceItem: ...
+
+
+LogicalArrayLike: TypeAlias = LogicalArray | LogicalStore | LegateDataInterface
+
+
+def as_logical_array(obj: LegateDataInterface) -> LogicalArray:
+    """Extra a LogicalArray from an object that provides the Legate
+    data interface.
+
+    Parameters
+    ----------
+    obj : LegateDataInterface
+        An object exposing a legate data interface.
+
+    Returns
+    -------
+        LogicalArray
+
+    Raises
+    ------
+        TypeError
+            In case obj does not expose a valid Legate Data Interface
+
+        NotImplementedError
+            In case the Legate Data Interface specifies unsupported
+            features (e.g. nullable fields)
+
+    """
+    if not hasattr(obj, "__legate_data_interface__"):
+        msg = "object does not provide Legate data interface"
+        raise TypeError(msg)
+
+    iface = obj.__legate_data_interface__
+
+    if "version" not in iface:
+        msg = "Legate data interface missing a version number"  # type: ignore [unreachable]
+        raise TypeError(msg)
+
+    v = iface["version"]
+
+    if not isinstance(v, int):
+        msg = f"Legate data interface version expected an integer, got {v!r}"  # type: ignore [unreachable]
+        raise TypeError(msg)
+
+    if v < MIN_DATA_INTERFACE_VERSION:
+        msg = (
+            f"Legate data interface version {v} is below "
+            f"{MIN_DATA_INTERFACE_VERSION=}"
+        )
+        raise TypeError(msg)
+
+    if v > MAX_DATA_INTERFACE_VERSION:
+        msg = f"Unsupported Legate data interface version {v}"
+        raise NotImplementedError(msg)
+
+    data = iface["data"]
+
+    it = iter(data)
+
+    try:
+        field = next(it)
+    except StopIteration:
+        msg = "Legate data object has no fields"
+        raise TypeError(msg)
+
+    try:
+        next(it)
+    except StopIteration:
+        pass
+    else:
+        msg = (
+            "Legate data interface objects with more than "
+            "one store are unsupported"
+        )
+        raise NotImplementedError(msg)
+
+    column = data[field]
+
+    if column.nullable:
+        msg = (
+            "Legate data interface objects with nullable "
+            "stores are unsupported"
+        )
+        raise NotImplementedError(msg)
+
+    return column
+
+
+def offload_to(obj: LogicalArrayLike, *, target: StoreTarget) -> None:
+    """Offload a logical array-like object to a particular memory space.
+
+    Parameters
+    ----------
+    obj: LogicalArrayLike
+        The object to offload.
+    target: StoreTarget
+        The store target to offload to, e.g. StoreTarget.SYSMEM
+
+    """
+    if isinstance(obj, (LogicalArray, LogicalStore)):
+        obj.offload_to(target)
+
+    else:
+        array = as_logical_array(obj)
+        array.offload_to(target)
 
 
 class Field:

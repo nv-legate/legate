@@ -688,7 +688,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             TypeError,
-            match="Argument: 'x' Legate data interface missing a version number",  # noqa: E501
+            match="Legate data interface missing a version number\nTask Argument: 'x'",  # noqa: E501
         ):
             foo(missing)
 
@@ -710,7 +710,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             TypeError,
-            match="Argument: 'x' Legate data interface version expected an integer, got",  # noqa: E501
+            match=r"Legate data interface version expected an integer, got(.*)\nTask Argument: 'x'",  # noqa: E501
         ):
             foo(bad)
 
@@ -732,7 +732,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             TypeError,
-            match=f"Argument: 'x' Legate data interface version {v} is below",
+            match=f"Legate data interface version {v} is below(.*)\nTask Argument: 'x'",  # noqa: E501
         ):
             foo(lo)
 
@@ -755,7 +755,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             NotImplementedError,
-            match=f"Argument: 'x' Unsupported Legate data interface version {v}",  # noqa: E501
+            match=f"Unsupported Legate data interface version {v}\nTask Argument: 'x'",  # noqa: E501
         ):
             foo(hi)
 
@@ -772,7 +772,8 @@ class TestLegateDataInterface:
         missing = MissingFields()
 
         with pytest.raises(
-            TypeError, match="Argument: 'x' Legate data object has no fields"
+            TypeError,
+            match="Legate data object has no fields\nTask Argument: 'x'",
         ):
             foo(missing)
 
@@ -796,7 +797,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with more than one store are unsupported",  # noqa: E501
+            match="Legate data interface objects with more than one store are unsupported\nTask Argument: 'x'",  # noqa: E501
         ):
             foo(too_many)
 

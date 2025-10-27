@@ -42,9 +42,8 @@ from ..._lib.type.types cimport Type, TypeCode, binary_type
 from ..._lib.runtime.runtime import ProfileRange
 
 from ...data_interface import (
-    MAX_DATA_INTERFACE_VERSION,
-    MIN_DATA_INTERFACE_VERSION,
     LegateDataInterface,
+    as_logical_array,
 )
 
 from .type cimport (
@@ -70,66 +69,13 @@ cdef tuple[type, ...] _REDUCTION_TYPES = (ReductionStore, ReductionArray)
 
 
 cdef try_unpack_simple_store(arg: LegateDataInterface, name: str):
-    iface = arg.__legate_data_interface__
-
-    if "version" not in iface:
-        raise TypeError(
-            f"Argument: {name!r} Legate data interface missing a version "
-            "number"
-        )
-
-    v = iface["version"]
-
-    if not isinstance(v, int):
-        raise TypeError(
-            f"Argument: {name!r} Legate data interface version expected an "
-            f"integer, got {v!r}"
-        )
-
-    if v < MIN_DATA_INTERFACE_VERSION:
-        raise TypeError(
-            f"Argument: {name!r} Legate data interface version {v} is below "
-            f"{MIN_DATA_INTERFACE_VERSION=}"
-        )
-
-    if v > MAX_DATA_INTERFACE_VERSION:
-        raise NotImplementedError(
-            f"Argument: {name!r} Unsupported Legate data interface version {v}"
-        )
-
-    data = iface["data"]
-
-    it = iter(data)
-
     try:
-        field = next(it)
-    except StopIteration:
-        raise TypeError(f"Argument: {name!r} Legate data object has no fields")
+        array = as_logical_array(arg)
+    except Exception as e:
+        e.add_note(f"Task Argument: {name!r}")
+        raise
 
-    try:
-        next(it)
-    except StopIteration:
-        pass
-    else:
-        raise NotImplementedError(
-            f"Argument: {name!r} Legate data interface objects with more than "
-            "one store are unsupported"
-        )
-
-    if field.nullable:
-        raise NotImplementedError(
-            f"Argument: {name!r} Legate data interface objects with nullable "
-            "fields are unsupported"
-        )
-
-    column = data[field]
-    if column.nullable:
-        raise NotImplementedError(
-            f"Argument: {name!r} Legate data interface objects with nullable "
-            "stores are unsupported"
-        )
-
-    return column.data
+    return array.data
 
 
 cdef inline type _unpack_generic_type(object annotation):

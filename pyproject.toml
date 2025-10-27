@@ -235,7 +235,10 @@ ignore = [
     #
     # None of our python code is in a hot-loop, and typing.cast() is so seldom used that
     # this is OK to silence.
-    "TC006"
+    "TC006",
+    # This seems like a ruff bug, or bad choice. Should only apply for actual exception subclasses
+    "TRY003"
+
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]

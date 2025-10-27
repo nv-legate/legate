@@ -102,7 +102,13 @@ from ._lib.utilities.typedefs import (
     LocalTaskID,
     VariantCode,
 )
-from .data_interface import Field, LegateDataInterface, Table
+from .data_interface import (
+    Field,
+    LegateDataInterface,
+    Table,
+    as_logical_array,
+    offload_to,
+)
 from .types import (
     FixedArrayType,
     ReductionOpKind,
