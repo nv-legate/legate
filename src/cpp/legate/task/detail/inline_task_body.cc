@@ -11,6 +11,7 @@
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/task.h>
+#include <legate/operation/detail/task_array_arg.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/task.h>

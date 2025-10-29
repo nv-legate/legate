@@ -325,6 +325,7 @@ target_sources(legate_obj
                        legate/operation/detail/scatter.cc
                        legate/operation/detail/scatter_gather.cc
                        legate/operation/detail/task.cc
+                       legate/operation/detail/task_array_arg.cc
                        legate/operation/detail/task_launcher.cc
                        legate/operation/detail/timing.cc
                        legate/operation/detail/extract_scalar.cc

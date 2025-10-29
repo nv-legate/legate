@@ -7,6 +7,7 @@
 #include <legate/partitioning/detail/proxy/image.h>
 
 #include <legate/operation/detail/task.h>
+#include <legate/operation/detail/task_array_arg.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>

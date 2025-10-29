@@ -11,6 +11,7 @@
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/operation/detail/operation.h>
+#include <legate/operation/detail/task_array_arg.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/streaming.h>
@@ -21,9 +22,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <utility>
-#include <variant>
 
 namespace legate {
 
@@ -37,46 +36,6 @@ class CommunicatorFactory;
 class ConstraintSolver;
 class Library;
 class VariantInfo;
-
-class TaskArrayArg {
- public:
-  /**
-   * @brief Construct a TaskArrayArg for LogicalArray.
-   *
-   * `priv` should be initialized to the following values based on whether the argument as an
-   * input, output, or reduction:
-   *
-   * - input: `LEGION_READ_ONLY`
-   * - output: `LEGION_WRITE_ONLY`
-   * - reduction: `LEGION_REDUCE`
-   *
-   * If the owning task is a streaming task, then this privilege is further fixed up during
-   * scheduling window flush to include additional discard privileges. Therefore, the privilege
-   * member should *not* be considered stable until the task is sent to Legion.
-   *
-   * @param priv The access privilege for this task argument.
-   * @param _array The LogicalArray for this argument.
-   * @param _projection An optional projection for the argument.
-   */
-  TaskArrayArg(Legion::PrivilegeMode priv,
-               InternalSharedPtr<LogicalArray> _array,
-               std::optional<SymbolicPoint> _projection = std::nullopt);
-
-  /**
-   * @brief Construct a TaskArrayArg for PhysicalArray.
-   *
-   * @param priv The access privilege for this task argument.
-   * @param _array The PhysicalArray for this argument.
-   */
-  TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalArray> _array);
-  [[nodiscard]] bool needs_flush() const;
-
-  Legion::PrivilegeMode privilege{Legion::PrivilegeMode::LEGION_NO_ACCESS};
-  std::variant<InternalSharedPtr<LogicalArray>, InternalSharedPtr<PhysicalArray>> array{};
-  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>
-    mapping{};  // Only used for LogicalArray
-  std::optional<SymbolicPoint> projection{};
-};
 
 class TaskBase : public Operation {
  protected:
