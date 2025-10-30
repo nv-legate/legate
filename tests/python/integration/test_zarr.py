@@ -14,7 +14,7 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from legate.core import LogicalArray, Type, get_legate_runtime
+from legate.core import LogicalArray, Table, Type, get_legate_runtime
 from legate.core.experimental.io.zarr import read_array, write_array
 
 if TYPE_CHECKING:
@@ -74,6 +74,35 @@ class TestZarrV2:
         array = LogicalArray.from_store(store)
 
         write_array(ary=array, dirpath=tmp_path, chunks=chunks)
+        get_legate_runtime().issue_execution_fence(block=True)
+
+        b = zarr.open_array(tmp_path, mode="r")
+        assert_array_equal(a, b)
+
+    @pytest.mark.parametrize(*shape_chunks)
+    @pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
+    @pytest.mark.skipif(
+        MULTI_GPU_CI,
+        reason=(
+            "Intermittent failures in CI for multi-gpu, "
+            "see https://github.com/nv-legate/legate.internal/issues/2326"
+        ),
+    )
+    def test_write_array_from_data_interface(
+        self,
+        tmp_path: Path,
+        shape: tuple[int, ...],
+        chunks: tuple[int, ...],
+        dtype: str,
+    ) -> None:
+        a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
+        store = get_legate_runtime().create_store_from_buffer(
+            Type.from_numpy_dtype(a.dtype), a.shape, a, False
+        )
+        array = LogicalArray.from_store(store)
+        table = Table.from_arrays(["store"], [array])
+
+        write_array(ary=table, dirpath=tmp_path, chunks=chunks)
         get_legate_runtime().issue_execution_fence(block=True)
 
         b = zarr.open_array(tmp_path, mode="r")

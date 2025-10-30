@@ -7,6 +7,7 @@ from os import PathLike as os_PathLike
 from pathlib import Path
 from typing import TypeAlias
 
+from .....data_interface import LogicalArrayLike
 from ....data.logical_array import LogicalArray
 from ....data.shape import Shape
 from ....type.types import Type
@@ -15,7 +16,7 @@ Pathlike: TypeAlias = str | os_PathLike[str] | Path
 Shapelike: TypeAlias = Shape | Sequence[int]
 
 def from_file(path: Pathlike, array_type: Type) -> LogicalArray: ...
-def to_file(path: Pathlike, array: LogicalArray) -> None: ...
+def to_file(path: Pathlike, array: LogicalArrayLike) -> None: ...
 def from_tiles(
     path: Pathlike,
     shape: Shapelike,

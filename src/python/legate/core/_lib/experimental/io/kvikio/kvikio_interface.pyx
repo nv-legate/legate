@@ -7,6 +7,8 @@ from libc.stdint cimport uint64_t
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
+from .....data_interface import as_logical_array
+
 from ....._ext.cython_libcpp.string_view cimport (
     std_string_view,
     std_string_view_from_py,
@@ -27,7 +29,13 @@ cpdef LogicalArray from_file(object path, Type array_type):
 
     return LogicalArray.from_handle(std_move(ret))
 
-cpdef void to_file(object path, LogicalArray array):
+
+cpdef void to_file(object path, object array):
+    ary = as_logical_array(array)
+    _logical_array_to_file(path, ary)
+
+
+cdef void _logical_array_to_file(object path, LogicalArray array):
     cdef std_string_view cpp_path = std_string_view_from_py(str(path))
 
     with nogil:

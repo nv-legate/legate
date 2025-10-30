@@ -25,4 +25,8 @@ cdef extern from "legate/io/hdf5/interface.h" namespace "legate" nogil:
 
 
 cpdef LogicalArray from_file(object path, str dataset_name)
-cpdef void to_file(LogicalArray array, object path, str dataset_name)
+cdef void _logical_array_to_file(
+    LogicalArray array,
+    object path,
+    str dataset_name
+)

@@ -34,7 +34,7 @@ LogicalArrayLike: TypeAlias = LogicalArray | LogicalStore | LegateDataInterface
 
 
 def as_logical_array(obj: LegateDataInterface) -> LogicalArray:
-    """Extra a LogicalArray from an object that provides the Legate
+    """Extract a LogicalArray from an object that provides the Legate
     data interface.
 
     Parameters

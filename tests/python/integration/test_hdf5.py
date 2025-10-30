@@ -16,10 +16,12 @@ from numpy.testing import assert_array_equal
 import pytest
 
 from legate.core import (
+    Field,
     LogicalArray,
     ParallelPolicy,
     Scope,
     StreamingMode,
+    Table,
     Type,
     get_legate_runtime,
     types as ty,
@@ -207,6 +209,34 @@ def test_array_write(
         runtime.issue_fill(array, 1)
 
         to_file(array=array, path=filename, dataset_name=dataset_name)
+        # del is deliberate here, we need the array to be destroyed and emit
+        # the discard inside the streaming scope.
+        del array
+
+    runtime.issue_execution_fence(block=True)
+
+
+@pytest.mark.parametrize("shape", [(1,), (2, 2), (3, 4, 5)])
+def test_array_write_from_data_interface(
+    tmp_path: Path, shape: tuple[int, ...]
+) -> None:
+    runtime = get_legate_runtime()
+
+    filename = tmp_path / "test-file.hdf5"
+    dataset_name = "foo"
+
+    with Scope(
+        parallel_policy=ParallelPolicy(
+            streaming_mode=StreamingMode.RELAXED, overdecompose_factor=8
+        )
+    ):
+        array = runtime.create_array(dtype=ty.int64, shape=shape)
+        runtime.issue_fill(array, 1)
+
+        field = Field("foo", dtype=ty.int64)
+        table = Table([field], [array])
+
+        to_file(table, path=filename, dataset_name=dataset_name)
         # del is deliberate here, we need the array to be destroyed and emit
         # the discard inside the streaming scope.
         del array

@@ -4,6 +4,7 @@
 
 from libcpp.utility cimport move as std_move
 
+from ....core.data_interface import as_logical_array
 from ....core._ext.cython_libcpp.string_view cimport (
     std_string_view,
     std_string_view_from_py,
@@ -44,7 +45,8 @@ cpdef LogicalArray from_file(object path, str dataset_name):
 
     return LogicalArray.from_handle(std_move(ret))
 
-cpdef void to_file(LogicalArray array, object path, str dataset_name):
+
+cpdef to_file(object array, object path, str dataset_name):
     r"""Write a LogicalArray to disk using HDF5.
 
     If ``path`` already exists at the time of writing, the file will be
@@ -63,8 +65,8 @@ cpdef void to_file(LogicalArray array, object path, str dataset_name):
 
     Parameters
     ----------
-    array : LogicalArray
-        The array to serialize.
+    array : LogicalArrayLike
+        The array-like object to serialize.
     path : Pathlike
         Path to write to.
     dataset_name : str
@@ -77,6 +79,15 @@ cpdef void to_file(LogicalArray array, object path, str dataset_name):
         directory name. Generally speaking, it should be in the form
         ``/path/to/file.h5``.
     """
+    ary = as_logical_array(array)
+    _logical_array_to_file(ary, path, dataset_name)
+
+
+cdef void _logical_array_to_file(
+    LogicalArray array,
+    object path, str
+    dataset_name
+):
     cdef str str_path = str(path)
     cdef std_string_view cpp_path
     cdef std_string_view cpp_dataset_name

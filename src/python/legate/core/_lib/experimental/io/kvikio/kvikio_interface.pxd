@@ -67,7 +67,7 @@ cdef extern from "legate/experimental/io/kvikio/interface.h" \
 
 
 cpdef LogicalArray from_file(object path, Type array_type)
-cpdef void to_file(object path, LogicalArray array)
+cdef void _logical_array_to_file(object path, LogicalArray array)
 
 cpdef LogicalArray from_tiles(
     object path,

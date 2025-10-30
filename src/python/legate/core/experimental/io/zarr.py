@@ -11,6 +11,7 @@ import zarr  # type: ignore # noqa: PGH003
 import zarr.core  # type: ignore # noqa: PGH003
 
 from ... import LogicalArray, Type, get_legate_runtime
+from ...data_interface import LogicalArrayLike, as_logical_array
 from . import tile
 
 
@@ -47,7 +48,7 @@ def _get_padded_shape(  # type: ignore # noqa: PGH003
 
 
 def write_array(
-    ary: LogicalArray,
+    ary: LogicalArrayLike,
     dirpath: Path | str,
     chunks: int | tuple[int, ...] | None = None,
 ) -> None:
@@ -61,13 +62,15 @@ def write_array(
 
     Parameters
     ----------
-    ary : LogicalArray
-       The Legate array to write.
+    ary : LogicalArrayLike
+       The Legate array-like object to write.
     dirpath : Path | str
         Root directory of the tile files.
     chunks : int | tuple[int, ...] | None
         The shape of each tile.
     """
+    ary = as_logical_array(ary)
+
     dirpath = Path(dirpath)
 
     # We use Zarr to write the meta data

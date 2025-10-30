@@ -7,10 +7,11 @@ from pathlib import Path
 from typing import TypeAlias
 
 from ....core import LogicalArray
+from ....core.data_interface import LogicalArrayLike
 
 Pathlike: TypeAlias = str | os_PathLike[str] | Path
 
 def from_file(path: Pathlike, dataset_name: str) -> LogicalArray: ...
 def to_file(
-    array: LogicalArray, path: Pathlike, dataset_name: str
+    array: LogicalArrayLike, path: object, dataset_name: str
 ) -> None: ...
