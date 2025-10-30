@@ -105,8 +105,9 @@ MATCHER_P3(MatchesStackTrace,  // NOLINT
   EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: System: .*"));
   EXPECT_THAT(deref(it++),
               MatchesRegex(R"(LEGATE ERROR: Legate version: [0-9]+.[0-9]+.[0-9]+ \([A-z0-9]+\))"));
+
   EXPECT_THAT(deref(it++),
-              MatchesRegex(R"(LEGATE ERROR: Legion version: [0-9]+.[0-9]+.[0-9]+ \([A-z0-9]+\))"));
+              MatchesRegex("LEGATE ERROR: Legion version: " LEGION_VERSION R"( \([A-z0-9]+\))"));
   EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: Configure options: .*"));
   EXPECT_EQ(
     deref(it++),

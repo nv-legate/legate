@@ -60,8 +60,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                            SYSTEM
                            TRUE
                   EXCLUDE_FROM_ALL ${exclude_from_all}
-                  OPTIONS "Legion_VERSION ${version}"
-                          "Legion_REDOP_HALF OFF"
+                  OPTIONS "Legion_REDOP_HALF OFF"
                           "Legion_REDOP_COMPLEX OFF"
                           "Legion_UCX_DYNAMIC_LOAD ON"
                           # We never want local fields
@@ -78,7 +77,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON")
 
   legate_export_variables(Legion)
-  set(Legion_VERSION "${version}" PARENT_SCOPE)
+  set_parent_scope(Legion_VERSION)
   set(Legion_GIT_REPO "${git_repo}" PARENT_SCOPE)
   set(Legion_GIT_BRANCH "${git_branch}" PARENT_SCOPE)
   set_parent_scope(Legion_USE_CUDA)
