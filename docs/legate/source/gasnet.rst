@@ -201,6 +201,13 @@ install cmake`` or by any other means.  Note that when the wrapper is built, the
 final message suggests reactivating the environment, but that is not necessary
 before building the GASNet wrapper:
 
+.. note::
+
+   As of October 2025, the GASNet wrapper on Perlmutter only works when the
+   NERSC-provided ``mpich`` module is loaded.  Attempts to build or use the
+   wrapper with ``cray-mpich`` currently fail, so ensure ``module load mpich``
+   is issued before running ``build-gex-wrapper.sh``.
+
 .. code-block:: sh
 
     login40:~> /conda/envs/legate-gex-anaconda/gex-wrapper/build-gex-wrapper.sh
@@ -338,6 +345,14 @@ actually provide the ``srun`` command around Legate, and then we would use
 ``--launcher none`` to prevent the Legate launcher from using any external
 launcher.  With our options, Legate run results in the following output on
 Perlmutter:
+
+.. warning::
+
+   As of October 2025, Perlmutter jobs that request more than 32 GB of frame
+   buffer memory (for example, ``--fbmem 64000``) must include ``-gex:bindcuda
+   0`` in the options passed through ``REALM_DEFAULT_ARGS``.  Otherwise the OFI
+   provider aborts with ``Unexpected error 12 (Cannot allocate memory) from
+   fi_mr_regattr()``.
 
 .. code-block:: sh
 
