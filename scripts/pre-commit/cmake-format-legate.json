@@ -16,6 +16,11 @@
                     "nargs": 0
                 }
             },
+            "compute_legion_target": {
+                "pargs": {
+                    "nargs": 1
+                }
+            },
             "find_legate_cpp": {
                 "kwargs": {
                     "BUILD_EXPORT_SET": 1,

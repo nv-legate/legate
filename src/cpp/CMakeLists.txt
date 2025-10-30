@@ -669,14 +669,26 @@ foreach(target legate_obj legate)
   legate_add_target_link_options("${target}" PUBLIC legate_LINKER_FLAGS)
 endforeach()
 
-get_target_property(legion_target Legion::LegionRuntime ALIASED_TARGET)
+function(compute_legion_target TARGET_VAR)
+  get_target_property(imported Legion::LegionRuntime IMPORTED)
+  if(imported)
+    set(${TARGET_VAR} "" PARENT_SCOPE)
+    return()
+  endif()
 
-if(NOT legion_target)
-  message(FATAL_ERROR "Failed to determine underlying Legion "
-                      "target from Legion::LegionRuntime")
-endif()
+  get_target_property(legion_target Legion::LegionRuntime ALIASED_TARGET)
 
-foreach(target legate_obj legate "${legion_target}")
+  if(NOT legion_target)
+    message(FATAL_ERROR "Failed to determine underlying Legion "
+                        "target from Legion::LegionRuntime")
+  endif()
+
+  set(${TARGET_VAR} "${legion_target}" PARENT_SCOPE)
+endfunction()
+
+compute_legion_target(legion_target)
+# Don't quote legion_target expansion here. It may be empty.
+foreach(target legate_obj legate ${legion_target})
   # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
   target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
   if(legate_USE_CUDA AND ("${CCCL_VERSION}" VERSION_EQUAL "2.7.0"))
