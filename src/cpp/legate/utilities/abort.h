@@ -26,7 +26,7 @@ namespace legate::detail {
 #define __has_cpp_attribute(x) 0
 #endif
 
-// The abort handler *really* does not need to optimized for speed in any way, shape, or
+// The abort handler *really* does not need to be optimized for speed in any way, shape, or
 // form. The only thing it should be optimized for is compile-time and instruction
 // footprint. We already extract the true abort handler to a .cc, but we still need to convert
 // all the arguments to string and unfortunately, std::stringstream has a tendency to explode

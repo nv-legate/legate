@@ -171,7 +171,7 @@ class LegateDriver:
         if self.config.profiling.profile:
             self.print_on_head_node(
                 f"Profiles have been generated under {log_dir}, run "
-                f"legion_prof view {log_dir}/legate_*.prof to view them"
+                f"legate_prof view {log_dir}/legate_*.prof to view them"
             )
 
         return ret

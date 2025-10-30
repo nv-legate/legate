@@ -261,7 +261,7 @@ run_test_or_analysis() {
                     -c "${PROFILER_DIR}/conda-build/legate-profiler" \
                     legate-profiler || true
 
-              # Archive to legion_prof; ignore failures so we still upload inputs.
+              # Archive to legate_prof; ignore failures so we still upload inputs.
               "${CONDA_PREFIX}"/bin/legate_prof archive "${REPO_DIR}"/legate_*.prof || true
 
               # Copy processed profiler output if present
