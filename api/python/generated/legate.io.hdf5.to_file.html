@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.io.hdf5.to_file &#8212; NVIDIA legate (25.11.00.dev44+g88333c190)</title>
+    <title>legate.io.hdf5.to_file &#8212; NVIDIA legate (25.11.00.dev47+g95a0d7165)</title>
   
   
   
@@ -46,7 +46,7 @@ SPDX-License-Identifier: Apache-2.0
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=da457d13"></script>
+    <script src="../../../_static/documentation_options.js?v=57220256"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,11 +133,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev44+g88333c190) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev44+g88333c190) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev47+g95a0d7165) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev47+g95a0d7165) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev44+g88333c190)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev47+g95a0d7165)</p>
   
 </a></div>
     
@@ -244,11 +244,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev44+g88333c190) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev44+g88333c190) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.11.00.dev47+g95a0d7165) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.11.00.dev47+g95a0d7165) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.11.00.dev44+g88333c190)</p>
+    <p class="title logo__title">NVIDIA legate (25.11.00.dev47+g95a0d7165)</p>
   
 </a>
 
@@ -690,7 +690,7 @@ SPDX-License-Identifier: Apache-2.0
 <h1>legate.io.hdf5.to_file<a class="headerlink" href="#legate-io-hdf5-to-file" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="legate.io.hdf5.to_file">
-<span class="sig-prename descclassname"><span class="pre">legate.io.hdf5.</span></span><span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LogicalArray</span> <span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str</span> <span class="pre">dataset_name</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#legate.io.hdf5.to_file" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">legate.io.hdf5.</span></span><span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str</span> <span class="pre">dataset_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#legate.io.hdf5.to_file" title="Link to this definition">#</a></dt>
 <dd><p>Write a LogicalArray to disk using HDF5.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">path</span></code> already exists at the time of writing, the file will be
 overwritten.</p>
@@ -705,7 +705,7 @@ the tasks assume these directories exist when they execute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>array</strong> (<a class="reference internal" href="legate.core.LogicalArray.html#legate.core.LogicalArray" title="legate.core.LogicalArray"><em>LogicalArray</em></a>) – The array to serialize.</p></li>
+<li><p><strong>array</strong> (<em>LogicalArrayLike</em>) – The array-like object to serialize.</p></li>
 <li><p><strong>path</strong> (<em>Pathlike</em>) – Path to write to.</p></li>
 <li><p><strong>dataset_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – The name of the data set to store the array under.</p></li>
 </ul>
