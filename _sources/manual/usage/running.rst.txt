@@ -363,7 +363,7 @@ files can be opened with the profile viewer:
 
 .. code-block:: sh
 
-    legion_prof view legate_*.prof
+    legate_prof view legate_*.prof
 
 The viewer will open a window with a timeline of your program's execution:
 
