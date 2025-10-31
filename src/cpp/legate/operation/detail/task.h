@@ -152,8 +152,10 @@ class LogicalTask : public TaskBase {
 
  private:
   void legion_launch_(Strategy* strategy);
-  void demux_scalar_stores_(const Legion::Future& result);
-  void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
+  void demux_scalar_stores_(const Legion::Future& result, std::size_t future_size);
+  void demux_scalar_stores_(const Legion::FutureMap& result,
+                            const Domain& launch_domain,
+                            std::size_t future_size);
   [[nodiscard]] std::size_t calculate_future_size_() const;
 
   SmallVector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};

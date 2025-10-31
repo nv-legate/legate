@@ -398,10 +398,25 @@ class Runtime {
   void dispatch(const Legion::IndexFillLauncher& launcher);
 
   /**
-   * @brief Extract a scalar of size `size` from a future at offset `offset` and return it in a
-   * `Future`.
+   * @brief Given a future (`result`) that contains possibly multiple future values packed into
+   * a single value, extract a specific value and return it as a standalone future.
    *
-   * See `legate::detail::Task::demux_scalar_stores_`.
+   * @param parallel_policy The policy to use for the task launch.
+   * @param result The future to extract from.
+   * @param offset The byte-based offset into the buffer of `result` where the sub-value begins.
+   * @param size The maximum possible size of the value to extract. The actual value may be smaller.
+   * @param future_size The size (in bytes) of buffer held by `result`.
+   *
+   * `size` is an upper bound. While the actual size of the value may be smaller, it cannot
+   * exceed `size`. As `size` would also affect other offsets, the only time where the true
+   * size of the future may differ from `size` is if it is the "last" value contained in the future.
+   *
+   * `future_size` is passed explicitly (instead of using `result.get_untyped_size()`) because
+   * getting the size of the future requires blocking on the completion of the task that fills
+   * the future. This could end up in a deadlock if the future hasn't been allocated yet by the
+   * mapper thread.
+   *
+   * @see `legate::detail::Task::demux_scalar_stores_()`.
    */
   [[nodiscard]] Legion::Future extract_scalar(const ParallelPolicy& parallel_policy,
                                               const Legion::Future& result,
@@ -409,10 +424,27 @@ class Runtime {
                                               std::size_t size,
                                               std::size_t future_size) const;
   /**
-   * @brief Extract a scalar of size `size` from each future in a `FutureMap` at offset `offset` and
-   * return them in a `FutureMap`.
+   * @brief Given a future-map (`result`) that contains possibly multiple future-map values
+   * packed into a single one, extract a specific value and return it as a standalone
+   * future-map.
    *
-   * See `legate::detail::Task::demux_scalar_stores_`.
+   * @param parallel_policy The policy to use for the task launch.
+   * @param result The future-map to extract from.
+   * @param offset The byte-based offset into the buffer of `result` where the sub-values begin.
+   * @param size The maximum possible size of the value to extract. The actual value may be smaller.
+   * @param future_size The size (in bytes) of buffer held by `result`.
+   * @param launch_domain The launch domain of the task that produced `result`.
+   *
+   * `size` is an upper bound. While the actual size of the value may be smaller, it cannot
+   * exceed `size`. As `size` would also affect other offsets, the only time where the true
+   * size of the future may differ from `size` is if it is the "last" value contained in the future.
+   *
+   * `future_size` is passed explicitly (instead of using `result.get_untyped_size()`) because
+   * getting the size of the future requires blocking on the completion of the task that fills
+   * the future. This could end up in a deadlock if the future hasn't been allocated yet by the
+   * mapper thread.
+   *
+   * @see `legate::detail::Task::demux_scalar_stores_()`.
    */
   [[nodiscard]] Legion::FutureMap extract_scalar(const ParallelPolicy& parallel_policy,
                                                  const Legion::FutureMap& result,

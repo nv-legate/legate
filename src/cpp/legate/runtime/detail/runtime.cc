@@ -1538,6 +1538,13 @@ Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                        std::size_t size,
                                        std::size_t future_size) const
 {
+  if (offset == 0 && size == future_size) {
+    // If the future we want to extract is at the "front", and has the same size as the future
+    // itself then... it's the only thing contained within the future, and there is no need to
+    // launch the task.
+    return result;
+  }
+
   const auto& machine = get_machine();
   auto launcher       = TaskLauncher{core_library(),
                                machine,
@@ -1562,6 +1569,13 @@ Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                           std::size_t future_size,
                                           const Legion::Domain& launch_domain) const
 {
+  if (offset == 0 && size == future_size) {
+    // If the future we want to extract is at the "front", and has the same size as the future
+    // itself then... it's the only thing contained within the future, and there is no need to
+    // launch the task.
+    return result;
+  }
+
   const auto& machine = get_machine();
   auto launcher       = TaskLauncher{core_library(),
                                machine,

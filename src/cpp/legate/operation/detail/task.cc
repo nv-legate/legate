@@ -358,122 +358,76 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
     auto result = launcher.execute(launch_domain);
 
     if (launch_volume > 1) {
-      demux_scalar_stores_(result, launch_domain);
+      demux_scalar_stores_(result, launch_domain, future_size);
     } else {
-      demux_scalar_stores_(result.get_future(launch_domain.lo()));
+      demux_scalar_stores_(result.get_future(launch_domain.lo()), future_size);
     }
   } else {
     auto result = launcher.execute_single();
 
-    demux_scalar_stores_(result);
+    demux_scalar_stores_(result, future_size);
   }
 }
 
-void LogicalTask::demux_scalar_stores_(const Legion::Future& result)
+void LogicalTask::demux_scalar_stores_(const Legion::Future& result, std::size_t future_size)
 {
-  auto num_scalar_outs  = scalar_outputs_.size();
-  auto num_scalar_reds  = scalar_reductions_.size();
-  auto num_unbound_outs = unbound_outputs_.size();
+  auto return_layout = TaskReturnLayoutForUnpack{unbound_outputs_.size() * sizeof(std::size_t)};
+  const auto compute_offset = [&](const InternalSharedPtr<LogicalStore>& store) {
+    return return_layout.next(store->type()->size(), store->type()->alignment());
+  };
 
-  auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
-               static_cast<std::size_t>(can_throw_exception());
-  if (0 == total) {
-    return;
+  for (auto&& store : scalar_outputs()) {
+    store->set_future(result, compute_offset(store));
   }
-  if (1 == total) {
-    if (1 == num_scalar_outs) {
-      scalar_outputs_.front()->set_future(result);
-    } else if (1 == num_scalar_reds) {
-      scalar_reductions_.front().first->set_future(result);
-    } else if (can_throw_exception()) {
-      detail::Runtime::get_runtime().record_pending_exception(result);
-    } else {
-      LEGATE_ASSERT(1 == num_unbound_outs);
-    }
-  } else {
-    auto&& runtime     = detail::Runtime::get_runtime();
-    auto return_layout = TaskReturnLayoutForUnpack{num_unbound_outs * sizeof(std::size_t)};
 
-    const auto compute_offset = [&](auto&& store) {
-      return return_layout.next(store->type()->size(), store->type()->alignment());
-    };
+  for (auto&& [store, _] : scalar_reductions()) {
+    store->set_future(result, compute_offset(store));
+  }
 
-    for (auto&& store : scalar_outputs_) {
-      store->set_future(result, compute_offset(store));
-    }
-    for (auto&& [store, _] : scalar_reductions_) {
-      store->set_future(result, compute_offset(store));
-    }
-    if (can_throw_exception()) {
-      const auto future_size = calculate_future_size_();
-      runtime.record_pending_exception(
-        runtime.extract_scalar(parallel_policy(),
-                               result,
-                               return_layout.total_size(),
-                               legate::detail::ReturnedException::max_size(),
-                               future_size));
-    }
+  if (can_throw_exception()) {
+    auto&& runtime = detail::Runtime::get_runtime();
+
+    runtime.record_pending_exception(
+      runtime.extract_scalar(parallel_policy(),
+                             result,
+                             return_layout.total_size(),
+                             legate::detail::ReturnedException::max_size(),
+                             future_size));
   }
 }
 
-void LogicalTask::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain)
+void LogicalTask::demux_scalar_stores_(const Legion::FutureMap& result,
+                                       const Domain& launch_domain,
+                                       std::size_t future_size)
 {
-  auto num_scalar_outs  = scalar_outputs_.size();
-  auto num_scalar_reds  = scalar_reductions_.size();
-  auto num_unbound_outs = unbound_outputs_.size();
+  auto return_layout = TaskReturnLayoutForUnpack{unbound_outputs_.size() * sizeof(std::size_t)};
+  const auto compute_offset = [&](const InternalSharedPtr<Type>& type) {
+    return return_layout.next(type->size(), type->alignment());
+  };
 
-  auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
-               static_cast<std::size_t>(can_throw_exception());
-  if (0 == total) {
-    return;
+  for (auto&& store : scalar_outputs()) {
+    store->set_future_map(result, compute_offset(store->type()));
   }
 
-  const auto future_size = calculate_future_size_();
-  auto&& runtime         = detail::Runtime::get_runtime();
-  if (1 == total) {
-    if (1 == num_scalar_outs) {
-      scalar_outputs_.front()->set_future_map(result);
-    } else if (1 == num_scalar_reds) {
-      auto& [store, redop] = scalar_reductions_.front();
+  auto&& runtime = detail::Runtime::get_runtime();
 
-      store->set_future(runtime.reduce_future_map(result, redop, store->get_future()));
-    } else if (can_throw_exception()) {
-      runtime.record_pending_exception(runtime.reduce_exception_future_map(result));
-    } else {
-      LEGATE_ASSERT(1 == num_unbound_outs);
-    }
-  } else {
-    auto return_layout = TaskReturnLayoutForUnpack{num_unbound_outs * sizeof(std::size_t)};
+  for (auto&& [store, redop] : scalar_reductions()) {
+    auto&& ty         = store->type();
+    const auto values = runtime.extract_scalar(
+      parallel_policy(), result, compute_offset(ty), ty->size(), future_size, launch_domain);
 
-    auto extract_future_map = [&](auto&& future_map, auto&& store) {
-      auto size   = store->type()->size();
-      auto offset = return_layout.next(size, store->type()->alignment());
-      return runtime.extract_scalar(
-        parallel_policy(), future_map, offset, size, future_size, launch_domain);
-    };
+    store->set_future(runtime.reduce_future_map(values, redop, store->get_future()));
+  }
 
-    const auto compute_offset = [&](auto&& store) {
-      return return_layout.next(store->type()->size(), store->type()->alignment());
-    };
+  if (can_throw_exception()) {
+    const auto exn_fm = runtime.extract_scalar(parallel_policy(),
+                                               result,
+                                               return_layout.total_size(),
+                                               legate::detail::ReturnedException::max_size(),
+                                               future_size,
+                                               launch_domain);
 
-    for (auto&& store : scalar_outputs_) {
-      store->set_future_map(result, compute_offset(store));
-    }
-    for (auto&& [store, redop] : scalar_reductions_) {
-      auto values = extract_future_map(result, store);
-
-      store->set_future(runtime.reduce_future_map(values, redop, store->get_future()));
-    }
-    if (can_throw_exception()) {
-      auto exn_fm = runtime.extract_scalar(parallel_policy(),
-                                           result,
-                                           return_layout.total_size(),
-                                           legate::detail::ReturnedException::max_size(),
-                                           future_size,
-                                           launch_domain);
-
-      runtime.record_pending_exception(runtime.reduce_exception_future_map(exn_fm));
-    }
+    runtime.record_pending_exception(runtime.reduce_exception_future_map(exn_fm));
   }
 }
 
