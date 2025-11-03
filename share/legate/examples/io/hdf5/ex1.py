@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 import h5py
 
-from legate.core.io.hdf5 import from_file
+from legate.io.hdf5 import from_file
 from legate.timing import time
 
 if TYPE_CHECKING:
@@ -117,7 +117,7 @@ def process_hdf5_files(filename: Path, n_rank: int) -> None:
                 data = from_file(fname, dataset_name=dset)
                 total_size += data.size
 
-    elapsed_time_s = (time(units="us") - start_time_us) * 10**6
+    elapsed_time_s = (time(units="us") - start_time_us) / 10**6
     throughput = total_size / (
         elapsed_time_s * (2**20)
     )  # Throughput in MB/sec

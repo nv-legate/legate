@@ -259,7 +259,23 @@ int main(int argc, char* argv[])
       char* src_file_name = NULL;
 
       // Set the file name for the virtual dataset
-      asprintf(&src_file_name, "%s_%03u", args.virtual_dset_base_name, u);
+      // Calculate size needed: base_name + "_" + digits + null terminator
+      const int num_digits = snprintf(NULL, 0, "%03u", u);
+      const size_t name_len = strlen(args.virtual_dset_base_name) + num_digits + 2;
+
+      src_file_name = (char*)malloc(name_len);
+      if (src_file_name == NULL) {
+        fprintf(stderr, "error allocating memory for source file name\n");
+        goto error;
+      }
+
+      int ret = snprintf(src_file_name, name_len, "%s_%03u", args.virtual_dset_base_name, u);
+
+      if (ret < 0 || (size_t)ret >= name_len) {
+        fprintf(stderr, "error formatting source file name\n");
+        free(src_file_name);
+        goto error;
+      }
 
       // Create the source HDF5 file
       src_fid = H5Fcreate(src_file_name, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
@@ -349,7 +365,23 @@ int main(int argc, char* argv[])
     char* dset_name = NULL;
     hid_t dset_id;
 
-    asprintf(&dset_name, "dset_%03u", u);
+    // Allocate memory for dataset name: "dset_" + digits + null terminator
+    const size_t name_len = snprintf(NULL, 0, "dset_%03u", u) + 1;  // Full string + "\0"
+
+    dset_name = (char*)malloc(name_len);
+    if (dset_name == NULL) {
+      fprintf(stderr, "error allocating memory for dataset name\n");
+      goto error;
+    }
+
+    int ret = snprintf(dset_name, name_len, "dset_%03u", u);
+
+    if (ret < 0 || (size_t)ret >= name_len) {
+      fprintf(stderr, "error formatting dataset name\n");
+      free(dset_name);
+      goto error;
+    }
+
     if (args.verbose) {
       printf("Creating dataset '%s'\n", dset_name);
     }
@@ -392,7 +424,23 @@ int main(int argc, char* argv[])
       char* src_file_name = NULL;
 
       // Set the file name for the virtual dataset
-      asprintf(&src_file_name, "%s_%03u", args.virtual_dset_base_name, u);
+      // Calculate size needed: base_name + "_" + digits + null terminator
+      const int num_digits = snprintf(NULL, 0, "%03u", u);
+      const size_t name_len = strlen(args.virtual_dset_base_name) + num_digits + 2;
+
+      src_file_name = (char*)malloc(name_len);
+      if (src_file_name == NULL) {
+        fprintf(stderr, "error allocating memory for source file name\n");
+        goto error;
+      }
+
+      int ret = snprintf(src_file_name, name_len, "%s_%03u", args.virtual_dset_base_name, u);
+      
+      if (ret < 0 || (size_t)ret >= name_len) {
+        fprintf(stderr, "error formatting source file name\n");
+        free(src_file_name);
+        goto error;
+      }
 
       // Clear virtual layout in DCPL
       if (H5Pset_layout(dcpl_id, H5D_VIRTUAL) < 0) {
