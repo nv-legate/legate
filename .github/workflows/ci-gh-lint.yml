@@ -138,7 +138,7 @@ jobs:
             cuda-nvcc \
             cuda-nvtx-dev \
             cuda-cupti-dev \
-            nccl \
+            nccl=2.27 \
             libcufile-dev \
             llvm-openmp \
             pybind11
