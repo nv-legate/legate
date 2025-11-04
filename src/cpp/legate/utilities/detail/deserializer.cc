@@ -7,6 +7,9 @@
 #include <legate/utilities/detail/deserializer.h>
 
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/physical_stores/future_physical_store.h>
+#include <legate/data/detail/physical_stores/region_physical_store.h>
+#include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/data/physical_store.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/typedefs.h>
@@ -105,19 +108,19 @@ InternalSharedPtr<PhysicalStore> TaskDeserializer::unpack_store()
     if (redop_id != GlobalRedopID{-1} && !fut.valid()) {
       fut.initialize_with_identity(redop_id);
     }
-    return make_internal_shared<PhysicalStore>(
+    return make_internal_shared<FuturePhysicalStore>(
       dim, std::move(type), redop_id, std::move(fut), std::move(transform));
   }
   if (!unbound) {
     auto rf = unpack<RegionField>();
 
-    return make_internal_shared<PhysicalStore>(
+    return make_internal_shared<RegionPhysicalStore>(
       dim, std::move(type), redop_id, std::move(rf), std::move(transform));
   }
   LEGATE_CHECK(redop_id == GlobalRedopID{-1});
   auto out = unpack<UnboundRegionField>();
 
-  return make_internal_shared<PhysicalStore>(
+  return make_internal_shared<UnboundPhysicalStore>(
     dim, std::move(type), std::move(out), std::move(transform));
 }
 

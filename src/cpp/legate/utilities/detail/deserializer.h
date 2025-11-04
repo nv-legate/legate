@@ -9,6 +9,7 @@
 #include <legate/comm/communicator.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/data/detail/transform.h>
 #include <legate/data/physical_store.h>

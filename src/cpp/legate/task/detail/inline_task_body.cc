@@ -8,6 +8,7 @@
 
 #include <legate/comm/communicator.h>
 #include <legate/data/detail/physical_array.h>
+#include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/task.h>
@@ -146,10 +147,10 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
     }
 
     for (auto&& phys_store : get_stores_cache(*phys_array)) {
-      if (phys_store->is_future()) {
+      if (phys_store->kind() == PhysicalStore::Kind::FUTURE) {
         // Was an output scalar or scalar reduction, save a reference to the deferred buffer so
         // we can create a new future out of it down the line in finalize().
-        deferred_buffers->emplace_back(phys_store->get_buffer());
+        deferred_buffers->emplace_back(phys_store->as_future_store().get_buffer());
       }
     }
   }
@@ -285,7 +286,7 @@ void handle_return_values_impl(const PhysicalTask& task,
     );
 
     // Update the PhysicalStore with the new future
-    scal->set_future(std::move(fut));
+    scal->as_future_store().set_future(std::move(fut));
   };
   std::size_t idx = 0;
 

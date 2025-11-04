@@ -8,6 +8,8 @@
 
 #include <legate/comm/communicator.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/data/detail/physical_stores/future_physical_store.h>
+#include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/return_value.h>
@@ -107,7 +109,7 @@ LegionTaskContext::LegionTaskContext(const Legion::Task& legion_task,
   // then we need to wait for all the host-to-device copies for initialization to finish,
   // UNLESS the user has promised to use the task stream. In that case we can skip this sync.
   constexpr auto is_scalar_store = [](const InternalSharedPtr<PhysicalArray>& array) {
-    return array->data()->is_future();
+    return array->data()->kind() == PhysicalStore::Kind::FUTURE;
   };
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && !can_elide_device_ctx_sync() &&
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&
@@ -126,10 +128,10 @@ std::vector<ReturnValue> LegionTaskContext::get_return_values_() const
   return_values.reserve(get_unbound_stores_().size() + get_scalar_stores_().size() +
                         can_raise_exception());
   for (auto&& store : get_unbound_stores_()) {
-    return_values.push_back(store->pack_weight());
+    return_values.push_back(store->as_unbound_store().pack_weight());
   }
   for (auto&& store : get_scalar_stores_()) {
-    return_values.push_back(store->pack());
+    return_values.push_back(store->as_future_store().pack());
   }
   // If this is a reduction task, we do sanity checks on the invariants
   // the Python code relies on.

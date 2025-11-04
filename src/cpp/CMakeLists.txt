@@ -284,6 +284,9 @@ target_sources(legate_obj
                        legate/data/detail/scalar.cc
                        legate/data/detail/physical_array.cc
                        legate/data/detail/physical_store.cc
+                       legate/data/detail/physical_stores/future_physical_store.cc
+                       legate/data/detail/physical_stores/region_physical_store.cc
+                       legate/data/detail/physical_stores/unbound_physical_store.cc
                        legate/data/detail/shape.cc
                        legate/data/detail/transform.cc
                        legate/data/detail/future_wrapper.cc

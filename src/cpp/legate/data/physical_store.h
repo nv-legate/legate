@@ -777,6 +777,7 @@ class LEGATE_EXPORT PhysicalStore {
 
  private:
   void check_accessor_dimension_(std::int32_t dim) const;
+  void check_accessor_store_backing_() const;
   void check_buffer_dimension_(std::int32_t dim) const;
   void check_shape_dimension_(std::int32_t dim) const;
   void check_valid_binding_(bool bind_buffer) const;
@@ -785,6 +786,8 @@ class LEGATE_EXPORT PhysicalStore {
   template <typename T>
   void check_accessor_type_() const;
   void check_accessor_type_(Type::Code code, std::size_t size_of_T) const;
+  void check_scalar_store_() const;
+  void check_unbound_store_() const;
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
   [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field_() const;
@@ -843,8 +846,6 @@ class LEGATE_EXPORT PhysicalStore {
 
   [[nodiscard]] std::pair<Legion::OutputRegion, Legion::FieldID> get_output_field_() const;
   void update_num_elements_(std::size_t num_elements) const;
-
-  [[noreturn]] static void throw_invalid_scalar_access_();
 
   SharedPtr<detail::PhysicalStore> impl_{};
   // This member exists purely to solve the temporary store problem. It is illegal for Physical

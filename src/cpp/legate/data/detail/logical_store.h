@@ -36,6 +36,7 @@ class Machine;
 namespace legate::detail {
 
 class LogicalStorePartition;
+class RegionPhysicalStore;
 
 class LogicalStore {
  public:
@@ -234,7 +235,7 @@ class LogicalStore {
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
-  InternalSharedPtr<PhysicalStore> mapped_{};
+  InternalSharedPtr<RegionPhysicalStore> mapped_{};
 };
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(

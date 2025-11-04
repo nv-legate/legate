@@ -6,7 +6,6 @@
 
 #pragma once
 
-// Useful for IDEs
 #include <legate/data/physical_store.h>
 #include <legate/utilities/detail/mdspan/util.h>
 
@@ -163,6 +162,8 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
     check_accessor_type_<T>();
   }
 
+  check_accessor_store_backing_();
+
   if (is_future()) {
     if (is_read_only_future_()) {
       return {get_future_(),
@@ -189,6 +190,7 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
     check_accessor_type_<T>();
   }
 
+  check_accessor_store_backing_();
   check_write_access_();
 
   if (is_future()) {
@@ -207,6 +209,7 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) c
     check_accessor_type_<T>();
   }
 
+  check_accessor_store_backing_();
   check_write_access_();
 
   if (is_future()) {
@@ -226,6 +229,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
     check_accessor_type_<T>();
   }
 
+  check_accessor_store_backing_();
   check_reduction_access_();
 
   if (is_future()) {
@@ -240,6 +244,7 @@ Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
                                                    bool bind_buffer /*= false*/) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
+  check_unbound_store_();
   check_valid_binding_(bind_buffer);
   check_buffer_dimension_(DIM);
 
@@ -275,9 +280,7 @@ Rect<DIM> PhysicalStore::shape() const
 template <typename VAL>
 VAL PhysicalStore::scalar() const
 {
-  if (!is_future()) {
-    throw_invalid_scalar_access_();
-  }
+  check_scalar_store_();
   if (is_read_only_future_()) {
     // get_untyped_pointer_from_future_ is guaranteed to return an aligned pointer when T is the
     // right value type
@@ -291,6 +294,7 @@ template <typename T, std::int32_t DIM>
 void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
+  check_unbound_store_();
   check_valid_binding_(true);
   check_buffer_dimension_(DIM);
 

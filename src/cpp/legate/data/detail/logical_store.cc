@@ -10,6 +10,8 @@
 
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/physical_stores/future_physical_store.h>
+#include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/detail/transform.h>
 #include <legate/mapping/detail/machine.h>
@@ -417,13 +419,13 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
                                 storage->get_future()};
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    return make_internal_shared<PhysicalStore>(
+    return make_internal_shared<FuturePhysicalStore>(
       dim(), type(), GlobalRedopID{-1}, std::move(future), transform_);
   }
 
   LEGATE_ASSERT(storage->kind() == Storage::Kind::REGION_FIELD);
   auto region_field = storage->map(target);
-  mapped_           = make_internal_shared<PhysicalStore>(
+  mapped_           = make_internal_shared<RegionPhysicalStore>(
     dim(), type(), GlobalRedopID{-1}, std::move(region_field), transform_);
   return mapped_;
 }

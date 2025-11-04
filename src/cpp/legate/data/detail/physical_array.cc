@@ -24,10 +24,10 @@ const InternalSharedPtr<PhysicalStore>& PhysicalArray::data() const
 
 bool BasePhysicalArray::unbound() const
 {
-  const auto data_unbound = data()->is_unbound_store();
+  const auto data_unbound = data()->kind() == PhysicalStore::Kind::UNBOUND;
 
   if (nullable()) {
-    LEGATE_ASSERT(data_unbound == null_mask()->is_unbound_store());
+    LEGATE_ASSERT(data_unbound == (null_mask()->kind() == PhysicalStore::Kind::UNBOUND));
   }
   return data_unbound;
 }
@@ -56,7 +56,7 @@ void BasePhysicalArray::populate_stores(SmallVector<InternalSharedPtr<PhysicalSt
 
 void BasePhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
-  data()->check_shape_dimension_(dim);
+  data()->check_shape_dimension(dim);
 }
 
 // ==========================================================================================
