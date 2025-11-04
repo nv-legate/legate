@@ -33,7 +33,6 @@ jobs:
           - gpu
           - cpu
         build-mode:
-          - debug
           - release
     uses:
       ./.github/workflows/gh-build-and-test.yml
