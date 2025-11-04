@@ -32,6 +32,12 @@ C++
 
 .. rubric:: Mapping
 
+- Change the type of ``legate::mapping::InstanceMappingPolicy::ordering`` to
+  ``std::optional<legate::mapping::DimOrdering>``. With this change, the default instance mapping
+  policy now leaves the dimension ordering unspecified.
+
+- Add a new parameter ``ordering`` to ``legate::mapping::StoreMapping::default_mapping()``.
+
 .. rubric:: Partitioning
 
 .. rubric:: Reduction Operators
