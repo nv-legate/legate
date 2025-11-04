@@ -116,9 +116,13 @@ StoreMapping::StoreMapping(std::unique_ptr<detail::StoreMapping> impl) : impl_{s
 
 /*static*/ StoreMapping StoreMapping::default_mapping(const Store& store,
                                                       StoreTarget target,
-                                                      bool exact)
+                                                      bool exact,
+                                                      std::optional<DimOrdering> ordering)
 {
-  return create(store, InstanceMappingPolicy{}.with_target(target).with_exact(exact));
+  auto policy = InstanceMappingPolicy{}.with_target(target).with_exact(exact);
+
+  policy.ordering = std::move(ordering);
+  return create(store, std::move(policy));
 }
 
 /*static*/ StoreMapping StoreMapping::create(const Store& store, InstanceMappingPolicy&& policy)

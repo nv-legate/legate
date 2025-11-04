@@ -338,8 +338,11 @@ void StoreMapping::populate_layout_constraints(
   //
   // ...would result in not 1, not 2, but 3 deep copies of our vector! Now it's a 0-copy
   // operation (a move)
-  layout_constraints.ordering_constraint.ordering =
-    policy().ordering.impl()->generate_legion_dims(*store());
+  if (policy().ordering.has_value()) {
+    const auto& ordering = policy().ordering->impl();
+
+    layout_constraints.ordering_constraint.ordering = ordering->generate_legion_dims(*store());
+  }
   layout_constraints.ordering_constraint.contiguous = false;
   layout_constraints.add_constraint(Legion::MemoryConstraint{to_kind(policy().target)});
 

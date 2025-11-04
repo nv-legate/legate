@@ -111,7 +111,7 @@ inline void InstanceMappingPolicy::set_allocation_policy(AllocPolicy _allocation
 
 inline void InstanceMappingPolicy::set_ordering(DimOrdering _ordering)
 {
-  ordering = std::move(_ordering);
+  ordering.emplace(std::move(_ordering));
 }
 
 inline void InstanceMappingPolicy::set_exact(bool _exact) { exact = _exact; }

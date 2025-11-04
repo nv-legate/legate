@@ -84,15 +84,15 @@ class LibraryMapper : public legate::mapping::Mapper {
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override
   {
-    std::vector<legate::mapping::StoreMapping> mappings;
+    const auto fortran_order = task.scalar(0).value<bool>();
+    auto output              = task.output(0).data();
+    auto dim_ordering        = fortran_order ? legate::mapping::DimOrdering::fortran_order()
+                                             : legate::mapping::DimOrdering::c_order();
+
+    std::vector<legate::mapping::StoreMapping> mappings{};
+
     mappings.push_back(legate::mapping::StoreMapping::default_mapping(
-      task.output(0).data(), options.front(), /*exact*/ true));
-
-    auto fortran_order = task.scalar(0).value<bool>();
-
-    if (fortran_order) {
-      mappings.back().policy().set_ordering(legate::mapping::DimOrdering::fortran_order());
-    }
+      output, options.front(), /*exact*/ true, std::move(dim_ordering)));
     return mappings;
   }
 

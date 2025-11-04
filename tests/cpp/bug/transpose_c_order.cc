@@ -25,14 +25,56 @@ class Tester : public legate::LegateTask<Tester> {
   }
 };
 
-class Config {
- public:
-  static constexpr std::string_view LIBRARY_NAME = "test_transpose_c_order";
+namespace {
 
-  static void registration_callback(legate::Library library) { Tester::register_variants(library); }
+constexpr std::string_view LIBRARY_NAME = "test_transpose_c_order";
+
+class LibraryMapper : public legate::mapping::Mapper {
+  std::vector<legate::mapping::StoreMapping> store_mappings(
+    const legate::mapping::Task& task,
+    const std::vector<legate::mapping::StoreTarget>& options) override
+  {
+    std::vector<legate::mapping::StoreMapping> mappings;
+
+    mappings.push_back(
+      legate::mapping::StoreMapping::default_mapping(task.output(0).data(),
+                                                     options.front(),
+                                                     /*exact*/ true,
+                                                     legate::mapping::DimOrdering::c_order()));
+
+    return mappings;
+  }
+
+  legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
+  {
+    return legate::Scalar{};
+  }
+
+  std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task&,
+                                                  legate::mapping::StoreTarget) override
+  {
+    return std::nullopt;
+  }
 };
 
-class TransposeCOrder : public RegisterOnceFixture<Config> {};
+}  // namespace
+
+class TransposeCOrder : public DefaultFixture {
+ public:
+  void SetUp() override
+  {
+    DefaultFixture::SetUp();
+
+    auto runtime = legate::Runtime::get_runtime();
+    auto created = false;
+    auto library = runtime->find_or_create_library(
+      LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<LibraryMapper>(), {}, &created);
+
+    if (created) {
+      Tester::register_variants(library);
+    }
+  }
+};
 
 TEST_F(TransposeCOrder, Test)
 {
@@ -43,7 +85,7 @@ TEST_F(TransposeCOrder, Test)
   auto shape      = legate::Shape{X, Y, Z};
   auto store      = runtime->create_store(shape, legate::int64());
 
-  auto library = runtime->find_library(Config::LIBRARY_NAME);
+  auto library = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(library, Tester::TASK_CONFIG.task_id(), {1});
   task.add_output(store.transpose({2, 0, 1}));
   runtime->submit(std::move(task));

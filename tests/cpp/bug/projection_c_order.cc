@@ -56,19 +56,63 @@ class Tester2 : public legate::LegateTask<Tester2> {
   }
 };
 
-class Config {
- public:
-  static constexpr std::string_view LIBRARY_NAME = "test_projection_c_order";
+namespace {
 
-  static void registration_callback(legate::Library library)
+constexpr std::string_view LIBRARY_NAME = "test_projection_c_order";
+
+class LibraryMapper : public legate::mapping::Mapper {
+ public:
+  std::vector<legate::mapping::StoreMapping> store_mappings(
+    const legate::mapping::Task& task,
+    const std::vector<legate::mapping::StoreTarget>& options) override
   {
-    Init::register_variants(library);
-    Tester::register_variants(library);
-    Tester2::register_variants(library);
+    if (task.task_id() != Tester2::TASK_CONFIG.task_id()) {
+      return {};
+    }
+
+    std::vector<legate::mapping::StoreMapping> mappings;
+
+    mappings.push_back(
+      legate::mapping::StoreMapping::default_mapping(task.output(0).data(),
+                                                     options.front(),
+                                                     /*exact*/ true,
+                                                     legate::mapping::DimOrdering::c_order()));
+
+    return mappings;
+  }
+
+  legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
+  {
+    return legate::Scalar{};
+  }
+
+  std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task&,
+                                                  legate::mapping::StoreTarget) override
+  {
+    return std::nullopt;
   }
 };
 
-class ProjectionCOrder : public RegisterOnceFixture<Config> {};
+}  // namespace
+
+class ProjectionCOrder : public DefaultFixture {
+ public:
+  void SetUp() override
+  {
+    DefaultFixture::SetUp();
+
+    auto runtime = legate::Runtime::get_runtime();
+    auto created = false;
+    auto library = runtime->find_or_create_library(
+      LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<LibraryMapper>(), {}, &created);
+
+    if (created) {
+      Init::register_variants(library);
+      Tester::register_variants(library);
+      Tester2::register_variants(library);
+    }
+  }
+};
 
 TEST_F(ProjectionCOrder, AliasSharingInstance)
 {
@@ -80,7 +124,7 @@ TEST_F(ProjectionCOrder, AliasSharingInstance)
   auto store1     = runtime->create_store(shape, legate::int64());
   auto store2     = runtime->create_store({1}, legate::binary_type(sizeof(std::int64_t*)), true);
 
-  auto library = runtime->find_library(Config::LIBRARY_NAME);
+  auto library = runtime->find_library(LIBRARY_NAME);
   {
     auto task = runtime->create_task(library, Init::TASK_CONFIG.task_id(), {1});
     task.add_output(store1);
@@ -104,7 +148,7 @@ TEST_F(ProjectionCOrder, TransposeFollowedByProjection)
   auto shape      = legate::Shape{X, Y, Z};
   auto store      = runtime->create_store(shape, legate::int64());
 
-  auto library = runtime->find_library(Config::LIBRARY_NAME);
+  auto library = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(library, Tester2::TASK_CONFIG.task_id(), {1});
   task.add_output(store.transpose({2, 0, 1}).project(0, 1));
   runtime->submit(std::move(task));

@@ -220,9 +220,16 @@ class LEGATE_EXPORT InstanceMappingPolicy {
   AllocPolicy allocation{AllocPolicy::MAY_ALLOC};
 
   /**
-   * @brief Dimension ordering for the instance. C order by default.
+   * @brief Dimension ordering for the instance. Unspecified by default. When unspecified, the
+   * mapper will grab an instance of any dimension ordering that satisfies the rest of the policy.
+   *
+   * A recommendation in general is that the mapper should keep this ordering unspecified, to
+   * increase the chance of reusing existing instances in the store mapping. Dimension orderings are
+   * required most likely when tasks interoperate with external libraries that assume specific
+   * allocation layouts (e.g., math libraries expecting Fortran or C layouts with no stride
+   * arguments).
    */
-  DimOrdering ordering{};
+  std::optional<DimOrdering> ordering{};
   /**
    * @brief If true, the instance must be tight to the store(s); i.e., the instance
    * must not have any extra elements not included in the store(s).
@@ -354,12 +361,16 @@ class LEGATE_EXPORT StoreMapping {
    * @param store Target store
    * @param target Kind of the memory to which the store should be mapped
    * @param exact Indicates whether the instance should be exact
+   * @param ordering Optionally specifies a desirable dimension ordering. If unspecified, the mapped
+   * instance is allowed to have any dimension ordering. (See `InstanceMappingPolicy::ordering`.)
    *
    * @return A store mapping
    */
-  [[nodiscard]] static StoreMapping default_mapping(const Store& store,
-                                                    StoreTarget target,
-                                                    bool exact = false);
+  [[nodiscard]] static StoreMapping default_mapping(
+    const Store& store,
+    StoreTarget target,
+    bool exact                          = false,
+    std::optional<DimOrdering> ordering = std::nullopt);
   /**
    * @brief Creates a mapping policy for the given store using the instance mapping policy
    *

@@ -20,7 +20,7 @@ TEST_F(InstanceMappingPolicyTest, Create)
 
   ASSERT_EQ(policy.target, legate::mapping::StoreTarget::SYSMEM);
   ASSERT_EQ(policy.allocation, legate::mapping::AllocPolicy::MAY_ALLOC);
-  ASSERT_EQ(policy.ordering, legate::mapping::DimOrdering{});
+  ASSERT_FALSE(policy.ordering.has_value());
   ASSERT_EQ(policy.exact, false);
 }
 

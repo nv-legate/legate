@@ -478,19 +478,16 @@ void map_unbound_stores(Span<const std::unique_ptr<StoreMapping>> mappings,
       local_machine.get_memory(target_proc, mapping->policy().target);
 
     const auto ndim = mapping->store()->dim();
-    std::vector<Legion::DimensionKind> dimension_ordering;
-
-    dimension_ordering.reserve(static_cast<std::size_t>(ndim) + 1);
-    for (auto dim = ndim - 1; dim >= 0; --dim) {
-      dimension_ordering.push_back(static_cast<Legion::DimensionKind>(
-        static_cast<std::int32_t>(Legion::DimensionKind::LEGION_DIM_X) + dim));
-    }
-    dimension_ordering.push_back(Legion::DimensionKind::LEGION_DIM_F);
 
     auto& output_constraint   = output->output_constraints[req_idx];
     auto& ordering_constraint = output_constraint.ordering_constraint;
 
-    ordering_constraint.ordering   = std::move(dimension_ordering);
+    ordering_constraint.ordering = [&] {
+      if (auto&& ord = mapping->policy().ordering; ord.has_value()) {
+        return ord->impl()->generate_legion_dims(*store);
+      }
+      return DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(ndim);
+    }();
     ordering_constraint.contiguous = false;
 
     output_constraint.alignment_constraints.emplace_back(
@@ -882,6 +879,13 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
   // TODO(mpapadakis): The policy.exact field is currently ignored here. If this changes, also
   // read it when polling the cache above (in ReductionInstanceManager::find_instance).
   const auto find_or_create_instance = [&] {
+    if (!policy.ordering.has_value()) {
+      // When we're creating a fresh instance, we use C ordering unless specified otherwise
+      layout_constraints->ordering_constraint.ordering =
+        DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(regions.front().get_dim());
+      layout_constraints->ordering_constraint.contiguous = false;
+    }
+
     if (!can_cache) {
       // The instance will be acquired during creation
       *need_acquire = false;
@@ -963,10 +967,10 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
                                        const std::set<const Legion::RegionRequirement*>& reqs,
                                        const InstanceMappingPolicy& policy,
                                        Legion::FieldID field,
-                                       const Legion::LayoutConstraintSet& layout_constraints,
                                        Memory target_memory,
                                        bool must_alloc_collective_writes,
                                        std::vector<Legion::LogicalRegion>&& regions,
+                                       Legion::LayoutConstraintSet* layout_constraints,
                                        Legion::Mapping::PhysicalInstance* result,
                                        bool* need_acquire,
                                        std::size_t* footprint)
@@ -990,7 +994,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
 
   const auto found_in_cache = [&] {
     auto cached = local_instances_.find_instance(
-      regions.front(), field, target_memory, policy, layout_constraints);
+      regions.front(), field, target_memory, policy, *layout_constraints);
     const auto found = cached.has_value();
 
     if (found) {
@@ -1049,11 +1053,18 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
 
   // Haven't made this instance before, so make it now
   const auto find_or_create_instance = [&] {
+    // When we're creating a fresh instance, we use C ordering unless specified otherwise
+    if (!policy.ordering.has_value()) {
+      layout_constraints->ordering_constraint.ordering =
+        DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(regions.front().get_dim());
+      layout_constraints->ordering_constraint.contiguous = false;
+    }
+
     if (alloc_policy == AllocPolicy::MUST_ALLOC) {
       *need_acquire = false;
       return runtime->create_physical_instance(ctx,
                                                target_memory,
-                                               layout_constraints,
+                                               *layout_constraints,
                                                regions,
                                                *result,
                                                true /*acquire*/,
@@ -1068,7 +1079,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
     // before the cache gets updated.
     const auto success = runtime->find_or_create_physical_instance(ctx,
                                                                    target_memory,
-                                                                   layout_constraints,
+                                                                   *layout_constraints,
                                                                    regions,
                                                                    *result,
                                                                    created,
@@ -1198,10 +1209,10 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
                                     reqs,
                                     policy,
                                     field,
-                                    layout_constraints,
                                     target_memory,
                                     must_alloc_collective_writes,
                                     std::move(regions),
+                                    &layout_constraints,
                                     &result,
                                     &need_acquire,
                                     &footprint);

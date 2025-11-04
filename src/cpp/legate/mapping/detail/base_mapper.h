@@ -341,10 +341,10 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                                            const std::set<const Legion::RegionRequirement*>& reqs,
                                            const InstanceMappingPolicy& policy,
                                            Legion::FieldID field,
-                                           const Legion::LayoutConstraintSet& layout_constraints,
                                            Memory target_memory,
                                            bool must_alloc_collective_writes,
                                            std::vector<Legion::LogicalRegion>&& regions,
+                                           Legion::LayoutConstraintSet* layout_constraints,
                                            Legion::Mapping::PhysicalInstance* result,
                                            bool* need_acquire,
                                            std::size_t* footprint);
