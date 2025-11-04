@@ -21,6 +21,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace legate::detail {
@@ -394,16 +395,87 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   std::string mapper_name_{};
 
   // Streaming transformation related objects
-  class ProcStreamingInfo {
+  class ColumnStreamingInfo {
    public:
-    std::uint32_t streaming_current_gen{};
-    std::optional<DomainPoint> streaming_target_column{};
+    std::uint32_t streaming_gen{};
     std::uint32_t streaming_rows_mapped{};
+    // For each column we track which processors this column is being mapped on.
+    // We reset the processor's tracking data structure at the end of the column.
+    std::unordered_set<Processor> procs;
   };
 
   std::queue<Legion::Mapping::MapperEvent> deferral_events_{};
 
-  std::unordered_map<Processor, ProcStreamingInfo, hasher<Processor>> streaming_info_{};
+  class StreamingInfo {
+    // We group all the accounting data structures per column and use this map for that.
+    std::unordered_map<DomainPoint, ColumnStreamingInfo, hasher<DomainPoint>> col_streaming_info_{};
+
+   public:
+    // We use this map to track if and which column is being mapped in a processor.
+    std::unordered_map<Processor, std::optional<DomainPoint>, hasher<Processor>>
+      proc_streaming_info{};
+    /*
+     * @brief Check if the task matches a column.
+     *
+     * The index point of a point task determines which "column" it belongs to. In this function
+     * we check if that matches with the column the target processor of the task is already mapping.
+     *
+     * @param task The task we want to check.
+     * @param processing_column The current column being mapped by the target processor.
+     * @param logger To add logging details in debug mode.
+     *
+     * @return True If the task's index point matches the column the target processor is currently
+     * mapping.
+     */
+    [[nodiscard]] bool task_matches_processing_column(const Legion::Task& task,
+                                                      const DomainPoint& processing_column,
+                                                      Legion::Logger* logger);
+    /*
+     * @brief Select the column of the point task as the one the target processor is mapping.
+     *
+     * @param task The task we want to assign the column of.
+     * @param stream_gen The generation of the current streaming section.
+     * @param logger To add logging details in debug mode.
+     */
+    void select_column(const Legion::Task& task,
+                       const legate::detail::StreamingGeneration& stream_gen,
+                       Legion::Logger* logger);
+    /*
+     * @brief Update the data structures used for bookkeeping a streaming section.
+     *
+     * @param task The task we want to assign the column of.
+     * @param stream_gen The generation of the current streaming section.
+     * @param logger To add logging details in debug mode.
+     */
+    void update_streaming_info(const Legion::Task& task,
+                               const legate::detail::StreamingGeneration& stream_gen,
+                               Legion::Logger* logger);
+  };
+
+  // In order for us to be able to enforce a "column by column" mapping scheduling inside a
+  // streaming section we need to accommodate the following configurations:
+  //
+  // 1. We can only map one column of tasks at a time in one processor (it should be memory).
+  // 2. Tasks belonging to the same column can be targeted for different processors.
+  // 3. If we have multiple processors and multiple columns we should ideally map one column
+  //    per processor simultaneously.
+  //
+  // To support these three configurations we need to maintain two sets of accounting.
+  //
+  // 1. Map to track if and which column a processor is targeting.
+  // 2. Map to track the count for a column of tasks.
+  //
+  // We need these as if we maintained one map for the processor we will misscount for
+  // configuration 2. How we count is as follows:
+  //
+  // 1. For every column we keep counting how many from that column we have mapped and in which
+  //    processors.
+  // 2. For each of those processors we keep tracking which column it is currently mapping.
+  // 3. Once we reach the end of a column, we reset the trakcing for that processor and that column
+  // index.
+  //    This allows us to assign a new column to a processor and in the case of a new generation
+  //    (new streaming section) the same column index can be safely counted again.
+  StreamingInfo streaming_info_{};
 };
 
 }  // namespace legate::mapping::detail

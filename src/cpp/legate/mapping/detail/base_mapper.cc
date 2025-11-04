@@ -2058,52 +2058,96 @@ void BaseMapper::map_dataflow_graph(Legion::Mapping::MapperContext /*ctx*/,
   LEGATE_ABORT("Should never get here");
 }
 
+bool BaseMapper::StreamingInfo::task_matches_processing_column(const Legion::Task& task,
+                                                               const DomainPoint& processing_column,
+                                                               Legion::Logger* logger)
+{
+  // Tells us if and which column this processor is handling.
+  const auto& task_column = task.index_point;
+
+  logger->debug() << "-- Processor " << task.target_proc << " currently processing "
+                  << processing_column;
+
+  return task_column == processing_column;
+}
+
+void BaseMapper::StreamingInfo::select_column(const Legion::Task& task,
+                                              const legate::detail::StreamingGeneration& stream_gen,
+                                              Legion::Logger* logger)
+{
+  const auto& task_column  = task.index_point;
+  auto& col_streaming_info = col_streaming_info_[task_column];
+  if (col_streaming_info.streaming_gen != stream_gen.generation) {
+    // We have encountered a new matrix of streaming tasks. We should reset all the
+    // information from the old streaming matrix. If streaming_rows_mapped != 0, this means
+    // we didn't finish mapping the previous matrix. Likely someone forgot to include a
+    // mapping fence before launching a new streaming run.
+    logger->debug() << "-- Switching generation " << col_streaming_info.streaming_gen << " -> "
+                    << stream_gen.generation;
+    LEGATE_CHECK(col_streaming_info.streaming_rows_mapped == 0);
+    col_streaming_info.streaming_gen = stream_gen.generation;
+  }
+
+  // Either we mapped all the points in a previous column (of the same matrix), or we
+  // switched to a new matrix. In any case, we arbitrarily pick the current column as our
+  // target column. We will now map all rows matching this column.
+  proc_streaming_info[task.target_proc] = task_column;
+  logger->debug() << "---- No selected index point, using current task index point " << task_column;
+}
+
+void BaseMapper::StreamingInfo::update_streaming_info(
+  const Legion::Task& task,
+  const legate::detail::StreamingGeneration& stream_gen,
+  Legion::Logger* logger)
+{
+  const auto& task_column  = task.index_point;
+  auto& col_streaming_info = col_streaming_info_[task_column];
+
+  LEGATE_ASSERT(task_column == proc_streaming_info[task.target_proc]);
+
+  // Keep track of all processors this column is being mapped on
+  col_streaming_info.procs.insert(task.target_proc);
+
+  if (++col_streaming_info.streaming_rows_mapped == stream_gen.size) {
+    col_streaming_info.streaming_rows_mapped = 0;
+    logger->debug() << "------ Fully mapped row";
+    // Clear all the processors this column was being mapped in
+    for (auto proc : col_streaming_info.procs) {
+      proc_streaming_info[proc].reset();
+    }
+    // Column is done mapping clear the processors being tracked
+    col_streaming_info.procs.clear();
+  }
+}
+
 void BaseMapper::select_streaming_tasks_to_map_(
   const Legion::Task& task,
   const legate::detail::StreamingGeneration& stream_gen,
   std::set<const Legion::Task*>* mapped_tasks)
 {
-  auto& proc_streaming_info = streaming_info_[task.target_proc];
+  // The column of the task
+  const auto& processing_column = streaming_info_.proc_streaming_info[task.target_proc];
+  const auto& task_column       = task.index_point;
+  logger().debug() << "-- Using index point " << task_column;
 
-  if (stream_gen.generation != proc_streaming_info.streaming_current_gen) {
-    // We have encountered a new matrix of streaming tasks. We should reset all the
-    // information from the old streaming matrix. If streaming_rows_mapped != 0, this means
-    // we didn't finish mapping the previous matrix. Likely someone forgot to include a
-    // mapping fence before launching a new streaming run.
-    logger().debug() << "-- Switching generation " << proc_streaming_info.streaming_current_gen
-                     << " -> " << stream_gen.generation;
-    LEGATE_CHECK(proc_streaming_info.streaming_rows_mapped == 0);
-
-    proc_streaming_info.streaming_target_column.reset();
-    proc_streaming_info.streaming_current_gen = stream_gen.generation;
-  }
-
-  LEGATE_CHECK(proc_streaming_info.streaming_rows_mapped <= stream_gen.size);
-
-  const auto& task_column   = task.index_point;
-  const auto& target_column = [&]() -> const DomainPoint& {
-    if (!proc_streaming_info.streaming_target_column.has_value()) {
-      // Either we mapped all the points in a previous column (of the same matrix), or we
-      // switched to a new matrix. In any case, we arbitrarily pick the current column as our
-      // target column. We will now map all rows matching this column.
-      logger().debug() << "---- No selected index point, using current task index point "
-                       << task_column;
-      proc_streaming_info.streaming_target_column = task_column;
+  const auto task_selected_to_be_mapped = [&] {
+    if (processing_column.has_value()) {
+      // We're already mapping a column in this processor, so the only way
+      // we'll select this task to be mapped if the column being mapped Matches
+      // that of the task's.
+      return streaming_info_.task_matches_processing_column(
+        task, processing_column.value(), &logger());
     }
-    return *proc_streaming_info.streaming_target_column;
+    logger().debug() << "-- Processor " << task.target_proc << " currently not processing ";
+    streaming_info_.select_column(task, stream_gen, &logger());
+    return true;
   }();
 
-  logger().debug() << "-- Using index point " << target_column;
-
-  if (task_column == target_column) {
-    // Found a task in our column, map it
+  if (task_selected_to_be_mapped) {
+    // Found a task in our column and generation, map it
     logger().debug() << "---- Matches index point, mapping";
     mapped_tasks->insert(&task);
-    if (++proc_streaming_info.streaming_rows_mapped == stream_gen.size) {
-      proc_streaming_info.streaming_rows_mapped = 0;
-      proc_streaming_info.streaming_target_column.reset();
-      logger().debug() << "------ Fully mapped row";
-    }
+    streaming_info_.update_streaming_info(task, stream_gen, &logger());
   }
 }
 

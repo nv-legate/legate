@@ -51,6 +51,20 @@ struct hash<legate::Domain> {
   }
 };
 
+// Legion currently does not provide a hash function for DomainPoint class.
+// We'll remove this once Legion starts providing that,
+template <>
+struct hash<Legion::DomainPoint> {
+  [[nodiscard]] std::size_t operator()(const Legion::DomainPoint& domain_point) const noexcept
+  {
+    std::size_t result = 0;
+    for (std::int32_t idx = 0; idx < domain_point.dim; ++idx) {
+      legate::hash_combine(result, domain_point.point_data[idx]);
+    }
+    return result;
+  }
+};
+
 template <typename T>
 struct hash<std::reference_wrapper<T>> {  // NOLINT(cert-dcl58-cpp)
 
