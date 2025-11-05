@@ -9,55 +9,11 @@
 #include <legate/data/detail/buffer.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/mapping.h>
-#include <legate/utilities/abort.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 namespace legate::detail {
 
-UnboundRegionField& UnboundRegionField::operator=(UnboundRegionField&& other) noexcept
-{
-  if (this != &other) {
-    bound_        = std::exchange(other.bound_, false);
-    partitioned_  = std::exchange(other.partitioned_, false);
-    num_elements_ = std::exchange(other.num_elements_, Legion::UntypedDeferredValue{});
-    out_          = std::exchange(other.out_, Legion::OutputRegion{});
-    fid_          = std::exchange(other.fid_, -1);
-  }
-  return *this;
-}
-
-ReturnValue UnboundRegionField::pack_weight() const
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    if (!bound_) {
-      LEGATE_ABORT(
-        "Found an uninitialized unbound store. Please make sure you return buffers to all unbound "
-        "stores in the task");
-    }
-  }
-  return {num_elements_, sizeof(std::size_t), alignof(std::size_t)};
-}
-
-void UnboundRegionField::bind_empty_data(std::int32_t ndim)
-{
-  update_num_elements(0);
-
-  DomainPoint extents;
-  extents.dim = ndim;
-
-  for (std::int32_t dim = 0; dim < ndim; ++dim) {
-    extents[dim] = 0;
-  }
-  auto empty_buffer = create_buffer<std::int8_t>(0);
-  out_.return_data(extents, fid_, empty_buffer.get_instance(), false);
-  bound_ = true;
-}
-
-void UnboundRegionField::update_num_elements(std::size_t num_elements)
-{
-  const AccessorWO<std::size_t, 1> acc{num_elements_, sizeof(num_elements), false};
-  acc[0] = num_elements;
-}
+ReturnValue UnboundPhysicalStore::pack_weight() const { return unbound_field_.pack_weight(); }
 
 Domain UnboundPhysicalStore::domain() const
 {

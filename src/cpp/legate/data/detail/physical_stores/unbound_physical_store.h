@@ -6,14 +6,19 @@
 
 #pragma once
 
+#include <legate/data/buffer.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/region_field.h>
+#include <legate/data/detail/physical_stores/unbound_region_field.h>
 #include <legate/data/detail/transform.h>
 #include <legate/data/inline_allocation.h>
+#include <legate/task/detail/return_value.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <utility>
 
 namespace legate::mapping {
 
@@ -22,38 +27,6 @@ enum class StoreTarget : std::uint8_t;
 }
 
 namespace legate::detail {
-
-class UnboundRegionField {
- public:
-  UnboundRegionField() = default;
-  UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid, bool partitioned);
-
-  UnboundRegionField(UnboundRegionField&& other) noexcept;
-  UnboundRegionField& operator=(UnboundRegionField&& other) noexcept;
-
-  UnboundRegionField(const UnboundRegionField& other)            = delete;
-  UnboundRegionField& operator=(const UnboundRegionField& other) = delete;
-
-  [[nodiscard]] bool is_partitioned() const;
-  [[nodiscard]] bool bound() const;
-
-  void bind_empty_data(std::int32_t dim);
-
-  [[nodiscard]] ReturnValue pack_weight() const;
-
-  void set_bound(bool bound);
-  void update_num_elements(std::size_t num_elements);
-
-  [[nodiscard]] const Legion::OutputRegion& get_output_region() const;
-  [[nodiscard]] Legion::FieldID get_field_id() const;
-
- private:
-  bool bound_{};
-  bool partitioned_{};
-  Legion::UntypedDeferredValue num_elements_{};
-  Legion::OutputRegion out_{};
-  Legion::FieldID fid_{-1U};
-};
 
 class UnboundPhysicalStore final : public PhysicalStore {
  public:

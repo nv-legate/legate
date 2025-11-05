@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#pragma once
+
 #include <legate/data/detail/physical_stores/future_physical_store.h>
+
+#include <utility>
 
 namespace legate::detail {
 

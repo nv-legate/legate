@@ -6,10 +6,12 @@
 
 #include <legate/utilities/detail/deserializer.h>
 
+#include <legate/data/detail/future_wrapper.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
+#include <legate/data/detail/physical_stores/unbound_region_field.h>
 #include <legate/data/physical_store.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/typedefs.h>

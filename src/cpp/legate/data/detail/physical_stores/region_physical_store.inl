@@ -8,6 +8,8 @@
 
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 
+#include <utility>
+
 namespace legate::detail {
 
 inline RegionPhysicalStore::RegionPhysicalStore(std::int32_t dim,

@@ -6,18 +6,15 @@
 
 #include <legate/data/detail/physical_store.h>
 
-#include <legate/data/buffer.h>
-#include <legate/data/detail/buffer.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
-#include <legate/mapping/detail/mapping.h>
-#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
-#include <legate/utilities/dispatch.h>
 
 #include <fmt/format.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <cstring>  // std::memcpy
 #include <stdexcept>
 

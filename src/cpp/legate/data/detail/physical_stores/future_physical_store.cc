@@ -6,10 +6,10 @@
 
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 
-#include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/mapping.h>
 #include <legate/utilities/assert.h>
-#include <legate/utilities/detail/traced_exception.h>
+
+#include <utility>
 
 namespace legate::detail {
 

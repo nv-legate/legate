@@ -12,6 +12,10 @@
 #include <legate/data/inline_allocation.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
+
+#include <cstdint>
+#include <utility>
 
 namespace legate::mapping {
 

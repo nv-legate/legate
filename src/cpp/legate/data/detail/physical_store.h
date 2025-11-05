@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include <legate/data/buffer.h>
-#include <legate/data/detail/future_wrapper.h>
-#include <legate/data/detail/region_field.h>
 #include <legate/data/detail/transform.h>
 #include <legate/data/inline_allocation.h>
-#include <legate/task/detail/return_value.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
+#include <legion/legion_domain.h>
+
+#include <cstddef>
 #include <cstdint>
 
 namespace legate::mapping {
@@ -24,9 +24,6 @@ enum class StoreTarget : std::uint8_t;
 }
 
 namespace legate::detail {
-
-class BasePhysicalArray;
-class TaskLocalBuffer;
 
 class RegionPhysicalStore;
 class UnboundPhysicalStore;
@@ -53,6 +50,8 @@ class PhysicalStore {
 
   PhysicalStore(const PhysicalStore& other)            = delete;
   PhysicalStore& operator=(const PhysicalStore& other) = delete;
+
+  virtual ~PhysicalStore() = default;
 
   [[nodiscard]] virtual Kind kind() const  = 0;
   [[nodiscard]] virtual bool valid() const = 0;

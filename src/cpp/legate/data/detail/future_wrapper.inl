@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/data/detail/future_wrapper.h>
+#include <legate/utilities/assert.h>
 
 namespace legate::detail {
 

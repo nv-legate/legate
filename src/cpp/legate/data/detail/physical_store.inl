@@ -7,8 +7,6 @@
 #pragma once
 
 #include <legate/data/detail/physical_store.h>
-#include <legate/utilities/detail/traced_exception.h>
-#include <legate/utilities/machine.h>
 
 #include <utility>
 
