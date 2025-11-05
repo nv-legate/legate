@@ -701,25 +701,67 @@ InternalSharedPtr<T> make_internal_shared(Args&&... args)
 template <typename T, typename U>
 InternalSharedPtr<T> static_pointer_cast(const InternalSharedPtr<U>& ptr) noexcept
 {
-  return {ptr, static_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+  auto* const p = static_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get());
+
+  return {ptr, p};
 }
 
 template <typename T, typename U>
 InternalSharedPtr<T> static_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept
 {
-  return {std::move(ptr), static_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+  auto* const p = static_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get());
+
+  return {std::move(ptr), p};
 }
 
 template <typename T, typename U>
 InternalSharedPtr<T> const_pointer_cast(const InternalSharedPtr<U>& ptr) noexcept
 {
-  return {ptr, const_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+  auto* const p = const_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get());
+
+  return {ptr, p};
 }
 
 template <typename T, typename U>
 InternalSharedPtr<T> const_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept
 {
-  return {std::move(ptr), const_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+  auto* const p = const_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get());
+
+  return {std::move(ptr), p};
+}
+
+template <typename T, typename U>
+InternalSharedPtr<T> dynamic_pointer_cast(const InternalSharedPtr<U>& ptr) noexcept
+{
+  if (auto* const p = dynamic_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())) {
+    return InternalSharedPtr<T>{ptr, p};
+  }
+  return InternalSharedPtr<T>{};
+}
+
+template <typename T, typename U>
+InternalSharedPtr<T> dynamic_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept
+{
+  if (auto* const p = dynamic_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())) {
+    return InternalSharedPtr<T>{std::move(ptr), p};
+  }
+  return InternalSharedPtr<T>{};
+}
+
+template <typename T, typename U>
+InternalSharedPtr<T> reinterpret_pointer_cast(const InternalSharedPtr<U>& ptr) noexcept
+{
+  auto* const p = reinterpret_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get());
+
+  return {ptr, p};
+}
+
+template <typename T, typename U>
+InternalSharedPtr<T> reinterpret_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept
+{
+  auto* const p = reinterpret_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get());
+
+  return {std::move(ptr), p};
 }
 
 // ==========================================================================================

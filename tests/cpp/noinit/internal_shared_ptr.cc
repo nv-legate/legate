@@ -11,6 +11,8 @@
 //
 #include <legate/utilities/internal_shared_ptr.h>
 
+#include <cstdint>
+#include <cstring>
 #include <noinit/shared_ptr_util.h>
 #include <stdexcept>
 #include <thread>
@@ -545,6 +547,138 @@ TYPED_TEST(InternalSharedPtrUnit, MultiThreaded)
   };
   check_exn(t1exn, 1);
   check_exn(t2exn, 2);
+}
+
+TEST(InternalSharedPtrUnit, DynamicPointerCastConstRef)
+{
+  enum class Kind : std::uint8_t { BASE, DERIVED };
+
+  class BaseFoo {
+   public:
+    [[nodiscard]] virtual Kind kind() const { return Kind::BASE; }
+
+    virtual ~BaseFoo() = default;
+  };
+
+  class DerivedFoo : public BaseFoo {
+   public:
+    [[nodiscard]] Kind kind() const override { return Kind::DERIVED; }
+  };
+
+  // Use new expression so we can construct a base shared ptr directly.
+  const auto der = legate::InternalSharedPtr<BaseFoo>{new DerivedFoo};
+
+  ASSERT_NE(der, nullptr);
+  ASSERT_EQ(der->kind(), Kind::DERIVED);
+
+  const auto dyn_cast = legate::dynamic_pointer_cast<DerivedFoo>(der);
+
+  ASSERT_NE(dyn_cast, nullptr);
+  ASSERT_EQ(dyn_cast->kind(), Kind::DERIVED);
+  // Dyn-casting should not modify the original
+  ASSERT_NE(der, nullptr);
+  ASSERT_EQ(der->kind(), Kind::DERIVED);
+
+  class Unrelated {};
+
+  const auto unrelated = legate::dynamic_pointer_cast<Unrelated>(der);
+
+  // Unrelated, should fail
+  ASSERT_EQ(unrelated, nullptr);
+  // Dyn-casting should not modify the original
+  ASSERT_NE(der, nullptr);
+  ASSERT_EQ(der->kind(), Kind::DERIVED);
+}
+
+TEST(InternalSharedPtrUnit, DynamicPointerCastMove)
+{
+  enum class Kind : std::uint8_t { BASE, DERIVED };
+
+  class BaseFoo {
+   public:
+    [[nodiscard]] virtual Kind kind() const { return Kind::BASE; }
+
+    virtual ~BaseFoo() = default;
+  };
+
+  class DerivedFoo : public BaseFoo {
+   public:
+    [[nodiscard]] Kind kind() const override { return Kind::DERIVED; }
+  };
+
+  // Use new expression so we can construct a base shared ptr directly.
+  auto der = legate::InternalSharedPtr<BaseFoo>{new DerivedFoo};
+
+  ASSERT_NE(der, nullptr);
+  ASSERT_EQ(der->kind(), Kind::DERIVED);
+
+  auto dyn_cast = legate::dynamic_pointer_cast<DerivedFoo>(std::move(der));
+
+  ASSERT_NE(dyn_cast, nullptr);
+  ASSERT_EQ(dyn_cast->kind(), Kind::DERIVED);
+  // We *successfully* moved, so der should be NULL
+  ASSERT_EQ(der, nullptr);  // NOLINT(bugprone-use-after-move)
+
+  class Unrelated {};
+
+  const auto unrelated = legate::dynamic_pointer_cast<Unrelated>(std::move(dyn_cast));
+
+  // Unrelated, should fail
+  ASSERT_EQ(unrelated, nullptr);
+  // We failed the case moved, so dyn_cast should be non-NULL
+  ASSERT_NE(dyn_cast, nullptr);                // NOLINT(bugprone-use-after-move)
+  ASSERT_EQ(dyn_cast->kind(), Kind::DERIVED);  // NOLINT(bugprone-use-after-move)
+}
+
+TEST(InternalSharedPtrUnit, ReinterpretPointerCastConstRef)
+{
+  static constexpr std::int32_t MINUS_ONE = -1;
+  const std::uint32_t UINT_MINUS_ONE      = [] {
+    std::uint32_t ret{};
+
+    // Need to bitcast as that is what the reinterpret_pointer_cast() will equate to.
+    static_assert(sizeof(ret) == sizeof(MINUS_ONE));
+    std::memcpy(&ret, &MINUS_ONE, sizeof(ret));
+    return ret;
+  }();
+
+  const auto int_ptr = legate::make_internal_shared<std::int32_t>(MINUS_ONE);
+
+  ASSERT_NE(int_ptr, nullptr);
+  ASSERT_EQ(*int_ptr, MINUS_ONE);
+
+  const auto uint_ptr = legate::reinterpret_pointer_cast<std::uint32_t>(int_ptr);
+
+  ASSERT_NE(uint_ptr, nullptr);
+  ASSERT_EQ(*uint_ptr, UINT_MINUS_ONE);
+  // Reinterpret casting should have no effect on the original
+  ASSERT_NE(int_ptr, nullptr);
+  ASSERT_EQ(*int_ptr, MINUS_ONE);
+}
+
+TEST(InternalSharedPtrUnit, ReinterpretPointerCastMove)
+{
+  static constexpr std::int32_t MINUS_ONE = -1;
+  const std::uint32_t UINT_MINUS_ONE      = [] {
+    std::uint32_t ret{};
+
+    // Need to bitcast as that is what the reinterpret_pointer_cast() will equate to.
+    static_assert(sizeof(ret) == sizeof(MINUS_ONE));
+    std::memcpy(&ret, &MINUS_ONE, sizeof(ret));
+    return ret;
+  }();
+
+  auto int_ptr = legate::make_internal_shared<std::int32_t>(MINUS_ONE);
+
+  ASSERT_NE(int_ptr, nullptr);
+  ASSERT_EQ(*int_ptr, MINUS_ONE);
+
+  const auto uint_ptr = legate::reinterpret_pointer_cast<std::uint32_t>(std::move(int_ptr));
+
+  ASSERT_NE(uint_ptr, nullptr);
+  ASSERT_EQ(*uint_ptr, UINT_MINUS_ONE);
+  // We moved, so should be NULL
+  ASSERT_EQ(int_ptr, nullptr);  // NOLINT(bugprone-use-after-move)
 }
 
 // NOLINTEND(readability-magic-numbers)

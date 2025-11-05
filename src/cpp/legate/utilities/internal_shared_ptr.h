@@ -328,6 +328,59 @@ template <typename T, typename U>
 template <typename T, typename U>
 [[nodiscard]] InternalSharedPtr<T> const_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept;
 
+/**
+ * @brief Creates a new instance of InternalSharedPtr based on `ptr` using a `dynamic_cast()`
+ * expression.
+ *
+ * @tparam T The type to cast to.
+ *
+ * @param ptr The pointer to dynamic cast.
+ *
+ * @return The casted pointer, or `nullptr` if the dynamic cast failed.
+ */
+template <typename T, typename U>
+[[nodiscard]] InternalSharedPtr<T> dynamic_pointer_cast(const InternalSharedPtr<U>& ptr) noexcept;
+
+/**
+ * @brief Converts an instance of InternalSharedPtr based on `ptr` using a `dynamic_cast()`
+ * expression.
+ *
+ * @tparam T The type to cast to.
+ *
+ * @param ptr The pointer to dynamic cast.
+ *
+ * @return The casted pointer, or `nullptr` if the dynamic cast failed.
+ */
+template <typename T, typename U>
+[[nodiscard]] InternalSharedPtr<T> dynamic_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept;
+
+/**
+ * @brief Creates a new instance of InternalSharedPtr based on `ptr` using a `reinterpret_cast()`
+ * expression.
+ *
+ * @tparam T The type to cast to.
+ *
+ * @param ptr The pointer to reinterpret cast.
+ *
+ * @return The casted pointer.
+ */
+template <typename T, typename U>
+[[nodiscard]] InternalSharedPtr<T> reinterpret_pointer_cast(
+  const InternalSharedPtr<U>& ptr) noexcept;
+
+/**
+ * @brief Converts an instance of InternalSharedPtr based on `ptr` using a `reinterpret_cast()`
+ * expression.
+ *
+ * @tparam T The type to cast to.
+ *
+ * @param ptr The pointer to reinterpet cast.
+ *
+ * @return The casted pointer.
+ */
+template <typename T, typename U>
+[[nodiscard]] InternalSharedPtr<T> reinterpret_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept;
+
 // ==========================================================================================
 
 template <typename T, typename U>
