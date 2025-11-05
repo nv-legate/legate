@@ -16,7 +16,7 @@ jobs:
     name: Build MPI wrapper
     strategy:
       fail-fast: false
-    runs-on: linux-amd64-gpu-l4-latest-1
+    runs-on: linux-amd64-cpu4
     timeout-minutes: 15
     container:
       options: -u root
@@ -32,7 +32,7 @@ jobs:
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Set environment variables
         run: |
@@ -67,7 +67,7 @@ jobs:
           conda_build_args+=(--output-folder "${CONDA_OUTPUT}")
           conda_build_args+=(--no-test)
 
-          conda install conda-build
+          conda install -q conda-build
           conda-build "${conda_build_args[@]}" conda/mpi_wrapper
 
       - name: Display output files
@@ -79,9 +79,3 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.ARTIFACT_PATH }}
-
-      - name: Install pre-requisites to upload package
-        run: |
-          echo "Install pre-requisites"
-          apt-get update
-          apt-get install -y curl jq
