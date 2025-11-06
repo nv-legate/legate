@@ -10,7 +10,8 @@
 
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/shape.h>
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/shift.h>
+#include <legate/data/detail/transform/transform_stack.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/operation.h>

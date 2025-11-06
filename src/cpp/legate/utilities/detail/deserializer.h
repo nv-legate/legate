@@ -10,7 +10,7 @@
 #include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/scalar.h>
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/transform_stack.h>
 #include <legate/data/physical_store.h>
 #include <legate/data/scalar.h>
 #include <legate/mapping/detail/array.h>
@@ -26,7 +26,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>

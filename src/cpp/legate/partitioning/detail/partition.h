@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/transform_stack.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/restriction.h>

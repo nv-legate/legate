@@ -343,6 +343,7 @@ bool tuple<T>::any(PRED&& pred) const
 
 namespace detail {
 
+// NOLINTNEXTLINE(readability-redundant-declaration)
 LEGATE_EXPORT void assert_valid_mapping(std::size_t container_size,
                                         Span<const std::int32_t> mapping);
 

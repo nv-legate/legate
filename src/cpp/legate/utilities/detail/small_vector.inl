@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/utilities/cpp_version.h>
+#include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/hash.h>

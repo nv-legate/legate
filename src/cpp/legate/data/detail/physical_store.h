@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/transform_stack.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>

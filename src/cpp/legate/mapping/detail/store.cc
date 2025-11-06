@@ -6,7 +6,7 @@
 
 #include <legate/mapping/detail/store.h>
 
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/transform_stack.h>
 
 #include <utility>
 

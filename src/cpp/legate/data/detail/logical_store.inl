@@ -9,7 +9,7 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/detail/storage.h>
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/transform_stack.h>
 
 #include <utility>
 

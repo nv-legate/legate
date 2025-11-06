@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/delinearize.h>
+
+#include <legate/data/detail/transform/non_invertible_transformation.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/internal_shared_ptr.h>

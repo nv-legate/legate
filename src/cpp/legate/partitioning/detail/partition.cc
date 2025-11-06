@@ -7,6 +7,7 @@
 #include <legate/partitioning/detail/partition.h>
 
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/transform/non_invertible_transformation.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/types.h>

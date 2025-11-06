@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/dim_broadcast.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <gmock/gmock.h>

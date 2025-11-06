@@ -289,7 +289,15 @@ target_sources(legate_obj
                        legate/data/detail/physical_stores/unbound_physical_store.cc
                        legate/data/detail/physical_stores/unbound_region_field.cc
                        legate/data/detail/shape.cc
-                       legate/data/detail/transform.cc
+                       legate/data/detail/transform/delinearize.cc
+                       legate/data/detail/transform/dim_broadcast.cc
+                       legate/data/detail/transform/non_invertible_transformation.cc
+                       legate/data/detail/transform/project.cc
+                       legate/data/detail/transform/promote.cc
+                       legate/data/detail/transform/shift.cc
+                       legate/data/detail/transform/transform.cc
+                       legate/data/detail/transform/transform_stack.cc
+                       legate/data/detail/transform/transpose.cc
                        legate/data/detail/future_wrapper.cc
                        legate/data/detail/region_field.cc
                        legate/data/detail/user_storage_tracker.cc

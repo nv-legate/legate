@@ -8,7 +8,7 @@
 
 #include <legate/data/detail/future_wrapper.h>
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/transform_stack.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/task/detail/return_value.h>
 #include <legate/type/detail/types.h>

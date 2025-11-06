@@ -7,6 +7,8 @@
 #include <legate.h>
 
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/transform/delinearize.h>
+#include <legate/data/detail/transform/non_invertible_transformation.h>
 #include <legate/partitioning/detail/partition.h>
 
 #include <gtest/gtest.h>

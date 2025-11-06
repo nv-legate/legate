@@ -13,7 +13,13 @@
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/shape.h>
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/delinearize.h>
+#include <legate/data/detail/transform/dim_broadcast.h>
+#include <legate/data/detail/transform/project.h>
+#include <legate/data/detail/transform/promote.h>
+#include <legate/data/detail/transform/shift.h>
+#include <legate/data/detail/transform/transform_stack.h>
+#include <legate/data/detail/transform/transpose.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/operation.h>

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/data/detail/logical_store_partition.h>
-#include <legate/data/detail/transform.h>
 
 namespace legate::detail {
 

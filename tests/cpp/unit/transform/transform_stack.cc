@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/data/detail/transform.h>
+#include <legate/data/detail/transform/transform_stack.h>
+
+#include <legate/data/detail/transform/promote.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <gtest/gtest.h>

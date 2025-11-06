@@ -7,6 +7,13 @@
 #pragma once
 
 // Useful for IDEs
+#include <legate/data/detail/transform/delinearize.h>
+#include <legate/data/detail/transform/dim_broadcast.h>
+#include <legate/data/detail/transform/project.h>
+#include <legate/data/detail/transform/promote.h>
+#include <legate/data/detail/transform/shift.h>
+#include <legate/data/detail/transform/transform_stack.h>
+#include <legate/data/detail/transform/transpose.h>
 #include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/deserializer.h>
