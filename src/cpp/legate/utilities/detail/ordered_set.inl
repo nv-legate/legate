@@ -13,21 +13,21 @@ namespace legate {
 template <typename T>
 void ordered_set<T>::insert(const T& value)
 {
-  if (element_set_.find(value) != element_set_.end()) {
-    return;
+  const auto [it, inserted] = element_set_.emplace(value);
+
+  if (inserted) {
+    elements_.emplace_back(*it);
   }
-  elements_.emplace_back(value);
-  element_set_.insert(value);
 }
 
 template <typename T>
 void ordered_set<T>::insert(T&& value)
 {
-  if (element_set_.find(value) != element_set_.end()) {
-    return;
+  const auto [it, inserted] = element_set_.emplace(std::move(value));
+
+  if (inserted) {
+    elements_.emplace_back(*it);
   }
-  elements_.emplace_back(value);
-  element_set_.insert(std::move(value));
 }
 
 template <typename T>

@@ -6,11 +6,17 @@
 
 #include <legate/partitioning/detail/constraint_solver.h>
 
-#include <legate/data/detail/logical_store.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/detail/partitioner.h>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/small_vector.h>
 
-#include <type_traits>
+#include <algorithm>
+#include <cstddef>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace legate::detail {
 
@@ -71,11 +77,11 @@ void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol,
                                             AccessMode access_mode)
 {
   partition_symbols_.insert(partition_symbol);
-  auto finder = access_modes_.find(*partition_symbol);
-  if (finder != access_modes_.end()) {
-    finder->second = std::max(finder->second, access_mode);
-  } else {
-    access_modes_.emplace(*partition_symbol, access_mode);
+
+  const auto [it, inserted] = access_modes_.try_emplace(*partition_symbol, access_mode);
+
+  if (!inserted) {
+    it->second = std::max(it->second, access_mode);
   }
 }
 
@@ -98,8 +104,8 @@ void ConstraintSolver::solve_constraints()
   }
 
   // Unify equivalence classes based on alignment constraints
-  auto handle_alignment = [&table](const Alignment& alignment) {
-    auto update_table = [&table](UnionFindEntry* old_cls, UnionFindEntry* new_cls) {
+  const auto handle_alignment = [&table](const Alignment& alignment) {
+    const auto update_table = [&table](UnionFindEntry* old_cls, UnionFindEntry* new_cls) {
       while (old_cls != nullptr) {
         table[*old_cls->partition_symbol] = new_cls;
         old_cls                           = old_cls->next;
@@ -111,8 +117,8 @@ void ConstraintSolver::solve_constraints()
     alignment.find_partition_symbols(part_symbs_to_unify);
     LEGATE_ASSERT(!part_symbs_to_unify.empty());
 
-    auto it           = part_symbs_to_unify.begin();
-    auto* equiv_class = table[**it++];
+    auto it                 = part_symbs_to_unify.begin();
+    auto* const equiv_class = table[**it++];
 
     LEGATE_ASSERT(equiv_class != nullptr);
     for (; it != part_symbs_to_unify.end(); ++it) {
@@ -129,33 +135,31 @@ void ConstraintSolver::solve_constraints()
   };
 
   // Set the restrictions according to broadcasting constraints
-  auto handle_broadcast = [&table](const Broadcast& broadcast) {
-    auto* variable    = broadcast.variable();
-    auto&& axes       = broadcast.axes();
-    auto* equiv_class = table.at(*variable);
+  const auto handle_broadcast = [&table](const Broadcast& broadcast) {
+    auto&& axes             = broadcast.axes();
+    auto* const equiv_class = table.at(*broadcast.variable());
+
     if (axes.empty()) {
       equiv_class->restrict_all();
       return;
     }
+
     for (auto&& ax : axes) {
-      auto axis = static_cast<std::uint32_t>(ax);
       // TODO(wonchanl): We want to check the axis eagerly and raise an exception
       // if it is out of bounds
-      static_assert(std::is_unsigned_v<decltype(axis)>,
-                    "If axis becomes signed, extend check below to include axis >= 0");
-      LEGATE_ASSERT(axis < equiv_class->restrictions.size());
-      equiv_class->restrictions[axis] = Restriction::FORBID;
+      LEGATE_ASSERT(ax < equiv_class->restrictions.size());
+      equiv_class->restrictions[ax] = Restriction::FORBID;
     }
   };
 
   // Here we only mark dependent partition symbols
-  auto handle_image_constraint = [&](const ImageConstraint& image_constraint) {
+  const auto handle_image_constraint = [&](const ImageConstraint& image_constraint) {
     is_dependent_[*image_constraint.var_range()] = true;
   };
-  auto handle_scale_constraint = [&](const ScaleConstraint& scale_constraint) {
+  const auto handle_scale_constraint = [&](const ScaleConstraint& scale_constraint) {
     is_dependent_[*scale_constraint.var_bigger()] = true;
   };
-  auto handle_bloat_constraint = [&](const BloatConstraint& bloat_constraint) {
+  const auto handle_bloat_constraint = [&](const BloatConstraint& bloat_constraint) {
     is_dependent_[*bloat_constraint.var_bloat()] = true;
   };
 
@@ -200,10 +204,10 @@ void ConstraintSolver::solve_constraints()
   }
 
   equiv_classes_.reserve(distinct_entries.size());
-  for (auto* entry : distinct_entries) {
+  for (const auto* entry : distinct_entries) {
     auto& equiv_class = equiv_classes_.emplace_back(entry);
 
-    for (auto* symb : equiv_class.partition_symbols) {
+    for (const auto* symb : equiv_class.partition_symbols) {
       equiv_class_map_.insert({*symb, &equiv_class});
     }
   }
