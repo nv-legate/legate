@@ -78,18 +78,18 @@ repos:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes"]
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v21.1.2'
+    rev: 'v21.1.5'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
         exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
   - repo: https://github.com/fsfe/reuse-tool
-    rev: v6.1.2
+    rev: v6.2.0
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.0
+    rev: v0.14.4
     hooks:
       - id: ruff-format
       - id: ruff
@@ -113,12 +113,12 @@ repos:
           "git+https://github.com/nv-legate/aedifix@1.10.0"
         ]
   - repo: https://github.com/MarcoGorelli/cython-lint
-    rev: v0.17.0
+    rev: v0.18.1
     hooks:
       - id: cython-lint
       - id: double-quote-cython-strings
   - repo: https://github.com/netromdk/vermin
-    rev: 'v1.6.0'
+    rev: 'v1.7.0'
     hooks:
       - id: vermin
         args: [
