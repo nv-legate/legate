@@ -33,17 +33,10 @@ class Machine;
 
 namespace legate::detail {
 
-class LogicalStorePartition;
-class PhysicalStore;
 class StoragePartition;
-class Strategy;
-class TaskReturnLayoutForUnpack;
-class Variable;
 class Type;
-class BufferBuilder;
 class Shape;
 class Partition;
-class TransformStack;
 
 class Storage {
  public:
@@ -79,6 +72,17 @@ class Storage {
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;
+  /**
+   * @brief Determine whether two stores refer to the same memory.
+   *
+   * This routine can be used to determine whether two seemingly unrelated stores refer to the
+   * same logical memory region.
+   *
+   * @param other The `Storage` to compare with.
+   *
+   * @return `true` if two stores cover the same underlying memory region, `false` otherwise.
+   */
+  [[nodiscard]] bool equal(const Storage& other) const;
   [[nodiscard]] Kind kind() const;
   [[nodiscard]] std::int32_t level() const;
   [[nodiscard]] std::size_t scalar_offset() const;

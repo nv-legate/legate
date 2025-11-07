@@ -30,6 +30,7 @@ class ListLogicalArray;
 class TaskReturnLayoutForUnpack;
 class Variable;
 class BasePhysicalArray;
+class Strategy;
 
 class LogicalArray {
  public:

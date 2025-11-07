@@ -210,6 +210,59 @@ bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
   return true;
 }
 
+namespace {
+
+class EqualVisitor {
+ public:
+  bool operator()(const std::optional<InternalSharedPtr<LogicalRegionField>>& lhs_rf,
+                  const std::optional<InternalSharedPtr<LogicalRegionField>>& rhs_rf) const
+  {
+    if (lhs_rf.has_value() != rhs_rf.has_value()) {
+      return false;
+    }
+    if (!lhs_rf.has_value() && !rhs_rf.has_value()) {
+      return false;
+    }
+    // Both region fields exist, check if they are the same
+    return (*lhs_rf)->region() == (*rhs_rf)->region() &&
+           (*lhs_rf)->field_id() == (*rhs_rf)->field_id();
+  }
+
+  bool operator()(const std::optional<Legion::Future>&, const std::optional<Legion::Future>&) const
+  {
+    return false;
+  }
+
+  bool operator()(const std::optional<Legion::FutureMap>&,
+                  const std::optional<Legion::FutureMap>&) const
+  {
+    return false;
+  }
+
+  template <typename T, typename U, std::enable_if_t<!std::is_same_v<T, U>>* = nullptr>
+  bool operator()(const T&, const U&) const
+  {
+    LEGATE_ABORT(
+      "kind() and other.kind() are the same, but underlying variant types are different. Storage "
+      "data is inconsistent with kind().");
+  }
+};
+
+}  // namespace
+
+bool Storage::equal(const Storage& other) const
+{
+  if (this == &other) {
+    return true;
+  }
+
+  if (kind() != other.kind()) {
+    return false;
+  }
+
+  return std::visit(EqualVisitor{}, storage_data_, other.storage_data_);
+}
+
 bool Storage::is_mapped() const
 {
   // TODO(wonchanl): future- and future map-backed storages are considered unmapped until we

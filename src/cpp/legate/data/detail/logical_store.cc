@@ -830,30 +830,7 @@ bool LogicalStore::equal_storage(const LogicalStore& other) const
     return true;
   }
 
-  const auto kind = get_storage()->kind();
-
-  if (kind != other.get_storage()->kind()) {
-    return false;
-  }
-
-  switch (kind) {
-    case Storage::Kind::REGION_FIELD: {
-      auto&& rf       = get_region_field();
-      auto&& other_rf = other.get_region_field();
-      return rf->field_id() == other_rf->field_id() && rf->region() == other_rf->region();
-    }
-    case Storage::Kind::FUTURE: [[fallthrough]];
-    case Storage::Kind::FUTURE_MAP: {
-      // Future- and future map-backed stores are not sliced and thus cannot be aliased through
-      // different storage objects, so equality on the storage is sufficient
-      return get_storage() == other.get_storage();
-    }
-  }
-  // Because sometimes, GCC is really stupid:
-  //
-  // error: control reaches end of non-void function [-Werror=return-type]
-  LEGATE_UNREACHABLE();
-  return false;
+  return get_storage()->equal(*other.get_storage());
 }
 
 InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(

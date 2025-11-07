@@ -32,6 +32,7 @@ class Scalar;
 
 namespace legate::detail {
 
+class PhysicalStore;
 class CommunicatorFactory;
 class ConstraintSolver;
 class Library;

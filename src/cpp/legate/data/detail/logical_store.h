@@ -14,6 +14,7 @@
 #include <legate/operation/detail/store_projection.h>
 #include <legate/operation/projection.h>
 #include <legate/partitioning/detail/restriction.h>
+#include <legate/task/detail/task_return_layout.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
@@ -36,6 +37,10 @@ class Machine;
 namespace legate::detail {
 
 class LogicalStorePartition;
+class TransformStack;
+class PhysicalStore;
+class TaskReturnLayoutForUnpack;
+class Strategy;
 class RegionPhysicalStore;
 
 class LogicalStore {
