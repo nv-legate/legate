@@ -277,7 +277,7 @@ class Runtime {
     const InternalSharedPtr<Shape>& shape,
     const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
     InternalSharedPtr<Type> type,
-    const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
+    Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
     InternalSharedPtr<mapping::detail::DimOrdering> ordering);
 
   void prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,

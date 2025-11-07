@@ -916,27 +916,31 @@ Runtime::IndexAttachResult Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
   InternalSharedPtr<Type> type,
-  const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
+  Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
   InternalSharedPtr<mapping::detail::DimOrdering> ordering)
 {
   validate_store_shape(shape, type);
 
-  auto type_size = type->size();
-  auto store     = create_store(shape, std::move(type), false /*optimize_scalar*/);
-  auto partition = partition_store_by_tiling(store, tile_shape);
+  const auto type_size = type->size();
+  auto store           = create_store(shape, std::move(type), false /*optimize_scalar*/);
+  auto partition       = partition_store_by_tiling(store, tile_shape);
 
   std::vector<Legion::LogicalRegion> subregions;
   std::vector<InternalSharedPtr<ExternalAllocation>> allocs;
   std::unordered_set<std::uint64_t> visited;
+  // Use this 2-step process (instead of having a std::unordered_set<tuple>) because we don't
+  // actually want to store a copy of the color spaces in the set, we just care about if we've
+  // seen them before.
   const hasher<tuple<std::uint64_t>> hash_color{};
+
   subregions.reserve(allocations.size());
   allocs.reserve(allocations.size());
   visited.reserve(allocations.size());
-
   for (auto&& [idx, spec] : enumerate(allocations)) {
     auto&& [allocation, color] = spec;
-    const auto color_hash      = hash_color(color);
-    if (visited.find(color_hash) != visited.end()) {
+    const auto [_, inserted]   = visited.emplace(hash_color(color));
+
+    if (!inserted) {
       // If we're here, this color might have been seen in one of the previous iterations
       for (std::int64_t k = 0; k < idx; ++k) {
         if (allocations[k].second == color) {
@@ -946,20 +950,11 @@ Runtime::IndexAttachResult Runtime::create_store(
       }
       // If we're here, then we've just seen a fairly rare hash collision
     }
-    visited.insert(color_hash);
-    auto& alloc        = allocs.emplace_back(allocation.impl());
-    auto substore      = partition->get_child_store([](const tuple<std::uint64_t>& color_tup) {
-      // Work around CCCL bug, see https://github.com/NVIDIA/cccl/issues/5116
-      // Otherwise this would just be get_child_store({color.begin(), color.end()})
-      SmallVector<std::uint64_t, LEGATE_MAX_DIM> vec;
 
-      vec.reserve(color_tup.size());
-      for (auto&& c : color_tup) {
-        vec.push_back(c);
-      }
-      return vec;
-    }(color));
-    auto required_size = substore->volume() * type_size;
+    const auto& alloc = allocs.emplace_back(allocation.impl());
+    const auto substore =
+      partition->get_child_store({tags::iterator_tag, color.begin(), color.end()});
+    const auto required_size = substore->volume() * type_size;
 
     LEGATE_ASSERT(alloc->ptr());
 

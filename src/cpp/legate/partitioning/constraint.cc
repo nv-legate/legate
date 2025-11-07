@@ -114,12 +114,9 @@ ProxyConstraint broadcast(std::variant<ProxyArrayArgument,
 {
   return ProxyConstraint{legate::make_shared<detail::ProxyBroadcast>(
     std::move(value),
-    axes.has_value() ? std::make_optional<detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>>(
-                         // &* to work around CCCL bug https://github.com/NVIDIA/cccl/issues/5116
-                         detail::tags::iterator_tag,
-                         &*(axes->begin()),
-                         &*(axes->end()))
-                     : std::nullopt)};
+    axes.has_value()
+      ? std::make_optional<detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>>(axes->data())
+      : std::nullopt)};
 }
 
 // ------------------------------------------------------------------------------------------

@@ -353,10 +353,9 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
   const std::vector<std::pair<ExternalAllocation, tuple<std::uint64_t>>>& allocations,
   const mapping::DimOrdering& ordering)
 {
-  // &* to work around CCCL bug https://github.com/NVIDIA/cccl/issues/5116
   auto [store, partition] =
     impl_->create_store(shape.impl(),
-                        {detail::tags::iterator_tag, &*tile_shape.begin(), &*tile_shape.end()},
+                        {detail::tags::iterator_tag, tile_shape.begin(), tile_shape.end()},
                         type.impl(),
                         allocations,
                         ordering.impl());
