@@ -151,7 +151,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(const Scalar& scalar) const;
+  void add_scalar_arg(const Scalar& scalar);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -168,7 +168,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param constraint A partitioning constraint
    */
-  void add_constraint(const Constraint& constraint) const;
+  void add_constraint(const Constraint& constraint);
 
   /**
    * @brief Adds multiple partitioning constraints to the task.
@@ -198,7 +198,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @see add_constraint(const Constraint&)
    */
-  void add_constraints(Span<const Constraint> constraints) const;
+  void add_constraints(Span<const Constraint> constraints);
 
   /**
    * @brief Finds or creates a partition symbol for the given array
@@ -207,13 +207,13 @@ class LEGATE_EXPORT AutoTask {
    *
    * @return The existing symbol if there is one for the array, a fresh symbol otherwise
    */
-  [[nodiscard]] Variable find_or_declare_partition(const LogicalArray& array) const;
+  [[nodiscard]] Variable find_or_declare_partition(const LogicalArray& array);
   /**
    * @brief Declares partition symbol
    *
    * @return A new symbol that can be used when passing an array to an operation
    */
-  [[nodiscard]] Variable declare_partition() const;
+  [[nodiscard]] Variable declare_partition();
   /**
    * @brief Returns the provenance information of this operation
    *
@@ -230,7 +230,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param concurrent A boolean value indicating whether the task needs a concurrent task launch
    */
-  void set_concurrent(bool concurrent) const;
+  void set_concurrent(bool concurrent);
   /**
    * @brief Sets whether the task has side effects or not.
    *
@@ -238,19 +238,19 @@ class LEGATE_EXPORT AutoTask {
    *
    * @param has_side_effect A boolean value indicating whether the task has side effects
    */
-  void set_side_effect(bool has_side_effect) const;
+  void set_side_effect(bool has_side_effect);
   /**
    * @brief Sets whether the task can throw an exception or not.
    *
    * @param can_throw_exception A boolean value indicating whether the task can throw an exception
    */
-  void throws_exception(bool can_throw_exception) const;
+  void throws_exception(bool can_throw_exception);
   /**
    * @brief Requests a communicator for this task.
    *
    * @param name The name of the communicator to use for this task
    */
-  void add_communicator(std::string_view name) const;
+  void add_communicator(std::string_view name);
 
   AutoTask() = LEGATE_DEFAULT_WHEN_CYTHON;
 
