@@ -4,6 +4,14 @@
             "git_shallow": false,
             "git_tag": "241951db88a0daf841b0cef1fb23b8742a88b7d6",
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
+            "patches": [
+                {
+                    "file": "${current_json_dir}/../patches/data_source.diff",
+                    "fixed_in": "",
+                    "issue": "profiler unreachable code",
+                    "required": true
+                }
+            ],
             "version": "25.06.0"
         }
     }
