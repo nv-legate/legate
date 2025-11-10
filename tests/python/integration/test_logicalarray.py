@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+try:
+    import cupy  # type: ignore[import-not-found]
+except ModuleNotFoundError:
+    cupy = None
 import numpy as np
 
 import pytest
@@ -76,9 +80,7 @@ class TestArrayCreation:
     )
     def test_fbmem_target(self) -> None:
         # Need to explicitly check cupy existence here
-        try:
-            import cupy  # type: ignore[import-not-found]  # noqa: PLC0415
-        except ModuleNotFoundError:
+        if not cupy:
             pytest.skip(reason="Test requires cupy to be installed")
         runtime = get_legate_runtime()
         lg_arr = runtime.create_array(ty.int32, shape=(3, 3, 3))
@@ -107,6 +109,22 @@ class TestArrayCreation:
         assert len(struct_arr.fields()) == 2
         assert struct_arr.num_children == 2
         assert struct_arr.nested
+        assert (
+            struct_arr.get_physical_array().child(0).domain().lo
+            == int_arr.get_physical_array().domain().lo
+        )
+        assert (
+            struct_arr.get_physical_array().child(0).type
+            == int_arr.get_physical_array().type
+        )
+        assert (
+            struct_arr.get_physical_array().child(0).ndim
+            == int_arr.get_physical_array().ndim
+        )
+        assert (
+            struct_arr.get_physical_array().child(0).nullable
+            == int_arr.get_physical_array().nullable
+        )
 
 
 class TestPromote:
@@ -142,7 +160,7 @@ class TestPromote:
 
         expand_dim = arr_np.ndim - 1
         expanded_arr = np.expand_dims(arr_np, expand_dim)
-        promoted = arr_logical.promote(expand_dim, 1)
+        promoted = arr_logical.promote(-1, 1)
 
         promoted_arr = np.asarray(
             promoted.data.get_physical_store().get_inline_allocation()
@@ -150,6 +168,8 @@ class TestPromote:
         assert promoted_arr.ndim == expanded_arr.ndim
         assert promoted_arr.shape == expanded_arr.shape
         assert promoted_arr.dtype == expanded_arr.dtype
+        exp = (*tuple(arr_logical.get_physical_array().domain().lo), 0)
+        assert tuple(promoted.get_physical_array().domain().lo) == exp
 
 
 class TestTranspose:
@@ -201,6 +221,24 @@ class TestTranspose:
         assert arr.null_mask.shape == arr.shape
 
 
+class TestBroadcast:
+    @pytest.mark.parametrize(
+        ("shape", "dim", "size"),
+        [((2, 1, 2), 1, 2), ((1, 3, 2), 0, 3), ((0, 9, 1), -1, 4)],
+        ids=str,
+    )
+    def test_broadcast(
+        self, shape: tuple[int, ...], dim: int, size: int
+    ) -> None:
+        arr, store = random_array_and_store(shape)
+        larr = LogicalArray.from_store(store)
+        b_larr = larr.broadcast(dim, size)
+        b_arr = np.asarray(b_larr)
+        assert b_arr.shape[dim] == size
+        exp_arr = np.broadcast_to(arr, b_arr.shape)
+        np.testing.assert_allclose(b_arr, exp_arr)
+
+
 class TestArrayCreationErrors:
     @pytest.mark.parametrize(
         "dtype", [ty.string_type, ty.struct_type([ty.int8])]
@@ -218,6 +256,23 @@ class TestArrayCreationErrors:
         msg = "nullable arrays don't support the array interface directly"
         with pytest.raises(ValueError, match=msg):
             np.asarray(arr.get_physical_array())
+
+    @pytest.mark.skipif(
+        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
+        reason="Test requires GPU",
+    )
+    def test_nullable_cupy_array_interface(self) -> None:
+        # Need to explicitly check cupy existence here
+        if not cupy:
+            pytest.skip(reason="Test requires cupy to be installed")
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(ty.uint16, shape=(1,), nullable=True)
+        msg = (
+            "Nested or nullable arrays don't support the CUDA array "
+            "interface directly"
+        )
+        with pytest.raises(ValueError, match=msg):
+            cupy.asarray(arr)
 
     def test_runtime_create_nullable_array_invalid_type(self) -> None:
         runtime = get_legate_runtime()

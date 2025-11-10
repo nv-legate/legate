@@ -331,8 +331,10 @@ cdef class Scalar:
             code = self._handle.type().code()
         try:
             return _GETTERS[code](self)
-        except KeyError as ke:
-            raise RuntimeError(f"unhandled type {code}") from ke
+        except KeyError as ke:  # pragma: no cover
+            raise RuntimeError(  # pragma: no cover
+                    f"unhandled type {code}"  # pragma: no cover
+            ) from ke  # pragma: no cover
 
     def __str__(self) -> str:
         r"""

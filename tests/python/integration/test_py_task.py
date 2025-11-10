@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import os
 import re
+import sys
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -404,6 +406,45 @@ class TestPyTask:
         _, source_store = utils.random_array_and_store(shape)
         _, bloat_store = utils.random_array_and_store(shape)
         bloat_task(source_store, bloat_store, low_offsets, high_offsets, shape)
+
+    @pytest.mark.skipif(
+        # TODO(yimoj) [PR-3069]
+        # Test fails in CI for some reason and the output is truncated.
+        # Disable it in CI for now.
+        bool(os.environ.get("CI"))
+        or get_legate_runtime().machine.preferred_target != TaskTarget.CPU,
+        reason="CPU only test",
+    )
+    def test_throws_exception(self) -> None:
+        proc = utils.subprocess_helper(
+            __file__,
+            "test_throws_exception_impl",
+            {
+                "LEGATE_MAX_EXCEPTION_SIZE": "15000",
+                "LEGATE_AUTO_CONFIG": "0",
+                "LEGATE_CONFIG": "--cpus 1",
+            },
+        )
+        assert not proc.returncode, proc.stdout
+
+    @pytest.mark.xfail(
+        run=False, reason="should only be invoked by test_throws_exception"
+    )
+    def test_throws_exception_impl(self) -> None:
+        @task(
+            variants=tuple(VariantCode),
+            options=VariantOptions(may_throw_exception=True),
+        )
+        def null_mask(x: InputArray) -> None:
+            x.null_mask()
+
+        msg = "Invalid to retrieve the null mask of a non-nullable array"
+        arr = get_legate_runtime().create_array(
+            ty.int32, (3, 2, 1), nullable=False
+        )
+        arr.fill(0)
+        with pytest.raises(ValueError, match=msg):
+            null_mask(arr)
 
     def test_register_invalid_param_variant(self) -> None:
         arr = get_legate_runtime().create_array(ty.int32)

@@ -81,8 +81,9 @@ cdef _ExternalAllocation create_from_buffer(
 
     cdef int return_code = PyObject_GetBuffer(obj, buffer.get(), flags)
     if return_code == -1:
-        raise BufferError(
-            f"{type(obj)} does not support the Python buffer protocol."
+        raise BufferError(  # pragma: no cover
+            f"{type(obj)} does not support "  # pragma: no cover
+            "the Python buffer protocol."
         )
 
     if (order_type == DimOrderingKind.FORTRAN and

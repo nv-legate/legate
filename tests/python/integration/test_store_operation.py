@@ -6,11 +6,16 @@ from __future__ import annotations
 import re
 from typing import Any
 
+try:
+    import cupy  # type: ignore[import-not-found]
+except ModuleNotFoundError:
+    cupy = None
 import numpy as np
 
 import pytest
 
 from legate.core import LEGATE_MAX_DIM, get_legate_runtime, types as ty
+from legate.core._lib.mapping.mapping import TaskTarget
 
 from .utils import utils
 
@@ -201,6 +206,21 @@ class TestLogicalStoreOperation:
         np.testing.assert_allclose(store_arr, arr_t)
 
     @pytest.mark.parametrize(
+        ("shape", "dim", "size"),
+        [((2, 1, 2), 1, 2), ((1, 3, 2), 0, 3), ((0, 9, 1), -1, 4)],
+        ids=str,
+    )
+    def test_broadcast(
+        self, shape: tuple[int, ...], dim: int, size: int
+    ) -> None:
+        arr, store = utils.random_array_and_store(shape)
+        b_store = store.broadcast(dim, size)
+        b_arr = np.asarray(b_store)
+        assert b_arr.shape[dim] == size
+        exp_arr = np.broadcast_to(arr, b_arr.shape)
+        np.testing.assert_allclose(b_arr, exp_arr)
+
+    @pytest.mark.parametrize(
         ("arr_shape", "dim", "start", "stop"),
         [
             ((2, 2), 1, None, 1),
@@ -382,6 +402,14 @@ class TestLogicalStoreOperationErrors:
         with pytest.raises(ValueError, match=msg):
             store.partition_by_tiling(shape)  #  type: ignore[arg-type]
 
+    def test_invalid_color_shape(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int16, (2, 2, 2))
+        color_shape = 111
+        msg = f"Expected an iterable but got {type(color_shape)}"
+        with pytest.raises(ValueError, match=msg):
+            store.partition_by_tiling((2, 2, 2), color_shape)  #  type: ignore[arg-type]
+
     def test_child_store_invalid_color_size(self) -> None:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int16, (2, 2, 2))
@@ -419,6 +447,34 @@ class TestLogicalStoreOperationErrors:
             ValueError, match="Store has no attachment to detach"
         ):
             store.detach()
+
+    @pytest.mark.parametrize(
+        ("shape", "dim"),
+        [((2, 1, 2), 99), ((1, 3, 1), -4), ((0, 9, 1), 1)],
+        ids=str,
+    )
+    def test_invalid_broadcast_dim(
+        self, shape: tuple[int, ...], dim: int
+    ) -> None:
+        _, store = utils.random_array_and_store(shape)
+        msg = "Invalid broadcast on dimension"
+        with pytest.raises(ValueError, match=msg):
+            store.broadcast(dim, 2)
+
+    @pytest.mark.skipif(
+        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
+        reason="test requires GPU",
+    )
+    def test_cupy_from_sysmem(self) -> None:
+        if not cupy:
+            pytest.skip(reason="test requires cupy")
+        _, store = utils.random_array_and_store((3, 2, 1))
+        msg = (
+            "Physical store in a host-only memory does not support the CUDA "
+            "array interface"
+        )
+        with pytest.raises(ValueError, match=msg):
+            cupy.asarray(store)
 
 
 if __name__ == "__main__":

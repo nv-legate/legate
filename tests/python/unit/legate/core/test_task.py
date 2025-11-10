@@ -670,9 +670,40 @@ class TestLegateDataInterface:
             assert (arr == 22).all()
 
         field = Field("foo", dtype=ty.int64)
+        assert field.name == "foo"
+        assert field.type == ty.int64
+        assert not field.nullable
         x = make_input_array(value=22)
 
         foo(Table([field], [x]))
+
+    def test_from_arrays(self) -> None:
+        @lct.task
+        def foo(x: InputArray) -> None:
+            arr = np.asarray(x)
+            assert arr.dtype == np.int64
+            assert (arr == 22).all()
+
+        x = make_input_array(value=22)
+
+        foo(Table.from_arrays(["foo"], [x]))
+
+    def test_from_arrays_name_mismatch(self) -> None:
+        @lct.task
+        def foo(x: InputArray) -> None:
+            arr = np.asarray(x)
+            assert arr.dtype == np.int64
+            assert (arr == 22).all()
+
+        x = make_input_array(value=22)
+        names = ["foo", "bar"]
+        arrays = [x]
+        msg = re.escape(
+            f"Length of names ({names}) does not match "
+            f"length of arrays ({arrays})"
+        )
+        with pytest.raises(ValueError, match=msg):
+            foo(Table.from_arrays(names, arrays))
 
     def test_missing_version(self) -> None:
         class MissingVersion:

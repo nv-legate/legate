@@ -56,6 +56,11 @@ class TestInlineAllocation:
             "data": (alloc.ptr, False),
             "strides": strides,
         }
+        assert (
+            str(alloc) == f"InlineAllocation({alloc.ptr}, "
+            f"{alloc.strides}, {alloc.target})"
+        )
+        assert repr(alloc) == str(alloc)
         with pytest.raises(
             ValueError,
             match=(

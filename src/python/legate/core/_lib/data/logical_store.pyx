@@ -618,7 +618,11 @@ cdef class LogicalStore(Unconstructable):
         if dim < 0:
             dim += self.ndim
         if not is_iterable(shape):
-            raise ValueError(f"Expected an iterable but got {type(shape)}")
+            raise ValueError(  # pragma: no cover
+                "Expected an iterable but got "  # pragma: no cover
+                f"{type(shape)}"  # pragma: no cover
+            )
+
         cdef std_vector[uint64_t] sizes = std_vector[uint64_t]()
 
         sizes.reserve(len(shape))

@@ -162,6 +162,55 @@ class TestStoreCreationErrors:
         with pytest.raises(ValueError, match=msg):
             runtime.create_store_from_buffer(ty.uint64, (1024,), arr, False)
 
+    def test_create_from_non_buffer(self) -> None:
+        msg = re.escape(
+            f"a bytes-like object is required, not '{type(print).__name__}'"
+        )
+        with pytest.raises(TypeError, match=msg):
+            get_legate_runtime().create_store_from_buffer(
+                ty.int32, (1,), print, False
+            )
+
+    @pytest.mark.xfail(reason="issue-3062")
+    def test_invalid_fortran_ordering(self) -> None:
+        # TODO(yimoj) [issue-3062]
+        # The BufferError gets caught and re-raised as ValueError, same one
+        # as test_small_buffer
+        msg = re.escape(
+            "Buffer expected to be Fortran order but is not F-Contiguous."
+        )
+        runtime = get_legate_runtime()
+        shape = (2, 3, 4)
+        data = np.arange(24, dtype=np.int32).reshape(shape).copy(order="K")
+        with pytest.raises(BufferError, match=msg):
+            runtime.create_store_from_buffer(
+                ty.int32,
+                shape,
+                data,
+                read_only=True,
+                ordering=DimOrdering.fortran_order(),
+            )
+
+    @pytest.mark.xfail(reason="issue-3062")
+    def test_invalid_c_ordering(self) -> None:
+        # TODO(yimoj) [issue-3062]
+        # The BufferError gets caught and re-raised as ValueError, same one
+        # as test_small_buffer
+        msg = re.escape(
+            "Buffer expected to be C order but is not C-Contiguous."
+        )
+        runtime = get_legate_runtime()
+        shape = (2, 3, 4)
+        data = np.arange(24, dtype=np.int32).reshape(shape).copy(order="F")
+        with pytest.raises(BufferError, match=msg):
+            runtime.create_store_from_buffer(
+                ty.int32,
+                shape,
+                data,
+                read_only=True,
+                ordering=DimOrdering.c_order(),
+            )
+
 
 class TestStoreCreationDimOrdering:
     """Test DimOrdering functionality in create_store_from_buffer."""

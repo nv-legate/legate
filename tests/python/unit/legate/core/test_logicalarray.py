@@ -90,6 +90,8 @@ class TestProject:
         assert list(projected.extents) == [1, 3, 4]
         projected = arr.project(3, 2)
         assert list(projected.extents) == [1, 2, 3]
+        projected = arr.project(-1, 2)
+        assert list(projected.extents) == [1, 2, 3]
 
     @pytest.mark.parametrize("dtype", _PRIMITIVES)
     @pytest.mark.parametrize("nullable", {True, False})
@@ -345,6 +347,9 @@ class TestDelinearize:
         assert list(delinearized.extents) == [1, 1, 2, 3, 4]
 
         delinearized = arr.delinearize(3, (2, 1, 2, 1))
+        assert list(delinearized.extents) == [1, 2, 3, 2, 1, 2, 1]
+
+        delinearized = arr.delinearize(-1, (2, 1, 2, 1))
         assert list(delinearized.extents) == [1, 2, 3, 2, 1, 2, 1]
 
     @pytest.mark.parametrize("dtype", _PRIMITIVES)

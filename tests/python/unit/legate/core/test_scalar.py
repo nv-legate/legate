@@ -212,6 +212,17 @@ class TestScalarErrors:
         with pytest.raises(ValueError, match=msg):
             np.asarray(scalar)
 
+    def test_create_invalid_type(self) -> None:
+        class Foo(ty.Type):
+            @property
+            def code(self) -> ty.TypeCode:
+                return ty.TypeCode.LIST
+
+        dtype = Foo()
+        msg = f"unhandled type {dtype}"
+        with pytest.raises(TypeError, match=msg):
+            Scalar("bar", dtype)
+
 
 if __name__ == "__main__":
     import sys
