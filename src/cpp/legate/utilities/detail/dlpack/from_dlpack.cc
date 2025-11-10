@@ -155,7 +155,9 @@ namespace {
     farthest_idx += stride * (shape - 1);
     volume *= shape;
   }
-  return farthest_idx == volume - 1;
+  // Empty tensors (either actually empty: (), or a zero dimension: (1, 0, 2)) are always
+  // contiguous.
+  return volume == 0 || farthest_idx == volume - 1;
 }
 
 [[nodiscard]] legate::mapping::DimOrdering get_dim_ordering(const DLTensor& tensor)

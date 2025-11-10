@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/dlpack/dlpack.h>
 #include <legate/utilities/detail/dlpack/from_dlpack.h>
 
@@ -145,9 +146,14 @@ void check_store(const legate::LogicalStore& store, const DLTensor& tensor)
   ASSERT_EQ(store.type().size(), tensor.dtype.bits / CHAR_BIT);
 
   const auto shape = store.shape();
-  auto&& extents   = shape.extents();
 
-  ASSERT_EQ(shape.volume(), 1 << DIM);
+  const auto expected_volume = legate::detail::array_volume(
+    legate::Span<const std::int64_t>{tensor.shape, tensor.shape + tensor.ndim});
+
+  ASSERT_EQ(shape.volume(), expected_volume);
+
+  auto&& extents = shape.extents();
+
   ASSERT_THAT(extents.data(), ::testing::ElementsAreArray(tensor.shape, tensor.ndim));
 
   {
@@ -304,6 +310,21 @@ TEST_F(FromDLPackVersionedUnit, OpaqueDataType)
   ASSERT_THAT(extents.data(), ::testing::ElementsAreArray(tensor.shape, tensor.ndim));
 }
 
+TEST_F(FromDLPackVersionedUnit, EmptyDim)
+{
+  constexpr auto DIM = 3;
+  using data_type    = std::int8_t;
+
+  auto* dlm_tensor = make_tensor<data_type, DIM>();
+
+  dlm_tensor->dl_tensor.shape[1] = 0;
+
+  const auto& tensor = dlm_tensor->dl_tensor;
+  auto store         = legate::detail::from_dlpack(&dlm_tensor);
+
+  check_store<data_type, DIM>(store, tensor);
+}
+
 class FromDLPackVersionedUnitDeviceType : public FromDLPackVersionedUnit {};
 
 class FromDLPackVersionedCPUInput : public FromDLPackVersionedUnit,
@@ -428,7 +449,6 @@ TEST_F(FromDLPackVersionedDeathTest, InvalidDeviceType)
     static_cast<DLDeviceType>(99);  // Invalid device type
   // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
 
-  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
   auto* raw_ptr = uniq_dlm_tensor.get();
   ASSERT_DEATH(static_cast<void>(legate::detail::from_dlpack(&raw_ptr)),
                ::testing::AnyOf(
@@ -436,6 +456,34 @@ TEST_F(FromDLPackVersionedDeathTest, InvalidDeviceType)
                  ::testing::HasSubstr("Unhandled device type"),
                  // Error from UBSAN, if we are running with it
                  ::testing::HasSubstr("runtime error: load of value 99")));
+}
+
+TEST_F(FromDLPackVersionedDeathTest, ZeroDim)
+{
+  constexpr auto DIM  = 3;
+  auto* const runtime = legate::Runtime::get_runtime();
+  auto* dlm_tensor    = make_tensor<std::int8_t, DIM>();
+  const auto uniq_dlm_tensor =
+    std::unique_ptr<DLManagedTensorVersioned, std::function<void(void*)>>{
+      dlm_tensor, [tptr = dlm_tensor](void*) {
+        if (tptr->deleter) {
+          tptr->deleter(tptr);
+        }
+      }};
+  auto* raw_ptr = uniq_dlm_tensor.get();
+
+  dlm_tensor->dl_tensor.ndim = 0;
+
+  ASSERT_DEATH(
+    [&] {
+      std::ignore = legate::detail::from_dlpack(&raw_ptr);
+      // The assertion in question is triggered by launching the Attach operation (to attach to
+      // the external allocation). If the execution window is large enough (really, >1) the
+      // attachment doesn't trigger until a manual flush.
+      runtime->issue_execution_fence(/* block */ true);
+    }(),
+    // The LEGATE_CHECK() in generate_legion_dims() failed
+    ::testing::HasSubstr("assertion failed: ndim > 0"));
 }
 
 }  // namespace test_from_dlpack_versioned

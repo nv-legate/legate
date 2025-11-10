@@ -119,7 +119,7 @@ std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(std::uint32
 {
   std::vector<Legion::DimensionKind> ordering;
 
-  LEGATE_ASSERT(ndim > 0);
+  LEGATE_CHECK(ndim > 0);
   ordering.reserve(static_cast<std::size_t>(ndim) + 1);
   switch (kind) {
     case Kind::C: {
