@@ -28,6 +28,12 @@ def rotate_switcher(ctx: Context) -> None:
     with switcher_json.open() as fd:
         data: list[SwitcherData] = json.load(fd)
 
+    dev_idx: int | None = None
+    for idx, sub_data in enumerate(data):
+        if sub_data.get("version") == "dev":
+            dev_idx = idx
+            break
+
     for sub_data in data:
         if sub_data.get("preferred", False):
             last_release = sub_data
@@ -69,6 +75,9 @@ def rotate_switcher(ctx: Context) -> None:
     }
 
     data.append(new_release)
+    if dev_idx is not None and 0 <= dev_idx < len(data) - 1:
+        dev_entry = data.pop(dev_idx)
+        data.append(dev_entry)
     if not ctx.dry_run:
         with switcher_json.open(mode="w") as fd:
             json.dump(data, fd, indent=4, sort_keys=True)

@@ -8,10 +8,7 @@ from argparse import ArgumentParser
 
 from packaging.version import Version, parse as parse_version
 
-from util.bump_cmake_versions import (
-    bump_cmakelists_version,
-    bump_legion_version,
-)
+from util.bump_cmake_versions import bump_cmakelists_version
 from util.bump_conda_versions import bump_legate_profiler_version
 from util.bump_docs_version import rotate_switcher, update_changelog
 from util.context import Context
@@ -121,7 +118,6 @@ def post_cut(ctx: Context) -> None:
     rotate_switcher(ctx)
     update_changelog(ctx)
     bump_legate_profiler_version(ctx)
-    bump_legion_version(ctx)
     bump_cmakelists_version(ctx)
 
 
