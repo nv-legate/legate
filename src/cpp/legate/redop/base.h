@@ -11,7 +11,7 @@
 //
 #include <legate/utilities/detail/doxygen.h>
 
-#include <legion/legion_redop.h>
+#include <legion/api/redop.h>
 
 namespace legate {
 

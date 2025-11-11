@@ -8,7 +8,7 @@
 
 #include <legate/task/detail/return_value.h>
 
-#include <legion/legion_types.h>
+#include <legion/api/types.h>
 
 #include <cstddef>
 #include <cstdint>

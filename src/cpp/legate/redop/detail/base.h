@@ -14,7 +14,7 @@
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/macros.h>
 
-#include <legion/legion_config.h>
+#include <legion/api/config.h>
 
 #include <cuda/std/functional>
 

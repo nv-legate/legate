@@ -8,7 +8,7 @@
 
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <legion/runtime.h>
+#include <legion/api/runtime.h>
 #include <realm/id.h>
 
 #include <fmt/format.h>

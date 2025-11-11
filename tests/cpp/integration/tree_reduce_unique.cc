@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <unordered_set>
 #include <utilities/utilities.h>
 
 namespace tree_reduce_unique {

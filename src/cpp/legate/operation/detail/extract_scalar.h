@@ -15,7 +15,7 @@
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/macros.h>
 
-#include <legion/legion_types.h>
+#include <legion/api/types.h>
 
 #include <vector>
 

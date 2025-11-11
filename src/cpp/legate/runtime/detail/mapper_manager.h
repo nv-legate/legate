@@ -9,8 +9,8 @@
 #include <legate/utilities/detail/zstring_view.h>
 
 #include <legion.h>
-#include <legion/legion_mapping.h>
-#include <legion/legion_types.h>
+#include <legion/api/mapping.h>
+#include <legion/api/types.h>
 
 namespace legate::mapping::detail {
 

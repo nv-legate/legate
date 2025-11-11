@@ -12,7 +12,7 @@
 #include <legate/utilities/shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
-#include <legion/legion_config.h>
+#include <legion/api/config.h>
 
 #include <iosfwd>
 #include <string>

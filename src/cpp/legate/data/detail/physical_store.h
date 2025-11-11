@@ -12,8 +12,6 @@
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
-#include <legion/legion_domain.h>
-
 #include <cstddef>
 #include <cstdint>
 

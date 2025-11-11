@@ -16,8 +16,8 @@
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/typedefs.h>
 
-#include <legion/legion_c.h>
-#include <legion/legion_c_util.h>
+#include <legion/bindings/c_bindings.h>
+#include <legion/bindings/c_bindings_util.h>
 
 #include <fmt/format.h>
 

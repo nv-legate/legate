@@ -24,7 +24,10 @@ set(BASE_CLANG_TIDY_COMMAND
     --quiet #
     --extra-arg=-Wno-error=unused-command-line-argument #
     --extra-arg=-UNDEBUG #
-    --extra-arg=-DLEGATE_CLANG_TIDY=1)
+    --extra-arg=-DLEGATE_CLANG_TIDY=1 #
+    # Need to define this unconditionally, as otherwise the static analyzer doesn't see
+    # certain assert()'s
+    --extra-arg=-DLEGION_DEBUG=1)
 
 function(_legate_ensure_tidy_target)
   if(TARGET tidy)

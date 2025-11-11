@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legion/legion_types.h>
+#include <legion/api/types.h>
 
 #include <type_traits>
 

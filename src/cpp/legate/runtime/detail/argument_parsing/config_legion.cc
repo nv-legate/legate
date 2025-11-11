@@ -31,6 +31,12 @@ std::string compose_legion_default_args(const ParsedArgs& parsed)
   // Turn point-wise analysis ON in Legion by default
   ret += "-lg:enable_pointwise_analysis ";
 
+  // Turn off automatic trace detection from running in the background, to avoid any interference
+  // from the added analysis overhead. Legion should already be very conservative with allocating
+  // resources to this task, but disabling it just to be safe. Notably this is also disabled in the
+  // Legate base mapper.
+  ret += "-lg:no_auto_tracing ";
+
   // If these are negative, then we forgot to configure them
   LEGATE_CHECK(parsed.omps.value() >= 0);
   LEGATE_CHECK(parsed.numamem.value().unscaled_value() >= 0);

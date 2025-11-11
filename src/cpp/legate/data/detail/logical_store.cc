@@ -50,6 +50,7 @@
 #include <cstddef>
 #include <numeric>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 namespace legate::detail {

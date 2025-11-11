@@ -10,7 +10,7 @@
 
 #include <legate/partitioning/detail/partitioning_tasks.h>
 
-#include <legion/legion_redop.h>
+#include <legion/api/redop.h>
 
 namespace legate::detail {
 

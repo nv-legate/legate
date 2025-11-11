@@ -9,7 +9,7 @@
 #include <legate/utilities/detail/unravel.h>
 #include <legate/utilities/typedefs.h>
 
-#include <legion/legion_config.h>  // LEGION_FOREACH_N
+#include <legion/api/config.h>  // LEGION_FOREACH_N
 
 #include <cstddef>
 #include <cstdint>

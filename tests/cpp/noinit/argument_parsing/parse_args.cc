@@ -193,7 +193,7 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   ASSERT_THAT(parsed.field_reuse_freq, ArgumentMatches(88));
   ASSERT_THAT(parsed.consensus, ArgumentMatches(::testing::IsTrue()));
   ASSERT_THAT(parsed.disable_mpi, ArgumentMatches(::testing::IsTrue()));
-  ASSERT_THAT(parsed.io_use_vfd_gds, ArgumentMatches(legate::detail::is_gds_maybe_available()));
+  ASSERT_THAT(parsed.io_use_vfd_gds, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.cpus, ArgumentMatches(-1));
   ASSERT_THAT(parsed.gpus, ArgumentMatches(-1));
   ASSERT_THAT(parsed.omps, ArgumentMatches(-1));
