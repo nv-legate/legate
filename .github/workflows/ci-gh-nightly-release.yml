@@ -5,6 +5,9 @@
 name: Build conda Nightly release legate packages
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       ref-sha:

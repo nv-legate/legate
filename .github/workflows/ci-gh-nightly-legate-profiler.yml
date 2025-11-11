@@ -5,6 +5,9 @@
 name: Build and test the nightly legate profiler
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       ref-sha:
@@ -12,7 +15,7 @@ on:
         required: false
         default: ''
   schedule:
-    - cron: '0 22 * * 0'  # Weekly Monday at 10:00 PM
+    - cron: '0 22 * * 0'  # Weekly Sunday at 10:00 PM
 
 jobs:
   build-and-test-legate-profiler:
