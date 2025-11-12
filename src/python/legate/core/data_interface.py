@@ -122,8 +122,9 @@ def offload_to(obj: LogicalArrayLike, *, target: StoreTarget) -> None:
     Parameters
     ----------
     obj: LogicalArrayLike
-        The object to offload.
-    target: StoreTarget
+        The object to offload. A ``LogicalArray`` or object exposing a
+        Legate Data Interface.
+    target: :class:`~legate.core.StoreTarget`
         The store target to offload to, e.g. StoreTarget.SYSMEM
 
     """

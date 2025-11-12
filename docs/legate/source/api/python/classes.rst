@@ -33,6 +33,7 @@ Classes
    library
    scope
    parallel_policy
+   store_target
    types
 .. partition
 .. legion

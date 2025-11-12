@@ -352,7 +352,7 @@ channels:
 {channels}
 dependencies:
 
-  - python>={min_python_version}
+{python_req}
 
 {conda_sections}{pip}
 """
@@ -463,6 +463,12 @@ if __name__ == "__main__":
         default=False,
         help="Whether to include cupynumeric dependencies",
     )
+    parser.add_argument(
+        "--python",
+        dest="python",
+        default=None,
+        help="Pin Python minor version for the environment (e.g., 3.13).",
+    )
 
     parser.add_argument(
         "--sections",
@@ -517,11 +523,21 @@ if __name__ == "__main__":
     if args.sections:
         filename = config.filename + "-partial"
 
+    python_req = f"  - python>={MIN_PYTHON_VERSION}"
+    if args.python:
+        import re
+
+        match = re.match(r"^\s*(\d+)\.(\d+)", args.python.strip())
+        if not match:
+            msg = f"--python expects 'MAJOR.MINOR', got: {args.python!r}"
+            raise SystemExit(msg)
+        python_req = f"  - python={match.group(1)}.{match.group(2)}.*"
+
     print(f"--- generating: {filename}.yaml")  # noqa: T201
     out = ENV_TEMPLATE.format(
         use=config.use,
         channels=config.channels,
-        min_python_version=MIN_PYTHON_VERSION,
+        python_req=python_req,
         conda_sections=conda_sections,
         pip=(
             PIP_TEMPLATE.format(pip_sections=pip_sections)

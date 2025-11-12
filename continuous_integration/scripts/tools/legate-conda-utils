@@ -9,10 +9,18 @@ set -eou pipefail
 
 make_conda_env_from_yaml() {
   # shellcheck disable=SC2154
-  rapids-conda-retry env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
+  local env_create_cmd=(rapids-conda-retry env create -q -n "${CONDA_ENV}" -f "${yaml_file}")
+  rapids-logger "Running: ${env_create_cmd[*]}"
+  "${env_create_cmd[@]}"
 }
 
 generate_yaml_file() {
+  # shellcheck disable=SC2154
+  local py_pin_args=()
+  if [[ -n "${PYTHON_VERSION:-}" ]]; then
+    py_pin_args+=(--python "${PYTHON_VERSION}")
+  fi
+
   # shellcheck disable=SC2154
   if [[ "${USE_CUDA}" == "OFF" ]]; then
     # shellcheck disable=SC2154
@@ -20,7 +28,8 @@ generate_yaml_file() {
                --os "${OS_SHORT_NAME}" \
                --compilers             \
                --openmpi               \
-               --ucx)
+               --ucx                   \
+               "${py_pin_args[@]}")
 
     yaml_output=$(echo "${output}" | head -n1)
     yaml_file=$(echo "${yaml_output}" | cut -d' ' -f3)
@@ -31,7 +40,8 @@ generate_yaml_file() {
                --compilers             \
                --ctk "${LEGATE_CUDA_VERSION}" \
                --openmpi               \
-               --ucx)
+               --ucx                   \
+               "${py_pin_args[@]}")
 
     yaml_output=$(echo "${output}" | head -n1)
     yaml_file=$(echo "${yaml_output}" | cut -d' ' -f3)
@@ -43,7 +53,6 @@ generate_yaml_file() {
 
   # shellcheck disable=SC2154
   ${SED} -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
-  echo "  - boa" >> "${yaml_file}";
 
   # shellcheck disable=SC2154
   if [[ ${LEGATE_BUILD_MODE} == *sanitizer* ]]; then

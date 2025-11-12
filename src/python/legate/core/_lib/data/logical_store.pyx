@@ -769,8 +769,8 @@ cdef class LogicalStore(Unconstructable):
 
         Parameters
         ----------
-        target_mem : StoreTarget
-            The target memory to offload to
+        target_mem : :class:`~legate.core.StoreTarget`
+            The target memory to offload to, e.g. StoreTarget.SYSMEM
 
         """
         with nogil:

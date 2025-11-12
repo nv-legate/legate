@@ -15,6 +15,8 @@ class TaskTarget(IntEnum):
 
 @unique
 class StoreTarget(IntEnum):
+    """Specify what memory to offload objects to."""  # noqa: PYI021
+
     SYSMEM = cast(int, ...)
     FBMEM = cast(int, ...)
     ZCMEM = cast(int, ...)
