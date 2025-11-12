@@ -265,9 +265,20 @@ bool Storage::equal(const Storage& other) const
 
 bool Storage::is_mapped() const
 {
+  if (unbound()) {
+    return false;
+  }
+
   // TODO(wonchanl): future- and future map-backed storages are considered unmapped until we
   // implement the full state machine for them (they are currently read only)
-  return !unbound() && kind() == Kind::REGION_FIELD && get_region_field()->is_mapped();
+  return std::visit(Overload{
+                      [&](const std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
+                        return rf.has_value() && (*rf)->is_mapped();
+                      },
+                      [&](const std::optional<Legion::Future>&) { return false; },
+                      [&](const std::optional<Legion::FutureMap>&) { return false; },
+                    },
+                    storage_data_);
 }
 
 namespace {
@@ -327,6 +338,7 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self
 
   auto tiling = create_tiling(std::move(tile_shape), std::move(color_shape), std::move(offsets));
   auto storage_partition = root->create_partition(root, std::move(tiling), can_tile_completely);
+
   return storage_partition->get_child_storage(storage_partition, std::move(color));
 }
 
@@ -360,15 +372,19 @@ const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field() const
 
 Legion::Future Storage::get_future() const
 {
-  if (kind() == Kind::FUTURE) {
-    return future_().value_or(Legion::Future{});
-  }
-
-  LEGATE_ASSERT(kind() == Kind::FUTURE_MAP);
-
-  // this future map must always exist, otherwise something bad has happened
-  auto future_map = get_future_map();
-  return future_map.get_future(future_map.get_future_map_domain().lo());
+  return std::visit(
+    Overload{
+      [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) -> Legion::Future {
+        LEGATE_ABORT("Cannot get future from RegionField-backed storage");
+      },
+      [](const std::optional<Legion::Future>& fut) { return fut.value_or(Legion::Future{}); },
+      [](const std::optional<Legion::FutureMap>& fm) {
+        LEGATE_CHECK(fm.has_value());
+        // this future map must always exist, otherwise something bad has happened
+        return fm->get_future(fm->get_future_map_domain().lo());
+      },
+    },
+    storage_data_);
 }
 
 Legion::FutureMap Storage::get_future_map() const
@@ -382,22 +398,36 @@ Legion::FutureMap Storage::get_future_map() const
 std::variant<Legion::Future, Legion::FutureMap> Storage::get_future_or_future_map(
   const Domain& launch_domain) const
 {
-  LEGATE_ASSERT(kind() == Kind::FUTURE_MAP);
+  return std::visit(
+    Overload{
+      [](const std::optional<InternalSharedPtr<LogicalRegionField>>&)
+        -> std::variant<Legion::Future, Legion::FutureMap> {
+        LEGATE_ABORT("Cannot get future from RegionField-backed storage");
+      },
+      [](const std::optional<Legion::Future>&) -> std::variant<Legion::Future, Legion::FutureMap> {
+        // TODO(jfaibussowit):
+        // This seems... patently false. But the previous code asserted that kind() ==
+        // FUTURE_MAP
+        LEGATE_ABORT("Cannot get future from Future-backed storage");
+      },
+      [&](const std::optional<Legion::FutureMap>& fm_opt)
+        -> std::variant<Legion::Future, Legion::FutureMap> {
+        const auto& future_map       = fm_opt.value();
+        const auto future_map_domain = future_map.get_future_map_domain();
 
-  // this future map must always exist, otherwise something bad has happened
-  auto future_map        = get_future_map();
-  auto future_map_domain = future_map.get_future_map_domain();
-
-  if (!launch_domain.is_valid()) {
-    return future_map.get_future(future_map_domain.lo());
-  }
-  if (launch_domain == future_map_domain) {
-    return future_map;
-  }
-  if (launch_domain.get_volume() != future_map_domain.get_volume()) {
-    return future_map.get_future(future_map_domain.lo());
-  }
-  return Runtime::get_runtime().reshape_future_map(future_map, launch_domain);
+        if (!launch_domain.is_valid()) {
+          return future_map.get_future(future_map_domain.lo());
+        }
+        if (launch_domain == future_map_domain) {
+          return future_map;
+        }
+        if (launch_domain.get_volume() != future_map_domain.get_volume()) {
+          return future_map.get_future(future_map_domain.lo());
+        }
+        return Runtime::get_runtime().reshape_future_map(future_map, launch_domain);
+      },
+    },
+    storage_data_);
 }
 
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
@@ -414,10 +444,10 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
                  }
                  Runtime::get_runtime().attach_alloc_info(*storage_rf, provenance());
                },
-               [&](std::optional<Legion::Future>&) {
+               [](const std::optional<Legion::Future>&) {
                  LEGATE_ABORT("Cannot set a region field on a future-backed storage.");
                },
-               [&](std::optional<Legion::FutureMap>&) {
+               [](const std::optional<Legion::FutureMap>&) {
                  LEGATE_ABORT("Cannot set a region field on a future map-backed storage.");
                },
              },
@@ -427,7 +457,7 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
 void Storage::set_future(Legion::Future future, std::size_t scalar_offset)
 {
   std::visit(Overload{
-               [&](std::optional<InternalSharedPtr<LogicalRegionField>>&) {
+               [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) {
                  LEGATE_ABORT("Cannot set a future on a region field-backed storage.");
                },
                [&](std::optional<Legion::Future>& storage_future) {
@@ -451,10 +481,10 @@ void Storage::set_future(Legion::Future future, std::size_t scalar_offset)
 void Storage::set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset)
 {
   std::visit(Overload{
-               [&](std::optional<InternalSharedPtr<LogicalRegionField>>&) {
+               [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) {
                  LEGATE_ABORT("Cannot set a future map on a region field-backed storage.");
                },
-               [&](std::optional<Legion::Future>&) {
+               [&](const std::optional<Legion::Future>&) {
                  // If this was originally a future-backed storage, it means this storage is now
                  // backed by a future map with futures having the same value
                  replicated_    = true;
@@ -473,19 +503,38 @@ void Storage::set_future_map(Legion::FutureMap future_map, std::size_t scalar_of
 RegionField Storage::map(  // NOLINT(readability-make-member-function-const)
   legate::mapping::StoreTarget target)
 {
-  LEGATE_ASSERT(Kind::REGION_FIELD == kind());
-  auto&& region_field = get_region_field();
-  auto mapped         = region_field->map(target);
-  // Set the right subregion so the physical store can see the right domain
-  mapped.set_logical_region(region_field->region());
-  return mapped;
+  return std::visit(Overload{
+                      [&](std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
+                        LEGATE_CHECK(rf.has_value());
+
+                        auto mapped = (*rf)->map(target);
+                        // Set the right subregion so the physical store can see the right domain
+                        mapped.set_logical_region((*rf)->region());
+                        return mapped;
+                      },
+                      [](const std::optional<Legion::Future>&) -> RegionField {
+                        LEGATE_ABORT("Cannot map a future-backed storage.");
+                      },
+                      [](const std::optional<Legion::FutureMap>&) -> RegionField {
+                        LEGATE_ABORT("Cannot map a future-map-backed storage.");
+                      },
+                    },
+                    storage_data_);
 }
 
 // Unmapping is a logically non-const operation
 void Storage::unmap()  // NOLINT(readability-make-member-function-const)
 {
-  LEGATE_ASSERT(Kind::REGION_FIELD == kind());
-  get_region_field()->unmap();
+  std::visit(Overload{
+               [&](std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
+                 if (rf.has_value()) {
+                   (*rf)->unmap();
+                 }
+               },
+               [](const std::optional<Legion::Future>&) {},
+               [](const std::optional<Legion::FutureMap>&) {},
+             },
+             storage_data_);
 }
 
 void Storage::allow_out_of_order_destruction()
@@ -499,11 +548,16 @@ void Storage::allow_out_of_order_destruction()
     get_root()->allow_out_of_order_destruction();
   } else if (!destroyed_out_of_order_) {
     destroyed_out_of_order_ = true;
-    if (kind() == Kind::REGION_FIELD) {
-      if (auto&& rf = region_field_(); rf.has_value()) {
-        (*rf)->allow_out_of_order_destruction();
-      }
-    }
+    std::visit(Overload{
+                 [&](std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
+                   if (rf.has_value()) {
+                     (*rf)->allow_out_of_order_destruction();
+                   }
+                 },
+                 [](const std::optional<Legion::Future>&) {},
+                 [](const std::optional<Legion::FutureMap>&) {},
+               },
+               storage_data_);
   }
 }
 
@@ -582,14 +636,20 @@ std::string Storage::to_string() const
 
   auto result = fmt::format("Storage({}) {{kind: {}, level: {}", id(), kind_str, level());
 
-  if (kind() == Kind::REGION_FIELD) {
-    if (unbound()) {
-      result += ", region: unbound";
-    } else {
-      auto&& rf = get_region_field();
-      fmt::format_to(std::back_inserter(result), ", region: {}, field: {}", *rf, rf->field_id());
-    }
-  }
+  std::visit(
+    Overload{
+      [&](const std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
+        if (unbound()) {
+          result += ", region: unbound";
+        } else if (rf.has_value()) {
+          fmt::format_to(
+            std::back_inserter(result), ", region: {}, field: {}", **rf, (*rf)->field_id());
+        }
+      },
+      [](const std::optional<Legion::Future>&) {},
+      [](const std::optional<Legion::FutureMap>&) {},
+    },
+    storage_data_);
   result += '}';
   return result;
 }
