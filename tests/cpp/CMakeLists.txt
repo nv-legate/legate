@@ -138,6 +138,7 @@ set(with_runtime_SRC
     integration/consensus_match.cc
     integration/copy_failure.cc
     integration/copy_gather.cc
+    integration/core_mapper.cc
     integration/copy_gather_scatter.cc
     integration/copy_normal.cc
     integration/copy_scatter.cc
