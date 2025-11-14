@@ -162,7 +162,8 @@ class BuildConfig(SectionConfig):
             "pkg-config",
             "scikit-build>=0.13.1",
             # see https://github.com/nv-legate/cupynumeric.internal/issues/704
-            # for more details why do we restrict to <=75.3.0
+            # for more details on why we restrict pip and setuptools versions
+            "pip<=25.2",
             "setuptools>60,<=75.3.0",
             "zlib",
             "numba",
