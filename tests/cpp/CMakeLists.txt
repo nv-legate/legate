@@ -353,7 +353,8 @@ set(non_reentrant_wo_runtime_SRC
     non_reentrant/wo_runtime/exception/traced_exception.cc
     non_reentrant/wo_runtime/exception/terminate_handler.cc
     non_reentrant/wo_runtime/init/init.cc
-    non_reentrant/wo_runtime/streaming/streaming.cc)
+    non_reentrant/wo_runtime/streaming/streaming.cc
+    non_reentrant/wo_runtime/inline_launch/basic.cc)
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
                                                       ${with_runtime_SRC}

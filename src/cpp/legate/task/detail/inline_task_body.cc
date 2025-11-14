@@ -119,6 +119,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 // ==========================================================================================
 
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalArray>> fill_vector(
+  VariantCode variant_code,
   Span<const TaskArrayArg> src,
   bool ignore_future_mutability,
   const StoreIteratorCache<InternalSharedPtr<PhysicalStore>>& get_stores_cache,
@@ -131,9 +132,22 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
     const auto phys_array = std::visit(
       Overload{
         [&](const InternalSharedPtr<LogicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
-          // For LogicalArray (AutoTask/ManualTask), convert to PhysicalArray
-          return arr->get_physical_array(legate::mapping::StoreTarget::SYSMEM,
-                                         ignore_future_mutability);
+          // This isn't right. We don't ever consult the users mapper, so an inline-launched
+          // task may select a different memory than the regular task launch would have.
+          //
+          // But the user mapper expects to get a `mapping::Task`, which would require
+          // translating all of the logical stores into the equivalent mapping variants (which,
+          // coincidentally also expect to hold a Legion::Task).
+          const auto target = [&] {
+            switch (variant_code) {
+              case VariantCode::CPU: return legate::mapping::StoreTarget::SYSMEM;
+              case VariantCode::GPU: return legate::mapping::StoreTarget::FBMEM;
+              case VariantCode::OMP: return legate::mapping::StoreTarget::SOCKETMEM;
+            }
+            LEGATE_ABORT("Unhandled variant code: ", to_underlying(variant_code));
+          }();
+
+          return arr->get_physical_array(target, ignore_future_mutability);
         },
         [&](const InternalSharedPtr<PhysicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
           // For PhysicalArray (PhysicalTask), use directly
@@ -165,7 +179,11 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 {
   const auto get_stores_cache = StoreIteratorCache<InternalSharedPtr<PhysicalStore>>{};
 
-  auto inputs = fill_vector(task.inputs(), false, get_stores_cache, deferred_buffers);
+  auto inputs = fill_vector(variant_code,
+                            task.inputs(),
+                            /* ignore_future_mutability */ false,
+                            get_stores_cache,
+                            deferred_buffers);
   // None of the inputs should ever create an output buffer
   LEGATE_CHECK(deferred_buffers->empty());
   // We do these here instead of inline in the function arguments because the order in which
@@ -198,8 +216,17 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
     deferred_buffers->reserve(physical_task->physical_scalar_outputs().size() +
                               physical_task->physical_scalar_reductions().size());
   }
-  auto outputs    = fill_vector(task.outputs(), true, get_stores_cache, deferred_buffers);
-  auto reductions = fill_vector(task.reductions(), true, get_stores_cache, deferred_buffers);
+
+  auto outputs    = fill_vector(variant_code,
+                             task.outputs(),
+                             /* ignore_future_mutability */ true,
+                             get_stores_cache,
+                             deferred_buffers);
+  auto reductions = fill_vector(variant_code,
+                                task.reductions(),
+                                /* ignore_future_mutability */ true,
+                                get_stores_cache,
+                                deferred_buffers);
 
   return InlineTaskContext{variant_code,
                            std::move(inputs),
