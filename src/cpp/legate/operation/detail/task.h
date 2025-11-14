@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/scalar.h>
@@ -32,6 +31,7 @@ class Scalar;
 
 namespace legate::detail {
 
+class LogicalArray;
 class PhysicalStore;
 class CommunicatorFactory;
 class ConstraintSolver;

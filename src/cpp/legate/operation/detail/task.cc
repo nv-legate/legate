@@ -9,6 +9,8 @@
 #include <legate_defines.h>
 
 #include <legate/data/detail/array_tasks.h>
+#include <legate/data/detail/logical_array.h>
+#include <legate/data/detail/logical_arrays/list_logical_array.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/operation/detail/launcher_arg.h>

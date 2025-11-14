@@ -12,6 +12,8 @@
 #include <legate/data/detail/array_tasks.h>
 #include <legate/data/detail/external_allocation.h>
 #include <legate/data/detail/logical_array.h>
+#include <legate/data/detail/logical_arrays/list_logical_array.h>
+#include <legate/data/detail/logical_arrays/struct_logical_array.h>
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>

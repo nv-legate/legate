@@ -7,6 +7,8 @@
 #include <legate/data/logical_array.h>
 
 #include <legate/data/detail/logical_array.h>
+#include <legate/data/detail/logical_arrays/list_logical_array.h>
+#include <legate/data/detail/logical_arrays/struct_logical_array.h>
 #include <legate/data/detail/user_storage_tracker.h>
 #include <legate/data/physical_array.h>
 #include <legate/mapping/mapping.h>

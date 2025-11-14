@@ -7,6 +7,7 @@
 #include <legate/task/detail/inline_task_body.h>
 
 #include <legate/comm/communicator.h>
+#include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/scalar.h>

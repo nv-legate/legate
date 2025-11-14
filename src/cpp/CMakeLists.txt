@@ -276,6 +276,9 @@ target_sources(legate_obj
                        legate/data/detail/attachment.cc
                        legate/data/detail/external_allocation.cc
                        legate/data/detail/logical_array.cc
+                       legate/data/detail/logical_arrays/base_logical_array.cc
+                       legate/data/detail/logical_arrays/list_logical_array.cc
+                       legate/data/detail/logical_arrays/struct_logical_array.cc
                        legate/data/detail/logical_region_field.cc
                        legate/data/detail/logical_store.cc
                        legate/data/detail/logical_store_partition.cc
