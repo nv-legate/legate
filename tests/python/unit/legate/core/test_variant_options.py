@@ -83,3 +83,11 @@ class TestVariantOptions:
 
         options.communicators = ()
         assert options.communicators == ()
+
+    def test_compare(self) -> None:
+        options = VariantOptions()
+        options2 = VariantOptions(concurrent=True)
+        options3 = VariantOptions(concurrent=True)
+        assert options != options2
+        assert options2 == options3
+        assert options.__eq__("bar") == NotImplemented

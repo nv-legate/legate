@@ -12,14 +12,14 @@ import warnings
 from collections.abc import Callable
 from inspect import Parameter, Signature
 from pickle import (
-    HIGHEST_PROTOCOL as PKL_HIGHEST_PROTOCOL,
+    HIGHEST_PROTOCOL as PKL_HIGHEST_PROTOCOL,  # pragma: no cover
     dumps as pkl_dumps,
     loads as pkl_loads,
 )
 from pickletools import optimize as pklt_optimize
 from types import NoneType, UnionType
 from typing import (
-    Any,
+    Any,  # pragma: no cover
     TypeVar,
     _UnionGenericAlias,
     get_args as typing_get_args,
@@ -42,7 +42,7 @@ from ..._lib.type.types cimport Type, TypeCode, binary_type
 from ..._lib.runtime.runtime import ProfileRange
 
 from ...data_interface import (
-    LegateDataInterface,
+    LegateDataInterface,  # pragma: no cover
     as_logical_array,
 )
 
@@ -474,8 +474,9 @@ cdef class VariantInvoker:
             elif issubclass(expected_ty, _REDUCTION_TYPES):
                 task.add_reduction(user_param, typing_get_args(annotation)[0])
             else:
-                raise NotImplementedError(
-                    f"Unsupported parameter type {expected_ty}"
+                raise NotImplementedError(  # pragma: no cover
+                    "Unsupported parameter type "  # pragma: no cover
+                    f" {expected_ty}"  # pragma: no cover
                 )
         # Must do this elif _after_ we check for physical types above. The type
         # hint says "InputArray" (A.K.A. PhysicalArray), but the user will be
@@ -627,9 +628,9 @@ cdef class VariantInvoker:
                 ret = arg.data()
             else:
                 # this is a bug
-                raise TypeError(
-                    f"Unhandled argument type '{arg_ty}' during unpacking, "
-                    "this is a bug in legate!"
+                raise TypeError(  # pragma: no cover
+                    f"Unhandled argument type '{arg_ty}' "  # pragma: no cover
+                    "during unpacking, this is a bug in legate!"
                 )
 
             if default_val is Parameter.empty:

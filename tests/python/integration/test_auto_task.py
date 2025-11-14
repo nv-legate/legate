@@ -381,6 +381,22 @@ class TestAutoTaskConstraints:
             np.sum(in_arr),
         )
 
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    def test_add_alignment(self, shape: tuple[int, ...]) -> None:
+        runtime = get_legate_runtime()
+        arr, store = utils.random_array_and_store(shape)
+        out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
+        auto_task = runtime.create_auto_task(
+            tasks.copy_store_task_no_constraints.library,
+            tasks.copy_store_task_no_constraints.task_id,
+        )
+        auto_task.add_input(store)
+        auto_task.add_output(out_store)
+        auto_task.add_alignment(store, out_store)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(out_arr, arr)
+
     @pytest.mark.parametrize("axes", [None, 1, (1, 0), (2, 1), ()], ids=str)
     def test_add_broadcast(self, axes: int | tuple[int, ...] | None) -> None:
         runtime = get_legate_runtime()
@@ -587,7 +603,7 @@ class TestAutoTaskErrors:
             assert msg not in str(exc)  # noqa: PT017
         runtime.issue_execution_fence(block=True)
 
-    @pytest.mark.xfail(run=False, reason="crashes application")
+    @pytest.mark.xfail(run=False, reason="crashes1,  application")
     def test_uninitialized_input_store(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
@@ -638,6 +654,23 @@ class TestAutoTaskErrors:
 
 
 class TestAutoTaskConstraintsErrors:
+    def test_invalid_constraints(self) -> None:
+        runtime = get_legate_runtime()
+        shape = (1,)
+        _, source_store = utils.random_array_and_store(shape)
+        _, bloat_store = utils.random_array_and_store(shape)
+
+        auto_task = runtime.create_auto_task(
+            tasks.copy_store_task_no_constraints.library,
+            tasks.copy_store_task_no_constraints.task_id,
+        )
+        source_part = auto_task.declare_partition()
+        bloat_part = auto_task.declare_partition()
+        auto_task.add_input(source_store, source_part)
+        auto_task.add_output(bloat_store, bloat_part)
+        with pytest.raises(TypeError, match=repr(str)):
+            auto_task.add_constraint(("foo",))  # type: ignore[arg-type]
+
     def test_alignment_shape_mismatch(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(

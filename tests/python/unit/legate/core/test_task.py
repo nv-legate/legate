@@ -27,6 +27,7 @@ from legate.core import (
     task as lct,
     types as ty,
 )
+from legate.core._lib.partitioning.constraint import DeferredConstraint
 from legate.core.data_interface import (
     MAX_DATA_INTERFACE_VERSION,
     LegateDataInterfaceItem,
@@ -930,6 +931,14 @@ class TestVariantInvoker(BaseTest):
         with pytest.raises(ValueError):  # noqa: PT011
             invoker.validate_signature(multi_output)
 
+    def test_create_constraints_bad(self) -> None:
+        msg = (
+            f"Constraint #1 of unexpected type. Found {type(None)}, "
+            f"expected {DeferredConstraint}"
+        )
+        with pytest.raises(TypeError, match=msg):
+            VariantInvoker(single_input, constraints=[None])  # type: ignore[list-item]
+
     @pytest.mark.parametrize(
         ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
@@ -1068,6 +1077,19 @@ class TestTaskUtil:
     def test_validate_variant_bad(self) -> None:
         with pytest.raises(ValueError):  # noqa: PT011
             lct._util.validate_variant(345)  # type: ignore[arg-type]
+
+    def test_dynamic_docstring_good(self) -> None:
+        @lct._util.dynamic_docstring(foo="bar")
+        def foo() -> None:
+            """{foo}."""
+            return
+
+        assert foo.__doc__ == "bar."
+        foo()
+
+    def test_dynamic_docstring_bad(self) -> None:
+        with pytest.raises(AssertionError):
+            lct._util.dynamic_docstring(foo="bar")(print)("baz")
 
 
 class TestUnbound:

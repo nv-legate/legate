@@ -29,8 +29,8 @@ cpdef void validate_variant(VariantCode kind):
         If ``kind`` is an unknown variant kind.
     """
     if kind not in PyVariantCode:
-        m = f"Unknown variant kind: {kind}"
-        raise ValueError(m)
+        m = f"Unknown variant kind: {kind}"  # pragma: no cover
+        raise ValueError(m)  # pragma: no cover
 
 
 def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]:

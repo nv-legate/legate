@@ -53,6 +53,33 @@ from .utils.data import ARRAY_TYPES, LARGE_SHAPES, SCALAR_VALS, SHAPES
 
 
 class TestPyTask:
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    def test_task_from_object(self, shape: tuple[int, ...]) -> None:
+        class TaskMeta(type):
+            def __getattribute__(cls, name: str) -> Any:
+                if name == "__qualname__":
+                    raise AttributeError
+                return super().__getattribute__(name)
+
+        class TaskClass(metaclass=TaskMeta):
+            def __getattribute__(self, name: str) -> Any:
+                if name == "__qualname__":
+                    raise AttributeError
+                if name == "__name__":
+                    return "TaskClass"
+                return super().__getattribute__(name)
+
+            def __call__(
+                self, in_store: InputStore, out_store: OutputStore
+            ) -> None:
+                tasks._copy_store_task(in_store, out_store)
+
+        arr, store = utils.random_array_and_store(shape)
+        out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
+        py_task = PyTask(func=TaskClass(), variants=tuple(VariantCode))
+        py_task(store, out_store)
+        np.testing.assert_allclose(out_arr, arr)
+
     @pytest.mark.parametrize("shape", SHAPES)
     def test_output_store(self, shape: tuple[int, ...]) -> None:
         arr, store = utils.random_array_and_store(shape)
