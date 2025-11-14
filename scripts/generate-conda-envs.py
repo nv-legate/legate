@@ -110,6 +110,9 @@ class CUDAConfig(SectionConfig):
                     "libcusolver-dev",
                     "libcusolvermp-dev>=0.7",  # pre-0.7 uses UCC, not NCCL
                     "libcusparse-dev",
+                    # Required by cuDSS for multi-gpu support in legate-sparse:
+                    # "libcudss-commlayer-nccl"
+                    "libcudss-dev",
                     "libnvjitlink-dev",
                 )
 
