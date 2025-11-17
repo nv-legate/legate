@@ -12,4 +12,8 @@ function(find_or_configure_hdf5)
   # downstream users do not need to know about it (except for transitive link
   # dependencies).
   rapids_find_package(HDF5 1.14.4 REQUIRED)
+  # Clear the interface compile definitions as they incorrectly set
+  # DNDEBUG,_FORTIFY_SOURCE=2. This should not be set publicly and causes issues in
+  # consumers of the target.
+  set_property(TARGET HDF5::HDF5 PROPERTY INTERFACE_COMPILE_DEFINITIONS "")
 endfunction()
