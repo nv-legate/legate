@@ -61,6 +61,13 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
   /**
    * @brief Search this cache for an Instance with the provided characteristics.
    *
+   * The procedure for searching for a valid cache instance is as follows.
+   * 1. If region already maps to a group in the cache, cache hit with the group's instance.
+   * 2. If the query requests an exact instance, cache miss as no exact instance is guaranteed.
+   * 3. Otherwise, consider an instance from a group that covers the region's domain, if any.
+   *
+   * @param ctx The MapperContext being used for mapping.
+   * @param runtime The MapperRuntime being used for mapping.
    * @param region The Region that the Instance must cover.
    * @param policy The mapping policy that the Instance must adhere to.
    * @param layout_constraints The layout that the Instance must have.
@@ -69,6 +76,8 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
    *         exists.
    */
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
+    const Legion::Mapping::MapperContext& ctx,
+    const Legion::Mapping::MapperRuntime* runtime,
     const Legion::LogicalRegion& region,
     const InstanceMappingPolicy& policy,
     const Legion::LayoutConstraintSet& layout_constraints) const;
@@ -164,6 +173,15 @@ class InstanceManager final : public BaseInstanceManager {
   /**
    * @brief Search this cache for an Instance with the provided characteristics.
    *
+   * The procedure for searching for a valid cache instance is as follows.
+   * 1. Find the instance sets with the same tree, field and memory as query.
+   * 2. If not found, cache miss. If found, search within the instance set.
+   * 3. If the exact region was queried before, cache hit on its existing instance if valid.
+   * 4. If the query requests an exact instance, cache miss.
+   * 5. As a last resort, consider an instance in the set that covers the region's domain, if any.
+   *
+   * @param ctx The MapperContext being used for mapping.
+   * @param runtime The MapperRuntime being used for mapping.
    * @param region The Region that the Instance must cover.
    * @param field_id The Field that the Instance must include.
    * @param memory The memory on which the Instance must reside.
@@ -174,6 +192,8 @@ class InstanceManager final : public BaseInstanceManager {
    *         exists.
    */
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
+    const Legion::Mapping::MapperContext& ctx,
+    const Legion::Mapping::MapperRuntime* runtime,
     const Legion::LogicalRegion& region,
     Legion::FieldID field_id,
     Memory memory,

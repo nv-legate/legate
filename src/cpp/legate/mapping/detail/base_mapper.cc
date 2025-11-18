@@ -995,7 +995,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
 
   const auto found_in_cache = [&] {
     auto cached = local_instances_.find_instance(
-      regions.front(), field, target_memory, policy, *layout_constraints);
+      ctx, runtime, regions.front(), field, target_memory, policy, *layout_constraints);
     const auto found = cached.has_value();
 
     if (found) {

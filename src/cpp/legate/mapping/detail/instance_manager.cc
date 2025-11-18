@@ -38,21 +38,54 @@ std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group)
 }
 
 std::optional<Legion::Mapping::PhysicalInstance> InstanceSet::find_instance(
+  const Legion::Mapping::MapperContext& ctx,
+  const Legion::Mapping::MapperRuntime* runtime,
   const Legion::LogicalRegion& region,
   const InstanceMappingPolicy& policy,
   const Legion::LayoutConstraintSet& layout_constraints) const
 {
-  const auto finder = groups_.find(region);
+  const auto it = groups_.find(region);
 
-  if (finder == groups_.end()) {
+  auto&& group_opt = [&]() -> std::optional<InternalSharedPtr<RegionGroup>> {
+    // Prioritize searching for the exact region in the cache first.
+    if (it != groups_.end()) {
+      return it->second;
+    }
+
+    // Otherwise, find a group that covers this region's domain and use that instance
+    if (policy.exact) {
+      // The logic below will search for the first instance in which the domain
+      // of the region query is a subset of the domain of the instance. However,
+      // the logic below doesn't guarantee that the two domains will be equal
+      // (i.e. exact in Legate terminology). As a result, if the query expects
+      // an exact instance, then simply return a cache miss because the below
+      // logic doesn't guarantee it.
+      return std::nullopt;
+    }
+
+    std::vector<Legion::Domain> region_domains;
+
+    runtime->get_index_space_domains(ctx, region.get_index_space(), region_domains);
+
+    const auto iter = std::find_if(
+      groups_.begin(),
+      groups_.end(),
+      [&](const std::pair<Legion::LogicalRegion, InternalSharedPtr<RegionGroup>>& pair) {
+        const Domain& group_domain = pair.second->bounding_box;
+
+        return std::all_of(region_domains.begin(), region_domains.end(), [&](auto&& domain) {
+          return group_domain.contains(domain.lo()) && group_domain.contains(domain.hi());
+        });
+      });
+
+    return iter == groups_.end() ? std::nullopt : std::optional{iter->second};
+  }();
+
+  if (!group_opt.has_value()) {
     return std::nullopt;
   }
 
-  auto&& group = finder->second;
-
-  if (policy.exact && group->regions.size() > 1) {
-    return std::nullopt;
-  }
+  auto&& group = group_opt.value();
 
   const auto ifinder = instances_.find(group.get());
   LEGATE_CHECK(ifinder != instances_.end());
@@ -475,6 +508,8 @@ bool BaseInstanceManager::do_erase_(
 // ==========================================================================================
 
 std::optional<Legion::Mapping::PhysicalInstance> InstanceManager::find_instance(
+  const Legion::Mapping::MapperContext& ctx,
+  const Legion::Mapping::MapperRuntime* runtime,
   const Legion::LogicalRegion& region,
   Legion::FieldID field_id,
   Memory memory,
@@ -490,7 +525,7 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceManager::find_instance(
     return std::nullopt;
   }
 
-  return it->second.find_instance(region, policy, layout_constraints);
+  return it->second.find_instance(ctx, runtime, region, policy, layout_constraints);
 }
 
 InternalSharedPtr<RegionGroup> InstanceManager::find_region_group(
