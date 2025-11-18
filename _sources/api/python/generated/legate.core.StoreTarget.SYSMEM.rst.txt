@@ -1,0 +1,6 @@
+legate.core.StoreTarget.SYSMEM
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StoreTarget.SYSMEM

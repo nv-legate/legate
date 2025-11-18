@@ -36,8 +36,8 @@ environment.
 
    $ export LEGATE_IO_USE_VFD_GDS=1
 
-Example
--------
+Read Example
+------------
 
 Below is the output of an example python program which iterates all the datasets in a HDF5
 file and reads the data. The source code for the example may be found at
@@ -54,13 +54,14 @@ Assuming the HDF5 data set at /path/to/hdf/data exists, running the example with
 
 .. code-block:: sh
 
-   $ LEGATE_IO_USE_VFD_GDS=1 legate \
+   $ legate \
      --launcher mpirun \
      --ranks-per-node 1 \
      --gpus 1 \
      --gpu-bind 0 \
      --cpu-bind 48-63 \
      --mem-bind 3 \
+     --io-use-vfd-gds \
      --sysmem 15000 \
      --fbmem 80000 \
      --zcmem 5000 \
@@ -77,7 +78,7 @@ Running the example with 4 ranks:
 
 .. code-block:: sh
 
-   $ LEGATE_IO_USE_VFD_GDS=1 legate \
+   $ legate \
      --launcher mpirun \
      --ranks-per-node 4 \
      --gpus 1 \
@@ -85,6 +86,7 @@ Running the example with 4 ranks:
      --cpu-bind 48-63/176-191/16-31/144-159 \
      --mem-bind 3/3/1/1 \
      --sysmem 15000 \
+     --io-use-vfd-gds \
      --fbmem 80000 \
      --zcmem 5000 \
      share/legate/examples/io/hdf5/ex1.py /path/to/hdf/data --n_rank 4
@@ -105,14 +107,83 @@ Running the example with 4 ranks:
    Total Turnaround time (seconds): 72.73599338531494
    Throughput (MB/sec): 901.0119605135058
 
+Write Example
+-------------
+
+The write example can be found at https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/hdf5_write_benchmark.py.
+
+The example writes data to a HDF5 file and measures the throughput.
+
+Example Usage
+-------------
+
+.. code-block:: sh
+
+   $ legate \
+     --launcher mpirun \
+     --ranks-per-node 1 \
+     --io-use-vfd-gds \
+     --gpus 1 \
+     --gpu-bind 1 \
+     --sysmem 15000 \
+     --fbmem 40000 \
+     --zcmem 5000 \
+     share/legate/examples/io/hdf5/hdf5_write_benchmark.py --output-dir /path/to/output --sizes 1000000 --dtypes float32 --iterations 3
+
+      ===============================================================================
+      HDF5 WRITE BENCHMARK
+      ================================================================================
+      Output directory: output
+      Sizes: [1000000]
+      Data types: ['float32']
+      Iterations per config: 3
+      ================================================================================
+
+      Benchmarking size=1,000,000, dtype=float32
+      Iteration 1: Wall=0.444s, Legate=0.240s, Throughput=15.88 MB/s
+      Iteration 2: Wall=0.014s, Legate=0.014s, Throughput=267.70 MB/s
+      Iteration 3: Wall=0.010s, Legate=0.010s, Throughput=398.15 MB/s
+      Average: Wall=0.156s, Legate=0.088s, Throughput=227.24 MB/s
+
+      ================================================================================
+      BENCHMARK SUMMARY
+      ================================================================================
+            Size     Type         MB    Wall(s)  Legate(s)   Throughput
+      --------------------------------------------------------------------------------
+         1,000,000  float32       3.81      0.156      0.088     227.24 MB/s
+      ================================================================================
+
+      Best throughput: 227.24 MB/s (size=1,000,000, dtype=float32)
+
+GDS Not Available
+-----------------
+
+If GDS is not available in the system, the user can still use the
+``LEGATE_CONFIG="--io-use-vfd-gds"`` with the cuFile compatibility mode.
+In that case the user needs to set the following environment variable:
+
+.. code-block:: sh
+
+   $ export CUFILE_ALLOW_COMPAT_MODE='true'
+
 GDS Performance Tuning
 ----------------------
 If the HDF5 datasets are larger, then the following tuning helps improve the performance.
-Edit ``/etc/cufile.json`` and add the following line under properties section (for 12.6 CUDA
-release and above):
+Edit ``/etc/cufile.json`` and add the following line under properties section
+(for 12.6 CUDA release and above):
 
 .. code-block::
 
+   "execution" : {
+            ...
+            // max number of host threads per gpu to spawn for parallel IO
+            "max_io_threads" : 8,
+            // enable support for parallel IO
+            "parallel_io" : true,
+            // maximum parallelism for a single request
+            "max_request_parallelism" : 8
+            ...
+   },
 
    "properties": {
      ...
@@ -122,3 +193,10 @@ release and above):
 
 For more GDS specific performance tuning, please refer to
 https://docs.nvidia.com/gpudirect-storage/troubleshooting-guide/index.html
+
+Usually cuFile.json is located at /etc/cufile.json. The user can specify the
+path to the cuFile.json file using the CUFILE_CONFIG_FILE environment variable.
+
+.. code-block:: sh
+
+   $ export CUFILE_ENV_PATH_JSON=/path/to/cufile.json

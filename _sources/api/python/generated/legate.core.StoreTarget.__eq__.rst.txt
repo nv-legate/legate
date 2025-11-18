@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_eq\_\_
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__eq__

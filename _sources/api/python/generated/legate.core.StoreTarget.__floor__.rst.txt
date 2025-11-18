@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_floor\_\_
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__floor__

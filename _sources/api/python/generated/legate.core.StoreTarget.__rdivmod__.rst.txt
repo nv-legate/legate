@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_rdivmod\_\_
+=======================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__rdivmod__

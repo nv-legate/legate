@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_lt\_\_
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__lt__

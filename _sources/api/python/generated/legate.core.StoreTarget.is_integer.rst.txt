@@ -1,0 +1,6 @@
+legate.core.StoreTarget.is\_integer
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.is_integer

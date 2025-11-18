@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_getattribute\_\_
+============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__getattribute__

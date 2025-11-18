@@ -46,6 +46,7 @@ legate.core.Domain
       ~Domain.__mul__
       ~Domain.__ne__
       ~Domain.__new__
+      ~Domain.__replace__
       ~Domain.__repr__
       ~Domain.__rmul__
       ~Domain._asdict

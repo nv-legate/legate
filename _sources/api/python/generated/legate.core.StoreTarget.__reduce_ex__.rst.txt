@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_reduce\_ex\_\_
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__reduce_ex__

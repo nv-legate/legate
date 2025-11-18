@@ -1,0 +1,6 @@
+legate.core.StoreTarget.ZCMEM
+=============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StoreTarget.ZCMEM

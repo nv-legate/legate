@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.Domain &#8212; NVIDIA legate (25.12.00.dev2+gb632ca8c9)</title>
+    <title>legate.core.Domain &#8212; NVIDIA legate (25.12.00.dev18+g5e60df50b)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=6512f5eb"></script>
+    <script src="../../../_static/documentation_options.js?v=560830ba"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev2+gb632ca8c9) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev2+gb632ca8c9) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev2+gb632ca8c9)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev18+g5e60df50b)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev2+gb632ca8c9) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev2+gb632ca8c9) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev2+gb632ca8c9)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev18+g5e60df50b)</p>
   
 </a>
 
@@ -390,6 +390,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../library.html">Library</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../scope.html">Execution Scope</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../parallel_policy.html">ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../store_target.html">StoreTarget</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../types.html">Types</a></li>
 </ul>
 </details></li>
@@ -771,25 +772,28 @@ SPDX-License-Identifier: Apache-2.0
 <tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain.__new__.html#legate.core.Domain.__new__" title="legate.core.Domain.__new__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__new__</span></code></a>(_cls[, lo, hi])</p></td>
 <td><p>Create new instance of Domain(lo, hi)</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain.__repr__.html#legate.core.Domain.__repr__" title="legate.core.Domain.__repr__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__repr__</span></code></a>()</p></td>
-<td><p>Return a nicely formatted representation string</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain.__rmul__.html#legate.core.Domain.__rmul__" title="legate.core.Domain.__rmul__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__rmul__</span></code></a>(value, /)</p></td>
-<td><p>Return value*self.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain._asdict.html#legate.core.Domain._asdict" title="legate.core.Domain._asdict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_asdict</span></code></a>()</p></td>
-<td><p>Return a new dict which maps field names to their values.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain._make.html#legate.core.Domain._make" title="legate.core.Domain._make"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_make</span></code></a>(iterable)</p></td>
-<td><p>Make a new Domain object from a sequence or iterable</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain._replace.html#legate.core.Domain._replace" title="legate.core.Domain._replace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_replace</span></code></a>(**kwds)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain.__replace__.html#legate.core.Domain.__replace__" title="legate.core.Domain.__replace__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__replace__</span></code></a>(**kwds)</p></td>
 <td><p>Return a new Domain object replacing specified fields with new values</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain.count.html#legate.core.Domain.count" title="legate.core.Domain.count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count</span></code></a>(value, /)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain.__repr__.html#legate.core.Domain.__repr__" title="legate.core.Domain.__repr__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__repr__</span></code></a>()</p></td>
+<td><p>Return a nicely formatted representation string</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain.__rmul__.html#legate.core.Domain.__rmul__" title="legate.core.Domain.__rmul__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__rmul__</span></code></a>(value, /)</p></td>
+<td><p>Return value*self.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain._asdict.html#legate.core.Domain._asdict" title="legate.core.Domain._asdict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_asdict</span></code></a>()</p></td>
+<td><p>Return a new dict which maps field names to their values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain._make.html#legate.core.Domain._make" title="legate.core.Domain._make"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_make</span></code></a>(iterable)</p></td>
+<td><p>Make a new Domain object from a sequence or iterable</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain._replace.html#legate.core.Domain._replace" title="legate.core.Domain._replace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_replace</span></code></a>(**kwds)</p></td>
+<td><p>Return a new Domain object replacing specified fields with new values</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain.count.html#legate.core.Domain.count" title="legate.core.Domain.count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">count</span></code></a>(value, /)</p></td>
 <td><p>Return number of occurrences of value.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Domain.index.html#legate.core.Domain.index" title="legate.core.Domain.index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></a>(value[, start, stop])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Domain.index.html#legate.core.Domain.index" title="legate.core.Domain.index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></a>(value[, start, stop])</p></td>
 <td><p>Return first index of value.</p></td>
 </tr>
 </tbody>

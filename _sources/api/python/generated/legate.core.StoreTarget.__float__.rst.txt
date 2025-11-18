@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_float\_\_
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__float__

@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_pos\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__pos__

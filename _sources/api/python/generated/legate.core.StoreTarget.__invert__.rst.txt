@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_invert\_\_
+======================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__invert__

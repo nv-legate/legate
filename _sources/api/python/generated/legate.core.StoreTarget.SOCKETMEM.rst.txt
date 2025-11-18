@@ -1,0 +1,6 @@
+legate.core.StoreTarget.SOCKETMEM
+=================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StoreTarget.SOCKETMEM

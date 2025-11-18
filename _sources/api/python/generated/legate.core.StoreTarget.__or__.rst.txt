@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_or\_\_
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__or__

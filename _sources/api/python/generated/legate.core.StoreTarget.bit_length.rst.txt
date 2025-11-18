@@ -1,0 +1,6 @@
+legate.core.StoreTarget.bit\_length
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.bit_length

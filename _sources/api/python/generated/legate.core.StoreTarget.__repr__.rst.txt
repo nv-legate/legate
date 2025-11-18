@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_repr\_\_
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__repr__

@@ -1,0 +1,6 @@
+legate.core.StoreTarget.conjugate
+=================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.conjugate

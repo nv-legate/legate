@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_rmul\_\_
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__rmul__

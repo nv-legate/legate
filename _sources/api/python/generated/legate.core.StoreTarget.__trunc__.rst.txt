@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_trunc\_\_
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__trunc__

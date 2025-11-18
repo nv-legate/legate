@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_dir\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__dir__

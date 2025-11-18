@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_bool\_\_
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__bool__

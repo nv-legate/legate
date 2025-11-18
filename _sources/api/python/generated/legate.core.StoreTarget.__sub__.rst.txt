@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_sub\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__sub__

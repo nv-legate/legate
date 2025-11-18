@@ -1,0 +1,6 @@
+legate.core.StoreTarget.denominator
+===================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StoreTarget.denominator

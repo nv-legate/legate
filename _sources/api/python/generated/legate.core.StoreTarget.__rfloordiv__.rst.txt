@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_rfloordiv\_\_
+=========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__rfloordiv__

@@ -1,0 +1,6 @@
+legate.core.StoreTarget.as\_integer\_ratio
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.as_integer_ratio

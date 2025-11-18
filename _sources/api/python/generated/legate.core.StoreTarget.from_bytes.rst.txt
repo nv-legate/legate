@@ -1,0 +1,6 @@
+legate.core.StoreTarget.from\_bytes
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.from_bytes

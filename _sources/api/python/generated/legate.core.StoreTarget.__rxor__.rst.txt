@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_rxor\_\_
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__rxor__

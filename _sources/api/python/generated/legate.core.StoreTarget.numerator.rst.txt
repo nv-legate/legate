@@ -1,0 +1,6 @@
+legate.core.StoreTarget.numerator
+=================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StoreTarget.numerator

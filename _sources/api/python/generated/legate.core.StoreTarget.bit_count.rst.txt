@@ -1,0 +1,6 @@
+legate.core.StoreTarget.bit\_count
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.bit_count

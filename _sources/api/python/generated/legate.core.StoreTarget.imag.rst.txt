@@ -1,0 +1,6 @@
+legate.core.StoreTarget.imag
+============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StoreTarget.imag

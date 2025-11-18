@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_len\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__len__

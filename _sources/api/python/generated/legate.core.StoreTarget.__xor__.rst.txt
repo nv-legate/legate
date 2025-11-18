@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_xor\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__xor__

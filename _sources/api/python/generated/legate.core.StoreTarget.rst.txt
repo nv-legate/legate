@@ -1,0 +1,105 @@
+﻿..
+  SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+legate.core.StoreTarget
+=======================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: StoreTarget
+
+   .. automethod:: StoreTarget.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~StoreTarget.real
+      ~StoreTarget.imag
+      ~StoreTarget.numerator
+      ~StoreTarget.denominator
+      ~StoreTarget.SYSMEM
+      ~StoreTarget.FBMEM
+      ~StoreTarget.ZCMEM
+      ~StoreTarget.SOCKETMEM
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~StoreTarget.__format__
+      ~StoreTarget.__str__
+      ~StoreTarget.__repr__
+      ~StoreTarget.__new__
+      ~StoreTarget.__hash__
+      ~StoreTarget.__getattribute__
+      ~StoreTarget.__lt__
+      ~StoreTarget.__le__
+      ~StoreTarget.__eq__
+      ~StoreTarget.__ne__
+      ~StoreTarget.__gt__
+      ~StoreTarget.__ge__
+      ~StoreTarget.__add__
+      ~StoreTarget.__radd__
+      ~StoreTarget.__sub__
+      ~StoreTarget.__rsub__
+      ~StoreTarget.__mul__
+      ~StoreTarget.__rmul__
+      ~StoreTarget.__mod__
+      ~StoreTarget.__rmod__
+      ~StoreTarget.__divmod__
+      ~StoreTarget.__rdivmod__
+      ~StoreTarget.__pow__
+      ~StoreTarget.__rpow__
+      ~StoreTarget.__neg__
+      ~StoreTarget.__pos__
+      ~StoreTarget.__abs__
+      ~StoreTarget.__bool__
+      ~StoreTarget.__invert__
+      ~StoreTarget.__lshift__
+      ~StoreTarget.__rlshift__
+      ~StoreTarget.__rshift__
+      ~StoreTarget.__rrshift__
+      ~StoreTarget.__and__
+      ~StoreTarget.__rand__
+      ~StoreTarget.__xor__
+      ~StoreTarget.__rxor__
+      ~StoreTarget.__or__
+      ~StoreTarget.__ror__
+      ~StoreTarget.__int__
+      ~StoreTarget.__float__
+      ~StoreTarget.__floordiv__
+      ~StoreTarget.__rfloordiv__
+      ~StoreTarget.__truediv__
+      ~StoreTarget.__rtruediv__
+      ~StoreTarget.__index__
+      ~StoreTarget.conjugate
+      ~StoreTarget.bit_length
+      ~StoreTarget.bit_count
+      ~StoreTarget.to_bytes
+      ~StoreTarget.from_bytes
+      ~StoreTarget.as_integer_ratio
+      ~StoreTarget.__trunc__
+      ~StoreTarget.__floor__
+      ~StoreTarget.__ceil__
+      ~StoreTarget.__round__
+      ~StoreTarget.__getnewargs__
+      ~StoreTarget.__sizeof__
+      ~StoreTarget.is_integer
+      ~StoreTarget.__contains__
+      ~StoreTarget.__dir__
+      ~StoreTarget.__getitem__
+      ~StoreTarget.__iter__
+      ~StoreTarget.__len__
+      ~StoreTarget.__reduce_ex__
+   
+   

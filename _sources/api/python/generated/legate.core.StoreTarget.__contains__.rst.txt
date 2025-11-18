@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_contains\_\_
+========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__contains__

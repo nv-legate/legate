@@ -1,0 +1,6 @@
+legate.core.StoreTarget.\_\_rlshift\_\_
+=======================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StoreTarget.__rlshift__
