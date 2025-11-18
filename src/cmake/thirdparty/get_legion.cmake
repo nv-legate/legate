@@ -49,16 +49,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
                   GLOBAL_TARGETS Legion::Regent Legion::Legion Legion::LegionRuntime
-                  CPM_ARGS ${legion_cpm_git_args}
-                           # HACK: Legion headers contain *many* warnings, but we would
-                           # like to build with -Wall -Werror. But there is a work-around.
-                           # Compilers treat system headers as special and do not emit any
-                           # warnings about suspect code in them, so until legion cleans
-                           # house, we mark their headers as "system" headers.
-                           FIND_PACKAGE_ARGUMENTS
-                           EXACT
-                           SYSTEM
-                           TRUE
+                  CPM_ARGS ${legion_cpm_git_args} SYSTEM TRUE
                   EXCLUDE_FROM_ALL ${exclude_from_all}
                   OPTIONS "Legion_REDOP_HALF OFF"
                           "Legion_REDOP_COMPLEX OFF"
@@ -104,7 +95,11 @@ calls into NCCL either directly or through some other Legate library.
   legate_maybe_override_package_info(Legion "${legate_LEGION_BRANCH}")
   legate_load_overrideable_package_info(Legion version git_repo git_branch shallow
                                         exclude_from_all)
-
+  if(CPM_Legion_SOURCE)
+    # The user is supplying a source directory, relax version requirement.
+    message(STATUS "User supplied Legion source directory")
+    set(version "0.0.0")
+  endif()
   find_or_configure_legion_impl("${version}" "${git_repo}" "${git_branch}" "${shallow}"
                                 "${exclude_from_all}")
 
