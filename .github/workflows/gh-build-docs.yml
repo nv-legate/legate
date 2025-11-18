@@ -30,7 +30,7 @@ jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.42
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.44
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
@@ -40,13 +40,14 @@ jobs:
       build-type: docs
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.42"
+      legate-gh-ci-tag: "v1.44"
       build-mode: ${{ inputs.build-mode }}
       network: "ucx"
       python-version: "3.13"
       setup-python-proxy-cache: true
       timeout: 60
       cuda-version: ${{ inputs.cuda-version }}
+      docker-image: "condaforge/miniforge3:25.3.1-0"
     secrets: inherit
 
   upload-docs-to-gh-pages:

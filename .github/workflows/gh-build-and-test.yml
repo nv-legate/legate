@@ -52,7 +52,7 @@ jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.43
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.44
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
@@ -62,7 +62,7 @@ jobs:
       build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.43"
+      legate-gh-ci-tag: "v1.44"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -154,7 +154,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.43"
+      legate-gh-ci-tag: "v1.44"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -189,7 +189,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.43"
+      legate-gh-ci-tag: "v1.44"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -216,7 +216,7 @@ jobs:
       name: Upload to Anaconda
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.43"
+      legate-gh-ci-tag: "v1.44"
       build-mode: ${{ inputs.build-mode }}
       network: ${{ inputs.network }}
       upload-action: 'upload-package-Anaconda'
