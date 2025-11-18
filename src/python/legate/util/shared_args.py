@@ -40,6 +40,7 @@ __all__ = (
     "SHOW_CONFIG",
     "SHOW_MEMORY_USAGE",
     "SHOW_PROGRESS",
+    "SINGLE_CONTROLLER_EXECUTION",
     "SYSMEM",
     "UTILITY",
     "WARMUP_NCCL",
@@ -364,6 +365,15 @@ INLINE_TASK_LAUNCH = Argument(
     "--inline-task-launch",
     ArgSpec(
         dest="inline_task_launch",
+        action="store_true",
+        help="Set LEGATE_CONFIG='--help' for information on this option.",
+    ),
+)
+
+SINGLE_CONTROLLER_EXECUTION = Argument(
+    "--single-controller-execution",
+    ArgSpec(
+        dest="single_controller_execution",
         action="store_true",
         help="Set LEGATE_CONFIG='--help' for information on this option.",
     ),

@@ -158,6 +158,7 @@ class Other(DataclassMixin):
     warmup_nccl: bool
     disable_mpi: bool
     inline_task_launch: bool
+    single_controller_execution: bool
     io_use_vfd_gds: bool
     experimental_copy_path: bool
 

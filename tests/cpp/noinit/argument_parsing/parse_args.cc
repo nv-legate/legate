@@ -114,6 +114,7 @@ TEST_F(ParseArgsUnit, NoArgs)
   ASSERT_THAT(parsed.empty_task, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.warmup_nccl, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.inline_task_launch, ArgumentMatches(::testing::IsFalse()));
+  ASSERT_THAT(parsed.single_controller_execution, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.show_usage, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.max_exception_size, ArgumentMatches(LEGATE_MAX_EXCEPTION_SIZE_DEFAULT));
   ASSERT_THAT(parsed.min_cpu_chunk, ArgumentMatches(LEGATE_MIN_CPU_CHUNK_DEFAULT));
@@ -338,6 +339,15 @@ TEST_P(BoolArgs, InlineTaskLaunch)
     legate::detail::parse_args({"dummy", "--inline-task-launch", std::string{arg_value}});
 
   ASSERT_THAT(parsed.inline_task_launch, ArgumentMatches(expected));
+}
+
+TEST_P(BoolArgs, SingleControllerExecution)
+{
+  const auto [arg_value, expected] = GetParam();
+  const auto parsed =
+    legate::detail::parse_args({"dummy", "--single-controller-execution", std::string{arg_value}});
+
+  ASSERT_THAT(parsed.single_controller_execution, ArgumentMatches(expected));
 }
 
 TEST_P(BoolArgs, ShowUsage)

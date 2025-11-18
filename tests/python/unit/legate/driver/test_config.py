@@ -242,6 +242,7 @@ class TestOther:
             "warmup_nccl",
             "disable_mpi",
             "inline_task_launch",
+            "single_controller_execution",
             "io_use_vfd_gds",
             "experimental_copy_path",
         }
@@ -326,6 +327,7 @@ class TestConfig:
             warmup_nccl=False,
             disable_mpi=False,
             inline_task_launch=False,
+            single_controller_execution=False,
             io_use_vfd_gds=False,
             experimental_copy_path=False,
         )

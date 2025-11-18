@@ -23,6 +23,7 @@ from ..util.shared_args import (
     SHOW_CONFIG,
     SHOW_MEMORY_USAGE,
     SHOW_PROGRESS,
+    SINGLE_CONTROLLER_EXECUTION,
     WARMUP_NCCL,
     WINDOW_SIZE,
 )
@@ -183,6 +184,14 @@ def env_inline_task_launch(config: ConfigProtocol) -> EnvPart:
     )
 
 
+def env_single_controller_execution(config: ConfigProtocol) -> EnvPart:
+    return (
+        (SINGLE_CONTROLLER_EXECUTION.name,)
+        if config.other.single_controller_execution
+        else ()
+    )
+
+
 def env_io_use_vfd_gds(config: ConfigProtocol) -> EnvPart:
     return (IO_USE_VFD_GDS.name,) if config.other.io_use_vfd_gds else ()
 
@@ -228,6 +237,7 @@ ENV_PARTS_LEGATE = (
     env_warmup_nccl,
     env_disable_mpi,
     env_inline_task_launch,
+    env_single_controller_execution,
     env_io_use_vfd_gds,
     env_experimental_copy_path,
 )

@@ -108,6 +108,7 @@ class TestConfig:
             warmup_nccl=False,
             disable_mpi=False,
             inline_task_launch=False,
+            single_controller_execution=False,
             io_use_vfd_gds=False,
             experimental_copy_path=False,
         )

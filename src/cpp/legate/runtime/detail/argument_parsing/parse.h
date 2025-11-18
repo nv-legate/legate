@@ -26,6 +26,7 @@ class ParsedArgs {
   Argument<bool> empty_task;
   Argument<bool> warmup_nccl;
   Argument<bool> inline_task_launch;
+  Argument<bool> single_controller_execution;
   Argument<bool> show_usage;
   Argument<std::uint32_t> max_exception_size;
   Argument<std::int64_t> min_cpu_chunk;

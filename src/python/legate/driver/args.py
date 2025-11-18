@@ -42,6 +42,7 @@ from ..util.shared_args import (
     SHOW_CONFIG,
     SHOW_MEMORY_USAGE,
     SHOW_PROGRESS,
+    SINGLE_CONTROLLER_EXECUTION,
     SYSMEM,
     UTILITY,
     WARMUP_NCCL,
@@ -548,6 +549,9 @@ other.add_argument(WINDOW_SIZE.name, **WINDOW_SIZE.kwargs)
 other.add_argument(WARMUP_NCCL.name, **WARMUP_NCCL.kwargs)
 other.add_argument(DISABLE_MPI.name, **DISABLE_MPI.kwargs)
 other.add_argument(INLINE_TASK_LAUNCH.name, **INLINE_TASK_LAUNCH.kwargs)
+other.add_argument(
+    SINGLE_CONTROLLER_EXECUTION.name, **SINGLE_CONTROLLER_EXECUTION.kwargs
+)
 other.add_argument(IO_USE_VFD_GDS.name, **IO_USE_VFD_GDS.kwargs)
 other.add_argument(
     EXPERIMENTAL_COPY_PATH.name, **EXPERIMENTAL_COPY_PATH.kwargs

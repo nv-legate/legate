@@ -66,6 +66,7 @@ Config prefill_config(const ParsedArgs& args)
   cfg.set_use_empty_task(args.empty_task.value());
   cfg.set_warmup_nccl(args.warmup_nccl.value());
   cfg.set_enable_inline_task_launch(args.inline_task_launch.value());
+  cfg.set_single_controller_execution(args.single_controller_execution.value());
   cfg.set_show_mapper_usage(args.show_usage.value());
   cfg.set_max_exception_size(args.max_exception_size.value());
   cfg.set_min_cpu_chunk(args.min_cpu_chunk.value());

@@ -114,6 +114,7 @@ class Config:
             warmup_nccl=args.warmup_nccl,
             disable_mpi=args.disable_mpi,
             inline_task_launch=args.inline_task_launch,
+            single_controller_execution=args.single_controller_execution,
             io_use_vfd_gds=args.io_use_vfd_gds,
             experimental_copy_path=args.experimental_copy_path,
         )

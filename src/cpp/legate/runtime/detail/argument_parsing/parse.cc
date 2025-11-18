@@ -92,6 +92,7 @@ std::string ParsedArgs::config_summary() const
   print_var(empty_task);
   print_var(warmup_nccl);
   print_var(inline_task_launch);
+  print_var(single_controller_execution);
   // No point printing this one, obviously we are showing usage
   // print_var(show_usage);
   print_var(max_exception_size);
@@ -660,6 +661,13 @@ ParsedArgs parse_args(std::vector<std::string> args)
 
   inline_task_launch.argparse_argument().hidden();
 
+  auto single_controller_execution = parser.add_argument(
+    "--single-controller-execution",
+    "Enable single controller execution in which the top-level task only runs on rank 0.",
+    false);
+
+  single_controller_execution.argparse_argument().hidden();
+
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Profiling and logging");
 
@@ -778,6 +786,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
           /* empty_task */ std::move(empty_task),
           /* warmup_nccl */ std::move(warmup_nccl),
           /* inline_task_launch */ std::move(inline_task_launch),
+          /* single_controller_execution */ std::move(single_controller_execution),
           /* show_usage */ std::move(show_usage),
           /* max_exception_size */ std::move(max_exception_size),
           /* min_cpu_chunk */ std::move(min_cpu_chunk),

@@ -32,6 +32,7 @@ class LEGATE_PYTHON_EXPORT Config {
   LEGATE_CONFIG_VAR(bool, use_empty_task, false);
   LEGATE_CONFIG_VAR(bool, warmup_nccl, false);
   LEGATE_CONFIG_VAR(bool, enable_inline_task_launch, false);
+  LEGATE_CONFIG_VAR(bool, single_controller_execution, false);
   LEGATE_CONFIG_VAR(bool, show_mapper_usage, false);
   LEGATE_CONFIG_VAR(std::uint32_t, max_exception_size, LEGATE_MAX_EXCEPTION_SIZE_DEFAULT);
   LEGATE_CONFIG_VAR(std::int64_t, min_cpu_chunk, LEGATE_MIN_CPU_CHUNK_DEFAULT);

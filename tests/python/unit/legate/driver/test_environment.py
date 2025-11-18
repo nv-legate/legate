@@ -53,6 +53,7 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_warmup_nccl,
         m.env_disable_mpi,
         m.env_inline_task_launch,
+        m.env_single_controller_execution,
         m.env_io_use_vfd_gds,
         m.env_experimental_copy_path,
     ) == m.ENV_PARTS_LEGATE
