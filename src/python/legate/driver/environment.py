@@ -142,7 +142,11 @@ def env_profile_name(config: ConfigProtocol) -> EnvPart:
 
 def env_provenance(config: ConfigProtocol) -> EnvPart:
     if config.profiling.provenance is None:
-        return ("--provenance",) if config.profiling.profile else ()
+        return (
+            ("--provenance",)
+            if config.profiling.profile or config.profiling.nsys
+            else ()
+        )
     return ("--provenance",) if config.profiling.provenance else ()
 
 

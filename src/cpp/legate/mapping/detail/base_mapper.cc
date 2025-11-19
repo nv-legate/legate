@@ -1322,6 +1322,10 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
   //
   // UPDATE(wonchanl): Removing the mentioning of the eager pool from the message, but the reporting
   // still needs to be extended per the description above.
+  if (!legate::detail::Runtime::get_runtime().config().provenance()) {
+    logger().error() << "NOTE: Rerun with LEGATE_CONFIG=\"--provenance\" to get more information "
+                        "on allocation sites.";
+  }
   logger().error() << fmt::format(
     "There is not enough space because Legate is reserving {} of the available {} bytes for the "
     "following LogicalStores:",
