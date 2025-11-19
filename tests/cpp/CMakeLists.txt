@@ -228,6 +228,7 @@ set(with_runtime_SRC
     unit/machine/local_machine.cc
     unit/mapping/common_api.cc
     unit/mapping/dim_ordering.cc
+    unit/mapping/instance_manager.cc
     unit/mapping/instance_mapping_policy.cc
     unit/mapping/store_mapping.cc
     unit/partition/image.cc
