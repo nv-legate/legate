@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::Scope &#8212; NVIDIA legate (25.12.00.dev18+g5e60df50b)</title>
+    <title>legate::Scope &#8212; NVIDIA legate (25.12.00.dev22+g9f0476260)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=560830ba"></script>
+    <script src="../../../../_static/documentation_options.js?v=86fd81d8"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev22+g9f0476260) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev22+g9f0476260) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev18+g5e60df50b)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev22+g9f0476260)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev18+g5e60df50b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev22+g9f0476260) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev22+g9f0476260) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev18+g5e60df50b)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev22+g9f0476260)</p>
   
 </a>
 
@@ -974,6 +974,12 @@ The given machine is intersected with the machine from the outer scope</p>
 </dl>
 </dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5ScopeD0Ev">
+<span id="_CPPv3N6legate5ScopeD0Ev"></span><span id="_CPPv2N6legate5ScopeD0Ev"></span><span id="legate::Scope::~Scope"></span><span class="target" id="classlegate_1_1Scope_1a054f148066a6278b735a6842b654adbd"></span><span class="sig-name descname"><span class="n"><span class="pre">~Scope</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5ScopeD0Ev" title="Link to this definition">#</a><br /></dt>
+<dd><p><a class="reference internal" href="../group/group__tuning.html#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> destructor triggers runtime actions such as scheduling the operations submitted within the scope. These actions may throw an exception. Therefore, we declare it as noexcept(false), as since C++-11 the default destructors are declared noexcept. </p>
+</dd></dl>
+
 </div>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
@@ -1032,7 +1038,28 @@ The given machine is intersected with the machine from the outer scope</p>
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope4ImplE">
 <span id="_CPPv3N6legate5Scope4ImplE"></span><span id="_CPPv2N6legate5Scope4ImplE"></span><span id="legate::Scope::Impl"></span><span class="target" id="classlegate_1_1Scope_1_1Impl"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Impl</span></span></span><a class="headerlink" href="#_CPPv4N6legate5Scope4ImplE" title="Link to this definition">#</a><br /></dt>
-<dd></dd></dl>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope4Impl17trigger_end_scopeEv">
+<span id="_CPPv3N6legate5Scope4Impl17trigger_end_scopeEv"></span><span id="_CPPv2N6legate5Scope4Impl17trigger_end_scopeEv"></span><span id="legate::Scope::Impl::trigger_end_scope"></span><span class="target" id="classlegate_1_1Scope_1_1Impl_1ad059e73ca6c8d80639b1a9839705692c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">trigger_end_scope</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope4Impl17trigger_end_scopeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Initiate actions required when scope is about to end. </p>
+<p>When the <a class="reference internal" href="../group/group__tuning.html#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> ends and the <a class="reference internal" href="../group/group__tuning.html#classlegate_1_1ParallelPolicy"><span class="std std-ref">ParallelPolicy</span></a> is replaced, it may trigger additional actions, such as flushing the scheduling window.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – exception if operations submitted in the scope are not streamable. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope4Impl8destructEv">
+<span id="_CPPv3N6legate5Scope4Impl8destructEv"></span><span id="_CPPv2N6legate5Scope4Impl8destructEv"></span><span id="legate::Scope::Impl::destruct"></span><span class="target" id="classlegate_1_1Scope_1_1Impl_1afedb680b2d619c411f4f8ba984fef62a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">destruct</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope4Impl8destructEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Separate out the destructor actions as a separate function so that we can call them inside a catch clause inside <a class="reference internal" href="../group/group__tuning.html#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a>’s destructor, in order to restore the global scope to correct state. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
 
 </dd></dl>
 
@@ -1104,12 +1131,17 @@ The given machine is intersected with the machine from the outer scope</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope14set_provenanceENSt6stringE"><code class="docutils literal notranslate"><span class="pre">set_provenance()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">set_machine()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope19set_parallel_policyE14ParallelPolicy"><code class="docutils literal notranslate"><span class="pre">set_parallel_policy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5ScopeD0Ev"><code class="docutils literal notranslate"><span class="pre">~Scope()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope8priorityEv"><code class="docutils literal notranslate"><span class="pre">priority()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope14exception_modeEv"><code class="docutils literal notranslate"><span class="pre">exception_mode()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope10provenanceEv"><code class="docutils literal notranslate"><span class="pre">provenance()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope7machineEv"><code class="docutils literal notranslate"><span class="pre">machine()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope15parallel_policyEv"><code class="docutils literal notranslate"><span class="pre">parallel_policy()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope4ImplE"><code class="docutils literal notranslate"><span class="pre">legate::Scope::Impl</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope4ImplE"><code class="docutils literal notranslate"><span class="pre">legate::Scope::Impl</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope4Impl17trigger_end_scopeEv"><code class="docutils literal notranslate"><span class="pre">trigger_end_scope()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope4Impl8destructEv"><code class="docutils literal notranslate"><span class="pre">destruct()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
