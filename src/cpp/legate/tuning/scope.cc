@@ -64,7 +64,6 @@ class Scope::Impl {
     const auto new_is_streaming = parallel_policy.streaming();
     auto& global_scope          = detail::Runtime::get_runtime().scope();
 
-    parallel_policy_ = global_scope.exchange_parallel_policy(std::move(parallel_policy));
     // If the window size isn't big enough you never get any streaming, because every streaming
     // run will be size 1, and so will just get mapped normally. So we want to artificially
     // increase the scheduling window size (to some suitable large window) for the duration of
@@ -80,34 +79,75 @@ class Scope::Impl {
         scheduling_window_size_ = global_scope.exchange_scheduling_window_size(BIG_WINDOW);
       }
     }
+
+    // this should be the last action in case the control returns earlier due to an
+    // exception begin thrown
+    try {
+      global_scope.trigger_exchange_side_effects(parallel_policy,
+                                                 detail::Scope::ChangeKind::SCOPE_BEG);
+      parallel_policy_ = global_scope.exchange_parallel_policy(std::move(parallel_policy));
+
+    } catch (const std::exception& e) {
+      parallel_policy_ = global_scope.exchange_parallel_policy(std::move(parallel_policy));
+      throw;
+    }
   }
 
-  ~Impl()
+  /**
+   * @brief Initiate actions required when scope is about to end.
+   *
+   * When the Scope ends and the ParallelPolicy is replaced, it may trigger
+   * additional actions, such as flushing the scheduling window.
+   *
+   * @throws std::invalid_argument exception if operations submitted in the scope
+   * are not streamable.
+   */
+  void trigger_end_scope()
   {
-    if (priority_) {
-      static_cast<void>(detail::Runtime::get_runtime().scope().exchange_priority(*priority_));
-    }
-    if (exception_mode_) {
-      static_cast<void>(
-        detail::Runtime::get_runtime().scope().exchange_exception_mode(*exception_mode_));
-    }
-    if (provenance_) {
-      static_cast<void>(
-        detail::Runtime::get_runtime().scope().exchange_provenance(std::move(*provenance_)));
-    }
-    if (machine_) {
-      static_cast<void>(
-        detail::Runtime::get_runtime().scope().exchange_machine(std::move(machine_)));
-    }
-    if (parallel_policy_) {
-      static_cast<void>(detail::Runtime::get_runtime().scope().exchange_parallel_policy(
-        std::move(*parallel_policy_)));
-    }
-    if (scheduling_window_size_.has_value()) {
-      static_cast<void>(detail::Runtime::get_runtime().scope().exchange_scheduling_window_size(
-        *scheduling_window_size_));
+    if (parallel_policy_.has_value()) {
+      auto& global_scope = detail::Runtime::get_runtime().scope();
+
+      global_scope.trigger_exchange_side_effects(*parallel_policy_,
+                                                 detail::Scope::ChangeKind::SCOPE_END);
     }
   }
+
+  /**
+   * @brief Separate out the destructor actions as a separate function so that we
+   * can call them inside a catch clause inside Scope's destructor, in order to
+   * restore the global scope to correct state.
+   */
+  void destruct()
+  {
+    auto& global_scope = detail::Runtime::get_runtime().scope();
+
+    if (priority_.has_value()) {
+      static_cast<void>(global_scope.exchange_priority(*priority_));
+      priority_ = std::nullopt;
+    }
+    if (exception_mode_.has_value()) {
+      static_cast<void>(global_scope.exchange_exception_mode(*exception_mode_));
+      exception_mode_ = std::nullopt;
+    }
+    if (provenance_.has_value()) {
+      static_cast<void>(global_scope.exchange_provenance(std::move(*provenance_)));
+      provenance_ = std::nullopt;
+    }
+    if (machine_) {
+      static_cast<void>(global_scope.exchange_machine(std::move(machine_)));
+      machine_ = nullptr;
+    }
+    if (parallel_policy_.has_value()) {
+      static_cast<void>(global_scope.exchange_parallel_policy(std::move(*parallel_policy_)));
+      parallel_policy_ = std::nullopt;
+    }
+    if (scheduling_window_size_.has_value()) {
+      static_cast<void>(global_scope.exchange_scheduling_window_size(*scheduling_window_size_));
+      scheduling_window_size_ = std::nullopt;
+    }
+  }
+
+  ~Impl() { destruct(); }
 
  private:
   std::optional<std::int32_t> priority_{};
@@ -189,7 +229,18 @@ void Scope::set_parallel_policy(ParallelPolicy parallel_policy)
   impl_->set_parallel_policy(std::move(parallel_policy));
 }
 
-Scope::~Scope() = default;
+Scope::~Scope() noexcept(false)
+{
+  if (impl_) {
+    try {
+      impl_->trigger_end_scope();
+    } catch (const std::exception& e) {
+      // must cleanup and restore the global scope correctly.
+      impl_->destruct();
+      throw;
+    }
+  }
+}
 
 /*static*/ std::int32_t Scope::priority()
 {

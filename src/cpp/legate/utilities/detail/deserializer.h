@@ -16,7 +16,7 @@
 #include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/store.h>
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/generation.h>
 #include <legate/type/detail/types.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/small_vector.h>

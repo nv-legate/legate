@@ -12,15 +12,27 @@
 
 namespace legate::detail {
 
-ParallelPolicy Scope::exchange_parallel_policy(ParallelPolicy parallel_policy)
+void Scope::trigger_exchange_side_effects(const ParallelPolicy& new_policy,
+                                          Scope::ChangeKind change_kind) const
 {
   // TODO(amberhassaan): with the introduction of StreamingMode, we could allow the
   // case where STRICT scope is nested inside a RELAXED scope. In such a case,
   // don't issue a mapping fence and don't flush the window.
-  if (parallel_policy != parallel_policy_) {
+  if (new_policy != parallel_policy_) {
     auto&& rt = Runtime::get_runtime();
 
-    if (parallel_policy.streaming() || parallel_policy_.streaming()) {
+    switch (change_kind) {
+      case ChangeKind::SCOPE_BEG:
+        if (parallel_policy_.streaming() && !new_policy.streaming()) {
+          rt.clear_scheduling_window(Runtime::PrivateKey{});
+          throw TracedException<std::invalid_argument>{
+            "cannot nest non-streaming scope inside a streaming scope"};
+        }
+        break;
+      case ChangeKind::SCOPE_END: break;
+    }
+
+    if (new_policy.streaming() || parallel_policy_.streaming()) {
       // Note, we want to issue this mapping fence if either the incoming or outgoing scope are
       // streaming, because during scheduling window flushes, the streaming generation will
       // change. See discussion in `BaseMapping::select_streaming_tasks_to_map()` for why this
@@ -33,9 +45,13 @@ ParallelPolicy Scope::exchange_parallel_policy(ParallelPolicy parallel_policy)
       // that might have triggered inside the scope.
       rt.issue_field_match();
     }
-    rt.flush_scheduling_window();
+    rt.flush_scheduling_window(/*streaming_scope_change=*/true);
   }
-  return std::exchange(parallel_policy_, std::move(parallel_policy));
+}
+
+ParallelPolicy Scope::exchange_parallel_policy(ParallelPolicy new_policy)
+{
+  return std::exchange(parallel_policy_, std::move(new_policy));
 }
 
 }  // namespace legate::detail

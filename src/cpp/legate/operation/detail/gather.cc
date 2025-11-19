@@ -92,7 +92,10 @@ void Gather::launch(Strategy* p_strategy)
 // TODO(amberhassaan): could move all instances of add_to_solver to base class Operation
 void Gather::add_to_solver(ConstraintSolver& solver)
 {
-  solver.add_constraint(std::move(constraint_));
+  // TODO(amberhassaan): do not move constraints until
+  // https://github.com/nv-legate/legate.internal/issues/3120 is resolved
+  // solver.add_constraint(std::move(constraint_));
+  solver.add_constraint(constraint_);
   solver.add_partition_symbol(target_.variable,
                               !redop_kind_ ? AccessMode::WRITE : AccessMode::REDUCE);
   solver.add_partition_symbol(source_.variable, AccessMode::READ);

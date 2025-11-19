@@ -7,6 +7,7 @@
 #pragma once
 
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 
 #include <string>
 #include <type_traits>
@@ -16,6 +17,12 @@
 // complaining that some class declarations in the included header are unused and
 // the names collide with legate::detail, such as Task and Operation
 enum legion_privilege_mode_t : std::uint32_t;  // NOLINT(readability-identifier-naming)
+
+namespace Legion {  // NOLINT(readability-identifier-naming)
+
+class DomainPoint;
+
+}  // namespace Legion
 
 namespace legate {
 
@@ -212,5 +219,8 @@ template <>
 struct formatter<legion_privilege_mode_t> : formatter<std::string_view> {
   format_context::iterator format(legion_privilege_mode_t mode, format_context& ctx) const;
 };
+
+template <>
+struct formatter<Legion::DomainPoint> : ostream_formatter {};
 
 }  // namespace fmt

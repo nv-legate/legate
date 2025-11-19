@@ -65,6 +65,8 @@ inline bool ManualTask::needs_partitioning() const { return false; }
 
 inline bool ManualTask::supports_streaming() const { return true; }
 
+inline const InternalSharedPtr<Strategy>& ManualTask::strategy() const { return strategy_; }
+
 // ==========================================================================================
 
 inline Operation::Kind PhysicalTask::kind() const { return Kind::PHYSICAL_TASK; }

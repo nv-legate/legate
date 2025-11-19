@@ -6,41 +6,31 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
+#include <legate/runtime/detail/streaming/util.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
-#include <cstdint>
 #include <deque>
 
 namespace legate::detail {
 
-class BufferBuilder;
+class Operation;
 
 /**
- * @brief A class to hold information about a particular streaming run.
+ * @brief Given a queue of Operations, find a streamable prefix of the queue by
+ * running some checks on the queue.
+ *
+ * @param in_window Operations from the schedulign window.
+ *
+ * @return deque containing the prefix of operations from `ops` that can be
+ * streamed together.
+ *
+ * @throws std::invalid_argument if the window of operations is not streamable and
+ * the user has specified streaming mode as `StreamingMode::STRICT`.
  */
-class StreamingGeneration {
- public:
-  /**
-   * @brief A unique ID that identifies a particular set of tasks all belonging to the same
-   * generation.
-   */
-  std::uint32_t generation{};
-
-  /**
-   * @brief The number of tasks (logical tasks, not leaf tasks) belonging to a particular
-   * generation.
-   */
-  std::uint32_t size{};
-
-  /**
-   * @brief Serialize this StreamingGeneration.
-   *
-   * @param buffer The buffer to serialize into.
-   */
-  void pack(BufferBuilder& buffer) const;
-};
-
-class Operation;
+[[nodiscard]] std::deque<InternalSharedPtr<Operation>> extract_streamable_prefix(
+  std::deque<InternalSharedPtr<Operation>>* in_window);
 
 /**
  * @brief Process a streaming section.

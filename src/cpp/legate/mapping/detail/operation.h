@@ -11,7 +11,7 @@
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/mapping/mapping.h>
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/generation.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/deserializer.h>
 #include <legate/utilities/detail/small_vector.h>

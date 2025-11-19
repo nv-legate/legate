@@ -10,7 +10,7 @@
 #include <legate/operation/detail/store_projection.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/generation.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/zip.h>
 

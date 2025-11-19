@@ -390,7 +390,11 @@ target_sources(legate_obj
                        legate/runtime/detail/argument_parsing/flags/sysmem.cc
                        legate/runtime/detail/argument_parsing/flags/cuda_driver_path.cc
                        legate/runtime/detail/mpi_detection.cc
-                       legate/runtime/detail/streaming.cc
+                       legate/runtime/detail/streaming/analysis.cc
+                       legate/runtime/detail/streaming/generation.cc
+                       legate/runtime/detail/streaming/disallowed_operation_checker.cc
+                       legate/runtime/detail/streaming/launch_domain_equality_checker.cc
+                       legate/runtime/detail/streaming/util.cc
                        legate/task/registrar.cc
                        legate/task/task.cc
                        legate/task/task_context.cc

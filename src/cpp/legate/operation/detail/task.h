@@ -13,7 +13,7 @@
 #include <legate/operation/detail/task_array_arg.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/generation.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -239,6 +239,31 @@ class ManualTask final : public LogicalTask {
    */
   [[nodiscard]] const Domain& launch_domain() const;
 
+  void launch() override;
+
+  [[nodiscard]] Kind kind() const override;
+
+  /**
+   * @return `false`, `ManualTask` operations by definition have the runtime compute the
+   * partitioning for each argument.
+   */
+  [[nodiscard]] bool needs_partitioning() const override;
+
+  /**
+   * @brief @see Operation::supports_streaming.
+   *
+   * @return true.
+   */
+  [[nodiscard]] bool supports_streaming() const override;
+
+  /**
+   * @brief used by streaming to read strategy of a manual task.
+   * Assumes strategy has been computed.
+   *
+   * @return strategy by shared pointer.
+   */
+  [[nodiscard]] const InternalSharedPtr<Strategy>& strategy() const;
+
  private:
   /**
    * @brief Add a store as an argument to the `ManualTask`
@@ -256,29 +281,7 @@ class ManualTask final : public LogicalTask {
                   InternalSharedPtr<Partition> partition,
                   std::optional<SymbolicPoint> projection = {});
 
- public:
-  void launch() override;
-
-  [[nodiscard]] Kind kind() const override;
-
-  /**
-   * @return `false`, `ManualTask` operations by definition have the runtime compute the
-   * partitioning for each argument.
-   */
-  [[nodiscard]] bool needs_partitioning() const override;
-
-  /**
-   * @see Operation::supports_streaming
-   */
-  [[nodiscard]] bool supports_streaming() const override;
-
-  /**
-   * Provide a copy of internal Strategy
-   */
-  [[nodiscard]] Strategy copy_strategy() const;
-
- private:
-  Strategy strategy_{};
+  InternalSharedPtr<Strategy> strategy_{};
 };
 
 /**

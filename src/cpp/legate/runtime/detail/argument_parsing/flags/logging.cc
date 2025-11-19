@@ -8,6 +8,7 @@
 
 #include <legate/comm/detail/logger.h>
 #include <legate/mapping/detail/base_mapper.h>
+#include <legate/runtime/detail/streaming/util.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/cpp_version.h>
 #include <legate/utilities/detail/string_utils.h>
@@ -161,10 +162,12 @@ std::string logging_help_str()
                  "- {} (the core legate logger)\n"
                  "- {} (the store partitioning logger)\n"
                  "- {} (the mapping logger)\n"
+                 "- {} (the streaming logger)\n"
                  "- {} (the collective communication logger)",
                  log_legate().get_name(),
                  log_legate_partitioner().get_name(),
                  mapping::detail::BaseMapper::LOGGER_NAME,
+                 log_streaming().get_name(),
                  comm::coll::logger().get_name());
   return ret;
 }

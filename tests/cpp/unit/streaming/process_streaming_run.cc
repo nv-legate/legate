@@ -10,7 +10,7 @@
 #include <legate/operation/detail/fill.h>
 #include <legate/operation/detail/task.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/analysis.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

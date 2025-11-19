@@ -616,8 +616,9 @@ void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint, bool byp
 void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 {
   for (auto&& constraint : constraints_) {
-    // Do not use std::move here as the streaming analysis may call add_to_solver
-    // multiple times
+    // TODO(amberhassaan): do not move constraints until
+    // https://github.com/nv-legate/legate.internal/issues/3120 is resolved
+    // solver.add_constraint(std::move(constraint));
     solver.add_constraint(constraint);
   }
   for (auto&& output : outputs_) {
@@ -700,12 +701,13 @@ ManualTask::ManualTask(const Library& library,
                 unique_id,
                 priority,
                 std::move(machine),
-                /* can_inline_launch */ false}
+                /* can_inline_launch */ false},
+    strategy_{make_internal_shared<Strategy>()}
 {
-  strategy_.set_launch_domain(*this, launch_domain);
+  strategy_->set_launch_domain(*this, launch_domain);
 }
 
-const Domain& ManualTask::launch_domain() const { return strategy_.launch_domain(*this); }
+const Domain& ManualTask::launch_domain() const { return strategy_->launch_domain(*this); }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
 {
@@ -822,15 +824,13 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
     const auto field_id =
       runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
 
-    strategy_.insert(*partition_symbol, std::move(partition), std::move(field_space), field_id);
+    strategy_->insert(*partition_symbol, std::move(partition), std::move(field_space), field_id);
   } else {
-    strategy_.insert(*partition_symbol, std::move(partition));
+    strategy_->insert(*partition_symbol, std::move(partition));
   }
 }
 
-void ManualTask::launch() { launch_task_(&strategy_); }
-
-Strategy ManualTask::copy_strategy() const { return strategy_; }
+void ManualTask::launch() { launch_task_(strategy_.get()); }
 
 ////////////////////////////////////////////////////
 // legate::detail::PhysicalTask

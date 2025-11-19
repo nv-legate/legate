@@ -24,9 +24,10 @@ class ConstraintSolver;
 class Strategy {
  public:
   Strategy() = default;
-  // TODO(amberhassaan): Copying is expensive. Convert uses to a pointer type.
-  Strategy(const Strategy&)            = default;
-  Strategy& operator=(const Strategy&) = default;
+
+  // NOTE(amberhassaan): disabled only because copy is expensive.
+  Strategy(const Strategy&)            = delete;
+  Strategy& operator=(const Strategy&) = delete;
 
   Strategy(Strategy&&) noexcept            = default;
   Strategy& operator=(Strategy&&) noexcept = default;

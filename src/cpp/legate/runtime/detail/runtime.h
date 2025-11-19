@@ -33,11 +33,11 @@
 #include <legate/utilities/typedefs.h>
 
 #include <atomic>
+#include <deque>
 #include <list>
 #include <map>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -189,7 +189,16 @@ class Runtime {
   // also used for offloading stores
   void offload_to(mapping::StoreTarget target_mem, const InternalSharedPtr<LogicalArray>& array);
 
-  void flush_scheduling_window();
+  /**
+   * @brief Launch operations in Legate's queue.
+   *
+   * @param streaming_scope_change set to true when flush_scheduling_window is
+   * called due to entering or leaving a streaming scope.
+   *
+   * @throws std::invalid_argument if called during or at the end of a strict
+   * streaming scope.
+   */
+  void flush_scheduling_window(bool streaming_scope_change = false);
   void submit(InternalSharedPtr<Operation> op);
   static void launch_immediately(const InternalSharedPtr<Operation>& op);
 
@@ -241,7 +250,28 @@ class Runtime {
     SmallVector<InternalSharedPtr<LogicalArray>>&& fields,
     const std::optional<InternalSharedPtr<LogicalStore>>& null_mask);
 
+  /**
+   * @brief Give access to certain methods via this class.
+   */
+  class PrivateKey {
+    PrivateKey() = default;
+    friend class legate::detail::Scope;
+  };
+
+  /**
+   * @brief something went wrong, such as an exception or error inside a streaming
+   * scope. So clear the tasks in the queue.
+   */
+  void clear_scheduling_window(PrivateKey);
+
  private:
+  /**
+   * @brief Launch the operations in the queue provided.
+   *
+   * @param window queue of tasks.
+   */
+  void schedule_(std::deque<InternalSharedPtr<Operation>>* window);
+
   [[nodiscard]] std::pair<mapping::detail::Machine, const VariantInfo&> slice_machine_for_task_(
     const TaskInfo& info) const;
 
@@ -595,7 +625,7 @@ class Runtime {
   std::unordered_map<ShardingDesc, Legion::ShardingID, hasher<ShardingDesc>>
     registered_shardings_{};
 
-  std::queue<InternalSharedPtr<Operation>> operations_{};
+  std::deque<InternalSharedPtr<Operation>> operations_{};
   std::atomic<std::uint64_t> cur_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;

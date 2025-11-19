@@ -49,7 +49,7 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/mpi_detection.h>
 #include <legate/runtime/detail/shard.h>
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/analysis.h>
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/legion_task.h>
@@ -78,7 +78,6 @@
 #include <fmt/ranges.h>
 
 #include <cstdlib>
-#include <iostream>
 #include <mappers/logging_wrapper.h>
 // GCC 14 alloc-zero warning when using Conda installed compiler
 LEGATE_PRAGMA_PUSH();
@@ -544,27 +543,42 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
   }
 }
 
-void Runtime::flush_scheduling_window()
+void Runtime::flush_scheduling_window(bool streaming_scope_change)
 {
-  if (scope().parallel_policy().streaming()) {
-    // Accessor is needed because the underlying container for a queue is a protected
-    // member. First instinct would be not to do these protected accesses and to just use
-    // std::deque directly everywhere, but that's not advisable.
-    //
-    // The runtime interacts with the ops stream as FIFO. It pushes to the back, and pops from
-    // the front, so it should also see the stream as it is, a queue.
-    //
-    // The processing code needs to see a mutable, semi-linear stream of operations, and
-    // therefore needs to see the `std::deque` (or whatever underlying data structure is used).
-    //
-    // The standard allowed this escape-hatch for exactly such situations, there is no harm in
-    // accessing the protected member like this to use it.
-    struct Container : std::queue<InternalSharedPtr<Operation>> {
-      using queue::c;
-    };
+  // whenever the parallel policy changes due to scope change, we flush the
+  // scheduling window, so if current scope is streaming, all the tasks in it have
+  // their parallel policy with streaming set.
+  if (const auto pp = scope().parallel_policy(); pp.streaming()) {
+    if (pp.streaming_mode() == StreamingMode::STRICT && !streaming_scope_change) {
+      clear_scheduling_window(PrivateKey{});
+      throw TracedException<std::invalid_argument>{
+        "flush_scheduling_window called from inside a streaming scope"};
+    }
 
-    process_streaming_run(&static_cast<Container&>(operations_).c);
+    while (!operations_.empty()) {
+      std::deque<InternalSharedPtr<Operation>> streamable_ops{};
+
+      try {
+        streamable_ops = extract_streamable_prefix(&operations_);
+      } catch (const std::exception& e) {
+        clear_scheduling_window(PrivateKey{});
+        throw;
+      }
+
+      LEGATE_CHECK(!streamable_ops.empty());
+
+      schedule_(&streamable_ops);
+
+      LEGATE_ASSERT(streamable_ops.empty());
+    }
+
+  } else {
+    schedule_(&operations_);
   }
+}
+
+void Runtime::schedule_(std::deque<InternalSharedPtr<Operation>>* window)
+{
   // We should only execute the operations resident in the queue at the time of flush, no more,
   // no less. It is possible that during the flush additional operations may be queued, and so
   // we use the size of the window on entrance to determine the number of ops to flush.
@@ -575,10 +589,11 @@ void Runtime::flush_scheduling_window()
   // already emptied the queue for us.
   //
   // This is why we check flush_size > 0 && !operations_.empty().
-  for (auto flush_size = operations_.size(); flush_size > 0 && !operations_.empty(); --flush_size) {
-    auto op = std::move(operations_.front());
+  for (auto flush_size = window->size(); flush_size > 0 && !window->empty(); --flush_size) {
+    auto op = std::move(window->front());
 
-    operations_.pop();
+    window->pop_front();
+
     if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       log_legate().debug() << op->to_string(true /*show_provenance*/) << " launched";
     }
@@ -596,6 +611,8 @@ void Runtime::flush_scheduling_window()
   }
 }
 
+void Runtime::clear_scheduling_window(PrivateKey) { operations_.clear(); }
+
 void Runtime::submit(InternalSharedPtr<Operation> op)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -606,9 +623,14 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   // operations_.
   op->validate();
 
-  const auto& submitted = operations_.emplace(std::move(op));
+  const auto& submitted = operations_.emplace_back(std::move(op));
 
-  if (submitted->needs_flush() || operations_.size() >= scope().scheduling_window_size()) {
+  // Ignore window size when inside a streaming scope because we want to analyze
+  // and stream the entire streaming scope if it's bigger than window size
+  const auto win_too_big = !scope().parallel_policy().streaming() &&
+                           (operations_.size() >= scope().scheduling_window_size());
+
+  if (submitted->needs_flush() || win_too_big) {
     flush_scheduling_window();
   }
 }

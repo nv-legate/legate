@@ -4,38 +4,160 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/analysis.h>
 
 #include <legate/data/detail/logical_store.h>
 #include <legate/operation/detail/discard.h>
 #include <legate/operation/detail/mapping_fence.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/operation/detail/task.h>
+#include <legate/operation/task.h>
+#include <legate/partitioning/detail/partition.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/detail/streaming/base_operation_checker.h>
+#include <legate/runtime/detail/streaming/disallowed_operation_checker.h>
+#include <legate/runtime/detail/streaming/generation.h>
+#include <legate/runtime/detail/streaming/launch_domain_equality_checker.h>
+#include <legate/runtime/detail/streaming/util.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/hash.h>
+#include <legate/utilities/typedefs.h>
+
+#include <fmt/ranges.h>
 
 #include <algorithm>
+#include <array>
 #include <deque>
 #include <functional>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
+// NOTE(amberhassaan): don't move this to <legate/utilities/detail/formatters.h>
+// because it's not for a general InternalSharedPtr<T>
+namespace fmt {
+
+template <>
+struct formatter<legate::InternalSharedPtr<legate::detail::Operation>>
+  : formatter<legate::detail::Operation> {
+  format_context::iterator format(const legate::InternalSharedPtr<legate::detail::Operation>& op,
+                                  format_context& ctx) const
+  {
+    return formatter<legate::detail::Operation>::format(*op, ctx);
+  }
+};
+
+}  // namespace fmt
+
 namespace legate::detail {
 
-void StreamingGeneration::pack(BufferBuilder& buffer) const
+namespace {
+
+/**
+ * @brief Create a strategy for the operation provided if it needs a strategy.
+ *
+ * @return optional with shared pointer to strategy.
+ */
+std::optional<InternalSharedPtr<Strategy>> get_strategy(const InternalSharedPtr<Operation>& op)
 {
-  buffer.pack(generation);
-  buffer.pack(size);
+  LEGATE_ASSERT(op->parallel_policy().streaming());
+
+  if (op->needs_partitioning()) {
+    return make_internal_shared<Strategy>(Partitioner{{op}}.partition_stores());
+  }
+
+  const auto* mt = dynamic_cast<const ManualTask*>(op.get());
+
+  if (mt != nullptr) {
+    return mt->strategy();
+  }
+
+  return std::nullopt;
+}
+
+/**
+ * @brief Given a queue of operations, find a prefix that is streamable together.
+ *
+ * Prefix can be as big as the entire queue and as small as the first task.
+ *
+ * @param ops_queue_ptr Pointer to a queue of operations from which a prefix is
+ * removed.
+ * @param context Error message context collector.
+ */
+[[nodiscard]] std::deque<InternalSharedPtr<Operation>> extract_streamable_prefix_impl(
+  std::deque<InternalSharedPtr<Operation>>* ops_queue_ptr, StreamingErrorContext* context)
+{
+  DisallowedOp disallowed_op;
+  LaunchDomainEquality launch_domain_eq;
+  std::array<BaseOperationChecker*, 2> checkers = {&disallowed_op, &launch_domain_eq};
+
+  auto check_one_op = [&](const InternalSharedPtr<Operation>& op,
+                          const std::optional<InternalSharedPtr<Strategy>>& strategy) {
+    for (const auto& checker : checkers) {
+      if (!checker->is_streamable(op, strategy, context)) {
+        context->append("{} Failed Streaming Check {}", *op, checker->name());
+
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  auto& ops_queue = *ops_queue_ptr;
+
+  // Streaming scope cannot be empty. At least should have mapping_fence
+  // Also, calling function extract_streamable_prefix returns early if in_window is
+  // empty.
+  LEGATE_CHECK(!ops_queue.empty());
+
+  std::deque<InternalSharedPtr<Operation>> ret_prefix = [&] {
+    std::deque<InternalSharedPtr<Operation>> prefix{};
+    while (!ops_queue.empty()) {
+      const InternalSharedPtr<Operation>& op = ops_queue.front();
+
+      const auto strategy = get_strategy(op);
+
+      if (!check_one_op(op, strategy)) {
+        // if the very first op is non-streamable, pick at least that op for the prefix
+        // also, if the failing op is a MAPPING_FENCE, include it in the prefix
+        if (prefix.empty() || op->kind() == Operation::Kind::MAPPING_FENCE) {
+          // pop_front when the op is pushed to prefix to ensure it's not accidentally
+          // lost
+          prefix.emplace_back(op);
+          ops_queue.pop_front();
+        }
+
+        return prefix;
+      }
+
+      // pop_front when the op is pushed to prefix to ensure it's not accidentally
+      // lost
+      prefix.emplace_back(op);
+      ops_queue.pop_front();
+    }
+
+    return prefix;
+  }();
+
+  LEGATE_CHECK(!ret_prefix.empty());
+
+  // If we exited early because a check failed or if
+  // Runtime::flush_scheduling_window() was called before the end of a scope, we
+  // may need to add a mapping fence to ensure that a streaming generation ends in a mapping
+  // fence.
+  if (ret_prefix.back()->kind() != Operation::Kind::MAPPING_FENCE) {
+    ret_prefix.emplace_back(make_internal_shared<MappingFence>(Runtime::get_runtime().new_op_id()));
+  }
+  return ret_prefix;
 }
 
 // ==========================================================================================
-
-namespace {
 
 /**
  * @brief Determine whether a task will be launched as a singleton task.
@@ -365,6 +487,56 @@ void assign_streaming_generation(std::uint32_t generation_size,
 }
 
 }  // namespace
+
+std::deque<InternalSharedPtr<Operation>> extract_streamable_prefix(
+  std::deque<InternalSharedPtr<Operation>>* in_window)
+{
+  // NOTE(amberhassaan): This should never happen. The calling code (currently
+  // detail::Runtime::flush_scheduling_window) should only call this function when
+  // the scheduling window is non-empty.
+  if (in_window->empty()) {
+    return {};
+  }
+
+  auto log_prefix = [](std::string_view msg, const auto& ops) {
+    if (log_streaming().want_debug()) {
+      log_streaming().debug() << fmt::format("StreamablePrefix: {} [ {} ]", msg, ops);
+    }
+  };
+
+  log_prefix("incoming window", *in_window);
+
+  const bool strict_mode =
+    Runtime::get_runtime().scope().parallel_policy().streaming_mode() == StreamingMode::STRICT;
+
+  StreamingErrorContext context{strict_mode};
+
+  std::deque<InternalSharedPtr<Operation>> prefix =
+    extract_streamable_prefix_impl(in_window, &context);
+
+  // Must at least pick the first task if in_window is non-empty
+  LEGATE_CHECK(!prefix.empty());
+
+  if (strict_mode && (!in_window->empty())) {
+    context.append("Streaming Scope cannot be streamed in one go");
+    throw TracedException<std::invalid_argument>{context.to_string()};
+  }
+
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    if (log_streaming().want_debug()) {
+      log_streaming().debug() << context.to_string();
+    }
+  }
+
+  log_prefix("before process_streaming_run", prefix);
+
+  // TODO(amberhassaan): simplify process_streaming_run given that analysis has
+  // found a valid streamable prefix
+  process_streaming_run(&prefix);
+
+  log_prefix("after process_streaming_run", prefix);
+  return prefix;
+}
 
 void process_streaming_run(std::deque<InternalSharedPtr<Operation>>* ops)
 {

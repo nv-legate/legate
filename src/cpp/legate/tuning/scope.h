@@ -267,7 +267,13 @@ class LEGATE_EXPORT Scope {
    */
   [[nodiscard]] static const ParallelPolicy& parallel_policy();
 
-  ~Scope();
+  /**
+   * @brief Scope destructor triggers runtime actions such as scheduling the
+   * operations submitted within the scope. These actions may throw an exception.
+   * Therefore, we declare it as noexcept(false), as since C++-11 the default
+   * destructors are declared noexcept.
+   */
+  ~Scope() noexcept(false);
 
   Scope(const Scope&)            = delete;
   Scope& operator=(const Scope&) = delete;

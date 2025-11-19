@@ -9,7 +9,7 @@
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/launcher_arg.h>
-#include <legate/runtime/detail/streaming.h>
+#include <legate/runtime/detail/streaming/generation.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/zstring_view.h>

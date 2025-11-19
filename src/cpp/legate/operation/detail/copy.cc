@@ -97,7 +97,10 @@ void Copy::launch(Strategy* p_strategy)
 
 void Copy::add_to_solver(ConstraintSolver& solver)
 {
-  solver.add_constraint(std::move(constraint_));
+  // TODO(amberhassaan): do not move constraints until
+  // https://github.com/nv-legate/legate.internal/issues/3120 is resolved
+  // solver.add_constraint(std::move(constraint_));
+  solver.add_constraint(constraint_);
   solver.add_partition_symbol(target_.variable,
                               !redop_kind_ ? AccessMode::WRITE : AccessMode::REDUCE);
   if (target_.store->has_scalar_storage()) {

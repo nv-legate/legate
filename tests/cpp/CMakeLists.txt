@@ -172,6 +172,7 @@ set(with_runtime_SRC
     integration/req_analyzer.cc
     integration/scalar_out.cc
     integration/scale_constraints.cc
+    integration/streaming_checker.cc
     integration/task_misc.cc
     integration/tasks/task_simple.cc
     integration/task_store/auto_task_tests.cc
@@ -284,6 +285,7 @@ set(with_runtime_SRC
     unit/dlpack/from_dlpack/versioned.cc
     unit/dlpack/from_dlpack/unversioned.cc
     unit/dlpack/to_dlpack/to_dlpack.cc
+    unit/streaming/extract_streamable_prefix.cc
     unit/streaming/process_streaming_run.cc
     unit/task/physical_task.cc
     # experimental
