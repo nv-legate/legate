@@ -24,6 +24,8 @@
 
 namespace formatter_test {
 
+constexpr std::int32_t SCALAR_VALUE = 42;
+
 // Dummy task to make the runtime think the store is initialized
 struct FormatterBaseTask : public legate::LegateTask<FormatterBaseTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -79,6 +81,10 @@ class FormatDLPackTypeCode
 class FormatDLPackDeviceType
   : public DefaultFixture,
     public ::testing::WithParamInterface<std::tuple<DLDeviceType, std::string_view>> {};
+
+class FormatLegionPrivilegeMode
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legion_privilege_mode_t, std::string_view>> {};
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
@@ -200,6 +206,20 @@ INSTANTIATE_TEST_SUITE_P(FormatterUnit,
                                            std::make_tuple(DLDeviceType::kDLHexagon, "Hexagon"),
                                            std::make_tuple(DLDeviceType::kDLMAIA, "MAIA")));
 
+INSTANTIATE_TEST_SUITE_P(
+  FormatterUnit,
+  FormatLegionPrivilegeMode,
+  ::testing::Values(std::make_tuple(LEGION_READ_ONLY, "LEGION_READ_ONLY"),
+                    std::make_tuple(LEGION_READ_DISCARD, "LEGION_READ_DISCARD"),
+                    std::make_tuple(LEGION_REDUCE, "LEGION_REDUCE"),
+                    std::make_tuple(LEGION_WRITE_ONLY, "LEGION_WRITE_ONLY"),
+                    std::make_tuple(LEGION_READ_WRITE, "LEGION_READ_WRITE"),
+                    std::make_tuple(LEGION_WRITE_DISCARD, "LEGION_WRITE_DISCARD"),
+                    std::make_tuple(LEGION_WRITE_PRIV, "LEGION_WRITE_PRIV"),
+                    std::make_tuple(LEGION_NO_ACCESS, "LEGION_NO_ACCESS"),
+                    std::make_tuple(LEGION_DISCARD_MASK, "LEGION_DISCARD_MASK"),
+                    std::make_tuple(LEGION_DISCARD_OUTPUT_MASK, "LEGION_DISCARD_OUTPUT_MASK")));
+
 template <typename>
 using FormatID = ::testing::Test;
 
@@ -210,56 +230,70 @@ TYPED_TEST_SUITE(FormatID, IDTypeList, );
 
 TEST_P(FormatType, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatShape, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatVariantCode, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatOperationKind, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatImgComputationHint, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatTaskTarget, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatStoreTarget, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatDLPackTypeCode, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
 
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
 TEST_P(FormatDLPackDeviceType, Basic)
 {
-  auto& [format_obj, expect_result] = GetParam();
+  const auto& [format_obj, expect_result] = GetParam();
+
+  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
+TEST_P(FormatLegionPrivilegeMode, Basic)
+{
+  const auto& [format_obj, expect_result] = GetParam();
 
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
@@ -296,6 +330,7 @@ TEST_F(FormatterUnit, ExecutionFence)
   const legate::InternalSharedPtr<legate::detail::Operation> smart_ptr{
     new legate::detail::ExecutionFence{1, false}};
   constexpr std::string_view expect_str = "ExecutionFence:1";
+
   ASSERT_EQ(fmt::format("{}", *smart_ptr), expect_str);
 }
 
@@ -308,12 +343,14 @@ TEST_F(FormatterUnit, Alignment)
 
   auto part1 = task.declare_partition();
   auto part2 = task.declare_partition();
+
   ASSERT_THAT(fmt::format("{}", *(part1.impl())),
               ::testing::MatchesRegex(R"(X0\{formatter_test::FormatterBaseTask:[0-9]+\})"));
   ASSERT_THAT(fmt::format("{}", *(part2.impl())),
               ::testing::MatchesRegex(R"(X1\{formatter_test::FormatterBaseTask:[0-9]+\})"));
 
   auto alignment = legate::detail::align(part1.impl(), part2.impl());
+
   ASSERT_THAT(
     fmt::format("{}", *alignment),
     ::testing::MatchesRegex(
@@ -322,13 +359,52 @@ TEST_F(FormatterUnit, Alignment)
 
 TEST_F(FormatterUnit, TaskInfo)
 {
-  auto task_info = legate::TaskInfo{"test_task"};
+  const auto task_info = legate::TaskInfo{"test_task"};
+
   ASSERT_EQ(fmt::format("{}", task_info), "test_task {}");
+}
+
+TEST_F(FormatterUnit, BoundLogicalStore)
+{
+  const auto runtime           = legate::Runtime::get_runtime();
+  const auto bound_store       = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  const auto& bound_store_impl = bound_store.impl();
+
+  ASSERT_THAT(
+    fmt::format("{}", *bound_store_impl),
+    ::testing::MatchesRegex(
+      R"(Store\([0-9]+\) \{shape: \[1\], type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
+}
+
+TEST_F(FormatterUnit, UnboundLogicalStore)
+{
+  const auto runtime             = legate::Runtime::get_runtime();
+  const auto unbound_store       = runtime->create_store(legate::int64());
+  const auto& unbound_store_impl = unbound_store.impl();
+
+  ASSERT_THAT(
+    fmt::format("{}", *unbound_store_impl),
+    ::testing::MatchesRegex(
+      R"(Store\([0-9]+\) \{shape: \(unbound\), type: int64, storage: Storage\([0-9]+\) \{kind: Region, level: [0-9]+, region: unbound\}\})"));
+}
+
+TEST_F(FormatterUnit, TransformedBoundLogicalStore)
+{
+  const auto runtime        = legate::Runtime::get_runtime();
+  const auto bound_store    = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  const auto promoted       = bound_store.promote(0, 5);
+  const auto& promoted_impl = promoted.impl();
+
+  ASSERT_THAT(
+    fmt::format("{}", *promoted_impl),
+    ::testing::MatchesRegex(
+      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
 }
 
 TYPED_TEST(FormatID, Basic)
 {
   constexpr auto id = TypeParam{0};
+
   ASSERT_EQ(fmt::format("{}", id), "0");
 }
 
