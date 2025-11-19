@@ -1689,17 +1689,17 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     const std::uint32_t total_tasks_count = legate::detail::linearize(lo, hi, hi) + 1;
 
     // Calculate index for target processor (e.g., GPU)
-    const std::uint32_t target_start_proc_id = machine_desc.processor_range(copy_target).low;
+    // Use the local range's offset because LocalProcessorRange::operator[] subtracts this offset
     auto target_idx =
       (legate::detail::linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) +
-      target_start_proc_id;
+      local_range.offset();
     target_proc = local_range[static_cast<std::uint32_t>(target_idx)];
 
     // Calculate index for host processor (e.g., CPU)
-    const std::uint32_t host_start_proc_id = machine_desc.processor_range(host_target).low;
+    // Use the local range's offset because LocalProcessorRange::operator[] subtracts this offset
     auto host_idx =
       (legate::detail::linearize(lo, hi, p) * host_range.total_proc_count() / total_tasks_count) +
-      host_start_proc_id;
+      host_range.offset();
     host_proc = host_range[static_cast<std::uint32_t>(host_idx)];
   } else {
     target_proc = local_range.first();
@@ -1777,7 +1777,12 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     }
   }
 
-  map_legate_stores_(ctx, copy, mappings, target_proc, output_map);
+  // Use the appropriate processor based on whether preimages are computed:
+  // - If compute_preimages is true, all stores target GPU memory, so use target_proc (GPU)
+  // - If compute_preimages is false, all stores target host memory, so use host_proc (CPU/OMP)
+  const auto effective_proc = compute_preimages ? target_proc : host_proc;
+
+  map_legate_stores_(ctx, copy, mappings, effective_proc, output_map);
 }
 
 void BaseMapper::select_copy_sources(Legion::Mapping::MapperContext ctx,
