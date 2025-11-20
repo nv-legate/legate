@@ -508,16 +508,6 @@ class TestPyTask:
             def _(*_: tuple[InputStore, ...]) -> None:
                 pass
 
-    def test_prepare_nullable_param(self) -> None:
-        runtime = get_legate_runtime()
-        arr = runtime.create_array(ty.int32, (1, 2, 3), nullable=True)
-        msg = (
-            "Legate data interface objects with nullable stores are "
-            "unsupported"
-        )
-        with pytest.raises(NotImplementedError, match=msg):
-            tasks.fill_task.prepare_call(arr, Scalar(None))
-
     def test_register_arbitrary_union_type(self) -> None:
         msg = re.escape(
             "Arbitrary union types not yet supported. Union types may "

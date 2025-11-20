@@ -104,16 +104,7 @@ def as_logical_array(obj: LegateDataInterface) -> LogicalArray:
         )
         raise NotImplementedError(msg)
 
-    column = data[field]
-
-    if column.nullable:
-        msg = (
-            "Legate data interface objects with nullable "
-            "stores are unsupported"
-        )
-        raise NotImplementedError(msg)
-
-    return column
+    return data[field]
 
 
 def offload_to(obj: LogicalArrayLike, *, target: StoreTarget) -> None:

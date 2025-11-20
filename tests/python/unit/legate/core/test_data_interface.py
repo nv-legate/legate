@@ -24,6 +24,13 @@ class Test_as_logical_array:
 
         as_logical_array(Table([field], [x]))
 
+    def test_identity(self) -> None:
+        x = make_input_array(value=123)
+        x2 = as_logical_array(x)
+
+        # An array passed through as_logical_array() should just return itself.
+        assert x2 is x
+
     def test_missing_interface(self) -> None:
         class MissingInterface:
             pass
@@ -134,48 +141,6 @@ class Test_as_logical_array:
             match="Legate data interface objects with more than one store are unsupported",  # noqa: E501
         ):
             as_logical_array(too_many)
-
-    # Can't currently even create a nullable field to test with
-    @pytest.mark.xfail
-    def test_bad_nullable_fields(self) -> None:
-        class NullableField:
-            @property
-            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {
-                    "version": 1,
-                    "data": {
-                        Field(
-                            "foo", nullable=True, dtype=ty.int64
-                        ): make_input_array()
-                    },
-                }
-
-        nullable = NullableField()
-
-        with pytest.raises(
-            NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with nullable fields are unsupported",  # noqa: E501
-        ):
-            as_logical_array(nullable)
-
-    # Trying to create a nullable array, even a fake one, explodes
-    @pytest.mark.skip
-    def test_bad_nullable_array(self) -> None:
-        class NullableStore:
-            @property
-            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {
-                    "version": 1,
-                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
-                }
-
-        nullable = NullableStore()
-
-        with pytest.raises(
-            NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with nullable stores are unsupported",  # noqa: E501
-        ):
-            as_logical_array(nullable)
 
 
 if __name__ == "__main__":
