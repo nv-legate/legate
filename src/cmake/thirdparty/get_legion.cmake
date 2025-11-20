@@ -95,11 +95,7 @@ calls into NCCL either directly or through some other Legate library.
   legate_maybe_override_package_info(Legion "${legate_LEGION_BRANCH}")
   legate_load_overrideable_package_info(Legion version git_repo git_branch shallow
                                         exclude_from_all)
-  if(CPM_Legion_SOURCE)
-    # The user is supplying a source directory, relax version requirement.
-    message(STATUS "User supplied Legion source directory")
-    set(version "0.0.0")
-  endif()
+
   find_or_configure_legion_impl("${version}" "${git_repo}" "${git_branch}" "${shallow}"
                                 "${exclude_from_all}")
 

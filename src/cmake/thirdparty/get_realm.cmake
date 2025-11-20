@@ -13,12 +13,6 @@ function(find_or_configure_realm)
   legate_load_overrideable_package_info(Realm version git_repo git_tag git_shallow
                                         exclude_from_all)
 
-  if(CPM_Realm_SOURCE)
-    # The user is supplying a source directory, relax version requirement.
-    message(STATUS "User supplied Realm source directory")
-    set(version "0.0.0")
-  endif()
-
   option(REALM_ENABLE_NVTX "Enabled NVTX" OFF)
   option(REALM_ENABLE_PAPI "Use PAPI for thread profiling" OFF)
   option(REALM_ENABLE_PREALM "Build Realm with support for PRealm" OFF)
