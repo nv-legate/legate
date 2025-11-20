@@ -1339,8 +1339,9 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
       std::set<Legion::FieldID> fields;
       inst.get_fields(fields);
       logger().error() << fmt::format(
-        "  Instance {:x} of size {} covering elements {} {}",
+        "  Instance {:x} at address {:x} of size {} covering elements {} {}",
         inst.get_instance_id(),
+        inst.get_pointer_constraint().ptr,
         fmt::group_digits(inst.get_instance_size()),
         Legion::Mapping::Utilities::to_string(runtime, ctx, inst.get_instance_domain()),
         (fields.size() > 1 ? "of multiple stores" : ""));
