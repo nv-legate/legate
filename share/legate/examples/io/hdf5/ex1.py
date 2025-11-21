@@ -115,14 +115,14 @@ def process_hdf5_files(filename: Path, n_rank: int) -> None:
         with h5py.File(fname, "r") as hdf_file:
             for dset in traverse_datasets(hdf_file):
                 data = from_file(fname, dataset_name=dset)
-                total_size += data.size
+                total_size += data.size * data.type.size
 
     elapsed_time_s = (time(units="us") - start_time_us) / 10**6
     throughput = total_size / (
         elapsed_time_s * (2**20)
     )  # Throughput in MB/sec
 
-    print(f"Total Data Read: {total_size}")
+    print(f"Total Data Read: {total_size} bytes")
     print(f"Total Turnaround Time (seconds): {elapsed_time_s}")
     print(f"Throughput (MB/sec): {throughput}")
 
