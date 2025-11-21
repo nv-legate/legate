@@ -20,11 +20,10 @@
 
 {% set legate_version = environ.get('LEGATE_VERSION') %}
 {% set default_env_var = legate_version or '' %}
-
 {% if 'dev' in environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var) %}
-    {% set legate_prof_version = (environ.get('LEGATE_GIT_DESCRIBE_TAG') ~ environ.get('LEGATE_GIT_DESCRIBE_NUMBER', default_env_var)).lstrip('v') %}
+    {% set legate_version = (environ.get('LEGATE_GIT_DESCRIBE_TAG') ~ environ.get('LEGATE_GIT_DESCRIBE_NUMBER', default_env_var)).lstrip('v') %}
 {% else %}
-    {% set legate_prof_version = environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var).lstrip('v') %}
+    {% set legate_version = environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var).lstrip('v') %}
 {% endif %}
 
 {% set git_rev = environ.get('LEGION_GIT_REV', 'master') %}
@@ -41,7 +40,7 @@ invalid_yaml_missing_cuda_version: LEGATE_CUDA_VERSION must be set
 
 package:
   name: {{ name|lower }}
-  version: {{ legate_prof_version }}
+  version: {{ legate_version }}
 
 source:
   git_url: {{ git_url }}

@@ -4,17 +4,33 @@
 ---
 {% set name = "legate" %}
 
+{% if build_number is not defined %}
+    {% set build_number = environ.get('LEGATE_GIT_DESCRIBE_NUMBER', '0') %}
+{% endif %}
+
 {% set legate_version = environ.get('LEGATE_VERSION') %}
-{% set git_describe_hash = environ.get('GIT_DESCRIBE_HASH', '0') %}
+{% set default_env_var = legate_version or '' %}
+{% if 'dev' in environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var) %}
+    {% set legate_version = (environ.get('LEGATE_GIT_DESCRIBE_TAG') ~ environ.get('LEGATE_GIT_DESCRIBE_NUMBER', default_env_var)).lstrip('v') %}
+{% else %}
+    {% set legate_version = environ.get('LEGATE_GIT_DESCRIBE_TAG', default_env_var).lstrip('v') %}
+{% endif %}
+
+{% set git_describe_hash='_' + environ.get('LEGATE_GIT_DESCRIBE_HASH', '0') %}
+{% set py_version=environ.get('CONDA_PY', 36) %}
+{% set network_tag='_ucx' %}
+{% set cpu_gpu_tag='_cpu' %}
+{% set upload_tag='' %}
+{% set debug_tag='' %}
 
 package:
   name: {{ name|lower }}
   version: {{ legate_version }}
 
 build:
-  number: 0
+  number: {{ build_number }}
   skip: true  # [not linux]
-  string: {{ git_describe_hash }}
+  string: "py{{ py_version }}{{ network_tag }}{{ cpu_gpu_tag }}{{ debug_tag }}{{ upload_tag }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}"
 
 requirements:
   build: []
