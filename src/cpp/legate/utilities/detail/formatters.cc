@@ -67,7 +67,7 @@ format_context::iterator formatter<legate::detail::Variable>::format(
 format_context::iterator formatter<legate::VariantCode>::format(legate::VariantCode variant,
                                                                 format_context& ctx) const
 {
-  string_view name = "(unknown)";
+  std::string_view name = "(unknown)";
 
   switch (variant) {
 #define LEGATE_VARIANT_CASE(x) \
@@ -78,7 +78,7 @@ format_context::iterator formatter<legate::VariantCode>::format(legate::VariantC
 #undef LEGATE_VARIANT_CASE
   }
 
-  return formatter<string_view>::format(name, ctx);
+  return formatter<std::string_view>::format(name, ctx);
 }
 
 format_context::iterator formatter<legate::LocalTaskID>::format(legate::LocalTaskID id,
@@ -108,7 +108,7 @@ format_context::iterator formatter<legate::GlobalRedopID>::format(legate::Global
 format_context::iterator formatter<legate::ImageComputationHint>::format(
   legate::ImageComputationHint hint, format_context& ctx) const
 {
-  string_view name = "(unknown)";
+  std::string_view name = "(unknown)";
   switch (hint) {
 #define LEGATE_HINT_CASE(x) \
   case legate::ImageComputationHint::x: name = LEGATE_STRINGIZE_(x); break
@@ -118,13 +118,13 @@ format_context::iterator formatter<legate::ImageComputationHint>::format(
 #undef LEGATE_HINT_CASE
   };
 
-  return formatter<string_view>::format(name, ctx);
+  return formatter<std::string_view>::format(name, ctx);
 }
 
 format_context::iterator formatter<legate::detail::ZStringView>::format(
   const legate::detail::ZStringView& sv, format_context& ctx) const
 {
-  return formatter<string_view>::format(sv.as_string_view(), ctx);
+  return formatter<std::string_view>::format(sv.as_string_view(), ctx);
 }
 
 format_context::iterator formatter<legate::detail::LogicalRegionField>::format(
@@ -166,7 +166,7 @@ format_context::iterator formatter<legate::mapping::detail::Machine>::format(
 format_context::iterator formatter<legate::mapping::TaskTarget>::format(
   legate::mapping::TaskTarget target, format_context& ctx) const
 {
-  string_view name = "(unknown)";
+  std::string_view name = "(unknown)";
   switch (target) {
 #define LEGATE_TASK_TARGET_CASE(x) \
   case legate::mapping::TaskTarget::x: name = #x; break
@@ -175,13 +175,13 @@ format_context::iterator formatter<legate::mapping::TaskTarget>::format(
     LEGATE_TASK_TARGET_CASE(OMP);
 #undef LEGATE_TASK_TARGET_CASE
   }
-  return formatter<string_view>::format(name, ctx);
+  return formatter<std::string_view>::format(name, ctx);
 }
 
 format_context::iterator formatter<legate::mapping::StoreTarget>::format(
   legate::mapping::StoreTarget target, format_context& ctx) const
 {
-  string_view name = "(unknown)";
+  std::string_view name = "(unknown)";
   switch (target) {
 #define LEGATE_STORE_TARGET_CASE(x) \
   case legate::mapping::StoreTarget::x: name = #x; break
@@ -191,7 +191,7 @@ format_context::iterator formatter<legate::mapping::StoreTarget>::format(
     LEGATE_STORE_TARGET_CASE(SOCKETMEM);
 #undef LEGATE_STORE_TARGET_CASE
   }
-  return formatter<string_view>::format(name, ctx);
+  return formatter<std::string_view>::format(name, ctx);
 }
 
 format_context::iterator formatter<legate::detail::LogicalTask>::format(
@@ -209,7 +209,7 @@ format_context::iterator formatter<legate::detail::LogicalStore>::format(
 format_context::iterator formatter<legion_privilege_mode_t>::format(legion_privilege_mode_t mode,
                                                                     format_context& ctx) const
 {
-  string_view name = "(unknown)";
+  std::string_view name = "(unknown)";
   switch (mode) {
 #define LEGION_PRIVILEGE_MODE_CASE(x) \
   case x: name = #x; break
@@ -225,13 +225,13 @@ format_context::iterator formatter<legion_privilege_mode_t>::format(legion_privi
     LEGION_PRIVILEGE_MODE_CASE(LEGION_DISCARD_OUTPUT_MASK);
 #undef LEGION_PRIVILEGE_MODE_CASE
   }
-  return formatter<string_view>::format(name, ctx);
+  return formatter<std::string_view>::format(name, ctx);
 }
 
 format_context::iterator formatter<legate::StreamingMode>::format(legate::StreamingMode mode,
                                                                   format_context& ctx) const
 {
-  string_view name = "(unknown)";
+  std::string_view name = "(unknown)";
   switch (mode) {
 #define LEGATE_STREAMING_MODE_CASE(x) \
   case legate::StreamingMode::x: name = #x; break
@@ -240,7 +240,7 @@ format_context::iterator formatter<legate::StreamingMode>::format(legate::Stream
     LEGATE_STREAMING_MODE_CASE(STRICT);
 #undef LEGATE_STREAMING_MODE_CASE
   }
-  return formatter<string_view>::format(name, ctx);
+  return formatter<std::string_view>::format(name, ctx);
 }
 
 }  // namespace fmt

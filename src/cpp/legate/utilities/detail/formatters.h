@@ -119,7 +119,7 @@ struct formatter<legate::detail::Variable> : formatter<std::string> {
 };
 
 template <>
-struct formatter<legate::VariantCode> : formatter<string_view> {
+struct formatter<legate::VariantCode> : formatter<std::string_view> {
   format_context::iterator format(legate::VariantCode variant, format_context& ctx) const;
 };
 
@@ -144,12 +144,12 @@ struct formatter<legate::GlobalRedopID> : formatter<std::underlying_type_t<legat
 };
 
 template <>
-struct formatter<legate::ImageComputationHint> : formatter<string_view> {
+struct formatter<legate::ImageComputationHint> : formatter<std::string_view> {
   format_context::iterator format(legate::ImageComputationHint hint, format_context& ctx) const;
 };
 
 template <>
-struct formatter<legate::detail::ZStringView> : formatter<string_view> {
+struct formatter<legate::detail::ZStringView> : formatter<std::string_view> {
   format_context::iterator format(const legate::detail::ZStringView& sv, format_context& ctx) const;
 };
 
