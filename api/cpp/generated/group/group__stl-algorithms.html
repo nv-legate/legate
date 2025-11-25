@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>stl-algorithms &#8212; NVIDIA legate (25.12.00.dev30+g86b085641)</title>
+    <title>stl-algorithms &#8212; NVIDIA legate (25.12.00.dev34+g4dec8a54a)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=7d7b00eb"></script>
+    <script src="../../../../_static/documentation_options.js?v=47c96e87"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev30+g86b085641) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev30+g86b085641) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev34+g4dec8a54a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev34+g4dec8a54a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev30+g86b085641)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev34+g4dec8a54a)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev30+g86b085641) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev30+g86b085641) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev34+g4dec8a54a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev34+g4dec8a54a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev30+g86b085641)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev34+g4dec8a54a)</p>
   
 </a>
 
@@ -914,7 +914,7 @@ SPDX-License-Identifier: Apache-2.0
 <span class="k">auto</span><span class="w"> </span><span class="n">elems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elements_of</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">iota</span><span class="p">(</span><span class="n">elems</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">elems</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">});</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">());</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">{});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">result_span</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
 <span class="k">auto</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">value</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">result_span</span><span class="p">();</span>
@@ -929,7 +929,7 @@ SPDX-License-Identifier: Apache-2.0
 <span class="c1">// Reduce by rows</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">init</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">});</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">()));</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">{}));</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result_span</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
 <span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">rank</span><span class="p">(),</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 <span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
@@ -942,7 +942,7 @@ SPDX-License-Identifier: Apache-2.0
 <span class="c1">// Reduce by columns</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">init</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">});</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">columns_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">()));</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">columns_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">{}));</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result_span</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
 <span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">rank</span><span class="p">(),</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
 <span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
@@ -1005,7 +1005,7 @@ SPDX-License-Identifier: Apache-2.0
 <span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">});</span>
 <span class="n">stl</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">input</span><span class="p">),</span><span class="w">  </span><span class="c1">//</span>
 <span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">result</span><span class="p">),</span>
-<span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">Square</span><span class="p">()));</span>
+<span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">Square</span><span class="p">{}));</span>
 
 <span class="c1">// `result` now contains the squares of the elements:</span>
 <span class="c1">//     [[0   1   4   9]</span>
