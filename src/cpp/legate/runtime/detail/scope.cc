@@ -7,27 +7,91 @@
 #include <legate/runtime/detail/scope.h>
 
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/formatters.h>
 
 #include <utility>
 
 namespace legate::detail {
+namespace {
+
+/**
+ * @brief Helper function to throw an exception and clear the runtime's scheduling
+ * window.
+ *
+ * @param msg Exception message.
+ */
+[[noreturn]] void flush_window_and_throw(const char* const msg)
+{
+  auto&& rt = Runtime::get_runtime();
+  rt.clear_scheduling_window(Runtime::PrivateKey{});
+  throw TracedException<std::invalid_argument>{msg};
+}
+
+/**
+ * @brief Check for nested scopes with different parallel policies and throw an
+ * exception if the nesting is not valid.
+ *
+ * @param outer_policy Outer scope's ParallelPolicy
+ * @param inner_policy Inner scope's ParallelPolicy
+ *
+ * Following rules apply when outer policy is different from inner
+ *
+ * Outer Scope Mode | Inner Scope Mode | Behavior
+ * NONE             | RELAXED or STRICT| mapping fence + flush
+ * RELAXED          | STRICT           | mapping fence + flush
+ * RELAXED          | NONE             | throw exception
+ * STRICT           | RELAXED or NONE  | throw exception
+ * STRICT           | STRICT           | throw exception because something else in
+ *                                       ParallelPolicy changed, e.g., OD factor
+ */
+void check_policy_change_at_scope_begin(const ParallelPolicy& outer_policy,
+                                        const ParallelPolicy& inner_policy)
+{
+  // precondition
+  LEGATE_ASSERT(outer_policy != inner_policy);
+
+  const char* const inner_off_err =
+    "cannot nest a non-streaming scope inside a STRICT streaming scope";
+
+  const char* const inner_relaxed_err =
+    "cannot nest a RELAXED streaming scope inside a STRICT streaming scope";
+
+  const char* const inner_diff_err =
+    "cannot change the parallel policy when nesting a scope inside a STRICT streaming scope";
+
+  switch (outer_policy.streaming_mode()) {
+    case legate::StreamingMode::OFF: [[fallthrough]];
+    case legate::StreamingMode::RELAXED: return;  // no need to check inner.
+    case legate::StreamingMode::STRICT:
+      switch (inner_policy.streaming_mode()) {
+        case legate::StreamingMode::OFF: flush_window_and_throw(inner_off_err);
+        case legate::StreamingMode::RELAXED: flush_window_and_throw(inner_relaxed_err);
+        case legate::StreamingMode::STRICT:
+          flush_window_and_throw(inner_diff_err);  // error because inner_policy != outer_policy
+      }
+      LEGATE_ABORT(
+        fmt::format("Invalid inner_policy streaming mode: {}", inner_policy.streaming_mode()));
+  }
+
+  LEGATE_ABORT(
+    fmt::format("Invalid outer_policy streaming mode: {}", outer_policy.streaming_mode()));
+}
+
+}  // namespace
 
 void Scope::trigger_exchange_side_effects(const ParallelPolicy& new_policy,
                                           Scope::ChangeKind change_kind) const
 {
-  // TODO(amberhassaan): with the introduction of StreamingMode, we could allow the
-  // case where STRICT scope is nested inside a RELAXED scope. In such a case,
-  // don't issue a mapping fence and don't flush the window.
+  // TODO(amberhassaan): The equality check below can be relaxed to a compatibility
+  // check in the future because we may add more attributes and flags to
+  // ParallelPolicy that may not affect Streaming and may not need to flush or
+  // issue a mapping fence.
   if (new_policy != parallel_policy_) {
     auto&& rt = Runtime::get_runtime();
 
     switch (change_kind) {
       case ChangeKind::SCOPE_BEG:
-        if (parallel_policy_.streaming() && !new_policy.streaming()) {
-          rt.clear_scheduling_window(Runtime::PrivateKey{});
-          throw TracedException<std::invalid_argument>{
-            "cannot nest non-streaming scope inside a streaming scope"};
-        }
+        check_policy_change_at_scope_begin(parallel_policy_, new_policy);
         break;
       case ChangeKind::SCOPE_END: break;
     }

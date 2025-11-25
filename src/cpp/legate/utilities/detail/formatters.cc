@@ -228,4 +228,19 @@ format_context::iterator formatter<legion_privilege_mode_t>::format(legion_privi
   return formatter<string_view>::format(name, ctx);
 }
 
+format_context::iterator formatter<legate::StreamingMode>::format(legate::StreamingMode mode,
+                                                                  format_context& ctx) const
+{
+  string_view name = "(unknown)";
+  switch (mode) {
+#define LEGATE_STREAMING_MODE_CASE(x) \
+  case legate::StreamingMode::x: name = #x; break
+    LEGATE_STREAMING_MODE_CASE(OFF);
+    LEGATE_STREAMING_MODE_CASE(RELAXED);
+    LEGATE_STREAMING_MODE_CASE(STRICT);
+#undef LEGATE_STREAMING_MODE_CASE
+  }
+  return formatter<string_view>::format(name, ctx);
+}
+
 }  // namespace fmt

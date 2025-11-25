@@ -35,6 +35,8 @@ enum class GlobalRedopID : int /* A.K.A. Legion::ReductionOpID */;
 
 enum class ImageComputationHint : std::uint8_t;
 
+enum class StreamingMode : std::uint8_t;
+
 class Type;
 class TaskInfo;
 
@@ -222,5 +224,10 @@ struct formatter<legion_privilege_mode_t> : formatter<std::string_view> {
 
 template <>
 struct formatter<Legion::DomainPoint> : ostream_formatter {};
+
+template <>
+struct formatter<legate::StreamingMode> : formatter<std::string_view> {
+  format_context::iterator format(legate::StreamingMode mode, format_context& ctx) const;
+};
 
 }  // namespace fmt

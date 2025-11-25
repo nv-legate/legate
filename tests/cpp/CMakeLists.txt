@@ -286,6 +286,7 @@ set(with_runtime_SRC
     unit/dlpack/from_dlpack/unversioned.cc
     unit/dlpack/to_dlpack/to_dlpack.cc
     unit/streaming/extract_streamable_prefix.cc
+    unit/streaming/nested_scopes.cc
     unit/streaming/process_streaming_run.cc
     unit/task/physical_task.cc
     # experimental
