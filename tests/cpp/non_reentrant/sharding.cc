@@ -460,7 +460,7 @@ TEST_F(LegateShardingDeathTest, ShardInvalidRange)
 
   ASSERT_EXIT(static_cast<void>(sharding_functor->shard(
                 Legion::DomainPoint{Legion::Point<1>{total_points}}, domain, total_shards)),
-              ::testing::KilledBySignal(SIGABRT),
+              ::testing::KilledBySignal{SIGABRT},
               "shard_id < total_shards");
 }
 
@@ -470,7 +470,7 @@ TEST_F(LegateShardingDeathTest, FindByInvalidProjection)
 
   ASSERT_EXIT(
     static_cast<void>(legate::detail::find_sharding_functor_by_projection_functor(invalid_proj_id)),
-    ::testing::KilledBySignal(SIGABRT),
+    ::testing::KilledBySignal{SIGABRT},
     "it != functor_id_table.end\\(\\)");
 }
 
@@ -479,7 +479,7 @@ TEST_F(LegateShardingDeathTest, CreateWithDuplicateID)
   // Create a sharding functor with the same ID, the first creation is inside the SetUp() function
   ASSERT_EXIT(legate::detail::create_sharding_functor_using_projection(
                 LEGATE_SHARDING_ID, IDENTITY_PROJ_ID, RANGE),
-              ::testing::KilledBySignal(SIGABRT),
+              ::testing::KilledBySignal{SIGABRT},
               "");
 }
 

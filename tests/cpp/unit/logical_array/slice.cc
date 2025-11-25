@@ -48,60 +48,60 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(true, false),
     ::testing::Values(
       std::make_tuple(1,
-                      legate::Slice(0, 0),
+                      legate::Slice{0, 0},
                       std::vector<std::uint64_t>(
                         {1, 0, 3, 4})) /*  start = stop = 0, slice [OPEN, STOP) of dim i */,
       std::make_tuple(
-        2, legate::Slice(), std::vector<std::uint64_t>({1, 2, 3, 4})) /* full slice */,
+        2, legate::Slice{}, std::vector<std::uint64_t>({1, 2, 3, 4})) /* full slice */,
       std::make_tuple(
         2,
-        legate::Slice(-2, -1),
+        legate::Slice{-2, -1},
         std::vector<std::uint64_t>(
           {1, 2, 1, 4})) /* start < stop < 0, 0 < start + extent[dim] < stop + extent[dim] */,
       std::make_tuple(2,
-                      legate::Slice(-9, -2),
+                      legate::Slice{-9, -2},
                       std::vector<std::uint64_t>(
                         {1, 2, 1, 4})) /* start < stop < 0, start + extent[dim] < 0 < stop +
                                           extent[dim], stop - start > extent[dim] */
       ,
       std::make_tuple(
         0,
-        legate::Slice(-1, 0),
+        legate::Slice{-1, 0},
         std::vector<std::uint64_t>({0, 2, 3, 4})) /* start < 0 = stop, start + extent[dim] = 0 */,
       std::make_tuple(
         0,
-        legate::Slice(0, -1),
+        legate::Slice{0, -1},
         std::vector<std::uint64_t>({0, 2, 3, 4})) /* start = 0 > stop, stop + extent[dim] = 0 */,
       std::make_tuple(1,
-                      legate::Slice(-2, 1),
+                      legate::Slice{-2, 1},
                       std::vector<std::uint64_t>(
                         {1, 1, 3, 4})) /* start < 0 < stop, start + extent[dim] < stop */,
       std::make_tuple(3,
-                      legate::Slice(-2, 2),
+                      legate::Slice{-2, 2},
                       std::vector<std::uint64_t>(
                         {1, 2, 3, 0})) /* start < 0 < stop, start + extent[dim] = stop */,
       std::make_tuple(2,
-                      legate::Slice(-1, 1),
+                      legate::Slice{-1, 1},
                       std::vector<std::uint64_t>(
                         {1, 2, 0, 4})) /* start < 0 < stop, start + extent[dim] > stop */,
       std::make_tuple(
-        2, legate::Slice(1, 3), std::vector<std::uint64_t>({1, 2, 2, 4})) /* 0 < start < stop */,
+        2, legate::Slice{1, 3}, std::vector<std::uint64_t>({1, 2, 2, 4})) /* 0 < start < stop */,
       std::make_tuple(
-        1, legate::Slice(10, 8), std::vector<std::uint64_t>({1, 0, 3, 4})) /* start > stop > 0 */,
+        1, legate::Slice{10, 8}, std::vector<std::uint64_t>({1, 0, 3, 4})) /* start > stop > 0 */,
       std::make_tuple(
         2,
-        legate::Slice(1, -1),
+        legate::Slice{1, -1},
         std::vector<std::uint64_t>({1, 2, 1, 4})) /* start > 0 > stop, start < top + extent[dim] */,
       std::make_tuple(
         2,
-        legate::Slice(1, -2),
+        legate::Slice{1, -2},
         std::vector<std::uint64_t>({1, 2, 0, 4})) /* start > 0 > stop, start = top + extent[dim] */,
       std::make_tuple(
         2,
-        legate::Slice(2, -3),
+        legate::Slice{2, -3},
         std::vector<std::uint64_t>({1, 2, 0, 4})) /* start > 0 > stop, start > top + extent[dim] */,
       std::make_tuple(2,
-                      legate::Slice(-8, -10),
+                      legate::Slice{-8, -10},
                       std::vector<std::uint64_t>({1, 2, 0, 4})) /* 0 > start > stop */)));
 
 // TODO(joyshennv): issue #1481
@@ -126,10 +126,10 @@ INSTANTIATE_TEST_SUITE_P(
                       logical_array_util_test::list_type(),
                       legate::string_type()),
     ::testing::Values(true, false),
-    ::testing::Values(std::make_tuple(2, legate::Slice(1, 4)) /* stop > extent[dim] */,
-                      std::make_tuple(2, legate::Slice(-3, 4)) /* stop > extent[dim] */,
-                      std::make_tuple(1, legate::Slice(3, 4)) /* satrt = extent[dim] */,
-                      std::make_tuple(1, legate::Slice(4, 5)) /* satrt > extent[dim] */)));
+    ::testing::Values(std::make_tuple(2, legate::Slice{1, 4}) /* stop > extent[dim] */,
+                      std::make_tuple(2, legate::Slice{-3, 4}) /* stop > extent[dim] */,
+                      std::make_tuple(1, legate::Slice{3, 4}) /* satrt = extent[dim] */,
+                      std::make_tuple(1, legate::Slice{4, 5}) /* satrt > extent[dim] */)));
 
 INSTANTIATE_TEST_SUITE_P(
   LogicalArraySliceUnit,
@@ -139,8 +139,8 @@ INSTANTIATE_TEST_SUITE_P(
                                        logical_array_util_test::list_type(),
                                        legate::string_type()),
                      ::testing::Values(true, false),
-                     ::testing::Values(std::make_tuple(4, legate::Slice(1, 3)),
-                                       std::make_tuple(-2, legate::Slice(1, 2)))));
+                     ::testing::Values(std::make_tuple(4, legate::Slice{1, 3}),
+                                       std::make_tuple(-2, legate::Slice{1, 2}))));
 
 void test_negative_slice(
   const legate::Type& type, bool bound, bool nullable, std::int32_t dim, const legate::Slice& slice)
@@ -170,7 +170,7 @@ TEST_P(NonSliceTest, Basic)
 {
   const auto [type, nullable] = GetParam();
 
-  test_negative_slice(type, false, nullable, 0, legate::Slice());
+  test_negative_slice(type, false, nullable, 0, legate::Slice{});
 }
 
 TEST_P(NegativeSliceDimTest, Basic)

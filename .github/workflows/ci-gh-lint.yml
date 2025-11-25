@@ -114,7 +114,7 @@ jobs:
             steps.get-week-hash.outputs.week }}-${{ env.CACHE_NUMBER }}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
-          CACHE_NUMBER: 6
+          CACHE_NUMBER: 1
         id: cache
 
       - name: Update environment
@@ -141,6 +141,9 @@ jobs:
             nccl=2.27 \
             libcufile-dev \
             llvm-openmp \
+            llvmdev \
+            clangdev \
+            zlib \
             pybind11
         if: steps.cache.outputs.cache-hit != 'true'
 
@@ -174,7 +177,11 @@ jobs:
             --with-cc=clang \
             --with-cxx=clang++ \
             --CUDAFLAGS "-O3" \
+            -- \
+            -Dlegate_TIDY_PLUGINS_REQUIRED=ON \
             || { cat configure.log; exit 1; }
+
+            cat configure.log
 
       - name: Run clang-tidy
         run: |

@@ -7,6 +7,9 @@
 #include <legate/task/detail/task_signature.h>
 #include <legate/task/task_signature.h>
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include <gtest/gtest.h>
 
 #include <unit/task_signature/nargs_util.h>
@@ -60,9 +63,17 @@ INSTANTIATE_TEST_SUITE_P(TaskSignatureNargsUnit,
 
 TEST_P(Invalid, InvalidRange)
 {
-  const auto [lo, hi] = GetParam();
+  // Captured structured bindings are a C++20 extension.
+  LEGATE_CPP_VERSION_TODO(20, "Use structured bindigs below");
+  const auto lo     = GetParam().first;
+  const auto hi     = GetParam().second;
+  const auto lambda = [&] { std::ignore = legate::detail::TaskSignature::Nargs{lo, hi}; };
 
-  ASSERT_THROW(legate::detail::TaskSignature::Nargs(lo, hi), std::out_of_range);
+  ASSERT_THAT(
+    lambda,
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr(fmt::format(
+      "Invalid argument range: {}, upper bound must be strictly greater than the lower bound",
+      GetParam()))));
 }
 
 }  // namespace test_task_signature_nargs

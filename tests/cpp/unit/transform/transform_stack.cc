@@ -67,7 +67,7 @@ TEST_F(TransformStackUnitDeathTest, DoublePop)
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     ASSERT_EXIT(static_cast<void>(transform->pop()),
-                ::testing::KilledBySignal(SIGABRT),
+                ::testing::KilledBySignal{SIGABRT},
                 "transform_ != nullptr");
   }
 }
@@ -78,7 +78,7 @@ TEST_F(TransformStackUnitDeathTest, NegativePop)
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     ASSERT_EXIT(static_cast<void>(transform->pop()),
-                ::testing::KilledBySignal(SIGABRT),
+                ::testing::KilledBySignal{SIGABRT},
                 "transform_ != nullptr");
   }
 }

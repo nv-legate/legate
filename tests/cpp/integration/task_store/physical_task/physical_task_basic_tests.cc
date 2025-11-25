@@ -222,42 +222,42 @@ class PhysicalTaskAPIReduction : public PhysicalTaskAPI {};
 INSTANTIATE_TEST_SUITE_P(TaskStoreTests,
                          PhysicalTaskNormalInput,
                          ::testing::Combine(::testing::Values(false, true),
-                                            ::testing::Values(legate::Shape({5, 5}),
-                                                              legate::Shape({3, 3}),
-                                                              legate::Shape({2, 4}))));
+                                            ::testing::Values(legate::Shape{{5, 5}},
+                                                              legate::Shape{{3, 3}},
+                                                              legate::Shape{{2, 4}})));
 
 INSTANTIATE_TEST_SUITE_P(TaskStoreTests,
                          PhysicalTaskNormalOutput,
                          ::testing::Combine(::testing::Values(false, true),
-                                            ::testing::Values(legate::Shape({5, 5}),
-                                                              legate::Shape({3, 3}),
-                                                              legate::Shape({2, 4}))));
+                                            ::testing::Values(legate::Shape{{5, 5}},
+                                                              legate::Shape{{3, 3}},
+                                                              legate::Shape{{2, 4}})));
 
 INSTANTIATE_TEST_SUITE_P(TaskStoreTests,
                          PhysicalTaskNormalReduction,
                          ::testing::Combine(::testing::Values(false, true),
-                                            ::testing::Values(legate::Shape({5, 5}),
-                                                              legate::Shape({3, 3}),
-                                                              legate::Shape({2, 4}))));
+                                            ::testing::Values(legate::Shape{{5, 5}},
+                                                              legate::Shape{{3, 3}},
+                                                              legate::Shape{{2, 4}})));
 
 // API test instantiations - just test that the API calls work
 INSTANTIATE_TEST_SUITE_P(TaskStoreTests,
                          PhysicalTaskAPIInput,
                          ::testing::Combine(::testing::Values(false, true),
-                                            ::testing::Values(legate::Shape({2, 2}),
-                                                              legate::Shape({3, 3}))));
+                                            ::testing::Values(legate::Shape{{2, 2}},
+                                                              legate::Shape{{3, 3}})));
 
 INSTANTIATE_TEST_SUITE_P(TaskStoreTests,
                          PhysicalTaskAPIOutput,
                          ::testing::Combine(::testing::Values(false, true),
-                                            ::testing::Values(legate::Shape({2, 2}),
-                                                              legate::Shape({3, 3}))));
+                                            ::testing::Values(legate::Shape{{2, 2}},
+                                                              legate::Shape{{3, 3}})));
 
 INSTANTIATE_TEST_SUITE_P(TaskStoreTests,
                          PhysicalTaskAPIReduction,
                          ::testing::Combine(::testing::Values(false, true),
-                                            ::testing::Values(legate::Shape({2, 2}),
-                                                              legate::Shape({3, 3}))));
+                                            ::testing::Values(legate::Shape{{2, 2}},
+                                                              legate::Shape{{3, 3}})));
 
 // Test implementations
 TEST_P(PhysicalTaskNormalInput, Basic)

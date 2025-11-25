@@ -56,7 +56,10 @@ TEST(ZipShortestUnit, IterateOneShort)
     EXPECT_EQ(wi, static_cast<float>(count));
     EXPECT_EQ(xi, count);
     EXPECT_EQ(yi, static_cast<double>(count));
-    EXPECT_EQ(zi, pair_type(count, static_cast<double>(count)));
+
+    const auto expected = pair_type{count, static_cast<double>(count)};
+
+    EXPECT_EQ(zi, expected);
   }
   EXPECT_EQ(count, expect_count);
 
@@ -66,7 +69,10 @@ TEST(ZipShortestUnit, IterateOneShort)
     EXPECT_EQ(wi, static_cast<float>(count));
     EXPECT_EQ(xi, count);
     EXPECT_EQ(yi, static_cast<double>(count));
-    EXPECT_EQ(zi, pair_type(count, static_cast<double>(count)));
+
+    const auto expected = pair_type{count, static_cast<double>(count)};
+
+    EXPECT_EQ(zi, expected);
   }
   EXPECT_EQ(count, expect_count);
 }

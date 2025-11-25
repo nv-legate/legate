@@ -131,14 +131,14 @@ class ReduceAccessorFn {
       const auto INIT_VALUE = static_cast<T>(10);
 
       ASSERT_EXIT(
-        reduce_acc.reduce(exceeded_bounds, static_cast<T>(10)), ::testing::ExitedWithCode(1), "");
+        reduce_acc.reduce(exceeded_bounds, static_cast<T>(10)), ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(reduce_acc.reduce((op_shape.hi + legate::Point<DIM>::ONES()), INIT_VALUE),
-                  ::testing::ExitedWithCode(1),
+                  ::testing::ExitedWithCode{1},
                   "");
       ASSERT_EXIT(
-        reduce_acc_bounds.reduce(exceeded_bounds, INIT_VALUE), ::testing::ExitedWithCode(1), "");
+        reduce_acc_bounds.reduce(exceeded_bounds, INIT_VALUE), ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(reduce_acc_bounds.reduce((bounds.hi + legate::Point<DIM>::ONES()), INIT_VALUE),
-                  ::testing::ExitedWithCode(1),
+                  ::testing::ExitedWithCode{1},
                   "");
     }
   }
@@ -332,7 +332,7 @@ TEST_F(PhysicalStoreReduceAccessorUnit, InvalidDim)
       store
         .reduce_accessor<legate::SumReduction<std::int16_t>, true, INVALID_DIM, VALIDATE_TYPE>()),
     std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM, std::int16_t>({0, 0, 0}, {0, 0, 0});
+  auto bounds = legate::Rect<INVALID_DIM, std::int16_t>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(

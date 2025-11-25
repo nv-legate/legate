@@ -442,72 +442,63 @@ class ManualTaskPromoteReduction : public ManualTaskPromote {};
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskNormalInput,
-  ::testing::Combine(::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::INPUT)),
-                     ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
-                                                       legate::Shape({3, 3}),
-                                                       std::vector<std::uint64_t>({2, 2})),
-                                       std::make_tuple(legate::Shape({3, 3}),
-                                                       legate::Shape({1}),
-                                                       std::vector<std::uint64_t>({3, 3})),
-                                       std::make_tuple(legate::Shape({3, 3}),
-                                                       legate::Shape({2, 2}),
-                                                       std::vector<std::uint64_t>({2, 2})))));
+  ::testing::Combine(
+    ::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
+    ::testing::Range(0, manual_task_method_count().at(TaskDataMode::INPUT)),
+    ::testing::Values(
+      std::make_tuple(legate::Shape{5, 5}, legate::Shape{3, 3}, std::vector<std::uint64_t>(2, 2)),
+      std::make_tuple(legate::Shape{3, 3}, legate::Shape{1}, std::vector<std::uint64_t>({3, 3})),
+      std::make_tuple(
+        legate::Shape{3, 3}, legate::Shape{2, 2}, std::vector<std::uint64_t>({2, 2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskNormalOutput,
-  ::testing::Combine(::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::OUTPUT)),
-                     ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
-                                                       legate::Shape({3, 3}),
-                                                       std::vector<std::uint64_t>({2, 2})),
-                                       std::make_tuple(legate::Shape({3, 3}),
-                                                       legate::Shape({1}),
-                                                       std::vector<std::uint64_t>({3, 3})),
-                                       std::make_tuple(legate::Shape({3, 3}),
-                                                       legate::Shape({2, 2}),
-                                                       std::vector<std::uint64_t>({2, 2})))));
+  ::testing::Combine(
+    ::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
+    ::testing::Range(0, manual_task_method_count().at(TaskDataMode::OUTPUT)),
+    ::testing::Values(
+      std::make_tuple(legate::Shape{5, 5}, legate::Shape{3, 3}, std::vector<std::uint64_t>({2, 2})),
+      std::make_tuple(legate::Shape{3, 3}, legate::Shape{1}, std::vector<std::uint64_t>({3, 3})),
+      std::make_tuple(
+        legate::Shape{3, 3}, legate::Shape{2, 2}, std::vector<std::uint64_t>({2, 2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskNormalReduction,
-  ::testing::Combine(::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::REDUCTION)),
-                     ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
-                                                       legate::Shape({3, 3}),
-                                                       std::vector<std::uint64_t>({2, 2})),
-                                       std::make_tuple(legate::Shape({3, 3}),
-                                                       legate::Shape({1}),
-                                                       std::vector<std::uint64_t>({3, 3})),
-                                       std::make_tuple(legate::Shape({3, 3}),
-                                                       legate::Shape({2, 2}),
-                                                       std::vector<std::uint64_t>({2, 2})))));
+  ::testing::Combine(
+    ::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
+    ::testing::Range(0, manual_task_method_count().at(TaskDataMode::REDUCTION)),
+    ::testing::Values(
+      std::make_tuple(legate::Shape{5, 5}, legate::Shape{3, 3}, std::vector<std::uint64_t>({2, 2})),
+      std::make_tuple(legate::Shape{3, 3}, legate::Shape{1}, std::vector<std::uint64_t>({3, 3})),
+      std::make_tuple(
+        legate::Shape{3, 3}, legate::Shape{2, 2}, std::vector<std::uint64_t>({2, 2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskUnboundInput,
   ::testing::Combine(::testing::Range(0, 1),
-                     ::testing::Values(std::make_tuple(2, legate::Shape({3, 5})))));
+                     ::testing::Values(std::make_tuple(2, legate::Shape{3, 5}))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskUnboundOutput,
   ::testing::Combine(::testing::Range(0, 1),
-                     ::testing::Values(std::make_tuple(2, legate::Shape({3, 5})))));
+                     ::testing::Values(std::make_tuple(2, legate::Shape{3, 5}))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskUnboundReduction,
   ::testing::Combine(::testing::Range(0, 2),
-                     ::testing::Values(std::make_tuple(2, legate::Shape({3, 5})))));
+                     ::testing::Values(std::make_tuple(2, legate::Shape{3, 5}))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskScalarInput,
   ::testing::Combine(
     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::INPUT)),
-    ::testing::Values(std::make_tuple(legate::Shape{{3, 5}}, std::vector<std::uint64_t>({2})),
+    ::testing::Values(std::make_tuple(legate::Shape{3, 5}, std::vector<std::uint64_t>({2})),
                       std::make_tuple(legate::Shape{2}, std::vector<std::uint64_t>({2})))));
 
 INSTANTIATE_TEST_SUITE_P(
@@ -515,7 +506,7 @@ INSTANTIATE_TEST_SUITE_P(
   ManualTaskScalarOutput,
   ::testing::Combine(
     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::OUTPUT)),
-    ::testing::Values(std::make_tuple(legate::Shape{{3, 5}}, std::vector<std::uint64_t>({2})),
+    ::testing::Values(std::make_tuple(legate::Shape{3, 5}, std::vector<std::uint64_t>({2})),
                       std::make_tuple(legate::Shape{2}, std::vector<std::uint64_t>({2})))));
 
 INSTANTIATE_TEST_SUITE_P(
@@ -523,15 +514,15 @@ INSTANTIATE_TEST_SUITE_P(
   ManualTaskScalarReduction,
   ::testing::Combine(
     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::REDUCTION)),
-    ::testing::Values(std::make_tuple(legate::Shape{{3, 5}}, std::vector<std::uint64_t>({2})),
+    ::testing::Values(std::make_tuple(legate::Shape{3, 5}, std::vector<std::uint64_t>({2})),
                       std::make_tuple(legate::Shape{2}, std::vector<std::uint64_t>({2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskPromoteInput,
   ::testing::Combine(::testing::Range(0, manual_task_method_count().at(TaskDataMode::INPUT)),
-                     ::testing::Values(std::make_tuple(legate::Shape({3}),
-                                                       legate::Shape({1}),
+                     ::testing::Values(std::make_tuple(legate::Shape{3},
+                                                       legate::Shape{1},
                                                        std::vector<std::uint64_t>({3, 1}),
                                                        std::vector<std::int32_t>({1, 1})))));
 
@@ -539,8 +530,8 @@ INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskPromoteOutput,
   ::testing::Combine(::testing::Range(0, manual_task_method_count().at(TaskDataMode::OUTPUT)),
-                     ::testing::Values(std::make_tuple(legate::Shape({3}),
-                                                       legate::Shape({1}),
+                     ::testing::Values(std::make_tuple(legate::Shape{3},
+                                                       legate::Shape{1},
                                                        std::vector<std::uint64_t>({3, 1}),
                                                        std::vector<std::int32_t>({1, 1})))));
 
@@ -548,8 +539,8 @@ INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskPromoteReduction,
   ::testing::Combine(::testing::Range(0, manual_task_method_count().at(TaskDataMode::REDUCTION)),
-                     ::testing::Values(std::make_tuple(legate::Shape({3}),
-                                                       legate::Shape({1}),
+                     ::testing::Values(std::make_tuple(legate::Shape{3},
+                                                       legate::Shape{1},
                                                        std::vector<std::uint64_t>({3, 1}),
                                                        std::vector<std::int32_t>({1, 1})))));
 

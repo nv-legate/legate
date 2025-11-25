@@ -66,8 +66,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 INSTANTIATE_TEST_SUITE_P(ShapeUnit,
                          EmptyShapeTest,
-                         ::testing::Values(legate::Shape(),
-                                           legate::Shape{},
+                         ::testing::Values(legate::Shape{},
                                            legate::Shape{std::vector<std::uint64_t>{}}));
 
 }  // namespace

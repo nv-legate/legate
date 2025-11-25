@@ -190,7 +190,7 @@ class UnVersionedUnsupportedInput : public FromDLPackUnVersionedUnit,
 
 INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitUnsupportedTyped,
                          UnVersionedUnsupportedInput,
-                         ::testing::ValuesIn(dlpack_common::GetUnsupportedDataTypeCodes()));
+                         ::testing::ValuesIn(dlpack_common::get_unsupported_data_type_codes()));
 
 TEST_P(UnVersionedUnsupportedInput, Basic)
 {
@@ -305,15 +305,15 @@ class FromDLPackUnVersionedUnsupportedDeviceInput
 
 INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitDeviceType,
                          FromDLPackUnVersionedCPUInput,
-                         ::testing::ValuesIn(dlpack_common::GetCPUDeviceTypes()));
+                         ::testing::ValuesIn(dlpack_common::get_cpu_device_types()));
 
 INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitDeviceType,
                          FromDLPackUnVersionedGPUInput,
-                         ::testing::ValuesIn(dlpack_common::GetGPUDeviceTypes()));
+                         ::testing::ValuesIn(dlpack_common::get_gpu_device_types()));
 
 INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitDeviceType,
                          FromDLPackUnVersionedUnsupportedDeviceInput,
-                         ::testing::ValuesIn(dlpack_common::GetUnsupportedDeviceTypes()));
+                         ::testing::ValuesIn(dlpack_common::get_unsupported_device_types()));
 
 TEST_P(FromDLPackUnVersionedCPUInput, Basic)
 {

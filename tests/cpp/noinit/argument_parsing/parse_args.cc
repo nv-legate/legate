@@ -224,7 +224,7 @@ using ParseArgsDeathTest = ParseArgsUnit;
 TEST_F(ParseArgsDeathTest, InvalidArgs)
 {
   ASSERT_EXIT(static_cast<void>(legate::detail::parse_args({"dummy", "--invalid-args"})),
-              ::testing::ExitedWithCode(EXIT_FAILURE),
+              ::testing::ExitedWithCode{EXIT_FAILURE},
               ::testing::HasSubstr("== LEGATE ERROR: Unknown argument: --invalid-args"));
 }
 

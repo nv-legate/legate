@@ -211,7 +211,7 @@ TEST_F(LogicalRegionFieldDeathTest, AttachAfterMap)
   // failed with attach after mapping is already done
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     ASSERT_EXIT(region_field->attach(physical_region, allocation),
-                ::testing::KilledBySignal(SIGABRT),
+                ::testing::KilledBySignal{SIGABRT},
                 ::testing::HasSubstr("!physical_state_->physical_region().exists()"));
   }
 }
@@ -286,7 +286,7 @@ TEST_F(LogicalRegionFieldDeathTest, AttachFailsOnChild)
   // logical_region_filed with parent is not allowed to attach
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     ASSERT_EXIT(child.attach(physical_region, allocation),
-                ::testing::KilledBySignal(SIGABRT),
+                ::testing::KilledBySignal{SIGABRT},
                 ::testing::HasSubstr("!parent().has_value()"));
   }
 }

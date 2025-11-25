@@ -60,7 +60,7 @@ TEST_F(TerminateHandlerDeathTest, Basic)
   using exn_ty        = std::runtime_error;
 
   ASSERT_EXIT(throw_and_terminate<exn_ty>(text),
-              ::testing::KilledBySignal(SIGABRT),
+              ::testing::KilledBySignal{SIGABRT},
               MatchesStackTrace(
                 std::array{std::cref(typeid(exn_ty))}, std::array{text}, std::array{__FILE__}));
 }
@@ -73,7 +73,7 @@ TEST_F(TerminateHandlerDeathTest, TracedException)
 
   ASSERT_EXIT(
     throw_and_terminate<exn_ty>(text),
-    ::testing::KilledBySignal(SIGABRT),
+    ::testing::KilledBySignal{SIGABRT},
     MatchesStackTrace(
       std::array{std::cref(typeid(inner_exn_ty))}, std::array{text}, std::array{__FILE__}));
 }
@@ -83,7 +83,7 @@ TEST_F(TerminateHandlerDeathTest, NonStdException)
   constexpr auto text = "An exception";
   using exn_ty        = NonStdException;
 
-  ASSERT_EXIT(throw_and_terminate<exn_ty>(text), ::testing::KilledBySignal(SIGABRT), "");
+  ASSERT_EXIT(throw_and_terminate<exn_ty>(text), ::testing::KilledBySignal{SIGABRT}, "");
 }
 
 TEST_F(TerminateHandlerDeathTest, Nested)
@@ -105,7 +105,7 @@ TEST_F(TerminateHandlerDeathTest, Nested)
     [](const std::exception& exn) -> const std::type_info& { return typeid(exn); });
 
   EXPECT_EXIT(throw_nested_exception([](const auto&) { std::terminate(); }),
-              ::testing::KilledBySignal(SIGABRT),
+              ::testing::KilledBySignal{SIGABRT},
               ::testing::AllOf(
                 ::testing::HasSubstr("LEGATE ERROR: #0 std::runtime_error: BOTTOM"),
                 ::testing::HasSubstr(fmt::format("LEGATE ERROR: #1 {}: TOP", nested_type_id))));
@@ -130,7 +130,7 @@ TEST_F(TerminateHandlerDeathTest, NestedNonStdException)
     [](const std::exception& exn) -> const std::type_info& { return typeid(exn); });
 
   EXPECT_EXIT(throw_nested_exception([](const auto&) { std::terminate(); }),
-              ::testing::KilledBySignal(SIGABRT),
+              ::testing::KilledBySignal{SIGABRT},
               ::testing::AllOf(
                 ::testing::HasSubstr(fmt::format("LEGATE ERROR: #0 {}: TOP", nested_type_id))));
 }

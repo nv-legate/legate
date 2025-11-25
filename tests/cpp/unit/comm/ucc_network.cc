@@ -96,10 +96,10 @@ class MockOOBForUCC final : public OOBAllgather {
                 const std::vector<int>& mapping_table,
                 std::shared_ptr<SharedMemoryAllgather> shared_memory_allgather,
                 bool should_fail_allgather = false)
-    : rank_(rank),
+    : rank_{rank},
       mapping_table_(mapping_table),
-      shared_memory_allgather_(std::move(shared_memory_allgather)),
-      should_fail_allgather_(should_fail_allgather)
+      shared_memory_allgather_{std::move(shared_memory_allgather)},
+      should_fail_allgather_{should_fail_allgather}
   {
   }
 

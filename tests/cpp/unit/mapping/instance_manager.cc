@@ -119,7 +119,7 @@ TEST_F(InstanceMgrNegativeTest, FindInstanceWithWrongRedop)
 {
   legate::mapping::detail::ReductionInstanceSet instance_set;
   auto region                = create_test_region();
-  const auto& instance       = Legion::Mapping::PhysicalInstance();
+  const auto& instance       = Legion::Mapping::PhysicalInstance{};
   constexpr auto test_redop  = legate::GlobalRedopID{1};
   constexpr auto wrong_redop = legate::GlobalRedopID{2};
   const auto& policy         = legate::mapping::InstanceMappingPolicy{};

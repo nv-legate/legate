@@ -103,7 +103,7 @@ class VerificationTask : public legate::LegateTask<VerificationTask> {
       //    `.with_throws_exception(true)` when configuring TASK_CONFIG above.
       // This is necessary because Legate executes tasks asynchronously,
       // and proper exception handling ensures errors are propagated correctly.
-      throw legate::detail::TracedException<std::runtime_error>("Verification failed");
+      throw legate::detail::TracedException<std::runtime_error>{"Verification failed"};
     }
     std::cout << "Verification passed \n";
   }

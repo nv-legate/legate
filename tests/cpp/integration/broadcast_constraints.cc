@@ -71,9 +71,9 @@ void test_normal_store()
     auto store = runtime->create_store(legate::Shape{extents}, legate::int64());
     auto task  = runtime->create_task(context, TesterTask::TASK_CONFIG.task_id());
     auto part  = task.add_output(store);
-    task.add_scalar_arg(legate::Scalar(EXT_LARGE));
-    task.add_scalar_arg(legate::Scalar(dims));
-    task.add_scalar_arg(legate::Scalar(false));
+    task.add_scalar_arg(legate::Scalar{EXT_LARGE});
+    task.add_scalar_arg(legate::Scalar{dims});
+    task.add_scalar_arg(legate::Scalar{false});
     if (omit_dims_in_broadcast) {
       task.add_constraint(legate::broadcast(part));
     } else {
@@ -112,9 +112,9 @@ void test_promoted_store()
 
     auto task = runtime->create_task(context, TesterTask::TASK_CONFIG.task_id());
     auto part = task.add_input(store.promote(2, EXT_LARGE));
-    task.add_scalar_arg(legate::Scalar(EXT_LARGE));
-    task.add_scalar_arg(legate::Scalar(std::vector<std::uint32_t>{dim}));
-    task.add_scalar_arg(legate::Scalar(true));
+    task.add_scalar_arg(legate::Scalar{EXT_LARGE});
+    task.add_scalar_arg(legate::Scalar{std::vector<std::uint32_t>{dim}});
+    task.add_scalar_arg(legate::Scalar{true});
     task.add_constraint(legate::broadcast(part, legate::tuple<std::uint32_t>{dim}));
     runtime->submit(std::move(task));
   };

@@ -168,7 +168,7 @@ void transform_doxy_snippets()
     auto result = stl::create_store({3, 4}, std::int64_t{0});
     stl::transform(stl::rows_of(input),  //
                    stl::rows_of(result),
-                   stl::elementwise(Square()));
+                   stl::elementwise(Square{}));
 
     // `result` now contains the squares of the elements:
     //     [[0   1   4   9]

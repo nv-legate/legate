@@ -96,6 +96,8 @@ IncludeCategories:
     Priority:        65
   - Regex:           '^("|<)H5.*'
     Priority:        66
+  - Regex:           '^("|<)clang.*'
+    Priority:        67
   - Regex:           '^("|<)(gtest|gmock).*'
     Priority:        90
   - Regex:           '^".*'

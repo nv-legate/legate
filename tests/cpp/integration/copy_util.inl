@@ -103,7 +103,8 @@ legate::Point<DIM> delinearize(std::size_t index,
 template <std::int32_t IND_DIM, std::int32_t DATA_DIM>
 struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DATA_DIM>> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{FILL_INDIRECT_TASK + IND_DIM * TEST_MAX_DIM + DATA_DIM}};
+    legate::TaskConfig{
+      legate::LocalTaskID{FILL_INDIRECT_TASK + (IND_DIM * TEST_MAX_DIM) + DATA_DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -111,8 +112,8 @@ struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DA
     auto ind_shape  = output.shape<IND_DIM>();
     auto data_shape = context.scalar(0).value<legate::Rect<DATA_DIM>>();
 
-    std::size_t data_vol = data_shape.volume();
-    std::size_t ind_vol  = ind_shape.volume();
+    const std::size_t data_vol = data_shape.volume();
+    const std::size_t ind_vol  = ind_shape.volume();
 
     if (0 == ind_vol) {
       return;
@@ -146,7 +147,7 @@ void fill_indirect(legate::Library library,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task_id = legate::LocalTaskID{FILL_INDIRECT_TASK + ind.dim() * TEST_MAX_DIM + data.dim()};
+  auto task_id = legate::LocalTaskID{FILL_INDIRECT_TASK + (ind.dim() * TEST_MAX_DIM) + data.dim()};
   auto task    = runtime->create_task(library, task_id);
   auto part    = task.declare_partition();
   task.add_output(ind, part);

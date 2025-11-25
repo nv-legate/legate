@@ -131,12 +131,12 @@ class WriteAccessorFn {
       const auto write_acc          = store.write_accessor<T, DIM>();
       const auto write_acc_bounds   = store.write_accessor<T, DIM>(bounds);
 
-      ASSERT_EXIT(write_acc[exceeded_bounds], ::testing::ExitedWithCode(1), "");
+      ASSERT_EXIT(write_acc[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(
-        write_acc[(op_shape.hi + legate::Point<DIM>::ONES())], ::testing::ExitedWithCode(1), "");
-      ASSERT_EXIT(write_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode(1), "");
+        write_acc[(op_shape.hi + legate::Point<DIM>::ONES())], ::testing::ExitedWithCode{1}, "");
+      ASSERT_EXIT(write_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(write_acc_bounds[(bounds.hi + legate::Point<DIM>::ONES())],
-                  ::testing::ExitedWithCode(1),
+                  ::testing::ExitedWithCode{1},
                   "");
     }
   }
@@ -329,7 +329,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, InvalidDim)
 
   ASSERT_THROW(static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM, std::int16_t>({0, 0, 0}, {0, 0, 0});
+  auto bounds = legate::Rect<INVALID_DIM, std::int16_t>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),

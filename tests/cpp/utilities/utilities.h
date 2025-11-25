@@ -29,13 +29,16 @@ class DefaultFixture : public ::testing::Test {
 template <typename Config>
 class RegisterOnceFixture : public DefaultFixture {
  public:
-  void SetUp() override
+  // clang-tidy thinks this won't get instantiated if it isn't called, but it is called. Not
+  // really sure what should be done to "fix" this.
+  void SetUp() override  // NOLINT(portability-template-virtual-member-function)
   {
     DefaultFixture::SetUp();
-    auto* runtime = legate::Runtime::get_runtime();
-    auto created  = false;
-    auto library  = runtime->find_or_create_library(
+    auto* const runtime = legate::Runtime::get_runtime();
+    auto created        = false;
+    const auto library  = runtime->find_or_create_library(
       Config::LIBRARY_NAME, legate::ResourceConfig{}, nullptr, {}, &created);
+
     if (created) {
       Config::registration_callback(library);
     }

@@ -141,7 +141,7 @@ void test_alignment_and_broadcast()
     auto part1 = task.add_output(store1);
     auto part2 = task.add_output(store2);
 
-    task.add_scalar_arg(legate::Scalar(extents[0]));
+    task.add_scalar_arg(legate::Scalar{extents[0]});
 
     /// [adding-mixed-constraints]
     task.add_constraints(
@@ -200,7 +200,7 @@ void test_alignment_transformed()
   launch_tester(store1, store2.project(1, 5));
   launch_tester(store1.promote(1, 10), store3.project(2, 0));
   launch_tester(store1.promote(1, 10).promote(2, 2), store3);
-  launch_tester(store1.promote(1, 5), store2.slice(1, legate::Slice(3, 8)));
+  launch_tester(store1.promote(1, 5), store2.slice(1, legate::Slice{3, 8}));
   launch_tester(store1.promote(0, 10).transpose({1, 0}), store2);
   launch_tester(store1.delinearize(0, {10, 10}), store4);
   launch_tester(store4.transpose({1, 0}).promote(0, 1), store4.promote(0, 1));

@@ -52,7 +52,7 @@ TEST_F(Constraint, Variable)
   ASSERT_FALSE(part.to_string().empty());
 
   // Test equal
-  auto part1(part);
+  auto part1{part};
   auto part1_imp = part1.impl();
   ASSERT_EQ(*part_imp, *part1_imp);
   auto part2     = task.declare_partition();
@@ -186,8 +186,8 @@ TEST_F(Constraint, BloatConstraint)
   auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
   auto source  = runtime->create_store({5}, legate::int64());
   auto bloated = runtime->create_store({5}, legate::int64());
-  runtime->issue_fill(source, legate::Scalar(std::int64_t{0}));
-  runtime->issue_fill(bloated, legate::Scalar(std::int64_t{0}));
+  runtime->issue_fill(source, legate::Scalar{std::int64_t{0}});
+  runtime->issue_fill(bloated, legate::Scalar{std::int64_t{0}});
   auto part_source  = task.add_input(source);
   auto part_bloated = task.add_input(bloated);
 

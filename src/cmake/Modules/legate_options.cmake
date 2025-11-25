@@ -98,6 +98,7 @@ legate_option(legate_USE_MPI LEGATE_USE_MPI "Enable MPI support" OFF)
 legate_option(legate_FAKE_FATBINS_FOR_TIDY LEGATE_FAKE_FATBINS_FOR_TIDY
               "Emit stub fatbins for clang-tidy (avoids building CUDA/Legion during tidy)"
               OFF)
+option(legate_TIDY_PLUGINS_REQUIRED "Force the clang-tidy plugins to be built" OFF)
 # Realm/GASNet controls
 legate_option(legate_USE_GASNET LEGATE_USE_GASNET "Enable GASNet via Realm" OFF)
 legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)

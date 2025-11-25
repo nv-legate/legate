@@ -50,8 +50,8 @@ INSTANTIATE_TEST_SUITE_P(CreatePhysicalArrayUnit,
 INSTANTIATE_TEST_SUITE_P(
   CreatePhysicalArrayUnit,
   BoundPhysicalArrayTest,
-  ::testing::Values(std::make_tuple(legate::Shape{2, 4}, true, legate::Rect<2>({0, 0}, {1, 3})),
-                    std::make_tuple(legate::Shape{2, 4}, false, legate::Rect<2>({0, 0}, {1, 3}))));
+  ::testing::Values(std::make_tuple(legate::Shape{2, 4}, true, legate::Rect<2>{{0, 0}, {1, 3}}),
+                    std::make_tuple(legate::Shape{2, 4}, false, legate::Rect<2>{{0, 0}, {1, 3}})));
 
 /*static*/ void UnboundArrayTask::cpu_variant(legate::TaskContext context)
 {
@@ -62,7 +62,7 @@ INSTANTIATE_TEST_SUITE_P(
 
   ASSERT_TRUE(store.is_unbound_store());
   ASSERT_NO_THROW(static_cast<void>(
-    store.create_output_buffer<std::uint32_t, DIM>(legate::Point<DIM>(10), true)));
+    store.create_output_buffer<std::uint32_t, DIM>(legate::Point<DIM>{10}, true)));
 
   ASSERT_EQ(array.nullable(), nullable);
   ASSERT_EQ(array.dim(), DIM);
@@ -83,7 +83,7 @@ INSTANTIATE_TEST_SUITE_P(
 
     ASSERT_TRUE(null_mask.is_unbound_store());
     ASSERT_NO_THROW(
-      static_cast<void>(null_mask.create_output_buffer<bool, DIM>(legate::Point<DIM>(10), true)));
+      static_cast<void>(null_mask.create_output_buffer<bool, DIM>(legate::Point<DIM>{10}, true)));
     ASSERT_THROW(static_cast<void>(null_mask.shape<DIM>()), std::invalid_argument);
     ASSERT_THROW(static_cast<void>(null_mask.domain()), std::invalid_argument);
     ASSERT_EQ(null_mask.type(), legate::bool_());

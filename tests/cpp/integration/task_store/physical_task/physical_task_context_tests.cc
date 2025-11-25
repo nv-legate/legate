@@ -123,7 +123,7 @@ TEST_F(PhysicalTaskContextTests, PhysicalTaskMixedInputOutput)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(ContextTestConfig::LIBRARY_NAME);
 
-  auto shape               = legate::Shape({2, 2});
+  auto shape               = legate::Shape{{2, 2}};
   const auto initial_value = static_cast<std::int32_t>(42);
   auto logical_store       = runtime->create_store(shape, legate::int32());
   runtime->issue_fill(logical_store, legate::Scalar{initial_value});
@@ -178,7 +178,7 @@ TEST_F(TaskStoreTests, PhysicalTaskInlineExecution)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto shape               = legate::Shape({2, 2});
+  auto shape               = legate::Shape{{2, 2}};
   const auto initial_value = static_cast<std::int32_t>(100);
   auto logical_store       = runtime->create_store(shape, legate::int32());
   runtime->issue_fill(logical_store, legate::Scalar{initial_value});

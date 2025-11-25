@@ -31,7 +31,7 @@ void test_reduce_1D()
   auto elems = stl::elements_of(store);
   std::iota(elems.begin(), elems.end(), std::int64_t{1});
 
-  auto result = stl::reduce(store, init, std::plus<>());
+  auto result = stl::reduce(store, init, std::plus<>{});
 
   auto result_span = stl::as_mdspan(result);
   auto&& value     = result_span();
@@ -55,7 +55,7 @@ void test_reduce_2D()
   // Reduce by rows
   {
     auto init        = stl::create_store({4}, std::int64_t{0});
-    auto result      = stl::reduce(stl::rows_of(store), init, stl::elementwise(std::plus<>()));
+    auto result      = stl::reduce(stl::rows_of(store), init, stl::elementwise(std::plus<>{}));
     auto result_span = stl::as_mdspan(result);
     EXPECT_EQ(result_span.rank(), 1);
     EXPECT_EQ(result_span.extent(0), 4);
@@ -68,7 +68,7 @@ void test_reduce_2D()
   // Reduce by columns
   {
     auto init        = stl::create_store({3}, std::int64_t{0});
-    auto result      = stl::reduce(stl::columns_of(store), init, stl::elementwise(std::plus<>()));
+    auto result      = stl::reduce(stl::columns_of(store), init, stl::elementwise(std::plus<>{}));
     auto result_span = stl::as_mdspan(result);
     EXPECT_EQ(result_span.rank(), 1);
     EXPECT_EQ(result_span.extent(0), 3);
@@ -89,7 +89,7 @@ void reduce_doxy_snippets()
     auto elems = stl::elements_of(store);
     std::iota(elems.begin(), elems.end(), std::int64_t{1});
 
-    auto result = stl::reduce(store, init, std::plus<>());
+    auto result = stl::reduce(store, init, std::plus<>{});
 
     auto result_span = stl::as_mdspan(result);
     auto&& value     = result_span();
@@ -107,7 +107,7 @@ void reduce_doxy_snippets()
     // Reduce by rows
     {
       auto init        = stl::create_store({4}, std::int64_t{0});
-      auto result      = stl::reduce(stl::rows_of(store), init, stl::elementwise(std::plus<>()));
+      auto result      = stl::reduce(stl::rows_of(store), init, stl::elementwise(std::plus<>{}));
       auto result_span = stl::as_mdspan(result);
       EXPECT_EQ(result_span.rank(), 1);
       EXPECT_EQ(result_span.extent(0), 4);
@@ -120,7 +120,7 @@ void reduce_doxy_snippets()
     // Reduce by columns
     {
       auto init        = stl::create_store({3}, std::int64_t{0});
-      auto result      = stl::reduce(stl::columns_of(store), init, stl::elementwise(std::plus<>()));
+      auto result      = stl::reduce(stl::columns_of(store), init, stl::elementwise(std::plus<>{}));
       auto result_span = stl::as_mdspan(result);
       EXPECT_EQ(result_span.rank(), 1);
       EXPECT_EQ(result_span.extent(0), 3);

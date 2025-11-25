@@ -52,7 +52,7 @@ PYBIND11_MODULE(hello_world_pybind11, m)
            HelloWorld
     )pbdoc";
 
-  py::class_<hello_world::HelloWorld>(m, "HelloWorld")
+  py::class_<hello_world::HelloWorld>{m, "HelloWorld"}
     .def(py::init<>())
     .def_property_readonly_static(
       "TASK_ID",

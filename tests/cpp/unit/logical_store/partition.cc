@@ -96,9 +96,9 @@ INSTANTIATE_TEST_SUITE_P(
   ::testing::Combine(
     ::testing::Values(legate::Shape{9, 8}),
     ::testing::Values(std::vector<std::uint64_t>({2, 4})),
-    ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>({0, 0}), legate::Shape{2, 4}),
-                      std::make_tuple(legate::tuple<std::uint64_t>({2, 1}), legate::Shape{2, 4}),
-                      std::make_tuple(legate::tuple<std::uint64_t>({4, 1}), legate::Shape{1, 4}))));
+    ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>{{0, 0}}, legate::Shape{2, 4}),
+                      std::make_tuple(legate::tuple<std::uint64_t>{{2, 1}}, legate::Shape{2, 4}),
+                      std::make_tuple(legate::tuple<std::uint64_t>{{4, 1}}, legate::Shape{1, 4}))));
 
 INSTANTIATE_TEST_SUITE_P(
   LogicalStorePartitionUnit,
@@ -107,19 +107,19 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(legate::Shape{6, 9}),
     ::testing::Values(std::vector<std::uint64_t>({2, 4})),
     ::testing::Values(std::vector<std::uint64_t>({2, 5})),
-    ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>({0, 0}), legate::Shape{2, 4}),
-                      std::make_tuple(legate::tuple<std::uint64_t>({1, 2}), legate::Shape{2, 1}),
-                      std::make_tuple(legate::tuple<std::uint64_t>({0, 4}), legate::Shape{2, 0}),
-                      std::make_tuple(legate::tuple<std::uint64_t>({1, 3}), legate::Shape{2, 0}))));
+    ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>{{0, 0}}, legate::Shape{2, 4}),
+                      std::make_tuple(legate::tuple<std::uint64_t>{{1, 2}}, legate::Shape{2, 1}),
+                      std::make_tuple(legate::tuple<std::uint64_t>{{0, 4}}, legate::Shape{2, 0}),
+                      std::make_tuple(legate::tuple<std::uint64_t>{{1, 3}}, legate::Shape{2, 0}))));
 
 INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                          NegativeColorTest,
                          ::testing::Combine(::testing::Values(legate::Shape{4, 8}),
-                                            ::testing::Values(legate::tuple<std::uint64_t>({1}),
-                                                              legate::tuple<std::uint64_t>({4, 2}),
-                                                              legate::tuple<std::uint64_t>({5, 2}),
-                                                              legate::tuple<std::uint64_t>({5,
-                                                                                            0}))));
+                                            ::testing::Values(legate::tuple<std::uint64_t>{1},
+                                                              legate::tuple<std::uint64_t>{{4, 2}},
+                                                              legate::tuple<std::uint64_t>{{5, 2}},
+                                                              legate::tuple<std::uint64_t>{
+                                                                {5, 0}})));
 
 }  // namespace
 

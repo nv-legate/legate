@@ -34,19 +34,19 @@ INSTANTIATE_TEST_SUITE_P(
   ::testing::Values(std::make_tuple(legate::Shape{1, 2, 4},
                                     legate::struct_type(true, legate::int64(), legate::float32()),
                                     true,
-                                    legate::Rect<3>({0, 0, 0}, {0, 1, 3})),
+                                    legate::Rect<3>{{0, 0, 0}, {0, 1, 3}}),
                     std::make_tuple(legate::Shape{4, 5, 6},
                                     legate::struct_type(true, legate::int64(), legate::float32()),
                                     true,
-                                    legate::Rect<3>({0, 0, 0}, {3, 4, 5})),
+                                    legate::Rect<3>{{0, 0, 0}, {3, 4, 5}}),
                     std::make_tuple(legate::Shape{4, 5, 6},
                                     legate::struct_type(false, legate::int64(), legate::float32()),
                                     true,
-                                    legate::Rect<3>({0, 0, 0}, {3, 4, 5})),
+                                    legate::Rect<3>{{0, 0, 0}, {3, 4, 5}}),
                     std::make_tuple(legate::Shape{1, 2, 4},
                                     legate::struct_type(false, legate::int64(), legate::float32()),
                                     true,
-                                    legate::Rect<3>({0, 0, 0}, {0, 1, 3}))));
+                                    legate::Rect<3>{{0, 0, 0}, {0, 1, 3}})));
 
 }  // namespace
 

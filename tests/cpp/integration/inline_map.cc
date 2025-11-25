@@ -27,7 +27,7 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
     auto output = context.output(0).data();
     auto shape  = output.shape<1>();
     auto acc    = output.read_write_accessor<std::int64_t, 1>(shape);
-    for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
+    for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
       acc[*it] += 1;
     }
   }
@@ -59,7 +59,7 @@ void test_inline_map_region_and_slice()
   auto root_ls = runtime->create_store(legate::Shape{5}, legate::int64());
   auto root_ps = root_ls.get_physical_store();
   EXPECT_FALSE(root_ps.is_future());
-  auto slice_ls = root_ls.slice(0, legate::Slice(1));
+  auto slice_ls = root_ls.slice(0, legate::Slice{1});
   auto slice_ps = slice_ls.get_physical_store();
   EXPECT_FALSE(slice_ps.is_future());
   auto root_acc  = root_ps.write_accessor<std::int64_t, 1>();

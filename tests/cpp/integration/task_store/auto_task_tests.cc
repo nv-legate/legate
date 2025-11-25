@@ -268,21 +268,21 @@ INSTANTIATE_TEST_SUITE_P(
   AutoTaskNormalInput,
   ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::NORMAL_STORE)),
                      ::testing::Range(0, auto_task_method_count().at(TaskDataMode::INPUT)),
-                     ::testing::Values(legate::Shape({3, 3, 2}))));
+                     ::testing::Values(legate::Shape{{3, 3, 2}})));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskNormalOutput,
   ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::NORMAL_STORE)),
                      ::testing::Range(0, auto_task_method_count().at(TaskDataMode::OUTPUT)),
-                     ::testing::Values(legate::Shape({3, 3, 2}))));
+                     ::testing::Values(legate::Shape{{3, 3, 2}})));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskNormalReduction,
   ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::NORMAL_STORE)),
                      ::testing::Range(0, auto_task_method_count().at(TaskDataMode::REDUCTION)),
-                     ::testing::Values(legate::Shape({3, 3, 2}))));
+                     ::testing::Values(legate::Shape{{3, 3, 2}})));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,

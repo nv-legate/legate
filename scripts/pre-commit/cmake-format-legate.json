@@ -271,6 +271,15 @@
                     "nargs": 2
                 }
             },
+            "legate_create_clang_tidy_plugin": {
+                "kwargs": {
+                    "SOURCES": "+"
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
             "legate_create_cython_modules": {
                 "kwargs": {
                     "SOURCES": "+"

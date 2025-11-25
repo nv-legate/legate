@@ -337,7 +337,7 @@ class ToDLPackUnitUnsupportedLegateTypeInput
 
 INSTANTIATE_TEST_SUITE_P(ToDLPackUnitLegateType,
                          ToDLPackUnitUnsupportedLegateTypeInput,
-                         ::testing::ValuesIn(dlpack_common::GetUnsupportedLegateTypes()));
+                         ::testing::ValuesIn(dlpack_common::get_unsupported_legate_types()));
 
 TEST_P(ToDLPackUnitUnsupportedLegateTypeInput, Unsupported)
 {

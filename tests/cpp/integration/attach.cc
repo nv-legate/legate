@@ -35,13 +35,13 @@ void increment_physical_store(const legate::PhysicalStore& store, std::int32_t d
   if (dim == 1) {
     auto shape = store.shape<1>();
     auto acc   = store.read_write_accessor<std::int64_t, 1, true>(shape);
-    for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
+    for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
       acc[*it] += 1;
     }
   } else {
     auto shape = store.shape<2>();
     auto acc   = store.read_write_accessor<std::int64_t, 2, true>(shape);
-    for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
       acc[*it] += 1;
     }
   }
@@ -242,7 +242,7 @@ TEST_F(Attach, Negative)
   auto runtime = legate::Runtime::get_runtime();
 
   // Trying to detach a store without an attachment
-  EXPECT_THROW(runtime->create_store(legate::Scalar(42)).detach(), std::invalid_argument);
+  EXPECT_THROW(runtime->create_store(legate::Scalar{42}).detach(), std::invalid_argument);
   EXPECT_THROW(runtime->create_store(SHAPE_2D(), legate::int64()).detach(), std::invalid_argument);
   EXPECT_THROW(runtime->create_store(legate::int64()).detach(), std::invalid_argument);
 

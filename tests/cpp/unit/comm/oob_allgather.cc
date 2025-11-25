@@ -64,7 +64,7 @@ TEST_F(OOBAllgatherTest, MPIAllgather)
   std::vector<int> recv_data(2);
   void* req = nullptr;
 
-  std::thread t([&]() {
+  std::thread t{[&]() {
     const int send_data = 42;
 
     const ucc_status_t status =
@@ -75,9 +75,9 @@ TEST_F(OOBAllgatherTest, MPIAllgather)
     // Test that test and free also return UCC_OK
     EXPECT_EQ(mpi_oob_allgather->test(req), UCC_OK);
     EXPECT_EQ(mpi_oob_allgather->free(req), UCC_OK);
-  });
+  }};
 
-  std::thread t2([&]() {
+  std::thread t2{[&]() {
     const int send_data = 54;
 
     const ucc_status_t status =
@@ -88,7 +88,7 @@ TEST_F(OOBAllgatherTest, MPIAllgather)
     // Test that test and free also return UCC_OK
     EXPECT_EQ(mpi_oob_allgather2->test(req), UCC_OK);
     EXPECT_EQ(mpi_oob_allgather2->free(req), UCC_OK);
-  });
+  }};
 
   t.join();
   t2.join();

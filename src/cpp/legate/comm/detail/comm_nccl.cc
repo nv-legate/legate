@@ -117,7 +117,7 @@ class Init : public detail::LegionTask<Init> {
     auto ts_init_stop = std::chrono::high_resolution_clock::now();
 
     constexpr double MILLI = 1000.0;
-    auto time_init = std::chrono::duration<double>(ts_init_stop - ts_init_start).count() * MILLI;
+    auto time_init = std::chrono::duration<double>{ts_init_stop - ts_init_start}.count() * MILLI;
 
     if (0 == rank_id) {
       legate::detail::log_legate().debug() << "NCCL initialization took " << time_init << " ms";

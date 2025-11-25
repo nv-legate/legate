@@ -205,7 +205,7 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 
     if (context.get_task_index() == context.get_launch_domain().lo()) {
       logger().debug() << "== Image received in task 0 ==";
-      for (legate::Domain::DomainPointIterator it(range); it; ++it) {
+      for (legate::Domain::DomainPointIterator it{range}; it; ++it) {
         logger().debug() << "  " << *it;
       }
       logger().debug() << "==============================";
@@ -306,7 +306,7 @@ void test_image(const std::vector<std::uint64_t>& domain_extents,
   auto range      = runtime->create_store(legate::Shape{range_extents}, legate::int64());
 
   initialize_function(func, range_extents, ascending);
-  runtime->issue_fill(range, legate::Scalar(std::int64_t{1234}));
+  runtime->issue_fill(range, legate::Scalar{std::int64_t{1234}});
   check_image(func, range, hint);
   runtime->issue_execution_fence();
   check_image(func, range, hint);

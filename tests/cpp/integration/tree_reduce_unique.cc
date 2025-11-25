@@ -86,7 +86,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 
     const std::size_t size = dedup_set.size();
     std::int64_t pos       = 0;
-    auto result = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>(size), true);
+    auto result = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size}, true);
     for (auto e : dedup_set) {
       result[pos++] = e;
     }

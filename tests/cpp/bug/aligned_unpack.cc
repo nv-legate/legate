@@ -22,7 +22,7 @@ using AlignedUnpack = DefaultFixture;
 
 class TestDeserializer : public legate::detail::BaseDeserializer<TestDeserializer> {
  public:
-  TestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer(args, arglen) {}
+  TestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer{args, arglen} {}
 
   using BaseDeserializer::unpack_impl;
 };

@@ -699,7 +699,7 @@ TEST_P(NullableTest, PhsicalArray)
   ASSERT_EQ(array.type(), primitive_type);
   ASSERT_FALSE(array.nested());
 
-  auto shape = legate::Rect<BOUND_DIM>({0, 0, 0, 0}, {0, 1, 2, 3});
+  auto shape = legate::Rect<BOUND_DIM>{{0, 0, 0, 0}, {0, 1, 2, 3}};
 
   ASSERT_EQ(array.shape<BOUND_DIM>(), shape);
   ASSERT_EQ((array.domain().bounds<BOUND_DIM, std::int64_t>()), shape);

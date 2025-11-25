@@ -57,7 +57,7 @@ TEST_F(ExampleDeathTest, Simple)
 
     EXPECT_DEATH(kill_process(), "");
   } else {
-    EXPECT_EXIT(kill_process(), ::testing::KilledBySignal(SIGABRT), "");
+    EXPECT_EXIT(kill_process(), ::testing::KilledBySignal{SIGABRT}, "");
   }
 }
 

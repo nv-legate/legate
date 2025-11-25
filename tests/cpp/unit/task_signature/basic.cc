@@ -206,7 +206,7 @@ TEST_F(TaskSignatureDeathTest, InvalidProxyArray)
   const legate::detail::ArgSelectVisitor visitor;
 
   ASSERT_EXIT(static_cast<void>(visitor(proxy_array_argument)),
-              ::testing::KilledBySignal(SIGABRT),
+              ::testing::KilledBySignal{SIGABRT},
               "Unhandled array kind");
 }
 

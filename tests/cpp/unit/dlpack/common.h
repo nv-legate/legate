@@ -35,7 +35,9 @@ using AllTypes = ::testing::Types<std::int8_t,
 
 using SignedIntTypes = ::testing::Types<std::int8_t, std::int16_t, std::int32_t, std::int64_t>;
 
-inline constexpr std::array<DLDataTypeCode, 11> GetUnsupportedDataTypeCodes()
+// clang-tidy complains that "11" is a magic number.
+// NOLINTBEGIN(readability-magic-numbers)
+constexpr std::array<DLDataTypeCode, 11> get_unsupported_data_type_codes()
 {
   return std::array<DLDataTypeCode, 11>{DLDataTypeCode::kDLFloat8_e3m4,
                                         DLDataTypeCode::kDLFloat8_e4m3,
@@ -50,18 +52,22 @@ inline constexpr std::array<DLDataTypeCode, 11> GetUnsupportedDataTypeCodes()
                                         DLDataTypeCode::kDLFloat4_e2m1fn};
 }
 
-inline constexpr std::array<DLDeviceType, 1> GetCPUDeviceTypes()
+// NOLINTEND(readability-magic-numbers)
+
+constexpr std::array<DLDeviceType, 1> get_cpu_device_types()
 {
   return std::array<DLDeviceType, 1>{DLDeviceType::kDLCPU};
 }
 
-inline constexpr std::array<DLDeviceType, 3> GetGPUDeviceTypes()
+constexpr std::array<DLDeviceType, 3> get_gpu_device_types()
 {
   return std::array<DLDeviceType, 3>{
     DLDeviceType::kDLCUDA, DLDeviceType::kDLCUDAHost, DLDeviceType::kDLCUDAManaged};
 }
 
-inline constexpr std::array<DLDeviceType, 11> GetUnsupportedDeviceTypes()
+// clang-tidy complains that "11" is a magic number.
+// NOLINTBEGIN(readability-magic-numbers)
+constexpr std::array<DLDeviceType, 11> get_unsupported_device_types()
 {
   return std::array<DLDeviceType, 11>{DLDeviceType::kDLOpenCL,
                                       DLDeviceType::kDLVulkan,
@@ -76,7 +82,9 @@ inline constexpr std::array<DLDeviceType, 11> GetUnsupportedDeviceTypes()
                                       DLDeviceType::kDLMAIA};
 }
 
-inline constexpr std::array<legate::Type::Code, 3> GetUnsupportedLegateTypes()
+// NOLINTEND(readability-magic-numbers)
+
+constexpr std::array<legate::Type::Code, 3> get_unsupported_legate_types()
 {
   return std::array<legate::Type::Code, 3>{
     legate::Type::Code::NIL, legate::Type::Code::FIXED_ARRAY, legate::Type::Code::STRUCT};

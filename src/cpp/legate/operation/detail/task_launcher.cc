@@ -89,7 +89,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   Legion::IndexTaskLauncher index_task{static_cast<Legion::TaskID>(legion_task_id()),
                                        launch_domain,
                                        task_arg.to_legion_buffer(),
-                                       Legion::ArgumentMap(),
+                                       Legion::ArgumentMap{},
                                        Legion::Predicate::TRUE_PRED,
                                        false /*must*/,
                                        runtime.mapper_id(),

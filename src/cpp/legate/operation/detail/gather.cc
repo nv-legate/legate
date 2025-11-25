@@ -28,7 +28,7 @@ Gather::Gather(InternalSharedPtr<LogicalStore> target,
     target_{target, declare_partition()},
     source_{source, declare_partition()},
     source_indirect_{source_indirect, declare_partition()},
-    constraint_(align(target_.variable, source_indirect_.variable)),
+    constraint_{align(target_.variable, source_indirect_.variable)},
     redop_kind_{redop_kind}
 {
   record_partition_(
@@ -40,12 +40,12 @@ Gather::Gather(InternalSharedPtr<LogicalStore> target,
 void Gather::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw TracedException<std::invalid_argument>("Source and targets must have the same type");
+    throw TracedException<std::invalid_argument>{"Source and targets must have the same type"};
   }
   auto validate_store = [](const auto& store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
-      throw TracedException<std::invalid_argument>(
-        "Gather accepts only normal, untransformed, region-backed stores");
+      throw TracedException<std::invalid_argument>{
+        "Gather accepts only normal, untransformed, region-backed stores"};
     }
   };
   validate_store(target_.store);
@@ -53,8 +53,8 @@ void Gather::validate()
   validate_store(source_indirect_.store);
 
   if (!is_point_type(source_indirect_.store->type(), source_.store->dim())) {
-    throw TracedException<std::invalid_argument>(
-      "Indirection store should contain " + std::to_string(source_.store->dim()) + "-D points");
+    throw TracedException<std::invalid_argument>{
+      "Indirection store should contain " + std::to_string(source_.store->dim()) + "-D points"};
   }
 
   constraint_->validate();
