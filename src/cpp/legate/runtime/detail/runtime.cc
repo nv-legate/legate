@@ -555,6 +555,11 @@ void Runtime::flush_scheduling_window(bool streaming_scope_change)
         "flush_scheduling_window called from inside a streaming scope"};
     }
 
+    // we propagate and prune discards on the entire scope because in relaxed mode,
+    // the scope may be split into multiple prefixes, which prevents from discards
+    // being propagated and pruned.
+    forward_propagate_and_prune_discards(&operations_);
+
     while (!operations_.empty()) {
       std::deque<InternalSharedPtr<Operation>> streamable_ops{};
 

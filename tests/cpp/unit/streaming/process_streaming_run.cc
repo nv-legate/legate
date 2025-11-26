@@ -17,7 +17,7 @@
 
 #include <utilities/utilities.h>
 
-namespace test_process_streaming_run {
+namespace test_propagage_and_prune_discards {
 
 namespace {
 
@@ -41,7 +41,7 @@ class DummyTask : public legate::LegateTask<DummyTask> {
 
 class Config {
  public:
-  static constexpr std::string_view LIBRARY_NAME = "test_process_streaming_run";
+  static constexpr std::string_view LIBRARY_NAME = "test_propagage_and_prune_discards";
 
   static void registration_callback(legate::Library library)
   {
@@ -55,17 +55,17 @@ constexpr std::uint64_t DUMMY_UNIQUE_ID = 999999999;
 
 }  // namespace
 
-class ProcessStreamingRunUnit : public RegisterOnceFixture<Config> {};
+class PropagatePruneDiscardsUnit : public RegisterOnceFixture<Config> {};
 
-TEST_F(ProcessStreamingRunUnit, Empty)
+TEST_F(PropagatePruneDiscardsUnit, Empty)
 {
   std::deque<legate::InternalSharedPtr<legate::detail::Operation>> run;
 
-  ASSERT_NO_THROW(legate::detail::process_streaming_run(&run));
+  ASSERT_NO_THROW(legate::detail::forward_propagate_and_prune_discards(&run));
   ASSERT_THAT(run, ::testing::IsEmpty());
 }
 
-TEST_F(ProcessStreamingRunUnit, Basic)
+TEST_F(PropagatePruneDiscardsUnit, Basic)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto lib      = runtime->find_library(Config::LIBRARY_NAME);
@@ -100,7 +100,7 @@ TEST_F(ProcessStreamingRunUnit, Basic)
   ASSERT_EQ(task.impl_()->inputs().at(0).privilege, LEGION_READ_ONLY);
   ASSERT_EQ(task.impl_()->outputs().at(0).privilege, LEGION_WRITE_ONLY);
 
-  legate::detail::process_streaming_run(&ops);
+  legate::detail::forward_propagate_and_prune_discards(&ops);
 
   ASSERT_EQ(task.impl_()->inputs().at(0).privilege, LEGION_READ_ONLY | LEGION_DISCARD_OUTPUT_MASK);
   // Only the first one should be modified
@@ -108,7 +108,7 @@ TEST_F(ProcessStreamingRunUnit, Basic)
   ASSERT_THAT(ops, ::testing::ElementsAre(task.impl_(), fill));
 }
 
-TEST_F(ProcessStreamingRunUnit, BasicDiscardFirst)
+TEST_F(PropagatePruneDiscardsUnit, BasicDiscardFirst)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto lib      = runtime->find_library(Config::LIBRARY_NAME);
@@ -142,7 +142,7 @@ TEST_F(ProcessStreamingRunUnit, BasicDiscardFirst)
   ASSERT_EQ(task.impl_()->inputs().at(0).privilege, LEGION_READ_ONLY);
   ASSERT_EQ(task.impl_()->outputs().at(0).privilege, LEGION_WRITE_ONLY);
 
-  legate::detail::process_streaming_run(&ops);
+  legate::detail::forward_propagate_and_prune_discards(&ops);
 
   // Discard came before the task, so nothing should change
   ASSERT_EQ(task.impl_()->inputs().at(0).privilege, LEGION_READ_ONLY);
@@ -150,7 +150,7 @@ TEST_F(ProcessStreamingRunUnit, BasicDiscardFirst)
   ASSERT_THAT(ops, ::testing::ElementsAre(discard, task.impl_(), fill));
 }
 
-TEST_F(ProcessStreamingRunUnit, NoDiscards)
+TEST_F(PropagatePruneDiscardsUnit, NoDiscards)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto lib      = runtime->find_library(Config::LIBRARY_NAME);
@@ -166,7 +166,7 @@ TEST_F(ProcessStreamingRunUnit, NoDiscards)
   ASSERT_EQ(task.impl_()->inputs().at(0).privilege, LEGION_READ_ONLY);
   ASSERT_EQ(task.impl_()->outputs().at(0).privilege, LEGION_WRITE_ONLY);
 
-  legate::detail::process_streaming_run(&ops);
+  legate::detail::forward_propagate_and_prune_discards(&ops);
 
   // No discards, so nothing should change
   ASSERT_EQ(task.impl_()->inputs().at(0).privilege, LEGION_READ_ONLY);
@@ -174,7 +174,7 @@ TEST_F(ProcessStreamingRunUnit, NoDiscards)
   ASSERT_THAT(ops, ::testing::ElementsAre(task.impl_()));
 }
 
-TEST_F(ProcessStreamingRunUnit, OnlyDiscards)
+TEST_F(PropagatePruneDiscardsUnit, OnlyDiscards)
 {
   const auto store_a = make_store(legate::Shape{3});
   const auto discard = [&] {
@@ -187,8 +187,8 @@ TEST_F(ProcessStreamingRunUnit, OnlyDiscards)
   auto ops = std::deque<legate::InternalSharedPtr<legate::detail::Operation>>{discard};
 
   // Nothing should happen here
-  ASSERT_NO_THROW(legate::detail::process_streaming_run(&ops));
+  ASSERT_NO_THROW(legate::detail::forward_propagate_and_prune_discards(&ops));
   ASSERT_THAT(ops, ::testing::ElementsAre(discard));
 }
 
-}  // namespace test_process_streaming_run
+}  // namespace test_propagage_and_prune_discards

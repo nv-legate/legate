@@ -269,33 +269,19 @@ void scan_task_discards(
 }
 
 /**
- * @brief Find all of the discard operations in a particular operations stream and forward
- * propagate the discard privileges.
+ * @brief Compute the size of a streaming generation.
  *
- * @note We need to take by const std::vector<T>& instead of Span<const T> because we need to
- * return the iterators.
+ * @param ops Queue of operations.
  *
- * @param ops The stream of operations to scan.
- *
- * @return discard_ops The discard operations that were handled directly within the ops stream.
+ * @return number of streamable tasks.
  */
-[[nodiscard]] std::pair<SmallVector<std::uint32_t>, std::uint32_t> forward_propagate_discards(
-  const std::deque<InternalSharedPtr<Operation>>& ops)
+[[nodiscard]] std::uint32_t get_generation_size(const std::deque<InternalSharedPtr<Operation>>& ops)
 {
-  // Order of FieldID and LogicalRegion is deliberate. It is more expensive to compare
-  // LogicalRegion's than it is to compare a single integer (FieldID).
-  auto discard_regions = std::
-    unordered_map<std::pair<Legion::FieldID, Legion::LogicalRegion>, std::uint32_t, hasher<>>{};
-  // Can't use iterators for discard_ops because the standard says that std::deque::erase()
-  // invalidates all iterators. So we must use indices instead.
-  auto discard_ops = SmallVector<std::uint32_t>{};
   // Even during recursive flushes, there is at most only a single new generation being added.
   auto generation_size      = std::uint32_t{};
   auto finalized_generation = false;
 
-  for (auto it = ops.rbegin(); it != ops.rend(); ++it) {
-    auto* const op = it->get();
-
+  for (const auto& op : ops) {
     switch (op->kind()) {
       case Operation::Kind::ATTACH: [[fallthrough]];
       case Operation::Kind::COPY: [[fallthrough]];
@@ -307,38 +293,20 @@ void scan_task_discards(
       case Operation::Kind::REDUCE: [[fallthrough]];
       case Operation::Kind::SCATTER: [[fallthrough]];
       case Operation::Kind::SCATTER_GATHER: [[fallthrough]];
-      case Operation::Kind::TIMING: continue;
-      case Operation::Kind::RELEASE_REGION_FIELD: {
-        // TODO(jfaibussowit):
-        // Should remove if store is unmapped
-        continue;
-      }
+      case Operation::Kind::TIMING: [[fallthrough]];
+      case Operation::Kind::RELEASE_REGION_FIELD: [[fallthrough]];
+      case Operation::Kind::DISCARD: continue;
 
-      case Operation::Kind::DISCARD: {
-        const auto& discard = static_cast<const Discard&>(*op);
-
-        discard_regions.emplace(std::make_pair(discard.field_id(), discard.region()),
-                                std::distance(ops.begin(), std::next(it).base()));
-        // We don't append to discard_ops here, because we only want to remove the discards that
-        // this streaming run directly handles. I.e. if the streaming run is:
-        //
-        // - discard(A)
-        // - foo(B, C)
-        // - discard(B)
-        //
-        // Then we only want to remove discard(B) and leave discard(A) untouched.
-        continue;
-      }
-
-        // Only user tasks need their privileges fixed
+      // TODO(amberhassaan): move generation field to Operation class. Current code
+      // only handles task operations.
       case Operation::Kind::AUTO_TASK: [[fallthrough]];
       case Operation::Kind::MANUAL_TASK: [[fallthrough]];
       case Operation::Kind::PHYSICAL_TASK: break;
     }
 
-    LEGATE_ASSERT(dynamic_cast<LogicalTask*>(op) != nullptr);
+    LEGATE_ASSERT(dynamic_cast<LogicalTask*>(op.get()) != nullptr);
 
-    auto* const task = static_cast<LogicalTask*>(op);
+    auto* const task = static_cast<LogicalTask*>(op.get());
 
     // Don't count tasks that already have a generation assigned.
     if (task->streaming_generation().has_value()) {
@@ -373,33 +341,9 @@ void scan_task_discards(
         ++generation_size;
       }
     }
-
-    scan_task_discards(task, &discard_regions, &discard_ops);
   }
 
-  return {std::move(discard_ops), generation_size};
-}
-
-/**
- * @brief Remove the handled discard operations from the operations queue.
- *
- * @param discard_ops The discard operations to remove.
- * @param ops The operations stream.
- */
-void prune_handled_discard_ops(SmallVector<std::uint32_t> discard_ops,
-                               std::deque<InternalSharedPtr<Operation>>* ops)
-{
-  // Note, we need to remove the discard operations starting from the back because otherwise
-  // the other indices pointed to by discard_ops get invalidated. I.e. we must remove item 3
-  // before we remove items 2 and 1.
-  std::sort(discard_ops.begin(), discard_ops.end(), std::greater<>{});
-  for (auto to_remove_idx : discard_ops) {
-    const auto it = std::next(ops->begin(), to_remove_idx);
-
-    LEGATE_ASSERT(it < ops->end());
-    LEGATE_ASSERT(dynamic_cast<Discard*>(it->get()) != nullptr);
-    ops->erase(it);
-  }
+  return generation_size;
 }
 
 /**
@@ -486,6 +430,119 @@ void assign_streaming_generation(std::uint32_t generation_size,
   }
 }
 
+/**
+ * @brief Process a streaming section.
+ *
+ * Inform every task in the streaming section that they are a streaming
+ * task. This information is needed by the mapper (in `select_tasks_to_map()`) in order to
+ * properly vertically schedule the tasks.
+ *
+ * @param ops The operations stream to scan.
+ */
+void process_streaming_run(std::deque<InternalSharedPtr<Operation>>* ops)
+{
+  // TODO(amberhassaan): since this is called after the analysis, we can simplify
+  // this quite a bit.
+  auto generation_sizes = get_generation_size(*ops);
+  assign_streaming_generation(generation_sizes, ops);
+}
+
+/**
+ * @brief Find all of the discard operations in a particular operations stream and forward
+ * propagate the discard privileges.
+ *
+ * @note We need to take by const std::vector<T>& instead of Span<const T> because we need to
+ * return the iterators.
+ *
+ * @param ops The stream of operations to scan.
+ *
+ * @return discard_ops The discard operations that were handled directly within the ops stream.
+ */
+[[nodiscard]] SmallVector<std::uint32_t> forward_propagate_discards(
+  const std::deque<InternalSharedPtr<Operation>>& ops)
+{
+  // Order of FieldID and LogicalRegion is deliberate. It is more expensive to compare
+  // LogicalRegion's than it is to compare a single integer (FieldID).
+  auto discard_regions = std::
+    unordered_map<std::pair<Legion::FieldID, Legion::LogicalRegion>, std::uint32_t, hasher<>>{};
+  // Can't use iterators for discard_ops because the standard says that std::deque::erase()
+  // invalidates all iterators. So we must use indices instead.
+  auto discard_ops = SmallVector<std::uint32_t>{};
+
+  for (auto it = ops.rbegin(); it != ops.rend(); ++it) {
+    auto* const op = it->get();
+
+    switch (op->kind()) {
+      case Operation::Kind::ATTACH: [[fallthrough]];
+      case Operation::Kind::COPY: [[fallthrough]];
+      case Operation::Kind::EXECUTION_FENCE: [[fallthrough]];
+      case Operation::Kind::FILL: [[fallthrough]];
+      case Operation::Kind::GATHER: [[fallthrough]];
+      case Operation::Kind::INDEX_ATTACH: [[fallthrough]];
+      case Operation::Kind::MAPPING_FENCE: [[fallthrough]];
+      case Operation::Kind::REDUCE: [[fallthrough]];
+      case Operation::Kind::SCATTER: [[fallthrough]];
+      case Operation::Kind::SCATTER_GATHER: [[fallthrough]];
+      case Operation::Kind::TIMING: continue;
+      case Operation::Kind::RELEASE_REGION_FIELD: {
+        // TODO(jfaibussowit):
+        // Should remove if store is unmapped
+        continue;
+      }
+
+      case Operation::Kind::DISCARD: {
+        const auto& discard = static_cast<const Discard&>(*op);
+
+        discard_regions.emplace(std::make_pair(discard.field_id(), discard.region()),
+                                std::distance(ops.begin(), std::next(it).base()));
+        // We don't append to discard_ops here, because we only want to remove the discards that
+        // this streaming run directly handles. I.e. if the streaming run is:
+        //
+        // - discard(A)
+        // - foo(B, C)
+        // - discard(B)
+        //
+        // Then we only want to remove discard(B) and leave discard(A) untouched.
+        continue;
+      }
+
+        // Only user tasks need their privileges fixed
+      case Operation::Kind::AUTO_TASK: [[fallthrough]];
+      case Operation::Kind::MANUAL_TASK: [[fallthrough]];
+      case Operation::Kind::PHYSICAL_TASK: break;
+    }
+
+    LEGATE_ASSERT(dynamic_cast<LogicalTask*>(op) != nullptr);
+
+    auto* const task = static_cast<LogicalTask*>(op);
+
+    scan_task_discards(task, &discard_regions, &discard_ops);
+  }
+  return discard_ops;
+}
+
+/**
+ * @brief Remove the handled discard operations from the operations queue.
+ *
+ * @param discard_ops The discard operations to remove.
+ * @param ops The operations stream.
+ */
+void prune_handled_discard_ops(SmallVector<std::uint32_t> discard_ops,
+                               std::deque<InternalSharedPtr<Operation>>* ops)
+{
+  // Note, we need to remove the discard operations starting from the back because otherwise
+  // the other indices pointed to by discard_ops get invalidated. I.e. we must remove item 3
+  // before we remove items 2 and 1.
+  std::sort(discard_ops.begin(), discard_ops.end(), std::greater<>{});
+  for (auto to_remove_idx : discard_ops) {
+    const auto it = std::next(ops->begin(), to_remove_idx);
+
+    LEGATE_ASSERT(it < ops->end());
+    LEGATE_ASSERT(dynamic_cast<Discard*>(it->get()) != nullptr);
+    ops->erase(it);
+  }
+}
+
 }  // namespace
 
 std::deque<InternalSharedPtr<Operation>> extract_streamable_prefix(
@@ -538,12 +595,11 @@ std::deque<InternalSharedPtr<Operation>> extract_streamable_prefix(
   return prefix;
 }
 
-void process_streaming_run(std::deque<InternalSharedPtr<Operation>>* ops)
+void forward_propagate_and_prune_discards(std::deque<InternalSharedPtr<Operation>>* ops)
 {
-  auto [discard_ops, generation_sizes] = forward_propagate_discards(*ops);
+  auto discards = forward_propagate_discards(*ops);
 
-  prune_handled_discard_ops(std::move(discard_ops), ops);
-  assign_streaming_generation(generation_sizes, ops);
+  prune_handled_discard_ops(std::move(discards), ops);
 }
 
 }  // namespace legate::detail

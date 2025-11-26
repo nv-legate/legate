@@ -33,7 +33,8 @@ class Operation;
   std::deque<InternalSharedPtr<Operation>>* in_window);
 
 /**
- * @brief Process a streaming section.
+ * @brief Find all of the discard operations in a particular operations stream and forward
+ * propagate the discard privileges, and subsequently remove the discard ops.
  *
  * During a streaming section, we want to:
  *
@@ -49,12 +50,8 @@ class Operation;
  * remove the discard operation (but crucially *only* the discard ops that were handled in the
  * ops stream).
  *
- * The final step is to inform every task in the streaming section that they are a streaming
- * task. This information is needed by the mapper (in `select_tasks_to_map()`) in order to
- * properly vertically schedule the tasks.
- *
- * @param ops The operations stream to scan.
+ * @param ops The stream of operations to scan and update (by removing discard ops)
  */
-void process_streaming_run(std::deque<InternalSharedPtr<Operation>>* ops);
+void forward_propagate_and_prune_discards(std::deque<InternalSharedPtr<Operation>>* ops);
 
 }  // namespace legate::detail
