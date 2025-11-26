@@ -227,11 +227,14 @@ set(with_runtime_SRC
     unit/machine/processor_range.cc
     unit/machine/machine.cc
     unit/machine/local_machine.cc
+    unit/mapping/base_array.cc
     unit/mapping/common_api.cc
     unit/mapping/dim_ordering.cc
     unit/mapping/instance_manager.cc
     unit/mapping/instance_mapping_policy.cc
+    unit/mapping/list_array.cc
     unit/mapping/store_mapping.cc
+    unit/mapping/struct_array.cc
     unit/partition/image.cc
     unit/partition/nopartition.cc
     unit/partition/tiling.cc
