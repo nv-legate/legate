@@ -4,10 +4,10 @@
 
 from __future__ import annotations
 
-import os
 import re
 import sys
 import math
+from subprocess import CalledProcessError, run
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -86,21 +86,26 @@ def test_read_write_tiles(
     assert_array_equal(a, np.asarray(b.get_physical_array()))
 
 
+try:
+    run(["modinfo", "nvidia_fs"], check=True)
+except (CalledProcessError, FileNotFoundError):
+    has_cufile = False
+else:
+    has_cufile = True
+
+
 @pytest.mark.skipif(
-    bool(os.environ.get("CI"))
+    not has_cufile
     and get_legate_runtime().machine.preferred_target == TaskTarget.GPU,
-    # TODO(yimoj) [PR-2934]
-    # Hit strange cufile error in CI, can't reproduce locally
-    # skipping it for now
-    reason="skip CI GPU run for now",
+    reason="test require nvidia_fs",
 )
 @pytest.mark.parametrize(
-    ("shape", "tile_shape", "offsets"),
+    ("shape", "tile_shape", "offsets", "expected"),
     [
-        ((2,), (2,), (0,)),
-        ((4,), (2,), (0, 2)),
-        ((4, 2), (2, 2), (4, 4)),
-        ((2, 4), (2, 2), (0, 4)),
+        ((2,), (2,), (0,), [0, 1]),
+        ((4,), (2,), (0, 1), [0, 1, 1, 0]),
+        ((4, 2), (2, 2), (4, 2), [[0, 0], [0, 0], [2, 3], [0, 0]]),
+        ((2, 4), (2, 2), (4, 0), [[0, 0, 0, 1], [0, 0, 4, 5]]),
     ],
     ids=str,
 )
@@ -109,6 +114,7 @@ def test_read_tiles_by_offset(
     shape: tuple[int, ...],
     tile_shape: tuple[int, ...],
     offsets: tuple[int, ...],
+    expected: list[int | list[int]],
 ) -> None:
     a = np.arange(math.prod(shape)).reshape(shape)
     store = get_legate_runtime().create_store_from_buffer(
@@ -133,7 +139,12 @@ def test_read_tiles_by_offset(
     )
     get_legate_runtime().issue_execution_fence(block=True)
 
-    np.testing.assert_allclose(np.asarray(b.get_physical_array()), a)
+    arr_exp = np.array(expected)
+    # legate may or may not get a clean array here, need to wipe everything
+    # we don't expect to read with 0 before comparing
+    arr_b = np.asarray(b.get_physical_array())
+    arr_b[:][np.where(arr_exp == 0)] = 0
+    np.testing.assert_allclose(arr_b, arr_exp)
 
 
 if __name__ == "__main__":
