@@ -24,6 +24,28 @@ bool LaunchDomainEquality::is_streamable(const InternalSharedPtr<Operation>& op,
 {
   if (strategy.has_value()) {
     const auto& op_ld = strategy.value()->launch_domain(*op);
+
+    if (op_ld.get_dim() == 1 && op_ld.get_volume() == 1) {
+      // If we have a single task that only has scalar inputs and outputs and no reductions,
+      // it should be safe to bypass this test. We need to do it this way
+      // until we have data flow analysis that can actually catch these cases.
+      // In the current streaming implementation we allow single tasks to be mapped
+      // immediately in the mapper. Please see `select_tasks_to_map()`.
+      const auto only_scalar_inputs = [&]() {
+        return std::all_of(op->input_stores().begin(),
+                           op->input_stores().end(),
+                           [](const auto& store_arg) { return store_arg.store->volume() == 1; });
+      };
+      const auto only_scalar_outputs = [&]() {
+        return std::all_of(op->output_stores().begin(),
+                           op->output_stores().end(),
+                           [](const auto& store_arg) { return store_arg.store->volume() == 1; });
+      };
+      if (op->reduction_stores().empty() && only_scalar_inputs() && only_scalar_outputs()) {
+        return true;
+      }
+    }
+
     if (!launch_domain_.has_value()) {
       launch_domain_ = op_ld;
       return true;
