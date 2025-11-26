@@ -32,7 +32,11 @@ def to_store_target(target: TaskTarget) -> StoreTarget:
         case TaskTarget.CPU:
             return StoreTarget.SYSMEM
         case TaskTarget.OMP:
-            return StoreTarget.SOCKETMEM
+            # Don't use SOCKETMEM here as there's no guarantee that numamem is
+            # configured.
+            # TODO(wonchanl): programmatically checking if numamem exists would
+            # be helpful here
+            return StoreTarget.SYSMEM
         case TaskTarget.GPU:
             return StoreTarget.FBMEM
 

@@ -45,10 +45,9 @@ class TestInlineAllocation:
         assert alloc.strides == strides
         assert alloc.shape == shape
 
-        if runtime.machine.preferred_target == TaskTarget.OMP:
-            assert alloc.target == StoreTarget.SOCKETMEM
-        else:
-            assert alloc.target == StoreTarget.SYSMEM
+        # the target of the returned physical store can be any of the system
+        # memory kinds
+        assert alloc.target in (StoreTarget.SOCKETMEM, StoreTarget.SYSMEM)
         assert alloc.__array_interface__ == {
             "version": 3,
             "shape": shape,
