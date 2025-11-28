@@ -15,6 +15,23 @@ fi
 # Needed for cargo
 export CMAKE_CUDA_COMPILER=${CUDACXX}
 
+# Ensure all toolchains (C/C++ and Rust) use the conda sysroot and linker so we
+# don't pick up host glibc headers/libraries.
+if [[ -n "${CONDA_BUILD_SYSROOT:-}" ]]; then
+    export CFLAGS="${CFLAGS:+${CFLAGS} }--sysroot=${CONDA_BUILD_SYSROOT}"
+    export CXXFLAGS="${CXXFLAGS:+${CXXFLAGS} }--sysroot=${CONDA_BUILD_SYSROOT}"
+    export CPPFLAGS="${CPPFLAGS:+${CPPFLAGS} }--sysroot=${CONDA_BUILD_SYSROOT}"
+    export LDFLAGS="${LDFLAGS:+${LDFLAGS} }--sysroot=${CONDA_BUILD_SYSROOT}"
+
+    rust_linker="${CC:-cc}"
+    export RUSTFLAGS="${RUSTFLAGS:+${RUSTFLAGS} }-Clinker=${rust_linker} -C link-arg=--sysroot=${CONDA_BUILD_SYSROOT}"
+    case "$(gcc -dumpmachine)" in
+        x86_64-*)  export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER="${rust_linker}" ;;
+        aarch64-*) export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER="${rust_linker}" ;;
+        *)         echo "Unsupported build triple for cargo linker override" >&2; exit 1 ;;
+    esac
+fi
+
 # Build the legate profiler
 # shellcheck disable=SC2154
 GIT_COMMIT=$(git -C "${SRC_DIR}" rev-parse HEAD)
