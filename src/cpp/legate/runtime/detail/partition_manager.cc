@@ -302,7 +302,7 @@ bool PartitionManager::use_complete_tiling(Span<const std::uint64_t> extents,
   // If it would generate a very large number of elements then
   // we'll apply a heuristic for now and not actually tile it
   // TODO(wonchanl): A better heuristic for this in the future
-  constexpr auto MAX_TILES_HEURISTIC  = 256;
+  constexpr auto MAX_TILES_HEURISTIC  = 1024;
   constexpr auto MAX_PIECES_HEURISTIC = 16;
   const auto num_tiles                = std::transform_reduce(extents.begin(),
                                                extents.end(),
