@@ -6,6 +6,7 @@
 # ruff: noqa: T201
 from __future__ import annotations
 
+import math
 import time as pytime
 from argparse import ArgumentParser
 from pathlib import Path
@@ -35,12 +36,42 @@ class BenchmarkResult(NamedTuple):
 class AggregatedResult(NamedTuple):
     """Aggregated results from multiple benchmark iterations."""
 
-    size: int
+    shape: tuple[int, ...]
     dtype: str
     mb: float
     avg_wall_time: float
     avg_legate_time: float
     avg_throughput: float
+
+
+def parse_shape(shape_str: str) -> tuple[int, ...]:
+    """Parse a shape string into a tuple of integers.
+
+    Parameters
+    ----------
+    shape_str : str
+        String representation of the shape.
+        Accepts formats like:
+        - "1000" -> (1000,)
+        - "1000,2000" -> (1000, 2000)
+        - "(1000,2000)" -> (1000, 2000)
+
+    Returns
+    -------
+    tuple[int, ...]
+        Tuple of integers representing the shape.
+
+    """
+    shape_str = shape_str.strip()
+    if shape_str.startswith("(") and shape_str.endswith(")"):
+        shape_str = shape_str[1:-1]
+
+    try:
+        dims = [int(dim.strip()) for dim in shape_str.split(",")]
+        return tuple(dims)
+    except ValueError as e:
+        error = f"Invalid shape format '{shape_str}': {e}"
+        raise ValueError(error) from e
 
 
 def parse_arguments() -> Namespace:
@@ -55,11 +86,11 @@ def parse_arguments() -> Namespace:
         help="directory for output HDF5 files (default: hdf5_benchmark)",
     )
     parser.add_argument(
-        "--sizes",
-        type=int,
-        nargs="+",
-        default=[1000, 10000, 100000, 1000000],
-        help="array sizes to test (1D arrays)",
+        "--shape",
+        type=parse_shape,
+        default=(1000,),
+        help="array shape to benchmark (e.g., '1000' for 1D, "
+        "'1000,2000' for 2D)",
     )
     parser.add_argument(
         "--dtypes",
@@ -92,7 +123,7 @@ def parse_arguments() -> Namespace:
 
 
 def benchmark_write(
-    output_file: Path, size: int, dtype_str: str
+    output_file: Path, shape: tuple[int, ...], dtype_str: str
 ) -> BenchmarkResult:
     """
     Benchmark a single HDF5 write operation.
@@ -101,8 +132,8 @@ def benchmark_write(
     ----------
     output_file : Path
         Path to the output HDF5 file.
-    size : int
-        Size of the 1D array to write.
+    shape : tuple[int, ...]
+        Shape of the array to write.
     dtype_str : str
         Data type as string.
 
@@ -129,11 +160,11 @@ def benchmark_write(
     wall_start = pytime.time()
     legate_start_us = time(units="us")
 
-    # Creates an array with the given type and size and fill it with a
+    # Creates an array with the given type and shape and fill it with a
     # constant value of 1. This array is written to a HDF5 file with
     # the given name and dataset name. Legate will create a HDF5
     # virtual dataset on disk for the dataset.
-    array = runtime.create_array(dtype=legate_dtype, shape=(size,))
+    array = runtime.create_array(dtype=legate_dtype, shape=shape)
 
     runtime.issue_fill(array, 1)
     to_file(array=array, path=output_file, dataset_name="/data")
@@ -145,7 +176,10 @@ def benchmark_write(
     wall_time = pytime.time() - wall_start
     legate_time = (time(units="us") - legate_start_us) / 1e6
 
-    mb_written = size * legate_dtype.size / (1024 * 1024)
+    # Calculate total number of elements
+    total_elements = math.prod(shape)
+
+    mb_written = total_elements * legate_dtype.size / (1024 * 1024)
     legate_throughput = mb_written / legate_time if legate_time > 0 else 0
 
     return BenchmarkResult(
@@ -157,15 +191,15 @@ def benchmark_write(
 
 
 def benchmark_configuration(
-    size: int, dtype_str: str, output_dir: Path, iterations: int
+    shape: tuple[int, ...], dtype_str: str, output_dir: Path, iterations: int
 ) -> AggregatedResult:
     """
-    Benchmark a specific size/dtype configuration.
+    Benchmark a specific shape/dtype configuration.
 
     Parameters
     ----------
-    size : int
-        Array size to benchmark.
+    shape : tuple[int, ...]
+        Array shape to benchmark.
     dtype_str : str
         Data type to benchmark.
     output_dir : Path
@@ -178,15 +212,17 @@ def benchmark_configuration(
     AggregatedResult
         Named tuple containing aggregated benchmark results.
     """
-    print(f"Benchmarking size={size:,}, dtype={dtype_str}")
+    shape_str = "x".join(f"{dim:,}" for dim in shape)
+    print(f"Benchmarking shape={shape_str}, dtype={dtype_str}")
 
     iter_results = []
     for iteration in range(iterations):
         output_file = (
-            output_dir / f"benchmark_{size}_{dtype_str}_iter{iteration}.h5"
+            output_dir
+            / f"benchmark_{shape_str}_{dtype_str}_iter{iteration}.h5"
         )
 
-        result = benchmark_write(output_file, size, dtype_str)
+        result = benchmark_write(output_file, shape, dtype_str)
         iter_results.append(result)
 
         print(
@@ -212,7 +248,7 @@ def benchmark_configuration(
     print()
 
     return AggregatedResult(
-        size=size,
+        shape=shape,
         dtype=dtype_str,
         mb=mb_written,
         avg_wall_time=avg_wall,
@@ -229,7 +265,10 @@ def run_benchmarks(args: Namespace) -> None:
     print("HDF5 WRITE BENCHMARK")
     print(BIG_BANNER)
     print(f"Output directory: {args.output_dir}")
-    print(f"Sizes: {args.sizes}")
+
+    shape_str = f"({','.join(str(dim) for dim in args.shape)})"
+
+    print(f"Shape: {shape_str}")
     print(f"Data types: {args.dtypes}")
     print(f"Iterations per config: {args.iterations}")
     print(BIG_BANNER)
@@ -237,25 +276,25 @@ def run_benchmarks(args: Namespace) -> None:
 
     results = []
 
-    for size in args.sizes:
-        for dtype_str in args.dtypes:
-            result = benchmark_configuration(
-                size, dtype_str, args.output_dir, args.iterations
-            )
-            results.append(result)
+    for dtype_str in args.dtypes:
+        result = benchmark_configuration(
+            args.shape, dtype_str, args.output_dir, args.iterations
+        )
+        results.append(result)
 
     print(BIG_BANNER)
     print("BENCHMARK SUMMARY")
     print(BIG_BANNER)
     print(
-        f"{'Size':>12} {'Type':>8} {'MB':>10} {'Wall(s)':>10} "
+        f"{'Shape':>15} {'Type':>8} {'MB':>10} {'Wall(s)':>10} "
         f"{'Legate(s)':>10} {'Throughput':>12}"
     )
-    print("-" * 80)
+    print("-" * 85)
 
     for r in results:
+        shape_str = "x".join(f"{dim:,}" for dim in r.shape)
         print(
-            f"{r.size:12,} {r.dtype:>8} {r.mb:10.2f} "
+            f"{shape_str:>15} {r.dtype:>8} {r.mb:10.2f} "
             f"{r.avg_wall_time:10.3f} {r.avg_legate_time:10.3f} "
             f"{r.avg_throughput:10.2f} MB/s"
         )
@@ -265,10 +304,11 @@ def run_benchmarks(args: Namespace) -> None:
     # Find best performance
     if results:
         best = max(results, key=lambda x: x.avg_throughput)
+        shape_str = "x".join(f"{dim:,}" for dim in best.shape)
 
         print(
             f"\nBest throughput: {best.avg_throughput:.2f} MB/s "
-            f"(size={best.size:,}, dtype={best.dtype})"
+            f"(shape={shape_str}, dtype={best.dtype})"
         )
 
 
