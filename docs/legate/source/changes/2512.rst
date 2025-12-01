@@ -27,6 +27,10 @@ C++
 
 .. rubric:: Mapping
 
+- Explicitly delete the default constructor of ``legate::mapping::Store`` (and
+  ``legate::mapping::Array``). These objects were never default constructible to begin
+  with.
+
 .. rubric:: Partitioning
 
 .. rubric:: Tasks

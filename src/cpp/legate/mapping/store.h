@@ -96,7 +96,7 @@ class LEGATE_EXPORT Store {
 
   explicit Store(const detail::Store* impl) noexcept;
 
-  Store() = default;
+  Store() = delete;
 
  private:
   const detail::Store* impl_{};

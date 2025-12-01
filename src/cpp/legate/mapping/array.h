@@ -74,6 +74,8 @@ class LEGATE_EXPORT Array {
 
   explicit Array(const detail::Array* impl);
 
+  Array() = delete;
+
  private:
   const detail::Array* impl_{};
 };
