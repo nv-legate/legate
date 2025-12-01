@@ -16,9 +16,19 @@ namespace legate::detail {
 
 class ReleaseRegionField final : public Operation {
  public:
+  /**
+   * @brief An operation that cleans up the physical state of a freed region field in the pool. The
+   * operation is issued such that when the region field is recycled for a downstream store
+   * creation, the `ReleaseRegionField` op would run before any downstream consumers of the store
+   * run.
+   *
+   * @param unique_id Unique ID for this operation.
+   * @param physical_state Pointer to the released LogicalRegionField's physical status tracker.
+   * @param unordered Whether this operation is being invoked at a point in time that can differ
+   * across the processes in a multi-process run, e.g. as part of garbage collection.
+   */
   ReleaseRegionField(std::uint64_t unique_id,
                      InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state,
-                     bool unmap,
                      bool unordered);
 
   void launch() override;
@@ -50,7 +60,6 @@ class ReleaseRegionField final : public Operation {
 
  private:
   InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state_{};
-  bool unmap_{};
   bool unordered_{};
 };
 

@@ -165,10 +165,13 @@ TEST_F(LogicalRegionFieldUnit, AttachWithPhysicalRegion)
     test_buffer.data(),
     buffer_size,
     std::move(realm_resource));
-  auto launcher = Legion::IndexAttachLauncher{legion_external_resource_t::LEGION_EXTERNAL_INSTANCE,
-                                              region_field->region()};
+  auto launcher = Legion::AttachLauncher{legion_external_resource_t::LEGION_EXTERNAL_INSTANCE,
+                                         region_field->region(),
+                                         region_field->region(),
+                                         /* restricted */ false,
+                                         /* mapped */ true};
 
-  launcher.add_external_resource(region_field->region(), allocation->resource());
+  launcher.external_resource                       = allocation->resource();
   launcher.constraints.field_constraint.field_set  = {region_field->field_id()};
   launcher.constraints.field_constraint.contiguous = false;
   launcher.constraints.field_constraint.inorder    = false;
@@ -177,14 +180,54 @@ TEST_F(LogicalRegionFieldUnit, AttachWithPhysicalRegion)
   launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_F);
   launcher.privilege_fields.insert(region_field->field_id());
 
-  auto external_resources = Legion::Runtime::get_runtime()->attach_external_resources(
-    Legion::Runtime::get_context(), launcher);
-  std::vector<legate::InternalSharedPtr<legate::detail::ExternalAllocation>> allocations{
-    allocation};
+  auto pr = Legion::Runtime::get_runtime()->attach_external_resource(Legion::Runtime::get_context(),
+                                                                     launcher);
 
-  ASSERT_NO_THROW(region_field->mark_pending_attach());
-  ASSERT_NO_THROW(region_field->attach(std::move(external_resources), std::move(allocations)));
+  ASSERT_NO_THROW(region_field->set_mapped(/* mapped */ true));
+  ASSERT_NO_THROW(region_field->attach(std::move(pr), std::move(allocation)));
   ASSERT_TRUE(region_field->is_mapped());
+  ASSERT_NO_THROW(region_field->allow_out_of_order_destruction());
+}
+
+TEST_F(LogicalRegionFieldUnit, AttachWithPhysicalRegionReadOnly)
+{
+  auto runtime      = legate::Runtime::get_runtime();
+  auto store        = runtime->create_store(legate::Shape{2}, legate::int64());
+  auto region_field = store.impl()->get_region_field();
+
+  auto test_buffer = std::vector<std::int64_t>{1, 2};
+  auto buffer_size = test_buffer.size() * sizeof(test_buffer.front());
+
+  auto realm_resource = std::make_unique<Realm::ExternalMemoryResource>(
+    reinterpret_cast<std::uintptr_t>(test_buffer.data()), buffer_size, true /* read_only */
+  );
+  auto allocation = legate::make_internal_shared<legate::detail::ExternalAllocation>(
+    true /* read_only */,
+    legate::mapping::StoreTarget::SYSMEM,
+    test_buffer.data(),
+    buffer_size,
+    std::move(realm_resource));
+  auto launcher = Legion::AttachLauncher{legion_external_resource_t::LEGION_EXTERNAL_INSTANCE,
+                                         region_field->region(),
+                                         region_field->region(),
+                                         /* restricted */ false,
+                                         /* mapped */ false};
+
+  launcher.external_resource                       = allocation->resource();
+  launcher.constraints.field_constraint.field_set  = {region_field->field_id()};
+  launcher.constraints.field_constraint.contiguous = false;
+  launcher.constraints.field_constraint.inorder    = false;
+  launcher.constraints.ordering_constraint.ordering.clear();
+  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_X);
+  launcher.constraints.ordering_constraint.ordering.push_back(LEGION_DIM_F);
+  launcher.privilege_fields.insert(region_field->field_id());
+
+  auto pr = Legion::Runtime::get_runtime()->attach_external_resource(Legion::Runtime::get_context(),
+                                                                     launcher);
+
+  ASSERT_NO_THROW(region_field->set_mapped(/* mapped */ false));
+  ASSERT_NO_THROW(region_field->attach(std::move(pr), std::move(allocation)));
+  ASSERT_FALSE(region_field->is_mapped());
   ASSERT_NO_THROW(region_field->allow_out_of_order_destruction());
 }
 
@@ -249,9 +292,9 @@ TEST_F(LogicalRegionFieldUnit, AttachWithExternalResources)
   std::vector<legate::InternalSharedPtr<legate::detail::ExternalAllocation>> allocations{
     allocation};
 
-  ASSERT_NO_THROW(region_field->mark_pending_attach());
+  ASSERT_NO_THROW(region_field->set_mapped(/* mapped */ false));
   ASSERT_NO_THROW(region_field->attach(std::move(external_resources), std::move(allocations)));
-  ASSERT_TRUE(region_field->is_mapped());
+  ASSERT_FALSE(region_field->is_mapped());
   ASSERT_NO_THROW(region_field->allow_out_of_order_destruction());
 }
 

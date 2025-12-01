@@ -27,7 +27,6 @@ IndexAttach::IndexAttach(std::uint64_t unique_id,
     allocations_{std::move(allocations)},
     ordering_{std::move(ordering)}
 {
-  region_field_->mark_pending_attach();
 }
 
 void IndexAttach::launch()

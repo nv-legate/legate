@@ -26,31 +26,31 @@ class Partition;
 class Tiling;
 
 /**
- * A `LogicalRegionField` is in essence a pair of a logical region and a field backing a
- * `LogicalStore` and its aliases created via store transformations. A `LogicalRegionField` also
- * stores its physical state in a `PhysicalState` object, in case it has been constructed from an
- * external allocation or has an inline mapping created for it.
+ * A `LogicalRegionField` is a pair of a logical region and a field backing a `LogicalStore` and its
+ * aliases created via store transformations. A `LogicalRegionField` stays alive and occupies the
+ * region field as long as there exists a `LogicalStore` associated with it. When a
+ * `LogicalRegionField` loses all referring stores and gets destroyed, the region field that it has
+ * occupied is returned to the runtime and recycled for another `LogicalStore` of the same shape and
+ * element size.
  *
- * Because Legate tasks are scheduled in a deferred manner via scheduling window, any changes to the
- * physical state also needs to be deferred so that the tasks can see those changes in the right
- * order. The following summarizes how attaching, unmapping, and detaching are performed:
- *
- *  (1) At the time an `ExternalAllocation` is attached to a `LogicalRegionField`, the runtime sets
- *  `true` to `LogicalRegionField::attached_` to indicate that there's a pending
- *  `Attach`/`IndexAttach` operation for this `LogicalRegionField`. This bookkeeping allows the
- *  subsequent operations accessing this `LogicalRegionField` to know the pending attachment without
- *  examining the scheduling window. The issued operation then performs the actual attachment by
- *  updating `physical_state_.attachment_` of the `LogicalRegionField`.
- *
- *  (2) When a given `LogicalRegionField` loses all user references, the runtime frees its logical
- *  region and field and adds them to the list of free region fields, while the outstanding
- *  operations that use the region field are still sitting in the scheduling window.  The runtime
- *  safely performs the unmapping and detachment for the `LogicalRegionField` by issuing an
- *  `UnmapAndDetach` operation that unmaps the physical region and detaches the attachment only
- *  after all the preceding tasks using the `LogicalRegionField` are launched.
- *
- * Note that the inline mapping is performed immediately, as it always flushes the scheduling
+ * In addition to the logical region field, a `LogicalRegionField` keeps track of the region field's
+ * physical state (`LogicalRegionField::PhysicalState`) in case the region field is ever
+ * materialized in a physical allocation. The region field can be materialized by either inline
+ * mapping (`LogicalRegionField::map`) or attachment (`LogicalRegionField::attach`). In both cases,
+ * the runtime needs to make sure that the materialized allocation is destroyed when the
+ * `LogicalRegionField` is destroyed and returned to the runtime's pool of region fields. The
+ * attachment case needs a special treatment, as the `attach()` call is made by a deferred operation
+ * (`Attach`) and not eagerly handled. Because of this, `LogicalRegionField` does bookkeeping for
+ * potentially deferred materialization in its `mapped_` field, instead of directly examining the
+ * outcome of materialization (i.e., the `Legion::PhysicalRegion` object). Doing so allows the
+ * control code to check if a given `LogicalRegionField` has been materialized (which then requires
+ * the runtime to run any consumer tasks in a blocking fashion) without flushing the scheduling
  * window.
+ *
+ * As of GH 2901, a read-only attachment is not considered as a materialization of the region field.
+ * This means that the `mapped_` field won't be set to true upon read-only attachment. This is in
+ * line with the contract of read-only attachment that any updates from downstream consumer tasks to
+ * the region field don't need to be propagated back to the attachments.
  */
 class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
  public:
@@ -60,8 +60,18 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
                                                                Legion::FieldID field_id,
                                                                legate::mapping::StoreTarget target);
     void set_physical_region(Legion::PhysicalRegion physical_region);
+    /**
+     * @brief Set an attachment to the physical state
+     */
     void set_attachment(Attachment attachment);
-    void set_has_pending_detach(bool has_pending_detach);
+    /**
+     * @brief Mark in `has_pending_detach_` if the physical state has a pending detach operation.
+     * The value is set to `true` if the attachment exists and is not read-only.
+     */
+    void set_has_pending_detach();
+    /**
+     * @brief Add a callback to run when the physical state is recycled.
+     */
     void add_callback(std::function<void()> callback);
 
     /**
@@ -77,13 +87,16 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
      */
     void detach(bool unordered);
     /**
-     * @brief Ensure this LogicalRegionField is both unmapped and detached.
-     *
-     * @param unordered Whether this operation is being invoked at a point in time that can differ
-     * across the processes in a multi-process run, e.g. as part of garbage collection.
+     * @brief Invoke all callbacks in this physical state. This function is idempotent (i.e.,
+     * callbacks will be invoked only once no matter how many times this function is called.)
      */
-    void unmap_and_detach(bool unordered);
     void invoke_callbacks();
+    /**
+     * @brief Deallocate the attachment of this physical state.
+     *
+     * @param wait_on_detach If `true`, the deallocation waits for the pending detach operation to
+     * finish.
+     */
     void deallocate_attachment(bool wait_on_detach = true);
 
     [[nodiscard]] bool has_attachment() const;
@@ -121,12 +134,17 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   [[nodiscard]] bool is_mapped() const;
 
   [[nodiscard]] RegionField map(legate::mapping::StoreTarget target);
+  /**
+   * @brief Update the value of `mapped_` of this region field.
+   *
+   * @param mapped A new value for `mapped_`
+   */
+  void set_mapped(bool mapped);
   void unmap();
   void attach(Legion::PhysicalRegion physical_region,
               InternalSharedPtr<ExternalAllocation> allocation);
   void attach(Legion::ExternalResources external_resources,
               std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
-  void mark_pending_attach();
   void detach();
   void allow_out_of_order_destruction();
   void release_region_field() noexcept;
@@ -158,10 +176,9 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   // These are flags that are updated immediately following the control flow
   bool released_{};
   bool mapped_{};
-  bool attached_{};
   bool destroyed_out_of_order_{};
 
-  // This object is updated in a deferred manner by an UnmapAndDetach operation
+  // This object is updated in a deferred manner by a ReleaseRegionField operation
   InternalSharedPtr<PhysicalState> physical_state_{};
 };
 

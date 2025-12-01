@@ -933,6 +933,9 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
 
   auto store = create_store(shape, std::move(type), false /*optimize_scalar*/);
 
+  // We eagerly mark the region field as mapped if the attached allocation is not read-only, so that
+  // any access to the region field will flush the scheduling window and get serialized.
+  store->get_region_field()->set_mapped(!allocation->read_only());
   submit(make_internal_shared<Attach>(new_op_id(),
                                       store->get_region_field(),
                                       store->dim(),
@@ -1003,6 +1006,7 @@ Runtime::IndexAttachResult Runtime::create_store(
     subregions.push_back(substore->get_region_field()->region());
   }
 
+  // Unlike in the single attach case, the index attach case doesn't inline map the region field
   submit(make_internal_shared<IndexAttach>(new_op_id(),
                                            store->get_region_field(),
                                            store->dim(),
@@ -1645,10 +1649,10 @@ Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& fut
 }
 
 void Runtime::issue_release_region_field(
-  InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unmap, bool unordered)
+  InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unordered)
 {
-  submit(make_internal_shared<ReleaseRegionField>(
-    new_op_id(), std::move(physical_state), unmap, unordered));
+  submit(
+    make_internal_shared<ReleaseRegionField>(new_op_id(), std::move(physical_state), unordered));
 }
 
 void Runtime::issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)

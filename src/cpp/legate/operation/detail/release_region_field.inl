@@ -13,12 +13,8 @@ namespace legate::detail {
 inline ReleaseRegionField::ReleaseRegionField(
   std::uint64_t unique_id,
   InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state,
-  bool unmap,
   bool unordered)
-  : Operation{unique_id},
-    physical_state_{std::move(physical_state)},
-    unmap_{unmap},
-    unordered_{unordered}
+  : Operation{unique_id}, physical_state_{std::move(physical_state)}, unordered_{unordered}
 {
 }
 

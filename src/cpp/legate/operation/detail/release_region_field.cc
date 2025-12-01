@@ -12,15 +12,14 @@ namespace legate::detail {
 
 void ReleaseRegionField::launch()
 {
-  if (unmap_) {
-    physical_state_->unmap_and_detach(unordered_);
-  }
+  physical_state_->unmap();
+  physical_state_->detach(unordered_);
   physical_state_->invoke_callbacks();
 }
 
 bool ReleaseRegionField::supports_streaming() const
 {
-  return !(unmap_ || physical_state_->has_callbacks());
+  return !(physical_state_->physical_region().exists() || physical_state_->has_callbacks());
 }
 
 }  // namespace legate::detail

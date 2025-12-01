@@ -32,6 +32,11 @@ namespace legate::detail {
   return physical_region();
 }
 
+void LogicalRegionField::PhysicalState::set_has_pending_detach()
+{
+  has_pending_detach_ = attachment_.exists();
+}
+
 void LogicalRegionField::PhysicalState::unmap()
 {
   // We unmap the field immediately. In the case where a LogicalStore is allowed to be destroyed
@@ -60,12 +65,6 @@ void LogicalRegionField::PhysicalState::detach(bool unordered)
   has_pending_detach_ = false;
 }
 
-void LogicalRegionField::PhysicalState::unmap_and_detach(bool unordered)
-{
-  unmap();
-  detach(unordered);
-}
-
 void LogicalRegionField::PhysicalState::invoke_callbacks()
 {
   if (callbacks_.empty()) {
@@ -80,7 +79,7 @@ void LogicalRegionField::PhysicalState::invoke_callbacks()
 
 void LogicalRegionField::PhysicalState::deallocate_attachment(bool wait_on_detach)
 {
-  if (has_pending_detach_) {
+  if (wait_on_detach && has_pending_detach_) {
     // Needs to flush pending detach operations from the field's previous life.
     // Note that we don't need to progress unordered operations here, because if we're here, that
     // means that the region field is detached in order. (let that sink in :))
@@ -121,9 +120,7 @@ bool LogicalRegionField::is_mapped() const
   if (parent().has_value()) {
     return (*parent())->is_mapped();
   }
-  // A logical region field with a pending attachment needs the same treatment as the inline mapped
-  // one even when the `pr_->is_mapped()` is false
-  return mapped_ || attached_;
+  return mapped_;
 }
 
 RegionField LogicalRegionField::map(legate::mapping::StoreTarget target)
@@ -132,7 +129,7 @@ RegionField LogicalRegionField::map(legate::mapping::StoreTarget target)
     LEGATE_ASSERT(!physical_state_->physical_region().exists());
     return (*parent())->map(target);
   }
-  mapped_ = true;
+  set_mapped(true);
   return {dim(), physical_state_->ensure_mapping(lr_, fid_, target), fid_, false /*partitioned*/};
 }
 
@@ -143,7 +140,7 @@ void LogicalRegionField::unmap()
     (*parent())->unmap();
     return;
   }
-  mapped_ = false;
+  set_mapped(false);
   physical_state_->unmap();
 }
 
@@ -152,6 +149,7 @@ void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
 {
   LEGATE_ASSERT(!parent().has_value());
   LEGATE_ASSERT(physical_region.exists());
+  LEGATE_ASSERT(physical_region.is_mapped() == is_mapped());
   LEGATE_ASSERT(!physical_state_->attachment().exists());
   LEGATE_ASSERT(!physical_state_->physical_region().exists());
   physical_state_->set_attachment(Attachment{physical_region, std::move(allocation)});
@@ -178,19 +176,19 @@ void LogicalRegionField::detach()
   if (parent().has_value()) {
     throw TracedException<std::invalid_argument>{"Manual detach must be called on the root store"};
   }
-  if (!attached_) {
-    throw TracedException<std::invalid_argument>{"Store has no attachment to detach"};
-  }
 
   // Need to flush the scheduling window to get all pending attach ops to be issued
   runtime.flush_scheduling_window();
 
-  physical_state_->unmap_and_detach(false /*unordered*/);
+  if (!physical_state_->attachment().exists()) {
+    throw TracedException<std::invalid_argument>{"Store has no attachment to detach"};
+  }
+  physical_state_->unmap();
+  physical_state_->detach(false /*unordered*/);
   physical_state_->deallocate_attachment();
 
-  // Reset the object
-  mapped_   = false;
-  attached_ = false;
+  // Mark the region field as unmapped as well
+  set_mapped(false);
 }
 
 void LogicalRegionField::allow_out_of_order_destruction()
@@ -218,10 +216,8 @@ void LogicalRegionField::release_region_field() noexcept
 
     auto&& runtime = Runtime::get_runtime();
 
-    physical_state_->set_has_pending_detach(attached_);
-
-    runtime.issue_release_region_field(
-      physical_state_, is_mapped() || attached_, destroyed_out_of_order_);
+    physical_state_->set_has_pending_detach();
+    runtime.issue_release_region_field(physical_state_, destroyed_out_of_order_);
 
     runtime.field_manager().free_field(
       FreeFieldInfo{shape_, field_size_, lr_, fid_, physical_state_}, destroyed_out_of_order_);
@@ -229,8 +225,7 @@ void LogicalRegionField::release_region_field() noexcept
     LEGATE_ABORT(exn.what());
   }
 
-  mapped_   = false;
-  attached_ = false;
+  set_mapped(false);
   released_ = true;
 }
 

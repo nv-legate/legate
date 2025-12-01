@@ -17,7 +17,7 @@ FieldManager::~FieldManager()
   // We are shutting down, so just free all the buffer copies we've made to attach to
   for (auto&& [_, queue] : ordered_free_fields_) {
     for (; !queue.empty(); queue.pop()) {
-      queue.front().state->deallocate_attachment();
+      queue.front().state->deallocate_attachment(/* wait_on_detach */ false);
     }
   }
 }

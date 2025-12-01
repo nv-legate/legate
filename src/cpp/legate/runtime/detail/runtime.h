@@ -489,9 +489,7 @@ class Runtime {
   [[nodiscard]] Legion::Future reduce_exception_future_map(const Legion::FutureMap& future_map);
 
   void issue_release_region_field(
-    InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state,
-    bool unmap,
-    bool unordered);
+    InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unordered);
   void issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void issue_mapping_fence();

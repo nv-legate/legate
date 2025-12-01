@@ -23,11 +23,6 @@ inline void LogicalRegionField::PhysicalState::set_attachment(Attachment attachm
   attachment_ = std::move(attachment);
 }
 
-inline void LogicalRegionField::PhysicalState::set_has_pending_detach(bool has_pending_detach)
-{
-  has_pending_detach_ = has_pending_detach;
-}
-
 inline void LogicalRegionField::PhysicalState::add_callback(std::function<void()> callback)
 {
   callbacks_.push_back(std::move(callback));
@@ -77,6 +72,6 @@ inline const std::optional<InternalSharedPtr<LogicalRegionField>>& LogicalRegion
   return parent_;
 }
 
-inline void LogicalRegionField::mark_pending_attach() { attached_ = true; }
+inline void LogicalRegionField::set_mapped(bool mapped) { mapped_ = mapped; }
 
 }  // namespace legate::detail
