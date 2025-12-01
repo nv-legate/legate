@@ -42,15 +42,29 @@ function(_legate_get_tidy_plugin_targets DEST_VAR)
 endfunction()
 
 function(_legate_create_tidy_plugins)
+  # Some package managers (conda) have separate LLVM and clang development packages.
+  # Finding just LLVM or just clang does not guarantee that the other is installed, so
+  # need to check both exist upfront here.
   find_package(LLVM CONFIG QUIET)
-  if(NOT LLVM_FOUND)
-    set(severity VERBOSE)
+  find_package(Clang CONFIG QUIET HINTS "${LLVM_CMAKE_DIR}/..")
+  if((NOT LLVM_FOUND) OR (NOT Clang_FOUND))
+
+    if(NOT LLVM_FOUND)
+      set(missing "LLVM")
+    else()
+      set(missing "Clang")
+    endif()
+
     if(legate_TIDY_PLUGINS_REQUIRED)
       set(severity FATAL_ERROR)
+    else()
+      set(severity VERBOSE)
     endif()
-    message(${severity} "Failed to find LLVM, so cannot build the clang-tidy plugins. "
-            "Either point CMake to your LLVM installation via -DLLVM_DIR=... and/or "
-            "install a development build of LLVM")
+
+    message(${severity}
+            "Failed to find ${missing}, so cannot build the clang-tidy plugins. "
+            "Either point CMake to your ${missing} installation via -D${missing}_DIR=... "
+            "and/or install a development build of ${missing}")
     return()
   endif()
   # Use an absolute path for binary directory because we are not certain where this
