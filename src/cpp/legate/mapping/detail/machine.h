@@ -46,6 +46,9 @@ class Machine {
   [[nodiscard]] Machine only_if(F&& pred) const;
 
   [[nodiscard]] Machine only(TaskTarget target) const;
+  /**
+   * @copydoc mapping::Machine::only()
+   */
   [[nodiscard]] Machine only(Span<const TaskTarget> targets) const;
   [[nodiscard]] Machine slice(std::uint32_t from,
                               std::uint32_t to,

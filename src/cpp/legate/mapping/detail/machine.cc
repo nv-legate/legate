@@ -17,6 +17,7 @@
 #include <fmt/ostream.h>
 
 #include <algorithm>
+#include <optional>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -111,12 +112,42 @@ Machine Machine::only(TaskTarget target) const { return only(Span<const TaskTarg
 
 Machine Machine::only(Span<const TaskTarget> targets) const
 {
-  std::map<TaskTarget, ProcessorRange> new_processor_ranges;
+  auto new_processor_ranges = std::map<TaskTarget, ProcessorRange>{};
+
   for (auto&& t : targets) {
     new_processor_ranges.insert({t, processor_range(t)});
   }
 
-  return Machine{std::move(new_processor_ranges)};
+  const auto target = [&] {
+    // We want to choose the first target that produces a valid processor range to use as the
+    // selected target. We cannot just defer to the `Machine(map<TaskTarget, ProcessorRange>)`
+    // constructor because `new_processor_ranges` might be empty. This would end up creating an
+    // empty machine whose preferred target is always CPU, but we want to preserve the intent
+    // of the user by having the empty machine at least remember what kind of target it
+    // *wanted* to have.
+    //
+    // Note: we iterate over new_processor_ranges (instead of targets) because it will properly
+    // order the TaskTargets for us.
+    for (auto&& [tgt, range] : new_processor_ranges) {
+      if (!range.empty()) {
+        return tgt;
+      }
+    }
+
+    if (new_processor_ranges.empty()) {
+      // targets was empty, so the resulting machine will be as well. We arbitrarily pick the
+      // same target as the existing machine.
+      return preferred_target();
+    }
+
+    // All processor ranges were empty. We still pick the first target here because that's what
+    // the user would have wanted. For example, the user could say
+    // `machine.only(TaskTarget::GPU)` on a machine that has no GPUs. Even if the machine is
+    // empty, the *preferred* target is still a GPU.
+    return new_processor_ranges.begin()->first;
+  }();
+
+  return Machine{target, std::move(new_processor_ranges)};
 }
 
 Machine Machine::operator[](TaskTarget target) const { return only(target); }

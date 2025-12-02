@@ -195,6 +195,36 @@ TEST_F(MachineTest, Only)
   ASSERT_EQ(machine3, machine);
 }
 
+TEST_F(MachineTest, OnlyEmptyFullMachine)
+{
+  const legate::mapping::Machine machine{
+    {{legate::mapping::TaskTarget::CPU, CPU_RANGE}, {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
+
+  ASSERT_EQ(machine.preferred_target(), legate::mapping::TaskTarget::GPU);
+
+  const auto empty = machine.only(legate::Span<const legate::mapping::TaskTarget>{});
+
+  ASSERT_TRUE(empty.empty());
+  ASSERT_EQ(empty.preferred_target(), machine.preferred_target());
+}
+
+TEST_F(MachineTest, OnlyEmptyEmptyMachine)
+{
+  constexpr auto EMPTY_RANGE = legate::mapping::ProcessorRange{};
+
+  static_assert(EMPTY_RANGE.empty());
+
+  const legate::mapping::Machine machine{{{legate::mapping::TaskTarget::CPU, EMPTY_RANGE},
+                                          {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
+
+  ASSERT_EQ(machine.preferred_target(), legate::mapping::TaskTarget::GPU);
+
+  const auto empty = machine.only(legate::Span<const legate::mapping::TaskTarget>{});
+
+  ASSERT_TRUE(empty.empty());
+  ASSERT_EQ(empty.preferred_target(), machine.preferred_target());
+}
+
 TEST_F(MachineTest, OnlyIf)
 {
   const legate::mapping::Machine machine{{{legate::mapping::TaskTarget::CPU, CPU_RANGE},

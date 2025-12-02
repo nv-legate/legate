@@ -148,7 +148,11 @@ class Machine;
 class LEGATE_EXPORT Machine {
  public:
   /**
-   * @brief Preferred processor type of this machine descriptor
+   * @brief Preferred processor type of this machine descriptor.
+   *
+   * The preferred target of a machine is used to determine which task variant is launched in
+   * case there are multiple possibilities. For example, a machine might have both CPUs and
+   * GPUs, in which case the preferred target would select one of them.
    *
    * @return Task target
    */
@@ -222,6 +226,24 @@ class LEGATE_EXPORT Machine {
    *
    * Any of the `targets` that does not exist will be mapped to an empty processor range in the
    * returned machine descriptor
+   *
+   * The preferred target of the new machine is chosen based on the following criteria:
+   *
+   * - If `targets` is empty, the preferred target of the source machine is used.
+   * - If `targets` is not empty:
+   *
+   *   - The first target that produces a non-empty processor range (from the source machine)
+   *     according to the numerical ordering of the `TaskTarget` enum is used. For example, if
+   *     the source machine has 2 CPUs, 0 OMPs, and 2 GPUs, and `targets = {OMP, CPU, GPU}`,
+   *     then the preferred target will be GPU because:
+   *
+   *     - OMP had an empty processor range.
+   *     - GPU has higher precedence over CPU.
+   *
+   *   - If all of the targets produced an empty processor range (and therefore the resulting
+   *     `Machine` is empty), then the highest priority entry in `targets` is used. For
+   *     example, if a machine has 0 CPUs and 0 GPUs, and `targets = {CPU, GPU}`, then the
+   *     preferred target will be GPU because GPU has precedence over CPU.
    *
    * @param targets Processor types to select
    *
