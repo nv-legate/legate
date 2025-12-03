@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mapping &#8212; NVIDIA legate (25.12.00.dev44+g09583d4fc)</title>
+    <title>mapping &#8212; NVIDIA legate (25.12.00.dev46+gbd46f766a)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=41112a0e"></script>
+    <script src="../../../../_static/documentation_options.js?v=4cd74662"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev44+g09583d4fc) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev44+g09583d4fc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev46+gbd46f766a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev46+gbd46f766a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev44+g09583d4fc)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev46+gbd46f766a)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev44+g09583d4fc) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev44+g09583d4fc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.12.00.dev46+gbd46f766a) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.12.00.dev46+gbd46f766a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.12.00.dev44+g09583d4fc)</p>
+    <p class="title logo__title">NVIDIA legate (25.12.00.dev46+gbd46f766a)</p>
   
 </a>
 
@@ -980,6 +980,7 @@ SPDX-License-Identifier: Apache-2.0
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate7mapping7Machine16preferred_targetEv">
 <span id="_CPPv3NK6legate7mapping7Machine16preferred_targetEv"></span><span id="_CPPv2NK6legate7mapping7Machine16preferred_targetEv"></span><span id="legate::mapping::Machine::preferred_targetC"></span><span class="target" id="classlegate_1_1mapping_1_1Machine_1a2737cbb3c94adef654b78cc618362336"></span><a class="reference internal" href="#_CPPv410TaskTarget" title="TaskTarget"><span class="n"><span class="pre">TaskTarget</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">preferred_target</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
 <dd><p>Preferred processor type of this machine descriptor. </p>
+<p>The preferred target of a machine is used to determine which task variant is launched in case there are multiple possibilities. For example, a machine might have both CPUs and GPUs, in which case the preferred target would select one of them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#classlegate_1_1mapping_1_1Task"><span class="std std-ref">Task</span></a> target </p>
@@ -1100,6 +1101,20 @@ SPDX-License-Identifier: Apache-2.0
 <span id="_CPPv3NK6legate7mapping7Machine4onlyE4SpanIK10TaskTargetE"></span><span id="_CPPv2NK6legate7mapping7Machine4onlyE4SpanIK10TaskTargetE"></span><span id="legate::mapping::Machine::only__Span:TaskTargetC:C"></span><span class="target" id="classlegate_1_1mapping_1_1Machine_1a5bd06139f04e0753378614ef15ef2065"></span><a class="reference internal" href="../class/classlegate_1_1mapping_1_1Machine.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">only</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="group__data.html#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv410TaskTarget" title="TaskTarget"><span class="n"><span class="pre">TaskTarget</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
 <dd><p>Extracts the processor ranges for a given set of processor types and creates a fresh machine descriptor with them. </p>
 <p>Any of the <code class="docutils literal notranslate"><span class="pre">targets</span></code> that does not exist will be mapped to an empty processor range in the returned machine descriptor</p>
+<p>The preferred target of the new machine is chosen based on the following criteria:</p>
+<p><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">targets</span></code> is empty, the preferred target of the source machine is used.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">targets</span></code> is not empty:<ul>
+<li><p>The first target that produces a non-empty processor range (from the source machine) according to the numerical ordering of the <code class="docutils literal notranslate"><a class="reference internal" href="#group__mapping_1gaf92a9e7bfa097c7df5de8503ec53ef40"><span class="std std-ref"><span class="pre">TaskTarget</span></span></a></code> enum is used. For example, if the source machine has 2 CPUs, 0 OMPs, and 2 GPUs, and <code class="docutils literal notranslate"><span class="pre">targets</span> <span class="pre">=</span> <span class="pre">{OMP,</span> <span class="pre">CPU,</span> <span class="pre">GPU}</span></code>, then the preferred target will be GPU because:<ul>
+<li><p>OMP had an empty processor range.</p></li>
+<li><p>GPU has higher precedence over CPU.</p></li>
+</ul>
+</p></li>
+<li><p>If all of the targets produced an empty processor range (and therefore the resulting <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1Machine"><span class="std std-ref"><span class="pre">Machine</span></span></a></code> is empty), then the highest priority entry in <code class="docutils literal notranslate"><span class="pre">targets</span></code> is used. For example, if a machine has 0 CPUs and 0 GPUs, and <code class="docutils literal notranslate"><span class="pre">targets</span> <span class="pre">=</span> <span class="pre">{CPU,</span> <span class="pre">GPU}</span></code>, then the preferred target will be GPU because GPU has precedence over CPU.</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>targets</strong> – Processor types to select</p>
