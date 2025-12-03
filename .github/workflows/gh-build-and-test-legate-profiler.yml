@@ -151,9 +151,10 @@ jobs:
                 CONFIG_NAME=${CONFIG_INFO[0]}
                 CONFIG_SCOPE=${CONFIG_INFO[1]}
 
-                # Don't setup python proxy cache for the aarch64-linux 2GPU
-                # machines since they can't reach it over the network.
-                if [[ "${RUNNER_DEVICE}" == "2gpu" ]] && [[ "${RUNNER_PLATFORM}" == "linux-aarch64" ]]; then
+                # The linux-aarch64-2gpu runners can't resolve the on-prem
+                # conda cache endpoint, so disable the proxy cache there to
+                # avoid NameResolutionError failures.
+                if [[ "${RUNNER_NAME}" == "linux-aarch64-2gpu" ]]; then
                   SETUP_PYTHON_PROXY_CACHE=false
                 else
                   SETUP_PYTHON_PROXY_CACHE=true
