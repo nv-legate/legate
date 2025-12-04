@@ -14,6 +14,13 @@ function(find_or_configure_cpptrace)
 
   set(cpptrace_options "CPPTRACE_BUILD_TESTING OFF" "CPPTRACE_BUILD_BENCHMARKING OFF")
 
+  if(LEGATE_BUILD_PIP_WHEELS)
+    # When building wheels we want to statically link cpptrace into legate, otherwise
+    # auditwheel fails with "Cannot repair wheel, because required library
+    # "libcpptrace.so.0" could not be located".
+    list(APPEND cpptrace_options "BUILD_SHARED_LIBS OFF")
+  endif()
+
   find_package(zstd)
   if(zstd_FOUND)
     # For whatever reason, cpptrace opts to download and install its own zstd instead of

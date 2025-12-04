@@ -123,6 +123,14 @@ macro(_legate_find_python3)
 endmacro()
 
 # ########################################################################################
+# * cpptrace --------------------------------------------------------------
+
+# Do this before Realm, to guarantee that the Realm build will pick up the same cpptrace
+# as Legate.
+
+legate_find_or_configure(PACKAGE cpptrace)
+
+# ########################################################################################
 # * Realm -------------------------------------------------------------------
 
 legate_find_or_configure(PACKAGE Realm)
@@ -213,11 +221,6 @@ if(legate_USE_HDF5_VFD_GDS)
   endif()
   legate_find_or_configure(PACKAGE hdf5_vfd_gds)
 endif()
-
-# ########################################################################################
-# * cpptrace --------------------------------------------------------------
-
-legate_find_or_configure(PACKAGE cpptrace)
 
 # ########################################################################################
 # * CPMLicenses --------------------------------------------------------------
