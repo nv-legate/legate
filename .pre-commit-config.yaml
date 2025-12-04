@@ -173,26 +173,7 @@ repos:
         exclude: '.*\.(png|pdf)$'
         additional_dependencies:
           - rich
-      - id: cmake-format
-        name: cmake-format
-        entry: ./scripts/pre-commit/cmake-format.bash cmake-format
-        language: python
-        types: [cmake]
-        exclude: '^(share/legate/realm_ucp_bootstrap/CMakeLists.txt|share/legate/realm_ucp_bootstrap/cmake/Config.cmake.in|continuous_integration/scripts/ucc-cmake-config/.*.cmake)$'
-        # Note that pre-commit autoupdate does not update the versions
-        # of dependencies, so we'll have to update this manually.
-        additional_dependencies:
-          - cmakelang==0.6.13
-      - id: cmake-lint
-        name: cmake-lint
-        entry: ./scripts/pre-commit/cmake-format.bash cmake-lint
-        language: python
-        types: [cmake]
-        # Note that pre-commit autoupdate does not update the versions
-        # of dependencies, so we'll have to update this manually.
-        additional_dependencies:
-          - cmakelang==0.6.13
-      - id: dej2lint
+      - id: dej2lintxs
         name: dej2lint
         description: 'Run yamllint on meta.yaml files, removing Jinja2 directives'
         entry: python scripts/pre-commit/dej2lint.py
@@ -200,16 +181,6 @@ repos:
         files: meta\.yaml$
         args: ['-c', './scripts/pre-commit/yamllint.yml']
         additional_dependencies: ['yamllint']
-      - id: check_cmake_format
-        name: check_cmake_format
-        description: 'Check that cmake-format.json is properly filled out with function signatures'
-        entry: ./scripts/pre-commit/check_cmake_format.py
-        args: ['--input-file', './scripts/pre-commit/cmake-format-legate.json']
-        language: python
-        types: [cmake]
-        require_serial: true
-        additional_dependencies:
-          - cmakelang
 
 ci:
   autoupdate_schedule: quarterly
