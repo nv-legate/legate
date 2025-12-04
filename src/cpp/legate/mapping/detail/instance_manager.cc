@@ -44,31 +44,50 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceSet::find_instance(
   const InstanceMappingPolicy& policy,
   const Legion::LayoutConstraintSet& layout_constraints) const
 {
+  // Helper function to get a group's instance. Non-nullopt if the instance satisfies the query.
+  const auto get_valid_instance = [&](const InternalSharedPtr<RegionGroup>& group)
+    -> std::optional<Legion::Mapping::PhysicalInstance> {
+    const auto ifinder = instances_.find(group.get());
+
+    LEGATE_CHECK(ifinder != instances_.end());
+    if (auto&& spec = ifinder->second;
+        (spec.policy.exact || !policy.exact) && spec.instance.entails(layout_constraints)) {
+      return spec.instance;
+    }
+    return std::nullopt;
+  };
+
+  // Prioritize searching for the exact region in the cache first.
   const auto it = groups_.find(region);
 
-  auto&& group_opt = [&]() -> std::optional<InternalSharedPtr<RegionGroup>> {
-    // Prioritize searching for the exact region in the cache first.
-    if (it != groups_.end()) {
-      return it->second;
+  if (it != groups_.end()) {
+    if (const auto instance = get_valid_instance(it->second); instance.has_value()) {
+      return instance;
     }
+  }
 
-    // Otherwise, find a group that covers this region's domain and use that instance
-    if (policy.exact) {
-      // The logic below will search for the first instance in which the domain
-      // of the region query is a subset of the domain of the instance. However,
-      // the logic below doesn't guarantee that the two domains will be equal
-      // (i.e. exact in Legate terminology). As a result, if the query expects
-      // an exact instance, then simply return a cache miss because the below
-      // logic doesn't guarantee it.
-      return std::nullopt;
-    }
+  if (policy.exact) {
+    // The logic below will search for an instance in which the domain
+    // of the region query is a subset of the domain of the instance. However,
+    // the logic below doesn't guarantee that the two domains will be equal
+    // (i.e. exact in Legate terminology). As a result, if the query expects
+    // an exact instance, then simply return a cache miss because the below
+    // logic doesn't guarantee it.
+    return std::nullopt;
+  }
 
-    std::vector<Legion::Domain> region_domains;
+  // Search for a group in the instance set that covers the region's domain and
+  // that has a valid instance which satisfies the query.
+  std::vector<Legion::Domain> region_domains;
 
-    runtime->get_index_space_domains(ctx, region.get_index_space(), region_domains);
+  runtime->get_index_space_domains(ctx, region.get_index_space(), region_domains);
 
-    const auto iter = std::find_if(
-      groups_.begin(),
+  auto groups_iter = groups_.begin();
+
+  while (groups_iter != groups_.end()) {
+    // Consider group's instance if the region's domain subsets the group's domain.
+    const auto valid_group_iter = std::find_if(
+      groups_iter,
       groups_.end(),
       [&](const std::pair<Legion::LogicalRegion, InternalSharedPtr<RegionGroup>>& pair) {
         const Domain& group_domain = pair.second->bounding_box;
@@ -78,22 +97,20 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceSet::find_instance(
         });
       });
 
-    return iter == groups_.end() ? std::nullopt : std::optional{iter->second};
-  }();
+    if (valid_group_iter == groups_.end()) {
+      // No more satisfying groups, stop searching.
+      break;
+    }
 
-  if (!group_opt.has_value()) {
-    return std::nullopt;
+    if (const auto instance = get_valid_instance(valid_group_iter->second); instance.has_value()) {
+      return instance;
+    }
+
+    // Instance for the matching group is invalid, keep searching.
+    groups_iter = std::next(valid_group_iter);
   }
 
-  auto&& group = group_opt.value();
-
-  const auto ifinder = instances_.find(group.get());
-  LEGATE_CHECK(ifinder != instances_.end());
-
-  if (auto&& spec = ifinder->second;
-      (spec.policy.exact || !policy.exact) && spec.instance.entails(layout_constraints)) {
-    return spec.instance;
-  }
+  // No valid instances, cache miss.
   return std::nullopt;
 }
 
