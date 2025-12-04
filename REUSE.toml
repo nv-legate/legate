@@ -21,8 +21,7 @@ path = [
     "src/cmake/versions/legion_version.json",
     "src/python/legate/legate_jupyter.json",
     "src/cmake/presets/*.json",
-    "src/CMakePresets.json",
-    "src/cmake/versions/patches/realm_365.diff"
+    "src/CMakePresets.json"
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"

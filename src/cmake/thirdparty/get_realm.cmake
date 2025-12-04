@@ -39,7 +39,7 @@ function(find_or_configure_realm)
                   OPTIONS "REALM_ENABLE_INSTALL ON"
                           "REALM_SANITIZER ${REALM_SANITIZER}"
                           "REALM_ENABLE_UCX ${legate_USE_UCX}"
-                          # "REALM_INSTALL_UCX_BOOTSTRAPS ${legate_USE_UCX}"
+                          "REALM_INSTALL_UCX_BOOTSTRAPS ${legate_USE_UCX}"
                           "UCX_BOOTSTRAP_ENABLE_MPI ${legate_USE_UCX}"
                           "REALM_ENABLE_GASNETEX ${legate_USE_GASNET}"
                           "GASNet_ROOT ${GASNet_ROOT}"

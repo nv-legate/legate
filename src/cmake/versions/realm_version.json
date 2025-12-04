@@ -2,15 +2,8 @@
     "packages": {
         "Realm": {
             "git_shallow": false,
-            "git_tag": "90dc9818c078571205c212c383be86a22792bb16",
+            "git_tag": "9de4b38680995b726bb8a43264a2d2a9870e1f1c",
             "git_url": "https://github.com/StanfordLegion/realm.git",
-            "patches": [
-                {
-                    "file": "${current_json_dir}/patches/realm_365.diff",
-                    "issue": "fixing CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES error",
-                    "required": true
-                }
-            ],
             "version": "25.6.1"
         }
     }
