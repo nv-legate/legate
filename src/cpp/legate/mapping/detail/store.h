@@ -81,18 +81,20 @@ class FutureWrapper {
 class Store {
  public:
   Store() = default;
-  Store(std::int32_t dim,
-        InternalSharedPtr<legate::detail::Type> type,
-        FutureWrapper future,
-        InternalSharedPtr<legate::detail::TransformStack>&& transform = nullptr);
-  Store(Legion::Mapping::MapperRuntime& runtime,
-        Legion::Mapping::MapperContext context,
-        std::int32_t dim,
-        InternalSharedPtr<legate::detail::Type> type,
-        GlobalRedopID redop_id,
-        const RegionField& region_field,
-        bool is_unbound_store                                         = false,
-        InternalSharedPtr<legate::detail::TransformStack>&& transform = nullptr);
+  Store(
+    std::int32_t dim,
+    InternalSharedPtr<legate::detail::Type> type,
+    FutureWrapper future,
+    std::optional<InternalSharedPtr<legate::detail::TransformStack>>&& transform = std::nullopt);
+  Store(
+    Legion::Mapping::MapperRuntime& runtime,
+    Legion::Mapping::MapperContext context,
+    std::int32_t dim,
+    InternalSharedPtr<legate::detail::Type> type,
+    GlobalRedopID redop_id,
+    const RegionField& region_field,
+    bool is_unbound_store                                                        = false,
+    std::optional<InternalSharedPtr<legate::detail::TransformStack>>&& transform = std::nullopt);
   // A special constructor to create a mapper view of a store from a region requirement
   Store(Legion::Mapping::MapperRuntime& runtime,
         Legion::Mapping::MapperContext context,
@@ -148,7 +150,7 @@ class Store {
   FutureWrapper future_{};
   RegionField region_field_{};
 
-  InternalSharedPtr<legate::detail::TransformStack> transform_{};
+  std::optional<InternalSharedPtr<legate::detail::TransformStack>> transform_{};
 
   Legion::Mapping::MapperRuntime* runtime_{};
   Legion::Mapping::MapperContext context_{};

@@ -32,7 +32,7 @@ Legion::IndexSpace RegionField::get_index_space() const
 Store::Store(std::int32_t dim,
              InternalSharedPtr<legate::detail::Type> type,
              FutureWrapper future,
-             InternalSharedPtr<legate::detail::TransformStack>&& transform)
+             std::optional<InternalSharedPtr<legate::detail::TransformStack>>&& transform)
   : is_future_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -48,7 +48,7 @@ Store::Store(Legion::Mapping::MapperRuntime& runtime,
              GlobalRedopID redop_id,
              const RegionField& region_field,
              bool is_unbound_store,
-             InternalSharedPtr<legate::detail::TransformStack>&& transform)
+             std::optional<InternalSharedPtr<legate::detail::TransformStack>>&& transform)
   : is_unbound_store_{is_unbound_store},
     dim_{dim},
     type_{std::move(type)},
@@ -72,7 +72,7 @@ Store::Store(Legion::Mapping::MapperRuntime& runtime,
 
 bool Store::valid() const { return is_future() || unbound() || region_field().valid(); }
 
-bool Store::transformed() const { return transform_ && !transform_->identity(); }
+bool Store::transformed() const { return transform_.has_value() && !(*transform_)->identity(); }
 
 bool Store::can_colocate_with(const Store& other) const
 {
@@ -118,8 +118,8 @@ Domain Store::domain() const
     return region_field().domain(*runtime_, context_);
   }();
 
-  if (!transform_->identity()) {
-    result = transform_->transform(result);
+  if (transform_.has_value() && !(*transform_)->identity()) {
+    result = (*transform_)->transform(result);
   }
   LEGATE_CHECK(result.dim == dim());
   return result;
@@ -127,8 +127,8 @@ Domain Store::domain() const
 
 legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> Store::find_imaginary_dims() const
 {
-  if (transform_) {
-    return transform_->find_imaginary_dims();
+  if (transform_.has_value()) {
+    return (*transform_)->find_imaginary_dims();
   }
   return {};
 }
@@ -136,8 +136,8 @@ legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> Store::find_imaginary_
 legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> Store::invert_dims(
   legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> dims) const
 {
-  if (transform_) {
-    return transform_->invert_dims(std::move(dims));
+  if (transform_.has_value()) {
+    return (*transform_)->invert_dims(std::move(dims));
   }
   return dims;
 }
