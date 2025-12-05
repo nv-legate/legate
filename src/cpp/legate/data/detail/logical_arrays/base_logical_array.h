@@ -21,6 +21,7 @@
 
 namespace legate::detail {
 
+class PhysicalArray;
 class BasePhysicalArray;
 class LogicalStore;
 class Shape;

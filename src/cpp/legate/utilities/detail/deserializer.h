@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/comm/communicator.h>
-#include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/data/detail/transform/transform_stack.h>
@@ -36,6 +35,11 @@ namespace legate::detail {
 class FutureWrapper;
 class RegionField;
 class UnboundRegionField;
+
+class PhysicalArray;
+class BasePhysicalArray;
+class ListPhysicalArray;
+class StructPhysicalArray;
 
 template <typename Deserializer>
 class BaseDeserializer {

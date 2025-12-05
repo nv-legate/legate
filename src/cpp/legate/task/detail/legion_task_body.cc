@@ -8,6 +8,7 @@
 
 #include <legate/comm/communicator.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/mapping/detail/machine.h>

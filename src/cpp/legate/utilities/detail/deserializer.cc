@@ -7,6 +7,8 @@
 #include <legate/utilities/detail/deserializer.h>
 
 #include <legate/data/detail/future_wrapper.h>
+#include <legate/data/detail/physical_arrays/list_physical_array.h>
+#include <legate/data/detail/physical_arrays/struct_physical_array.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/region_physical_store.h>

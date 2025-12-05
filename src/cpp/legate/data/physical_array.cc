@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/physical_array.h>
+#include <legate/data/detail/physical_arrays/list_physical_array.h>
 #include <legate/data/logical_array.h>
 #include <legate/data/physical_store.h>
 #include <legate/type/types.h>

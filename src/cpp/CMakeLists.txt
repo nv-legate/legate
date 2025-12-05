@@ -289,6 +289,9 @@ target_sources(legate_obj
                        legate/data/detail/storage_partition.cc
                        legate/data/detail/scalar.cc
                        legate/data/detail/physical_array.cc
+                       legate/data/detail/physical_arrays/base_physical_array.cc
+                       legate/data/detail/physical_arrays/list_physical_array.cc
+                       legate/data/detail/physical_arrays/struct_physical_array.cc
                        legate/data/detail/physical_store.cc
                        legate/data/detail/physical_stores/future_physical_store.cc
                        legate/data/detail/physical_stores/region_physical_store.cc

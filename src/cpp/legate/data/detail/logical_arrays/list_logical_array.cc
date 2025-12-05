@@ -7,7 +7,7 @@
 #include <legate/data/detail/logical_arrays/list_logical_array.h>
 
 #include <legate/data/detail/logical_arrays/base_logical_array.h>
-#include <legate/data/detail/physical_array.h>
+#include <legate/data/detail/physical_arrays/list_physical_array.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/task.h>
 #include <legate/partitioning/detail/constraint.h>
