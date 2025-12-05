@@ -225,10 +225,10 @@ std::ostream& operator<<(std::ostream& os, const Machine& machine)
 }
 
 ///////////////////////////////////////////
-// legate::mapping::LocalProcessorRange
+// legate::mapping::ProcessorSpan
 ///////////////////////////////////////////
 
-const Processor& LocalProcessorRange::operator[](std::uint32_t idx) const
+const Processor& ProcessorSpan::operator[](std::uint32_t idx) const
 {
   auto local_idx = idx - offset_;
   static_assert(std::is_unsigned_v<decltype(local_idx)>,
@@ -237,12 +237,9 @@ const Processor& LocalProcessorRange::operator[](std::uint32_t idx) const
   return procs_[local_idx];
 }
 
-std::string LocalProcessorRange::to_string() const
-{
-  return fmt::format("{}", fmt::streamed(*this));
-}
+std::string ProcessorSpan::to_string() const { return fmt::format("{}", fmt::streamed(*this)); }
 
-std::ostream& operator<<(std::ostream& os, const LocalProcessorRange& range)
+std::ostream& operator<<(std::ostream& os, const ProcessorSpan& range)
 {
   os << "{offset: " << range.offset_ << ", total processor count: " << range.total_proc_count_
      << ", processors: ";
@@ -257,6 +254,39 @@ std::ostream& operator<<(std::ostream& os, const LocalProcessorRange& range)
 // legate::mapping::LocalMachine
 ///////////////////////////////////////////
 LocalMachine::LocalMachine()
+  : LocalMachine{[](Legion::Machine::ProcessorQuery& pq) -> Legion::Machine::ProcessorQuery& {
+                   return pq.local_address_space();
+                 },
+                 [](Legion::Machine::MemoryQuery& mq) -> Legion::Machine::MemoryQuery& {
+                   return mq.local_address_space();
+                 }}
+{
+}
+
+LocalMachine::LocalMachine(Processor p)
+  : LocalMachine{[p](Legion::Machine::ProcessorQuery& pq) -> Legion::Machine::ProcessorQuery& {
+                   return pq.same_address_space_as(p);
+                 },
+                 [p](Legion::Machine::MemoryQuery& mq) -> Legion::Machine::MemoryQuery& {
+                   return mq.same_address_space_as(p);
+                 }}
+{
+}
+
+LocalMachine::LocalMachine(Memory m)
+  : LocalMachine{[m](Legion::Machine::ProcessorQuery& pq) -> Legion::Machine::ProcessorQuery& {
+                   return pq.same_address_space_as(m);
+                 },
+                 [m](Legion::Machine::MemoryQuery& mq) -> Legion::Machine::MemoryQuery& {
+                   return mq.same_address_space_as(m);
+                 }}
+{
+}
+
+LocalMachine::LocalMachine(
+  const std::function<Legion::Machine::ProcessorQuery&(Legion::Machine::ProcessorQuery&)>&
+    localize_pq,
+  const std::function<Legion::Machine::MemoryQuery&(Legion::Machine::MemoryQuery&)>& localize_mq)
   : node_id{static_cast<std::uint32_t>(Realm::Network::my_node_id)},
     total_nodes{
       static_cast<std::uint32_t>(Legion::Machine::get_machine().get_address_space_count())}
@@ -264,7 +294,7 @@ LocalMachine::LocalMachine()
   auto legion_machine = Legion::Machine::get_machine();
   Legion::Machine::ProcessorQuery procs{legion_machine};
   // Query to find all our local processors
-  procs.local_address_space();
+  localize_pq(procs);
   for (auto proc : procs) {
     switch (proc.kind()) {
       case Processor::LOC_PROC: {
@@ -290,14 +320,14 @@ LocalMachine::LocalMachine()
 
   // Now do queries to find all our local memories
   Legion::Machine::MemoryQuery sysmem{legion_machine};
-  sysmem.local_address_space().only_kind(Legion::Memory::SYSTEM_MEM);
+  localize_mq(sysmem).only_kind(Legion::Memory::SYSTEM_MEM);
   LEGATE_CHECK(sysmem.count() > 0);
   system_memory_ = sysmem.first();
 
   if (!gpus_.empty()) {
     Legion::Machine::MemoryQuery zcmem{legion_machine};
 
-    zcmem.local_address_space().only_kind(Legion::Memory::Z_COPY_MEM);
+    localize_mq(zcmem).only_kind(Legion::Memory::Z_COPY_MEM);
     LEGATE_CHECK(zcmem.count() > 0);
     zerocopy_memory_ = zcmem.first();
   }
@@ -305,7 +335,7 @@ LocalMachine::LocalMachine()
   for (auto&& gpu : gpus_) {
     Legion::Machine::MemoryQuery framebuffer{legion_machine};
 
-    framebuffer.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
+    localize_mq(framebuffer).only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
     LEGATE_CHECK(framebuffer.count() > 0);
     frame_buffers_[gpu] = framebuffer.first();
   }
@@ -313,7 +343,7 @@ LocalMachine::LocalMachine()
   for (auto&& omp : omps_) {
     Legion::Machine::MemoryQuery sockmem{legion_machine};
 
-    sockmem.local_address_space().only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);
+    localize_mq(sockmem).only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);
     // If we have socket memories then use them
     if (sockmem.count() > 0) {
       socket_memories_[omp] = sockmem.first();
@@ -324,10 +354,11 @@ LocalMachine::LocalMachine()
     }
   }
 
-  init_g2c_multi_hop_bandwidth_();
+  init_g2c_multi_hop_bandwidth_(localize_mq);
 }
 
-void LocalMachine::init_g2c_multi_hop_bandwidth_()
+void LocalMachine::init_g2c_multi_hop_bandwidth_(
+  const std::function<Legion::Machine::MemoryQuery&(Legion::Machine::MemoryQuery&)>& localize_mq)
 {
   // Estimate local-node CPU<->GPU multi-hop memory copy bandwidth. If the CPU memory is not pinned,
   // then Realm cannot do this in one hop, and therefore get_mem_mem_affinity won't cover this case.
@@ -339,7 +370,7 @@ void LocalMachine::init_g2c_multi_hop_bandwidth_()
   if (zerocopy_memory_.exists()) {
     Legion::Machine::MemoryQuery gpu_mems{legion_machine};
 
-    gpu_mems.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM);
+    localize_mq(gpu_mems).only_kind(Legion::Memory::GPU_FB_MEM);
     for (auto gpu_mem : gpu_mems) {
       std::vector<Legion::MemoryMemoryAffinity> g2z_affinities;
       legion_machine.get_mem_mem_affinity(
@@ -352,7 +383,7 @@ void LocalMachine::init_g2c_multi_hop_bandwidth_()
       auto& cache_for_gpu = g2c_multi_hop_bandwidth_[gpu_mem];
 
       Legion::Machine::MemoryQuery cpu_mems{legion_machine};
-      cpu_mems.local_address_space();
+      localize_mq(cpu_mems);
       for (auto cpu_mem : cpu_mems) {
         if (cpu_mem.kind() != Legion::Memory::SYSTEM_MEM &&
             cpu_mem.kind() != Legion::Memory::SOCKET_MEM) {
@@ -379,7 +410,7 @@ const std::vector<Processor>& LocalMachine::procs(TaskTarget target) const
     case TaskTarget::OMP: return omps_;
     case TaskTarget::CPU: return cpus_;
   }
-  return cpus_;
+  LEGATE_ABORT(fmt::format("LocalMachine::procs not implemented for target: {}", target));
 }
 
 std::size_t LocalMachine::total_frame_buffer_size() const
@@ -421,21 +452,19 @@ bool LocalMachine::has_socket_memory() const
          socket_memories().begin()->second.kind() == Legion::Memory::SOCKET_MEM;
 }
 
-LocalProcessorRange LocalMachine::slice(TaskTarget target,
-                                        const Machine& machine,
-                                        bool fallback_to_global /*=false*/) const
+ProcessorSpan LocalMachine::slice(const Machine& machine) const
 {
-  const auto& local_procs = procs(target);
+  const TaskTarget preferred_target = machine.preferred_target();
+  const auto& local_procs           = procs(preferred_target);
 
-  auto finder = machine.processor_ranges().find(target);
-  if (machine.processor_ranges().end() == finder) {
-    if (fallback_to_global) {
-      return LocalProcessorRange{local_procs};
-    }
+  // Find processors of target in machine argument
+  auto it = machine.processor_ranges().find(preferred_target);
+
+  if (machine.processor_ranges().end() == it) {
     return {};
   }
 
-  auto& global_range = finder->second;
+  auto& global_range = it->second;
 
   auto num_local_procs = local_procs.size();
   auto my_low          = num_local_procs * node_id;
@@ -443,16 +472,48 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
                                 static_cast<std::uint32_t>(my_low + num_local_procs),
                                 global_range.per_node_count};
 
+  // Check intersection between global machine parameter and local list of processors
   auto slice = global_range & my_range;
+
   if (slice.empty()) {
-    if (fallback_to_global) {
-      return LocalProcessorRange{local_procs};
-    }
     return {};
   }
 
-  return {
-    slice.low, global_range.count(), local_procs.data() + (slice.low - my_low), slice.count()};
+  const Span<const Processor> procs{local_procs.data() + (slice.low - my_low), slice.count()};
+
+  return {slice.low, global_range.count(), procs};
+}
+
+ProcessorSpan LocalMachine::slice_with_fallback(const Machine& machine) const
+{
+  const TaskTarget preferred_target = machine.preferred_target();
+  const auto& local_procs           = procs(preferred_target);
+
+  // Find processors of target in machine argument (fallback if none in machine)
+  auto it = machine.processor_ranges().find(preferred_target);
+
+  if (machine.processor_ranges().end() == it) {
+    return ProcessorSpan{local_procs};
+  }
+
+  auto& global_range = it->second;
+
+  auto num_local_procs = local_procs.size();
+  auto my_low          = num_local_procs * node_id;
+  const ProcessorRange my_range{static_cast<std::uint32_t>(my_low),
+                                static_cast<std::uint32_t>(my_low + num_local_procs),
+                                global_range.per_node_count};
+
+  // Check intersection between global machine parameter and local list of processors
+  auto slice = global_range & my_range;
+
+  if (slice.empty()) {
+    return ProcessorSpan{local_procs};
+  }
+
+  const Span<const Processor> procs{local_procs.data() + (slice.low - my_low), slice.count()};
+
+  return {slice.low, global_range.count(), procs};
 }
 
 const Processor& LocalMachine::find_first_processor_with_affinity_to(StoreTarget target) const

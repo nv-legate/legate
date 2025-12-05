@@ -15,8 +15,8 @@
 
 namespace local_machine_test {
 
-using LocalMachineTest        = DefaultFixture;
-using LocalProcessorRangeTest = DefaultFixture;
+using LocalMachineTest  = DefaultFixture;
+using ProcessorSpanTest = DefaultFixture;
 
 TEST_F(LocalMachineTest, CPU)
 {
@@ -69,11 +69,10 @@ TEST_F(LocalMachineTest, OMP)
 TEST_F(LocalMachineTest, SliceCPU)
 {
   auto local_machine = legate::mapping::detail::LocalMachine{};
-  auto sliced        = local_machine.slice(legate::mapping::TaskTarget::CPU,
-                                    *legate::Runtime::get_runtime()->get_machine().impl());
-  auto sliced_global = local_machine.slice(legate::mapping::TaskTarget::CPU,
-                                           *legate::Runtime::get_runtime()->get_machine().impl(),
-                                           true /* fallback_to_global */);
+  auto machine =
+    legate::Runtime::get_runtime()->get_machine().impl()->only(legate::mapping::TaskTarget::CPU);
+  auto sliced        = local_machine.slice(machine);
+  auto sliced_global = local_machine.slice_with_fallback(machine);
 
   if (local_machine.has_cpus()) {
     ASSERT_FALSE(sliced.empty());
@@ -90,11 +89,10 @@ TEST_F(LocalMachineTest, SliceCPU)
 TEST_F(LocalMachineTest, SliceGPU)
 {
   auto local_machine = legate::mapping::detail::LocalMachine{};
-  auto sliced        = local_machine.slice(legate::mapping::TaskTarget::GPU,
-                                    *legate::Runtime::get_runtime()->get_machine().impl());
-  auto sliced_global = local_machine.slice(legate::mapping::TaskTarget::GPU,
-                                           *legate::Runtime::get_runtime()->get_machine().impl(),
-                                           true /* fallback_to_global */);
+  auto machine =
+    legate::Runtime::get_runtime()->get_machine().impl()->only(legate::mapping::TaskTarget::GPU);
+  auto sliced        = local_machine.slice(machine);
+  auto sliced_global = local_machine.slice_with_fallback(machine);
 
   if (local_machine.has_gpus()) {
     ASSERT_FALSE(sliced.empty());
@@ -111,11 +109,10 @@ TEST_F(LocalMachineTest, SliceGPU)
 TEST_F(LocalMachineTest, SliceOMP)
 {
   auto local_machine = legate::mapping::detail::LocalMachine{};
-  auto sliced        = local_machine.slice(legate::mapping::TaskTarget::OMP,
-                                    *legate::Runtime::get_runtime()->get_machine().impl());
-  auto sliced_global = local_machine.slice(legate::mapping::TaskTarget::OMP,
-                                           *legate::Runtime::get_runtime()->get_machine().impl(),
-                                           true /* fallback_to_global */);
+  auto machine =
+    legate::Runtime::get_runtime()->get_machine().impl()->only(legate::mapping::TaskTarget::OMP);
+  auto sliced        = local_machine.slice(machine);
+  auto sliced_global = local_machine.slice_with_fallback(machine);
 
   if (local_machine.has_omps()) {
     ASSERT_FALSE(sliced.empty());
@@ -164,12 +161,11 @@ TEST_F(LocalMachineTest, FindProcessor)
   }
 }
 
-TEST_F(LocalProcessorRangeTest, Create)
+TEST_F(ProcessorSpanTest, Create)
 {
-  auto local_processor_range = legate::mapping::detail::LocalProcessorRange{};
-  ASSERT_TRUE(local_processor_range.empty());
-  ASSERT_EQ(local_processor_range.to_string(),
-            "{offset: 0, total processor count: 0, processors: }");
+  auto processor_span = legate::mapping::detail::ProcessorSpan{};
+  ASSERT_TRUE(processor_span.empty());
+  ASSERT_EQ(processor_span.to_string(), "{offset: 0, total processor count: 0, processors: }");
 }
 
 }  // namespace local_machine_test

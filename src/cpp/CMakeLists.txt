@@ -319,6 +319,8 @@ target_sources(legate_obj
                        legate/mapping/detail/core_mapper.cc
                        legate/mapping/detail/instance_manager.cc
                        legate/mapping/detail/machine.cc
+                       legate/mapping/detail/local_machine_selector.cc
+                       legate/mapping/detail/global_machine.cc
                        legate/mapping/detail/mapping.cc
                        legate/mapping/detail/operation.cc
                        legate/mapping/detail/store.cc

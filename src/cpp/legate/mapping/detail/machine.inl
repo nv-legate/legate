@@ -34,26 +34,25 @@ Machine Machine::only_if(F&& pred) const
 
 // ==========================================================================================
 
-inline LocalProcessorRange::LocalProcessorRange(std::uint32_t offset,
-                                                std::uint32_t total_proc_count,
-                                                const Processor* local_procs,
-                                                std::size_t num_local_procs)
-  : offset_{offset}, total_proc_count_{total_proc_count}, procs_{local_procs, num_local_procs}
+inline ProcessorSpan::ProcessorSpan(std::uint32_t offset,
+                                    std::uint32_t total_proc_count,
+                                    Span<const Processor> procs)
+  : offset_{offset}, total_proc_count_{total_proc_count}, procs_{procs}
 {
 }
 
-inline LocalProcessorRange::LocalProcessorRange(const std::vector<Processor>& procs)
-  : LocalProcessorRange{0, static_cast<std::uint32_t>(procs.size()), procs.data(), procs.size()}
+inline ProcessorSpan::ProcessorSpan(legate::Span<const Processor> procs)
+  : ProcessorSpan{0, static_cast<std::uint32_t>(procs.size()), procs}
 {
 }
 
-inline const Processor& LocalProcessorRange::first() const { return procs_.front(); }
+inline const Processor& ProcessorSpan::first() const { return procs_.front(); }
 
-inline bool LocalProcessorRange::empty() const { return procs_.empty(); }
+inline bool ProcessorSpan::empty() const { return procs_.empty(); }
 
-inline std::uint32_t LocalProcessorRange::total_proc_count() const { return total_proc_count_; }
+inline std::uint32_t ProcessorSpan::total_proc_count() const { return total_proc_count_; }
 
-inline std::uint32_t LocalProcessorRange::offset() const { return offset_; }
+inline std::uint32_t ProcessorSpan::offset() const { return offset_; }
 
 // ==========================================================================================
 

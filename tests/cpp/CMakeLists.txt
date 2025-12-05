@@ -226,7 +226,9 @@ set(with_runtime_SRC
     unit/machine/node_range.cc
     unit/machine/processor_range.cc
     unit/machine/machine.cc
+    unit/machine/global_machine.cc
     unit/machine/local_machine.cc
+    unit/machine/local_machine_selector.cc
     unit/mapping/base_array.cc
     unit/mapping/common_api.cc
     unit/mapping/dim_ordering.cc

@@ -254,7 +254,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   const Task legate_task{task, *runtime, ctx};
 
   auto&& machine_desc = legate_task.machine();
-  auto local_range    = local_machine_.slice(legate_task.target(), machine_desc);
+  auto local_range    = local_machine_.slice(machine_desc.only(legate_task.target()));
 
   Legion::ProjectionID projection = 0;
   for (auto&& req : task.regions) {
@@ -604,8 +604,14 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     }
     // If this is a single task, here is the right place to compute the final
     // target processor
-    const auto local_range =
-      local_machine_.slice(legate_task.target(), legate_task.machine(), task.local_function);
+    const auto local_range = [&]() {
+      const auto machine = legate_task.machine().only(legate_task.target());
+
+      if (task.local_function) {
+        return local_machine_.slice_with_fallback(machine);
+      }
+      return local_machine_.slice(machine);
+    }();
 
     LEGATE_ASSERT(!local_range.empty());
     return local_range.first();
@@ -1666,13 +1672,14 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   // Prefer GPU if available.
   const auto copy_target = machine_desc.valid_targets().front();
 
-  auto local_range = local_machine_.slice(copy_target, machine_desc, true);
+  auto local_range = local_machine_.slice_with_fallback(machine_desc.only(copy_target));
 
   LEGATE_ASSERT(!local_range.empty());
   // Determine the target processor for indirect requirements, which are typically
   // on host memory.
   const auto host_target = machine_desc.valid_targets_except({TaskTarget::GPU}).front();
-  const auto host_range  = local_machine_.slice(host_target, machine_desc, true);
+  const auto host_range  = local_machine_.slice_with_fallback(machine_desc.only(host_target));
+
   LEGATE_ASSERT(!host_range.empty());
 
   Processor target_proc = Processor::NO_PROC;
