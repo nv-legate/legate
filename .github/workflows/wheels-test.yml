@@ -95,7 +95,7 @@ jobs:
           sha="$(echo ${{github.sha}} | head -c 10)"
           echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.sha }}
@@ -116,7 +116,7 @@ jobs:
         if: ${{ matrix.GPU != 'v100' && matrix.GPU != 'a100' }}
 
       - name: Download wheels from the build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         env:
           BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12-py${{ matrix.PY_VER }}
         with:

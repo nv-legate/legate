@@ -108,7 +108,7 @@ jobs:
           role-duration-seconds: 28800 # 8 hours
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.sha }}
@@ -119,7 +119,7 @@ jobs:
           # The || true is to satisfy the linting check, seems less readable to me.
           echo "$(pwd)/continuous_integration/scripts/tools" >> "${GITHUB_PATH}" || true
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: rapidsai/gha-tools
           path: gha-tools
@@ -140,7 +140,7 @@ jobs:
       - name: C++ wheel upload
         env:
           BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12-py${{ matrix.PY_VER }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: legate-wheel-${{ env.BUILD_NAME }}
           path: final-dist/*.whl

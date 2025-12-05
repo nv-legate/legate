@@ -63,7 +63,7 @@ jobs:
           echo "${{ needs.build-docs.outputs.artifacts-dir }}"
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: ${{ needs.build-docs.outputs.artifact-name }}
           path: ${{ needs.build-docs.outputs.artifacts-dir }}
@@ -92,7 +92,7 @@ jobs:
           echo "docs_dir=${PARENT_DIR}" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4

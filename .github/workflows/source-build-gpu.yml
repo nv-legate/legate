@@ -199,7 +199,7 @@ jobs:
       - name: C++ build upload
         env:
           BUILD_NAME: ${{ matrix.ARCH }}-cuda12-gcc${{ matrix.GCC_VER }}-${{ matrix.BUILD_MODE }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: source-build-${{ env.BUILD_NAME }}
           # We have already compressed the artifact, no need for github to try and

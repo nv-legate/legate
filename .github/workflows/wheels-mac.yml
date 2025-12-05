@@ -72,7 +72,7 @@ jobs:
       matrix: ${{ fromJSON(needs.compute-matrix.outputs.MATRIX) }}
     runs-on: mac-arm64-llr
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5
+      - uses: actions/checkout@v5
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.sha }}
@@ -115,7 +115,7 @@ jobs:
       - name: Wheel upload
         env:
           BUILD_NAME: mac-arm64-py${{ matrix.PY_VER }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheel-${{ env.BUILD_NAME }}
           path: wheelhouse/*.whl

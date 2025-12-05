@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
@@ -75,7 +75,7 @@ jobs:
           ls -lAhR "${CONDA_OUTPUT}"
 
       - name: Upload mpi wrapper artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.ARTIFACT_PATH }}
