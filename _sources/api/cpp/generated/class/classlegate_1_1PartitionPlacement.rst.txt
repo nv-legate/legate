@@ -1,0 +1,4 @@
+legate::PartitionPlacement
+==========================
+
+.. doxygenclass:: legate::PartitionPlacement

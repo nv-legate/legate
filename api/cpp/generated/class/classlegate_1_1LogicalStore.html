@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::LogicalStore &#8212; NVIDIA legate (26.01.00.dev0)</title>
+    <title>legate::LogicalStore &#8212; NVIDIA legate (26.01.00.dev1+gff73494df)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=2d1b9571"></script>
+    <script src="../../../../_static/documentation_options.js?v=93ed6ddf"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
   
 </a></div>
     
@@ -253,11 +253,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
   
 </a>
 
@@ -481,6 +481,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1MinReduction_3_01Half_01_4.html">legate::MinReduction&lt; Half &gt;</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1OrReduction.html">legate::OrReduction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PartitionPlacement.html">legate::PartitionPlacement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PartitionPlacementInfo.html">legate::PartitionPlacementInfo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalTask.html">legate::PhysicalTask</a></li>
@@ -1173,6 +1175,19 @@ The size and alignment of the new type must match that of the existing type.</p>
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore25get_cached_physical_storeEv">
+<span id="_CPPv3NK6legate12LogicalStore25get_cached_physical_storeEv"></span><span id="_CPPv2NK6legate12LogicalStore25get_cached_physical_storeEv"></span><span id="legate::LogicalStore::get_cached_physical_storeC"></span><span class="target" id="classlegate_1_1LogicalStore_1a7ee07d10d405c97113f68c2be02b09dd"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="classlegate_1_1PhysicalStore.html#_CPPv4N6legate13PhysicalStoreE" title="legate::PhysicalStore"><span class="n"><span class="pre">PhysicalStore</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_cached_physical_store</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore25get_cached_physical_storeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Gets the currently mapped <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for this <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code></p>
+<p>Returns the physical store if this logical store has already been mapped to physical memory via a previous call to <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1a65a19d72698f2e1c1d99f0f54620d7dd"><span class="std std-ref"><span class="pre">get_physical_store()</span></span></a></code>. This method does not trigger any new mapping operations and does not block.</p>
+<p>This is useful for checking if a store has an existing physical allocation without forcing a new inline mapping operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The currently mapped <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> if one exists, or std::nullopt otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE">
 <span id="_CPPv3NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="_CPPv2NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="legate::LogicalStore::get_physical_store__std::optional:mapping::StoreTarget:C"></span><span class="target" id="classlegate_1_1LogicalStore_1a65a19d72698f2e1c1d99f0f54620d7dd"></span><a class="reference internal" href="classlegate_1_1PhysicalStore.html#_CPPv4N6legate13PhysicalStoreE" title="legate::PhysicalStore"><span class="n"><span class="pre">PhysicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_physical_store</span></span></span><span class="sig-paren">(</span>
 
@@ -1334,6 +1349,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore11delinearizeENSt7int32_tENSt6vectorINSt8uint64_tEEE"><code class="docutils literal notranslate"><span class="pre">delinearize()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore13get_partitionEv"><code class="docutils literal notranslate"><span class="pre">get_partition()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore19partition_by_tilingE4SpanIKNSt8uint64_tEENSt8optionalI4SpanIKNSt8uint64_tEEEE"><code class="docutils literal notranslate"><span class="pre">partition_by_tiling()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore25get_cached_physical_storeEv"><code class="docutils literal notranslate"><span class="pre">get_cached_physical_store()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE"><code class="docutils literal notranslate"><span class="pre">get_physical_store()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate12LogicalStore6detachEv"><code class="docutils literal notranslate"><span class="pre">detach()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate12LogicalStore10offload_toEN7mapping11StoreTargetE"><code class="docutils literal notranslate"><span class="pre">offload_to()</span></code></a></li>

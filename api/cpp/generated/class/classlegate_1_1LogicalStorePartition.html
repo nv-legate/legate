@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::LogicalStorePartition &#8212; NVIDIA legate (26.01.00.dev0)</title>
+    <title>legate::LogicalStorePartition &#8212; NVIDIA legate (26.01.00.dev1+gff73494df)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=2d1b9571"></script>
+    <script src="../../../../_static/documentation_options.js?v=93ed6ddf"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
   
 </a>
 
@@ -480,6 +480,8 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1MinReduction_3_01Half_01_4.html">legate::MinReduction&lt; Half &gt;</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1OrReduction.html">legate::OrReduction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PartitionPlacement.html">legate::PartitionPlacement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PartitionPlacementInfo.html">legate::PartitionPlacementInfo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalStore.html">legate::PhysicalStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalTask.html">legate::PhysicalTask</a></li>
@@ -702,7 +704,22 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate21LogicalStorePartitionE">
 <span id="_CPPv3N6legate21LogicalStorePartitionE"></span><span id="_CPPv2N6legate21LogicalStorePartitionE"></span><span id="legate::LogicalStorePartition"></span><span class="target" id="classlegate_1_1LogicalStorePartition"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LogicalStorePartition</span></span></span><a class="headerlink" href="#_CPPv4N6legate21LogicalStorePartitionE" title="Link to this definition">#</a><br /></dt>
-<dd><dl class="cpp class">
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate21LogicalStorePartition18get_placement_infoEv">
+<span id="_CPPv3NK6legate21LogicalStorePartition18get_placement_infoEv"></span><span id="_CPPv2NK6legate21LogicalStorePartition18get_placement_infoEv"></span><span id="legate::LogicalStorePartition::get_placement_infoC"></span><span class="target" id="classlegate_1_1LogicalStorePartition_1a43baf4d9e574e617836f064146261acb"></span><a class="reference internal" href="classlegate_1_1PartitionPlacementInfo.html#_CPPv4N6legate22PartitionPlacementInfoE" title="legate::PartitionPlacementInfo"><span class="n"><span class="pre">PartitionPlacementInfo</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_placement_info</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate21LogicalStorePartition18get_placement_infoEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Gets the partition placement info for this partition. </p>
+<p>The partition placement info contains the device mappings for this partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The partition placement info for this partition. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate21LogicalStorePartition4ImplE">
 <span id="_CPPv3N6legate21LogicalStorePartition4ImplE"></span><span id="_CPPv2N6legate21LogicalStorePartition4ImplE"></span><span id="legate::LogicalStorePartition::Impl"></span><span class="target" id="classlegate_1_1LogicalStorePartition_1_1Impl"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Impl</span></span></span><a class="headerlink" href="#_CPPv4N6legate21LogicalStorePartition4ImplE" title="Link to this definition">#</a><br /></dt>
 <dd></dd></dl>
@@ -761,6 +778,7 @@ SPDX-License-Identifier: Apache-2.0
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate21LogicalStorePartitionE"><code class="docutils literal notranslate"><span class="pre">legate::LogicalStorePartition</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate21LogicalStorePartition18get_placement_infoEv"><code class="docutils literal notranslate"><span class="pre">get_placement_info()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate21LogicalStorePartition4ImplE"><code class="docutils literal notranslate"><span class="pre">legate::LogicalStorePartition::Impl</span></code></a></li>
 </ul>
 </li>
