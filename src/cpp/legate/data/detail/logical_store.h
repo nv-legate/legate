@@ -116,6 +116,19 @@ class LogicalStore {
  public:
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     legate::mapping::StoreTarget target, bool ignore_future_mutability);
+
+  /**
+   * @brief Gets the currently mapped `PhysicalStore` for this `LogicalStore`
+   *
+   * Returns the physical store if this logical store has already been mapped to physical
+   * memory via a previous call to `get_physical_store()`. This method does not trigger
+   * any new mapping operations and does not block.
+   *
+   * This is useful for checking if a store has an existing physical allocation without
+   * forcing a new inline mapping operation.
+   */
+  [[nodiscard]] const std::optional<InternalSharedPtr<PhysicalStore>>& get_cached_physical_store()
+    const;
   [[nodiscard]] bool is_mapped() const;
   [[nodiscard]] bool needs_flush() const;
   void detach();
@@ -240,7 +253,7 @@ class LogicalStore {
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
-  InternalSharedPtr<RegionPhysicalStore> mapped_{};
+  std::optional<InternalSharedPtr<PhysicalStore>> mapped_{};
 };
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(

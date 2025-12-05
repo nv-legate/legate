@@ -283,6 +283,9 @@ target_sources(legate_obj
                        legate/data/detail/logical_arrays/list_logical_array.cc
                        legate/data/detail/logical_arrays/struct_logical_array.cc
                        legate/data/detail/logical_region_field.cc
+                       legate/data/partition_placement.cc
+                       legate/data/partition_placement_info.cc
+                       legate/data/detail/partition_placement_info.cc
                        legate/data/detail/logical_store.cc
                        legate/data/detail/logical_store_partition.cc
                        legate/data/detail/storage.cc
@@ -805,6 +808,8 @@ install(FILES legate/data/allocator.h
               legate/data/inline_allocation.h
               legate/data/logical_array.h
               legate/data/logical_store.h
+              legate/data/partition_placement.h
+              legate/data/partition_placement_info.h
               legate/data/physical_array.h
               legate/data/physical_array.inl
               legate/data/physical_store.h

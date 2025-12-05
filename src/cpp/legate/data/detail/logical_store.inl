@@ -103,4 +103,10 @@ inline RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<Lo
   return self->to_launcher_arg_for_fixup_(self, launch_domain, privilege);
 }
 
+inline const std::optional<InternalSharedPtr<PhysicalStore>>&
+LogicalStore::get_cached_physical_store() const
+{
+  return mapped_;
+}
+
 }  // namespace legate::detail

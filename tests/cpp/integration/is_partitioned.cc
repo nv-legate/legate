@@ -48,22 +48,49 @@ class CopyTask : public legate::LegateTask<CopyTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{10}};
 
+  class CopyTaskBody {
+   public:
+    template <int DIM>
+    void operator()(legate::TaskContext& context)
+    {
+      if (context.num_inputs() > 0) {
+        // Copy from input to output
+        const auto input  = context.input(0).data();
+        const auto output = context.output(0).data();
+        const auto shape  = input.shape<DIM>();
+
+        if (shape.empty()) {
+          return;
+        }
+
+        auto input_acc  = input.read_accessor<std::int64_t, DIM>(shape);
+        auto output_acc = output.write_accessor<std::int64_t, DIM>(shape);
+
+        for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+          output_acc[*it] = input_acc[*it];
+        }
+      } else {
+        // Just write zeros to output (for initialization)
+        const auto output = context.output(0).data();
+        const auto shape  = output.shape<DIM>();
+
+        if (shape.empty()) {
+          return;
+        }
+
+        auto output_acc = output.write_accessor<std::int64_t, DIM>(shape);
+        for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+          output_acc[*it] = 0;
+        }
+      }
+    }
+  };
+
   static void cpu_variant(legate::TaskContext context)
   {
-    const auto input  = context.input(0).data();
-    const auto output = context.output(0).data();
-    const auto shape  = input.shape<1>();
-
-    if (shape.empty()) {
-      return;
-    }
-
-    auto input_acc  = input.read_accessor<std::int64_t, 1>(shape);
-    auto output_acc = output.write_accessor<std::int64_t, 1>(shape);
-
-    for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-      output_acc[*it] = input_acc[*it];
-    }
+    auto dim =
+      context.num_inputs() > 0 ? context.input(0).data().dim() : context.output(0).data().dim();
+    legate::dim_dispatch(dim, CopyTaskBody{}, context);
   }
 };
 
@@ -102,6 +129,7 @@ class Config {
     Tester::register_variants(library);
     // Register FillTask from copy_util.inl for 1D arrays
     FillTask<1>::register_variants(library);
+    FillTask<2>::register_variants(library);
     CopyTask::register_variants(library);
     SumTask::register_variants(library);
   }
@@ -195,6 +223,66 @@ TEST_F(PartitionedStore, StoreGetPartition)
   manual_task.add_output(sum_output_store);
   runtime->submit(std::move(manual_task));
   runtime->issue_execution_fence(true);
+}
+
+TEST_F(PartitionedStore, PartitionPlacementInfo)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  constexpr std::uint64_t dim_x = 1000;
+  constexpr std::uint64_t dim_y = 1280;
+  const auto shape_2d           = legate::Shape{dim_x, dim_y};
+
+  auto in_store_2d                  = runtime->create_store(shape_2d, legate::int64());
+  auto out_store_2d                 = runtime->create_store(shape_2d, legate::int64());
+  constexpr std::int64_t fill_value = 42;
+
+  fill_input(library, in_store_2d, legate::Scalar{fill_value});
+
+  auto copy_task_2d = runtime->create_task(library, CopyTask::TASK_CONFIG.task_id());
+  copy_task_2d.add_input(in_store_2d);
+  copy_task_2d.add_output(out_store_2d);
+  runtime->submit(std::move(copy_task_2d));
+  runtime->issue_execution_fence(true);
+
+  auto partition_2d_optional = out_store_2d.get_partition();
+
+  if (!partition_2d_optional.has_value()) {
+    GTEST_SKIP() << "Partition not found, the task did not partition the store";
+  }
+
+  const auto& partition_2d   = partition_2d_optional.value();
+  auto partition_color_shape = partition_2d.color_shape();
+
+  ASSERT_GT(partition_color_shape.size(), 0) << "Partition should have non-zero dimensions";
+
+  auto device_mapping_2d = partition_2d.get_placement_info();
+
+  ASSERT_GT(device_mapping_2d.placements().size(), 0);
+
+  std::uint64_t total_colors = 1;
+
+  for (auto dim_size : partition_color_shape) {
+    total_colors *= dim_size;
+  }
+
+  auto num_nodes             = runtime->node_count();
+  auto expected_min_per_node = total_colors / num_nodes;
+
+  EXPECT_GE(device_mapping_2d.placements().size(), expected_min_per_node)
+    << "Node should have at least " << expected_min_per_node << " colors";
+  EXPECT_GT(device_mapping_2d.placements().size(), 0);
+
+  for (const auto& mapping : device_mapping_2d.placements()) {
+    EXPECT_EQ(mapping.partition_color().size(), partition_color_shape.size())
+      << "Partition color dimensionality mismatch";
+
+    for (std::size_t dim = 0; dim < mapping.partition_color().size(); ++dim) {
+      EXPECT_LT(mapping.partition_color()[dim], partition_color_shape[dim])
+        << "Color coordinate " << dim << " out of range";
+    }
+  }
 }
 
 }  // namespace is_partitioned

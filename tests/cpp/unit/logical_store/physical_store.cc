@@ -75,4 +75,17 @@ TEST_F(LogicalStorePhysicalUnit, ScalarStore)
   ASSERT_EQ(physical_store.code(), legate::Type::Code::INT32);
 }
 
+TEST_F(LogicalStorePhysicalUnit, CachedPhysicalStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{4, 4}, legate::int64());
+
+  ASSERT_FALSE(store.get_cached_physical_store().has_value());
+
+  std::ignore                = store.get_physical_store();
+  auto cached_physical_store = store.get_cached_physical_store();
+
+  ASSERT_TRUE(cached_physical_store.has_value());
+}
+
 }  // namespace logical_store_physical_test

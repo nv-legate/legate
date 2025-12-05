@@ -190,6 +190,7 @@ set(with_runtime_SRC
     # unit
     unit/attachment.cc
     unit/constraint.cc
+    unit/data/partition_placement_info.cc
     unit/dispatch.cc
     unit/formatter.cc
     unit/future_wrapper.cc

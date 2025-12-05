@@ -127,6 +127,16 @@ LogicalStore LogicalStore::delinearize(std::int32_t dim, std::vector<std::uint64
     impl()->delinearize(dim, detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{std::move(sizes)})};
 }
 
+std::optional<PhysicalStore> LogicalStore::get_cached_physical_store() const
+{
+  auto mapped = impl()->get_cached_physical_store();
+
+  if (mapped.has_value()) {
+    return PhysicalStore{*mapped, *this};
+  }
+  return std::nullopt;
+}
+
 PhysicalStore LogicalStore::get_physical_store(std::optional<mapping::StoreTarget> target) const
 {
   const auto sanitized =
@@ -206,6 +216,14 @@ LogicalStore LogicalStorePartition::get_child_store(Span<const std::uint64_t> co
 {
   return LogicalStore{
     impl()->get_child_store(detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color})};
+}
+
+PartitionPlacementInfo LogicalStorePartition::get_placement_info() const
+{
+  auto detail_mapping = impl()->get_placement_info();
+  auto detail_ptr     = make_internal_shared<detail::PartitionPlacementInfo>(detail_mapping);
+
+  return PartitionPlacementInfo{std::move(detail_ptr)};
 }
 
 const SharedPtr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const

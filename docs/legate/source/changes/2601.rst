@@ -25,6 +25,20 @@ C++
 
 .. rubric:: Data
 
+- Add a method to ``legate::LogicalStorePartition::get_placement_info()``.
+  This method returns a ``legate::PartitionPlacementInfo`` object that contains the
+  information about the placement of the partitions on the nodes.
+  ``legate::PartitionPlacementInfo`` class adds methods
+  ``legate::PartitionPlacementInfo::get_placement_for_color()``,
+  ``legate::PartitionPlacementInfo::placements()``, and
+  ``legate::PartitionPlacementInfo::to_string()``.
+  Further ``legate::PartitionPlacement`` class adds methods
+  ``legate::PartitionPlacement::partition_color()``,
+  ``legate::PartitionPlacement::node_id()``, and
+  ``legate::PartitionPlacement::memory_type()``.
+- Add a method ``legate::LogicalStore::get_cached_physical_store()`` to get
+  the cached physical store for the partition if one exists.
+
 .. rubric:: Mapping
 
 .. rubric:: Partitioning

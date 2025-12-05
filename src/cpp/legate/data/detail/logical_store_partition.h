@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/partition_placement_info.h>
 #include <legate/data/detail/storage.h>
 #include <legate/data/detail/storage_partition.h>
 #include <legate/data/slice.h>
@@ -51,6 +52,13 @@ class LogicalStorePartition {
     const Domain& launch_domain, const std::optional<SymbolicPoint>& projection = {});
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] Span<const std::uint64_t> color_shape() const;
+
+  /**
+   * @brief Gets the partition placement info for this partition.
+   *
+   * @return The partition placement info for this.
+   */
+  [[nodiscard]] detail::PartitionPlacementInfo get_placement_info() const;
 
  private:
   InternalSharedPtr<Partition> partition_{};

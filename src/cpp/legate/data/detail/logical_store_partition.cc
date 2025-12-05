@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/data/detail/partition_placement_info.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/detail/transform/shift.h>
@@ -20,7 +21,9 @@
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/partition_manager.h>
+#include <legate/runtime/detail/projection.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/detail/shard.h>
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/type/detail/types.h>
@@ -105,6 +108,59 @@ bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const
 Span<const std::uint64_t> LogicalStorePartition::color_shape() const
 {
   return partition_->color_shape();
+}
+
+detail::PartitionPlacementInfo LogicalStorePartition::get_placement_info() const
+{
+  // Algorithm:
+  // 1. Get the partition's color shape and launch domain from the underlying partition
+  // 2. Compute the projection ID that maps from launch domain points to partition colors
+  // 3. Find the corresponding sharding functor that determines which node executes each partition
+  // 4. For each point in the launch domain:
+  //    a. Use the sharding functor to determine which node (shard) executes this partition
+  //    b. Use the projection function to map the launch domain point to a partition color
+  //    c. Get the child store for this partition color
+  //    d. Determine the memory type where this partition is stored (cached or default SYSMEM)
+  //    e. Record the mapping of (partition_color, node_id, memory_type)
+
+  const auto&& color_shape   = partition_->color_shape();
+  const auto&& launch_domain = partition_->launch_domain();
+  const auto&& projection_id = store_->compute_projection(launch_domain, color_shape);
+  const auto&& sharding_id   = find_sharding_functor_by_projection_functor(projection_id);
+  Legion::ShardingFunctor* sharding_functor = Legion::Runtime::get_sharding_functor(sharding_id);
+
+  LEGATE_CHECK(sharding_functor != nullptr);
+
+  std::vector<detail::PartitionPlacement> mappings{};
+  auto total_nodes               = Runtime::get_runtime().node_count();
+  const auto projection_function = find_projection_function(projection_id);
+
+  for (Legion::Domain::DomainPointIterator itr{launch_domain}; itr; itr++) {
+    auto assigned_shard = sharding_functor->shard(itr.p, launch_domain, total_nodes);
+
+    const auto&& color_domain_point = projection_function->project_point(itr.p);
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> partition_color;
+
+    partition_color.reserve(color_domain_point.get_dim());
+    for (int i = 0; i < color_domain_point.get_dim(); ++i) {
+      partition_color.push_back(static_cast<std::uint64_t>(color_domain_point[i]));
+    }
+
+    const auto&& child_store = get_child_store(partition_color);
+
+    auto memory_type = [&]() {
+      auto mapped_physical_store = child_store->get_cached_physical_store();
+
+      if (mapped_physical_store.has_value()) {
+        return mapped_physical_store.value()->target();
+      }
+      return legate::mapping::StoreTarget::SYSMEM;
+    }();
+
+    mappings.emplace_back(std::move(partition_color), assigned_shard, memory_type);
+  }
+
+  return detail::PartitionPlacementInfo{std::move(mappings)};
 }
 
 }  // namespace legate::detail

@@ -8,6 +8,8 @@
 
 #include <legate_defines.h>
 
+#include <legate/data/partition_placement.h>
+#include <legate/data/partition_placement_info.h>
 #include <legate/data/shape.h>
 #include <legate/data/slice.h>
 #include <legate/mapping/mapping.h>
@@ -509,6 +511,20 @@ class LEGATE_EXPORT LogicalStore {
     std::optional<Span<const std::uint64_t>> color_shape = std::nullopt) const;
 
   /**
+   * @brief Gets the currently mapped `PhysicalStore` for this `LogicalStore`
+   *
+   * Returns the physical store if this logical store has already been mapped to physical
+   * memory via a previous call to `get_physical_store()`. This method does not trigger
+   * any new mapping operations and does not block.
+   *
+   * This is useful for checking if a store has an existing physical allocation without
+   * forcing a new inline mapping operation.
+   *
+   * @return The currently mapped `PhysicalStore` if one exists, or std::nullopt otherwise
+   */
+  [[nodiscard]] std::optional<PhysicalStore> get_cached_physical_store() const;
+
+  /**
    * @brief Creates a `PhysicalStore` for this `LogicalStore`
    *
    * This call blocks the client's control flow and fetches the data for the whole store to the
@@ -604,6 +620,15 @@ class LEGATE_EXPORT LogicalStorePartition {
   [[nodiscard]] LogicalStore store() const;
   [[nodiscard]] tuple<std::uint64_t> color_shape() const;
   [[nodiscard]] LogicalStore get_child_store(Span<const std::uint64_t> color) const;
+
+  /**
+   * @brief Gets the partition placement info for this partition
+   *
+   * The partition placement info contains the device mappings for this partition.
+   *
+   * @return The partition placement info for this partition.
+   */
+  [[nodiscard]] PartitionPlacementInfo get_placement_info() const;
 
   [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& impl() const;
 

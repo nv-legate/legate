@@ -387,9 +387,9 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
 
   // If there's already a physical store for this logical store, just return the cached one.
   // Any operations using this logical store will immediately flush the scheduling window.
-  if (mapped_) {
-    if (mapped_->on_target(target)) {
-      return mapped_;
+  if (mapped_.has_value()) {
+    if ((*mapped_)->target() == target) {
+      return *mapped_;
     }
     get_storage()->unmap();
     mapped_.reset();
@@ -434,7 +434,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   auto region_field = storage->map(target);
   mapped_           = make_internal_shared<RegionPhysicalStore>(
     dim(), type(), GlobalRedopID{-1}, std::move(region_field), transform_);
-  return mapped_;
+  return *mapped_;
 }
 
 // Just because all the member functions used are const, doesn't mean this function
