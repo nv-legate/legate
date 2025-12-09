@@ -8,9 +8,9 @@
 
 #include <legate_defines.h>
 
-#include <legate/mapping/mapping.h>
-#include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/span.h>
 
 #include <cstdint>
 
@@ -20,6 +20,12 @@
  */
 
 namespace legate {
+
+namespace mapping {
+
+enum class StoreTarget : std::uint8_t;
+
+}  // namespace mapping
 
 namespace detail {
 
