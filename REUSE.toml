@@ -5,10 +5,7 @@ version = 1
 path = [
     "VERSION",
     "continuous_integration/requirements-build.txt",
-    "scripts/pre-commit/cmake_config_format.json",
-    "scripts/pre-commit/cmake_config_lint.json",
     "scripts/pre-commit/shellcheckrc",
-    "scripts/pre-commit/cmake-format-legate.json",
     "docs/legate/switcher.json",
     "share/legate/sanitizers/lsan_suppressions.txt",
     "share/legate/sanitizers/ubsan_suppressions.txt",

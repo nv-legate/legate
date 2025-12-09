@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
-# cmake-format: off
-list(APPEND CMAKE_MODULE_PATH
-     "${LEGATE_CMAKE_DIR}/thirdparty/sphinx" # codespell:ignore thirdparty
+list(
+  APPEND CMAKE_MODULE_PATH
+  "${LEGATE_CMAKE_DIR}/thirdparty/sphinx" # codespell:ignore thirdparty
 )
-# cmake-format: on
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "docs")
 
@@ -29,29 +28,36 @@ configure_file("${DOXYFILE_IN}" "${DOXYFILE_OUT}" @ONLY)
 
 file(MAKE_DIRECTORY "${DOXYGEN_OUTPUT_DIR}") # Doxygen won't create this for us
 
-add_custom_command(OUTPUT "${DOXYGEN_INDEX_FILE}" DEPENDS "${DOXYFILE_OUT}"
-                   COMMAND "${DOXYGEN_EXECUTABLE}" "${DOXYFILE_OUT}"
-                   COMMENT "Generating doxygen output")
+add_custom_command(
+  OUTPUT "${DOXYGEN_INDEX_FILE}"
+  DEPENDS "${DOXYFILE_OUT}"
+  COMMAND "${DOXYGEN_EXECUTABLE}" "${DOXYFILE_OUT}"
+  COMMENT "Generating doxygen output"
+)
 
 add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}" COMMENT "Running doxygen")
 
 set(SPHINX_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(SPHINX_BUILD "${CMAKE_CURRENT_BINARY_DIR}/sphinx")
 
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/switcher.json"
-     DESTINATION "${SPHINX_BUILD}/legate")
+file(
+  COPY "${CMAKE_CURRENT_SOURCE_DIR}/switcher.json"
+  DESTINATION "${SPHINX_BUILD}/legate"
+)
 
 if(NOT legate_LICENSE_FILE)
-  message(FATAL_ERROR "Don't know where Legate license file is. "
-                      "Expected cmake variable legate_LICENSE_FILE to contain it's location, but that variable is empty. "
-                      "Presumably somebody changed the name?")
+  message(
+    FATAL_ERROR
+    "Don't know where Legate license file is. "
+    "Expected cmake variable legate_LICENSE_FILE to contain it's location, but that variable is empty. "
+    "Presumably somebody changed the name?"
+  )
 endif()
 
 # Need to make this every time because git does not allow you to check in empty
 # directories
 file(MAKE_DIRECTORY "${SPHINX_SOURCE}/generated")
 
-# cmake-format: off
 # Need to do this symlink because the .rst files have no way to know where the build
 # directory is. I tried using rst_prolog (while setting an environment variable
 # LEGATE_SPHINX_BUILD):
@@ -67,36 +73,47 @@ file(MAKE_DIRECTORY "${SPHINX_SOURCE}/generated")
 # But this didn't work because you can't do replacements inside other directives in rst
 # apparently. The only way I found that works is just symlinking it somewhere into the
 # source directory then...
-# cmake-format: on
-add_custom_target(symlink_license_file
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink "${legate_LICENSE_FILE}"
-                          "${SPHINX_SOURCE}/generated/licenses.txt"
-                  BYPRODUCTS "${SPHINX_SOURCE}/generated/licenses.txt"
-                  COMMENT "Symlinking licenses.txt -> ${SPHINX_SOURCE}/generated")
+add_custom_target(
+  symlink_license_file
+  COMMAND
+    ${CMAKE_COMMAND} -E create_symlink "${legate_LICENSE_FILE}"
+    "${SPHINX_SOURCE}/generated/licenses.txt"
+  BYPRODUCTS "${SPHINX_SOURCE}/generated/licenses.txt"
+  COMMENT "Symlinking licenses.txt -> ${SPHINX_SOURCE}/generated"
+)
 add_dependencies(symlink_license_file legate_write_licenses)
 
-cmake_path(SET generated_cpp_api_dir NORMALIZE
-           "${CMAKE_CURRENT_BINARY_DIR}/generated_cpp_api")
+cmake_path(
+  SET generated_cpp_api_dir
+  NORMALIZE
+  "${CMAKE_CURRENT_BINARY_DIR}/generated_cpp_api"
+)
 file(MAKE_DIRECTORY "${generated_cpp_api_dir}")
-add_custom_target(generate_cpp_api_rst
-                  COMMAND ${LEGATE_DIR}/scripts/maint/gen_api_doc.py
-                          "${DOXYGEN_OUTPUT_DIR}/xml" --generate=class,struct,group
-                          --output-dir="${generated_cpp_api_dir}" --force
-                  WORKING_DIRECTORY "${generated_cpp_api_dir}"
-                  COMMENT "Generating C++ API rst files")
+add_custom_target(
+  generate_cpp_api_rst
+  COMMAND
+    ${LEGATE_DIR}/scripts/maint/gen_api_doc.py "${DOXYGEN_OUTPUT_DIR}/xml"
+    --generate=class,struct,group --output-dir="${generated_cpp_api_dir}" --force
+  WORKING_DIRECTORY "${generated_cpp_api_dir}"
+  COMMENT "Generating C++ API rst files"
+)
 add_dependencies(generate_cpp_api_rst Doxygen)
 
-add_custom_target(symlink_cpp_api_dir
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink "${generated_cpp_api_dir}"
-                          "${SPHINX_SOURCE}/api/cpp/generated"
-                  COMMENT "Symlinking ${generated_cpp_api_dir} -> ${SPHINX_SOURCE}/api/cpp/generated"
+add_custom_target(
+  symlink_cpp_api_dir
+  COMMAND
+    ${CMAKE_COMMAND} -E create_symlink "${generated_cpp_api_dir}"
+    "${SPHINX_SOURCE}/api/cpp/generated"
+  COMMENT "Symlinking ${generated_cpp_api_dir} -> ${SPHINX_SOURCE}/api/cpp/generated"
 )
 add_dependencies(symlink_cpp_api_dir generate_cpp_api_rst)
 
-add_custom_target(Sphinx
-                  COMMAND "${SPHINX_EXECUTABLE}" -b html
-                          -Dbreathe_projects.legate="${DOXYGEN_OUTPUT_DIR}/xml" -W
-                          "${SPHINX_SOURCE}" "${SPHINX_BUILD}/legate/latest"
-                  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-                  COMMENT "Generating documentation with Sphinx")
+add_custom_target(
+  Sphinx
+  COMMAND
+    "${SPHINX_EXECUTABLE}" -b html -Dbreathe_projects.legate="${DOXYGEN_OUTPUT_DIR}/xml"
+    -W "${SPHINX_SOURCE}" "${SPHINX_BUILD}/legate/latest"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMENT "Generating documentation with Sphinx"
+)
 add_dependencies(Sphinx symlink_cpp_api_dir symlink_license_file)

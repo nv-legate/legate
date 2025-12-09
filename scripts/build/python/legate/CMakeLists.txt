@@ -46,8 +46,10 @@ endif()
 
 # Install the legate wrappers if they exist.
 if(LEGATE_WRAPPER_DIR)
-  install(DIRECTORY ${LEGATE_WRAPPER_DIR}/lib64/
-          DESTINATION ${CMAKE_INSTALL_LIBDIR}/legate/wrapper)
+  install(
+    DIRECTORY ${LEGATE_WRAPPER_DIR}/lib64/
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/legate/wrapper
+  )
   set(rpaths "$ORIGIN/legate/wrapper")
   # Add the rpath to the legate and RealmRuntime targets so they can load the wrappers.
   set_property(TARGET legate PROPERTY INSTALL_RPATH ${rpaths} APPEND)

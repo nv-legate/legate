@@ -143,6 +143,15 @@ repos:
         exclude: ^\.github/workflows/ci-gh-nightly-release\.yml$  # YAML anchors unsupported by actionlint yet (see rhysd/actionlint#133)
         args: [-config-file=scripts/pre-commit/actionlint.yml]
         entry: env SHELLCHECK_OPTS="--enable=all --severity=style" actionlint
+  - repo: https://github.com/BlankSpruce/gersemi
+    rev: 0.24.0
+    hooks:
+      - id: gersemi
+        args: [
+          --in-place,
+          --warnings-as-errors,
+          "--cache-dir=./.cache/gersemi"
+        ]
   - repo: local
     hooks:
       - id: legate-defined

@@ -11,21 +11,30 @@ macro(find_legate_cpp_impl legate_version build_export_set install_export_set)
 
   macro(legate_rapids_find_legate)
     message(STATUS "Searching for Legate")
-    rapids_find_package(legate
-                        GLOBAL_TARGETS legate::legate
-                        BUILD_EXPORT_SET ${build_export_set}
-                        INSTALL_EXPORT_SET ${install_export_set}
-                        FIND_ARGS ${parsed_ver} EXACT CONFIG
-                        REQUIRED)
+    rapids_find_package(
+      legate
+      ${parse_ver}
+      EXACT
+      CONFIG
+      REQUIRED
+      GLOBAL_TARGETS legate::legate
+      BUILD_EXPORT_SET ${build_export_set}
+      INSTALL_EXPORT_SET ${install_export_set}
+    )
     message(STATUS "legate_FOUND = ${legate_FOUND}")
     message(STATUS "legate_ROOT  = ${legate_ROOT}")
   endmacro()
 
   # We are required to find legate if either the user sets legate_ROOT, or we have done
   # this before and found legate via some pre-installed version.
-  if((DEFINED legate_ROOT)
-     OR ((DEFINED _legate_FOUND_METHOD) # this means we've been here before
-         AND (_legate_FOUND_METHOD STREQUAL "INSTALLED")))
+  if(
+    (DEFINED legate_ROOT)
+    OR
+      (
+        (DEFINED _legate_FOUND_METHOD) # this means we've been here before
+        AND (_legate_FOUND_METHOD STREQUAL "INSTALLED")
+      )
+  )
     legate_rapids_find_legate()
     set(_legate_FOUND_METHOD "INSTALLED")
   endif()
@@ -46,11 +55,13 @@ macro(find_legate_cpp_impl legate_version build_export_set install_export_set)
     # find_library(). If we find it, we can be reasonably sure that the build directory is
     # usable.
     message(STATUS "Searching ${legate_ROOT} for pre-built Legate")
-    find_library(legate_cpp_lib
-                 NAMES legate
-                 PATHS "${legate_ROOT}/cpp" "${legate_ROOT}"
-                 PATH_SUFFIXES lib "${CMAKE_INSTALL_LIBDIR}"
-                 NO_DEFAULT_PATH)
+    find_library(
+      legate_cpp_lib
+      NAMES legate
+      PATHS "${legate_ROOT}/cpp" "${legate_ROOT}"
+      PATH_SUFFIXES lib "${CMAKE_INSTALL_LIBDIR}"
+      NO_DEFAULT_PATH
+    )
 
     if(EXISTS "${legate_cpp_lib}")
       message(STATUS "Legate appears to already have been built")
@@ -62,12 +73,17 @@ macro(find_legate_cpp_impl legate_version build_export_set install_export_set)
       if("${procs}" STREQUAL "0") # some kind of problem occurred
         set(procs 1)
       endif()
-      execute_process(COMMAND ${CMAKE_COMMAND} --build . -j "${procs}"
-                      WORKING_DIRECTORY "${legate_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
+      execute_process(
+        COMMAND ${CMAKE_COMMAND} --build . -j "${procs}"
+        WORKING_DIRECTORY "${legate_ROOT}"
+        COMMAND_ERROR_IS_FATAL ANY
+      )
       legate_rapids_find_legate()
       set(_legate_FOUND_METHOD "PRE_BUILT")
     elseif(_legate_FOUND_METHOD STREQUAL "PRE_BUILT")
-      message(FATAL_ERROR "Failed to find legate C++ build even though we apparently used-it previously"
+      message(
+        FATAL_ERROR
+        "Failed to find legate C++ build even though we apparently used-it previously"
       )
     endif()
     unset(legate_ROOT) # undo this
@@ -93,10 +109,12 @@ macro(find_legate_cpp)
   set(one_value_args VERSION BUILD_EXPORT_SET INSTALL_EXPORT_SET)
   cmake_parse_arguments(_FIND_LEGATE "" "${one_value_args}" "" ${ARGN})
 
-  find_legate_cpp_impl(${_FIND_LEGATE_VERSION} ${_FIND_LEGATE_BUILD_EXPORT_SET}
-                       ${_FIND_LEGATE_INSTALL_EXPORT_SET})
+  find_legate_cpp_impl(
+    ${_FIND_LEGATE_VERSION}
+    ${_FIND_LEGATE_BUILD_EXPORT_SET}
+    ${_FIND_LEGATE_INSTALL_EXPORT_SET}
+  )
 
-  # cmake-lint: disable=C0103
   set(_legate_FOUND_METHOD ${_legate_FOUND_METHOD} CACHE INTERNAL "" FORCE)
   message(STATUS "legate_FOUND_METHOD: '${_legate_FOUND_METHOD}'")
 

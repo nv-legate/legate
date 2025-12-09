@@ -15,19 +15,23 @@ include("${LEGATE_CMAKE_DIR}/Modules/legate_options.cmake")
 # * Project definition -------------------------------------------------------
 
 # Write the version header
-rapids_cmake_write_version_file(${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
-                                PREFIX LEGATE)
+rapids_cmake_write_version_file(
+  ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
+  PREFIX LEGATE
+)
 
 if(PROJECT_IS_TOP_LEVEL)
   message(STATUS "Symlinking compile_commands.json to root directory")
-  file(CREATE_LINK
-       # Using CMAKE_BINARY_DIR vs CMAKE_CURRENT_BINARY_DIR is intentional. If we use
-       # CURRENT_BINARY_DIR, then it breaks anytime someone uses add_subdirectory(), since
-       # cmake always puts the compile_commands.json in the top-level build dir (not in
-       # the sub tree)
-       "${CMAKE_BINARY_DIR}/compile_commands.json"
-       "${LEGATE_DIR}/compile_commands.json"
-       SYMBOLIC)
+  file(
+    CREATE_LINK
+      # Using CMAKE_BINARY_DIR vs CMAKE_CURRENT_BINARY_DIR is intentional. If we use
+      # CURRENT_BINARY_DIR, then it breaks anytime someone uses add_subdirectory(), since
+      # cmake always puts the compile_commands.json in the top-level build dir (not in
+      # the sub tree)
+      "${CMAKE_BINARY_DIR}/compile_commands.json"
+      "${LEGATE_DIR}/compile_commands.json"
+    SYMBOLIC
+  )
 endif()
 
 # ########################################################################################
@@ -58,8 +62,13 @@ if(legate_USE_CUDA)
   set(Legion_CUDA_ARCH "${CMAKE_CUDA_ARCHITECTURES}")
   set(CMAKE_INCLUDE_SYSTEM_FLAG_CUDA "-isystem ")
   # Find the CUDAToolkit
-  rapids_find_package(CUDAToolkit 12.2 REQUIRED BUILD_EXPORT_SET legate-exports
-                      INSTALL_EXPORT_SET legate-exports)
+  rapids_find_package(
+    CUDAToolkit
+    12.2
+    REQUIRED
+    BUILD_EXPORT_SET legate-exports
+    INSTALL_EXPORT_SET legate-exports
+  )
   if("${CUDAToolkit_VERSION_MAJOR}" GREATER "13")
     message(FATAL_ERROR "We do not support CUDAToolkit version greater than 13.x")
   endif()
@@ -83,11 +92,14 @@ include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
 # * CCCL ---------------------------------------------------------------------
 
 macro(_legate_find_openmp required)
-  rapids_find_package(OpenMP ${required}
-                      GLOBAL_TARGETS OpenMP::OpenMP_CXX
-                      BUILD_EXPORT_SET legate-exports
-                      INSTALL_EXPORT_SET legate-exports
-                      COMPONENTS CXX)
+  rapids_find_package(
+    OpenMP
+    ${required}
+    GLOBAL_TARGETS OpenMP::OpenMP_CXX
+    BUILD_EXPORT_SET legate-exports
+    INSTALL_EXPORT_SET legate-exports
+    COMPONENTS CXX
+  )
 endmacro()
 
 # Pull CCCL in before Legion, so that Legion will use the same libcu++ as Legate (the one
@@ -113,7 +125,7 @@ legate_find_or_configure(PACKAGE CCCL)
 # * Python -------------------------------------------------------------------
 
 macro(_legate_find_python3)
-  rapids_find_package(Python3 COMPONENTS Interpreter Development FIND_ARGS REQUIRED)
+  rapids_find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
   message(VERBOSE "legate: Has Python3: ${Python3_FOUND}")
   message(VERBOSE "legate: Has Python 3 interpreter: ${Python3_Interpreter_FOUND}")
   message(VERBOSE "legate: Python 3 include directories: ${Python3_INCLUDE_DIRS}")
@@ -232,13 +244,14 @@ legate_find_or_configure(PACKAGE cpm_licenses)
 
 add_library(legate_obj OBJECT)
 
-# cmake-format: off
-set_target_properties(legate_obj
-                      PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE
-                                 CXX_VISIBILITY_PRESET     "hidden"
-                                 CUDA_VISIBILITY_PRESET    "hidden"
-                                 DEFINE_SYMBOL             "legate_EXPORTS")
-# cmake-format: on
+set_target_properties(
+  legate_obj
+  PROPERTIES
+    VISIBILITY_INLINES_HIDDEN TRUE
+    CXX_VISIBILITY_PRESET "hidden"
+    CUDA_VISIBILITY_PRESET "hidden"
+    DEFINE_SYMBOL "legate_EXPORTS"
+)
 
 # Define this property here because it directly relates to the legate target. Targets
 # linking against legate, which have this property defined, will also inherit the private
@@ -249,239 +262,249 @@ set_target_properties(legate_obj
 # property where it should be. For that reason, we define the property here, and also
 # check its existence on a few targets which we know must have it. That is the best we can
 # do...
-define_property(TARGET PROPERTY LEGATE_INTERNAL_TARGET
-                BRIEF_DOCS "A boolean property indicating that a target is internal to "
-                           "the legate build")
+define_property(
+  TARGET
+  PROPERTY LEGATE_INTERNAL_TARGET
+  BRIEF_DOCS
+    "A boolean property indicating that a target is internal to "
+    "the legate build"
+)
 
-target_sources(legate_obj
-               PRIVATE # core
-                       legate/comm/coll.cc
-                       legate/comm/detail/coll.cc
-                       legate/comm/detail/backend_network.cc
-                       legate/comm/detail/comm.cc
-                       legate/comm/detail/comm_cpu.cc
-                       legate/comm/detail/comm_local.cc
-                       legate/comm/detail/local_network.cc
-                       legate/comm/detail/logger.cc
-                       legate/comm/detail/thread_comm.cc
-                       legate/cuda/detail/cuda_driver_api.cc
-                       legate/cuda/detail/module_manager.cc
-                       legate/data/allocator.cc
-                       legate/data/buffer.cc
-                       legate/data/external_allocation.cc
-                       legate/data/logical_array.cc
-                       legate/data/logical_store.cc
-                       legate/data/scalar.cc
-                       legate/data/shape.cc
-                       legate/data/physical_array.cc
-                       legate/data/physical_store.cc
-                       legate/data/detail/array_tasks.cc
-                       legate/data/detail/attachment.cc
-                       legate/data/detail/external_allocation.cc
-                       legate/data/detail/logical_array.cc
-                       legate/data/detail/logical_arrays/base_logical_array.cc
-                       legate/data/detail/logical_arrays/list_logical_array.cc
-                       legate/data/detail/logical_arrays/struct_logical_array.cc
-                       legate/data/detail/logical_region_field.cc
-                       legate/data/partition_placement.cc
-                       legate/data/partition_placement_info.cc
-                       legate/data/detail/partition_placement_info.cc
-                       legate/data/detail/logical_store.cc
-                       legate/data/detail/logical_store_partition.cc
-                       legate/data/detail/storage.cc
-                       legate/data/detail/storage_partition.cc
-                       legate/data/detail/scalar.cc
-                       legate/data/detail/physical_array.cc
-                       legate/data/detail/physical_arrays/base_physical_array.cc
-                       legate/data/detail/physical_arrays/list_physical_array.cc
-                       legate/data/detail/physical_arrays/struct_physical_array.cc
-                       legate/data/detail/physical_store.cc
-                       legate/data/detail/physical_stores/future_physical_store.cc
-                       legate/data/detail/physical_stores/region_physical_store.cc
-                       legate/data/detail/physical_stores/unbound_physical_store.cc
-                       legate/data/detail/physical_stores/unbound_region_field.cc
-                       legate/data/detail/shape.cc
-                       legate/data/detail/transform/delinearize.cc
-                       legate/data/detail/transform/dim_broadcast.cc
-                       legate/data/detail/transform/non_invertible_transformation.cc
-                       legate/data/detail/transform/project.cc
-                       legate/data/detail/transform/promote.cc
-                       legate/data/detail/transform/shift.cc
-                       legate/data/detail/transform/transform.cc
-                       legate/data/detail/transform/transform_stack.cc
-                       legate/data/detail/transform/transpose.cc
-                       legate/data/detail/future_wrapper.cc
-                       legate/data/detail/region_field.cc
-                       legate/data/detail/user_storage_tracker.cc
-                       legate/data/detail/buffer.cc
-                       legate/experimental/trace.cc
-                       legate/mapping/array.cc
-                       legate/mapping/machine.cc
-                       legate/mapping/mapping.cc
-                       legate/mapping/operation.cc
-                       legate/mapping/store.cc
-                       legate/mapping/detail/array.cc
-                       legate/mapping/detail/base_mapper.cc
-                       legate/mapping/detail/core_mapper.cc
-                       legate/mapping/detail/instance_manager.cc
-                       legate/mapping/detail/machine.cc
-                       legate/mapping/detail/local_machine_selector.cc
-                       legate/mapping/detail/global_machine.cc
-                       legate/mapping/detail/mapping.cc
-                       legate/mapping/detail/operation.cc
-                       legate/mapping/detail/store.cc
-                       legate/operation/projection.cc
-                       legate/operation/task.cc
-                       legate/operation/detail/attach.cc
-                       legate/operation/detail/copy.cc
-                       legate/operation/detail/copy_launcher.cc
-                       legate/operation/detail/discard.cc
-                       legate/operation/detail/execution_fence.cc
-                       legate/operation/detail/fill.cc
-                       legate/operation/detail/fill_launcher.cc
-                       legate/operation/detail/gather.cc
-                       legate/operation/detail/index_attach.cc
-                       legate/operation/detail/mapping_fence.cc
-                       legate/operation/detail/launcher_arg.cc
-                       legate/operation/detail/operation.cc
-                       legate/operation/detail/store_projection.cc
-                       legate/operation/detail/reduce.cc
-                       legate/operation/detail/release_region_field.cc
-                       legate/operation/detail/store_analyzer.cc
-                       legate/operation/detail/scatter.cc
-                       legate/operation/detail/scatter_gather.cc
-                       legate/operation/detail/task.cc
-                       legate/operation/detail/task_array_arg.cc
-                       legate/operation/detail/task_launcher.cc
-                       legate/operation/detail/timing.cc
-                       legate/operation/detail/extract_scalar.cc
-                       legate/partitioning/constraint.cc
-                       legate/partitioning/proxy.cc
-                       legate/partitioning/detail/constraint.cc
-                       legate/partitioning/detail/constraint_solver.cc
-                       legate/partitioning/detail/partition.cc
-                       legate/partitioning/detail/partitioner.cc
-                       legate/partitioning/detail/partitioning_tasks.cc
-                       legate/partitioning/detail/restriction.cc
-                       legate/partitioning/detail/strategy.cc
-                       legate/partitioning/detail/proxy/align.cc
-                       legate/partitioning/detail/proxy/broadcast.cc
-                       legate/partitioning/detail/proxy/image.cc
-                       legate/partitioning/detail/proxy/scale.cc
-                       legate/partitioning/detail/proxy/bloat.cc
-                       legate/partitioning/detail/proxy/validate.cc
-                       legate/redop/complex.cc
-                       legate/redop/half.cc
-                       legate/redop/detail/register.cc
-                       legate/runtime/library.cc
-                       legate/runtime/runtime.cc
-                       legate/runtime/detail/communicator_manager.cc
-                       legate/runtime/detail/field_manager.cc
-                       legate/runtime/detail/library.cc
-                       legate/runtime/detail/partition_manager.cc
-                       legate/runtime/detail/projection.cc
-                       legate/runtime/detail/region_manager.cc
-                       legate/runtime/detail/runtime.cc
-                       legate/runtime/detail/shard.cc
-                       legate/runtime/detail/mapper_manager.cc
-                       legate/runtime/detail/argument_parsing/util.cc
-                       legate/runtime/detail/scope.cc
-                       legate/runtime/detail/argument_parsing/parse.cc
-                       legate/runtime/detail/argument_parsing/config_legion.cc
-                       legate/runtime/detail/argument_parsing/config_realm.cc
-                       legate/runtime/detail/argument_parsing/exceptions.cc
-                       legate/runtime/detail/argument_parsing/legate_args.cc
-                       legate/runtime/detail/argument_parsing/flags/cpus.cc
-                       legate/runtime/detail/argument_parsing/flags/gpus.cc
-                       legate/runtime/detail/argument_parsing/flags/fbmem.cc
-                       legate/runtime/detail/argument_parsing/flags/logging.cc
-                       legate/runtime/detail/argument_parsing/flags/numamem.cc
-                       legate/runtime/detail/argument_parsing/flags/ompthreads.cc
-                       legate/runtime/detail/argument_parsing/flags/openmp.cc
-                       legate/runtime/detail/argument_parsing/flags/sysmem.cc
-                       legate/runtime/detail/argument_parsing/flags/cuda_driver_path.cc
-                       legate/runtime/detail/mpi_detection.cc
-                       legate/runtime/detail/streaming/analysis.cc
-                       legate/runtime/detail/streaming/generation.cc
-                       legate/runtime/detail/streaming/disallowed_operation_checker.cc
-                       legate/runtime/detail/streaming/launch_domain_equality_checker.cc
-                       legate/runtime/detail/streaming/util.cc
-                       legate/task/registrar.cc
-                       legate/task/task.cc
-                       legate/task/task_context.cc
-                       legate/task/task_info.cc
-                       legate/task/variant_options.cc
-                       legate/task/variant_info.cc
-                       legate/task/task_signature.cc
-                       legate/task/task_config.cc
-                       legate/task/detail/return_value.cc
-                       legate/task/detail/returned_exception.cc
-                       legate/task/detail/returned_cpp_exception.cc
-                       legate/task/detail/returned_python_exception.cc
-                       legate/task/detail/task_context.cc
-                       legate/task/detail/inline_task_body.cc
-                       legate/task/detail/legion_task_body.cc
-                       legate/task/detail/task.cc
-                       legate/task/detail/task_return.cc
-                       legate/task/detail/task_return_layout.cc
-                       legate/task/detail/variant_info.cc
-                       legate/task/detail/task_info.cc
-                       legate/tuning/parallel_policy.cc
-                       legate/tuning/scope.cc
-                       legate/task/detail/task_signature.cc
-                       legate/task/detail/task_config.cc
-                       legate/type/types.cc
-                       legate/type/half.cc
-                       legate/type/detail/types.cc
-                       legate/utilities/machine.cc
-                       legate/utilities/internal_shared_ptr.cc
-                       legate/utilities/compiler.cc
-                       legate/utilities/abort.cc
-                       legate/utilities/dispatch.cc
-                       legate/utilities/detail/align.cc
-                       legate/utilities/detail/buffer_builder.cc
-                       legate/utilities/detail/env.cc
-                       legate/utilities/detail/tuple.cc
-                       legate/utilities/detail/deserializer.cc
-                       legate/utilities/detail/formatters.cc
-                       legate/utilities/detail/traced_exception.cc
-                       legate/utilities/detail/zip.cc
-                       legate/utilities/detail/linearize.cc
-                       legate/utilities/detail/error.cc
-                       legate/utilities/detail/proc_local_storage.cc
-                       legate/utilities/detail/array_algorithms.cc
-                       legate/utilities/detail/string_utils.cc
-                       legate/utilities/detail/shared_library.cc
-                       legate/utilities/detail/dlpack/from_dlpack.cc
-                       legate/utilities/detail/dlpack/to_dlpack.cc
-                       legate/utilities/detail/dlpack/common.cc
-                       legate/timing/timing.cc
-                       # stl
-                       legate/experimental/stl/detail/clang_tidy_dummy.cpp
-                       # io
-                       legate/io/hdf5/interface.cc
-                       legate/experimental/io/kvikio/detail/basic.cc
-                       legate/experimental/io/kvikio/detail/tile.cc
-                       legate/experimental/io/kvikio/detail/tile_by_offsets.cc
-                       legate/experimental/io/kvikio/interface.cc
-                       legate/experimental/io/detail/task.cc
-                       legate/experimental/io/detail/library.cc
-                       legate/experimental/io/detail/mapper.cc)
+target_sources(
+  legate_obj
+  PRIVATE # core
+    legate/comm/coll.cc
+    legate/comm/detail/coll.cc
+    legate/comm/detail/backend_network.cc
+    legate/comm/detail/comm.cc
+    legate/comm/detail/comm_cpu.cc
+    legate/comm/detail/comm_local.cc
+    legate/comm/detail/local_network.cc
+    legate/comm/detail/logger.cc
+    legate/comm/detail/thread_comm.cc
+    legate/cuda/detail/cuda_driver_api.cc
+    legate/cuda/detail/module_manager.cc
+    legate/data/allocator.cc
+    legate/data/buffer.cc
+    legate/data/external_allocation.cc
+    legate/data/logical_array.cc
+    legate/data/logical_store.cc
+    legate/data/scalar.cc
+    legate/data/shape.cc
+    legate/data/physical_array.cc
+    legate/data/physical_store.cc
+    legate/data/detail/array_tasks.cc
+    legate/data/detail/attachment.cc
+    legate/data/detail/external_allocation.cc
+    legate/data/detail/logical_array.cc
+    legate/data/detail/logical_arrays/base_logical_array.cc
+    legate/data/detail/logical_arrays/list_logical_array.cc
+    legate/data/detail/logical_arrays/struct_logical_array.cc
+    legate/data/detail/logical_region_field.cc
+    legate/data/partition_placement.cc
+    legate/data/partition_placement_info.cc
+    legate/data/detail/partition_placement_info.cc
+    legate/data/detail/logical_store.cc
+    legate/data/detail/logical_store_partition.cc
+    legate/data/detail/storage.cc
+    legate/data/detail/storage_partition.cc
+    legate/data/detail/scalar.cc
+    legate/data/detail/physical_array.cc
+    legate/data/detail/physical_arrays/base_physical_array.cc
+    legate/data/detail/physical_arrays/list_physical_array.cc
+    legate/data/detail/physical_arrays/struct_physical_array.cc
+    legate/data/detail/physical_store.cc
+    legate/data/detail/physical_stores/future_physical_store.cc
+    legate/data/detail/physical_stores/region_physical_store.cc
+    legate/data/detail/physical_stores/unbound_physical_store.cc
+    legate/data/detail/physical_stores/unbound_region_field.cc
+    legate/data/detail/shape.cc
+    legate/data/detail/transform/delinearize.cc
+    legate/data/detail/transform/dim_broadcast.cc
+    legate/data/detail/transform/non_invertible_transformation.cc
+    legate/data/detail/transform/project.cc
+    legate/data/detail/transform/promote.cc
+    legate/data/detail/transform/shift.cc
+    legate/data/detail/transform/transform.cc
+    legate/data/detail/transform/transform_stack.cc
+    legate/data/detail/transform/transpose.cc
+    legate/data/detail/future_wrapper.cc
+    legate/data/detail/region_field.cc
+    legate/data/detail/user_storage_tracker.cc
+    legate/data/detail/buffer.cc
+    legate/experimental/trace.cc
+    legate/mapping/array.cc
+    legate/mapping/machine.cc
+    legate/mapping/mapping.cc
+    legate/mapping/operation.cc
+    legate/mapping/store.cc
+    legate/mapping/detail/array.cc
+    legate/mapping/detail/base_mapper.cc
+    legate/mapping/detail/core_mapper.cc
+    legate/mapping/detail/instance_manager.cc
+    legate/mapping/detail/machine.cc
+    legate/mapping/detail/local_machine_selector.cc
+    legate/mapping/detail/global_machine.cc
+    legate/mapping/detail/mapping.cc
+    legate/mapping/detail/operation.cc
+    legate/mapping/detail/store.cc
+    legate/operation/projection.cc
+    legate/operation/task.cc
+    legate/operation/detail/attach.cc
+    legate/operation/detail/copy.cc
+    legate/operation/detail/copy_launcher.cc
+    legate/operation/detail/discard.cc
+    legate/operation/detail/execution_fence.cc
+    legate/operation/detail/fill.cc
+    legate/operation/detail/fill_launcher.cc
+    legate/operation/detail/gather.cc
+    legate/operation/detail/index_attach.cc
+    legate/operation/detail/mapping_fence.cc
+    legate/operation/detail/launcher_arg.cc
+    legate/operation/detail/operation.cc
+    legate/operation/detail/store_projection.cc
+    legate/operation/detail/reduce.cc
+    legate/operation/detail/release_region_field.cc
+    legate/operation/detail/store_analyzer.cc
+    legate/operation/detail/scatter.cc
+    legate/operation/detail/scatter_gather.cc
+    legate/operation/detail/task.cc
+    legate/operation/detail/task_array_arg.cc
+    legate/operation/detail/task_launcher.cc
+    legate/operation/detail/timing.cc
+    legate/operation/detail/extract_scalar.cc
+    legate/partitioning/constraint.cc
+    legate/partitioning/proxy.cc
+    legate/partitioning/detail/constraint.cc
+    legate/partitioning/detail/constraint_solver.cc
+    legate/partitioning/detail/partition.cc
+    legate/partitioning/detail/partitioner.cc
+    legate/partitioning/detail/partitioning_tasks.cc
+    legate/partitioning/detail/restriction.cc
+    legate/partitioning/detail/strategy.cc
+    legate/partitioning/detail/proxy/align.cc
+    legate/partitioning/detail/proxy/broadcast.cc
+    legate/partitioning/detail/proxy/image.cc
+    legate/partitioning/detail/proxy/scale.cc
+    legate/partitioning/detail/proxy/bloat.cc
+    legate/partitioning/detail/proxy/validate.cc
+    legate/redop/complex.cc
+    legate/redop/half.cc
+    legate/redop/detail/register.cc
+    legate/runtime/library.cc
+    legate/runtime/runtime.cc
+    legate/runtime/detail/communicator_manager.cc
+    legate/runtime/detail/field_manager.cc
+    legate/runtime/detail/library.cc
+    legate/runtime/detail/partition_manager.cc
+    legate/runtime/detail/projection.cc
+    legate/runtime/detail/region_manager.cc
+    legate/runtime/detail/runtime.cc
+    legate/runtime/detail/shard.cc
+    legate/runtime/detail/mapper_manager.cc
+    legate/runtime/detail/argument_parsing/util.cc
+    legate/runtime/detail/scope.cc
+    legate/runtime/detail/argument_parsing/parse.cc
+    legate/runtime/detail/argument_parsing/config_legion.cc
+    legate/runtime/detail/argument_parsing/config_realm.cc
+    legate/runtime/detail/argument_parsing/exceptions.cc
+    legate/runtime/detail/argument_parsing/legate_args.cc
+    legate/runtime/detail/argument_parsing/flags/cpus.cc
+    legate/runtime/detail/argument_parsing/flags/gpus.cc
+    legate/runtime/detail/argument_parsing/flags/fbmem.cc
+    legate/runtime/detail/argument_parsing/flags/logging.cc
+    legate/runtime/detail/argument_parsing/flags/numamem.cc
+    legate/runtime/detail/argument_parsing/flags/ompthreads.cc
+    legate/runtime/detail/argument_parsing/flags/openmp.cc
+    legate/runtime/detail/argument_parsing/flags/sysmem.cc
+    legate/runtime/detail/argument_parsing/flags/cuda_driver_path.cc
+    legate/runtime/detail/mpi_detection.cc
+    legate/runtime/detail/streaming/analysis.cc
+    legate/runtime/detail/streaming/generation.cc
+    legate/runtime/detail/streaming/disallowed_operation_checker.cc
+    legate/runtime/detail/streaming/launch_domain_equality_checker.cc
+    legate/runtime/detail/streaming/util.cc
+    legate/task/registrar.cc
+    legate/task/task.cc
+    legate/task/task_context.cc
+    legate/task/task_info.cc
+    legate/task/variant_options.cc
+    legate/task/variant_info.cc
+    legate/task/task_signature.cc
+    legate/task/task_config.cc
+    legate/task/detail/return_value.cc
+    legate/task/detail/returned_exception.cc
+    legate/task/detail/returned_cpp_exception.cc
+    legate/task/detail/returned_python_exception.cc
+    legate/task/detail/task_context.cc
+    legate/task/detail/inline_task_body.cc
+    legate/task/detail/legion_task_body.cc
+    legate/task/detail/task.cc
+    legate/task/detail/task_return.cc
+    legate/task/detail/task_return_layout.cc
+    legate/task/detail/variant_info.cc
+    legate/task/detail/task_info.cc
+    legate/tuning/parallel_policy.cc
+    legate/tuning/scope.cc
+    legate/task/detail/task_signature.cc
+    legate/task/detail/task_config.cc
+    legate/type/types.cc
+    legate/type/half.cc
+    legate/type/detail/types.cc
+    legate/utilities/machine.cc
+    legate/utilities/internal_shared_ptr.cc
+    legate/utilities/compiler.cc
+    legate/utilities/abort.cc
+    legate/utilities/dispatch.cc
+    legate/utilities/detail/align.cc
+    legate/utilities/detail/buffer_builder.cc
+    legate/utilities/detail/env.cc
+    legate/utilities/detail/tuple.cc
+    legate/utilities/detail/deserializer.cc
+    legate/utilities/detail/formatters.cc
+    legate/utilities/detail/traced_exception.cc
+    legate/utilities/detail/zip.cc
+    legate/utilities/detail/linearize.cc
+    legate/utilities/detail/error.cc
+    legate/utilities/detail/proc_local_storage.cc
+    legate/utilities/detail/array_algorithms.cc
+    legate/utilities/detail/string_utils.cc
+    legate/utilities/detail/shared_library.cc
+    legate/utilities/detail/dlpack/from_dlpack.cc
+    legate/utilities/detail/dlpack/to_dlpack.cc
+    legate/utilities/detail/dlpack/common.cc
+    legate/timing/timing.cc
+    # stl
+    legate/experimental/stl/detail/clang_tidy_dummy.cpp
+    # io
+    legate/io/hdf5/interface.cc
+    legate/experimental/io/kvikio/detail/basic.cc
+    legate/experimental/io/kvikio/detail/tile.cc
+    legate/experimental/io/kvikio/detail/tile_by_offsets.cc
+    legate/experimental/io/kvikio/interface.cc
+    legate/experimental/io/detail/task.cc
+    legate/experimental/io/detail/library.cc
+    legate/experimental/io/detail/mapper.cc
+)
 
 if(legate_USE_HDF5)
-  target_sources(legate_obj
-                 PRIVATE legate/io/hdf5/detail/interface.cc
-                         legate/io/hdf5/detail/read.cc
-                         legate/io/hdf5/detail/write_vds.cc
-                         legate/io/hdf5/detail/combine_vds.cc
-                         legate/io/hdf5/detail/hdf5_wrapper.cc)
+  target_sources(
+    legate_obj
+    PRIVATE
+      legate/io/hdf5/detail/interface.cc
+      legate/io/hdf5/detail/read.cc
+      legate/io/hdf5/detail/write_vds.cc
+      legate/io/hdf5/detail/combine_vds.cc
+      legate/io/hdf5/detail/hdf5_wrapper.cc
+  )
 endif()
 
 target_sources(legate_obj PRIVATE legate/comm/detail/mpi_interface.cc)
 if(NOT TARGET legate::mpi_wrapper)
   # The MPI wrapper's headers are needed for some symbols, no link.
-  target_include_directories(legate_obj
-                             PRIVATE "${legate_cpp_SOURCE_DIR}/../share/legate/mpi_wrapper/src"
+  target_include_directories(
+    legate_obj
+    PRIVATE "${legate_cpp_SOURCE_DIR}/../share/legate/mpi_wrapper/src"
   )
   # This is needed to tell mpi_wrapper.h not to
   #
@@ -490,25 +513,37 @@ if(NOT TARGET legate::mpi_wrapper)
   # Normally, we need to ensure that the MPI wrapper's symbols are publicly visible, but
   # in this case when we just need the header to define the symbols for us (and never
   # intend to actually load the wrapper), we don't care about visibility.
-  target_compile_definitions(legate_obj
-                             PRIVATE LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER=1)
+  target_compile_definitions(
+    legate_obj
+    PRIVATE LEGATE_MPI_WRAPPER_HAVE_NO_EXPORT_HEADER=1
+  )
 endif()
 
 if(legate_USE_MPI OR legate_USE_GASNET)
-  target_sources(legate_obj PRIVATE legate/comm/detail/mpi_network.cc
-                                    legate/comm/detail/comm_mpi.cc)
+  target_sources(
+    legate_obj
+    PRIVATE legate/comm/detail/mpi_network.cc legate/comm/detail/comm_mpi.cc
+  )
 endif()
 
 if(legate_USE_UCX)
-  target_sources(legate_obj
-                 PRIVATE legate/comm/detail/oob_allgather.cc
-                         legate/comm/detail/ucc_network.cc legate/comm/detail/comm_ucc.cc
-                         legate/comm/detail/mpi_oob_allgather.cc)
+  target_sources(
+    legate_obj
+    PRIVATE
+      legate/comm/detail/oob_allgather.cc
+      legate/comm/detail/ucc_network.cc
+      legate/comm/detail/comm_ucc.cc
+      legate/comm/detail/mpi_oob_allgather.cc
+  )
 endif()
 
 if(Legion_USE_OpenMP)
-  target_sources(legate_obj PRIVATE legate/data/detail/array_tasks_omp.cc
-                                    legate/partitioning/detail/partitioning_tasks_omp.cc)
+  target_sources(
+    legate_obj
+    PRIVATE
+      legate/data/detail/array_tasks_omp.cc
+      legate/partitioning/detail/partitioning_tasks_omp.cc
+  )
 endif()
 
 if(legate_USE_NCCL)
@@ -516,20 +551,27 @@ if(legate_USE_NCCL)
 endif()
 
 if(legate_USE_CUDA)
-  target_sources(legate_obj PRIVATE legate/data/detail/array_tasks_cuda.cc
-                                    legate/partitioning/detail/partitioning_tasks_cuda.cc)
+  target_sources(
+    legate_obj
+    PRIVATE
+      legate/data/detail/array_tasks_cuda.cc
+      legate/partitioning/detail/partitioning_tasks_cuda.cc
+  )
 
   include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
 
-  legate_generate_fatbin_modules(DEST_DIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/fatbin"
-                                 GENERATED_SOURCES_VAR fatbin_src
-                                 SOURCES legate/data/detail/fixup_ranges_fatbin.cu
-                                         legate/data/detail/offsets_to_ranges_fatbin.cu
-                                         legate/data/detail/ranges_to_offsets_fatbin.cu
-                                         legate/partitioning/detail/partitioning_tasks_fatbin.cu
-                                         legate/redop/detail/redop_half_fatbin.cu
-                                         legate/redop/detail/redop_complex_fatbin.cu
-                                 EXTRA_FLAGS ${legate_CUDA_FLAGS})
+  legate_generate_fatbin_modules(
+    DEST_DIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/fatbin"
+    GENERATED_SOURCES_VAR fatbin_src
+    SOURCES
+      legate/data/detail/fixup_ranges_fatbin.cu
+      legate/data/detail/offsets_to_ranges_fatbin.cu
+      legate/data/detail/ranges_to_offsets_fatbin.cu
+      legate/partitioning/detail/partitioning_tasks_fatbin.cu
+      legate/redop/detail/redop_half_fatbin.cu
+      legate/redop/detail/redop_complex_fatbin.cu
+    EXTRA_FLAGS ${legate_CUDA_FLAGS}
+  )
 
   target_sources(legate_obj PRIVATE ${fatbin_src})
 endif()
@@ -537,35 +579,36 @@ endif()
 include("${LEGATE_CMAKE_DIR}/Modules/generate_git_revision_file.cmake")
 
 legate_generate_git_revision_file(
-  GENERATED_SRC_VAR git_revision_src EXTRA_TARGETS Legion::Legion
-  EXTRA_TARGETS_PREFIX LEGION)
+  GENERATED_SRC_VAR git_revision_src
+  EXTRA_TARGETS Legion::Legion
+  EXTRA_TARGETS_PREFIX LEGION
+)
 
 target_sources(legate_obj PRIVATE ${git_revision_src})
 
 include(GenerateExportHeader)
 
-# cmake-format doesn't understand block() (because it hasn't been updated in over 4
-# years), and so doesn't indent these correctly.
 block()
-set(extra
+  set(
+    extra
     [=[
 // For symbols that are only exported because they are used by the python bindings, not
 // because they otherwise need to be. If references to them are removed in the Python
 // bindings, these symbols should also be fixed up to be un-exported again.
 #define LEGATE_PYTHON_EXPORT LEGATE_EXPORT
-]=])
-set(export_header
+]=]
+  )
+  set(
+    export_header
     "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/legate_exports.h"
-)
+  )
 
-# cmake-format: off
-generate_export_header(
-  legate_obj
-    BASE_NAME                   LEGATE
-    EXPORT_FILE_NAME            "${export_header}"
+  generate_export_header(
+    legate_obj
+    BASE_NAME LEGATE
+    EXPORT_FILE_NAME "${export_header}"
     CUSTOM_CONTENT_FROM_VARIABLE extra
-)
-# cmake-format: on
+  )
 endblock()
 
 include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
@@ -589,36 +632,30 @@ add_library(legate::legate ALIAS legate)
 
 target_link_libraries(legate PRIVATE $<BUILD_LOCAL_INTERFACE:legate_obj>)
 
-# For whatever reason cmake-format craps out when formatting the below, so much so that
-# cmake-lint then ultimately complains with:
-#
-# cmake-format: off
-# src/cpp/CMakeLists.txt:480,80: [C0307] Bad indentation:
-#                                                              )
-# ^----BodyNode: 1:0->StatementNode: 477:0->TreeNode: 480:80
-# cmake-format: on
-# cmake-format: off
-set_target_properties(legate
-                        PROPERTIES
-                          EXPORT_NAME               legate
-                          LIBRARY_OUTPUT_NAME       legate
-                          LIBRARY_OUTPUT_DIRECTORY  lib
-                          BUILD_RPATH_USE_ORIGIN    TRUE
-                          SOVERSION                 ${PROJECT_VERSION}
-                          VISIBILITY_INLINES_HIDDEN TRUE
-                          CXX_VISIBILITY_PRESET     "hidden"
-                          CUDA_VISIBILITY_PRESET    "hidden")
-# cmake-format: on
+set_target_properties(
+  legate
+  PROPERTIES
+    EXPORT_NAME legate
+    LIBRARY_OUTPUT_NAME legate
+    LIBRARY_OUTPUT_DIRECTORY lib
+    BUILD_RPATH_USE_ORIGIN TRUE
+    SOVERSION ${PROJECT_VERSION}
+    VISIBILITY_INLINES_HIDDEN TRUE
+    CXX_VISIBILITY_PRESET "hidden"
+    CUDA_VISIBILITY_PRESET "hidden"
+)
 
-set(install_rpath
-    "${legate_PLATFORM_RPATH_ORIGIN}"
-    # The ../ is needed because
-    # ${legate_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
-    # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
-    # that case it would expand to lib/lib/legate/deps which does not exist. So we need to
-    # ../ once so that it expands to lib/../lib/legate/deps. A hack for sure, but it
-    # works.
-    "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
+set(
+  install_rpath
+  "${legate_PLATFORM_RPATH_ORIGIN}"
+  # The ../ is needed because
+  # ${legate_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
+  # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
+  # that case it would expand to lib/lib/legate/deps which does not exist. So we need to
+  # ../ once so that it expands to lib/../lib/legate/deps. A hack for sure, but it
+  # works.
+  "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}"
+)
 
 set_property(TARGET legate APPEND PROPERTY INSTALL_RPATH "${install_rpath}")
 # export this so that install_info.py can properly locate the versioned and unversioned
@@ -655,11 +692,15 @@ foreach(target legate_obj legate)
   #    them to be able to override it with their own install/build of it.
   target_link_libraries("${target}" PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>)
 
-  target_link_libraries("${target}"
-                        PUBLIC libcudacxx::libcudacxx Realm::Realm Legion::Legion
-                        PRIVATE $<COMPILE_ONLY:fmt::fmt-header-only>
-                                $<COMPILE_ONLY:argparse::argparse> kvikio::kvikio
-                                cpptrace::cpptrace)
+  target_link_libraries(
+    "${target}"
+    PUBLIC libcudacxx::libcudacxx Realm::Realm Legion::Legion
+    PRIVATE
+      $<COMPILE_ONLY:fmt::fmt-header-only>
+      $<COMPILE_ONLY:argparse::argparse>
+      kvikio::kvikio
+      cpptrace::cpptrace
+  )
 
   if(Legion_USE_OpenMP)
     target_link_libraries("${target}" PUBLIC OpenMP::OpenMP_CXX)
@@ -670,8 +711,10 @@ foreach(target legate_obj legate)
   endif()
 
   if(legate_USE_CUDA)
-    target_link_libraries("${target}" PRIVATE CUDA::nvtx3
-                                              $<COMPILE_ONLY:CUDA::cuda_driver>)
+    target_link_libraries(
+      "${target}"
+      PRIVATE CUDA::nvtx3 $<COMPILE_ONLY:CUDA::cuda_driver>
+    )
   endif()
 
   if(legate_USE_HDF5_VFD_GDS)
@@ -709,8 +752,11 @@ function(compute_legion_target TARGET_VAR)
   get_target_property(legion_target Legion::LegionRuntime ALIASED_TARGET)
 
   if(NOT legion_target)
-    message(FATAL_ERROR "Failed to determine underlying Legion "
-                        "target from Legion::LegionRuntime")
+    message(
+      FATAL_ERROR
+      "Failed to determine underlying Legion "
+      "target from Legion::LegionRuntime"
+    )
   endif()
 
   set(${TARGET_VAR} "${legion_target}" PARENT_SCOPE)
@@ -772,11 +818,14 @@ endforeach()
 set(legate_LOCAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 foreach(target legate_obj legate)
-  target_include_directories("${target}"
-                             PUBLIC $<BUILD_INTERFACE:${legate_LOCAL_INCLUDE_DIR}>
-                                    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate>
-                             INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate>
-                                       $<INSTALL_INTERFACE:${legate_DEP_INSTALL_INCLUDEDIR}>
+  target_include_directories(
+    "${target}"
+    PUBLIC
+      $<BUILD_INTERFACE:${legate_LOCAL_INCLUDE_DIR}>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate>
+    INTERFACE
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate>
+      $<INSTALL_INTERFACE:${legate_DEP_INSTALL_INCLUDEDIR}>
   )
 endforeach()
 
@@ -787,204 +836,284 @@ include(CPack)
 
 install(TARGETS legate DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT legate-exports)
 
-install(FILES legate.h
-              ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate_defines.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate)
+install(
+  FILES
+    legate.h
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate_defines.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate
+)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
-              ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/legate_exports.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate)
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
+    ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/legate_exports.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate
+)
 
-install(FILES legate/comm/coll_comm.h legate/comm/coll.h legate/comm/communicator.h
-              legate/comm/communicator.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/comm)
+install(
+  FILES
+    legate/comm/coll_comm.h
+    legate/comm/coll.h
+    legate/comm/communicator.h
+    legate/comm/communicator.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/comm
+)
 
-install(FILES legate/data/allocator.h
-              legate/data/allocator.inl
-              legate/data/buffer.h
-              legate/data/buffer.inl
-              legate/data/external_allocation.h
-              legate/data/external_allocation.inl
-              legate/data/inline_allocation.h
-              legate/data/logical_array.h
-              legate/data/logical_store.h
-              legate/data/partition_placement.h
-              legate/data/partition_placement_info.h
-              legate/data/physical_array.h
-              legate/data/physical_array.inl
-              legate/data/physical_store.h
-              legate/data/physical_store.inl
-              legate/data/scalar.h
-              legate/data/scalar.inl
-              legate/data/shape.h
-              legate/data/shape.inl
-              legate/data/slice.h
-              legate/data/slice.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/data)
+install(
+  FILES
+    legate/data/allocator.h
+    legate/data/allocator.inl
+    legate/data/buffer.h
+    legate/data/buffer.inl
+    legate/data/external_allocation.h
+    legate/data/external_allocation.inl
+    legate/data/inline_allocation.h
+    legate/data/logical_array.h
+    legate/data/logical_store.h
+    legate/data/partition_placement.h
+    legate/data/partition_placement_info.h
+    legate/data/physical_array.h
+    legate/data/physical_array.inl
+    legate/data/physical_store.h
+    legate/data/physical_store.inl
+    legate/data/scalar.h
+    legate/data/scalar.inl
+    legate/data/shape.h
+    legate/data/shape.inl
+    legate/data/slice.h
+    legate/data/slice.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/data
+)
 
-install(FILES legate/experimental/trace.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental)
+install(
+  FILES legate/experimental/trace.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental
+)
 
-install(FILES legate/mapping/array.h
-              legate/mapping/array.inl
-              legate/mapping/machine.h
-              legate/mapping/machine.inl
-              legate/mapping/mapping.h
-              legate/mapping/mapping.inl
-              legate/mapping/operation.h
-              legate/mapping/operation.inl
-              legate/mapping/store.h
-              legate/mapping/store.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/mapping)
+install(
+  FILES
+    legate/mapping/array.h
+    legate/mapping/array.inl
+    legate/mapping/machine.h
+    legate/mapping/machine.inl
+    legate/mapping/mapping.h
+    legate/mapping/mapping.inl
+    legate/mapping/operation.h
+    legate/mapping/operation.inl
+    legate/mapping/store.h
+    legate/mapping/store.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/mapping
+)
 
-install(FILES legate/operation/projection.h legate/operation/projection.inl
-              legate/operation/task.h legate/operation/task.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/operation)
+install(
+  FILES
+    legate/operation/projection.h
+    legate/operation/projection.inl
+    legate/operation/task.h
+    legate/operation/task.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/operation
+)
 
-install(FILES legate/partitioning/constraint.h legate/partitioning/constraint.inl
-              legate/partitioning/proxy.h legate/partitioning/proxy.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/partitioning)
+install(
+  FILES
+    legate/partitioning/constraint.h
+    legate/partitioning/constraint.inl
+    legate/partitioning/proxy.h
+    legate/partitioning/proxy.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/partitioning
+)
 
-install(FILES legate/redop/redop.h legate/redop/base.h legate/redop/complex.h
-              legate/redop/half.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/redop)
+install(
+  FILES
+    legate/redop/redop.h
+    legate/redop/base.h
+    legate/redop/complex.h
+    legate/redop/half.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/redop
+)
 
 # These headers are technically private, but are exported transitively through the public
 # headers. I couldn't think of a good way to decouple them, and they don't really deserve
 # to live in the "public" directory...
-install(FILES legate/redop/detail/base.h legate/redop/detail/base.inl
-              legate/redop/detail/complex.h legate/redop/detail/complex.inl
-              legate/redop/detail/atomic_wrapper.h legate/redop/detail/atomic_wrapper.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/redop/detail)
+install(
+  FILES
+    legate/redop/detail/base.h
+    legate/redop/detail/base.inl
+    legate/redop/detail/complex.h
+    legate/redop/detail/complex.inl
+    legate/redop/detail/atomic_wrapper.h
+    legate/redop/detail/atomic_wrapper.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/redop/detail
+)
 
-install(FILES legate/runtime/exception_mode.h legate/runtime/library.h
-              legate/runtime/library.inl legate/runtime/resource.h
-              legate/runtime/runtime.h legate/runtime/runtime.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/runtime)
+install(
+  FILES
+    legate/runtime/exception_mode.h
+    legate/runtime/library.h
+    legate/runtime/library.inl
+    legate/runtime/resource.h
+    legate/runtime/runtime.h
+    legate/runtime/runtime.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/runtime
+)
 
-install(FILES legate/task/exception.h
-              legate/task/exception.inl
-              legate/task/registrar.h
-              legate/task/task.h
-              legate/task/task.inl
-              legate/task/task_context.h
-              legate/task/task_context.inl
-              legate/task/task_info.h
-              legate/task/task_info.inl
-              legate/task/variant_helper.h
-              legate/task/variant_options.h
-              legate/task/variant_options.inl
-              legate/task/variant_info.h
-              legate/task/variant_info.inl
-              legate/task/task_signature.h
-              legate/task/task_signature.inl
-              legate/task/task_config.h
-              legate/task/task_config.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/task)
+install(
+  FILES
+    legate/task/exception.h
+    legate/task/exception.inl
+    legate/task/registrar.h
+    legate/task/task.h
+    legate/task/task.inl
+    legate/task/task_context.h
+    legate/task/task_context.inl
+    legate/task/task_info.h
+    legate/task/task_info.inl
+    legate/task/variant_helper.h
+    legate/task/variant_options.h
+    legate/task/variant_options.inl
+    legate/task/variant_info.h
+    legate/task/variant_info.inl
+    legate/task/task_signature.h
+    legate/task/task_signature.inl
+    legate/task/task_config.h
+    legate/task/task_config.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/task
+)
 
-install(FILES legate/tuning/parallel_policy.h legate/tuning/parallel_policy.inl
-              legate/tuning/scope.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tuning)
+install(
+  FILES
+    legate/tuning/parallel_policy.h
+    legate/tuning/parallel_policy.inl
+    legate/tuning/scope.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tuning
+)
 
-install(FILES legate/type/types.h legate/type/types.inl legate/type/type_traits.h
-              legate/type/half.h legate/type/half.inl legate/type/complex.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/type)
+install(
+  FILES
+    legate/type/types.h
+    legate/type/types.inl
+    legate/type/type_traits.h
+    legate/type/half.h
+    legate/type/half.inl
+    legate/type/complex.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/type
+)
 
-install(FILES legate/utilities/dispatch.h
-              legate/utilities/hash.h
-              legate/utilities/machine.h
-              legate/utilities/memory.h
-              legate/utilities/memory.inl
-              legate/utilities/span.h
-              legate/utilities/mdspan.h
-              legate/utilities/mdspan.inl
-              legate/utilities/tuple.h
-              legate/utilities/tuple.inl
-              legate/utilities/typedefs.h
-              legate/utilities/shared_ptr.h
-              legate/utilities/shared_ptr.inl
-              legate/utilities/internal_shared_ptr.h
-              legate/utilities/internal_shared_ptr.inl
-              legate/utilities/cpp_version.h
-              legate/utilities/assert.h
-              legate/utilities/abort.h
-              legate/utilities/scope_guard.h
-              legate/utilities/scope_guard.inl
-              legate/utilities/compiler.h
-              legate/utilities/macros.h
-              legate/utilities/proc_local_storage.h
-              legate/utilities/proc_local_storage.inl
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities)
+install(
+  FILES
+    legate/utilities/dispatch.h
+    legate/utilities/hash.h
+    legate/utilities/machine.h
+    legate/utilities/memory.h
+    legate/utilities/memory.inl
+    legate/utilities/span.h
+    legate/utilities/mdspan.h
+    legate/utilities/mdspan.inl
+    legate/utilities/tuple.h
+    legate/utilities/tuple.inl
+    legate/utilities/typedefs.h
+    legate/utilities/shared_ptr.h
+    legate/utilities/shared_ptr.inl
+    legate/utilities/internal_shared_ptr.h
+    legate/utilities/internal_shared_ptr.inl
+    legate/utilities/cpp_version.h
+    legate/utilities/assert.h
+    legate/utilities/abort.h
+    legate/utilities/scope_guard.h
+    legate/utilities/scope_guard.inl
+    legate/utilities/compiler.h
+    legate/utilities/macros.h
+    legate/utilities/proc_local_storage.h
+    legate/utilities/proc_local_storage.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities
+)
 
-install(FILES legate/utilities/detail/compressed_pair.h
-              legate/utilities/detail/shared_ptr_control_block.h
-              legate/utilities/detail/shared_ptr_control_block.inl
-              legate/utilities/detail/type_traits.h
-              legate/utilities/detail/zip.h
-              legate/utilities/detail/zip.inl
-              legate/utilities/detail/enumerate.h
-              legate/utilities/detail/enumerate.inl
-              legate/utilities/detail/zstring_view.h
-              legate/utilities/detail/zstring_view.inl
-              legate/utilities/detail/doxygen.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail)
+install(
+  FILES
+    legate/utilities/detail/compressed_pair.h
+    legate/utilities/detail/shared_ptr_control_block.h
+    legate/utilities/detail/shared_ptr_control_block.inl
+    legate/utilities/detail/type_traits.h
+    legate/utilities/detail/zip.h
+    legate/utilities/detail/zip.inl
+    legate/utilities/detail/enumerate.h
+    legate/utilities/detail/enumerate.inl
+    legate/utilities/detail/zstring_view.h
+    legate/utilities/detail/zstring_view.inl
+    legate/utilities/detail/doxygen.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail
+)
 
-install(FILES legate/utilities/detail/mdspan/flat_mdspan_view.h
-              legate/utilities/detail/mdspan/flat_mdspan_view.inl
-              legate/utilities/detail/mdspan/flat_mdspan_iterator.h
-              legate/utilities/detail/mdspan/flat_mdspan_iterator.inl
-              legate/utilities/detail/mdspan/reduction_accessor.h
-              legate/utilities/detail/mdspan/reduction_accessor.inl
-              legate/utilities/detail/mdspan/for_each_in_extent.h
-              legate/utilities/detail/mdspan/for_each_in_extent.inl
-              legate/utilities/detail/mdspan/util.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/mdspan)
+install(
+  FILES
+    legate/utilities/detail/mdspan/flat_mdspan_view.h
+    legate/utilities/detail/mdspan/flat_mdspan_view.inl
+    legate/utilities/detail/mdspan/flat_mdspan_iterator.h
+    legate/utilities/detail/mdspan/flat_mdspan_iterator.inl
+    legate/utilities/detail/mdspan/reduction_accessor.h
+    legate/utilities/detail/mdspan/reduction_accessor.inl
+    legate/utilities/detail/mdspan/for_each_in_extent.h
+    legate/utilities/detail/mdspan/for_each_in_extent.inl
+    legate/utilities/detail/mdspan/util.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/mdspan
+)
 
-install(FILES legate/utilities/detail/dlpack/dlpack.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/dlpack)
+install(
+  FILES legate/utilities/detail/dlpack/dlpack.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/dlpack
+)
 
 # ########################################################################################
 # * install Legate I/O -----------------------------------------------------------
 
-install(FILES legate/io/hdf5/interface.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/io/hdf5)
+install(
+  FILES legate/io/hdf5/interface.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/io/hdf5
+)
 
 # ########################################################################################
 # * install Legate STL -----------------------------------------------------------
 
-install(FILES legate/experimental/stl.hpp
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental)
+install(
+  FILES legate/experimental/stl.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental
+)
 
-install(FILES legate/experimental/stl/detail/for_each.hpp
-              legate/experimental/stl/detail/span.hpp
-              legate/experimental/stl/detail/registrar.hpp
-              legate/experimental/stl/detail/transform_reduce.hpp
-              legate/experimental/stl/detail/stlfwd.hpp
-              legate/experimental/stl/detail/get_logical_store.hpp
-              legate/experimental/stl/detail/config.hpp
-              legate/experimental/stl/detail/elementwise.hpp
-              legate/experimental/stl/detail/functional.hpp
-              legate/experimental/stl/detail/meta.hpp
-              legate/experimental/stl/detail/mdspan.hpp
-              legate/experimental/stl/detail/suffix.hpp
-              legate/experimental/stl/detail/prefix.hpp
-              legate/experimental/stl/detail/slice.hpp
-              legate/experimental/stl/detail/type_traits.hpp
-              legate/experimental/stl/detail/transform.hpp
-              legate/experimental/stl/detail/iterator.hpp
-              legate/experimental/stl/detail/utility.hpp
-              legate/experimental/stl/detail/store.hpp
-              legate/experimental/stl/detail/launch_task.hpp
-              legate/experimental/stl/detail/ranges.hpp
-              legate/experimental/stl/detail/reduce.hpp
-              legate/experimental/stl/detail/fill.hpp
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental/stl/detail)
+install(
+  FILES
+    legate/experimental/stl/detail/for_each.hpp
+    legate/experimental/stl/detail/span.hpp
+    legate/experimental/stl/detail/registrar.hpp
+    legate/experimental/stl/detail/transform_reduce.hpp
+    legate/experimental/stl/detail/stlfwd.hpp
+    legate/experimental/stl/detail/get_logical_store.hpp
+    legate/experimental/stl/detail/config.hpp
+    legate/experimental/stl/detail/elementwise.hpp
+    legate/experimental/stl/detail/functional.hpp
+    legate/experimental/stl/detail/meta.hpp
+    legate/experimental/stl/detail/mdspan.hpp
+    legate/experimental/stl/detail/suffix.hpp
+    legate/experimental/stl/detail/prefix.hpp
+    legate/experimental/stl/detail/slice.hpp
+    legate/experimental/stl/detail/type_traits.hpp
+    legate/experimental/stl/detail/transform.hpp
+    legate/experimental/stl/detail/iterator.hpp
+    legate/experimental/stl/detail/utility.hpp
+    legate/experimental/stl/detail/store.hpp
+    legate/experimental/stl/detail/launch_task.hpp
+    legate/experimental/stl/detail/ranges.hpp
+    legate/experimental/stl/detail/reduce.hpp
+    legate/experimental/stl/detail/fill.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental/stl/detail
+)
 
 # ########################################################################################
 # * install Legate timing -----------------------------------------------------------
 
-install(FILES legate/timing/timing.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/timing)
+install(
+  FILES legate/timing/timing.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/timing
+)
 
 # ########################################################################################
 # * install Legate MPI Wrapper -----------------------------------------------------------
@@ -992,17 +1121,25 @@ install(FILES legate/timing/timing.h
 # We want to install the entire CMake project for the wrapper as-is into the share folder
 # in the install path. That way -- once installed -- the user can build the wrapper
 # themselves. This is also why we specifically avoided generating the install rules
-install(FILES ${LEGATE_DIR}/share/legate/mpi_wrapper/install.bash
-              ${LEGATE_DIR}/share/legate/mpi_wrapper/CMakeLists.txt
-        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper")
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/mpi_wrapper/install.bash
+    ${LEGATE_DIR}/share/legate/mpi_wrapper/CMakeLists.txt
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper"
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/mpi_wrapper/cmake/Config.cmake.in
-        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/cmake")
+install(
+  FILES ${LEGATE_DIR}/share/legate/mpi_wrapper/cmake/Config.cmake.in
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/cmake"
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper.c
-              ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper.h
-              ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h
-        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/legate_mpi_wrapper")
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper.c
+    ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper.h
+    ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/legate_mpi_wrapper"
+)
 
 # ########################################################################################
 # * install Realm MPI Bootstrap ----------------------------------------------------------
@@ -1011,80 +1148,122 @@ install(FILES ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_
 # folder in the install path. That way -- once installed -- the user can build the
 # bootstrap themselves. This is also why we specifically avoided generating the install
 # rules
-install(FILES ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/CMakeLists.txt
-              ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap.h
-              ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap_mpi.c
-              ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap_util.h
-        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/realm_ucp_bootstrap")
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/CMakeLists.txt
+    ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap.h
+    ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap_mpi.c
+    ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap_util.h
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/realm_ucp_bootstrap"
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/cmake/Config.cmake.in
-        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/realm_ucp_bootstrap/cmake")
+install(
+  FILES ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/cmake/Config.cmake.in
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/realm_ucp_bootstrap/cmake"
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
-              ${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt
-              ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt
-              ${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt
-              ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
-              ${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt
-        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/sanitizers")
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
+    ${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt
+    ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt
+    ${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt
+    ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
+    ${LEGATE_DIR}/share/legate/sanitizers/ubsan_suppressions.txt
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/sanitizers"
+)
 
 # ########################################################################################
 # * install Legate examples -----------------------------------------------------------
 
-install(FILES ${LEGATE_DIR}/share/legate/examples/helloworld/helloworld.cc
-              ${LEGATE_DIR}/share/legate/examples/helloworld/CMakeLists.txt
-              ${LEGATE_DIR}/share/legate/examples/helloworld/build-and-run.sh
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/helloworld)
-legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/helloworld
-                                SOURCES helloworld.cc)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/helloworld/helloworld.cc
+    ${LEGATE_DIR}/share/legate/examples/helloworld/CMakeLists.txt
+    ${LEGATE_DIR}/share/legate/examples/helloworld/build-and-run.sh
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/helloworld
+)
+legate_add_external_tidy_target(
+  ROOT_DIR ${LEGATE_DIR}/share/legate/examples/helloworld
+  SOURCES helloworld.cc
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/examples/saxpy/saxpy.cc
-              ${LEGATE_DIR}/share/legate/examples/saxpy/CMakeLists.txt
-              ${LEGATE_DIR}/share/legate/examples/saxpy/build-and-run.sh
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/saxpy)
-legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/saxpy
-                                SOURCES saxpy.cc)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/saxpy/saxpy.cc
+    ${LEGATE_DIR}/share/legate/examples/saxpy/CMakeLists.txt
+    ${LEGATE_DIR}/share/legate/examples/saxpy/build-and-run.sh
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/saxpy
+)
+legate_add_external_tidy_target(
+  ROOT_DIR ${LEGATE_DIR}/share/legate/examples/saxpy
+  SOURCES saxpy.cc
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/examples/manual_tasks/manual_tasks.cc
-              ${LEGATE_DIR}/share/legate/examples/manual_tasks/CMakeLists.txt
-              ${LEGATE_DIR}/share/legate/examples/manual_tasks/build-and-run.sh
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/manual_tasks)
-legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/manual_tasks
-                                SOURCES manual_tasks.cc)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/manual_tasks/manual_tasks.cc
+    ${LEGATE_DIR}/share/legate/examples/manual_tasks/CMakeLists.txt
+    ${LEGATE_DIR}/share/legate/examples/manual_tasks/build-and-run.sh
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/manual_tasks
+)
+legate_add_external_tidy_target(
+  ROOT_DIR ${LEGATE_DIR}/share/legate/examples/manual_tasks
+  SOURCES manual_tasks.cc
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1.py
-              ${LEGATE_DIR}/share/legate/examples/io/hdf5/hdf5_write_benchmark.py
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1.py
+    ${LEGATE_DIR}/share/legate/examples/io/hdf5/hdf5_write_benchmark.py
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/gen_h5_data.c
-              ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/CMakeLists.txt
-              ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/build.bash
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5/ex1_gen)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/gen_h5_data.c
+    ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/CMakeLists.txt
+    ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/build.bash
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5/ex1_gen
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/examples/binding/manual/CMakeLists.txt
-              ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.cc
-              ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.py
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/manual)
-legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/binding/manual
-                                SOURCES hello_world.cc)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/binding/manual/CMakeLists.txt
+    ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.cc
+    ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.py
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/manual
+)
+legate_add_external_tidy_target(
+  ROOT_DIR ${LEGATE_DIR}/share/legate/examples/binding/manual
+  SOURCES hello_world.cc
+)
 
 # Not adding these files as tidy target, because it requires calling pip install to
 # configure.
-install(FILES ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.cc
-              ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.h
-              ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world_cython.pyx
-              ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.py
-              ${LEGATE_DIR}/share/legate/examples/binding/cython/pyproject.toml
-              ${LEGATE_DIR}/share/legate/examples/binding/cython/CMakeLists.txt
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/cython)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.cc
+    ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.h
+    ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world_cython.pyx
+    ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.py
+    ${LEGATE_DIR}/share/legate/examples/binding/cython/pyproject.toml
+    ${LEGATE_DIR}/share/legate/examples/binding/cython/CMakeLists.txt
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/cython
+)
 
-install(FILES ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.cc
-              ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.py
-              ${LEGATE_DIR}/share/legate/examples/binding/pybind11/pyproject.toml
-              ${LEGATE_DIR}/share/legate/examples/binding/pybind11/CMakeLists.txt
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/pybind11)
-legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/binding/pybind11
-                                SOURCES hello_world.cc)
+install(
+  FILES
+    ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.cc
+    ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.py
+    ${LEGATE_DIR}/share/legate/examples/binding/pybind11/pyproject.toml
+    ${LEGATE_DIR}/share/legate/examples/binding/pybind11/CMakeLists.txt
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/pybind11
+)
+legate_add_external_tidy_target(
+  ROOT_DIR ${LEGATE_DIR}/share/legate/examples/binding/pybind11
+  SOURCES hello_world.cc
+)
 
 # ########################################################################################
 # * install legate-bind.sh  --------------------------------------------------------
@@ -1096,14 +1275,18 @@ legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/bin
 # while /share gets picked up, /libexec does *not*.
 #
 # It's possible this restriction is relaxed in the future, but for now, /share it must be.
-install(PROGRAMS ${LEGATE_DIR}/share/legate/libexec/legate-bind.sh
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_LIBEXECDIR})
+install(
+  PROGRAMS ${LEGATE_DIR}/share/legate/libexec/legate-bind.sh
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_LIBEXECDIR}
+)
 
 # ########################################################################################
 # * install Legate CMake Helpers ---------------------------------------------------------
 
-install(FILES ${LEGATE_CMAKE_DIR}/Modules/legate_configure_target.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/legate/Modules)
+install(
+  FILES ${LEGATE_CMAKE_DIR}/Modules/legate_configure_target.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/legate/Modules
+)
 
 # ########################################################################################
 # * install Legate debug symbols ---------------------------------------------------------
@@ -1113,14 +1296,16 @@ legate_install_debug_symbols(TARGET legate INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} R
 # ########################################################################################
 # * install export -----------------------------------------------------------
 
-set(doc_string
-    [=[
+set(
+  doc_string
+  [=[
 Provide targets for Legate, the Foundation for All Legate Libraries.
 
 Imported Targets:
   - legate::legate
 
-]=])
+]=]
+)
 
 # Normally this is done transparently (via the "code_string" below, embedded in the
 # Findlegate.cmake) if the CMakeLists.txt calling this one finds the legate via a
@@ -1139,19 +1324,19 @@ if(NOT PROJECT_IS_TOP_LEVEL)
   # END MUST MATCH
 endif()
 
-string(JOIN
-       "\n"
-       base_code_string
-       # These must match the decls above BEGIN MUST MATCH
-       "set(Legion_USE_CUDA ${Legion_USE_CUDA})"
-       "set(legate_USE_CUDA ${legate_USE_CUDA})"
-       "set(Legion_USE_OpenMP ${Legion_USE_OpenMP})"
-       "set(Legion_USE_Python ${Legion_USE_Python})"
-       "set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH})"
-       "set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS})"
-       "set(Legion_MAX_DIM ${Legion_MAX_DIM})"
-       "set(Legion_MAX_FIELDS ${Legion_MAX_FIELDS})"
-       # END MUST MATCH
+string(
+  JOIN "\n"
+  base_code_string
+  # These must match the decls above BEGIN MUST MATCH
+  "set(Legion_USE_CUDA ${Legion_USE_CUDA})"
+  "set(legate_USE_CUDA ${legate_USE_CUDA})"
+  "set(Legion_USE_OpenMP ${Legion_USE_OpenMP})"
+  "set(Legion_USE_Python ${Legion_USE_Python})"
+  "set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH})"
+  "set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS})"
+  "set(Legion_MAX_DIM ${Legion_MAX_DIM})"
+  "set(Legion_MAX_FIELDS ${Legion_MAX_FIELDS})"
+  # END MUST MATCH
 )
 
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
@@ -1160,30 +1345,45 @@ list(REMOVE_ITEM languages NONE)
 
 message(STATUS "Enabled languages: ${languages}")
 
-string(JOIN "\n" install_code_string "${base_code_string}" [=[
+string(
+  JOIN "\n"
+  install_code_string
+  "${base_code_string}"
+  [=[
 include("${CMAKE_CURRENT_LIST_DIR}/Modules/legate_configure_target.cmake")
-]=])
+]=]
+)
 # FIXME(wonchanl): Passing LANGUAGES triggers a bug in rapids-cmake. Put it back once we
 # bump the rapids-cmake version.
-rapids_export(INSTALL legate
-              EXPORT_SET legate-exports
-              GLOBAL_TARGETS legate
-              NAMESPACE legate::
-              DOCUMENTATION doc_string
-              FINAL_CODE_BLOCK install_code_string)
+rapids_export(
+  INSTALL
+  legate
+  EXPORT_SET legate-exports
+  GLOBAL_TARGETS legate
+  NAMESPACE legate::
+  DOCUMENTATION doc_string
+  FINAL_CODE_BLOCK install_code_string
+)
 
-string(JOIN "\n" build_code_string "${base_code_string}"
-       "include(\"${LEGATE_CMAKE_DIR}/Modules/legate_configure_target.cmake\")")
+string(
+  JOIN "\n"
+  build_code_string
+  "${base_code_string}"
+  "include(\"${LEGATE_CMAKE_DIR}/Modules/legate_configure_target.cmake\")"
+)
 
 # build export targets
 # FIXME(wonchanl): Passing LANGUAGES triggers a bug in rapids-cmake. Put it back once we
 # bump the rapids-cmake version.
-rapids_export(BUILD legate
-              EXPORT_SET legate-exports
-              GLOBAL_TARGETS legate
-              NAMESPACE legate::
-              DOCUMENTATION doc_string
-              FINAL_CODE_BLOCK build_code_string)
+rapids_export(
+  BUILD
+  legate
+  EXPORT_SET legate-exports
+  GLOBAL_TARGETS legate
+  NAMESPACE legate::
+  DOCUMENTATION doc_string
+  FINAL_CODE_BLOCK build_code_string
+)
 
 set(legate_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -1211,11 +1411,17 @@ endif()
 # properly if it is called after all third-party packages have been downloaded.  Do not
 # move this call!
 set(legate_LICENSE_FILE "${CMAKE_CURRENT_BINARY_DIR}/licenses.txt")
-cpm_licenses_create_disclaimer_target(legate_write_licenses "${legate_LICENSE_FILE}"
-                                      "${CPM_PACKAGES}")
+cpm_licenses_create_disclaimer_target(
+  legate_write_licenses
+  "${legate_LICENSE_FILE}"
+  "${CPM_PACKAGES}"
+)
 
-install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target legate_write_licenses
-                COMMAND_ERROR_IS_FATAL ANY)")
+install(
+  CODE
+    "execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target legate_write_licenses
+                COMMAND_ERROR_IS_FATAL ANY)"
+)
 install(FILES ${legate_LICENSE_FILE} DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate")
 
 if(legate_BUILD_DOCS)

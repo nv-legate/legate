@@ -15,24 +15,37 @@ function(validate_nccl_version)
       list(APPEND candidate_incdirs "${stripped_dir}")
     endforeach()
 
-    find_path(legate_nccl_include_dir
-              NAMES nccl.h
-              PATH_SUFFIXES nccl
-              HINTS ${candidate_incdirs}
-              DOC "Path containing nccl.h")
+    find_path(
+      legate_nccl_include_dir
+      NAMES nccl.h
+      PATH_SUFFIXES nccl
+      HINTS ${candidate_incdirs}
+      DOC "Path containing nccl.h"
+    )
   endif()
 
   if(NOT legate_nccl_include_dir)
-    message(FATAL_ERROR "Could not find nccl.h in any include directory for "
-                        "NCCL version validation. Searched: ${candidate_incdirs}")
+    message(
+      FATAL_ERROR
+      "Could not find nccl.h in any include directory for "
+      "NCCL version validation. Searched: ${candidate_incdirs}"
+    )
   endif()
 
   set(nccl_header_path "${legate_nccl_include_dir}/nccl.h")
 
-  file(STRINGS "${nccl_header_path}" maj_line LIMIT_COUNT 1
-       REGEX [=[^#define[ \t]+NCCL_MAJOR[ \t]+[0-9]+]=])
-  file(STRINGS "${nccl_header_path}" min_line LIMIT_COUNT 1
-       REGEX [=[^#define[ \t]+NCCL_MINOR[ \t]+[0-9]+]=])
+  file(
+    STRINGS "${nccl_header_path}"
+    maj_line
+    LIMIT_COUNT 1
+    REGEX [=[^#define[ \t]+NCCL_MAJOR[ \t]+[0-9]+]=]
+  )
+  file(
+    STRINGS "${nccl_header_path}"
+    min_line
+    LIMIT_COUNT 1
+    REGEX [=[^#define[ \t]+NCCL_MINOR[ \t]+[0-9]+]=]
+  )
 
   string(REGEX MATCH [=[[0-9]+]=] nccl_major "${maj_line}")
   string(REGEX MATCH [=[[0-9]+]=] nccl_minor "${min_line}")
@@ -46,11 +59,16 @@ function(validate_nccl_version)
   set(required_nccl_version 2.28)
 
   if("${required_nccl_version}" VERSION_LESS "${nccl_version}")
-    message(FATAL_ERROR "Detected NCCL version ${nccl_version}, but "
-                        "version ${required_nccl_version} or lower is required.")
+    message(
+      FATAL_ERROR
+      "Detected NCCL version ${nccl_version}, but "
+      "version ${required_nccl_version} or lower is required."
+    )
   endif()
 
-  message(STATUS "NCCL version ${nccl_version} meets requirement <= ${required_nccl_version}"
+  message(
+    STATUS
+    "NCCL version ${nccl_version} meets requirement <= ${required_nccl_version}"
   )
 endfunction()
 
@@ -79,7 +97,9 @@ function(find_or_configure_nccl)
     # above without changing anything), so better to fail with a more useful error message
     # instead.
     message(VERBOSE "CMAKE_LIBRARY_ARCHITECTURE is set: ${CMAKE_LIBRARY_ARCHITECTURE}")
-    message(FATAL_ERROR "Could not find NCCL on your system. It's possible that you have it installed in a location that CMake does not know to search for automatically. Please report this case to Legate maintainers."
+    message(
+      FATAL_ERROR
+      "Could not find NCCL on your system. It's possible that you have it installed in a location that CMake does not know to search for automatically. Please report this case to Legate maintainers."
     )
   endif()
 
@@ -95,7 +115,9 @@ function(find_or_configure_nccl)
   endif()
 
   if(NOT CMAKE_LIBRARY_ARCHITECTURE)
-    message(FATAL_ERROR "Could not auto-deduce CMAKE_LIBRARY_ARCHITECTURE while trying to locate NCCL. It's possible that you have NCCL installed in a location that CMake does not know to search for automatically (which we tried to remedy by deducing CMAKE_LIBRARY_ARCHITECTURE). Please report this case to Legate maintainers."
+    message(
+      FATAL_ERROR
+      "Could not auto-deduce CMAKE_LIBRARY_ARCHITECTURE while trying to locate NCCL. It's possible that you have NCCL installed in a location that CMake does not know to search for automatically (which we tried to remedy by deducing CMAKE_LIBRARY_ARCHITECTURE). Please report this case to Legate maintainers."
     )
   endif()
 

@@ -14,21 +14,26 @@ function(_legate_get_supported_arch_list_nvcc dest_var var_name)
   endif()
 
   set(cmd "${CMAKE_CUDA_COMPILER}" "-arch-ls")
-  execute_process(COMMAND ${cmd}
-                  OUTPUT_VARIABLE arch_list
-                  ERROR_VARIABLE err
-                  RESULT_VARIABLE result
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(
+    COMMAND ${cmd}
+    OUTPUT_VARIABLE arch_list
+    ERROR_VARIABLE err
+    RESULT_VARIABLE result
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
 
   # Ignore stderr unless there is a nonzero return value. nvcc will occasionally emit
   # useless warning messages to the effect of: "incompatible redefinition for option <some
   # flag>, the last value of this option was used" which we should ignore.
   if(result)
-    message(FATAL_ERROR "Failed to auto-detect the list of supported CUDA "
-                        "architectures from NVCC. Please set ${var_name} to "
-                        "the appropriate list of architectures. Ran:\n"
-                        "${cmd}\n"
-                        "(${result}): ${err}")
+    message(
+      FATAL_ERROR
+      "Failed to auto-detect the list of supported CUDA "
+      "architectures from NVCC. Please set ${var_name} to "
+      "the appropriate list of architectures. Ran:\n"
+      "${cmd}\n"
+      "(${result}): ${err}"
+    )
   endif()
 
   string(REPLACE "\n" ";" arch_list ${arch_list})
@@ -38,8 +43,12 @@ function(_legate_get_supported_arch_list_nvcc dest_var var_name)
   # Use natural comparison, so that 100 does not end up before 90 etc.
   list(SORT arch_list COMPARE NATURAL)
 
-  set(legate_NVCC_SUPPORTED_ARCH_LIST "${arch_list}"
-      CACHE INTERNAL "List of supported CUDA arch values")
+  set(
+    legate_NVCC_SUPPORTED_ARCH_LIST
+    "${arch_list}"
+    CACHE INTERNAL
+    "List of supported CUDA arch values"
+  )
   set(${dest_var} "${arch_list}" PARENT_SCOPE)
 endfunction()
 
@@ -49,27 +58,41 @@ function(legate_set_default_cuda_arch)
   set(options)
   set(oneValueArgs DEST_VAR)
   set(multiValueArgs)
-  cmake_parse_arguments(_LEGATE "${options}" "${oneValueArgs}" "${multiValueArgs}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
+  )
 
   if(NOT _LEGATE_DEST_VAR)
     message(FATAL_ERROR "Must pass DEST_VAR")
   endif()
 
   if(${_LEGATE_DEST_VAR} STREQUAL "all-major")
-    message(STATUS "arch variable ${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}, "
-                   "translating to all supported major architectures")
+    message(
+      STATUS
+      "arch variable ${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}, "
+      "translating to all supported major architectures"
+    )
     set(ONLY_MAJOR ON)
   elseif(${_LEGATE_DEST_VAR} STREQUAL "all")
-    message(STATUS "arch variable ${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}, "
-                   "translating to all supported architectures")
+    message(
+      STATUS
+      "arch variable ${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}, "
+      "translating to all supported architectures"
+    )
     set(ONLY_MAJOR OFF)
   elseif(DEFINED ${_LEGATE_DEST_VAR})
     # Variable was already set by user to something else, don't mess with it.  Use of
     # DEFINED is deliberate. We want to handle the case where DEST_VAR is "OFF" (which we
     # should leave as-is).
-    message(STATUS "arch variable already pre-defined: "
-                   "${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}")
+    message(
+      STATUS
+      "arch variable already pre-defined: "
+      "${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}"
+    )
     if(${_LEGATE_DEST_VAR} MATCHES [=[^[0-5][0-9]$]=])
       message(FATAL_ERROR "CUDA architecture ${${_LEGATE_DEST_VAR}} is not supported.")
     endif()
@@ -133,6 +156,9 @@ function(legate_set_default_cuda_arch)
   set(${_LEGATE_DEST_VAR} "${arch_list}")
   set(${_LEGATE_DEST_VAR} "${${_LEGATE_DEST_VAR}}" PARENT_SCOPE)
 
-  message(STATUS "Set default CUDA architectures: "
-                 "${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}")
+  message(
+    STATUS
+    "Set default CUDA architectures: "
+    "${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}"
+  )
 endfunction()

@@ -18,21 +18,28 @@ function(legate_configure_benchmark)
 
   add_executable(${_LEGATE_BM_TARGET} ${_LEGATE_BM_SOURCES})
 
-  set_target_properties(${_LEGATE_BM_TARGET}
-                        PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-                                   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
-                                   BUILD_RPATH_USE_ORIGIN TRUE
-                                   INSTALL_RPATH_USE_LINK_PATH TRUE
-                                   LEGATE_INTERNAL_TARGET TRUE)
+  set_target_properties(
+    ${_LEGATE_BM_TARGET}
+    PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
+      BUILD_RPATH_USE_ORIGIN TRUE
+      INSTALL_RPATH_USE_LINK_PATH TRUE
+      LEGATE_INTERNAL_TARGET TRUE
+  )
 
-  set_property(TARGET ${_LEGATE_BM_TARGET} APPEND
-               PROPERTY INSTALL_RPATH
-                        "${legate_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR}")
+  set_property(
+    TARGET ${_LEGATE_BM_TARGET}
+    APPEND
+    PROPERTY INSTALL_RPATH "${legate_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR}"
+  )
 
   target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE legate::legate benchmark::benchmark)
 
-  legate_install_debug_symbols(TARGET ${_LEGATE_BM_TARGET}
-                               INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
+  legate_install_debug_symbols(
+    TARGET ${_LEGATE_BM_TARGET}
+    INSTALL_DIR "${CMAKE_INSTALL_BINDIR}"
+  )
 
   foreach(src IN LISTS _LEGATE_BM_SOURCES)
     legate_add_tidy_target(SOURCE "${src}")

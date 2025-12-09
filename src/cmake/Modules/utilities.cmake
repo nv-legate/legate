@@ -12,8 +12,13 @@ include(CheckLinkerFlag)
 macro(legate_string_escape_re_chars output_var input_var)
   # Escapes all special regex characters detailed at
   # https://cmake.org/cmake/help/latest/command/string.html#regex-specification
-  string(REGEX REPLACE [[(\.|\-|\+|\*|\^|\$|\?|\||\(|\)|\[|\])]] [[\\\1]] ${output_var}
-                       "${${input_var}}")
+  string(
+    REGEX REPLACE
+    [[(\.|\-|\+|\*|\^|\$|\?|\||\(|\)|\[|\])]]
+    [[\\\1]]
+    ${output_var}
+    "${${input_var}}"
+  )
 endmacro()
 
 macro(legate_list_escape_re_chars output_var input_var)
@@ -26,8 +31,13 @@ function(legate_string_ends_with)
   set(one_value_args SRC ENDS_WITH RESULT_VAR)
   set(multi_value_args)
 
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   if(NOT _LEGATE_SRC)
     message(FATAL_ERROR "Must pass SRC")
@@ -60,8 +70,13 @@ function(legate_find_program VARIABLE_NAME PROGRAM_NAME)
   set(one_value_args)
   set(multi_value_args FIND_PROGRAM_ARGS)
 
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   message(CHECK_START "Searching for ${PROGRAM_NAME}")
 
@@ -129,8 +144,13 @@ function(legate_target_get_target_dependencies)
   set(one_value_args TARGET RESULT_VAR)
   set(multi_value_args)
 
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   foreach(var IN LISTS one_value_args)
     if(NOT _LEGATE_${var})
@@ -175,17 +195,21 @@ function(legate_add_target_compile_options TARGET_NAME OPTION_LANG VIS OPTION_NA
   # If it does, we add the flags, if not, this has no effect.
   get_property(internal_prop_defined TARGET NONE PROPERTY LEGATE_INTERNAL_TARGET DEFINED)
   if(NOT internal_prop_defined)
-    message(FATAL_ERROR "LEGATE_INTERNAL_TARGET was not defined as a property yet. "
-                        "Probably some kind of refactoring has taken place and may have "
-                        "caused this property to not be defined where it should be. See "
-                        "the corresponding define_property() call in "
-                        "src/cpp/CMakeLists.txt for more info")
+    message(
+      FATAL_ERROR
+      "LEGATE_INTERNAL_TARGET was not defined as a property yet. "
+      "Probably some kind of refactoring has taken place and may have "
+      "caused this property to not be defined where it should be. See "
+      "the corresponding define_property() call in "
+      "src/cpp/CMakeLists.txt for more info"
+    )
   endif()
   if("${VIS}" STREQUAL "PRIVATE")
     set(has_prop "$<BOOL:$<TARGET_PROPERTY:LEGATE_INTERNAL_TARGET>>")
     set(lang_flags_if_has_secret_prop "$<${has_prop}:${lang_flags}>")
-    target_compile_options("${TARGET_NAME}"
-                           INTERFACE "$<BUILD_INTERFACE:${lang_flags_if_has_secret_prop}>"
+    target_compile_options(
+      "${TARGET_NAME}"
+      INTERFACE "$<BUILD_INTERFACE:${lang_flags_if_has_secret_prop}>"
     )
   endif()
 endfunction()

@@ -29,17 +29,19 @@ function(_legate_download_rapids DEST_PATH)
     set(rapids-cmake-sha "${rapids-cmake-sha}" PARENT_SCOPE)
 
     # This hash needs to be manually updated every time we bump rapids-cmake
-    set(expected_hash
-        EXPECTED_HASH
-        SHA256=3fef838cc269635d18763b42e707e98f2417224b65842641ea2907562993f8b8)
+    set(
+      expected_hash
+      EXPECTED_HASH
+      SHA256=3fef838cc269635d18763b42e707e98f2417224b65842641ea2907562993f8b8
+    )
   endif()
 
-  set(file_name
-      "https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake"
+  set(
+    file_name
+    "https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake"
   )
-  # Retry the download up to 5 times (foreach() is inclusive). Also cmake-lint seemingly
-  # doesn't know about range-foreach...
-  foreach(idx RANGE 1 5) # cmake-lint: disable=E1120
+  # Retry the download up to 5 times (foreach() is inclusive).
+  foreach(idx RANGE 1 5)
     file(DOWNLOAD "${file_name}" "${DEST_PATH}" ${expected_hash} STATUS status)
 
     list(GET status 0 code)

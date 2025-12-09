@@ -9,8 +9,14 @@ function(find_or_configure_cpptrace)
   list(APPEND CMAKE_MESSAGE_CONTEXT "cpptrace")
 
   include("${rapids-cmake-dir}/cpm/detail/package_details.cmake")
-  rapids_cpm_package_details(cpptrace version git_url git_tag git_shallow
-                             exclude_from_all)
+  rapids_cpm_package_details(
+    cpptrace
+    version
+    git_url
+    git_tag
+    git_shallow
+    exclude_from_all
+  )
 
   set(cpptrace_options "CPPTRACE_BUILD_TESTING OFF" "CPPTRACE_BUILD_BENCHMARKING OFF")
 
@@ -31,8 +37,11 @@ function(find_or_configure_cpptrace)
   find_package(libdwarf QUIET)
   if(libdwarf_FOUND)
     # ...same for libdwarf
-    list(APPEND cpptrace_options "CPPTRACE_USE_EXTERNAL_LIBDWARF ON"
-         "CPPTRACE_FIND_LIBDWARF_WITH_PKGCONFIG OFF")
+    list(
+      APPEND cpptrace_options
+      "CPPTRACE_USE_EXTERNAL_LIBDWARF ON"
+      "CPPTRACE_FIND_LIBDWARF_WITH_PKGCONFIG OFF"
+    )
   endif()
 
   if(APPLE)
@@ -41,14 +50,18 @@ function(find_or_configure_cpptrace)
     list(APPEND cpptrace_options "CPPTRACE_GET_SYMBOLS_WITH_ADDR2LINE ON")
   endif()
 
-  rapids_cpm_find(cpptrace "${version}"
-                  GLOBAL_TARGETS cpptrace::cpptrace
-                  CPM_ARGS
-                  GIT_REPOSITORY "${git_url}"
-                  GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
-                  GIT_TAG "${git_tag}"
-                  EXCLUDE_FROM_ALL "${exclude_from_all}"
-                  OPTIONS ${cpptrace_options})
+  rapids_cpm_find(
+    cpptrace
+    "${version}"
+    GLOBAL_TARGETS cpptrace::cpptrace
+    CPM_ARGS
+      GIT_REPOSITORY "${git_url}"
+      GIT_SHALLOW "${git_shallow}"
+      SYSTEM TRUE
+      GIT_TAG "${git_tag}"
+      EXCLUDE_FROM_ALL "${exclude_from_all}"
+      OPTIONS ${cpptrace_options}
+  )
 
   if(exclude_from_all)
     legate_install_dependencies(TARGETS cpptrace::cpptrace)

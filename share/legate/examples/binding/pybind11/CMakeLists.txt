@@ -31,8 +31,11 @@ find_package(pybind11 CONFIG REQUIRED)
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 python_add_library(hello_world_pybind11 MODULE hello_world.cc WITH_SOABI)
-target_link_libraries(hello_world_pybind11 PUBLIC legate::legate
-                      PRIVATE pybind11::headers)
+target_link_libraries(
+  hello_world_pybind11
+  PUBLIC legate::legate
+  PRIVATE pybind11::headers
+)
 
 # This is passing in the version as a define just as an example
 target_compile_definitions(hello_world_pybind11 PRIVATE VERSION_INFO=${PROJECT_VERSION})
@@ -42,12 +45,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(platform_rpath_origin "@loader_path")
 else()
-  message(FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}, don't know how to set rpath 'origin' on this platform"
+  message(
+    FATAL_ERROR
+    "Unsupported system: ${CMAKE_SYSTEM_NAME}, don't know how to set rpath 'origin' on this platform"
   )
 endif()
 
-set_property(TARGET hello_world_pybind11 APPEND
-             PROPERTY INSTALL_RPATH "${platform_rpath_origin}/../../")
+set_property(
+  TARGET hello_world_pybind11
+  APPEND
+  PROPERTY INSTALL_RPATH "${platform_rpath_origin}/../../"
+)
 
 # The install directory is the output (wheel) directory
 install(TARGETS hello_world_pybind11 DESTINATION .)

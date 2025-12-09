@@ -4,7 +4,6 @@
 #=============================================================================
 
 function(get_cpm_git_args _out_var)
-
   set(oneValueArgs TAG BRANCH REPOSITORY SHALLOW)
   cmake_parse_arguments(GIT "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -37,8 +36,11 @@ function(get_cpm_git_args _out_var)
   endif()
   if(GIT_REPOSITORY MATCHES "github\.com")
     # If retrieving from github use `.zip` URL to download faster
-    list(APPEND cpm_git_args URL
-         "${GIT_REPOSITORY}/archive/refs/${gh_tag_prefix}/${repo_tag}.zip")
+    list(
+      APPEND cpm_git_args
+      URL
+      "${GIT_REPOSITORY}/archive/refs/${gh_tag_prefix}/${repo_tag}.zip"
+    )
   elseif(GIT_REPOSITORY MATCHES "gitlab\.com")
     # GitLab archive URIs replace slashes with dashes
     string(REPLACE "/" "-" archive_tag "${repo_tag}")
@@ -47,10 +49,12 @@ function(get_cpm_git_args _out_var)
     math(EXPR repo_name_len "${repo_name_len} - ${repo_name_idx}")
     string(SUBSTRING "${GIT_REPOSITORY}" ${repo_name_idx} ${repo_name_len} repo_name)
     # If retrieving from gitlab use `.zip` URL to download faster
-    list(APPEND cpm_git_args URL
-         "${GIT_REPOSITORY}/-/archive/${repo_tag}/${repo_name}-${archive_tag}.zip")
+    list(
+      APPEND cpm_git_args
+      URL
+      "${GIT_REPOSITORY}/-/archive/${repo_tag}/${repo_name}-${archive_tag}.zip"
+    )
   endif()
 
   set(${_out_var} ${cpm_git_args} PARENT_SCOPE)
-
 endfunction()

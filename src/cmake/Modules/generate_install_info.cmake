@@ -31,22 +31,32 @@ function(legate_generate_install_info_py)
   # for the custom target, fail for other reasons.
   string(REPLACE " " ";" LEGATE_CONFIGURE_OPTIONS "${LEGATE_CONFIGURE_OPTIONS}")
 
-  set(legate_LIB_NAME
-      "$<TARGET_FILE_PREFIX:legate::legate>$<TARGET_FILE_BASE_NAME:legate::legate>")
+  set(
+    legate_LIB_NAME
+    "$<TARGET_FILE_PREFIX:legate::legate>$<TARGET_FILE_BASE_NAME:legate::legate>"
+  )
   set(legate_FULL_LIB_NAME "$<TARGET_FILE_NAME:legate::legate>")
 
-  cmake_path(SET install_info_tmp NORMALIZE
-             "${CMAKE_CURRENT_BINARY_DIR}/install_info_tmp/install_info.py")
+  cmake_path(
+    SET install_info_tmp
+    NORMALIZE
+    "${CMAKE_CURRENT_BINARY_DIR}/install_info_tmp/install_info.py"
+  )
   # We need this 2-step because we make use of generator expressions, which
   # configure_file() does not support.
   #
   # The first configure_file() will emit the temporary file in our bin dir, replacing the
   # cmake values verbatim. It will contain generator expressions...
-  configure_file("${LEGATE_CMAKE_DIR}/templates/install_info.py.in" "${install_info_tmp}"
-                 @ONLY)
+  configure_file(
+    "${LEGATE_CMAKE_DIR}/templates/install_info.py.in"
+    "${install_info_tmp}"
+    @ONLY
+  )
   # ...which this file(GENERATE) call will evaluate out. We could do this with a target,
   # that calls a cmake script that calls configure_file(), but it's much cleaner to do
   # this from the original generation stage.
-  file(GENERATE OUTPUT "${LEGATE_DIR}/src/python/legate/install_info.py"
-       INPUT "${install_info_tmp}")
+  file(
+    GENERATE OUTPUT "${LEGATE_DIR}/src/python/legate/install_info.py"
+    INPUT "${install_info_tmp}"
+  )
 endfunction()

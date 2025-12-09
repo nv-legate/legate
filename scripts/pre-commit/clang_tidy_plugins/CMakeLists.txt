@@ -35,14 +35,20 @@ function(legate_create_clang_tidy_plugin TARGET)
   set(options)
   set(one_value_args)
   set(multi_value_keywords SOURCES)
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}"
-                        "${multi_value_keywords}" ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_keywords}"
+    ${ARGN}
+  )
 
   add_library("${TARGET}" MODULE "${_LEGATE_SOURCES}")
 
-  target_include_directories("${TARGET}"
-                             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CLANG_INCLUDE_DIRS}
-                                     ${LLVM_INCLUDE_DIRS})
+  target_include_directories(
+    "${TARGET}"
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS}
+  )
   target_compile_definitions("${TARGET}" PRIVATE ${LLVM_DEFINITIONS_LIST})
   target_link_libraries("${TARGET}" PRIVATE ${LEGATE_LLVM_LIBS} clangTidy)
 
@@ -52,6 +58,11 @@ endfunction()
 add_subdirectory(aggregate_ctors)
 
 get_property(plugins GLOBAL PROPERTY LEGATE_TIDY_PLUGINS)
-set(LEGATE_TIDY_PLUGINS "${plugins}" CACHE STRING "List of configured clang-tidy plugins"
-                                           FORCE)
+set(
+  LEGATE_TIDY_PLUGINS
+  "${plugins}"
+  CACHE STRING
+  "List of configured clang-tidy plugins"
+  FORCE
+)
 set(LEGATE_TIDY_PLUGINS "${plugins}" PARENT_SCOPE)

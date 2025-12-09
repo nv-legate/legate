@@ -18,8 +18,11 @@ set(BUILD_SHARED_LIBS ON)
 # On by default because if this is being built by the user, and they install the wrapper,
 # they will likely want to have a proper cmake installation so that their downstream
 # projects can find this.
-option(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES
-       "Whether to generate install rules for source files" ON)
+option(
+  LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES
+  "Whether to generate install rules for source files"
+  ON
+)
 
 message(STATUS "Using build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Building shared library: ${BUILD_SHARED_LIBS}")
@@ -35,17 +38,24 @@ find_package(MPI REQUIRED COMPONENTS C)
 add_library(mpi_wrapper src/legate_mpi_wrapper/mpi_wrapper.c)
 add_library(legate::mpi_wrapper ALIAS mpi_wrapper)
 
-cmake_path(SET binary_include_dir NORMALIZE
-           "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper")
+cmake_path(
+  SET binary_include_dir
+  NORMALIZE
+  "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper"
+)
 
-target_include_directories(mpi_wrapper
-                           PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
-                                  $<BUILD_INTERFACE:${binary_include_dir}>)
+target_include_directories(
+  mpi_wrapper
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+    $<BUILD_INTERFACE:${binary_include_dir}>
+)
 
 if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
   # Only generate the interface include paths if we are installing the headers.
-  target_include_directories(mpi_wrapper
-                             INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper>
+  target_include_directories(
+    mpi_wrapper
+    INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper>
   )
 endif()
 
@@ -55,56 +65,77 @@ target_link_libraries(mpi_wrapper PUBLIC MPI::MPI_C)
 # wrappers.
 set(LEGATE_MPI_WRAPPER_LIB_NAME "legate_mpi_wrapper" CACHE STRING "Name of the library")
 
-set_target_properties(mpi_wrapper
-                      PROPERTIES LIBRARY_OUTPUT_NAME "${LEGATE_MPI_WRAPPER_LIB_NAME}"
-                                 ARCHIVE_OUTPUT_NAME "${LEGATE_MPI_WRAPPER_LIB_NAME}"
-                                 POSITION_INDEPENDENT_CODE ON
-                                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
-                                 ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
-                                 DEFINE_SYMBOL legate_mpi_wrapper_EXPORTS)
+set_target_properties(
+  mpi_wrapper
+  PROPERTIES
+    LIBRARY_OUTPUT_NAME "${LEGATE_MPI_WRAPPER_LIB_NAME}"
+    ARCHIVE_OUTPUT_NAME "${LEGATE_MPI_WRAPPER_LIB_NAME}"
+    POSITION_INDEPENDENT_CODE ON
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
+    DEFINE_SYMBOL legate_mpi_wrapper_EXPORTS
+)
 
 include(GenerateExportHeader)
 
-# cmake-format: off
 generate_export_header(
   mpi_wrapper
-    BASE_NAME        LEGATE_MPI_WRAPPER
-    EXPORT_FILE_NAME "${binary_include_dir}/legate_mpi_wrapper/legate_mpi_wrapper_exports.h"
+  BASE_NAME LEGATE_MPI_WRAPPER
+  EXPORT_FILE_NAME "${binary_include_dir}/legate_mpi_wrapper/legate_mpi_wrapper_exports.h"
 )
-# cmake-format: on
 
 # ==========================================================================================
 # Install rules
-install(TARGETS mpi_wrapper DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        EXPORT mpi-wrapper-exports)
+install(
+  TARGETS mpi_wrapper
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  EXPORT mpi-wrapper-exports
+)
 
 if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
-  install(FILES src/legate_mpi_wrapper/mpi_wrapper.h
-                src/legate_mpi_wrapper/mpi_wrapper_types.h
-          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper/legate_mpi_wrapper")
+  install(
+    FILES src/legate_mpi_wrapper/mpi_wrapper.h src/legate_mpi_wrapper/mpi_wrapper_types.h
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper/legate_mpi_wrapper"
+  )
 
-  install(FILES "${binary_include_dir}/legate_mpi_wrapper/legate_mpi_wrapper_exports.h"
-          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper/legate_mpi_wrapper")
+  install(
+    FILES "${binary_include_dir}/legate_mpi_wrapper/legate_mpi_wrapper_exports.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper/legate_mpi_wrapper"
+  )
 
   set(cmake_install_base_dir "${CMAKE_INSTALL_LIBDIR}/cmake/legate_mpi_wrapper")
   set(config_output "${CMAKE_CURRENT_BINARY_DIR}/mpi_wrapperConfig.cmake")
   set(config_version_output "${CMAKE_CURRENT_BINARY_DIR}/mpi_wrapperConfigVersion.cmake")
 
-  install(EXPORT mpi-wrapper-exports FILE mpi_wrapperTargets.cmake NAMESPACE legate::
-          DESTINATION "${cmake_install_base_dir}")
+  install(
+    EXPORT mpi-wrapper-exports
+    FILE mpi_wrapperTargets.cmake
+    NAMESPACE legate::
+    DESTINATION "${cmake_install_base_dir}"
+  )
 
-  export(TARGETS mpi_wrapper NAMESPACE legate::
-         FILE "${CMAKE_CURRENT_BINARY_DIR}/mpi_wrapperTargets.cmake")
+  export(
+    TARGETS mpi_wrapper
+    NAMESPACE legate::
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/mpi_wrapperTargets.cmake"
+  )
 
   include(CMakePackageConfigHelpers)
 
-  configure_package_config_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in"
-                                "${config_output}"
-                                INSTALL_DESTINATION "${cmake_install_base_dir}")
+  configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in"
+    "${config_output}"
+    INSTALL_DESTINATION "${cmake_install_base_dir}"
+  )
 
-  write_basic_package_version_file("${config_version_output}"
-                                   COMPATIBILITY SameMajorVersion ARCH_INDEPENDENT)
+  write_basic_package_version_file(
+    "${config_version_output}"
+    COMPATIBILITY SameMajorVersion
+    ARCH_INDEPENDENT
+  )
 
-  install(FILES "${config_output}" "${config_version_output}"
-          DESTINATION "${cmake_install_base_dir}")
+  install(
+    FILES "${config_output}" "${config_version_output}"
+    DESTINATION "${cmake_install_base_dir}"
+  )
 endif()

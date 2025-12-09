@@ -13,15 +13,21 @@ function(_legate_install_debug_syms_macos target install_dir)
   get_target_property(imported "${target}" IMPORTED)
   if(imported)
     # Nothing to do for imported targets
-    message(VERBOSE "cannot install debug information for ${target}"
-            "(target was imported, we did not generate it)")
+    message(
+      VERBOSE
+      "cannot install debug information for ${target}"
+      "(target was imported, we did not generate it)"
+    )
     return()
   endif()
 
   get_target_property(already_installed "${target}" LEGATE_DEBUG_SYMBOLS_INSTALL_DIR)
   if(already_installed)
-    message(VERBOSE "already installed debug information for ${target}: "
-            "${already_installed}")
+    message(
+      VERBOSE
+      "already installed debug information for ${target}: "
+      "${already_installed}"
+    )
     return()
   endif()
 
@@ -40,12 +46,11 @@ function(_legate_install_debug_syms_macos target install_dir)
     if(base_target)
       set(target "${base_target}")
     endif()
-    # cmake-format incorrectly indents this, and then cmake-lint complains, so disable
-    # formatting for this line
-    # cmake-format: off
-    set_target_properties("${target}"
-      PROPERTIES LEGATE_DEBUG_SYMBOLS_INSTALL_DIR "${install_dir}")
-    # cmake-format: on
+
+    set_target_properties(
+      "${target}"
+      PROPERTIES LEGATE_DEBUG_SYMBOLS_INSTALL_DIR "${install_dir}"
+    )
   endif()
 endfunction()
 
@@ -55,8 +60,13 @@ function(legate_install_debug_symbols)
   set(options RECURSIVE)
   set(one_value_args TARGET INSTALL_DIR)
   set(multi_value_keywords)
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}"
-                        "${multi_value_keywords}" ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_keywords}"
+    ${ARGN}
+  )
 
   foreach(var TARGET INSTALL_DIR)
     if(NOT _LEGATE_${var})
@@ -74,8 +84,10 @@ function(legate_install_debug_symbols)
   endif()
 
   if(_LEGATE_RECURSIVE)
-    legate_target_get_target_dependencies(TARGET "${_LEGATE_TARGET}"
-                                          RESULT_VAR target_list)
+    legate_target_get_target_dependencies(
+      TARGET "${_LEGATE_TARGET}"
+      RESULT_VAR target_list
+    )
   else()
     set(target_list "${_LEGATE_TARGET}")
   endif()

@@ -12,8 +12,13 @@ function(legate_uninstall_target)
   set(one_value_args TARGET)
   set(multi_value_args)
 
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   if(NOT _LEGATE_TARGET)
     message(FATAL_ERROR "Must pass TARGET")
@@ -27,11 +32,15 @@ function(legate_uninstall_target)
 
   set(INSTALL_MANIFEST_PATH "${CMAKE_BINARY_DIR}/install_manifest.txt")
 
-  configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../templates/uninstall.cmake.in"
-                 "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake" @ONLY)
+  configure_file(
+    "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../templates/uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake"
+    @ONLY
+  )
 
-  add_custom_target("${_LEGATE_TARGET}"
-                    COMMAND "${CMAKE_COMMAND}" -P
-                            "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake"
-                    COMMENT "Uninstalling ${CMAKE_PROJECT_NAME}")
+  add_custom_target(
+    "${_LEGATE_TARGET}"
+    COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake"
+    COMMENT "Uninstalling ${CMAKE_PROJECT_NAME}"
+  )
 endfunction()

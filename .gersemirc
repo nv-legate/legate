@@ -1,0 +1,15 @@
+# -*- mode: yaml  -*-
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+line_length: 90
+indent: 2
+warn_about_unknown_commands: true
+definitions:
+  - src
+  - tests/cpp
+  - scripts/pre-commit/gersemi/stubs/
+  - benchmarks/
+  - scripts/pre-commit/clang_tidy_plugins/
+extensions:
+  - scripts/pre-commit/gersemi/extensions/rapids_cmake.py

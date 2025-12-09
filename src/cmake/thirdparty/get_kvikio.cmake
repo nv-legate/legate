@@ -16,13 +16,19 @@ function(find_or_configure_kvikio)
   if(CMAKE_CUDA_RUNTIME_LIBRARY STREQUAL "STATIC")
     set(CUDA_STATIC_RUNTIME TRUE)
   endif()
-  rapids_cpm_find(kvikio "${version}"
-                  CPM_ARGS
-                  GIT_SHALLOW "${git_shallow}"
-                  GIT_REPOSITORY "${git_url}" SYSTEM TRUE
-                  GIT_TAG "${git_tag}" SOURCE_SUBDIR cpp
-                  EXCLUDE_FROM_ALL ${exclude_from_all}
-                  OPTIONS "KvikIO_BUILD_EXAMPLES OFF" "KvikIO_REMOTE_SUPPORT OFF")
+  rapids_cpm_find(
+    kvikio
+    "${version}"
+    CPM_ARGS
+      GIT_SHALLOW "${git_shallow}"
+      GIT_REPOSITORY "${git_url}"
+      SYSTEM TRUE
+      GIT_TAG "${git_tag}"
+      SOURCE_SUBDIR
+      cpp
+      EXCLUDE_FROM_ALL ${exclude_from_all}
+      OPTIONS "KvikIO_BUILD_EXAMPLES OFF" "KvikIO_REMOTE_SUPPORT OFF"
+  )
 
   if(exclude_from_all)
     legate_install_dependencies(TARGETS kvikio::kvikio)

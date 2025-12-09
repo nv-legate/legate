@@ -15,9 +15,13 @@ endif()
 # We don't want to install the source for the wrappers
 set(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES OFF)
 set(LEGATE_MPI_WRAPPER_LIB_NAME "legate_mpi_wrapper${MPI_NAME_SUFFIX}")
-add_subdirectory(../../../share/legate/mpi_wrapper
-                 "${CMAKE_BINARY_DIR}/legate_mpi_wrapper")
+add_subdirectory(
+  ../../../share/legate/mpi_wrapper
+  "${CMAKE_BINARY_DIR}/legate_mpi_wrapper"
+)
 
 set(REALM_UCP_BOOTSTRAP_LIB_NAME "realm_ucp_bootstrap_mpi${MPI_NAME_SUFFIX}")
-add_subdirectory(../../../share/legate/realm_ucp_bootstrap
-                 "${CMAKE_BINARY_DIR}/realm_ucp_bootstrap")
+add_subdirectory(
+  ../../../share/legate/realm_ucp_bootstrap
+  "${CMAKE_BINARY_DIR}/realm_ucp_bootstrap"
+)

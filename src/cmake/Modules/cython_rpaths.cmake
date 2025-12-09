@@ -83,15 +83,22 @@ function(legate_populate_cython_dependency_rpaths)
   set(options)
   set(one_value_args RAPIDS_ASSOCIATED_TARGET ROOT_DIRECTORY)
   set(multi_value_args)
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   if(NOT _LEGATE_RAPIDS_ASSOCIATED_TARGET)
     message(FATAL_ERROR "Must pass RAPIDS_ASSOCIATED_TARGET")
   endif()
 
   if(NOT TARGET ${_LEGATE_RAPIDS_ASSOCIATED_TARGET})
-    message(FATAL_ERROR "RAPIDS_ASSOCIATED_TARGET '${_LEGATE_RAPIDS_ASSOCIATED_TARGET}' is not a valid target"
+    message(
+      FATAL_ERROR
+      "RAPIDS_ASSOCIATED_TARGET '${_LEGATE_RAPIDS_ASSOCIATED_TARGET}' is not a valid target"
     )
   endif()
 
@@ -119,8 +126,11 @@ function(legate_populate_cython_dependency_rpaths)
     set(legate_cython_rpaths "../../" "../../legate/deps")
     # The Python PIP wheels layout is quite different to the conda layout.
     if(LEGATE_BUILD_PIP_WHEELS)
-      set(legate_cython_rpaths "${CMAKE_INSTALL_LIBDIR}"
-                               "${CMAKE_INSTALL_LIBDIR}/legate/deps")
+      set(
+        legate_cython_rpaths
+        "${CMAKE_INSTALL_LIBDIR}"
+        "${CMAKE_INSTALL_LIBDIR}/legate/deps"
+      )
     endif()
   endif()
 
@@ -131,8 +141,10 @@ function(legate_populate_cython_dependency_rpaths)
     set(root_dir_opts)
   endif()
 
-  rapids_cython_add_rpath_entries(TARGET "${_LEGATE_RAPIDS_ASSOCIATED_TARGET}"
-                                  PATHS ${legate_cython_rpaths} ${root_dir_opts})
+  rapids_cython_add_rpath_entries(
+    TARGET "${_LEGATE_RAPIDS_ASSOCIATED_TARGET}"
+    PATHS ${legate_cython_rpaths} ${root_dir_opts}
+  )
 
   if(SKBUILD_STATE STREQUAL "editable")
     # In editable mode we do not install the libraries into the wheel, and hence the

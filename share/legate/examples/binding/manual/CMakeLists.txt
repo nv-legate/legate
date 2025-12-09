@@ -19,10 +19,13 @@ add_library(hello_world hello_world.cc)
 
 include(GNUInstallDirs)
 
-set_target_properties(hello_world
-                      PROPERTIES POSITION_INDEPENDENT_CODE ON LIBRARY_OUTPUT_DIRECTORY
-                                                              "${CMAKE_INSTALL_LIBDIR}"
-                                 ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
+set_target_properties(
+  hello_world
+  PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
+)
 
 find_package(legate QUIET)
 

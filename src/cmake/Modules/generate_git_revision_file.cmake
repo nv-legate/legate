@@ -11,8 +11,13 @@ function(legate_generate_git_revision_file)
   set(options)
   set(one_value_args GENERATED_SRC_VAR)
   set(multi_value_args EXTRA_TARGETS EXTRA_TARGETS_PREFIX)
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   foreach(var IN LISTS one_value_args multi_value_args)
     if(NOT _LEGATE_${var})
@@ -23,8 +28,11 @@ function(legate_generate_git_revision_file)
   list(LENGTH _LEGATE_EXTRA_TARGETS num_targets)
   list(LENGTH _LEGATE_EXTRA_TARGETS_PREFIX num_prefix)
   if(NOT num_targets EQUAL num_prefix)
-    message(FATAL_ERROR "Must pass same number of prefixes as targets: "
-                        "(${num_targets} targets, ${num_prefix} prefixes)")
+    message(
+      FATAL_ERROR
+      "Must pass same number of prefixes as targets: "
+      "(${num_targets} targets, ${num_prefix} prefixes)"
+    )
   endif()
 
   find_package(Git QUIET REQUIRED)
@@ -50,17 +58,19 @@ function(legate_generate_git_revision_file)
   endforeach()
 
   set(template_file "${LEGATE_CMAKE_DIR}/templates/git_version.cc.in")
-  add_custom_target(generate_git_revisions ALL
-                    DEPENDS "${template_file}"
-                    BYPRODUCTS ${all_dest_files} ${all_cache_files}
-                    COMMAND ${CMAKE_COMMAND} -DGIT_EXECUTABLE="${GIT_EXECUTABLE}"
-                            -DTEMPLATE_FILE="${template_file}"
-                            -DSRC_DIRS="${all_src_dirs}"
-                            -DPREFIXES="${_LEGATE_EXTRA_TARGETS_PREFIX}"
-                            -DDEST_FILES="${all_dest_files}"
-                            -DCACHE_FILES="${all_cache_files}" -P
-                            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../scripts/git_revision.cmake"
-                    COMMENT "Checking the git repository for changes...")
+  add_custom_target(
+    generate_git_revisions
+    ALL
+    DEPENDS "${template_file}"
+    BYPRODUCTS ${all_dest_files} ${all_cache_files}
+    COMMAND
+      ${CMAKE_COMMAND} -DGIT_EXECUTABLE="${GIT_EXECUTABLE}"
+      -DTEMPLATE_FILE="${template_file}" -DSRC_DIRS="${all_src_dirs}"
+      -DPREFIXES="${_LEGATE_EXTRA_TARGETS_PREFIX}" -DDEST_FILES="${all_dest_files}"
+      -DCACHE_FILES="${all_cache_files}" -P
+      "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../scripts/git_revision.cmake"
+    COMMENT "Checking the git repository for changes..."
+  )
 
   list(APPEND "${_LEGATE_GENERATED_SRC_VAR}" ${all_dest_files})
   set(${_LEGATE_GENERATED_SRC_VAR} "${${_LEGATE_GENERATED_SRC_VAR}}" PARENT_SCOPE)

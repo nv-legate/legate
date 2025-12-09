@@ -13,8 +13,9 @@ function(_legate_check_nvcc_pedantic_flags FLAGS)
     return()
   endif()
   if(NOT (CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA"))
-    message(VERBOSE
-            "Skipping nvcc pedantic check (compiler \"${CMAKE_CUDA_COMPILER_ID}\" is not nvcc)"
+    message(
+      VERBOSE
+      "Skipping nvcc pedantic check (compiler \"${CMAKE_CUDA_COMPILER_ID}\" is not nvcc)"
     )
     return()
   endif()
@@ -22,10 +23,13 @@ function(_legate_check_nvcc_pedantic_flags FLAGS)
   # --compiler-options='-pedantic' but we do NOT want to catch -Wformat-pedantic!
   string(REGEX MATCH [=[[ |=|='|="]\-W?pedantic]=] match_var "${FLAGS}")
   if(match_var)
-    message(FATAL_ERROR "-pedantic (or -Wpedantic) is not supported by nvcc and will lead to "
-                        "spurious warnings in generated code. Please remove it from your build flags. If "
-                        "you would like to override this behavior, reconfigure with "
-                        "-Dlegate_SKIP_NVCC_PEDANTIC_CHECK=ON.")
+    message(
+      FATAL_ERROR
+      "-pedantic (or -Wpedantic) is not supported by nvcc and will lead to "
+      "spurious warnings in generated code. Please remove it from your build flags. If "
+      "you would like to override this behavior, reconfigure with "
+      "-Dlegate_SKIP_NVCC_PEDANTIC_CHECK=ON."
+    )
   endif()
 endfunction()
 
@@ -35,8 +39,13 @@ function(legate_generate_fatbin_modules)
   set(options)
   set(one_value_args DEST_DIR GENERATED_SOURCES_VAR)
   set(multi_value_args SOURCES EXTRA_FLAGS)
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
+  cmake_parse_arguments(
+    _LEGATE
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   if(NOT _LEGATE_DEST_DIR)
     message(FATAL_ERROR "Must pass DEST_DIR")
@@ -61,40 +70,52 @@ function(legate_generate_fatbin_modules)
       # Generate stub header and skip real fatbin work
       cmake_path(GET src STEM fatbin_var_name)
       set(VAR_NAME "${fatbin_var_name}")
-      configure_file("${LEGATE_CMAKE_DIR}/templates/stubfatbin.h.in"
-                     "${_LEGATE_DEST_DIR}/${fatbin_var_name}.h" @ONLY)
+      configure_file(
+        "${LEGATE_CMAKE_DIR}/templates/stubfatbin.h.in"
+        "${_LEGATE_DEST_DIR}/${fatbin_var_name}.h"
+        @ONLY
+      )
       continue()
     endif()
     string(MAKE_C_IDENTIFIER "${src}_fatbin" fatbin_target_name)
 
     add_library("${fatbin_target_name}" OBJECT "${src}")
-    target_include_directories("${fatbin_target_name}"
-                               PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
-                                       "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate"
+    target_include_directories(
+      "${fatbin_target_name}"
+      PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate"
     )
 
-    target_link_libraries("${fatbin_target_name}"
-                          PRIVATE CCCL::CCCL
-                                  # Technically none of the remaining libraries need to be
-                                  # linked into the fatbins, but since the fatbins include
-                                  # legate headers, and therefore transitively include the
-                                  # headers from these libraries, we have to include
-                                  # them...
-                                  Legion::Legion
-                                  fmt::fmt-header-only)
+    target_link_libraries(
+      "${fatbin_target_name}"
+      PRIVATE
+        CCCL::CCCL
+        # Technically none of the remaining libraries need to be
+        # linked into the fatbins, but since the fatbins include
+        # legate headers, and therefore transitively include the
+        # headers from these libraries, we have to include
+        # them...
+        Legion::Legion
+        fmt::fmt-header-only
+    )
     # Don't use cuda_flags for this since it does not handle generator expressions.
-    target_compile_options("${fatbin_target_name}"
-                           PRIVATE $<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:
-                                   -Xcudafe=--diag_suppress=boolean_controlling_expr_is_constant
-                                   -Xfatbin=-compress-all
-                                   --expt-extended-lambda
-                                   --expt-relaxed-constexpr
-                                   -Wno-deprecated-gpu-targets
-                                   --fatbin>)
+    target_compile_options(
+      "${fatbin_target_name}"
+      PRIVATE
+        $<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:
+        -Xcudafe=--diag_suppress=boolean_controlling_expr_is_constant
+        -Xfatbin=-compress-all
+        --expt-extended-lambda
+        --expt-relaxed-constexpr
+        -Wno-deprecated-gpu-targets
+        --fatbin>
+    )
 
-    set_target_properties("${fatbin_target_name}"
-                          PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                     INTERFACE_POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(
+      "${fatbin_target_name}"
+      PROPERTIES POSITION_INDEPENDENT_CODE ON INTERFACE_POSITION_INDEPENDENT_CODE ON
+    )
 
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
       set_target_properties("${fatbin_target_name}" PROPERTIES CUDA_FATBIN_COMPILATION ON)
@@ -110,16 +131,18 @@ function(legate_generate_fatbin_modules)
     set(fatbin_h "${_LEGATE_DEST_DIR}/${fatbin_var_name}.h")
     message(STATUS "Created fatbin target for: ${src}")
 
-    add_custom_command(OUTPUT "${fatbin_cc}"
-                       COMMAND ${CMAKE_COMMAND} "-DVAR_NAME=${fatbin_var_name}"
-                               "-DIN_FILE=$<TARGET_OBJECTS:${fatbin_target_name}>"
-                               "-DOUT_CC_FILE=${fatbin_cc}" "-DOUT_H_FILE=${fatbin_h}"
-                               "-DLEGATE_CMAKE_DIR=${LEGATE_CMAKE_DIR}" -P
-                               "${LEGATE_CMAKE_DIR}/scripts/bin2c.cmake"
-                       VERBATIM
-                       WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-                       DEPENDS "${fatbin_target_name}"
-                       COMMENT "Embedding binary objects $<TARGET_OBJECTS:${fatbin_target_name}> -> ${fatbin_cc}"
+    add_custom_command(
+      OUTPUT "${fatbin_cc}"
+      COMMAND
+        ${CMAKE_COMMAND} "-DVAR_NAME=${fatbin_var_name}"
+        "-DIN_FILE=$<TARGET_OBJECTS:${fatbin_target_name}>" "-DOUT_CC_FILE=${fatbin_cc}"
+        "-DOUT_H_FILE=${fatbin_h}" "-DLEGATE_CMAKE_DIR=${LEGATE_CMAKE_DIR}" -P
+        "${LEGATE_CMAKE_DIR}/scripts/bin2c.cmake"
+      VERBATIM
+      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+      DEPENDS "${fatbin_target_name}"
+      COMMENT
+        "Embedding binary objects $<TARGET_OBJECTS:${fatbin_target_name}> -> ${fatbin_cc}"
     )
 
     list(APPEND src_list "${fatbin_cc}")

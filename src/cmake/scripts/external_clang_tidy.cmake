@@ -3,7 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
-foreach(var ROOT_DIR BUILD_DIR CLANG_TIDY SED SOURCES LEGATE_BUILD_DIR)
+foreach(
+  var
+  ROOT_DIR
+  BUILD_DIR
+  CLANG_TIDY
+  SED
+  SOURCES
+  LEGATE_BUILD_DIR
+)
   if(NOT DEFINED ${var})
     message(FATAL_ERROR "Must pass ${var}")
   endif()
@@ -27,19 +35,21 @@ endif()
 
 # Legion is not found by CPMFindPackage in legeate-dependencies.cmake as Legion is trying
 # to find Realm. So we need to manually set the CPM_Legion_SOURCE and some Legion flags.
-execute_process(COMMAND ${CMAKE_COMMAND} -S "${ROOT_DIR}" -B "${BUILD_DIR}"
-                        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON --fresh
-                        -Dlegate_DIR=${LEGATE_BUILD_DIR}
-                WORKING_DIRECTORY "${ROOT_DIR}"
-                OUTPUT_VARIABLE output
-                ERROR_VARIABLE output
-                RESULT_VARIABLE return_code)
+execute_process(
+  COMMAND
+    ${CMAKE_COMMAND} -S "${ROOT_DIR}" -B "${BUILD_DIR}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    --fresh -Dlegate_DIR=${LEGATE_BUILD_DIR}
+  WORKING_DIRECTORY "${ROOT_DIR}"
+  OUTPUT_VARIABLE output
+  ERROR_VARIABLE output
+  RESULT_VARIABLE return_code
+)
 
 if(return_code)
   message(FATAL_ERROR "Error building external tidy target:\n${output}")
 endif()
 
-separate_arguments(CLANG_TIDY) # cmake-lint: disable=E1120
+separate_arguments(CLANG_TIDY)
 set(_LEGATE_TIDY_SED_RX [=[/[0-9]+ warnings generated\./d]=])
 
 foreach(src IN LISTS SOURCES)
@@ -51,13 +61,17 @@ foreach(src IN LISTS SOURCES)
   if(_SRC_EXT STREQUAL ".cu")
     # Helper for CUDA host/device-only passes
     function(_ext_run_tidy_cuda mode_flag out_var statuses_var)
-      execute_process(COMMAND ${CLANG_TIDY} --extra-arg=${mode_flag} -p "${BUILD_DIR}"
-                              "${src}"
-                      COMMAND "${SED}" -E ${_LEGATE_TIDY_SED_RX} #
-                      WORKING_DIRECTORY "${BUILD_DIR}"
-                      OUTPUT_VARIABLE _out
-                      ERROR_VARIABLE _out RESULTS_VARIABLE _statuses
-                      OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE)
+      execute_process(
+        COMMAND ${CLANG_TIDY} --extra-arg=${mode_flag} -p "${BUILD_DIR}" "${src}"
+        COMMAND
+          "${SED}" -E ${_LEGATE_TIDY_SED_RX} #
+        WORKING_DIRECTORY "${BUILD_DIR}"
+        OUTPUT_VARIABLE _out
+        ERROR_VARIABLE _out
+        RESULTS_VARIABLE _statuses
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_STRIP_TRAILING_WHITESPACE
+      )
       set(${out_var} "${_out}" PARENT_SCOPE)
       set(${statuses_var} "${_statuses}" PARENT_SCOPE)
     endfunction()
@@ -78,12 +92,17 @@ foreach(src IN LISTS SOURCES)
       set(sed_status 1)
     endif()
   else()
-    execute_process(COMMAND ${CLANG_TIDY} -p "${BUILD_DIR}" "${src}"
-                    COMMAND "${SED}" -E ${_LEGATE_TIDY_SED_RX} #
-                    WORKING_DIRECTORY "${BUILD_DIR}"
-                    OUTPUT_VARIABLE output
-                    ERROR_VARIABLE output RESULTS_VARIABLE statuses
-                    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE)
+    execute_process(
+      COMMAND ${CLANG_TIDY} -p "${BUILD_DIR}" "${src}"
+      COMMAND
+        "${SED}" -E ${_LEGATE_TIDY_SED_RX} #
+      WORKING_DIRECTORY "${BUILD_DIR}"
+      OUTPUT_VARIABLE output
+      ERROR_VARIABLE output
+      RESULTS_VARIABLE statuses
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_STRIP_TRAILING_WHITESPACE
+    )
     list(GET statuses 0 clang_tidy_status)
     list(GET statuses 1 sed_status)
   endif()
