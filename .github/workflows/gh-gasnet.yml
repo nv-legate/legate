@@ -53,7 +53,7 @@ jobs:
           apt-get install --no-install-recommends --quiet -y jq
 
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 

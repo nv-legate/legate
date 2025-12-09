@@ -95,7 +95,7 @@ jobs:
           sha="$(echo ${{github.sha}} | head -c 10)"
           echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.sha }}

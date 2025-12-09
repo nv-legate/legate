@@ -84,7 +84,7 @@ jobs:
       image: rockylinux/${{ inputs.linux_ver }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Add default paths to the env
         run: |
@@ -96,7 +96,7 @@ jobs:
         uses: nv-gha-runners/setup-proxy-cache@main
         continue-on-error: true
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: rapidsai/gha-tools
           path: gha-tools

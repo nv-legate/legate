@@ -93,7 +93,7 @@ jobs:
           role-duration-seconds: 28800 # 8 hours
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Add default paths to the env
         run: |
@@ -101,7 +101,7 @@ jobs:
 
           echo "${tools_dir}" >> "${GITHUB_PATH}"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: rapidsai/gha-tools
           path: gha-tools

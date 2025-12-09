@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -87,7 +87,7 @@ jobs:
           lsb_release -a
 
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

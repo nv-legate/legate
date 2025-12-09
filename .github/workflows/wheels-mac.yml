@@ -72,7 +72,7 @@ jobs:
       matrix: ${{ fromJSON(needs.compute-matrix.outputs.MATRIX) }}
     runs-on: mac-arm64-llr
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.sha }}
