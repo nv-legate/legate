@@ -96,7 +96,7 @@ jobs:
           echo "PY_VER_NO_DOT=${PY_VER_NO_DOT}" >> "${GITHUB_ENV}"
 
       - name: Build the legate wheel
-        uses: pypa/cibuildwheel@7c619efba910c04005a835b110b057fc28fd6e93  # v3.2.0
+        uses: pypa/cibuildwheel@63fd63b352a9a8bdcc24791c9dbee952ee9a8abc  # v3.3.0
         with:
           package-dir: ./scripts/build/python/legate/
           output-dir: wheelhouse
