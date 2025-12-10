@@ -20,8 +20,6 @@ inline ListPhysicalArray::ListPhysicalArray(InternalSharedPtr<Type> type,
 
 inline std::int32_t ListPhysicalArray::dim() const { return descriptor()->dim(); }
 
-inline ArrayKind ListPhysicalArray::kind() const { return ArrayKind::LIST; }
-
 inline const InternalSharedPtr<Type>& ListPhysicalArray::type() const { return type_; }
 
 inline bool ListPhysicalArray::unbound() const

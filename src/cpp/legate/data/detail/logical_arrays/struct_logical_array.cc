@@ -21,6 +21,18 @@
 
 namespace legate::detail {
 
+StructLogicalArray::StructLogicalArray(InternalSharedPtr<Type> type,
+                                       std::optional<InternalSharedPtr<LogicalStore>> null_mask,
+                                       SmallVector<InternalSharedPtr<LogicalArray>>&& fields)
+  : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
+{
+  if (type_->code != legate::Type::Code::STRUCT) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("StructLogicalArray constructor called with type {}, expected struct type",
+                  type_->to_string())};
+  }
+}
+
 std::uint32_t StructLogicalArray::dim() const { return fields_.front()->dim(); }
 
 const InternalSharedPtr<Shape>& StructLogicalArray::shape() const

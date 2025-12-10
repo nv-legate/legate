@@ -20,8 +20,6 @@ inline BaseArray::BaseArray(InternalSharedPtr<Store> data,
 
 inline std::int32_t BaseArray::dim() const { return data()->dim(); }
 
-inline legate::detail::ArrayKind BaseArray::kind() const { return legate::detail::ArrayKind::BASE; }
-
 inline const InternalSharedPtr<legate::detail::Type>& BaseArray::type() const
 {
   return data()->type();
@@ -43,8 +41,6 @@ inline ListArray::ListArray(InternalSharedPtr<legate::detail::Type> type,
   : type_{std::move(type)}, descriptor_{std::move(descriptor)}, vardata_{std::move(vardata)}
 {
 }
-
-inline legate::detail::ArrayKind ListArray::kind() const { return legate::detail::ArrayKind::LIST; }
 
 inline const InternalSharedPtr<legate::detail::Type>& ListArray::type() const { return type_; }
 
@@ -68,11 +64,6 @@ inline StructArray::StructArray(InternalSharedPtr<legate::detail::Type> type,
                                 legate::detail::SmallVector<InternalSharedPtr<Array>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
-}
-
-inline legate::detail::ArrayKind StructArray::kind() const
-{
-  return legate::detail::ArrayKind::STRUCT;
 }
 
 inline const InternalSharedPtr<legate::detail::Type>& StructArray::type() const { return type_; }

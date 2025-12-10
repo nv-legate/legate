@@ -339,7 +339,7 @@ class TestStoreOpsErrors:
         runtime = get_legate_runtime()
         arr = runtime.create_array(dtype, shape=(1,))
         msg = "Fills on list or struct arrays are not supported yet"
-        with pytest.raises(RuntimeError, match=msg):
+        with pytest.raises(ValueError, match=msg):
             runtime.issue_fill(arr, val)
 
     def test_issue_fill_mismatching_dtype(self) -> None:

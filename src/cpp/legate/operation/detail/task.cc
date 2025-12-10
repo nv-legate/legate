@@ -35,6 +35,7 @@
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/detail/zip.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -534,7 +535,8 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
 {
   array->record_scalar_or_unbound_outputs(this);
   // TODO(wonchanl): We will later support structs with list/string fields
-  if (array->kind() == ArrayKind::LIST && array->unbound()) {
+  if (const auto list_array = dynamic_pointer_cast<ListLogicalArray>(array);
+      list_array && array->unbound()) {
     arrays_to_fixup_.push_back(array.get());
   }
   auto& arg = outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(array));

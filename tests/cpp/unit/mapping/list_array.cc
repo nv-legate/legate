@@ -56,7 +56,6 @@ TEST_P(ListArrayNullableTest, Construction)
     list_type_ptr, descriptor, vardata);
 
   ASSERT_EQ(list_array->dim(), 1);
-  ASSERT_EQ(list_array->kind(), legate::detail::ArrayKind::LIST);
   ASSERT_EQ(list_array->nullable(), nullable);
   ASSERT_TRUE(list_array->nested());
 }

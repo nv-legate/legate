@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
 #include <tuple>
 #include <utilities/utilities.h>
 
@@ -345,7 +346,7 @@ TEST_F(FillTests, FillStructArrayWithScalar)
   const auto value  = legate::Scalar{10};
 
   ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },
-              ::testing::ThrowsMessage<std::runtime_error>(
+              ::testing::ThrowsMessage<std::invalid_argument>(
                 ::testing::HasSubstr("Fills on list or struct arrays are not supported yet")));
 }
 
@@ -356,7 +357,7 @@ TEST_F(FillTests, FillStructArrayWithStore)
   const auto value  = runtime->create_store(legate::int64());
 
   ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },
-              ::testing::ThrowsMessage<std::runtime_error>(
+              ::testing::ThrowsMessage<std::invalid_argument>(
                 ::testing::HasSubstr("Fills on list or struct arrays are not supported yet")));
 }
 

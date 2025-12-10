@@ -20,8 +20,6 @@ inline StructPhysicalArray::StructPhysicalArray(
 
 inline std::int32_t StructPhysicalArray::dim() const { return fields_.front()->dim(); }
 
-inline ArrayKind StructPhysicalArray::kind() const { return ArrayKind::STRUCT; }
-
 inline const InternalSharedPtr<Type>& StructPhysicalArray::type() const { return type_; }
 
 inline bool StructPhysicalArray::nullable() const

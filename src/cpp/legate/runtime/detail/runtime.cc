@@ -380,8 +380,8 @@ void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
 void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
                          InternalSharedPtr<LogicalStore> value)
 {
-  if (lhs->kind() != ArrayKind::BASE) {
-    throw TracedException<std::runtime_error>{
+  if (const auto lhs_base = dynamic_pointer_cast<BaseLogicalArray>(lhs); !lhs_base) {
+    throw TracedException<std::invalid_argument>{
       "Fills on list or struct arrays are not supported yet"};
   }
 
@@ -404,8 +404,8 @@ void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
 
 void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar value)
 {
-  if (lhs->kind() != ArrayKind::BASE) {
-    throw TracedException<std::runtime_error>{
+  if (const auto lhs_base = dynamic_pointer_cast<BaseLogicalArray>(lhs); !lhs_base) {
+    throw TracedException<std::invalid_argument>{
       "Fills on list or struct arrays are not supported yet"};
   }
 
@@ -700,7 +700,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
   const InternalSharedPtr<LogicalArray>& descriptor,
   InternalSharedPtr<LogicalArray> vardata)
 {
-  if (Type::Code::STRING != type->code && Type::Code::LIST != type->code) {
+  if (type->code != Type::Code::STRING && type->code != Type::Code::LIST) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Expected a list type but got {}", *type)};
   }

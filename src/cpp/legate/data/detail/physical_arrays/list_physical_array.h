@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
@@ -29,7 +28,6 @@ class ListPhysicalArray final : public PhysicalArray {
                     InternalSharedPtr<PhysicalArray> vardata);
 
   [[nodiscard]] std::int32_t dim() const override;
-  [[nodiscard]] ArrayKind kind() const override;
   [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;

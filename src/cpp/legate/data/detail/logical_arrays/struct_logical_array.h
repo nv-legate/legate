@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/user_storage_tracker.h>
 #include <legate/operation/detail/launcher_arg.h>
@@ -32,7 +31,6 @@ class StructLogicalArray final : public LogicalArray {
                      SmallVector<InternalSharedPtr<LogicalArray>>&& fields);
 
   [[nodiscard]] std::uint32_t dim() const override;
-  [[nodiscard]] ArrayKind kind() const override;
   [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] std::size_t volume() const override;

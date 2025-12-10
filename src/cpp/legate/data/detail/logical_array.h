@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/user_storage_tracker.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/projection.h>
@@ -37,7 +36,6 @@ class LogicalArray {
   LogicalArray()                                                      = default;
   virtual ~LogicalArray()                                             = default;
   [[nodiscard]] virtual std::uint32_t dim() const                     = 0;
-  [[nodiscard]] virtual ArrayKind kind() const                        = 0;
   [[nodiscard]] virtual const InternalSharedPtr<Type>& type() const   = 0;
   [[nodiscard]] virtual const InternalSharedPtr<Shape>& shape() const = 0;
   [[nodiscard]] virtual std::size_t volume() const                    = 0;

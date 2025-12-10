@@ -106,8 +106,10 @@ PhysicalArray LogicalArray::get_physical_array(std::optional<mapping::StoreTarge
 
 ListLogicalArray LogicalArray::as_list_array() const
 {
-  if (impl()->kind() != detail::ArrayKind::LIST) {
-    throw detail::TracedException<std::invalid_argument>{"Array is not a list array"};
+  if (const auto* list_array = dynamic_cast<const detail::ListLogicalArray*>(impl().get());
+      !list_array) {
+    throw detail::TracedException<std::invalid_argument>{
+      fmt::format("Array is not a list array, instead got array of type {}", type())};
   }
   return ListLogicalArray{impl()};
 }
@@ -115,7 +117,8 @@ ListLogicalArray LogicalArray::as_list_array() const
 StringLogicalArray LogicalArray::as_string_array() const
 {
   if (type().code() != Type::Code::STRING) {
-    throw detail::TracedException<std::invalid_argument>{"Array is not a string array"};
+    throw detail::TracedException<std::invalid_argument>{
+      fmt::format("Array is not a string array, instead got array of type {}", type())};
   }
   return StringLogicalArray{impl()};
 }

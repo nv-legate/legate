@@ -20,6 +20,18 @@
 
 namespace legate::detail {
 
+ListLogicalArray::ListLogicalArray(InternalSharedPtr<Type> type,
+                                   InternalSharedPtr<BaseLogicalArray> descriptor,
+                                   InternalSharedPtr<LogicalArray> vardata)
+  : type_{std::move(type)}, descriptor_{std::move(descriptor)}, vardata_{std::move(vardata)}
+{
+  if (type_->code != legate::Type::Code::LIST && type_->code != legate::Type::Code::STRING) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("ListLogicalArray constructor called with type {}, expected list or string type",
+                  type_->to_string())};
+  }
+}
+
 bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::promote(std::int32_t, std::size_t) const

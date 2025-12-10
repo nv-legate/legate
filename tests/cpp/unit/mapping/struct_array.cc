@@ -61,7 +61,6 @@ TEST_P(StructArrayNullableTest, Construction)
     struct_type_ptr, null_mask, std::move(fields));
 
   ASSERT_EQ(struct_array->dim(), 2);
-  ASSERT_EQ(struct_array->kind(), legate::detail::ArrayKind::STRUCT);
   ASSERT_EQ(struct_array->nullable(), nullable);
   ASSERT_TRUE(struct_array->nested());
 }

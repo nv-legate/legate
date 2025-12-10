@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -21,7 +20,6 @@ class Array {
   virtual ~Array() = default;
 
   [[nodiscard]] virtual std::int32_t dim() const                                    = 0;
-  [[nodiscard]] virtual legate::detail::ArrayKind kind() const                      = 0;
   [[nodiscard]] virtual const InternalSharedPtr<legate::detail::Type>& type() const = 0;
   [[nodiscard]] virtual bool unbound() const                                        = 0;
   [[nodiscard]] virtual bool nullable() const                                       = 0;
@@ -42,7 +40,6 @@ class BaseArray final : public Array {
   BaseArray(InternalSharedPtr<Store> data, std::optional<InternalSharedPtr<Store>> null_mask);
 
   [[nodiscard]] std::int32_t dim() const override;
-  [[nodiscard]] legate::detail::ArrayKind kind() const override;
   [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
@@ -69,7 +66,6 @@ class ListArray final : public Array {
             InternalSharedPtr<Array> vardata);
 
   [[nodiscard]] std::int32_t dim() const override;
-  [[nodiscard]] legate::detail::ArrayKind kind() const override;
   [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
@@ -97,7 +93,6 @@ class StructArray final : public Array {
               legate::detail::SmallVector<InternalSharedPtr<Array>>&& fields);
 
   [[nodiscard]] std::int32_t dim() const override;
-  [[nodiscard]] legate::detail::ArrayKind kind() const override;
   [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;

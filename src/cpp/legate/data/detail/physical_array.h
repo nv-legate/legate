@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
@@ -22,7 +21,6 @@ class PhysicalArray {
  public:
   virtual ~PhysicalArray()                                          = default;
   [[nodiscard]] virtual std::int32_t dim() const                    = 0;
-  [[nodiscard]] virtual ArrayKind kind() const                      = 0;
   [[nodiscard]] virtual const InternalSharedPtr<Type>& type() const = 0;
   [[nodiscard]] virtual bool unbound() const                        = 0;
   [[nodiscard]] virtual bool nullable() const                       = 0;

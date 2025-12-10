@@ -19,8 +19,6 @@ inline BasePhysicalArray::BasePhysicalArray(
 
 inline std::int32_t BasePhysicalArray::dim() const { return data()->dim(); }
 
-inline ArrayKind BasePhysicalArray::kind() const { return ArrayKind::BASE; }
-
 inline const InternalSharedPtr<Type>& BasePhysicalArray::type() const { return data()->type(); }
 
 inline bool BasePhysicalArray::nullable() const

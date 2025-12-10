@@ -11,16 +11,7 @@
 
 namespace legate::detail {
 
-inline ListLogicalArray::ListLogicalArray(InternalSharedPtr<Type> type,
-                                          InternalSharedPtr<BaseLogicalArray> descriptor,
-                                          InternalSharedPtr<LogicalArray> vardata)
-  : type_{std::move(type)}, descriptor_{std::move(descriptor)}, vardata_{std::move(vardata)}
-{
-}
-
 inline std::uint32_t ListLogicalArray::dim() const { return descriptor_->dim(); }
-
-inline ArrayKind ListLogicalArray::kind() const { return ArrayKind::LIST; }
 
 inline const InternalSharedPtr<Type>& ListLogicalArray::type() const { return type_; }
 

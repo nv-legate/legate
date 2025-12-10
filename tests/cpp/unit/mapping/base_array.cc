@@ -42,7 +42,6 @@ TEST_P(BaseArrayNullableTest, Construction)
     legate::make_internal_shared<legate::mapping::detail::BaseArray>(data_store, null_mask);
 
   ASSERT_EQ(base_array->dim(), DIM);
-  ASSERT_EQ(base_array->kind(), legate::detail::ArrayKind::BASE);
   ASSERT_EQ(base_array->type()->code, legate::int32().code());
   ASSERT_EQ(base_array->nullable(), nullable);
   ASSERT_FALSE(base_array->nested());

@@ -6,6 +6,7 @@
 
 #include <legate/utilities/detail/deserializer.h>
 
+#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/future_wrapper.h>
 #include <legate/data/detail/physical_arrays/list_physical_array.h>
 #include <legate/data/detail/physical_arrays/struct_physical_array.h>
@@ -22,8 +23,6 @@
 #include <legion/bindings/c_bindings_util.h>
 
 #include <fmt/format.h>
-
-#include <stdexcept>
 
 namespace legate::detail {
 

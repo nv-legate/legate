@@ -39,6 +39,9 @@ C++
 
 .. rubric:: Runtime
 
+- Change ``legate::Runtime::issue_fill`` to raise a ``std::invalid_argument``
+  instead of a ``std::runtime_error`` when called with a list or struct array.
+
 .. rubric:: Utilities
 
 .. rubric:: I/O
@@ -60,6 +63,9 @@ Python
 .. rubric:: Types
 
 .. rubric:: Runtime
+
+- Change ``legate.core.Runtime.issue_fill`` to raise a ``ValueError``
+  instead of a ``RuntimeError`` when called with a list or struct array.
 
 .. rubric:: Utilities
 

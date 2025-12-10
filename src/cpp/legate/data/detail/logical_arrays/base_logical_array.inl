@@ -14,11 +14,14 @@ inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
                                           std::optional<InternalSharedPtr<LogicalStore>> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
+  auto&& code = type()->code;
+
+  // Structs are only allowed if they are rect types.
+  LEGATE_ASSERT(code != Type::Code::STRUCT || is_rect_type(type()));
+  LEGATE_ASSERT(code != Type::Code::STRING && code != Type::Code::LIST);
 }
 
 inline std::uint32_t BaseLogicalArray::dim() const { return data_->dim(); }
-
-inline ArrayKind BaseLogicalArray::kind() const { return ArrayKind::BASE; }
 
 inline const InternalSharedPtr<Type>& BaseLogicalArray::type() const { return data_->type(); }
 

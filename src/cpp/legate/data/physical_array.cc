@@ -6,7 +6,6 @@
 
 #include <legate/data/physical_array.h>
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_arrays/list_physical_array.h>
 #include <legate/data/logical_array.h>
@@ -63,7 +62,8 @@ void PhysicalArray::check_shape_dimension_(std::int32_t dim) const
 
 ListPhysicalArray PhysicalArray::as_list_array() const
 {
-  if (impl()->kind() != detail::ArrayKind::LIST) {
+  if (const auto* list_array = dynamic_cast<const detail::ListPhysicalArray*>(impl().get());
+      !list_array) {
     throw detail::TracedException<std::invalid_argument>{"Array is not a list array"};
   }
   return ListPhysicalArray{impl(), owner()};

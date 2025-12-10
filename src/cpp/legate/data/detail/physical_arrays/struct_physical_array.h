@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -27,7 +26,6 @@ class StructPhysicalArray final : public PhysicalArray {
                       SmallVector<InternalSharedPtr<PhysicalArray>>&& fields);
 
   [[nodiscard]] std::int32_t dim() const override;
-  [[nodiscard]] ArrayKind kind() const override;
   [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
