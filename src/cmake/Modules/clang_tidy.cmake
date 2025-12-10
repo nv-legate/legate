@@ -183,6 +183,10 @@ function(legate_add_tidy_target)
   cmake_path(RELATIVE_PATH src BASE_DIRECTORY "${LEGATE_DIR}" OUTPUT_VARIABLE rel_src)
   string(MAKE_C_IDENTIFIER "${rel_src}_tidy" tidy_target)
 
+  if(TARGET "${tidy_target}")
+    return()
+  endif()
+
   get_property(clang_tidy_cmd GLOBAL PROPERTY LEGATE_BASE_CLANG_TIDY_COMMAND)
 
   add_custom_target(

@@ -103,6 +103,14 @@ function(rapids_test_install_relocatable)
   cmake_parse_arguments(_RAPIDS_TEST "${options}" "${one_value}" "${multi_value}" ${ARGN})
 endfunction()
 
+function(rapids_test_gpu_requirements)
+  set(options)
+  set(one_value GPUS PERCENT)
+  set(multi_value)
+
+  cmake_parse_arguments(_RAPIDS_TEST "${options}" "${one_value}" "${multi_value}" ${ARGN})
+endfunction()
+
 function(
   rapids_cpm_package_details
   package_name

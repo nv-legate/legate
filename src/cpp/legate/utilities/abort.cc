@@ -29,6 +29,9 @@ void abort_handler(std::string_view file, std::string_view func, int line, std::
                 std::move(*ss).str()},
     cpptrace::stacktrace::current(/* skip */ 1)}};
 
+  // We are about to hard abort one way or another, so ensure any other error messages (from
+  // potentially unrelated sources) are definitely flushed.
+  std::ignore = std::fflush(nullptr);
   std::cerr << make_error_message(errs) << std::endl;  // NOLINT(performance-avoid-endl)
   comm::coll::abort();
 }

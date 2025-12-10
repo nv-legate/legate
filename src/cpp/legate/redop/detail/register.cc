@@ -126,7 +126,13 @@ void realm_register_cuda_reductions(Realm::Cuda::CudaModule* cuda,
 [[nodiscard]] std::optional<Realm::Cuda::CudaModule*> realm_get_cuda_module()
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-    return Realm::Runtime::get_runtime().get_module<Realm::Cuda::CudaModule>("cuda");
+    auto* const mod = Realm::Runtime::get_runtime().get_module<Realm::Cuda::CudaModule>("cuda");
+
+    if (mod) {
+      // The CUDA module might not exist if the user has disabled them via LEGATE_CONFIG (via
+      // --gpus 0).
+      return mod;
+    }
   }
   return std::nullopt;
 }
@@ -237,7 +243,7 @@ void record_all(ReductionOpKind op)
 void register_builtin_reduction_ops()
 {
   LEGATE_FOREACH_SPECIALIZED_REDOP(LEGATE_REGISTER_LEGION_REDOP, );
-  if (const auto cuda = realm_get_cuda_module()) {
+  if (const auto cuda = realm_get_cuda_module(); cuda.has_value()) {
     const auto descs = create_cuda_redop_descriptors(*cuda);
 
     realm_register_cuda_reductions(*cuda, descs);

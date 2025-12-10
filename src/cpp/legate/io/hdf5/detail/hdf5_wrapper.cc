@@ -107,7 +107,7 @@ namespace {
   std::ignore = H5Eclear(stack);
 
   throw legate::detail::TracedException<std::runtime_error>{std::move(ret)};
-};
+}
 
 #define HDF5_CALL_NO_ERROR_PRINTING(...)                                            \
   [&] {                                                                             \
