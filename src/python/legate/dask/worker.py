@@ -6,29 +6,16 @@ from __future__ import annotations
 
 import subprocess
 from dataclasses import dataclass
-from enum import Enum
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from dask.distributed import Client
 
 # Constants
 DEFAULT_SCHEDULER_PORT: Final[int] = 50000
 DEFAULT_DASK_BASE_PORT: Final[int] = 50010
-
-# Environment variable constants
-WORKER_PEERS_INFO = "WORKER_PEERS_INFO"
-WORKER_SELF_INFO = "WORKER_SELF_INFO"
-BOOTSTRAP_P2P_PLUGIN = "BOOTSTRAP_P2P_PLUGIN"
-REALM_UCP_BOOTSTRAP_MODE = "REALM_UCP_BOOTSTRAP_MODE"
-
-
-class BootstrapPluginKind(str, Enum):
-    UCP = "realm_ucp_bootstrap_p2p.so"
-
-
-class BootstrapMode(str, Enum):
-    P2P = "p2p"
 
 
 @dataclass(frozen=True)
@@ -46,22 +33,19 @@ class WorkerDetails:
         return f"{self.ip}:{self.port}"
 
 
-def _setenv(selfaddr: str, peersaddr: str) -> None:
+def _setenv(selfidx: int, peersaddr: Sequence[str]) -> None:
     r"""Set environment variables for worker communication.
 
     Parameters
     ----------
-    selfaddr : str
-        The address (ip:port) of the current worker.
-    peersaddr : str
-        Space-separated string of all worker addresses.
+    selfidx : int
+        Index of current worker in `peersaddr`.
+    peersaddr : Sequence[str]
+        Sequence of all worker addresses as strings in 'ip:port' format.
     """
-    import os  # noqa: PLC0415
+    from legate.bootstrap import ucp_setup_peer  # noqa: PLC0415
 
-    os.environ[WORKER_SELF_INFO] = selfaddr
-    os.environ[WORKER_PEERS_INFO] = peersaddr
-    os.environ[BOOTSTRAP_P2P_PLUGIN] = BootstrapPluginKind.UCP
-    os.environ[REALM_UCP_BOOTSTRAP_MODE] = BootstrapMode.P2P
+    ucp_setup_peer(selfidx, peersaddr)
 
 
 def setup_worker_env(client: Client) -> None:
@@ -88,10 +72,10 @@ def setup_worker_env(client: Client) -> None:
         port = uniq_port[ip]
         legate_worker_details[worker] = WorkerDetails(ip, port)
 
-    peers = " ".join(w.addr for w in legate_worker_details.values())
+    peers = [w.addr for w in legate_worker_details.values()]
 
-    for worker_id, worker_detail in legate_worker_details.items():
-        client.run(_setenv, worker_detail.addr, peers, workers=[worker_id])
+    for worker_idx, worker_id in enumerate(legate_worker_details.keys()):
+        client.run(_setenv, worker_idx, peers, workers=[worker_id])
 
 
 def daskrun(cmd: list[str]) -> str:

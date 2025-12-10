@@ -15,16 +15,18 @@ if TYPE_CHECKING:
 
 import pytest
 
-from legate.dask import main as daskexec
-from legate.dask.worker import (
+from legate.bootstrap import (
     BOOTSTRAP_P2P_PLUGIN,
-    DEFAULT_DASK_BASE_PORT,
-    DEFAULT_SCHEDULER_PORT,
     REALM_UCP_BOOTSTRAP_MODE,
     WORKER_PEERS_INFO,
     WORKER_SELF_INFO,
     BootstrapMode,
     BootstrapPluginKind,
+)
+from legate.dask import main as daskexec
+from legate.dask.worker import (
+    DEFAULT_DASK_BASE_PORT,
+    DEFAULT_SCHEDULER_PORT,
     _setenv,
     daskrun,
     setup_worker_env,
@@ -118,11 +120,12 @@ class TestDaskWorker:
     @pytest.mark.usefixtures("preserve_env")
     def test_set_env(self) -> None:
         # for code coverage purposes
-        selfaddr = "foo"
-        peersaddr = "bar"
+        selfaddr = 0
+        peersaddr = ["foo", "bar"]
+
         _setenv(selfaddr, peersaddr)
-        assert os.environ[WORKER_SELF_INFO] == selfaddr
-        assert os.environ[WORKER_PEERS_INFO] == peersaddr
+        assert os.environ[WORKER_SELF_INFO] == peersaddr[selfaddr]
+        assert os.environ[WORKER_PEERS_INFO] == " ".join(peersaddr)
         assert os.environ[BOOTSTRAP_P2P_PLUGIN] == BootstrapPluginKind.UCP
         assert os.environ[REALM_UCP_BOOTSTRAP_MODE] == BootstrapMode.P2P
 
