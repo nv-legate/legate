@@ -66,7 +66,8 @@ jobs:
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
-      setup-python-proxy-cache: true
+      # Disable proxy cache so conda sees latest UCX/OpenMPI (cache lags on NV runners).
+      setup-python-proxy-cache: false
       timeout: 240
       cuda-version: ${{ inputs.cuda-version }}
     secrets: inherit
@@ -113,14 +114,8 @@ jobs:
                 CONFIG_NAME=${CONFIG_INFO[0]}
                 CONFIG_SCOPE=${CONFIG_INFO[1]}
 
-                # The linux-aarch64-2gpu runners can't resolve the on-prem
-                # conda cache endpoint, so disable the proxy cache there to
-                # avoid NameResolutionError failures.
-                if [[ "${RUNNER_NAME}" == "linux-aarch64-2gpu" ]]; then
-                  SETUP_PYTHON_PROXY_CACHE=false
-                else
-                  SETUP_PYTHON_PROXY_CACHE=true
-                fi
+                # Disable proxy cache on all test runners to avoid stale/missing UCX in cache.
+                SETUP_PYTHON_PROXY_CACHE=false
 
                 MATRIX_JSON+="{\"runner\": {\"name\": \"${RUNNER_NAME}\", \"type\": \"${RUNNER_TYPE}\", \"device\": \"${RUNNER_DEVICE}\", \"platform\": \"${RUNNER_PLATFORM}\", \"setup-python-proxy-cache\": ${SETUP_PYTHON_PROXY_CACHE}}, \"test-config\": {\"name\": \"${CONFIG_NAME}\", \"test-scope\": \"${CONFIG_SCOPE} ${RUNNER_DEVICE}\"}},"
               done

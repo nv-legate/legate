@@ -203,7 +203,8 @@ requirements:
     - ucx
     - ucc
 {% endif %}
-    - openmpi <6
+    # Avoid conda-forge's external_* stub builds (no libmpi). See issue #3287.
+    - openmpi >=5,<6 h*
 
   # Runtime python dependencies
   run:
@@ -234,6 +235,8 @@ requirements:
   run_constrained:
     - python >= 3.11
     - dask[distributed]
+    # Avoid conda-forge external_* stub builds (no libmpi); see issue #3287.
+    - openmpi >=5,<6 h*
 
 test:
   imports:
