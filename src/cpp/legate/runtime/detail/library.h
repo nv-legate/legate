@@ -15,6 +15,8 @@
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
+#include <legion/api/types.h>
+
 #include <memory>
 #include <mutex>
 #include <string>
@@ -64,6 +66,21 @@ class Library {
   Library& operator=(const Library&) = delete;
   Library(Library&&)                 = delete;
   Library& operator=(Library&&)      = delete;
+
+  /**
+   * @brief Perform some callback function accepting data held in a buffer on one or more ranks.
+   *
+   * In (default) control replication execution mode, calling this will execute `callback(buffer)`
+   * only locally. In single controller execution mode, calling this will execute
+   * `callback(buffer)` on all ranks.
+   *
+   * This function returns after calling `callback(buffer)` on the appropriate ranks.
+   *
+   * @param callback The callback to perform.
+   * @param buffer The buffer to pass to the callback.
+   */
+  static void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
+                               const Legion::UntypedBuffer& buffer);
 
   [[nodiscard]] ZStringView get_library_name() const;
 

@@ -20,7 +20,7 @@ namespace legate::detail {
 
 class Library;
 
-class FindBoundingBox : public LegateTask<FindBoundingBox> {
+class LEGATE_EXPORT FindBoundingBox : public LegateTask<FindBoundingBox> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp
     legate::TaskConfig{LocalTaskID{CoreTask::FIND_BOUNDING_BOX}}.with_signature(
@@ -39,7 +39,7 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
 #endif
 };
 
-class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
+class LEGATE_EXPORT FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp
     legate::TaskConfig{LocalTaskID{CoreTask::FIND_BOUNDING_BOX_SORTED}}.with_signature(

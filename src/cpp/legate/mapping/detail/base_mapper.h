@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <legate/mapping/detail/global_machine.h>
 #include <legate/mapping/detail/instance_manager.h>
+#include <legate/mapping/detail/local_machine_selector.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/utilities/detail/hash.h>
@@ -390,7 +392,8 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   ReductionInstanceManager reduction_instances_{};
 
   std::unordered_map<Legion::Mapping::PhysicalInstance, std::string> creating_operation_{};
-  LocalMachine local_machine_{};
+  GlobalMachine global_machine_{};
+  LocalMachineSelector local_machine_selector_{};
 
   std::string mapper_name_{};
 

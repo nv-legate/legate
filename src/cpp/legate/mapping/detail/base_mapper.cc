@@ -103,7 +103,7 @@ BaseMapper::BaseMapper()
     mapper_name_{
       fmt::format("{} on Node {}",
                   legate::detail::Runtime::get_runtime().core_library().get_library_name(),
-                  local_machine_.node_id)}
+                  local_machine_selector_.get_local().node_id)}
 {
 }
 
@@ -133,6 +133,21 @@ BaseMapper::~BaseMapper()
   }
 }
 
+const std::vector<Processor>& BaseMapper::cpus() const
+{
+  return local_machine_selector_.get_local().cpus();
+}
+
+const std::vector<Processor>& BaseMapper::gpus() const
+{
+  return local_machine_selector_.get_local().gpus();
+}
+
+const std::vector<Processor>& BaseMapper::omps() const
+{
+  return local_machine_selector_.get_local().omps();
+}
+
 namespace {
 
 void populate_input_collective_regions(
@@ -141,6 +156,11 @@ void populate_input_collective_regions(
   const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
   std::set<unsigned>* check_collective_regions)
 {
+  // Bug in Legion prevents collective regions working with single controller execution
+  // so skip in the meantime.
+  if (legate::detail::Runtime::get_runtime().config().single_controller_execution()) {
+    return;
+  }
   // Collective region is an optimization that will not impact correctness. This renders
   // the task as not streamable and hence is being turned off when the task is inside
   // a streaming section.
@@ -182,6 +202,11 @@ void populate_reduction_collective_regions(
   const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
   std::set<unsigned>* check_collective_regions)
 {
+  // Bug in Legion prevents collective regions working with single controller execution
+  // so skip in the meantime.
+  if (legate::detail::Runtime::get_runtime().config().single_controller_execution()) {
+    return;
+  }
   // Collective region is an optimization that will not impact correctness. This renders
   // the task as not streamable and hence is being turned off when the task is inside
   // a streaming section.
@@ -231,11 +256,21 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
       task, legate_task, get_stores, &output.check_collective_regions);
   }
 
-  // The initial processor just needs to have the same kind as the eventual target of this task
-  output.initial_proc = local_machine_.procs(legate_task.target()).front();
+  // The initial processor just needs to have the same kind and address space as the eventual target
+  // of this task in control replication mode.
+  output.initial_proc = local_machine_selector_.get_local().procs(legate_task.target()).front();
 
-  // We never want valid instances
+  // We never want valid instances.
   output.valid_instances = false;
+
+  // In task mapping, the base mapper uses the task's library's mapper to
+  // make mapping decisions. In single controller execution mode, the top-level
+  // task is the only rank with a valid library pointer, and thus, it is the only
+  // rank that can perform mapping decisions, thus requiring local mapping and
+  // also necessitates GlobalMachine. Ideally, we prefer map_locall = false as
+  // that is more scalable; however, the mapper's usage of pointers limits this ability.
+  output.map_locally =
+    legate::detail::Runtime::get_runtime().config().single_controller_execution();
 }
 
 void BaseMapper::premap_task(Legion::Mapping::MapperContext /*ctx*/,
@@ -254,7 +289,13 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   const Task legate_task{task, *runtime, ctx};
 
   auto&& machine_desc = legate_task.machine();
-  auto local_range    = local_machine_.slice(machine_desc.only(legate_task.target()));
+  auto proc_range     = [&]() {
+    auto machine = machine_desc.only(legate_task.target());
+    if (legate::detail::Runtime::get_runtime().config().single_controller_execution()) {
+      return global_machine_.slice(machine);
+    }
+    return local_machine_selector_.get_local().slice(machine);
+  }();
 
   Legion::ProjectionID projection = 0;
   for (auto&& req : task.regions) {
@@ -285,11 +326,11 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   for (Domain::DomainPointIterator itr{input.domain}; itr; ++itr) {
     const auto p = key_functor->project_point(itr.p);
     const auto idx =
-      (legate::detail::linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) +
+      (legate::detail::linearize(lo, hi, p) * proc_range.total_proc_count() / total_tasks_count) +
       start_proc_id;
 
     output.slices.emplace_back(Domain{itr.p, itr.p},
-                               local_range[static_cast<std::uint32_t>(idx)],
+                               proc_range[static_cast<std::uint32_t>(idx)],
                                false /*recurse*/,
                                false /*stealable*/);
   }
@@ -589,6 +630,11 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   // Should never be mapping the top-level task here
   LEGATE_CHECK(task.get_depth() > 0);
 
+  const auto& local_machine =
+    legate::detail::Runtime::get_runtime().config().single_controller_execution()
+      ? local_machine_selector_.get_local_to(task.target_proc)
+      : local_machine_selector_.get_local();
+
   auto legate_task = Task{task, *runtime, ctx};
 
   // Let's populate easy outputs first
@@ -608,9 +654,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
       const auto machine = legate_task.machine().only(legate_task.target());
 
       if (task.local_function) {
-        return local_machine_.slice_with_fallback(machine);
+        return local_machine.slice_with_fallback(machine);
       }
-      return local_machine_.slice(machine);
+      return local_machine.slice(machine);
     }();
 
     LEGATE_ASSERT(!local_range.empty());
@@ -637,9 +683,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   }
 
   // Map future-backed stores
-  map_future_backed_stores(mapped_futures, for_futures, local_machine_, task, target_proc, &output);
+  map_future_backed_stores(mapped_futures, for_futures, local_machine, task, target_proc, &output);
   // Map unbound stores
-  map_unbound_stores(for_unbound_stores, local_machine_, target_proc, &output);
+  map_unbound_stores(for_unbound_stores, local_machine, target_proc, &output);
 
   OutputMap output_map;
 
@@ -658,7 +704,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                      legate_task.machine().count() < task.index_domain.get_volume());
 
   calculate_pool_sizes(
-    runtime, ctx, task, target_proc, local_machine_, &logger(), &legate_task, &output);
+    runtime, ctx, task, target_proc, local_machine, &logger(), &legate_task, &output);
 
   for (auto&& mapping : for_stores) {
     if (!mapping->policy().redundant) {
@@ -678,7 +724,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
       legate::detail::Runtime::get_runtime().core_library().get_task_id(
         legate::LocalTaskID{legate::detail::CoreTask::EXTRACT_SCALAR})) {
     LEGATE_ASSERT(task.futures.size() == 1);
-    output.future_locations.push_back(local_machine_.get_memory(
+    output.future_locations.push_back(local_machine.get_memory(
       target_proc,
       target_proc.kind() == Processor::Kind::TOC_PROC ? StoreTarget::ZCMEM : StoreTarget::SYSMEM));
   }
@@ -1158,6 +1204,11 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     return false;
   }
 
+  const auto& local_machine =
+    legate::detail::Runtime::get_runtime().config().single_controller_execution()
+      ? local_machine_selector_.get_local_to(target_proc)
+      : local_machine_selector_.get_local();
+
   auto redop = GlobalRedopID{(*reqs.begin())->redop};
   std::vector<Legion::LogicalRegion> regions;
 
@@ -1182,7 +1233,7 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
   }
 
   const auto& policy       = mapping.policy();
-  const auto target_memory = local_machine_.get_memory(target_proc, policy.target);
+  const auto target_memory = local_machine.get_memory(target_proc, policy.target);
 
   // Generate layout constraints from the store mapping
   Legion::LayoutConstraintSet layout_constraints;
@@ -1545,6 +1596,10 @@ void BaseMapper::legate_select_sources_(
   // they are in to the destination.
   // TODO(wonchanl): consider layouts when ranking source to help out the DMA system
   auto target_memory = target.get_location();
+  const auto& local_machine =
+    legate::detail::Runtime::get_runtime().config().single_controller_execution()
+      ? local_machine_selector_.get_local_to(target_memory)
+      : local_machine_selector_.get_local();
   // fill in a vector of the sources with their bandwidths
   std::vector<AnnotatedSourceInstance> all_sources;
 
@@ -1553,7 +1608,7 @@ void BaseMapper::legate_select_sources_(
     find_source_instance_bandwidth(source,
                                    target_memory,
                                    legion_machine_,
-                                   local_machine_,
+                                   local_machine,
                                    &all_sources,
                                    &source_memory_bandwidths);
   }
@@ -1568,7 +1623,7 @@ void BaseMapper::legate_select_sources_(
     find_source_instance_bandwidth(source_instances.front(),
                                    target_memory,
                                    legion_machine_,
-                                   local_machine_,
+                                   local_machine,
                                    &all_sources,
                                    &source_memory_bandwidths);
   }
@@ -1627,7 +1682,8 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
   const Store store{*runtime, ctx, inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
   auto store_target = static_cast<StoreTarget>(inline_op.tag);
-  auto target_proc  = local_machine_.find_first_processor_with_affinity_to(store_target);
+  auto target_proc =
+    local_machine_selector_.get_local().find_first_processor_with_affinity_to(store_target);
 
   auto&& reqs = mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false))
                   ->requirements();
@@ -1672,13 +1728,23 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   // Prefer GPU if available.
   const auto copy_target = machine_desc.valid_targets().front();
 
-  auto local_range = local_machine_.slice_with_fallback(machine_desc.only(copy_target));
+  auto target_range = [&]() {
+    if (legate::detail::Runtime::get_runtime().config().single_controller_execution()) {
+      return global_machine_.slice_with_fallback(machine_desc.only(copy_target));
+    }
+    return local_machine_selector_.get_local().slice_with_fallback(machine_desc.only(copy_target));
+  }();
 
-  LEGATE_ASSERT(!local_range.empty());
+  LEGATE_ASSERT(!target_range.empty());
   // Determine the target processor for indirect requirements, which are typically
   // on host memory.
   const auto host_target = machine_desc.valid_targets_except({TaskTarget::GPU}).front();
-  const auto host_range  = local_machine_.slice_with_fallback(machine_desc.only(host_target));
+  const auto host_range  = [&]() {
+    if (legate::detail::Runtime::get_runtime().config().single_controller_execution()) {
+      return global_machine_.slice_with_fallback(machine_desc.only(host_target));
+    }
+    return local_machine_selector_.get_local().slice_with_fallback(machine_desc.only(host_target));
+  }();
 
   LEGATE_ASSERT(!host_range.empty());
 
@@ -1704,9 +1770,9 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     // Calculate index for target processor (e.g., GPU)
     // Use the local range's offset because LocalProcessorRange::operator[] subtracts this offset
     auto target_idx =
-      (legate::detail::linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) +
-      local_range.offset();
-    target_proc = local_range[static_cast<std::uint32_t>(target_idx)];
+      (legate::detail::linearize(lo, hi, p) * target_range.total_proc_count() / total_tasks_count) +
+      target_range.offset();
+    target_proc = target_range[static_cast<std::uint32_t>(target_idx)];
 
     // Calculate index for host processor (e.g., CPU)
     // Use the local range's offset because LocalProcessorRange::operator[] subtracts this offset
@@ -1715,7 +1781,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
       host_range.offset();
     host_proc = host_range[static_cast<std::uint32_t>(host_idx)];
   } else {
-    target_proc = local_range.first();
+    target_proc = target_range.first();
     host_proc   = host_range.first();
   }
 
@@ -1723,8 +1789,13 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   auto host_store_target = default_store_targets(host_proc.kind()).front();
 
   // Determine copy operation settings based on environment and workload characteristics
-  auto [compute_preimages, shadow_indirections] = determine_copy_settings(
-    target_proc, copy.src_requirements, copy.dst_requirements, runtime, ctx, local_machine_);
+  auto [compute_preimages, shadow_indirections] =
+    determine_copy_settings(target_proc,
+                            copy.src_requirements,
+                            copy.dst_requirements,
+                            runtime,
+                            ctx,
+                            local_machine_selector_.get_local_to(target_proc));
 
   // Set the final output values
   output.compute_preimages   = compute_preimages;
@@ -1921,11 +1992,12 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
                                const MapPartitionInput&,
                                MapPartitionOutput& output)
 {
-  auto target_proc = [&] {
-    if (local_machine_.has_omps()) {
-      return local_machine_.omps().front();
+  const auto& local_machine = local_machine_selector_.get_local();
+  auto target_proc          = [&] {
+    if (local_machine.has_omps()) {
+      return local_machine.omps().front();
     }
-    return local_machine_.cpus().front();
+    return local_machine.cpus().front();
   }();
 
   auto store_target = default_store_targets(target_proc.kind()).front();
@@ -1993,10 +2065,11 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
                                           const FutureMapReductionInput& input,
                                           FutureMapReductionOutput& output)
 {
+  const auto& local_machine = local_machine_selector_.get_local();
   output.serdez_upper_bound = legate::detail::ReturnedException::max_size();
   auto& dest_memories       = output.destination_memories;
 
-  if (local_machine_.has_gpus()) {
+  if (local_machine.has_gpus()) {
     // TODO(wonchanl): It's been reported that blindly mapping target instances of future map
     // reductions to framebuffers hurts performance. Until we find a better mapping policy, we guard
     // the current policy with a macro.
@@ -2005,9 +2078,9 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
       // because they need serdez
       if (input.tag ==
           legate::detail::to_underlying(legate::detail::CoreMappingTag::JOIN_EXCEPTION)) {
-        dest_memories.push_back(local_machine_.zerocopy_memory());
+        dest_memories.push_back(local_machine.zerocopy_memory());
       } else {
-        auto&& fbufs = local_machine_.frame_buffers();
+        auto&& fbufs = local_machine.frame_buffers();
 
         dest_memories.reserve(fbufs.size());
         for (auto&& pair : fbufs) {
@@ -2015,10 +2088,10 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
         }
       }
     } else {
-      dest_memories.push_back(local_machine_.zerocopy_memory());
+      dest_memories.push_back(local_machine.zerocopy_memory());
     }
-  } else if (local_machine_.has_socket_memory()) {
-    auto&& smems = local_machine_.socket_memories();
+  } else if (local_machine.has_socket_memory()) {
+    auto&& smems = local_machine.socket_memories();
 
     dest_memories.reserve(smems.size());
     for (auto&& pair : smems) {

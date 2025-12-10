@@ -32,6 +32,7 @@
 #include <legate/operation/detail/gather.h>
 #include <legate/operation/detail/index_attach.h>
 #include <legate/operation/detail/mapping_fence.h>
+#include <legate/operation/detail/offload.h>
 #include <legate/operation/detail/reduce.h>
 #include <legate/operation/detail/release_region_field.h>
 #include <legate/operation/detail/scatter.h>
@@ -55,7 +56,6 @@
 #include <legate/task/detail/legion_task.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/task_config.h>
-#include <legate/task/task_context.h>
 #include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
 #include <legate/tuning/scope.h>
@@ -473,32 +473,6 @@ void Runtime::tree_reduce(const Library& library,
                                       scope().priority(),
                                       std::move(machine)));
 }
-
-namespace {
-
-// OffloadTo is an empty task that runs with Read/Write permissions on its data,
-// so that the data ends up getting copied to the target memory. Additionally, we
-// modify the core-mapper to map the data to the specified target memory in
-// `Runtime::offload_to()` for this task. This invalidates any other copies of the
-// data in other memories and thus, frees up space.
-class OffloadTo : public LegateTask<OffloadTo> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{LocalTaskID{CoreTask::OFFLOAD_TO}}.with_signature(
-      legate::TaskSignature{}.inputs(1).outputs(1).scalars(1).redops(0).constraints(
-        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
-    );
-
-  // Task body left empty because there is no computation to do. This task
-  // triggers a data movement because of its R/W privileges
-  static void cpu_variant(legate::TaskContext) {}
-
-  static void gpu_variant(legate::TaskContext) {}
-
-  static void omp_variant(legate::TaskContext) {}
-};
-
-}  // namespace
 
 void Runtime::offload_to(mapping::StoreTarget target_mem,
                          const InternalSharedPtr<LogicalArray>& array)
@@ -1981,8 +1955,9 @@ void set_env_vars()
 
   Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
 
-  {
-    auto* const config = new Config{handle_legate_args()};
+  const bool single_controller_mode = [&]() -> bool {
+    auto* const config                     = new Config{handle_legate_args()};
+    const bool single_controller_execution = config->single_controller_execution();
     // Need to transport `Config` via raw pointer (which, if the below call fails, will simply
     // leak) because `Config` is not a POD. Legion expects to `memcpy()` the pointer given to
     // UntypedBuffer, so can't even use `std::unique_ptr` or something like that.
@@ -1994,19 +1969,38 @@ void set_env_vars()
 
     Legion::Runtime::perform_registration_callback(
       initialize_core_library_callback_, buf, true /*global*/);
-  }
 
-  if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true)) {
+    return single_controller_execution;
+  }();
+
+  const bool is_worker = single_controller_mode && Realm::Network::my_node_id != 0;
+
+  // Under control replication mode, all ranks return from Legion::Runtime::start(); however,
+  // under single controller execution mode, only the controller rank returns immediately.
+  // The worker ranks return when the Realm runtime is destructed by the controller.
+  if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/!is_worker)) {
     throw TracedException<std::runtime_error>{
       fmt::format("Legion Runtime failed to start, error code: {}", result)};
   }
 
-  auto&& runtime = Runtime::get_runtime();
-  auto&& ctx     = Legion::Runtime::get_runtime()->begin_implicit_task(CoreTask::TOPLEVEL,
-                                                                   runtime.mapper_id(),
-                                                                   Processor::LOC_PROC,
-                                                                   TOPLEVEL_NAME,
-                                                                   true /*control replicable*/);
+  auto& runtime = Runtime::get_runtime();
+
+  if (is_worker) {
+    // All Legate programs are control-replicated, meaning that the code after start() is
+    // Legate application code. Under single controller execution mode, workers reaching
+    // this line are done executing their Legate program. Returning from start() would mean
+    // incorrectly executing Legate code again; however, so for now, we simply exit the program.
+    // A better API where workers in single controller execution mode do not call start()
+    // and have their own method of connecting to the runtime should be considered.
+    std::exit(EXIT_SUCCESS);
+  }
+
+  auto&& ctx = Legion::Runtime::get_runtime()->begin_implicit_task(
+    CoreTask::TOPLEVEL,
+    runtime.mapper_id(),
+    Processor::LOC_PROC,
+    TOPLEVEL_NAME,
+    !single_controller_mode /*control replicable*/);
 
   runtime.legion_context_ = ctx;
 }
@@ -2190,7 +2184,7 @@ std::int32_t Runtime::finish()
   // END DO NOT MODIFY
 }
 
-namespace {
+namespace prefetch_task {
 
 // This task is launched for the side effect of having bloated instances created for the task and
 // intended to do nothing otherwise.
@@ -2223,12 +2217,16 @@ class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
 #endif
 };
 
+}  // namespace prefetch_task
+
+namespace {
+
 void register_legate_core_tasks(Library& core_lib)
 {
   const auto pub_core_lib = legate::Library{&core_lib};
 
   ExtractScalar::register_variants(pub_core_lib);
-  PrefetchBloatedInstances::register_variants(pub_core_lib);
+  prefetch_task::PrefetchBloatedInstances::register_variants(pub_core_lib);
   register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);

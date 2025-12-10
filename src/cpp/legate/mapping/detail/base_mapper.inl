@@ -14,13 +14,7 @@ inline Legion::Logger& BaseMapper::logger() { return logger_; }
 
 inline const Legion::Logger& BaseMapper::logger() const { return logger_; }
 
-inline const std::vector<Processor>& BaseMapper::cpus() const { return local_machine_.cpus(); }
-
-inline const std::vector<Processor>& BaseMapper::gpus() const { return local_machine_.gpus(); }
-
-inline const std::vector<Processor>& BaseMapper::omps() const { return local_machine_.omps(); }
-
-inline std::uint32_t BaseMapper::total_nodes() const { return local_machine_.total_nodes; }
+inline std::uint32_t BaseMapper::total_nodes() const { return global_machine_.total_nodes(); }
 
 inline const char* BaseMapper::get_mapper_name() const { return mapper_name_.c_str(); }
 
