@@ -15,6 +15,9 @@
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/core_ids.h>
 
+#include <optional>
+#include <utility>
+
 namespace legate::detail {
 
 namespace {
@@ -51,7 +54,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
     lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
     mapper_arg.to_legion_buffer()};
 
-  index_fill.provenance = runtime.get_provenance().as_string_view();
+  index_fill.provenance = provenance_;
   index_fill.add_field(field_id);
   runtime.dispatch(index_fill);
 }
@@ -73,7 +76,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
     lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
     mapper_arg.to_legion_buffer()};
 
-  single_fill.provenance = runtime.get_provenance().as_string_view();
+  single_fill.provenance = provenance_;
   single_fill.add_field(field_id);
   runtime.dispatch(single_fill);
 }

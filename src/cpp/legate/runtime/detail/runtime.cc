@@ -1399,11 +1399,14 @@ Legion::LogicalRegion Runtime::get_subregion(const Legion::LogicalPartition& par
 
 Legion::LogicalRegion Runtime::find_parent_region(const Legion::LogicalRegion& region)
 {
-  auto result = region;
-  while (get_legion_runtime()->has_parent_logical_partition(get_legion_context(), result)) {
-    auto partition =
-      get_legion_runtime()->get_parent_logical_partition(get_legion_context(), result);
-    result = get_legion_runtime()->get_parent_logical_region(get_legion_context(), partition);
+  auto* const legion_runtime = get_legion_runtime();
+  const auto legion_ctx      = get_legion_context();
+  auto result                = region;
+
+  while (legion_runtime->has_parent_logical_partition(legion_ctx, result)) {
+    auto partition = legion_runtime->get_parent_logical_partition(legion_ctx, result);
+
+    result = legion_runtime->get_parent_logical_region(legion_ctx, std::move(partition));
   }
   return result;
 }

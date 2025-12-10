@@ -6,20 +6,28 @@
 
 #pragma once
 
-#include <legate/mapping/detail/machine.h>
-#include <legate/operation/detail/store_projection.h>
 #include <legate/utilities/detail/core_ids.h>
+
+#include <cstdint>
+#include <string_view>
+
+namespace legate::mapping::detail {
+
+class Machine;
+
+}  // namespace legate::mapping::detail
 
 namespace legate::detail {
 
 class LogicalStore;
 class BufferBuilder;
+class StoreProjection;
 
 class FillLauncher {
  public:
   FillLauncher(const mapping::detail::Machine& machine,
                std::int32_t priority,
-               std::int64_t tag = 0);
+               std::string_view provenance);
 
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,
@@ -32,7 +40,7 @@ class FillLauncher {
 
   const mapping::detail::Machine& machine_;
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
-  std::int64_t tag_{};
+  std::string_view provenance_{};
 };
 
 }  // namespace legate::detail

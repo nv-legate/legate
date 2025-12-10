@@ -12,10 +12,9 @@ namespace legate::detail {
 
 inline FillLauncher::FillLauncher(const mapping::detail::Machine& machine,
                                   std::int32_t priority,
-                                  std::int64_t tag)
-  : machine_{machine}, priority_{priority}, tag_{tag}
+                                  std::string_view provenance)
+  : machine_{machine}, priority_{priority}, provenance_{provenance}
 {
-  static_cast<void>(tag_);
 }
 
 }  // namespace legate::detail
