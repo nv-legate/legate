@@ -60,6 +60,13 @@ Library::Library(ConstructKey,
 {
 }
 
+/*static*/ void Library::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
+                                          const Legion::UntypedBuffer& buffer)
+{
+  Legion::Runtime::perform_registration_callback(
+    callback, buffer, false /*global*/, false /*dedup*/);
+}
+
 GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
 {
   return static_cast<GlobalTaskID>(task_scope_.translate(static_cast<std::int64_t>(local_task_id)));

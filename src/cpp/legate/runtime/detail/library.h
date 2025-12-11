@@ -65,6 +65,9 @@ class Library {
   Library(Library&&)                 = delete;
   Library& operator=(Library&&)      = delete;
 
+  static void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
+                               const Legion::UntypedBuffer& buffer);
+
   [[nodiscard]] ZStringView get_library_name() const;
 
   [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
