@@ -1971,7 +1971,7 @@ void set_env_vars()
     };
 
     Legion::Runtime::perform_registration_callback(
-      initialize_core_library_callback_, buf, true /*global*/);
+      initialize_core_library_callback_, buf, false /*global*/, false /*dedup*/);
 
     return single_controller_execution;
   }();

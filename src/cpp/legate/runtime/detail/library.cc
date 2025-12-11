@@ -63,10 +63,8 @@ Library::Library(ConstructKey,
 /*static*/ void Library::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
                                           const Legion::UntypedBuffer& buffer)
 {
-  const bool global = Runtime::get_runtime().config().single_controller_execution();
-
   Legion::Runtime::perform_registration_callback(
-    callback, buffer, global /*global*/, false /*dedup*/);
+    callback, buffer, false /*global*/, false /*dedup*/);
 }
 
 GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
