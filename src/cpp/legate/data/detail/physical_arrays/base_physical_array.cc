@@ -6,6 +6,7 @@
 
 #include <legate/data/detail/physical_arrays/base_physical_array.h>
 
+#include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
@@ -14,10 +15,13 @@ namespace legate::detail {
 
 bool BasePhysicalArray::unbound() const
 {
-  const auto data_unbound = data()->kind() == PhysicalStore::Kind::UNBOUND;
+  const auto data_unbound = dynamic_cast<const UnboundPhysicalStore*>(data().get()) != nullptr;
 
-  if (nullable()) {
-    LEGATE_ASSERT(data_unbound == (null_mask()->kind() == PhysicalStore::Kind::UNBOUND));
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && nullable()) {
+    const auto null_mask_unbound =
+      dynamic_cast<const UnboundPhysicalStore*>(null_mask().get()) != nullptr;
+
+    LEGATE_CHECK(data_unbound == null_mask_unbound);
   }
   return data_unbound;
 }

@@ -10,6 +10,7 @@
 
 #include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/store_iterator_cache.h>
@@ -46,9 +47,9 @@ TaskContext::TaskContext(CtorArgs&& args)
   // Make copies of stores that we need to postprocess, as clients might move the stores away.
   for (auto&& output : outputs_) {
     for (auto&& store : get_stores(*output)) {
-      if (store->kind() == PhysicalStore::Kind::UNBOUND) {
+      if (dynamic_cast<const UnboundPhysicalStore*>(store.get())) {
         unbound_stores_.push_back(std::move(store));
-      } else if (store->kind() == PhysicalStore::Kind::FUTURE) {
+      } else if (dynamic_cast<const FuturePhysicalStore*>(store.get())) {
         scalar_stores_.push_back(std::move(store));
       }
     }
@@ -60,8 +61,8 @@ TaskContext::TaskContext(CtorArgs&& args)
     std::copy_if(std::make_move_iterator(stores.begin()),
                  std::make_move_iterator(stores.end()),
                  std::back_inserter(scalar_stores_),
-                 [](const InternalSharedPtr<PhysicalStore>& store) {
-                   return store->kind() == PhysicalStore::Kind::FUTURE;
+                 [](const InternalSharedPtr<PhysicalStore>& store) -> bool {
+                   return dynamic_cast<const FuturePhysicalStore*>(store.get());
                  });
   }
 

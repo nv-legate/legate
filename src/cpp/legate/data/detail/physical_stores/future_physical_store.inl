@@ -28,8 +28,6 @@ inline FuturePhysicalStore::FuturePhysicalStore(std::int32_t dim,
 {
 }
 
-inline PhysicalStore::Kind FuturePhysicalStore::kind() const { return Kind::FUTURE; }
-
 inline bool FuturePhysicalStore::valid() const { return true; }
 
 inline bool FuturePhysicalStore::is_partitioned() const { return false; }

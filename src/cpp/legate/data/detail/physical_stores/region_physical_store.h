@@ -33,7 +33,6 @@ class RegionPhysicalStore final : public PhysicalStore {
                       RegionField&& region_field,
                       InternalSharedPtr<detail::TransformStack> transform = nullptr);
 
-  [[nodiscard]] Kind kind() const override;
   [[nodiscard]] bool valid() const override;
   [[nodiscard]] Domain domain() const override;
   [[nodiscard]] InlineAllocation get_inline_allocation() const override;

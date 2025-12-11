@@ -162,7 +162,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
     }
 
     for (auto&& phys_store : get_stores_cache(*phys_array)) {
-      if (phys_store->kind() == PhysicalStore::Kind::FUTURE) {
+      if (dynamic_cast<const FuturePhysicalStore*>(phys_store.get())) {
         // Was an output scalar or scalar reduction, save a reference to the deferred buffer so
         // we can create a new future out of it down the line in finalize().
         deferred_buffers->emplace_back(phys_store->as_future_store().get_buffer());

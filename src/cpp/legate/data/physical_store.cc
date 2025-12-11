@@ -113,12 +113,12 @@ bool PhysicalStore::transformed() const { return impl()->transformed(); }
 
 bool PhysicalStore::is_future() const
 {
-  return impl()->kind() == detail::PhysicalStore::Kind::FUTURE;
+  return dynamic_cast<const detail::FuturePhysicalStore*>(impl().get());
 }
 
 bool PhysicalStore::is_unbound_store() const
 {
-  return impl()->kind() == detail::PhysicalStore::Kind::UNBOUND;
+  return dynamic_cast<const detail::UnboundPhysicalStore*>(impl().get());
 }
 
 bool PhysicalStore::is_partitioned() const { return impl()->is_partitioned(); }

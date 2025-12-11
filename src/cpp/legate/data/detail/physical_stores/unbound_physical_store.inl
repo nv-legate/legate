@@ -28,8 +28,6 @@ inline UnboundPhysicalStore::UnboundPhysicalStore(
 {
 }
 
-inline PhysicalStore::Kind UnboundPhysicalStore::kind() const { return Kind::UNBOUND; }
-
 inline bool UnboundPhysicalStore::valid() const { return true; }
 
 inline bool UnboundPhysicalStore::is_partitioned() const { return unbound_field_.is_partitioned(); }

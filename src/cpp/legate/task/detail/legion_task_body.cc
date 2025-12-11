@@ -109,8 +109,8 @@ LegionTaskContext::LegionTaskContext(const Legion::Task& legion_task,
   // If the task is running on a GPU, AND there is at least one scalar store for reduction,
   // then we need to wait for all the host-to-device copies for initialization to finish,
   // UNLESS the user has promised to use the task stream. In that case we can skip this sync.
-  constexpr auto is_scalar_store = [](const InternalSharedPtr<PhysicalArray>& array) {
-    return array->data()->kind() == PhysicalStore::Kind::FUTURE;
+  constexpr auto is_scalar_store = [](const InternalSharedPtr<PhysicalArray>& array) -> bool {
+    return dynamic_cast<const FuturePhysicalStore*>(array->data().get());
   };
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && !can_elide_device_ctx_sync() &&
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&

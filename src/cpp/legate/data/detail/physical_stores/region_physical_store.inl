@@ -32,8 +32,6 @@ inline bool RegionPhysicalStore::valid() const { return region_field_.valid(); }
 
 inline mapping::StoreTarget RegionPhysicalStore::target() const { return region_field_.target(); }
 
-inline PhysicalStore::Kind RegionPhysicalStore::kind() const { return Kind::REGION_FIELD; }
-
 inline bool RegionPhysicalStore::is_partitioned() const { return region_field_.is_partitioned(); }
 
 inline bool RegionPhysicalStore::on_target(mapping::StoreTarget target) const

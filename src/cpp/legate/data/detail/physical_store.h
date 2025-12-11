@@ -29,12 +29,6 @@ class FuturePhysicalStore;
 
 class PhysicalStore {
  public:
-  enum class Kind : std::uint8_t {
-    REGION_FIELD,
-    FUTURE,
-    UNBOUND,
-  };
-
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
                 GlobalRedopID redop_id,
@@ -51,7 +45,6 @@ class PhysicalStore {
 
   virtual ~PhysicalStore() = default;
 
-  [[nodiscard]] virtual Kind kind() const  = 0;
   [[nodiscard]] virtual bool valid() const = 0;
   [[nodiscard]] bool transformed() const;
 

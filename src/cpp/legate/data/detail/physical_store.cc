@@ -91,7 +91,7 @@ void PhysicalStore::check_accessor_dimension(std::int32_t dim) const
 
 void PhysicalStore::check_accessor_store_backing() const
 {
-  if (kind() == Kind::UNBOUND) {
+  if (dynamic_cast<const UnboundPhysicalStore*>(this)) {
     throw detail::TracedException<std::invalid_argument>{
       "Invalid to create an accessor on an unbound store"};
   }
@@ -113,14 +113,14 @@ void PhysicalStore::check_reduction_access() const
 
 void PhysicalStore::check_scalar_store() const
 {
-  if (kind() != Kind::FUTURE) {
+  if (!dynamic_cast<const FuturePhysicalStore*>(this)) {
     throw detail::TracedException<std::invalid_argument>{"Store isn't a scalar store"};
   }
 }
 
 void PhysicalStore::check_unbound_store() const
 {
-  if (kind() != Kind::UNBOUND) {
+  if (!dynamic_cast<const UnboundPhysicalStore*>(this)) {
     throw detail::TracedException<std::invalid_argument>{"Store isn't an unbound store"};
   }
 }
