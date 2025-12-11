@@ -149,7 +149,14 @@ void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
 {
   LEGATE_ASSERT(!parent().has_value());
   LEGATE_ASSERT(physical_region.exists());
-  LEGATE_ASSERT(physical_region.is_mapped() == is_mapped());
+  // A `is_mapped()` call returns false here for one of two cases:
+  //
+  // 1. the region field was created with a read-only attachment, or
+  // 2. the region field was created with a read-write attachment but has been released
+  // (i.e., `release_region_field()` has been invoked).
+  //
+  // For a live region field, the first condition holds, so the second condition is for case 2.
+  LEGATE_ASSERT((physical_region.is_mapped() == is_mapped()) || released_);
   LEGATE_ASSERT(!physical_state_->attachment().exists());
   LEGATE_ASSERT(!physical_state_->physical_region().exists());
   physical_state_->set_attachment(Attachment{physical_region, std::move(allocation)});
