@@ -2,7 +2,7 @@
     "packages": {
         "Realm": {
             "git_shallow": false,
-            "git_tag": "9de4b38680995b726bb8a43264a2d2a9870e1f1c",
+            "git_tag": "9d87611cc1d701110a6b967b3dda5aa8b72bd374",
             "git_url": "https://github.com/StanfordLegion/realm.git",
             "version": "25.6.1"
         }
