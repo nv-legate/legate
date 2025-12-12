@@ -78,7 +78,7 @@ repos:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes"]
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v21.1.5'
+    rev: 'v21.1.7'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
@@ -89,13 +89,13 @@ repos:
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.4
+    rev: v0.14.8
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.18.2'
+    rev: 'v1.19.0'
     hooks:
       - id: mypy
         pass_filenames: false
@@ -118,7 +118,7 @@ repos:
       - id: cython-lint
       - id: double-quote-cython-strings
   - repo: https://github.com/netromdk/vermin
-    rev: 'v1.7.0'
+    rev: 'v1.8.0'
     hooks:
       - id: vermin
         args: [
@@ -135,7 +135,7 @@ repos:
       - id: shellcheck
         args: ['--rcfile', './scripts/pre-commit/shellcheckrc']
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.8
+    rev: v1.7.9
     hooks:
       - id: actionlint
         types: [yaml]
