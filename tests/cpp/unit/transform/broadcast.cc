@@ -65,7 +65,7 @@ TEST_F(TransformBroadcastUnit, BroadcastConvertRestrictions)
     transform->convert(legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
                                                     legate::detail::Restriction::ALLOW,
                                                     legate::detail::Restriction::ALLOW},
-                       true);
+                       /*forbid_fake_dim=*/true);
   auto expected = legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
                                                legate::detail::Restriction::FORBID,
                                                legate::detail::Restriction::ALLOW};

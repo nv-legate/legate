@@ -30,7 +30,7 @@ void Timing::launch()
     LEGATE_ABORT("Unhandled precision ", to_underlying(precision_));
     return Legion::Future{};
   };
-  store_->set_future(get_timestamp(), 0);
+  store_->set_future(get_timestamp(), /*scalar_offset=*/0);
 }
 
 void Timing::launch(Strategy* /*strategy*/) { launch(); }

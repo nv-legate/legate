@@ -120,7 +120,7 @@ ReturnValue ReturnedPythonException::pack() const
 
   legion_serialize(acc.ptr(0));
   // No alignment for returned exceptions, as they are always memcpy-ed
-  return {std::move(buffer), buffer_size, 1 /*alignment*/};  // NOLINT(performance-move-const-arg)
+  return {std::move(buffer), buffer_size, /*alignment=*/1};  // NOLINT(performance-move-const-arg)
 }
 
 std::string ReturnedPythonException::to_string() const

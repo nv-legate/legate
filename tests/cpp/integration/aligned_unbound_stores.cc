@@ -63,7 +63,7 @@ TEST_F(AlignedUnboundStores, ViaNullableArray)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto arr = runtime->create_array(legate::int32(), 1, true /*nullable*/);
+  auto arr = runtime->create_array(legate::int32(), /*dim=*/1, /*nullable=*/true);
 
   {
     auto task = runtime->create_task(library, Producer::TASK_CONFIG.task_id());

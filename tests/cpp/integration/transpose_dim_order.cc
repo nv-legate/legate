@@ -257,7 +257,7 @@ TEST_P(TransposeDimOrder, PromoteTranspose)
 {
   auto store               = make_store<2>();
   const bool fortran_order = GetParam();
-  store                    = store.promote(1, Z_LEN).transpose({0, 2, 1});
+  store                    = store.promote(/*extra_dim=*/1, Z_LEN).transpose({0, 2, 1});
   launch_task_with_store<TaskPromoteTranspose>(store, fortran_order);
 }
 
@@ -265,7 +265,7 @@ TEST_P(TransposeDimOrder, ProjectTranspose)
 {
   auto store               = make_store<3>();
   const bool fortran_order = GetParam();
-  store                    = store.project(1, 0).transpose({1, 0});
+  store                    = store.project(/*dim=*/1, /*index=*/0).transpose({1, 0});
   launch_task_with_store<TaskProjectTranspose>(store, fortran_order);
 }
 
@@ -277,7 +277,7 @@ TEST_P(TransposeDimOrder, DelinearizeTranspose)
   constexpr std::size_t FACTOR_A = 4;
   constexpr std::size_t FACTOR_B = Y_LEN / FACTOR_A;
   ASSERT_EQ(Y_LEN, FACTOR_A * FACTOR_B);
-  store = store.delinearize(1, {FACTOR_A, FACTOR_B}).transpose({2, 1, 0});
+  store = store.delinearize(/*dim=*/1, {FACTOR_A, FACTOR_B}).transpose({2, 1, 0});
   launch_task_with_store<TaskDelinearizeTranspose>(store, fortran_order);
 }
 
@@ -294,7 +294,7 @@ TEST_P(TransposeDimOrder, EmptyPromoteTranspose)
   auto runtime             = legate::Runtime::get_runtime();
   auto store               = runtime->create_store(legate::Shape{}, legate::int64());
   const bool fortran_order = GetParam();
-  store                    = store.promote(0, X_LEN).promote(1, Y_LEN).transpose({1, 0});
+  store = store.promote(/*extra_dim=*/0, X_LEN).promote(/*extra_dim=*/1, Y_LEN).transpose({1, 0});
   launch_task_with_store<TaskEmptyPromoteTranspose>(store, fortran_order);
 }
 

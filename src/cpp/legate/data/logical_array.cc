@@ -100,7 +100,7 @@ PhysicalArray LogicalArray::get_physical_array(std::optional<mapping::StoreTarge
                       ? mapping::StoreTarget::SOCKETMEM
                       : mapping::StoreTarget::SYSMEM);
 
-  return PhysicalArray{impl()->get_physical_array(sanitized, false /*ignore_future_mutability*/),
+  return PhysicalArray{impl()->get_physical_array(sanitized, /*ignore_future_mutability=*/false),
                        *this};
 }
 

@@ -54,7 +54,7 @@ void UnboundRegionField::bind_empty_data(std::int32_t ndim)
     extents[dim] = 0;
   }
 
-  auto empty_buffer = create_buffer<std::int8_t>(0);
+  auto empty_buffer = create_buffer<std::int8_t>(/*size=*/0);
 
   out_.return_data(extents, fid_, empty_buffer.get_instance(), false);
   bound_ = true;

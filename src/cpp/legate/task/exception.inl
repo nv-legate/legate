@@ -18,7 +18,7 @@ inline TaskException::TaskException(std::int32_t index, std::string error_messag
 }
 
 inline TaskException::TaskException(std::string error_message)
-  : TaskException{0, std::move(error_message)}
+  : TaskException{/*index=*/0, std::move(error_message)}
 {
 }
 

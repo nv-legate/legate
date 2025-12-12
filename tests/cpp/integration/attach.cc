@@ -252,8 +252,9 @@ TEST_F(Attach, Negative)
 
   {
     // Trying to detach a sub-store
-    auto mem     = new std::int64_t[SHAPE_1D().volume()];
-    auto l_store = runtime->create_store(SHAPE_1D(), legate::int64(), mem, true /*share*/);
+    auto mem = new std::int64_t[SHAPE_1D().volume()];
+    auto l_store =
+      runtime->create_store(SHAPE_1D(), legate::int64(), mem, /*read_only=*/true /*share*/);
     EXPECT_THROW(l_store.project(0, 1).detach(), std::invalid_argument);
     // We have to properly detach this
     l_store.detach();

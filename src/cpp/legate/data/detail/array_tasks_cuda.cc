@@ -42,7 +42,7 @@ namespace legate::detail {
   const auto stream      = context.get_task_stream();
   auto&& api             = cuda::detail::get_cuda_driver_api();
   const auto kern        = Runtime::get_runtime().get_cuda_module_manager().load_kernel_from_fatbin(
-    fixup_ranges_fatbin, "legate_fixup_ranges_kernel");
+    fixup_ranges_fatbin, /*kernel_name=*/"legate_fixup_ranges_kernel");
 
   // TODO(wonchanl): We need to extend this to nested cases
   for (std::uint32_t i = 0; i < num_outputs; ++i) {
@@ -61,7 +61,7 @@ namespace legate::detail {
     api->launch_kernel(kern,
                        {num_blocks},
                        {LEGATE_THREADS_PER_BLOCK},
-                       0,
+                       /*shared_mem_bytes=*/0,
                        stream,
                        desc_volume,
                        desc_shape.lo,

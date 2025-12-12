@@ -29,7 +29,7 @@ constexpr std::string_view MAGIC_PROVENANCE2 = "43";
 
 legate::mapping::Machine remove_last_proc(const legate::mapping::Machine& machine)
 {
-  return machine.slice(0, std::max(std::uint32_t{1}, machine.count() - 1));
+  return machine.slice(/*from=*/0, std::max(std::uint32_t{1}, machine.count() - 1));
 }
 
 }  // namespace

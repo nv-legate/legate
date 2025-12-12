@@ -46,7 +46,7 @@ TEST_P(StructArrayNullableTest, Construction)
 
   // Create struct type
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int32(), legate::float64()).impl()};
+    legate::struct_type(/*align=*/true, legate::int32(), legate::float64()).impl()};
 
   // Create null mask if needed
   std::optional<legate::InternalSharedPtr<legate::mapping::detail::Store>> null_mask;
@@ -76,7 +76,7 @@ TEST_F(MappingStructArrayTest, Data)
   fields.push_back(field);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int32()).impl()};
+    legate::struct_type(/*align=*/true, legate::int32()).impl()};
 
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
@@ -105,7 +105,7 @@ TEST_F(MappingStructArrayTest, NullMaskNonNullable)
   fields.push_back(field);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int64()).impl()};
+    legate::struct_type(/*align=*/true, legate::int64()).impl()};
 
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
@@ -126,7 +126,7 @@ TEST_F(MappingStructArrayTest, NullMaskNullable)
   fields.push_back(field);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int64()).impl()};
+    legate::struct_type(/*align=*/true, legate::int64()).impl()};
 
   auto null_mask = legate::make_internal_shared<legate::mapping::detail::Store>(
     create_test_store(legate::Shape{8}, legate::bool_()));
@@ -159,7 +159,8 @@ TEST_F(MappingStructArrayTest, Child)
   fields.push_back(field3);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int32(), legate::float32(), legate::int16()).impl()};
+    legate::struct_type(/*align=*/true, legate::int32(), legate::float32(), legate::int16())
+      .impl()};
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
 
@@ -195,7 +196,7 @@ TEST_F(MappingStructArrayTest, PopulateStores)
   fields.push_back(field2);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int8(), legate::uint64()).impl()};
+    legate::struct_type(/*align=*/true, legate::int8(), legate::uint64()).impl()};
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
 
@@ -217,7 +218,7 @@ TEST_F(MappingStructArrayTest, Domain)
   fields.push_back(field);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int32()).impl()};
+    legate::struct_type(/*align=*/true, legate::int32()).impl()};
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
   auto domain = struct_array->domain();
@@ -241,7 +242,7 @@ TEST_F(MappingStructArrayTest, Unbound)
   fields.push_back(field2);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int16(), legate::uint32()).impl()};
+    legate::struct_type(/*align=*/true, legate::int16(), legate::uint32()).impl()};
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
 
@@ -261,7 +262,7 @@ TEST_P(StructArrayNullableTest, Valid)
   fields.push_back(field);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int32()).impl()};
+    legate::struct_type(/*align=*/true, legate::int32()).impl()};
   std::optional<legate::InternalSharedPtr<legate::mapping::detail::Store>> null_mask;
 
   if (nullable) {
@@ -292,7 +293,7 @@ TEST_F(MappingStructArrayTest, Fields)
   fields.push_back(field2);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int32(), legate::float32()).impl()};
+    legate::struct_type(/*align=*/true, legate::int32(), legate::float32()).impl()};
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
   auto fields_span = struct_array->fields();
@@ -319,7 +320,7 @@ TEST_F(MappingStructArrayTest, PopulateStoresNested)
   fields.push_back(field2);
 
   const legate::InternalSharedPtr<legate::detail::Type> struct_type_ptr{
-    legate::struct_type(true, legate::int32(), legate::float32()).impl()};
+    legate::struct_type(/*align=*/true, legate::int32(), legate::float32()).impl()};
   auto struct_array = legate::make_internal_shared<legate::mapping::detail::StructArray>(
     struct_type_ptr, std::nullopt, std::move(fields));
   legate::detail::SmallVector<legate::InternalSharedPtr<legate::mapping::detail::Store>> stores;

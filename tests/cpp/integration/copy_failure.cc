@@ -23,9 +23,10 @@ void test_invalid_stores()
   auto runtime = legate::Runtime::get_runtime();
 
   auto store1 = runtime->create_store(legate::Shape{10, 10}, legate::int64());
-  auto store2 = runtime->create_store(legate::Shape{1}, legate::int64(), true /*optimize_scalar*/);
+  auto store2 = runtime->create_store(legate::Shape{1}, legate::int64(), /*optimize_scalar=*/true);
   auto store3 = runtime->create_store(legate::int64());
-  auto store4 = runtime->create_store(legate::Shape{10, 10}, legate::int64()).promote(2, 10);
+  auto store4 = runtime->create_store(legate::Shape{10, 10}, legate::int64())
+                  .promote(/*extra_dim=*/2, /*dim_size=*/10);
 
   EXPECT_THROW(runtime->issue_copy(store2, store1), std::invalid_argument);
   EXPECT_THROW(runtime->issue_copy(store3, store1), std::invalid_argument);

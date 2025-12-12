@@ -99,12 +99,12 @@ void fill_null_mask(const ACC& acc, const legate::Rect<1>& shape)
 
   constexpr std::int64_t SIZE_VARDATA = ((1 + SIZE_ARRAY) * SIZE_ARRAY) / 2;
 
-  const auto vardata =
-    vardata_store.create_output_buffer<std::int64_t, 1>(legate::Point<1>{SIZE_VARDATA}, true);
+  const auto vardata = vardata_store.create_output_buffer<std::int64_t, 1>(
+    legate::Point<1>{SIZE_VARDATA}, /*bind_buffer=*/true);
 
   if (unbound) {
-    auto desc =
-      descriptor.create_output_buffer<legate::Rect<1>, 1>(legate::Point<1>{SIZE_ARRAY}, true);
+    auto desc = descriptor.create_output_buffer<legate::Rect<1>, 1>(legate::Point<1>{SIZE_ARRAY},
+                                                                    /*bind_buffer=*/true);
 
     fill_list_array(desc, vardata, legate::Rect<1>{0, SIZE_ARRAY - 1}, SIZE_VARDATA);
   } else {
@@ -120,7 +120,8 @@ void fill_null_mask(const ACC& acc, const legate::Rect<1>& shape)
     auto null_mask = list_array.null_mask();
 
     if (null_mask.is_unbound_store()) {
-      auto mask = null_mask.create_output_buffer<bool, 1>(legate::Point<1>{SIZE_ARRAY}, true);
+      auto mask =
+        null_mask.create_output_buffer<bool, 1>(legate::Point<1>{SIZE_ARRAY}, /*bind_buffer=*/true);
 
       fill_null_mask(mask, legate::Rect<1>{0, SIZE_ARRAY - 1});
     } else {
@@ -186,16 +187,16 @@ TEST_P(NullableFillListArrayTest, BoundListArray)
   auto logical_array  = legate::Runtime::get_runtime()->create_array(
     {SIZE_ARRAY}, legate::list_type(legate::int64()), nullable);
 
-  test_fill_list_array_task(logical_array, nullable, false);
+  test_fill_list_array_task(logical_array, nullable, /*unbound=*/false);
 }
 
 TEST_P(NullableFillListArrayTest, UnboundListArray)
 {
   const auto nullable = GetParam();
-  auto logical_array =
-    legate::Runtime::get_runtime()->create_array(legate::list_type(legate::int64()), 1, nullable);
+  auto logical_array  = legate::Runtime::get_runtime()->create_array(
+    legate::list_type(legate::int64()), /*dim=*/1, nullable);
 
-  test_fill_list_array_task(logical_array, nullable, true);
+  test_fill_list_array_task(logical_array, nullable, /*unbound=*/true);
 }
 
 }  // namespace physical_array_fill_list_test

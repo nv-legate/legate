@@ -456,7 +456,7 @@ TEST_F(LogicalRegionFieldUnit, ChildInvalidationCallbacks)
     legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1},  // color_shape
     legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{}     // offsets (empty)
   );
-  auto child_region_field = root_region_field->get_child(tiling.get(), {0}, true);
+  auto child_region_field = root_region_field->get_child(tiling.get(), {0}, /*complete=*/true);
   std::vector<int> callback_order;
 
   child_region_field->add_invalidation_callback(

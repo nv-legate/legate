@@ -40,7 +40,10 @@ Scalar::Scalar(InternalSharedPtr<detail::Scalar> impl) : impl_{std::move(impl)} 
 
 Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_{std::move(impl)} {}
 
-Scalar::Scalar() : Scalar{create_impl_(null_type(), nullptr, /* copy */ false), private_tag{}} {}
+Scalar::Scalar()
+  : Scalar{create_impl_(null_type(), /*data=*/nullptr, /* copy */ false), private_tag{}}
+{
+}
 
 Scalar::Scalar(const Type& type, const void* data, bool copy)
   : Scalar{create_impl_(type, data, copy), private_tag{}}

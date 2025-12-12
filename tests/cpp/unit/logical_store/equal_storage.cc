@@ -40,7 +40,7 @@ TEST_F(LogicalStoreEqualStorageUnit, Sliced)
   const auto runtime = legate::Runtime::get_runtime();
   /// [Store::equal_storage: Comparing sliced stores]
   const auto store       = runtime->create_store(legate::Shape{4, 3}, legate::int64());
-  const auto transformed = store.slice(1, legate::Slice{-2, -1});
+  const auto transformed = store.slice(/*dim=*/1, legate::Slice{-2, -1});
 
   // Slices partition a store into a parent and sub-store which both cover distinct regions,
   // and hence don't share storage.
@@ -73,7 +73,7 @@ TEST_F(LogicalStoreEqualStorageUnit, Future)
 {
   const auto runtime  = legate::Runtime::get_runtime();
   const auto store    = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  const auto promoted = store.promote(0, 5);
+  const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/5);
 
   ASSERT_TRUE(promoted.get_physical_store().is_future());
   ASSERT_TRUE(promoted.equal_storage(store));

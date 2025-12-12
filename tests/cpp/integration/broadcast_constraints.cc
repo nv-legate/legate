@@ -111,7 +111,7 @@ void test_promoted_store()
     initialize(store);
 
     auto task = runtime->create_task(context, TesterTask::TASK_CONFIG.task_id());
-    auto part = task.add_input(store.promote(2, EXT_LARGE));
+    auto part = task.add_input(store.promote(/*extra_dim=*/2, EXT_LARGE));
     task.add_scalar_arg(legate::Scalar{EXT_LARGE});
     task.add_scalar_arg(legate::Scalar{std::vector<std::uint32_t>{dim}});
     task.add_scalar_arg(legate::Scalar{true});

@@ -130,14 +130,15 @@ TEST_P(StructTypeTest, Basic)
 
 TEST_F(StructTypeUnit, Equal)
 {
-  auto type = legate::struct_type(true, legate::int16(), legate::bool_(), legate::float64());
+  auto type =
+    legate::struct_type(/*align=*/true, legate::int16(), legate::bool_(), legate::float64());
 
   ASSERT_TRUE(type == type);
 }
 
 TEST_F(StructTypeUnit, NotEqual)
 {
-  auto type1 = legate::struct_type(true, legate::int16());
+  auto type1 = legate::struct_type(/*align=*/true, legate::int16());
   auto type2 = legate::int16();
 
   ASSERT_FALSE(type1 == type2);
@@ -180,7 +181,8 @@ TEST_P(RectTypeTest, Basic)
   const auto to_string =
     fmt::format("{{int64[{}]:0,int64[{}]:{}}}", dim, dim, dim * sizeof(std::int64_t));
 
-  test_struct_type(type, true, full_size, sizeof(std::uint64_t), to_string, field_types);
+  test_struct_type(
+    type, /*aligned=*/true, full_size, sizeof(std::uint64_t), to_string, field_types);
   ASSERT_TRUE(legate::is_rect_type(type, dim));
   ASSERT_TRUE(legate::is_rect_type(type));
   ASSERT_EQ(legate::ndim_rect_type(type), dim);

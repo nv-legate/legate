@@ -41,8 +41,8 @@ struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
   {
     auto output = context.output(0).data();
     auto size   = context.get_task_index()[0] + 1;
-    auto buffer =
-      output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size}, true /*bind*/);
+    auto buffer = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size},
+                                                               /*bind_buffer=*/true /*bind*/);
     for (std::int64_t idx = 0; idx < size; ++idx) {
       buffer[idx] = size;
     }
@@ -61,7 +61,7 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
       auto shape = input.shape<1>();
       EXPECT_TRUE(shape.empty() || shape.volume() == TILE_SIZE);
     }
-    (void)output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{0}, true);
+    (void)output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{0}, /*bind_buffer=*/true);
   }
 };
 
@@ -79,7 +79,7 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
       ASSERT_EQ(shape.volume(), expected);
       ++expected;
     }
-    (void)output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{0}, true);
+    (void)output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{0}, /*bind_buffer=*/true);
   }
 };
 
@@ -113,7 +113,8 @@ TEST_F(TreeReduce, AutoProducer)
   task.add_output(part);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, 4);
+  auto result =
+    runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, /*radix=*/4);
 
   EXPECT_FALSE(result.unbound());
 }
@@ -133,7 +134,8 @@ TEST_F(TreeReduce, ManualProducer)
   task.add_output(part);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, 4);
+  auto result =
+    runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, /*radix=*/4);
 
   EXPECT_FALSE(result.unbound());
 }
@@ -153,7 +155,8 @@ TEST_F(TreeReduce, ManualProducerMultiLevel)
   task.add_output(part);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, 4);
+  auto result =
+    runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, /*radix=*/4);
 
   EXPECT_FALSE(result.unbound());
 }
@@ -188,7 +191,8 @@ TEST_F(TreeReduce, ManualProducerSingle)
   task.add_output(store);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, 4);
+  auto result =
+    runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, /*radix=*/4);
   EXPECT_FALSE(result.unbound());
 }
 
@@ -202,13 +206,15 @@ TEST_F(TreeReduce, AutoProducerSingle)
 
   {
     auto machine = runtime->get_machine();
-    const legate::Scope tracker{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
+    const legate::Scope tracker{
+      machine.slice(/*from=*/0, /*to=*/1, legate::mapping::TaskTarget::CPU)};
     auto task = runtime->create_task(context, ProduceUnboundTask::TASK_CONFIG.task_id());
     task.add_output(store);
     runtime->submit(std::move(task));
   }
 
-  auto result = runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, 4);
+  auto result =
+    runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, /*radix=*/4);
   EXPECT_FALSE(result.unbound());
 }
 

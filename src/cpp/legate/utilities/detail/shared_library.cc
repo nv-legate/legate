@@ -54,7 +54,7 @@ SharedLibrary::SharedLibrary(std::string lib_path, bool must_load)
 {
 }
 
-SharedLibrary::SharedLibrary(std::nullptr_t) : handle_{load_lib(nullptr)} {}
+SharedLibrary::SharedLibrary(std::nullptr_t) : handle_{load_lib(/*lib_name=*/nullptr)} {}
 
 void* SharedLibrary::load_symbol(ZStringView symbol_name) const
 {

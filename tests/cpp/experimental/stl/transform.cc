@@ -35,7 +35,7 @@ void test_transform_single_inplace()
   // Stateless extended lambdas work with both clang CUDA and nvcc
   auto inc = [] LEGATE_HOST_DEVICE(std::int64_t v) -> std::int64_t { return v + 2; };
 
-  stl::fill(store, 1);
+  stl::fill(store, /*val=*/1);
   stl::transform(store, store, inc);
 
   // Check the result
@@ -53,7 +53,7 @@ void test_transform_single_copy()
   // Stateless extended lambdas work with both clang CUDA and nvcc
   auto inc = [] LEGATE_HOST_DEVICE(std::int64_t v) -> std::int64_t { return v + 2; };
 
-  stl::fill(stl::elements_of(in_store), 1);
+  stl::fill(stl::elements_of(in_store), /*val=*/1);
   stl::transform(stl::elements_of(in_store), stl::elements_of(out_store), inc);
 
   // Check the result
@@ -78,8 +78,8 @@ void test_transform_double_inplace()
     return a << b;
   };
 
-  stl::fill(store1, 2);
-  stl::fill(store2, 4);
+  stl::fill(store1, /*val=*/2);
+  stl::fill(store2, /*val=*/4);
   stl::transform(store1, store2, store1, shift);
 
   // Check the result
@@ -104,8 +104,8 @@ void test_transform_double_copy()
     return a << b;
   };
 
-  stl::fill(store1, 2);
-  stl::fill(store2, 4);
+  stl::fill(store1, /*val=*/2);
+  stl::fill(store2, /*val=*/4);
   stl::transform(store1, store2, store3, shift);
 
   // Check the result
@@ -203,8 +203,8 @@ void transform_doxy_snippets()
       return a << b;
     };
 
-    stl::fill(store1, 2);
-    stl::fill(store2, 4);
+    stl::fill(store1, /*val=*/2);
+    stl::fill(store2, /*val=*/4);
     stl::transform(store1, store2, store3, shift);
 
     // `store3` now contains the elements:

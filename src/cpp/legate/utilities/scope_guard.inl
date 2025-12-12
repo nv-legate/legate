@@ -107,7 +107,7 @@ int ScopeFail<F>::exn_count_() const
 
 template <typename F>
 ScopeFail<F>::ScopeFail(value_type&& fn) noexcept
-  : guard_{std::forward<value_type>(fn), false}, exn_cnt_{std::uncaught_exceptions()}
+  : guard_{std::forward<value_type>(fn), /*enabled=*/false}, exn_cnt_{std::uncaught_exceptions()}
 {
 }
 

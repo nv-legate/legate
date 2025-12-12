@@ -53,6 +53,7 @@ bool LaunchDomainEquality::is_streamable(const InternalSharedPtr<Operation>& op,
 
     if (op_ld != launch_domain_.value()) {
       ctx->append(
+        // NOLINTNEXTLINE(bugprone-argument-comment)
         "Found unequal launch domains: operation's launch domain [{}, {}), launch "
         "domain of previous operation(s) [{}, {})",
         op_ld.lo(),

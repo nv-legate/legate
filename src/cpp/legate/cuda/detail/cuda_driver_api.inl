@@ -22,7 +22,8 @@ void CUDADriverAPI::launch_kernel(CUfunction f,
 {
   void* kernel_params[] = {static_cast<void*>(std::addressof(args))...};
 
-  launch_kernel_direct(f, grid_dim, block_dim, shared_mem_bytes, stream, kernel_params, nullptr);
+  launch_kernel_direct(
+    f, grid_dim, block_dim, shared_mem_bytes, stream, kernel_params, /*extra=*/nullptr);
 }
 
 template <typename... T>

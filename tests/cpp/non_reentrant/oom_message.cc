@@ -72,7 +72,7 @@ void test_oom_message()
     const legate::Scope scope{"launch_using_small_store_part"};
     auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
 
-    task.add_output(stores.at(1).slice(0, legate::Slice{1}));
+    task.add_output(stores.at(1).slice(/*dim=*/0, legate::Slice{1}));
     runtime->submit(std::move(task));
     runtime->issue_execution_fence(/*block=*/true);
   }

@@ -192,7 +192,7 @@ LogicalStore Runtime::tree_reduce(Library library,
                                   const LogicalStore& store,
                                   std::int32_t radix)
 {
-  auto out_store = create_store(store.type(), 1);
+  auto out_store = create_store(store.type(), /*dim=*/1);
 
   impl_->tree_reduce(*library.impl(), task_id, store.impl(), out_store.impl(), radix);
   return out_store;
@@ -234,7 +234,7 @@ void Runtime::submit(PhysicalTask&& task)
 LogicalArray Runtime::create_array(const Type& type, std::uint32_t dim, bool nullable)
 {
   return LogicalArray{impl_->create_array(
-    make_internal_shared<detail::Shape>(dim), type.impl(), nullable, false /*optimize_scalar*/)};
+    make_internal_shared<detail::Shape>(dim), type.impl(), nullable, /*optimize_scalar=*/false)};
 }
 
 LogicalArray Runtime::create_array(const Shape& shape,
@@ -302,8 +302,9 @@ StructLogicalArray Runtime::create_struct_array(Span<const LogicalArray> fields,
 
 LogicalStore Runtime::create_store(const Type& type, std::uint32_t dim)
 {
-  return LogicalStore{impl_->create_store(
-    make_internal_shared<detail::Shape>(dim), type.impl(), false /*optimize_scalar*/)};
+  return LogicalStore{impl_->create_store(make_internal_shared<detail::Shape>(dim),
+                                          type.impl(),
+                                          /*optimize_scalar=*/false)};
 }
 
 LogicalStore Runtime::create_store(const Shape& shape,

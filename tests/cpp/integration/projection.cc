@@ -125,15 +125,15 @@ TEST_F(ProjectionTest, ExtraProjection2)
 {
   test_extra_projection(legate::Runtime::get_runtime()
                           ->create_array(legate::Shape{SMALL_EXTENT, BIG_EXTENT}, legate::int64())
-                          .promote(2, SMALL_EXTENT));
+                          .promote(/*extra_dim=*/2, SMALL_EXTENT));
 }
 
 TEST_F(ProjectionTest, ExtraProjection3)
 {
   test_extra_projection(legate::Runtime::get_runtime()
                           ->create_array(legate::Shape{BIG_EXTENT}, legate::int64())
-                          .promote(0, SMALL_EXTENT)
-                          .promote(2, SMALL_EXTENT));
+                          .promote(/*extra_dim=*/0, SMALL_EXTENT)
+                          .promote(/*extra_dim=*/2, SMALL_EXTENT));
 }
 
 TEST_F(ProjectionTest, Delinearization1)
@@ -146,7 +146,7 @@ TEST_F(ProjectionTest, Delinearization2)
 {
   test_delinearization(legate::Runtime::get_runtime()
                          ->create_array(legate::Shape{BIG_EXTENT, BIGGER_EXTENT}, legate::int64())
-                         .promote(1, SMALL_EXTENT));
+                         .promote(/*extra_dim=*/1, SMALL_EXTENT));
 }
 
 }  // namespace projection_test

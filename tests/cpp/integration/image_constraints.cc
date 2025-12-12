@@ -364,7 +364,7 @@ TEST_F(ImageConstraint, InvalidStore)
   auto runtime = legate::Runtime::get_runtime();
   auto func    = runtime->create_store(legate::Shape{4, 4}, legate::point_type(2));
   auto range   = runtime->create_store(legate::Shape{10}, legate::int64());
-  auto task    = create_task_for_invalid(func, range.promote(1, 1));
+  auto task    = create_task_for_invalid(func, range.promote(/*extra_dim=*/1, /*dim_size=*/1));
   EXPECT_THROW(runtime->submit(std::move(task)), std::runtime_error);
 }
 

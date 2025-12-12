@@ -31,11 +31,11 @@ TEST_F(ScopeGuardUnit, EnableConstruct)
     void operator()() noexcept {}
   };
 
-  const legate::ScopeGuard<Callable> guard{Callable{}, true};
+  const legate::ScopeGuard<Callable> guard{Callable{}, /*enabled=*/true};
 
   EXPECT_TRUE(guard.enabled());
 
-  const legate::ScopeGuard<Callable> guard2{Callable{}, false};
+  const legate::ScopeGuard<Callable> guard2{Callable{}, /*enabled=*/false};
 
   EXPECT_FALSE(guard2.enabled());
 }

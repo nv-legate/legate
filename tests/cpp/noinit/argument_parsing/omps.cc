@@ -29,8 +29,8 @@ using GPUsType    = legate::detail::Argument<std::int32_t>;
 
 TEST_P(ConfigureOpenMPUnit, Preset)
 {
-  const auto gpus = GPUsType{nullptr, "--gpus", -1};
-  auto omps       = OpenMPsType{nullptr, "--omps", 1};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/-1};
+  auto omps       = OpenMPsType{nullptr, "--omps", /*init=*/1};
 
   legate::detail::configure_omps(
     /* auto_config */ GetParam(), /* openmp */ nullptr, /* numa_mems */ {}, gpus, &omps);
@@ -39,8 +39,8 @@ TEST_P(ConfigureOpenMPUnit, Preset)
 
 TEST_P(ConfigureOpenMPUnit, UnsetNoOmp)
 {
-  const auto gpus = GPUsType{nullptr, "--gpus", -1};
-  auto omps       = OpenMPsType{nullptr, "--omps", -1};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/-1};
+  auto omps       = OpenMPsType{nullptr, "--omps", /*init=*/-1};
 
   legate::detail::configure_omps(
     /* auto_config */ GetParam(), /* openmp */ nullptr, /* numa_mems */ {}, gpus, &omps);
@@ -61,7 +61,7 @@ TEST_F(ConfigureOpenMPUnit, AutoConfigGPUs)
   constexpr auto NUM_GPUS = 128;
   const auto gpus         = GPUsType{nullptr, "--gpus", NUM_GPUS};
   const auto openmp       = MockOpenMPModuleConfig{};
-  auto omps               = OpenMPsType{nullptr, "--omps", -1};
+  auto omps               = OpenMPsType{nullptr, "--omps", /*init=*/-1};
 
   legate::detail::configure_omps(
     /* auto_config */ true, &openmp, /* numa_mems */ {}, gpus, &omps);
@@ -70,9 +70,9 @@ TEST_F(ConfigureOpenMPUnit, AutoConfigGPUs)
 
 TEST_F(ConfigureOpenMPUnit, AutoConfigEmptyNUMA)
 {
-  const auto gpus   = GPUsType{nullptr, "--gpus", -1};
+  const auto gpus   = GPUsType{nullptr, "--gpus", /*init=*/-1};
   const auto openmp = MockOpenMPModuleConfig{};
-  auto omps         = OpenMPsType{nullptr, "--omps", -1};
+  auto omps         = OpenMPsType{nullptr, "--omps", /*init=*/-1};
 
   legate::detail::configure_omps(
     /* auto_config */ true, &openmp, /* numa_mems */ {}, gpus, &omps);
@@ -81,10 +81,10 @@ TEST_F(ConfigureOpenMPUnit, AutoConfigEmptyNUMA)
 
 TEST_F(ConfigureOpenMPUnit, NUMASize)
 {
-  const auto gpus      = GPUsType{nullptr, "--gpus", -1};
+  const auto gpus      = GPUsType{nullptr, "--gpus", /*init=*/-1};
   const auto openmp    = MockOpenMPModuleConfig{};
   const auto numa_mems = std::vector<std::size_t>(5, 0);
-  auto omps            = OpenMPsType{nullptr, "--omps", -1};
+  auto omps            = OpenMPsType{nullptr, "--omps", /*init=*/-1};
 
   legate::detail::configure_omps(
     /* auto_config */ true, &openmp, numa_mems, gpus, &omps);

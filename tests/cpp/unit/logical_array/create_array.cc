@@ -157,7 +157,7 @@ generate_invalid_arrays()
     runtime->create_array(bound_shape_multi_dim(), legate::rect_type(BOUND_DIM));
   const auto arr_4d_int8 = runtime->create_array(bound_shape_multi_dim(), legate::int8());
   const auto arr_nullable_int8 =
-    runtime->create_array(legate::Shape{1}, legate::int8(), true /*nullable*/);
+    runtime->create_array(legate::Shape{1}, legate::int8(), /*nullable=*/true);
 
   return {
     std::make_tuple(arr_unbound_rect1, arr_int8) /* descriptor: unbound sub-array */,
@@ -179,7 +179,8 @@ TEST_P(NullableTest, CreateBoundPrimitiveArray)
 {
   const auto nullable = GetParam();
   auto primitive_type = legate::int64();
-  auto array = logical_array_util_test::create_array_with_type(primitive_type, true, nullable);
+  auto array =
+    logical_array_util_test::create_array_with_type(primitive_type, /*bound=*/true, nullable);
 
   ASSERT_FALSE(array.unbound());
   ASSERT_EQ(array.dim(), BOUND_DIM);
@@ -214,7 +215,8 @@ TEST_P(NullableTest, CreateUnboundPrimitiveArray)
 {
   const auto nullable = GetParam();
   auto primitive_type = legate::int32();
-  auto array = logical_array_util_test::create_array_with_type(primitive_type, false, nullable);
+  auto array =
+    logical_array_util_test::create_array_with_type(primitive_type, /*bound=*/false, nullable);
 
   ASSERT_TRUE(array.unbound());
   ASSERT_EQ(array.dim(), UNBOUND_DIM);
@@ -249,7 +251,7 @@ TEST_P(NullableTest, CreateBoundListArray)
 {
   const auto nullable = GetParam();
   auto arr_type       = legate::list_type(legate::int64()).as_list_type();
-  auto array          = logical_array_util_test::create_array_with_type(arr_type, true, nullable);
+  auto array = logical_array_util_test::create_array_with_type(arr_type, /*bound=*/true, nullable);
 
   // List arrays are unbound even with the fixed extents
   ASSERT_TRUE(array.unbound());
@@ -284,7 +286,7 @@ TEST_P(NullableTest, CreateUnboundListArray)
 {
   const auto nullable = GetParam();
   auto arr_type       = legate::list_type(legate::int64()).as_list_type();
-  auto array          = logical_array_util_test::create_array_with_type(arr_type, false, nullable);
+  auto array = logical_array_util_test::create_array_with_type(arr_type, /*bound=*/false, nullable);
 
   ASSERT_TRUE(array.unbound());
   ASSERT_EQ(array.dim(), VARILABLE_TYPE_BOUND_DIM);
@@ -370,7 +372,7 @@ TEST_P(NullableTest, CreateBoundStringArray)
 {
   const auto nullable = GetParam();
   auto str_type       = legate::string_type();
-  auto array          = logical_array_util_test::create_array_with_type(str_type, true, nullable);
+  auto array = logical_array_util_test::create_array_with_type(str_type, /*bound=*/true, nullable);
 
   ASSERT_TRUE(array.unbound());
   ASSERT_EQ(array.dim(), VARILABLE_TYPE_BOUND_DIM);
@@ -404,7 +406,7 @@ TEST_P(NullableTest, CreateUnboundStringArray)
 {
   const auto nullable = GetParam();
   auto str_type       = legate::string_type();
-  auto array          = logical_array_util_test::create_array_with_type(str_type, false, nullable);
+  auto array = logical_array_util_test::create_array_with_type(str_type, /*bound=*/false, nullable);
 
   ASSERT_TRUE(array.unbound());
   ASSERT_EQ(array.dim(), UNBOUND_DIM);
@@ -439,7 +441,7 @@ TEST_P(NullableTest, CreateBoundStructArray)
   const auto nullable = GetParam();
   const auto& st_type = logical_array_util_test::struct_type();
   auto num_fields     = st_type.num_fields();
-  auto array          = logical_array_util_test::create_array_with_type(st_type, true, nullable);
+  auto array = logical_array_util_test::create_array_with_type(st_type, /*bound=*/true, nullable);
 
   ASSERT_FALSE(array.unbound());
   ASSERT_EQ(array.dim(), BOUND_DIM);
@@ -481,7 +483,7 @@ TEST_P(NullableTest, CreateUnboundStructArray)
   const auto nullable = GetParam();
   const auto& st_type = logical_array_util_test::struct_type();
   auto num_fields     = st_type.num_fields();
-  auto array          = logical_array_util_test::create_array_with_type(st_type, false, nullable);
+  auto array = logical_array_util_test::create_array_with_type(st_type, /*bound=*/false, nullable);
 
   ASSERT_TRUE(array.unbound());
   ASSERT_EQ(array.dim(), UNBOUND_DIM);
@@ -505,7 +507,8 @@ TEST_P(NullableTest, CreateBoundLike)
 {
   const auto nullable = GetParam();
   auto runtime        = legate::Runtime::get_runtime();
-  auto source  = logical_array_util_test::create_array_with_type(legate::int64(), true, nullable);
+  auto source =
+    logical_array_util_test::create_array_with_type(legate::int64(), /*bound=*/true, nullable);
   auto target1 = runtime->create_array_like(source);
 
   ASSERT_EQ(source.dim(), target1.dim());
@@ -529,7 +532,8 @@ TEST_P(NullableTest, CreateUnboundLike)
 {
   const auto nullable = GetParam();
   auto runtime        = legate::Runtime::get_runtime();
-  auto source  = logical_array_util_test::create_array_with_type(legate::int64(), false, nullable);
+  auto source =
+    logical_array_util_test::create_array_with_type(legate::int64(), /*bound=*/false, nullable);
   auto target1 = runtime->create_array_like(source);
 
   ASSERT_EQ(source.dim(), target1.dim());
@@ -552,7 +556,7 @@ TEST_P(NullableTest, CreateUnboundLike)
 TEST_P(NullableTest, InvalidCastBoundArray)
 {
   auto bound_array =
-    logical_array_util_test::create_array_with_type(legate::int64(), true, GetParam());
+    logical_array_util_test::create_array_with_type(legate::int64(), /*bound=*/true, GetParam());
 
   ASSERT_THROW(static_cast<void>(bound_array.as_list_array()), std::invalid_argument);
   ASSERT_THROW(static_cast<void>(bound_array.as_string_array()), std::invalid_argument);
@@ -561,7 +565,7 @@ TEST_P(NullableTest, InvalidCastBoundArray)
 TEST_P(NullableTest, InvalidCastUnboundArray)
 {
   auto unbound_array =
-    logical_array_util_test::create_array_with_type(legate::int64(), false, GetParam());
+    logical_array_util_test::create_array_with_type(legate::int64(), /*bound=*/false, GetParam());
 
   ASSERT_THROW(static_cast<void>(unbound_array.as_list_array()), std::invalid_argument);
   ASSERT_THROW(static_cast<void>(unbound_array.as_string_array()), std::invalid_argument);
@@ -692,7 +696,7 @@ TEST_P(NullableTest, PhsicalArray)
   const auto nullable = GetParam();
   auto primitive_type = legate::int64();
   auto logical_array =
-    logical_array_util_test::create_array_with_type(primitive_type, true, nullable);
+    logical_array_util_test::create_array_with_type(primitive_type, /*bound=*/true, nullable);
   auto array = logical_array.get_physical_array();
 
   ASSERT_EQ(array.dim(), BOUND_DIM);

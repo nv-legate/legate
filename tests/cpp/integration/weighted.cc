@@ -37,7 +37,7 @@ struct Initializer : public legate::LegateTask<Initializer> {
     for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto output = outputs.at(idx).data();
       static_cast<void>(output.create_output_buffer<std::int32_t, 1>(
-        legate::Point<1>{task_idx + (10 * (idx + 1))}, true));
+        legate::Point<1>{task_idx + (10 * (idx + 1))}, /*bind_buffer=*/true));
     }
   }
 };
@@ -58,7 +58,7 @@ struct Tester : public legate::LegateTask<Tester> {
     // AutoTask on that Store it will launch on a 4-worker domain but I can see that not being
     // the case, e.g. if we're running on 1 GPU only, we might want to active fast-path, as if
     // we're running the next task on 1 worker.
-    if (legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.get(false)) {
+    if (legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.get(/*default_value=*/false)) {
       return;
     }
 

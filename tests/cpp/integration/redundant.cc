@@ -46,8 +46,8 @@ class LibraryMapper : public legate::mapping::Mapper {
   {
     auto mappings = std::vector<legate::mapping::StoreMapping>{};
     for (auto&& input : task.inputs()) {
-      auto mapping =
-        legate::mapping::StoreMapping::default_mapping(input.data(), options.front(), true);
+      auto mapping = legate::mapping::StoreMapping::default_mapping(
+        input.data(), options.front(), /*exact=*/true);
       mapping.policy().redundant = true;
       mappings.push_back(std::move(mapping));
     }
@@ -103,12 +103,12 @@ TEST_F(Redundant, Test)
   auto part2   = store.partition_by_tiling({EXT / 4, EXT});
   auto part3   = store.partition_by_tiling({EXT, EXT / 4});
 
-  launch_task(part1, false);
-  launch_task(part2, true);
+  launch_task(part1, /*read_only=*/false);
+  launch_task(part2, /*read_only=*/true);
   // Without a mapping fence, all reader tasks in theory can initiate their mapping before mappings
   // for other tasks finish and yield the memory space
   runtime->issue_mapping_fence();
-  launch_task(part3, true);
+  launch_task(part3, /*read_only=*/true);
 }
 
 }  // namespace test_redundant

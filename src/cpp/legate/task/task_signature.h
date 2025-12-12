@@ -98,22 +98,22 @@ class LEGATE_EXPORT TaskSignature {
   /**
    * @brief Set the number of input arguments taken by the task.
    *
-   * This call signifies that a task takes at least `low_bound` but no more than `upper_bound`
+   * This call signifies that a task takes at least `lower_bound` but no more than `upper_bound`
    * number of input arguments. If `upper_bound` is `UNBOUNDED`, then the task takes at least
-   * `low_bound` number of arguments, but can take an unlimited number of arguments past that.
+   * `lower_bound` number of arguments, but can take an unlimited number of arguments past that.
    *
-   * If given, `upper_bound` must be strictly greater than `low_bound`.
+   * If given, `upper_bound` must be strictly greater than `lower_bound`.
    *
-   * @param low_bound The lower bound on the number of input arguments.
+   * @param lower_bound The lower bound on the number of input arguments.
    * @param upper_bound The upper bound on the number of input arguments.
    *
    * @return A reference to this.
    *
-   * @throw std::out_of_range If `upper_bound` <= `low_bound`.
+   * @throw std::out_of_range If `upper_bound` <= `lower_bound`.
    *
    * @see `inputs(std::uint32_t)`.
    */
-  TaskSignature& inputs(std::uint32_t low_bound, std::uint32_t upper_bound);
+  TaskSignature& inputs(std::uint32_t lower_bound, std::uint32_t upper_bound);
 
   /**
    * @brief Set the number of output arguments taken by the task.
@@ -133,22 +133,22 @@ class LEGATE_EXPORT TaskSignature {
   /**
    * @brief Set the number of output arguments taken by the task.
    *
-   * This call signifies that a task takes at least `low_bound` but no more than `upper_bound`
+   * This call signifies that a task takes at least `lower_bound` but no more than `upper_bound`
    * number of output arguments. If `upper_bound` is `UNBOUNDED`, then the task takes at least
-   * `low_bound` number of arguments, but can take an unlimited number of arguments past that.
+   * `lower_bound` number of arguments, but can take an unlimited number of arguments past that.
    *
-   * If given, `upper_bound` must be strictly greater than `low_bound`.
+   * If given, `upper_bound` must be strictly greater than `lower_bound`.
    *
-   * @param low_bound The lower bound on the number of output arguments.
+   * @param lower_bound The lower bound on the number of output arguments.
    * @param upper_bound The upper bound on the number of output arguments.
    *
    * @return A reference to this.
    *
-   * @throw std::out_of_range If `upper_bound` <= `low_bound`.
+   * @throw std::out_of_range If `upper_bound` <= `lower_bound`.
    *
    * @see `outputs(std::uint32_t)`.
    */
-  TaskSignature& outputs(std::uint32_t low_bound, std::uint32_t upper_bound);
+  TaskSignature& outputs(std::uint32_t lower_bound, std::uint32_t upper_bound);
 
   /**
    * @brief Set the number of scalar arguments taken by the task.
@@ -168,22 +168,22 @@ class LEGATE_EXPORT TaskSignature {
   /**
    * @brief Set the number of scalar arguments taken by the task.
    *
-   * This call signifies that a task takes at least `low_bound` but no more than `upper_bound`
+   * This call signifies that a task takes at least `lower_bound` but no more than `upper_bound`
    * number of scalar arguments. If `upper_bound` is `UNBOUNDED`, then the task takes at least
-   * `low_bound` number of arguments, but can take an unlimited number of arguments past that.
+   * `lower_bound` number of arguments, but can take an unlimited number of arguments past that.
    *
-   * If given, `upper_bound` must be strictly greater than `low_bound`.
+   * If given, `upper_bound` must be strictly greater than `lower_bound`.
    *
-   * @param low_bound The lower bound on the number of scalar arguments.
+   * @param lower_bound The lower bound on the number of scalar arguments.
    * @param upper_bound The upper bound on the number of scalar arguments.
    *
    * @return A reference to this.
    *
-   * @throw std::out_of_range If `upper_bound` <= `low_bound`.
+   * @throw std::out_of_range If `upper_bound` <= `lower_bound`.
    *
    * @see `scalars(std::uint32_t)`.
    */
-  TaskSignature& scalars(std::uint32_t low_bound, std::uint32_t upper_bound);
+  TaskSignature& scalars(std::uint32_t lower_bound, std::uint32_t upper_bound);
 
   /**
    * @brief Set the number of redop arguments taken by the task.
@@ -203,22 +203,22 @@ class LEGATE_EXPORT TaskSignature {
   /**
    * @brief Set the number of redop arguments taken by the task.
    *
-   * This call signifies that a task takes at least `low_bound` but no more than `upper_bound`
+   * This call signifies that a task takes at least `lower_bound` but no more than `upper_bound`
    * number of redop arguments. If `upper_bound` is `UNBOUNDED`, then the task takes at least
-   * `low_bound` number of arguments, but can take an unlimited number of arguments past that.
+   * `lower_bound` number of arguments, but can take an unlimited number of arguments past that.
    *
-   * If given, `upper_bound` must be strictly greater than `low_bound`.
+   * If given, `upper_bound` must be strictly greater than `lower_bound`.
    *
-   * @param low_bound The lower bound on the number of redop arguments.
+   * @param lower_bound The lower bound on the number of redop arguments.
    * @param upper_bound The upper bound on the number of redop arguments.
    *
    * @return A reference to this.
    *
-   * @throw std::out_of_range If `upper_bound` <= `low_bound`.
+   * @throw std::out_of_range If `upper_bound` <= `lower_bound`.
    *
    * @see `redops(std::uint32_t)`.
    */
-  TaskSignature& redops(std::uint32_t low_bound, std::uint32_t upper_bound);
+  TaskSignature& redops(std::uint32_t lower_bound, std::uint32_t upper_bound);
 
   /**
    * @brief Set the constraints imposed on task arguments.

@@ -32,57 +32,73 @@ namespace legate {
 /*static*/ void SumReduction<Half>::fill_redop_desc(cuda::detail::CUDAModuleManager* manager,
                                                     Realm::Cuda::CudaRedOpDesc* desc)
 {
-  desc->redop_id      = static_cast<Realm::ReductionOpID>(REDOP_ID);
-  desc->apply_excl    = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                        "legate_sum_redop_half_apply_excl");
-  desc->apply_nonexcl = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                           "legate_sum_redop_half_apply_non_excl");
-  desc->fold_excl     = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                       "legate_sum_redop_half_fold_excl");
-  desc->fold_nonexcl  = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                          "legate_sum_redop_half_fold_non_excl");
+  desc->redop_id = static_cast<Realm::ReductionOpID>(REDOP_ID);
+  desc->apply_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_half_apply_excl");
+  desc->apply_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_half_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_half_fold_excl");
+  desc->fold_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_half_fold_non_excl");
 }
 
 /*static*/ void ProdReduction<Half>::fill_redop_desc(cuda::detail::CUDAModuleManager* manager,
                                                      Realm::Cuda::CudaRedOpDesc* desc)
 {
-  desc->redop_id      = static_cast<Realm::ReductionOpID>(REDOP_ID);
-  desc->apply_excl    = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                        "legate_prod_redop_half_apply_excl");
-  desc->apply_nonexcl = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                           "legate_prod_redop_half_apply_non_excl");
-  desc->fold_excl     = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                       "legate_prod_redop_half_fold_excl");
-  desc->fold_nonexcl  = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                          "legate_prod_redop_half_fold_non_excl");
+  desc->redop_id = static_cast<Realm::ReductionOpID>(REDOP_ID);
+  desc->apply_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_prod_redop_half_apply_excl");
+  desc->apply_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_prod_redop_half_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_prod_redop_half_fold_excl");
+  desc->fold_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_prod_redop_half_fold_non_excl");
 }
 
 /*static*/ void MaxReduction<Half>::fill_redop_desc(cuda::detail::CUDAModuleManager* manager,
                                                     Realm::Cuda::CudaRedOpDesc* desc)
 {
-  desc->redop_id      = static_cast<Realm::ReductionOpID>(REDOP_ID);
-  desc->apply_excl    = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                        "legate_max_redop_half_apply_excl");
-  desc->apply_nonexcl = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                           "legate_max_redop_half_apply_non_excl");
-  desc->fold_excl     = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                       "legate_max_redop_half_fold_excl");
-  desc->fold_nonexcl  = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                          "legate_max_redop_half_fold_non_excl");
+  desc->redop_id = static_cast<Realm::ReductionOpID>(REDOP_ID);
+  desc->apply_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_max_redop_half_apply_excl");
+  desc->apply_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_max_redop_half_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_max_redop_half_fold_excl");
+  desc->fold_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_max_redop_half_fold_non_excl");
 }
 
 /*static*/ void MinReduction<Half>::fill_redop_desc(cuda::detail::CUDAModuleManager* manager,
                                                     Realm::Cuda::CudaRedOpDesc* desc)
 {
-  desc->redop_id      = static_cast<Realm::ReductionOpID>(REDOP_ID);
-  desc->apply_excl    = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                        "legate_min_redop_half_apply_excl");
-  desc->apply_nonexcl = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                           "legate_min_redop_half_apply_non_excl");
-  desc->fold_excl     = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                       "legate_min_redop_half_fold_excl");
-  desc->fold_nonexcl  = manager->load_function_from_fatbin(detail::redop_half_fatbin,
-                                                          "legate_min_redop_half_fold_non_excl");
+  desc->redop_id = static_cast<Realm::ReductionOpID>(REDOP_ID);
+  desc->apply_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_min_redop_half_apply_excl");
+  desc->apply_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_min_redop_half_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_min_redop_half_fold_excl");
+  desc->fold_nonexcl =
+    manager->load_function_from_fatbin(detail::redop_half_fatbin,
+                                       /*kernel_name=*/"legate_min_redop_half_fold_non_excl");
 }
 
 }  // namespace legate

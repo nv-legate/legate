@@ -83,7 +83,7 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlagsAndDefaultArgs)
   UNSET_ENV_VAR(LEGATE_LOG_PARTITIONING);
 
   const auto LEGION_DEFAULT_ARGS = legate::test::Environment::TemporaryEnvVar{
-    "LEGION_DEFAULT_ARGS", "--some --default --legion --args", /* overwrite */ true};
+    "LEGION_DEFAULT_ARGS", /*value=*/"--some --default --legion --args", /* overwrite */ true};
 
   const auto parsed = legate::detail::parse_args({"parsed",
                                                   "--omps",
@@ -197,7 +197,7 @@ TEST_F(ConfigureLegionUnit, WithFlagsAndDefaultArgs)
   UNSET_ENV_VAR(LEGATE_LOG_PARTITIONING);
 
   const auto LEGION_DEFAULT_ARGS = legate::test::Environment::TemporaryEnvVar{
-    "LEGION_DEFAULT_ARGS", "--some --default --legion --args", /* overwrite */ true};
+    "LEGION_DEFAULT_ARGS", /*value=*/"--some --default --legion --args", /* overwrite */ true};
 
   const auto parsed = legate::detail::parse_args({"parsed",
                                                   "--omps",

@@ -20,7 +20,8 @@ bool DisallowedOp::is_streamable(const InternalSharedPtr<Operation>& op,
                                  StreamingErrorContext* ctx)
 {
   if (op->needs_flush() || (!op->supports_streaming())) {
-    ctx->append("Operation {} does not support streaming", *op);
+    ctx->append("Operation {} does not support streaming",  // NOLINT(bugprone-argument-comment)
+                *op);
     return false;
   };
 

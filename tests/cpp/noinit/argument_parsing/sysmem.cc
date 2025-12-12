@@ -62,9 +62,9 @@ class MockCoreModuleConfig : public Realm::ModuleConfig {
 TEST_P(ConfigureSysMemUnit, Preset)
 {
   constexpr auto SYSMEM_SIZE = 128;
-  const auto core            = MockCoreModuleConfig{1, /* should_fail */ false};
-  const auto numamem         = NUMAMemType{nullptr, "--numamem", ScaledType{1, MB, "MiB"}};
-  auto sysmem                = SysMemType{nullptr, "--sysmem", ScaledType{SYSMEM_SIZE, MB, "MiB"}};
+  const auto core            = MockCoreModuleConfig{/*sysmem_size=*/1, /* should_fail */ false};
+  const auto numamem = NUMAMemType{nullptr, "--numamem", ScaledType{/*value=*/1, MB, "MiB"}};
+  auto sysmem        = SysMemType{nullptr, "--sysmem", ScaledType{SYSMEM_SIZE, MB, "MiB"}};
 
   legate::detail::configure_sysmem(
     /* auto_config */ GetParam(), core, numamem, &sysmem);
@@ -74,9 +74,9 @@ TEST_P(ConfigureSysMemUnit, Preset)
 TEST_F(ConfigureSysMemUnit, NoAutoConfig)
 {
   constexpr auto MINIMAL_MEM = 256;
-  const auto core            = MockCoreModuleConfig{1, /* should_fail */ false};
-  const auto numamem         = NUMAMemType{nullptr, "--numamem", ScaledType{0, MB, "MiB"}};
-  auto sysmem                = SysMemType{nullptr, "--sysmem", ScaledType{-1, MB, "MiB"}};
+  const auto core            = MockCoreModuleConfig{/*sysmem_size=*/1, /* should_fail */ false};
+  const auto numamem = NUMAMemType{nullptr, "--numamem", ScaledType{/*value=*/0, MB, "MiB"}};
+  auto sysmem        = SysMemType{nullptr, "--sysmem", ScaledType{/*value=*/-1, MB, "MiB"}};
 
   legate::detail::configure_sysmem(
     /* auto_config */ false, core, numamem, &sysmem);
@@ -86,9 +86,9 @@ TEST_F(ConfigureSysMemUnit, NoAutoConfig)
 TEST_F(ConfigureSysMemUnit, NUMAMemAllocated)
 {
   constexpr auto MINIMAL_MEM = 256;
-  const auto core            = MockCoreModuleConfig{1, /* should_fail */ false};
-  const auto numamem         = NUMAMemType{nullptr, "--numamem", ScaledType{100, MB, "MiB"}};
-  auto sysmem                = SysMemType{nullptr, "--sysmem", ScaledType{-1, MB, "MiB"}};
+  const auto core            = MockCoreModuleConfig{/*sysmem_size=*/1, /* should_fail */ false};
+  const auto numamem = NUMAMemType{nullptr, "--numamem", ScaledType{/*value=*/100, MB, "MiB"}};
+  auto sysmem        = SysMemType{nullptr, "--sysmem", ScaledType{/*value=*/-1, MB, "MiB"}};
 
   legate::detail::configure_sysmem(
     /* auto_config */ true, core, numamem, &sysmem);
@@ -99,8 +99,8 @@ TEST_F(ConfigureSysMemUnit, AutoConfig)
 {
   constexpr auto SYSMEM_SIZE = 1024;
   const auto core            = MockCoreModuleConfig{SYSMEM_SIZE * MB, /* should_fail */ false};
-  const auto numamem         = NUMAMemType{nullptr, "--numamem", ScaledType{0, MB, "MiB"}};
-  auto sysmem                = SysMemType{nullptr, "--sysmem", ScaledType{-1, MB, "MiB"}};
+  const auto numamem = NUMAMemType{nullptr, "--numamem", ScaledType{/*value=*/0, MB, "MiB"}};
+  auto sysmem        = SysMemType{nullptr, "--sysmem", ScaledType{/*value=*/-1, MB, "MiB"}};
 
   legate::detail::configure_sysmem(
     /* auto_config */ true, core, numamem, &sysmem);
@@ -114,8 +114,8 @@ TEST_F(ConfigureSysMemUnit, AutoConfigFail)
 {
   constexpr auto SYSMEM_SIZE = 1024;
   const auto core            = MockCoreModuleConfig{SYSMEM_SIZE * MB, /* should_fail */ true};
-  const auto numamem         = NUMAMemType{nullptr, "--numamem", ScaledType{0, MB, "MiB"}};
-  auto sysmem                = SysMemType{nullptr, "--sysmem", ScaledType{-1, MB, "MiB"}};
+  const auto numamem = NUMAMemType{nullptr, "--numamem", ScaledType{/*value=*/0, MB, "MiB"}};
+  auto sysmem        = SysMemType{nullptr, "--sysmem", ScaledType{/*value=*/-1, MB, "MiB"}};
 
   ASSERT_THAT(
     [&] {

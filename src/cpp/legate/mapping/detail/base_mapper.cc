@@ -578,7 +578,8 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
                     << " bytes in a pool for scalar stores, unbound stores, and exceptions";
   }
 
-  const auto& allocation_pool_targets = default_store_targets(target_proc.kind(), true);
+  const auto& allocation_pool_targets =
+    default_store_targets(target_proc.kind(), /*for_pool_size=*/true);
   if (!vinfo.options.has_allocations) {
     // Unfortunately, even when the user said her task doesn't create any allocations, there can be
     // some made by Legate. Therefore, we still need to return the right bounds so Legate can create
@@ -1331,7 +1332,7 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
     Legion::Mapping::Utilities::to_string(target_memory.kind()),
     req_ss.str(),
     mapping.requirement_indices(),
-    log_mappable(mappable, true /*prefix_only*/),
+    log_mappable(mappable, /*prefix_only=*/true),
     opname,
     provenance,
     mappable.get_unique_id());
@@ -1685,8 +1686,9 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
   auto target_proc =
     local_machine_selector_.get_local().find_first_processor_with_affinity_to(store_target);
 
-  auto&& reqs = mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false))
-                  ->requirements();
+  auto&& reqs =
+    mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, /*exact=*/false))
+      ->requirements();
 
   OutputMap output_map;
 
@@ -1849,15 +1851,17 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   for (auto&& store_set : stores_to_copy) {
     for (auto&& store : store_set.get()) {
       if (compute_preimages) {
-        mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false));
+        mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, /*exact=*/false));
       } else {
-        mappings.emplace_back(StoreMapping::default_mapping(&store, host_store_target, false));
+        mappings.emplace_back(
+          StoreMapping::default_mapping(&store, host_store_target, /*exact=*/false));
       }
     }
   }
   for (auto&& store_set : indirect_stores) {
     for (auto&& store : store_set.get()) {
-      mappings.emplace_back(StoreMapping::default_mapping(&store, host_store_target, false));
+      mappings.emplace_back(
+        StoreMapping::default_mapping(&store, host_store_target, /*exact=*/false));
     }
   }
 
@@ -2007,8 +2011,9 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
   const Store store{*runtime, ctx, partition.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
 
-  auto&& reqs = mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false))
-                  ->requirements();
+  auto&& reqs =
+    mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, /*exact=*/false))
+      ->requirements();
 
   OutputMap output_map;
 

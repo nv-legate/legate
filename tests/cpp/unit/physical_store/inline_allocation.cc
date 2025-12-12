@@ -115,7 +115,7 @@ TEST_F(PhysicalStoreInlineAllocationUnit, TransformedFutureStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto logical_store = runtime->create_store(legate::Scalar{1});
-  auto promoted      = logical_store.promote(0, 1);
+  auto promoted      = logical_store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   auto store         = promoted.get_physical_store();
   auto inline_alloc  = store.get_inline_allocation();
 

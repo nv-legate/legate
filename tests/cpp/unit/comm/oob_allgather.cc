@@ -67,8 +67,8 @@ TEST_F(OOBAllgatherTest, MPIAllgather)
   std::thread t{[&]() {
     const int send_data = 42;
 
-    const ucc_status_t status =
-      mpi_oob_allgather->allgather(&send_data, recv_data.data(), sizeof(int), nullptr, &req);
+    const ucc_status_t status = mpi_oob_allgather->allgather(
+      &send_data, recv_data.data(), sizeof(int), /*allgather_info=*/nullptr, &req);
 
     EXPECT_EQ(status, UCC_OK);
 
@@ -80,8 +80,8 @@ TEST_F(OOBAllgatherTest, MPIAllgather)
   std::thread t2{[&]() {
     const int send_data = 54;
 
-    const ucc_status_t status =
-      mpi_oob_allgather2->allgather(&send_data, recv_data.data(), sizeof(int), nullptr, &req);
+    const ucc_status_t status = mpi_oob_allgather2->allgather(
+      &send_data, recv_data.data(), sizeof(int), /*allgather_info=*/nullptr, &req);
 
     EXPECT_EQ(status, UCC_OK);
 

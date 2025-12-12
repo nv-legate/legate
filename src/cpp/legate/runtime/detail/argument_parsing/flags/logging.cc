@@ -125,7 +125,7 @@ std::string convert_log_levels(std::string_view log_levels)
   // This will over-reserve (since we are converting e.g. 'debug' to '1') but that's OK, what's
   // a little extra memory between friends?
   ret.reserve(log_levels.size());
-  for (auto&& spec : string_split<std::string_view>(log_levels, ',')) {
+  for (auto&& spec : string_split<std::string_view>(log_levels, /*sep=*/',')) {
     const auto [logger_name, level] = logger_name_and_level(spec);
 
     if (const auto it = find_level(level); it == LEVELS_END) {

@@ -99,10 +99,12 @@ void fill_null_mask(const ACC& acc, const legate::Rect<1>& shape)
 
   constexpr std::int64_t SIZE_CHARS = ((1 + SIZE_ARRAY) * SIZE_ARRAY) / 2;
 
-  const auto chars = chars_store.create_output_buffer<char, 1>(legate::Point<1>{SIZE_CHARS}, true);
+  const auto chars =
+    chars_store.create_output_buffer<char, 1>(legate::Point<1>{SIZE_CHARS}, /*bind_buffer=*/true);
 
   if (unbound) {
-    auto desc = ranges.create_output_buffer<legate::Rect<1>, 1>(legate::Point<1>{SIZE_ARRAY}, true);
+    auto desc = ranges.create_output_buffer<legate::Rect<1>, 1>(legate::Point<1>{SIZE_ARRAY},
+                                                                /*bind_buffer=*/true);
 
     fill_string_array(desc, chars, legate::Rect<1>{0, SIZE_ARRAY - 1}, SIZE_CHARS);
   } else {
@@ -116,7 +118,8 @@ void fill_null_mask(const ACC& acc, const legate::Rect<1>& shape)
     auto null_mask = string_array.null_mask();
 
     if (null_mask.is_unbound_store()) {
-      auto mask = null_mask.create_output_buffer<bool, 1>(legate::Point<1>{SIZE_ARRAY}, true);
+      auto mask =
+        null_mask.create_output_buffer<bool, 1>(legate::Point<1>{SIZE_ARRAY}, /*bind_buffer=*/true);
 
       fill_null_mask(mask, legate::Rect<1>{0, SIZE_ARRAY - 1});
     } else {
@@ -182,16 +185,16 @@ TEST_P(NullableFillStringArrayTest, BoundStringArray)
   auto logical_array =
     legate::Runtime::get_runtime()->create_array({SIZE_ARRAY}, legate::string_type(), nullable);
 
-  test_fill_string_array_task(logical_array, nullable, false);
+  test_fill_string_array_task(logical_array, nullable, /*unbound=*/false);
 }
 
 TEST_P(NullableFillStringArrayTest, UnboundStringArray)
 {
   const auto nullable = GetParam();
   auto logical_array =
-    legate::Runtime::get_runtime()->create_array(legate::string_type(), 1, nullable);
+    legate::Runtime::get_runtime()->create_array(legate::string_type(), /*dim=*/1, nullable);
 
-  test_fill_string_array_task(logical_array, nullable, true);
+  test_fill_string_array_task(logical_array, nullable, /*unbound=*/true);
 }
 
 }  // namespace physical_array_fill_string_test

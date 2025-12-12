@@ -31,7 +31,7 @@ TEST_F(TaskConfigUnit, Empty)
 TEST_F(TaskConfigUnit, Signature)
 {
   constexpr auto task_id = legate::LocalTaskID{2};
-  const auto signature   = legate::TaskSignature{}.inputs(1, 5);
+  const auto signature   = legate::TaskSignature{}.inputs(/*lower_bound=*/1, /*upper_bound=*/5);
   const auto config      = legate::TaskConfig{task_id}.with_signature(signature);
 
   ASSERT_EQ(config.task_id(), task_id);
@@ -68,10 +68,13 @@ TEST_F(TaskConfigUnit, EqSelf)
   constexpr auto task_id = legate::LocalTaskID{3};
   constexpr auto options =
     legate::VariantOptions{}.with_has_allocations(true).with_concurrent(true);
-  const auto signature = legate::TaskSignature{}.inputs(1, 5).constraints(
-    {{legate::align(legate::proxy::inputs),
-      legate::scale({1, 2, 3, 4}, legate::proxy::outputs[1], legate::proxy::inputs[1]),
-      legate::broadcast(legate::proxy::inputs)}});
+  const auto signature =
+    legate::TaskSignature{}
+      .inputs(/*lower_bound=*/1, /*upper_bound=*/5)
+      .constraints(
+        {{legate::align(legate::proxy::inputs),
+          legate::scale({1, 2, 3, 4}, legate::proxy::outputs[1], legate::proxy::inputs[1]),
+          legate::broadcast(legate::proxy::inputs)}});
   const auto lhs_config =
     legate::TaskConfig{task_id}.with_variant_options(options).with_signature(signature);
 
@@ -83,10 +86,13 @@ TEST_F(TaskConfigUnit, Eq)
   constexpr auto task_id = legate::LocalTaskID{3};
   constexpr auto options =
     legate::VariantOptions{}.with_has_allocations(true).with_concurrent(true);
-  const auto signature = legate::TaskSignature{}.inputs(1, 5).constraints(
-    {{legate::align(legate::proxy::inputs),
-      legate::scale({1, 2, 3, 4}, legate::proxy::outputs[1], legate::proxy::inputs[1]),
-      legate::broadcast(legate::proxy::inputs)}});
+  const auto signature =
+    legate::TaskSignature{}
+      .inputs(/*lower_bound=*/1, /*upper_bound=*/5)
+      .constraints(
+        {{legate::align(legate::proxy::inputs),
+          legate::scale({1, 2, 3, 4}, legate::proxy::outputs[1], legate::proxy::inputs[1]),
+          legate::broadcast(legate::proxy::inputs)}});
 
   const auto lhs_config =
     legate::TaskConfig{task_id}.with_variant_options(options).with_signature(signature);
@@ -101,15 +107,20 @@ TEST_F(TaskConfigUnit, NotEq)
   constexpr auto task_id = legate::LocalTaskID{3};
   constexpr auto options =
     legate::VariantOptions{}.with_has_allocations(true).with_concurrent(true);
-  const auto signature = legate::TaskSignature{}.inputs(1, 5).constraints(
-    {{legate::align(legate::proxy::inputs),
-      legate::scale({1, 2, 3, 4}, legate::proxy::outputs[1], legate::proxy::inputs[1]),
-      legate::broadcast(legate::proxy::inputs)}});
+  const auto signature =
+    legate::TaskSignature{}
+      .inputs(/*lower_bound=*/1, /*upper_bound=*/5)
+      .constraints(
+        {{legate::align(legate::proxy::inputs),
+          legate::scale({1, 2, 3, 4}, legate::proxy::outputs[1], legate::proxy::inputs[1]),
+          legate::broadcast(legate::proxy::inputs)}});
   const auto lhs_config =
     legate::TaskConfig{task_id}.with_variant_options(options).with_signature(signature);
 
-  const auto rhs_signature = legate::TaskSignature{}.inputs(1, 5).constraints(
-    {{legate::align(legate::proxy::inputs), legate::broadcast(legate::proxy::inputs)}});
+  const auto rhs_signature = legate::TaskSignature{}
+                               .inputs(/*lower_bound=*/1, /*upper_bound=*/5)
+                               .constraints({{legate::align(legate::proxy::inputs),
+                                              legate::broadcast(legate::proxy::inputs)}});
   const auto rhs_config =
     legate::TaskConfig{task_id}.with_variant_options(options).with_signature(rhs_signature);
 

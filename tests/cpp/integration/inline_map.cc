@@ -48,7 +48,7 @@ class InlineMap : public RegisterOnceFixture<Config> {};
 void test_inline_map_future()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto l_store = runtime->create_store(legate::Shape{1}, legate::int64(), true /*optimize_scalar*/);
+  auto l_store = runtime->create_store(legate::Shape{1}, legate::int64(), /*optimize_scalar=*/true);
   auto p_store = l_store.get_physical_store();
   EXPECT_TRUE(p_store.is_future());
 }
@@ -59,7 +59,7 @@ void test_inline_map_region_and_slice()
   auto root_ls = runtime->create_store(legate::Shape{5}, legate::int64());
   auto root_ps = root_ls.get_physical_store();
   EXPECT_FALSE(root_ps.is_future());
-  auto slice_ls = root_ls.slice(0, legate::Slice{1});
+  auto slice_ls = root_ls.slice(/*dim=*/0, legate::Slice{1});
   auto slice_ps = slice_ls.get_physical_store();
   EXPECT_FALSE(slice_ps.is_future());
   auto root_acc  = root_ps.write_accessor<std::int64_t, 1>();

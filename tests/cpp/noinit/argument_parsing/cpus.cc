@@ -61,10 +61,10 @@ class MockCoreModuleConfig : public Realm::ModuleConfig {
 TEST_P(ConfigureCPUsUnit, Preset)
 {
   constexpr auto NUM_CPUS = 10;
-  const auto core         = MockCoreModuleConfig{8, /* should_fail */ false};
-  const auto omps         = OpenMPsType{nullptr, "--omps", 1};
-  const auto util         = UtilType{nullptr, "--util", 2};
-  const auto gpus         = GPUsType{nullptr, "--gpus", 3};
+  const auto core         = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ false};
+  const auto omps         = OpenMPsType{nullptr, "--omps", /*init=*/1};
+  const auto util         = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus         = GPUsType{nullptr, "--gpus", /*init=*/3};
   auto cpus               = CPUsType{nullptr, "--cpus", NUM_CPUS};
 
   legate::detail::configure_cpus(
@@ -74,11 +74,11 @@ TEST_P(ConfigureCPUsUnit, Preset)
 
 TEST_F(ConfigureCPUsUnit, NoAutoConfig)
 {
-  const auto core = MockCoreModuleConfig{8, /* should_fail */ false};
-  const auto omps = OpenMPsType{nullptr, "--omps", 1};
-  const auto util = UtilType{nullptr, "--util", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 3};
-  auto cpus       = CPUsType{nullptr, "--cpus", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ false};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/1};
+  const auto util = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/3};
+  auto cpus       = CPUsType{nullptr, "--cpus", /*init=*/-1};
 
   legate::detail::configure_cpus(
     /* auto_config */ false, core, omps, util, gpus, &cpus);
@@ -87,11 +87,11 @@ TEST_F(ConfigureCPUsUnit, NoAutoConfig)
 
 TEST_F(ConfigureCPUsUnit, HaveOpenMP)
 {
-  const auto core = MockCoreModuleConfig{8, /* should_fail */ false};
-  const auto omps = OpenMPsType{nullptr, "--omps", 1};
-  const auto util = UtilType{nullptr, "--util", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 3};
-  auto cpus       = CPUsType{nullptr, "--cpus", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ false};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/1};
+  const auto util = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/3};
+  auto cpus       = CPUsType{nullptr, "--cpus", /*init=*/-1};
 
   legate::detail::configure_cpus(
     /* auto_config */ true, core, omps, util, gpus, &cpus);
@@ -100,11 +100,11 @@ TEST_F(ConfigureCPUsUnit, HaveOpenMP)
 
 TEST_F(ConfigureCPUsUnit, HaveGPUs)
 {
-  const auto core = MockCoreModuleConfig{8, /* should_fail */ false};
-  const auto omps = OpenMPsType{nullptr, "--omps", 0};
-  const auto util = UtilType{nullptr, "--util", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 3};
-  auto cpus       = CPUsType{nullptr, "--cpus", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ false};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/0};
+  const auto util = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/3};
+  auto cpus       = CPUsType{nullptr, "--cpus", /*init=*/-1};
 
   legate::detail::configure_cpus(
     /* auto_config */ true, core, omps, util, gpus, &cpus);
@@ -115,10 +115,10 @@ TEST_F(ConfigureCPUsUnit, AutoConfig)
 {
   constexpr auto NUM_CPUS = 8;
   const auto core         = MockCoreModuleConfig{NUM_CPUS, /* should_fail */ false};
-  const auto omps         = OpenMPsType{nullptr, "--omps", 0};
-  const auto util         = UtilType{nullptr, "--util", 2};
-  const auto gpus         = GPUsType{nullptr, "--gpus", 0};
-  auto cpus               = CPUsType{nullptr, "--cpus", -1};
+  const auto omps         = OpenMPsType{nullptr, "--omps", /*init=*/0};
+  const auto util         = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus         = GPUsType{nullptr, "--gpus", /*init=*/0};
+  auto cpus               = CPUsType{nullptr, "--cpus", /*init=*/-1};
 
   legate::detail::configure_cpus(
     /* auto_config */ true, core, omps, util, gpus, &cpus);
@@ -130,11 +130,11 @@ TEST_F(ConfigureCPUsUnit, AutoConfig)
 
 TEST_F(ConfigureCPUsUnit, AutoConfigFail)
 {
-  const auto core = MockCoreModuleConfig{8, /* should_fail */ true};
-  const auto omps = OpenMPsType{nullptr, "--omps", 0};
-  const auto util = UtilType{nullptr, "--util", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 0};
-  auto cpus       = CPUsType{nullptr, "--cpus", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ true};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/0};
+  const auto util = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/0};
+  auto cpus       = CPUsType{nullptr, "--cpus", /*init=*/-1};
 
   ASSERT_THAT(
     [&] {
@@ -148,11 +148,11 @@ TEST_F(ConfigureCPUsUnit, AutoConfigFail)
 
 TEST_F(ConfigureCPUsUnit, AutoConfigFailNoCPUs)
 {
-  const auto core = MockCoreModuleConfig{0, /* should_fail */ false};
-  const auto omps = OpenMPsType{nullptr, "--omps", 0};
-  const auto util = UtilType{nullptr, "--util", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 0};
-  auto cpus       = CPUsType{nullptr, "--cpus", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/0, /* should_fail */ false};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/0};
+  const auto util = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/0};
+  auto cpus       = CPUsType{nullptr, "--cpus", /*init=*/-1};
 
   ASSERT_THAT(
     [&] {
@@ -168,10 +168,10 @@ TEST_F(ConfigureCPUsUnit, AutoConfigFailNotEnoughCores)
 {
   constexpr auto NUM_CPUS = 1;
   const auto core         = MockCoreModuleConfig{NUM_CPUS, /* should_fail */ false};
-  const auto omps         = OpenMPsType{nullptr, "--omps", 0};
-  const auto util         = UtilType{nullptr, "--util", 2};
-  const auto gpus         = GPUsType{nullptr, "--gpus", 0};
-  auto cpus               = CPUsType{nullptr, "--cpus", -1};
+  const auto omps         = OpenMPsType{nullptr, "--omps", /*init=*/0};
+  const auto util         = UtilType{nullptr, "--util", /*init=*/2};
+  const auto gpus         = GPUsType{nullptr, "--gpus", /*init=*/0};
+  auto cpus               = CPUsType{nullptr, "--cpus", /*init=*/-1};
 
   ASSERT_THAT(
     [&] {

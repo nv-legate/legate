@@ -762,8 +762,8 @@ HDF5Type::Class HDF5Type::type_class() const
     case H5T_REFERENCE: return Class::REFERENCE;
     case H5T_ENUM: {
       if (const auto nmembers = h5t_get_nmembers(lock, hid()); nmembers == 2) {
-        const auto name1          = string_tolower(h5t_get_member_name(lock, hid(), 0));
-        const auto name2          = string_tolower(h5t_get_member_name(lock, hid(), 1));
+        const auto name1          = string_tolower(h5t_get_member_name(lock, hid(), /*mem_idx=*/0));
+        const auto name2          = string_tolower(h5t_get_member_name(lock, hid(), /*mem_idx=*/1));
         constexpr auto is_boolean = [](std::string_view name) {
           return name == "true" || name == "false";
         };

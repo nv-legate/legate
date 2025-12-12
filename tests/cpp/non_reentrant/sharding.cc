@@ -114,7 +114,8 @@ class LegateShardingTest : public DefaultFixture {
   // Only test the identity projection for now
   static constexpr Legion::ProjectionID IDENTITY_PROJ_ID = 0;
   static constexpr Legion::ShardID LEGATE_SHARDING_ID    = 1000;
-  static constexpr legate::mapping::ProcessorRange RANGE = {0, 16, 4};
+  static constexpr legate::mapping::ProcessorRange RANGE = {
+    /*low_id=*/0, /*high_id=*/16, /*per_node_proc_count=*/4};
 };
 
 using LegateShardingDeathTest = LegateShardingTest;
@@ -143,7 +144,7 @@ TEST_F(ToplevelTaskShardingTest, Shard1DEven)
   constexpr std::size_t total_points     = 16;
   constexpr std::size_t points_per_shard = 4;
 
-  const auto domain = create_1d_domain(0, 15);
+  const auto domain = create_1d_domain(/*lo=*/0, /*hi=*/15);
 
   for (std::size_t i = 0; i < total_points; ++i) {
     const auto shard_id_expected = i / points_per_shard;
@@ -166,7 +167,7 @@ TEST_F(ToplevelTaskShardingTest, Shard1DUneven)
   constexpr std::size_t total_points     = 10;
   constexpr std::size_t points_per_shard = 3;
 
-  const auto domain = create_1d_domain(0, 9);
+  const auto domain = create_1d_domain(/*lo=*/0, /*hi=*/9);
 
   for (std::size_t i = 0; i < total_points; ++i) {
     const auto shard_id_expected = i / points_per_shard;
@@ -196,7 +197,7 @@ TEST_F(LinearizingShardingTest, Shard2DEven)
   constexpr std::size_t total_shards   = 4;
   constexpr std::size_t points_per_dim = 4;
 
-  const auto domain = create_2d_domain(0, 3, 0, 3);
+  const auto domain = create_2d_domain(/*lo_x=*/0, /*hi_x=*/3, /*lo_y=*/0, /*hi_y=*/3);
 
   for (std::size_t i = 0; i < points_per_dim; ++i) {
     for (std::size_t j = 0; j < points_per_dim; ++j) {
@@ -218,7 +219,7 @@ TEST_F(LinearizingShardingTest, Shard2DUneven)
 
   constexpr std::size_t total_shards = 4;
 
-  const auto domain = create_2d_domain(0, 4, 0, 2);
+  const auto domain = create_2d_domain(/*lo_x=*/0, /*hi_x=*/4, /*lo_y=*/0, /*hi_y=*/2);
 
   const auto check_shard = [&](const Legion::Point<2>& point, std::size_t expected_shard_id) {
     const auto shard_id = sharding_functor->shard(Legion::DomainPoint{point}, domain, total_shards);
@@ -250,7 +251,7 @@ TEST_F(LinearizingShardingTest, Invert2DEven)
   constexpr std::size_t points_per_dim   = 4;
   constexpr std::size_t points_per_shard = 4;
 
-  const auto domain = create_2d_domain(0, 3, 0, 3);
+  const auto domain = create_2d_domain(/*lo_x=*/0, /*hi_x=*/3, /*lo_y=*/0, /*hi_y=*/3);
 
   for (std::size_t i = 0; i < points_per_dim; ++i) {
     std::vector<Legion::DomainPoint> points;
@@ -280,7 +281,7 @@ TEST_F(LinearizingShardingTest, Invert2DUneven)
 
   constexpr std::size_t total_shards = 4;
 
-  const auto domain = create_2d_domain(0, 4, 0, 2);
+  const auto domain = create_2d_domain(/*lo_x=*/0, /*hi_x=*/4, /*lo_y=*/0, /*hi_y=*/2);
 
   auto check_invert =
     [&](std::size_t shard_id, const Legion::Point<2>& first_point, std::size_t expected_size) {
@@ -315,7 +316,7 @@ TEST_F(LinearizingShardingTest, Invert2DOutOfRange)
   constexpr std::size_t total_shards = 4;
   constexpr std::size_t shard_id     = 4;
 
-  const auto domain = create_2d_domain(0, 3, 0, 3);
+  const auto domain = create_2d_domain(/*lo_x=*/0, /*hi_x=*/3, /*lo_y=*/0, /*hi_y=*/3);
   std::vector<Legion::DomainPoint> points;
 
   sharding_functor->invert(shard_id, domain, domain, total_shards, points);
@@ -353,7 +354,7 @@ TEST_F(LegateShardingTest, Shard1DEven)
   constexpr std::size_t total_shards = 4;
   constexpr std::size_t total_points = 16;
 
-  const auto domain = create_1d_domain(0, 15);
+  const auto domain = create_1d_domain(/*lo=*/0, /*hi=*/15);
 
   for (std::size_t i = 0; i < total_points; ++i) {
     const auto shard_id_expected = i / RANGE.per_node_count;
@@ -372,7 +373,7 @@ TEST_F(LegateShardingTest, Shard1DUneven)
 
   constexpr std::size_t total_shards = 4;
 
-  const auto domain = create_1d_domain(0, 9);
+  const auto domain = create_1d_domain(/*lo=*/0, /*hi=*/9);
 
   // Only check the start point and end point for uneven case because it's hard to verify all points
   // Verify start point of shard 0 (first shard)
@@ -401,7 +402,7 @@ TEST_F(LegateShardingTest, Shard2DEven)
   constexpr std::size_t total_shards   = 4;
   constexpr std::size_t points_per_dim = 4;
 
-  const auto domain = create_2d_domain(0, 3, 0, 3);
+  const auto domain = create_2d_domain(/*lo_x=*/0, /*hi_x=*/3, /*lo_y=*/0, /*hi_y=*/3);
 
   for (std::size_t i = 0; i < points_per_dim; ++i) {
     for (std::size_t j = 0; j < points_per_dim; ++j) {
@@ -422,7 +423,7 @@ TEST_F(LegateShardingTest, Shard2DUneven)
 
   constexpr std::size_t total_shards = 4;
 
-  const auto domain = create_2d_domain(0, 4, 0, 2);
+  const auto domain = create_2d_domain(/*lo_x=*/0, /*hi_x=*/4, /*lo_y=*/0, /*hi_y=*/2);
 
   // Only check the start point and end point for uneven case because it's hard to verify all points
   // Verify start point of shard 0 (first shard)
@@ -456,7 +457,7 @@ TEST_F(LegateShardingDeathTest, ShardInvalidRange)
   constexpr std::size_t total_shards = 3;
   constexpr std::size_t total_points = 16;
 
-  const auto domain = create_1d_domain(0, 15);
+  const auto domain = create_1d_domain(/*lo=*/0, /*hi=*/15);
 
   ASSERT_EXIT(static_cast<void>(sharding_functor->shard(
                 Legion::DomainPoint{Legion::Point<1>{total_points}}, domain, total_shards)),

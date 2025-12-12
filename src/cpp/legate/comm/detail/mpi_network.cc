@@ -101,7 +101,7 @@ void MPINetwork::abort()
   static_cast<void>(MPIInterface::mpi_initialized(&init));
   if (init) {
     // noreturn
-    static_cast<void>(MPIInterface::mpi_abort(MPIInterface::MPI_COMM_WORLD(), 1));
+    static_cast<void>(MPIInterface::mpi_abort(MPIInterface::MPI_COMM_WORLD(), /*error_code=*/1));
   }
 }
 
@@ -339,8 +339,8 @@ void MPINetwork::all_gather(const void* sendbuf,
   );
   // clang-format on
 
-  gather_(sendbuf_tmp, recvbuf, count, type, 0, global_comm);
-  bcast_(recvbuf, count * total_size, type, 0, global_comm);
+  gather_(sendbuf_tmp, recvbuf, count, type, /*root=*/0, global_comm);
+  bcast_(recvbuf, count * total_size, type, /*root=*/0, global_comm);
 }
 
 void MPINetwork::all_reduce(const void* sendbuf,

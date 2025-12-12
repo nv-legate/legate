@@ -100,7 +100,9 @@ std::optional<InternalSharedPtr<Strategy>> get_strategy(const InternalSharedPtr<
                           const std::optional<InternalSharedPtr<Strategy>>& strategy) {
     for (const auto& checker : checkers) {
       if (!checker->is_streamable(op, strategy, context)) {
-        context->append("{} Failed Streaming Check {}", *op, checker->name());
+        context->append("{} Failed Streaming Check {}",  // NOLINT(bugprone-argument-comment)
+                        *op,
+                        checker->name());
 
         return false;
       }

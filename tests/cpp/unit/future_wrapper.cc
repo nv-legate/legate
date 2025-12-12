@@ -46,7 +46,7 @@ TEST_F(FutureWrapperTest, Readonly)
   constexpr std::uint32_t FIELD_ALIGNMENT = alignof(std::int64_t);
   constexpr std::uint64_t FIELD_OFFSET    = 0;
   auto future_wrapper                     = legate::detail::FutureWrapper{
-    true /* read_only */, FIELD_SIZE, FIELD_ALIGNMENT, FIELD_OFFSET, domain, std::move(future)};
+    /*read_only=*/true, FIELD_SIZE, FIELD_ALIGNMENT, FIELD_OFFSET, domain, std::move(future)};
 
   ASSERT_TRUE(future_wrapper.valid());
   ASSERT_EQ(future_wrapper.dim(), 0);
@@ -76,7 +76,7 @@ TEST_F(FutureWrapperTest, Writable)
   constexpr std::uint64_t FIELD_OFFSET    = 0;
 
   auto future_wrapper = legate::detail::FutureWrapper{
-    false /* read_only */, FIELD_SIZE, FIELD_ALIGNMENT, FIELD_OFFSET, domain, std::move(future)};
+    /*read_only=*/false, FIELD_SIZE, FIELD_ALIGNMENT, FIELD_OFFSET, domain, std::move(future)};
 
   ASSERT_TRUE(future_wrapper.valid());
   ASSERT_FALSE(future_wrapper.is_read_only());

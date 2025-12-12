@@ -140,9 +140,9 @@ TEST_P(UidFixedArrayTypeTest, StructType)
   const auto [element_type, dim] = GetParam();
   // array of struct types
   auto array_of_struct_type1 =
-    legate::fixed_array_type(legate::struct_type(true, element_type), dim);
+    legate::fixed_array_type(legate::struct_type(/*align=*/true, element_type), dim);
   auto array_of_struct_type2 =
-    legate::fixed_array_type(legate::struct_type(true, element_type), dim);
+    legate::fixed_array_type(legate::struct_type(/*align=*/true, element_type), dim);
 
   ASSERT_NE(array_of_struct_type1.uid(), array_of_struct_type2.uid());
 }
@@ -164,8 +164,8 @@ TEST_F(TypeFeaturesUnit, StringTypeUid)
 TEST_P(UidTest, StructType)
 {
   const auto& element_type = GetParam();
-  auto struct_type1        = legate::struct_type(true, element_type);
-  auto struct_type2        = legate::struct_type(true, element_type);
+  auto struct_type1        = legate::struct_type(/*align=*/true, element_type);
+  auto struct_type2        = legate::struct_type(/*align=*/true, element_type);
 
   ASSERT_NE(struct_type1.uid(), struct_type2.uid());
   ASSERT_TRUE(struct_type1.uid() >= 0x10000);

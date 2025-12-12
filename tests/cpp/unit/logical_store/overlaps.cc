@@ -28,12 +28,12 @@ const legate::Shape& multi_dim_shape()
 TEST_F(LogicalStoreOverlapsUnit, OverlapsUnboundStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::int32(), 2);
+  auto store   = runtime->create_store(legate::int32(), /*dim=*/2);
 
   ASSERT_TRUE(store.overlaps(store));
   ASSERT_TRUE(store.overlaps(legate::LogicalStore{store}));
 
-  auto other = runtime->create_store(legate::int64(), 1);
+  auto other = runtime->create_store(legate::int64(), /*dim=*/1);
 
   ASSERT_FALSE(store.overlaps(other));
 }
@@ -48,9 +48,10 @@ TEST_F(LogicalStoreOverlapsUnit, OverlapsSelf)
 
 TEST_F(LogicalStoreOverlapsUnit, OverlapsOptimizeScalar)
 {
-  auto runtime   = legate::Runtime::get_runtime();
-  auto store     = runtime->create_store(legate::Shape{3}, legate::int32());
-  auto optimized = runtime->create_store(legate::Shape{3}, legate::int32(), true);
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{3}, legate::int32());
+  auto optimized =
+    runtime->create_store(legate::Shape{3}, legate::int32(), /*optimize_scalar=*/true);
 
   ASSERT_FALSE(store.overlaps(optimized));
 }
@@ -59,7 +60,7 @@ TEST_F(LogicalStoreOverlapsUnit, OverlapsSameRoot)
 {
   auto runtime          = legate::Runtime::get_runtime();
   auto store_multi_dims = runtime->create_store(multi_dim_shape(), legate::int32());
-  auto sliced           = store_multi_dims.slice(1, legate::Slice{1, 2});
+  auto sliced           = store_multi_dims.slice(/*dim=*/1, legate::Slice{1, 2});
 
   ASSERT_TRUE(store_multi_dims.overlaps(sliced));
   ASSERT_TRUE(sliced.overlaps(store_multi_dims));
@@ -67,11 +68,12 @@ TEST_F(LogicalStoreOverlapsUnit, OverlapsSameRoot)
 
 TEST_F(LogicalStoreOverlapsUnit, OverlapsDifferentRoot)
 {
-  auto runtime          = legate::Runtime::get_runtime();
-  auto store            = runtime->create_store(legate::Shape{3}, legate::int32());
-  auto optimized        = runtime->create_store(legate::Shape{3}, legate::int32(), true);
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{3}, legate::int32());
+  auto optimized =
+    runtime->create_store(legate::Shape{3}, legate::int32(), /*optimize_scalar=*/true);
   auto store_multi_dims = runtime->create_store(multi_dim_shape(), legate::int32());
-  auto sliced           = store_multi_dims.slice(1, legate::Slice{1, 2});
+  auto sliced           = store_multi_dims.slice(/*dim=*/1, legate::Slice{1, 2});
 
   ASSERT_FALSE(store_multi_dims.overlaps(store));
   ASSERT_FALSE(store_multi_dims.overlaps(optimized));

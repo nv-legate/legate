@@ -191,7 +191,7 @@ TYPED_TEST(Environ, GetWhenSet)
   const auto ENV_VAR        = this->make_env_var();
   const auto [val, str_val] = this->get_random_value();
 
-  legate::test::Environment::set_env_var(ENV_VAR.data(), str_val.c_str(), true);
+  legate::test::Environment::set_env_var(ENV_VAR.data(), str_val.c_str(), /*overwrite=*/true);
 
   const auto ret = ENV_VAR.get();
 
@@ -226,7 +226,7 @@ TYPED_TEST(Environ, GetDefaultWhenSet)
   }
   ASSERT_NE(set_val, default_val) << "Value must not equal default value: " << default_val;
 
-  legate::test::Environment::set_env_var(ENV_VAR.data(), str_val.c_str(), true);
+  legate::test::Environment::set_env_var(ENV_VAR.data(), str_val.c_str(), /*overwrite=*/true);
 
   const auto ret = ENV_VAR.get(default_val);
 
@@ -264,9 +264,10 @@ TYPED_TEST(Environ, GetTestWhenSet)
   }
   ASSERT_NE(set_val, default_val) << "Value must not equal default value: " << default_val;
 
-  const auto tmp = legate::test::Environment::temporary_env_var("LEGATE_TEST", "1", true);
+  const auto tmp =
+    legate::test::Environment::temporary_env_var("LEGATE_TEST", /*value=*/"1", /*overwrite=*/true);
 
-  legate::test::Environment::set_env_var(ENV_VAR.data(), str_val.c_str(), true);
+  legate::test::Environment::set_env_var(ENV_VAR.data(), str_val.c_str(), /*overwrite=*/true);
 
   // If default_val and test_val are the same, and default_val != set_val, then we can be sure
   // we are getting the right value below
@@ -296,7 +297,8 @@ TYPED_TEST(Environ, GetTestUnset)
   }
   ASSERT_NE(default_val, test_val) << "Value must not equal test value: " << test_val;
 
-  const auto tmp = legate::test::Environment::temporary_env_var("LEGATE_TEST", "1", true);
+  const auto tmp =
+    legate::test::Environment::temporary_env_var("LEGATE_TEST", /*value=*/"1", /*overwrite=*/true);
   const auto ret = ENV_VAR.get(default_val, test_val);
 
   // Should equal the TEST value, not the default
@@ -314,7 +316,8 @@ class Environ2 : public DefaultFixture {};
 TEST_F(Environ2, BadValueInvalidArgument)
 {
   constexpr auto var = legate::detail::EnvironmentVariable<std::uint32_t>{"FOO_BAR_BAZ"};
-  const auto tmp     = legate::test::Environment::temporary_env_var("FOO_BAR_BAZ", "true", true);
+  const auto tmp     = legate::test::Environment::temporary_env_var(
+    "FOO_BAR_BAZ", /*value=*/"true", /*overwrite=*/true);
 
   ASSERT_THROW(static_cast<void>(var.get()), std::invalid_argument);
 }
@@ -326,7 +329,8 @@ TEST_F(Environ2, BadValueOutOfRange)
   static_assert(std::numeric_limits<std::uint32_t>::max() <
                 std::numeric_limits<std::uint64_t>::max());
   const auto val = std::to_string(std::numeric_limits<std::uint64_t>::max());
-  const auto tmp = legate::test::Environment::temporary_env_var("FOO_BAR_BAZ", val.c_str(), true);
+  const auto tmp =
+    legate::test::Environment::temporary_env_var("FOO_BAR_BAZ", val.c_str(), /*overwrite=*/true);
 
   ASSERT_THROW(static_cast<void>(var.get()), std::out_of_range);
 }

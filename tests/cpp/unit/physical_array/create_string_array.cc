@@ -97,13 +97,13 @@ void test_array_data(legate::PhysicalStore& store,
   }
 
   test_array_data(ranges_store, unbound, legate::Type::Code::STRUCT, DIM);
-  test_array_data(chars_store, true, legate::Type::Code::INT8, DIM);
+  test_array_data(chars_store, /*is_unbound=*/true, legate::Type::Code::INT8, DIM);
 
   auto ranges = array.child(0).data();
   auto chars  = array.child(1).data();
 
   test_array_data(ranges, unbound, legate::Type::Code::STRUCT, DIM);
-  test_array_data(chars, true, legate::Type::Code::INT8, DIM);
+  test_array_data(chars, /*is_unbound=*/true, legate::Type::Code::INT8, DIM);
 
   // cast to ListArray
   auto list_array       = array.as_list_array();
@@ -111,7 +111,7 @@ void test_array_data(legate::PhysicalStore& store,
   auto vardata_store    = list_array.vardata().data();
 
   test_array_data(descriptor_store, unbound, legate::Type::Code::STRUCT, DIM);
-  test_array_data(vardata_store, true, legate::Type::Code::INT8, DIM);
+  test_array_data(vardata_store, /*is_unbound=*/true, legate::Type::Code::INT8, DIM);
 
   ASSERT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
   ASSERT_THROW(static_cast<void>(array.child(-1)), std::out_of_range);
@@ -139,16 +139,16 @@ TEST_P(NullableCreateStringArrayTest, BoundStringArray)
   static constexpr std::int32_t SHAPE_BOUND = 5;
   auto logical_array = runtime->create_array({SHAPE_BOUND}, legate::string_type(), nullable);
 
-  test_create_string_array_task(logical_array, nullable, false);
+  test_create_string_array_task(logical_array, nullable, /*unbound=*/false);
 }
 
 TEST_P(NullableCreateStringArrayTest, UnboundStringArray)
 {
   const auto nullable = GetParam();
   auto runtime        = legate::Runtime::get_runtime();
-  auto logical_array  = runtime->create_array(legate::string_type(), 1, nullable);
+  auto logical_array  = runtime->create_array(legate::string_type(), /*dim=*/1, nullable);
 
-  test_create_string_array_task(logical_array, nullable, true);
+  test_create_string_array_task(logical_array, nullable, /*unbound=*/true);
 }
 
 }  // namespace physical_array_create_string_test

@@ -27,7 +27,7 @@ TEST_F(STL, Test1DStore)
   auto shape = store.extents();
   EXPECT_EQ(shape[0], 4);
 
-  stl::fill(store, 0);
+  stl::fill(store, /*val=*/0);
 
   EXPECT_EQ(4, std::distance(stl::elements_of(store).begin(), stl::elements_of(store).end()));
   EXPECT_EQ(4, std::count(stl::elements_of(store).begin(), stl::elements_of(store).end(), 0));
@@ -55,7 +55,7 @@ TEST_F(STL, Test2DStore)
   EXPECT_EQ(shape[0], 4);
   EXPECT_EQ(shape[1], 5);
 
-  stl::fill(store, 0);
+  stl::fill(store, /*val=*/0);
 
   EXPECT_EQ(20, std::distance(stl::elements_of(store).begin(), stl::elements_of(store).end()));
   EXPECT_EQ(20, std::count(stl::elements_of(store).begin(), stl::elements_of(store).end(), 0));
@@ -94,7 +94,7 @@ TEST_F(STL, Test3DStore)
   EXPECT_EQ(shape[1], 5);
   EXPECT_EQ(shape[2], 6);
 
-  stl::fill(store, 0);
+  stl::fill(store, /*val=*/0);
 
   EXPECT_EQ(120, std::distance(stl::elements_of(store).begin(), stl::elements_of(store).end()));
   EXPECT_EQ(120, std::count(stl::elements_of(store).begin(), stl::elements_of(store).end(), 0));
@@ -128,23 +128,23 @@ TEST_F(STL, Constructors)
   static_assert(!std::is_default_constructible_v<stl::logical_store<int, 2>>);
 
   const stl::logical_store<int, 0> store0{{}};
-  const stl::logical_store<int, 0> store1{{}, 42};
-  const stl::logical_store store2{{}, 42};
+  const stl::logical_store<int, 0> store1{{}, /*elem=*/42};
+  const stl::logical_store store2{{}, /*elem=*/42};
 
   EXPECT_EQ(store2.dim(), 0);
   EXPECT_EQ(stl::as_mdspan(store2)(), 42);
 
   const stl::logical_store<int, 1> store3{{100}};
-  const stl::logical_store<int, 1> store4{{100}, 42};
-  const stl::logical_store store5{{100}, 42};
+  const stl::logical_store<int, 1> store4{{100}, /*value=*/42};
+  const stl::logical_store store5{{100}, /*value=*/42};
 
   EXPECT_EQ(store5.dim(), 1);
   EXPECT_EQ(store5.extents()[0], 100);
   EXPECT_EQ(stl::as_mdspan(store5)(0), 42);
 
   const stl::logical_store<int, 2> store6{{100, 200}};
-  const stl::logical_store<int, 2> store7{{100, 200}, 42};
-  const stl::logical_store store8{{100, 200}, 42};
+  const stl::logical_store<int, 2> store7{{100, 200}, /*value=*/42};
+  const stl::logical_store store8{{100, 200}, /*value=*/42};
 
   EXPECT_EQ(store8.dim(), 2);
   EXPECT_EQ(store8.extents()[0], 100);

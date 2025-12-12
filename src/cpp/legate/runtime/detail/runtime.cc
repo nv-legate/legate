@@ -645,8 +645,8 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
     auto descriptor = create_base_array_(shape, rect_type(1), nullable, optimize_scalar);
     auto vardata    = create_array(make_internal_shared<Shape>(1),
                                 std::move(elem_type),
-                                false /*nullable*/,
-                                false /*optimize_scalar*/);
+                                /*nullable=*/false,
+                                /*optimize_scalar=*/false);
 
     return make_internal_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
@@ -666,7 +666,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_array_like(
     return create_array(make_internal_shared<Shape>(array->dim()),
                         std::move(type),
                         array->nullable(),
-                        false /*optimize_scalar*/);
+                        /*optimize_scalar=*/false);
   }
 
   const bool optimize_scalar = array->data()->has_scalar_storage();
@@ -717,7 +717,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
                   fault_array,
                   fault_dim)};
   }
-  if (!is_rect_type(descriptor->type(), 1)) {
+  if (!is_rect_type(descriptor->type(), /*ndim=*/1)) {
     throw TracedException<std::invalid_argument>{"Descriptor array does not have a 1D rect type"};
   }
 
@@ -787,7 +787,7 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(
     field_types.push_back(field->type());
   }
 
-  auto struct_type = detail::struct_type(std::move(field_types), false /*align*/);
+  auto struct_type = detail::struct_type(std::move(field_types), /*align=*/false);
 
   return make_internal_shared<StructLogicalArray>(
     std::move(struct_type), null_mask, std::move(fields));
@@ -806,7 +806,7 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array_(
 
   fields.reserve(st_type.field_types().size());
   for (auto&& field_type : st_type.field_types()) {
-    fields.emplace_back(create_array(shape, field_type, false, optimize_scalar));
+    fields.emplace_back(create_array(shape, field_type, /*nullable=*/false, optimize_scalar));
   }
   return make_internal_shared<StructLogicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
@@ -905,7 +905,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
       *type)};
   }
 
-  auto store = create_store(shape, std::move(type), false /*optimize_scalar*/);
+  auto store = create_store(shape, std::move(type), /*optimize_scalar=*/false);
 
   // We eagerly mark the region field as mapped if the attached allocation is not read-only, so that
   // any access to the region field will flush the scheduling window and get serialized.
@@ -928,7 +928,7 @@ Runtime::IndexAttachResult Runtime::create_store(
   validate_store_shape(shape, type);
 
   const auto type_size = type->size();
-  auto store           = create_store(shape, std::move(type), false /*optimize_scalar*/);
+  auto store           = create_store(shape, std::move(type), /*optimize_scalar=*/false);
   auto partition       = partition_store_by_tiling(store, tile_shape);
 
   std::vector<Legion::LogicalRegion> subregions;
@@ -1305,7 +1305,7 @@ Legion::IndexPartition Runtime::create_image_partition(
 
   buffer.pack<StreamingGeneration>(std::nullopt);
   machine.pack(buffer);
-  buffer.pack<std::uint32_t>(get_sharding(machine, 0));
+  buffer.pack<std::uint32_t>(get_sharding(machine, /*proj_id=*/0));
   buffer.pack<std::int32_t>(scope().priority());
 
   if (is_range) {
@@ -1342,7 +1342,7 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
 {
   LEGATE_ASSERT(partition->has_launch_domain());
   auto&& launch_domain = partition->launch_domain();
-  auto output          = create_store(domain_type(), 1, true);
+  auto output          = create_store(domain_type(), /*dim=*/1, /*optimize_scalar=*/true);
   auto task            = create_task(
     core_library(),
     LocalTaskID{sorted ? CoreTask::FIND_BOUNDING_BOX_SORTED : CoreTask::FIND_BOUNDING_BOX},
@@ -1650,7 +1650,7 @@ InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precisi
 {
   static auto empty_shape =
     make_internal_shared<Shape>(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{});
-  auto timestamp = create_store(empty_shape, int64(), true /* optimize_scalar */);
+  auto timestamp = create_store(empty_shape, int64(), /*optimize_scalar=*/true);
   submit(make_internal_shared<Timing>(new_op_id(), precision, timestamp));
   return timestamp;
 }
@@ -1675,7 +1675,7 @@ InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
   const auto num_cpus  = local_machine_.total_cpu_count();
   auto create_range    = [&num_nodes](std::uint32_t num_procs) {
     auto per_node_count = static_cast<std::uint32_t>(num_procs / num_nodes);
-    return mapping::ProcessorRange{0, num_procs, per_node_count};
+    return mapping::ProcessorRange{/*low_id=*/0, num_procs, per_node_count};
   };
 
   return make_internal_shared<mapping::detail::Machine>(
@@ -1900,11 +1900,11 @@ void set_env_vars()
 #endif
 
   if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-    EnvironmentVariable<std::uint32_t>{"CUTENSOR_LOG_LEVEL"}.set(1,
+    EnvironmentVariable<std::uint32_t>{"CUTENSOR_LOG_LEVEL"}.set(/*value=*/1,
                                                                  /* overwrite */ false);
   }
 
-  EnvironmentVariable<bool>{"REALM_BACKTRACE"}.set(true, /* overwrite */ false);
+  EnvironmentVariable<bool>{"REALM_BACKTRACE"}.set(/*value=*/true, /* overwrite */ false);
 }
 
 }  // namespace

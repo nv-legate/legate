@@ -122,7 +122,8 @@ TEST_F(ProjectionCOrder, AliasSharingInstance)
   auto runtime    = legate::Runtime::get_runtime();
   auto shape      = legate::Shape{X, Y, Z};
   auto store1     = runtime->create_store(shape, legate::int64());
-  auto store2     = runtime->create_store({1}, legate::binary_type(sizeof(std::int64_t*)), true);
+  auto store2     = runtime->create_store(
+    {1}, legate::binary_type(sizeof(std::int64_t*)), /*optimize_scalar=*/true);
 
   auto library = runtime->find_library(LIBRARY_NAME);
   {
@@ -133,7 +134,7 @@ TEST_F(ProjectionCOrder, AliasSharingInstance)
   }
   {
     auto task = runtime->create_task(library, Tester::TASK_CONFIG.task_id(), {1});
-    task.add_input(store1.project(1, 0));
+    task.add_input(store1.project(/*dim=*/1, /*index=*/0));
     task.add_input(store2);
     runtime->submit(std::move(task));
   }
@@ -150,7 +151,7 @@ TEST_F(ProjectionCOrder, TransposeFollowedByProjection)
 
   auto library = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(library, Tester2::TASK_CONFIG.task_id(), {1});
-  task.add_output(store.transpose({2, 0, 1}).project(0, 1));
+  task.add_output(store.transpose({2, 0, 1}).project(/*dim=*/0, /*index=*/1));
   runtime->submit(std::move(task));
 }
 

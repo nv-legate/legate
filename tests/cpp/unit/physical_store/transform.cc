@@ -22,7 +22,7 @@ TEST_F(PhysicalStoreTransformUnit, FutureStore)
 
   ASSERT_FALSE(store.transformed());
 
-  auto promoted = logical_store.promote(0, 1);
+  auto promoted = logical_store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   store         = promoted.get_physical_store();
 
   ASSERT_TRUE(store.transformed());
@@ -37,7 +37,7 @@ TEST_F(PhysicalStoreTransformUnit, BoundStore)
 
   ASSERT_FALSE(store.transformed());
 
-  auto promoted = logical_store.promote(0, 1);
+  auto promoted = logical_store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   store         = promoted.get_physical_store();
 
   ASSERT_TRUE(store.transformed());

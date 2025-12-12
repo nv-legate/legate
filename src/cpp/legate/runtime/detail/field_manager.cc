@@ -265,7 +265,7 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
     auto it = info_for_match_items_.find(item);
 
     LEGATE_CHECK(it != info_for_match_items_.end());
-    FieldManager::free_field(std::move(it->second), false /*unordered*/);
+    FieldManager::free_field(std::move(it->second), /*unordered=*/false);
     info_for_match_items_.erase(it);
   }
   // All fields that weren't matched can go back into the unordered queue, to be included in the

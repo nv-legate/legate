@@ -119,7 +119,7 @@ void do_test(T value)
   std::vector<T> alloc(TILE_SIZE, value);
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(T);
 
-  test_sysmem<T>(alloc.data(), value, BYTES, false /* read_only */);
+  test_sysmem<T>(alloc.data(), value, BYTES, /*read_only=*/false);
 }
 
 void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
@@ -141,10 +141,10 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
       auto&& api   = legate::cuda::detail::get_cuda_driver_api();
       const auto _ = legate::cuda::detail::AutoPrimaryContext{0};
 
-      api->mem_cpy_async(raw_h_buffer, ptr, BYTES, nullptr);
+      api->mem_cpy_async(raw_h_buffer, ptr, BYTES, /*stream=*/nullptr);
       // TODO(issue 464)
       // ASSERT_EQ(*(static_cast<std::uint64_t*>(raw_h_buffer)), INIT_VALUE - 1);
-      api->mem_free_async(&ptr, nullptr);
+      api->mem_free_async(&ptr, /*stream=*/nullptr);
     } catch (const std::exception& e) {
       LEGATE_ABORT(e.what());
     }
@@ -153,26 +153,30 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
   auto&& api   = legate::cuda::detail::get_cuda_driver_api();
   const auto _ = legate::cuda::detail::AutoPrimaryContext{0};
 
-  d_alloc = api->mem_alloc_async(BYTES, nullptr);
-  api->mem_cpy_async(d_alloc, h_alloc.data(), BYTES, nullptr);
+  d_alloc = api->mem_alloc_async(BYTES, /*stream=*/nullptr);
+  api->mem_cpy_async(d_alloc, h_alloc.data(), BYTES, /*stream=*/nullptr);
 
   legate::ExternalAllocation ext_alloc;
   switch (store_target) {
     case legate::mapping::StoreTarget::FBMEM: {
       ext_alloc = legate::ExternalAllocation::create_fbmem(
-        0, d_alloc, BYTES, false /* read_only */, std::move(deleter));
+        /*local_device_id=*/0,
+        d_alloc,
+        BYTES,
+        /*read_only=*/false,
+        std::move(deleter));
       break;
     }
     case legate::mapping::StoreTarget::ZCMEM: {
       ext_alloc = legate::ExternalAllocation::create_zcmem(
-        d_alloc, BYTES, false /* read_only */, std::move(deleter));
+        d_alloc, BYTES, /*read_only=*/false, std::move(deleter));
       break;
     }
     case legate::mapping::StoreTarget::SYSMEM: [[fallthrough]];
     case legate::mapping::StoreTarget::SOCKETMEM:
       LEGATE_ABORT("Unhandled store target: SYSMEM and SOCKETMEM");
     default: {
-      api->mem_free_async(&d_alloc, nullptr);
+      api->mem_free_async(&d_alloc, /*stream=*/nullptr);
       return;
     }
   }
@@ -250,23 +254,23 @@ TEST_F(IndexAttach, GPU)
   auto&& api     = legate::cuda::detail::get_cuda_driver_api();
   const auto ctx = legate::cuda::detail::AutoPrimaryContext{0};
 
-  void* d_alloc1 = api->mem_alloc_async(BYTES, nullptr);
-  void* d_alloc2 = api->mem_alloc_async(BYTES, nullptr);
+  void* d_alloc1 = api->mem_alloc_async(BYTES, /*stream=*/nullptr);
+  void* d_alloc2 = api->mem_alloc_async(BYTES, /*stream=*/nullptr);
 
-  api->mem_cpy_async(d_alloc1, h_alloc1.data(), BYTES, nullptr);
-  api->mem_cpy_async(d_alloc2, h_alloc2.data(), BYTES, nullptr);
+  api->mem_cpy_async(d_alloc1, h_alloc1.data(), BYTES, /*stream=*/nullptr);
+  api->mem_cpy_async(d_alloc2, h_alloc2.data(), BYTES, /*stream=*/nullptr);
 
   auto deleter = [](void* ptr) noexcept {
     try {
-      legate::cuda::detail::get_cuda_driver_api()->mem_free_async(&ptr, nullptr);
+      legate::cuda::detail::get_cuda_driver_api()->mem_free_async(&ptr, /*stream=*/nullptr);
     } catch (const std::exception& e) {
       LEGATE_ABORT(e.what());
     }
   };
-  auto alloc1 =
-    legate::ExternalAllocation::create_fbmem(0, d_alloc1, BYTES, true /* read_only */, deleter);
+  auto alloc1 = legate::ExternalAllocation::create_fbmem(
+    /*local_device_id=*/0, d_alloc1, BYTES, /*read_only=*/true, deleter);
   auto alloc2 = legate::ExternalAllocation::create_fbmem(
-    0, d_alloc2, BYTES, true /* read_only */, std::move(deleter));
+    /*local_device_id=*/0, d_alloc2, BYTES, /*read_only=*/true, std::move(deleter));
 
   ASSERT_TRUE(alloc1.read_only());
   ASSERT_TRUE(alloc2.read_only());
@@ -376,7 +380,8 @@ TEST_F(IndexAttach, MutuableSysmemAccessByTask)
 
   ASSERT_NE(raw_buffer, nullptr);
   std::memset(raw_buffer, 0, BYTES);
-  test_sysmem<std::uint64_t>(raw_buffer, 0, BYTES, false /* read_only */, std::move(deleter));
+  test_sysmem<std::uint64_t>(
+    raw_buffer, /*value=*/0, BYTES, /*read_only=*/false, std::move(deleter));
 }
 
 TEST_F(IndexAttach, MutableFbmemAccess)

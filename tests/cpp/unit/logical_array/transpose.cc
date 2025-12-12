@@ -90,8 +90,9 @@ TEST_P(TransposeFixedArrayTest, Basic)
 {
   const auto [type, nullable, params] = GetParam();
   const auto [axes, shape]            = params;
-  auto bound_array = logical_array_util_test::create_array_with_type(type, true, nullable);
-  auto transposed  = bound_array.transpose(axes);
+  auto bound_array =
+    logical_array_util_test::create_array_with_type(type, /*bound=*/true, nullable);
+  auto transposed = bound_array.transpose(axes);
 
   ASSERT_EQ(transposed.extents().data(), shape);
 }
@@ -100,14 +101,14 @@ TEST_P(NonTransposeTest, Basic)
 {
   const auto [type, nullable] = GetParam();
 
-  test_negative_transpose(type, false, nullable, {0});
+  test_negative_transpose(type, /*bound=*/false, nullable, {0});
 }
 
 TEST_P(NegativeTransposeAxesTest, Basic)
 {
   const auto [type, nullable, axes] = GetParam();
 
-  test_negative_transpose(type, true, nullable, axes);
+  test_negative_transpose(type, /*bound=*/true, nullable, axes);
 }
 
 }  // namespace logical_array_transpose_test

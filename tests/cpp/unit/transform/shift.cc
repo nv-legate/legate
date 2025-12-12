@@ -29,7 +29,7 @@ TEST_F(TransformShiftUnit, ShiftConvert)
                                               legate::detail::Restriction::FORBID,
                                               legate::detail::Restriction::AVOID})};
   auto restrictions = legate::detail::Restrictions{restrictions_tuple};
-  auto result       = transform->convert(restrictions, true /* forbid_fake_dim */);
+  auto result       = transform->convert(restrictions, /*forbid_fake_dim=*/true);
 
   ASSERT_THAT(result, ::testing::ContainerEq(restrictions));
   ASSERT_EQ(transform->target_ndim(0), 0);

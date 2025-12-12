@@ -148,7 +148,8 @@ TEST_F(UCCNetworkTest, OOBOneThread)
   std::vector<int> mapping_table(1, 0);
   const int unique_id = 10245;
 
-  network.comm_create(comm.get(), 1, 0, unique_id, mapping_table.data());
+  network.comm_create(
+    comm.get(), /*global_comm_size=*/1, /*global_rank=*/0, unique_id, mapping_table.data());
   EXPECT_EQ(comm->unique_id, unique_id);
   EXPECT_EQ(comm->status, true);
   // No allgather calls should have been made as only one context

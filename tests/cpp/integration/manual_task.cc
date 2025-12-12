@@ -75,7 +75,7 @@ TEST_F(ManualTask, Invalid)
   auto library = runtime->find_library(task::simple::LIBRARY_NAME);
 
   auto scalar_store  = runtime->create_store(legate::Scalar{1});
-  auto unbound_store = runtime->create_store(legate::int64(), 1);
+  auto unbound_store = runtime->create_store(legate::int64(), /*dim=*/1);
 
   auto task = runtime->create_task(
     library, task::simple::HelloTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{3, 3});

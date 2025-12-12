@@ -229,9 +229,9 @@ TEST_F(PhysicalTaskNestedTests, PhysicalTaskNestedInAutoTask)
   }
 
   auto square_store =
-    runtime->create_store(legate::Shape{1}, legate::int32(), true /*optimize_scalar*/);
+    runtime->create_store(legate::Shape{1}, legate::int32(), /*optimize_scalar=*/true);
   auto sqrt_store =
-    runtime->create_store(legate::Shape{1}, legate::float32(), true /*optimize_scalar*/);
+    runtime->create_store(legate::Shape{1}, legate::float32(), /*optimize_scalar=*/true);
 
   auto auto_task =
     runtime->create_task(library, NestedAutoTaskWithPhysicalTask::TASK_CONFIG.task_id());

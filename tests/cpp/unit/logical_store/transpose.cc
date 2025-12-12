@@ -121,7 +121,7 @@ TEST_P(NegativeTransposeScalarStoreTest, Basic)
 TEST_F(LogicalStoreTransposeUnit, UnboundStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::int64(), 1);
+  auto store   = runtime->create_store(legate::int64(), /*dim=*/1);
 
   ASSERT_THROW(static_cast<void>(store.transpose({0})), std::invalid_argument);
 }

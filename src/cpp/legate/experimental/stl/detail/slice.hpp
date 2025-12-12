@@ -86,7 +86,7 @@ class ProjectionPolicy {
 
       // handle 0D stores specially until legate scalar stores are 0D themselves
       if (to.dim() == 1 && to.volume() == 1) {  //
-        to = to.project(0, 0);
+        to = to.project(/*dim=*/0, /*index=*/0);
       }
 
       for (auto dim : {ProjDims...}) {  //
@@ -142,7 +142,7 @@ class ProjectionPolicy {
 
       Mdspan span_{};
       using Indices    = std::make_index_sequence<Dim>;
-      using value_type = decltype(PhysicalMap::read_impl(Indices(), {}, 0));
+      using value_type = decltype(PhysicalMap::read_impl(Indices(), {}, /*cursor=*/0));
     };
 
     class LogicalMap : public affine_map<std::int64_t> {
@@ -247,7 +247,7 @@ class ElementPolicy {
       LEGATE_ASSERT(from.dim() == Dim);
       LEGATE_ASSERT(to.dim() == 1 && to.volume() == 1);
 
-      to = to.project(0, 0);
+      to = to.project(/*dim=*/0, /*index=*/0);
 
       auto&& shape = from.extents();
       LEGATE_ASSERT(shape.size() == Dim);

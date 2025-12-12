@@ -184,17 +184,18 @@ TEST_P(NegativeStoreTypeTest, BoundStore)
 TEST_F(LogicalStoreCreateUnit, OptimizeScalar)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store1  = runtime->create_store(legate::Shape{1}, legate::int64(), true);
+  auto store1  = runtime->create_store(legate::Shape{1}, legate::int64(), /*optimize_scalar=*/true);
 
   ASSERT_TRUE(store1.get_physical_store().is_future());
   ASSERT_TRUE(store1.has_scalar_storage());
 
-  auto store2 = runtime->create_store(legate::Shape{1, 2}, legate::int64(), true);
+  auto store2 =
+    runtime->create_store(legate::Shape{1, 2}, legate::int64(), /*optimize_scalar=*/true);
 
   ASSERT_FALSE(store2.get_physical_store().is_future());
   ASSERT_FALSE(store2.has_scalar_storage());
 
-  auto store3 = runtime->create_store(legate::Shape{1}, legate::int64(), false);
+  auto store3 = runtime->create_store(legate::Shape{1}, legate::int64(), /*optimize_scalar=*/false);
 
   ASSERT_FALSE(store3.get_physical_store().is_future());
   ASSERT_FALSE(store3.has_scalar_storage());
@@ -264,7 +265,7 @@ TEST_F(LogicalStoreCreateUnit, TransformedBoundStoreToString)
 {
   const auto runtime     = legate::Runtime::get_runtime();
   const auto bound_store = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  const auto promoted    = bound_store.promote(0, 5);
+  const auto promoted    = bound_store.promote(/*extra_dim=*/0, /*dim_size=*/5);
 
   ASSERT_THAT(
     promoted.to_string(),

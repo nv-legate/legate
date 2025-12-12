@@ -525,10 +525,12 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
             target, color_space, func_region, func_partition, field_id, is_range, machine_);
         }
         case ImageComputationHint::MIN_MAX: {
-          return runtime.create_approximate_image_partition(func_, func_partition_, target, false);
+          return runtime.create_approximate_image_partition(
+            func_, func_partition_, target, /*sorted=*/false);
         }
         case ImageComputationHint::FIRST_LAST: {
-          return runtime.create_approximate_image_partition(func_, func_partition_, target, true);
+          return runtime.create_approximate_image_partition(
+            func_, func_partition_, target, /*sorted=*/true);
         }
       }
       LEGATE_UNREACHABLE();

@@ -66,7 +66,7 @@ class MockCUDAModuleConfig : public Realm::ModuleConfig {
 TEST_F(ConfigureGPUsUnit, UnsetNoAutoConfigure)
 {
   constexpr auto NUM_GPUS = 123;
-  auto arg                = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", -1};
+  auto arg                = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", /*init=*/-1};
   auto cfg                = legate::detail::Config{};
   auto cuda               = MockCUDAModuleConfig{NUM_GPUS, /* should_fail */ false};
 
@@ -78,7 +78,7 @@ TEST_F(ConfigureGPUsUnit, UnsetNoAutoConfigure)
 TEST_F(ConfigureGPUsUnit, UnsetAutoConfigure)
 {
   constexpr auto NUM_GPUS = 123;
-  auto arg                = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", -1};
+  auto arg                = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", /*init=*/-1};
   auto cfg                = legate::detail::Config{};
   auto cuda               = MockCUDAModuleConfig{NUM_GPUS, /* should_fail */ false};
 
@@ -90,7 +90,7 @@ TEST_F(ConfigureGPUsUnit, UnsetAutoConfigure)
 
 TEST_F(ConfigureGPUsUnit, UnsetAutoConfigureNoCUDA)
 {
-  auto arg = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", -1};
+  auto arg = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", /*init=*/-1};
   auto cfg = legate::detail::Config{};
 
   legate::detail::configure_gpus(/* auto_config */ true, /* cuda */ nullptr, &arg, &cfg);
@@ -100,9 +100,9 @@ TEST_F(ConfigureGPUsUnit, UnsetAutoConfigureNoCUDA)
 
 TEST_F(ConfigureGPUsUnit, CUDAResourceFail)
 {
-  auto arg  = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", -1};
+  auto arg  = legate::detail::Argument<std::int32_t>{nullptr, "--gpus", /*init=*/-1};
   auto cfg  = legate::detail::Config{};
-  auto cuda = MockCUDAModuleConfig{0, /* should_fail */ true};
+  auto cuda = MockCUDAModuleConfig{/*num_gpus=*/0, /* should_fail */ true};
 
   ASSERT_THAT([&] { legate::detail::configure_gpus(/* auto_config */ true, &cuda, &arg, &cfg); },
               ::testing::ThrowsMessage<legate::detail::AutoConfigurationError>(

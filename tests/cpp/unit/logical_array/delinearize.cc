@@ -112,7 +112,8 @@ TEST_P(DelinearizeFixedArrayTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [dim, sizes, shape]      = params;
 
-  auto bound_array  = logical_array_util_test::create_array_with_type(type, true, nullable);
+  auto bound_array =
+    logical_array_util_test::create_array_with_type(type, /*bound=*/true, nullable);
   auto delinearized = bound_array.delinearize(dim, sizes);
 
   ASSERT_EQ(delinearized.extents().data(), shape);
@@ -122,7 +123,7 @@ TEST_P(NonDelinearizeTest, Basic)
 {
   const auto [type, nullable] = GetParam();
 
-  test_negative_delinearize(type, false, nullable, 0, {1});
+  test_negative_delinearize(type, /*bound=*/false, nullable, /*dim=*/0, {1});
 }
 
 TEST_P(NegativeDelinearizeDimTest, Basic)
@@ -130,7 +131,7 @@ TEST_P(NegativeDelinearizeDimTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [dim, sizes]             = params;
 
-  test_negative_delinearize(type, true, nullable, dim, sizes);
+  test_negative_delinearize(type, /*bound=*/true, nullable, dim, sizes);
 }
 
 TEST_P(NegativeDelinearizeSizeTest, Basic)
@@ -138,7 +139,7 @@ TEST_P(NegativeDelinearizeSizeTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [dim, sizes]             = params;
 
-  test_negative_delinearize(type, true, nullable, dim, sizes);
+  test_negative_delinearize(type, /*bound=*/true, nullable, dim, sizes);
 }
 
 }  // namespace logical_array_delinearize_test

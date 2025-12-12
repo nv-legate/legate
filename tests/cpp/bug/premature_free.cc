@@ -56,7 +56,7 @@ TEST_F(PrematureFree, ArrayFromTmpStore)
 
   {
     auto alloc = legate::ExternalAllocation::create_sysmem(
-      vec.data(), EXT * sizeof(std::int64_t), false, Deleter{&deleted});
+      vec.data(), EXT * sizeof(std::int64_t), /*read_only=*/false, Deleter{&deleted});
     auto arr = legate::LogicalArray{runtime->create_store({EXT}, legate::int64(), alloc)};
     static_cast<void>(runtime->create_store({EXT}, legate::int64()));
     runtime->issue_execution_fence(true);
@@ -83,9 +83,9 @@ TEST_F(PrematureFree, NullableArrayFromTmpStores)
 
   {
     auto alloc1 = legate::ExternalAllocation::create_sysmem(
-      vec1.data(), EXT * sizeof(std::int64_t), false, Deleter{&deleted1});
+      vec1.data(), EXT * sizeof(std::int64_t), /*read_only=*/false, Deleter{&deleted1});
     auto alloc2 = legate::ExternalAllocation::create_sysmem(
-      vec2.data(), EXT * sizeof(std::uint8_t), false, Deleter{&deleted2});
+      vec2.data(), EXT * sizeof(std::uint8_t), /*read_only=*/false, Deleter{&deleted2});
     auto arr = legate::LogicalArray{runtime->create_store({EXT}, legate::int64(), alloc1),
                                     runtime->create_store({EXT}, legate::bool_(), alloc2)};
     static_cast<void>(runtime->create_store({EXT}, legate::int64()));

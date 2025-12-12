@@ -25,9 +25,12 @@ using MachineTest = DefaultFixture;
 
 namespace {
 
-constexpr legate::mapping::ProcessorRange CPU_RANGE{1, 3, 4};
-constexpr legate::mapping::ProcessorRange OMP_RANGE{0, 3, 2};
-constexpr legate::mapping::ProcessorRange GPU_RANGE{3, 6, 3};
+constexpr legate::mapping::ProcessorRange CPU_RANGE{
+  /*low_id=*/1, /*high_id=*/3, /*per_node_proc_count=*/4};
+constexpr legate::mapping::ProcessorRange OMP_RANGE{
+  /*low_id=*/0, /*high_id=*/3, /*per_node_proc_count=*/2};
+constexpr legate::mapping::ProcessorRange GPU_RANGE{
+  /*low_id=*/3, /*high_id=*/6, /*per_node_proc_count=*/3};
 
 [[nodiscard]] bool check_task_target_vec(std::vector<legate::mapping::TaskTarget> input,
                                          std::vector<legate::mapping::TaskTarget> expect)
@@ -51,7 +54,8 @@ TEST_F(MachineTest, Create)
   const std::map<legate::mapping::TaskTarget, legate::mapping::ProcessorRange> processor_ranges = {
     {legate::mapping::TaskTarget::CPU, CPU_RANGE}};
   const legate::mapping::Machine machine{processor_ranges};
-  const auto empty_machine_range = legate::mapping::ProcessorRange{0, 0, 1};
+  const auto empty_machine_range =
+    legate::mapping::ProcessorRange{/*low_id=*/0, /*high_id=*/0, /*per_node_proc_count=*/1};
 
   ASSERT_EQ(machine.preferred_target(), legate::mapping::TaskTarget::CPU);
   ASSERT_EQ(machine.count(), 2);
@@ -243,17 +247,17 @@ TEST_F(MachineTest, Slice)
   const legate::mapping::Machine machine1{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE}, {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
   const legate::mapping::Machine expected{
-    {{legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(0, 1)}}};
+    {{legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(/*from=*/0, /*to=*/1)}}};
 
   ASSERT_EQ(machine1.slice(0, 1), expected);
 
-  const auto new_machine1 = machine1.slice(0, 2, legate::mapping::TaskTarget::GPU);
+  const auto new_machine1 = machine1.slice(/*from=*/0, /*to=*/2, legate::mapping::TaskTarget::GPU);
 
   ASSERT_EQ(new_machine1.preferred_target(), legate::mapping::TaskTarget::GPU);
   ASSERT_EQ(new_machine1.processor_range().count(), 2);
 
   const legate::mapping::Machine machine2{{{legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
-  const auto new_machine2 = machine2.slice(0, 2);
+  const auto new_machine2 = machine2.slice(/*from=*/0, /*to=*/2);
 
   ASSERT_EQ(new_machine2.preferred_target(), legate::mapping::TaskTarget::GPU);
   ASSERT_EQ(new_machine2.processor_range().count(), 2);
@@ -264,12 +268,12 @@ TEST_F(MachineTest, Slice)
   const legate::mapping::Machine expected1{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE},
      {legate::mapping::TaskTarget::OMP, OMP_RANGE},
-     {legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(0, 1)}}};
+     {legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(/*from=*/0, /*to=*/1)}}};
 
   ASSERT_EQ(machine3.slice(0, 1, true), expected1);
 
   const legate::mapping::Machine expected2{
-    {{legate::mapping::TaskTarget::CPU, CPU_RANGE.slice(1, 2)},
+    {{legate::mapping::TaskTarget::CPU, CPU_RANGE.slice(/*from=*/1, /*to=*/2)},
      {legate::mapping::TaskTarget::OMP, OMP_RANGE},
      {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
 
@@ -303,20 +307,21 @@ TEST_F(MachineTest, IndexOperator)
 TEST_F(MachineTest, IntersectionOperator)
 {
   const legate::mapping::Machine machine1{
-    {{legate::mapping::TaskTarget::CPU, CPU_RANGE.slice(1, 2)},
+    {{legate::mapping::TaskTarget::CPU, CPU_RANGE.slice(/*from=*/1, /*to=*/2)},
      {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
 
   const legate::mapping::Machine machine2{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE},
      {legate::mapping::TaskTarget::OMP, OMP_RANGE},
-     {legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(0, 1)}}};
+     {legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(/*from=*/0, /*to=*/1)}}};
 
   const legate::mapping::Machine machine3{
-    {{legate::mapping::TaskTarget::CPU, CPU_RANGE.slice(1, 2)},
-     {legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(0, 1)}}};
+    {{legate::mapping::TaskTarget::CPU, CPU_RANGE.slice(/*from=*/1, /*to=*/2)},
+     {legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(/*from=*/0, /*to=*/1)}}};
   ASSERT_EQ(machine3, (machine1 & machine2));
 
-  const legate::mapping::Machine machine4{{{legate::mapping::TaskTarget::CPU, {0, 0, 1}}}};
+  const legate::mapping::Machine machine4{
+    {{legate::mapping::TaskTarget::CPU, {/*low_id=*/0, /*high_id=*/0, /*per_node_proc_count=*/1}}}};
   ASSERT_EQ(machine2.only(legate::mapping::TaskTarget::OMP) & machine1, machine4);
 }
 

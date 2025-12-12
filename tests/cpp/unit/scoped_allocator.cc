@@ -271,15 +271,14 @@ TEST_P(ScopedAllocatorTask, Scoped)
 {
   auto& [bytes, alignment, kind] = GetParam();
 
-  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), true /* scoped */, kind, bytes, alignment);
+  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), /*scoped=*/true, kind, bytes, alignment);
 }
 
 TEST_P(ScopedAllocatorTask, NotScoped)
 {
   auto& [bytes, alignment, kind] = GetParam();
 
-  test_deallocate(
-    DeallocateTask::TASK_CONFIG.task_id(), false /* scoped */, kind, bytes, alignment);
+  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), /*scoped=*/false, kind, bytes, alignment);
 }
 
 TEST_P(ScopedAllocatorTask, CopyScoped)
@@ -287,21 +286,24 @@ TEST_P(ScopedAllocatorTask, CopyScoped)
   auto& [bytes, alignment, kind] = GetParam();
 
   test_deallocate(
-    CopyAllocatorTask::TASK_CONFIG.task_id(), true /* scoped */, kind, bytes, alignment);
+    CopyAllocatorTask::TASK_CONFIG.task_id(), /*scoped=*/true, kind, bytes, alignment);
 }
 
 TEST_P(ScopedAllocatorTask, CopyNotScoped)
 {
   auto& [bytes, alignment, kind] = GetParam();
 
-  test_deallocate(
-    CopyAllocatorTask::TASK_CONFIG.task_id(), false /* scoped */, kind, bytes, alignment);
+  test_deallocate(CopyAllocatorTask::TASK_CONFIG.task_id(),
+                  /*scoped=*/false,
+                  kind,
+                  bytes,
+                  alignment);
 }
 
 TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 {
   test_deallocate(DoubleDeallocateTask::TASK_CONFIG.task_id(),
-                  true /* scoped */,
+                  /*scoped=*/true,
                   legate::Memory::SYSTEM_MEM,
                   ALLOCATE_BYTES,
                   alignof(std::max_align_t));
@@ -309,7 +311,7 @@ TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 
 TEST_F(ScopedAllocatorUnit, InvalidDeallocateTopLevel)
 {
-  auto allocator = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, true /* scoped */};
+  auto allocator = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, /*scoped=*/true};
   std::vector<std::uint64_t> data = {1, 2, 3};
 
   ASSERT_THROW(allocator.deallocate(data.data()), std::invalid_argument);
@@ -318,7 +320,7 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocateTopLevel)
 TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
 {
   test_deallocate(InvalidAllocateTask::TASK_CONFIG.task_id(),
-                  true /* scoped */,
+                  /*scoped=*/true,
                   legate::Memory::SYSTEM_MEM,
                   ALLOCATE_BYTES,
                   alignof(std::max_align_t));
@@ -326,7 +328,7 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
 
 TEST_F(ScopedAllocatorUnit, EmptyAllocate)
 {
-  auto allocator = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, true /* scoped */};
+  auto allocator = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, /*scoped=*/true};
   void* ptr      = allocator.allocate(0);
 
   ASSERT_EQ(ptr, nullptr);
@@ -394,7 +396,7 @@ TEST_P(AllocateType, Scoped)
   auto& [num_items, code, kind] = GetParam();
 
   test_allocate_type(
-    AllocateTypeTask::TASK_CONFIG.task_id(), true /* scoped */, code, kind, num_items);
+    AllocateTypeTask::TASK_CONFIG.task_id(), /*scoped=*/true, code, kind, num_items);
 }
 
 TEST_P(AllocateType, NotScoped)
@@ -402,7 +404,7 @@ TEST_P(AllocateType, NotScoped)
   auto& [num_items, code, kind] = GetParam();
 
   test_allocate_type(
-    AllocateTypeTask::TASK_CONFIG.task_id(), false /* scoped */, code, kind, num_items);
+    AllocateTypeTask::TASK_CONFIG.task_id(), /*scoped=*/false, code, kind, num_items);
 }
 
 class AllocateAligned
@@ -419,16 +421,22 @@ TEST_P(AllocateAligned, CheckAlignment)
 {
   auto& [alignment, kind] = GetParam();
 
-  test_deallocate(
-    AllocateAlignedTask::TASK_CONFIG.task_id(), true /* scoped */, kind, ALLOCATE_BYTES, alignment);
+  test_deallocate(AllocateAlignedTask::TASK_CONFIG.task_id(),
+                  /*scoped=*/true,
+                  kind,
+                  ALLOCATE_BYTES,
+                  alignment);
 }
 
 TEST_P(AllocateAligned, ZeroBytesNullptr)
 {
   auto& [alignment, kind] = GetParam();
 
-  test_deallocate(
-    AllocateAlignedTask::TASK_CONFIG.task_id(), true /* scoped */, kind, 0, alignment);
+  test_deallocate(AllocateAlignedTask::TASK_CONFIG.task_id(),
+                  /*scoped=*/true,
+                  kind,
+                  /*bytes=*/0,
+                  alignment);
 }
 
 class AllocateAlignedExceptions
@@ -445,8 +453,11 @@ TEST_P(AllocateAlignedExceptions, InvalidAlignment)
 {
   auto& [alignment, kind] = GetParam();
 
-  test_deallocate(
-    AllocateAlignedTask::TASK_CONFIG.task_id(), true /* scoped */, kind, ALLOCATE_BYTES, alignment);
+  test_deallocate(AllocateAlignedTask::TASK_CONFIG.task_id(),
+                  /*scoped=*/true,
+                  kind,
+                  ALLOCATE_BYTES,
+                  alignment);
 }
 
 }  // namespace scoped_allocator_test

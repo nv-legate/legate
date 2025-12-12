@@ -95,9 +95,11 @@ TEST_P(BoundPhysicalStructArrayTest, Create)
 
 TEST_P(NullableCreateStructArrayTest, InvalidBoundStructArrayChild)
 {
-  auto runtime       = legate::Runtime::get_runtime();
-  auto logical_array = runtime->create_array(
-    legate::Shape{1}, legate::struct_type(true, legate::int64(), legate::float32()), GetParam());
+  auto runtime = legate::Runtime::get_runtime();
+  auto logical_array =
+    runtime->create_array(legate::Shape{1},
+                          legate::struct_type(/*align=*/true, legate::int64(), legate::float32()),
+                          GetParam());
   auto array = logical_array.get_physical_array();
 
   ASSERT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
@@ -106,9 +108,11 @@ TEST_P(NullableCreateStructArrayTest, InvalidBoundStructArrayChild)
 
 TEST_P(NullableCreateStructArrayTest, InvalidCastBoundStructArray)
 {
-  auto runtime       = legate::Runtime::get_runtime();
-  auto logical_array = runtime->create_array(
-    legate::Shape{1}, legate::struct_type(true, legate::int64(), legate::float32()), GetParam());
+  auto runtime = legate::Runtime::get_runtime();
+  auto logical_array =
+    runtime->create_array(legate::Shape{1},
+                          legate::struct_type(/*align=*/true, legate::int64(), legate::float32()),
+                          GetParam());
   auto array = logical_array.get_physical_array();
 
   ASSERT_THROW(static_cast<void>(array.as_list_array()), std::invalid_argument);

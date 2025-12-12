@@ -70,8 +70,8 @@ void test_isomorphic_transformed_stores()
   runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
 
   // Create aliased stores that are semantically equivalent
-  auto promoted1 = store.promote(1, 5);
-  auto promoted2 = store.promote(1, 5);
+  auto promoted1 = store.promote(/*extra_dim=*/1, /*dim_size=*/5);
+  auto promoted2 = store.promote(/*extra_dim=*/1, /*dim_size=*/5);
   auto task      = runtime->create_task(context, Tester::TASK_CONFIG.task_id());
   task.add_input(promoted1);
   task.add_output(promoted2);

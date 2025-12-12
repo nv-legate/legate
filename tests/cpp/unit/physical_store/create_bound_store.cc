@@ -132,17 +132,17 @@ TEST_F(CreateBoundPhysicalStoreUnit, EmptyShape)
 TEST_F(CreateBoundPhysicalStoreUnit, OptimizeScalar)
 {
   auto runtime        = legate::Runtime::get_runtime();
-  auto logical_store1 = runtime->create_store({1}, legate::int64(), true);
+  auto logical_store1 = runtime->create_store({1}, legate::int64(), /*optimize_scalar=*/true);
   auto store1         = logical_store1.get_physical_store();
 
   ASSERT_TRUE(store1.is_future());
 
-  auto logical_store2 = runtime->create_store({1, 2}, legate::int64(), true);
+  auto logical_store2 = runtime->create_store({1, 2}, legate::int64(), /*optimize_scalar=*/true);
   auto store2         = logical_store2.get_physical_store();
 
   ASSERT_FALSE(store2.is_future());
 
-  auto logical_store3 = runtime->create_store({1}, legate::int64(), false);
+  auto logical_store3 = runtime->create_store({1}, legate::int64(), /*optimize_scalar=*/false);
   auto store3         = logical_store3.get_physical_store();
 
   ASSERT_FALSE(store3.is_future());

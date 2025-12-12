@@ -87,8 +87,9 @@ TEST_P(PromoteFixedArrayTest, Basic)
 {
   const auto [type, nullable, params]     = GetParam();
   const auto [extra_dim, dim_size, shape] = params;
-  auto bound_array = logical_array_util_test::create_array_with_type(type, true, nullable);
-  auto promoted    = bound_array.promote(extra_dim, dim_size);
+  auto bound_array =
+    logical_array_util_test::create_array_with_type(type, /*bound=*/true, nullable);
+  auto promoted = bound_array.promote(extra_dim, dim_size);
 
   ASSERT_EQ(promoted.extents().data(), shape);
 }
@@ -97,7 +98,7 @@ TEST_P(NonPromoteTest, Basic)
 {
   const auto [type, nullable] = GetParam();
 
-  test_negative_promote(type, false, nullable, 1, 1);
+  test_negative_promote(type, /*bound=*/false, nullable, /*extra_dim=*/1, /*dim_size=*/1);
 }
 
 TEST_P(NegativePromoteDimTest, Basic)
@@ -105,7 +106,7 @@ TEST_P(NegativePromoteDimTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [extra_dim, dim_size]    = params;
 
-  test_negative_promote(type, true, nullable, extra_dim, dim_size);
+  test_negative_promote(type, /*bound=*/true, nullable, extra_dim, dim_size);
 }
 
 }  // namespace logical_array_promote_test

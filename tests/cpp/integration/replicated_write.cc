@@ -115,7 +115,7 @@ std::vector<legate::LogicalStore> perform_replicate_writes(
   std::vector<legate::LogicalStore> out_stores;
   for (std::uint32_t idx = 0; idx < num_out_stores; ++idx) {
     auto& out_store = out_stores.emplace_back(
-      runtime->create_store(extents, legate::int64(), true /*optimize_scalar*/));
+      runtime->create_store(extents, legate::int64(), /*optimize_scalar=*/true));
     task.add_output(out_store);
   }
   runtime->submit(std::move(task));
@@ -199,7 +199,7 @@ void test_auto_task(legate::Library library,
   std::vector<legate::LogicalStore> out_stores;
   for (std::uint32_t idx = 0; idx < num_out_stores; ++idx) {
     auto& out_store = out_stores.emplace_back(
-      runtime->create_store(extents, legate::int64(), true /*optimize_scalar*/));
+      runtime->create_store(extents, legate::int64(), /*optimize_scalar=*/true));
     auto part = task.add_output(out_store);
     task.add_constraint(legate::broadcast(part));
   }
@@ -278,70 +278,70 @@ TEST_F(ReplicatedWrite, AutoNonScalarSingle)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_auto_task(library, {2, 2}, 1);
+  test_auto_task(library, {2, 2}, /*num_out_stores=*/1);
 }
 
 TEST_F(ReplicatedWrite, AutoNonScalarMultiple)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_auto_task(library, {3, 3}, 3);
+  test_auto_task(library, {3, 3}, /*num_out_stores=*/3);
 }
 
 TEST_F(ReplicatedWrite, ManualNonScalarSingle)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_manual_task(library, {2, 2}, 1);
+  test_manual_task(library, {2, 2}, /*num_out_stores=*/1);
 }
 
 TEST_F(ReplicatedWrite, ManualNonScalarMultiple)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_manual_task(library, {3, 3}, 2);
+  test_manual_task(library, {3, 3}, /*num_out_stores=*/2);
 }
 
 TEST_F(ReplicatedWrite, AutoScalarSingle)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_auto_task(library, {1, 1}, 1);
+  test_auto_task(library, {1, 1}, /*num_out_stores=*/1);
 }
 
 TEST_F(ReplicatedWrite, AutoScalarMultiple)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_auto_task(library, {1, 1}, 5);
+  test_auto_task(library, {1, 1}, /*num_out_stores=*/5);
 }
 
 TEST_F(ReplicatedWrite, ManualScalarSingle)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_manual_task(library, {1, 1}, 1);
+  test_manual_task(library, {1, 1}, /*num_out_stores=*/1);
 }
 
 TEST_F(ReplicatedWrite, ManualScalarMultiple)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_manual_task(library, {1, 1}, 5);
+  test_manual_task(library, {1, 1}, /*num_out_stores=*/5);
 }
 
 TEST_F(ReplicatedWrite, ManualScalarMultipleWithReplicatedReadWrite)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_manual_task_with_replicated_read_write(library, {1, 1}, 3);
+  test_manual_task_with_replicated_read_write(library, {1, 1}, /*num_out_stores=*/3);
 }
 
 TEST_F(ReplicatedWrite, ManualScalarMultipleWithReductions)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  test_manual_task_with_reductions(library, {1, 1}, 3);
+  test_manual_task_with_reductions(library, {1, 1}, /*num_out_stores=*/3);
 }
 
 // NOLINTEND(readability-magic-numbers)

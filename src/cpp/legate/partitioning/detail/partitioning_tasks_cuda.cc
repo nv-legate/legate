@@ -122,7 +122,14 @@ struct FindBoundingBoxFn {
     CUkernel kern =
       mod_manager.load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
 
-    api->launch_kernel(kern, {1}, {1}, 0, stream, out_acc, result_low, result_high);
+    api->launch_kernel(kern,
+                       {/*x_=*/1},
+                       {/*x_=*/1},
+                       /*shared_mem_bytes=*/0,
+                       stream,
+                       out_acc,
+                       result_low,
+                       result_high);
   }
 };
 
@@ -157,11 +164,27 @@ struct FindBoundingBoxSortedFn {
       if constexpr (RECT) {
         auto in_acc = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
 
-        api->launch_kernel(kern, {1}, {1}, 0, stream, unravel, result_low, result_high, in_acc);
+        api->launch_kernel(kern,
+                           {/*x_=*/1},
+                           {/*x_=*/1},
+                           /*shared_mem_bytes=*/0,
+                           stream,
+                           unravel,
+                           result_low,
+                           result_high,
+                           in_acc);
       } else {
         auto in_acc = input.read_accessor<Point<POINT_NDIM>, STORE_NDIM>(shape);
 
-        api->launch_kernel(kern, {1}, {1}, 0, stream, unravel, result_low, result_high, in_acc);
+        api->launch_kernel(kern,
+                           {/*x_=*/1},
+                           {/*x_=*/1},
+                           /*shared_mem_bytes=*/0,
+                           stream,
+                           unravel,
+                           result_low,
+                           result_high,
+                           in_acc);
       }
     }
 
@@ -169,7 +192,14 @@ struct FindBoundingBoxSortedFn {
     CUkernel kern =
       mod_manager.load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
 
-    api->launch_kernel(kern, {1}, {1}, 0, stream, out_acc, result_low, result_high);
+    api->launch_kernel(kern,
+                       {/*x_=*/1},
+                       {/*x_=*/1},
+                       /*shared_mem_bytes=*/0,
+                       stream,
+                       out_acc,
+                       result_low,
+                       result_high);
   }
 };
 

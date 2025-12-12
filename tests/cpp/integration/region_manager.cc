@@ -69,7 +69,7 @@ TEST_F(RegionManager, Unbound)
   std::vector<legate::LogicalStore> stores;
   std::vector<legate::Variable> parts;
   for (std::uint32_t idx = 0; idx < legate::detail::RegionManager::MAX_NUM_FIELDS * 2; ++idx) {
-    auto store = runtime->create_store(legate::int64(), 1);
+    auto store = runtime->create_store(legate::int64(), /*dim=*/1);
     auto part  = task.add_output(store);
     stores.push_back(store);
     parts.push_back(part);

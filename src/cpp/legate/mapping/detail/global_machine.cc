@@ -74,7 +74,7 @@ ProcessorSpan GlobalMachine::slice(const Machine& machine) const
 
   auto num_global_procs = global_procs.size();
   const ProcessorRange my_range{
-    0, static_cast<std::uint32_t>(num_global_procs), global_range.per_node_count};
+    /*low_id=*/0, static_cast<std::uint32_t>(num_global_procs), global_range.per_node_count};
 
   // Check intersection between global machine parameter and global list of processors
   auto slice = global_range & my_range;
@@ -104,7 +104,7 @@ ProcessorSpan GlobalMachine::slice_with_fallback(const Machine& machine) const
 
   auto num_global_procs = global_procs.size();
   const ProcessorRange my_range{
-    0, static_cast<std::uint32_t>(num_global_procs), global_range.per_node_count};
+    /*low_id=*/0, static_cast<std::uint32_t>(num_global_procs), global_range.per_node_count};
 
   // Check intersection between global machine parameter and global list of processors
   auto slice = global_range & my_range;

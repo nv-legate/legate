@@ -90,7 +90,7 @@ void configure_legion(const ParsedArgs& parsed)
   if (parsed.freeze_on_error.value()) {
     constexpr EnvironmentVariable<std::uint32_t> LEGION_FREEZE_ON_ERROR{"LEGION_FREEZE_ON_ERROR"};
 
-    LEGION_FREEZE_ON_ERROR.set(1);
+    LEGION_FREEZE_ON_ERROR.set(/*value=*/1);
   }
 }
 

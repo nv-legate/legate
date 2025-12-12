@@ -62,8 +62,8 @@ class UnboundStoreBindFn {
         break;
       }
       case UnboundStoreOpCode::INVALID_BINDING: {
-        auto buffer =
-          store.create_output_buffer<T, DIM>(legate::Point<DIM>{UNBOUND_STORE_EXTENTS}, true);
+        auto buffer = store.create_output_buffer<T, DIM>(legate::Point<DIM>{UNBOUND_STORE_EXTENTS},
+                                                         /*bind_buffer=*/true);
 
         ASSERT_THROW(store.bind_data(buffer, legate::Point<DIM>::ONES()), std::invalid_argument);
         ASSERT_THROW(store.bind_empty_data(), std::invalid_argument);
@@ -253,7 +253,7 @@ TEST_P(CreateUnboundStoreTest, BindUntypedBuffer)
 {
   const auto [type, ignored] = GetParam();
 
-  bind_unbound_store_by_task(UnboundStoreOpCode::BIND_UNTYPED_BUFFER, type, 1);
+  bind_unbound_store_by_task(UnboundStoreOpCode::BIND_UNTYPED_BUFFER, type, /*dim=*/1);
 }
 
 TEST_P(CreateUnboundStoreTest, InvalidBinding)

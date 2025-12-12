@@ -24,14 +24,15 @@ class ArrayStoreFn {
     static constexpr auto EXTENTS = 10;
 
     if (store.is_unbound_store()) {
-      static_cast<void>(store.create_output_buffer<T, DIM>(legate::Point<DIM>{EXTENTS}, true));
+      static_cast<void>(
+        store.create_output_buffer<T, DIM>(legate::Point<DIM>{EXTENTS}, /*bind_buffer=*/true));
     }
     if (array.nullable()) {
       auto null_mask = array.null_mask();
 
       if (null_mask.is_unbound_store()) {
-        static_cast<void>(
-          null_mask.create_output_buffer<bool, DIM>(legate::Point<DIM>{EXTENTS}, true));
+        static_cast<void>(null_mask.create_output_buffer<bool, DIM>(legate::Point<DIM>{EXTENTS},
+                                                                    /*bind_buffer=*/true));
       }
     }
 
@@ -224,7 +225,7 @@ TEST_P(OptimizeScalarTest, CreateListUnboundArrayStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto list_type     = legate::list_type(legate::int64()).as_list_type();
-  auto logical_array = runtime->create_array(list_type, 1, GetParam());
+  auto logical_array = runtime->create_array(list_type, /*dim=*/1, GetParam());
 
   test_array_store(logical_array, ListArrayStoreTask::TASK_CONFIG.task_id());
 }
@@ -240,7 +241,7 @@ TEST_P(OptimizeScalarTest, CreateStringBoundArrayStore)
 TEST_P(OptimizeScalarTest, CreateStringUnboundArrayStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto logical_array = runtime->create_array(legate::string_type(), 1, GetParam());
+  auto logical_array = runtime->create_array(legate::string_type(), /*dim=*/1, GetParam());
 
   test_array_store(logical_array, StringArrayStoreTask::TASK_CONFIG.task_id());
 }

@@ -81,7 +81,7 @@ legate::ManualTask create_manual_exception_unbound()
   auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     library, ExceptionUnboundTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{4, 2});
-  auto store = runtime->create_store(legate::int64(), 2);
+  auto store = runtime->create_store(legate::int64(), /*dim=*/2);
 
   task.throws_exception(true);
   task.add_output(store);

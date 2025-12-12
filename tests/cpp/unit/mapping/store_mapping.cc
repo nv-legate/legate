@@ -31,7 +31,7 @@ class TestStoreHolder {
 
     // Create a future store using FutureWrapper
     auto domain         = Legion::Domain{Legion::Rect<1>{0, 9}};
-    auto future_wrapper = legate::mapping::detail::FutureWrapper{0, domain};
+    auto future_wrapper = legate::mapping::detail::FutureWrapper{/*idx=*/0, domain};
 
     detail_store_ = std::make_unique<legate::mapping::detail::Store>(1,  // dim
                                                                      std::move(type),
@@ -102,7 +102,7 @@ TEST_F(StoreMappingTest, CreateDefaultMapping)
   auto test_store   = store_holder.get_store();
 
   auto mapping = legate::mapping::StoreMapping::default_mapping(
-    test_store, legate::mapping::StoreTarget::SYSMEM, false);
+    test_store, legate::mapping::StoreTarget::SYSMEM, /*exact=*/false);
 
   ASSERT_EQ(mapping.policy().target, legate::mapping::StoreTarget::SYSMEM);
   ASSERT_EQ(mapping.policy().exact, false);

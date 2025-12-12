@@ -29,7 +29,8 @@ class InitTask : public legate::LegateTask<InitTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0);
-    auto buffer = output.data().create_output_buffer<std::int64_t, 1>(legate::Point<1>{EXT}, true);
+    auto buffer = output.data().create_output_buffer<std::int64_t, 1>(legate::Point<1>{EXT},
+                                                                      /*bind_buffer=*/true);
     for (std::int64_t idx = 0; idx < static_cast<std::int64_t>(EXT); ++idx) {
       buffer[idx] = VAL;
     }
@@ -89,9 +90,9 @@ TEST_F(LogicalStoreTransform, SliceBug1)
     EXPECT_FALSE(slice.overlaps(store));
     EXPECT_EQ(slice.dim(), store.dim());
   };
-  test_slice(store.slice(1, legate::Slice{-9, -8}));
-  test_slice(store.slice(1, legate::Slice{-8, -10}));
-  test_slice(store.slice(1, legate::Slice{1, 1}));
+  test_slice(store.slice(/*dim=*/1, legate::Slice{-9, -8}));
+  test_slice(store.slice(/*dim=*/1, legate::Slice{-8, -10}));
+  test_slice(store.slice(/*dim=*/1, legate::Slice{1, 1}));
 }
 
 TEST_F(LogicalStoreTransform, SliceBug2)
@@ -107,9 +108,9 @@ TEST_F(LogicalStoreTransform, SliceBug2)
     EXPECT_EQ(slice.dim(), store.dim());
   };
 
-  test_slice(store.slice(1, legate::Slice{-1, 0}));
-  test_slice(store.slice(1, legate::Slice{-1, 1}));
-  test_slice(store.slice(1, legate::Slice{10, 8}));
+  test_slice(store.slice(/*dim=*/1, legate::Slice{-1, 0}));
+  test_slice(store.slice(/*dim=*/1, legate::Slice{-1, 1}));
+  test_slice(store.slice(/*dim=*/1, legate::Slice{10, 8}));
 }
 
 namespace {
@@ -137,7 +138,7 @@ void add_and_copy(const legate::LogicalArray& output,
 
   auto task  = runtime->create_task(library, CopyTask::TASK_CONFIG.task_id());
   auto part1 = task.add_input(input);
-  auto part2 = task.add_output(output.project(1, index));
+  auto part2 = task.add_output(output.project(/*dim=*/1, index));
   task.add_scalar_arg(index);
   task.add_constraint(legate::align(part1, part2));
   runtime->submit(std::move(task));

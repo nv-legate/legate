@@ -37,27 +37,35 @@ legate::LogicalArray create_normal_array(std::uint32_t index, const legate::Shap
       array       = runtime->create_array_like(array1);
     } break;
     case 2:
-      array =
-        runtime->create_array(shape, legate::int32(), false /*nullable*/, true /*optimize_scalar*/);
+      array = runtime->create_array(shape,
+                                    legate::int32(),
+                                    /*nullable=*/false,
+                                    /*optimize_scalar=*/true);
       break;
     case 3: {
-      auto array1 =
-        runtime->create_array(shape, legate::int32(), false /*nullable*/, true /*optimize_scalar*/);
-      array = runtime->create_array_like(array1);
+      auto array1 = runtime->create_array(shape,
+                                          legate::int32(),
+                                          /*nullable=*/false,
+                                          /*optimize_scalar=*/true);
+      array       = runtime->create_array_like(array1);
     } break;
-    case 4: array = runtime->create_array(shape, legate::int32(), true /*nullable*/); break;
+    case 4: array = runtime->create_array(shape, legate::int32(), /*nullable=*/true); break;
     case 5: {
-      auto array1 = runtime->create_array(shape, legate::int32(), true /*nullable*/);
+      auto array1 = runtime->create_array(shape, legate::int32(), /*nullable=*/true);
       array       = runtime->create_array_like(array1);
     } break;
     case 6:
-      array =
-        runtime->create_array(shape, legate::int32(), true /*nullable*/, true /*optimize_scalar*/);
+      array = runtime->create_array(shape,
+                                    legate::int32(),
+                                    /*nullable=*/true,
+                                    /*optimize_scalar=*/true);
       break;
     case 7: {
-      auto array1 =
-        runtime->create_array(shape, legate::int32(), true /*nullable*/, true /*optimize_scalar*/);
-      array = runtime->create_array_like(array1);
+      auto array1 = runtime->create_array(shape,
+                                          legate::int32(),
+                                          /*nullable=*/true,
+                                          /*optimize_scalar=*/true);
+      array       = runtime->create_array_like(array1);
     } break;
     default: break;
   }
@@ -69,16 +77,16 @@ legate::LogicalArray create_normal_array(std::uint32_t index, const legate::Shap
 legate::LogicalArray create_unbound_array(std::uint32_t index, std::uint32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto array = runtime->create_array(legate::int32(), ndim, false /*nullable*/);  // dummy creation
+  auto array = runtime->create_array(legate::int32(), ndim, /*nullable=*/false);  // dummy creation
   switch (index) {
-    case 0: array = runtime->create_array(legate::int32(), ndim, false /*nullable*/); break;
+    case 0: array = runtime->create_array(legate::int32(), ndim, /*nullable=*/false); break;
     case 1: {
-      auto array1 = runtime->create_array(legate::int32(), ndim, false /*nullable*/);
+      auto array1 = runtime->create_array(legate::int32(), ndim, /*nullable=*/false);
       array       = runtime->create_array_like(array1);
     } break;
-    case 2: array = runtime->create_array(legate::int32(), ndim, true /*nullable*/); break;
+    case 2: array = runtime->create_array(legate::int32(), ndim, /*nullable=*/true); break;
     case 3: {
-      auto array1 = runtime->create_array(legate::int32(), ndim, true /*nullable*/);
+      auto array1 = runtime->create_array(legate::int32(), ndim, /*nullable=*/true);
       array       = runtime->create_array_like(array1);
     } break;
     default: break;

@@ -65,11 +65,11 @@ class MockCoreModuleConfig : public Realm::ModuleConfig {
 TEST_P(ConfigureOpenMPThreadsUnit, Preset)
 {
   constexpr auto NUM_OMPTHREADS = 10;
-  const auto core               = MockCoreModuleConfig{8, /* should_fail */ false};
-  const auto util               = UtilType{nullptr, "--util", 1};
-  const auto cpus               = CPUsType{nullptr, "--cpus", 2};
-  const auto gpus               = GPUsType{nullptr, "--gpus", 3};
-  const auto omps               = OpenMPsType{nullptr, "--omps", 4};
+  const auto core               = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ false};
+  const auto util               = UtilType{nullptr, "--util", /*init=*/1};
+  const auto cpus               = CPUsType{nullptr, "--cpus", /*init=*/2};
+  const auto gpus               = GPUsType{nullptr, "--gpus", /*init=*/3};
+  const auto omps               = OpenMPsType{nullptr, "--omps", /*init=*/4};
   auto ompthreads               = OpenMPThreadsType{nullptr, "--ompthreads", NUM_OMPTHREADS};
   auto cfg                      = legate::detail::Config{};
 
@@ -84,12 +84,12 @@ TEST_P(ConfigureOpenMPThreadsUnit, Preset)
 
 TEST_P(ConfigureOpenMPThreadsUnit, NoOpenMP)
 {
-  const auto core = MockCoreModuleConfig{8, /* should_fail */ false};
-  const auto util = UtilType{nullptr, "--util", 1};
-  const auto cpus = CPUsType{nullptr, "--cpus", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 3};
-  const auto omps = OpenMPsType{nullptr, "--omps", 0};
-  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ false};
+  const auto util = UtilType{nullptr, "--util", /*init=*/1};
+  const auto cpus = CPUsType{nullptr, "--cpus", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/3};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/0};
+  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", /*init=*/-1};
   auto cfg        = legate::detail::Config{};
 
   legate::detail::configure_ompthreads(
@@ -101,12 +101,12 @@ TEST_P(ConfigureOpenMPThreadsUnit, NoOpenMP)
 
 TEST_F(ConfigureOpenMPThreadsUnit, NoAutoConfig)
 {
-  const auto core = MockCoreModuleConfig{8, /* should_fail */ false};
-  const auto util = UtilType{nullptr, "--util", 1};
-  const auto cpus = CPUsType{nullptr, "--cpus", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 3};
-  const auto omps = OpenMPsType{nullptr, "--omps", 4};
-  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/8, /* should_fail */ false};
+  const auto util = UtilType{nullptr, "--util", /*init=*/1};
+  const auto cpus = CPUsType{nullptr, "--cpus", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/3};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/4};
+  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", /*init=*/-1};
   auto cfg        = legate::detail::Config{};
 
   legate::detail::configure_ompthreads(
@@ -120,11 +120,11 @@ TEST_F(ConfigureOpenMPThreadsUnit, AutoConfig)
 {
   constexpr auto NUM_CPUS = 16;
   const auto core         = MockCoreModuleConfig{NUM_CPUS, /* should_fail */ false};
-  const auto util         = UtilType{nullptr, "--util", 1};
-  const auto cpus         = CPUsType{nullptr, "--cpus", 2};
-  const auto gpus         = GPUsType{nullptr, "--gpus", 3};
-  const auto omps         = OpenMPsType{nullptr, "--omps", 4};
-  auto ompthreads         = OpenMPThreadsType{nullptr, "--ompthreads", -1};
+  const auto util         = UtilType{nullptr, "--util", /*init=*/1};
+  const auto cpus         = CPUsType{nullptr, "--cpus", /*init=*/2};
+  const auto gpus         = GPUsType{nullptr, "--gpus", /*init=*/3};
+  const auto omps         = OpenMPsType{nullptr, "--omps", /*init=*/4};
+  auto ompthreads         = OpenMPThreadsType{nullptr, "--ompthreads", /*init=*/-1};
   auto cfg                = legate::detail::Config{};
 
   legate::detail::configure_ompthreads(
@@ -140,12 +140,12 @@ TEST_F(ConfigureOpenMPThreadsUnit, AutoConfig)
 
 TEST_F(ConfigureOpenMPThreadsUnit, AutoConfigFail)
 {
-  const auto core = MockCoreModuleConfig{1, /* should_fail */ true};
-  const auto util = UtilType{nullptr, "--util", 1};
-  const auto cpus = CPUsType{nullptr, "--cpus", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 3};
-  const auto omps = OpenMPsType{nullptr, "--omps", 4};
-  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/1, /* should_fail */ true};
+  const auto util = UtilType{nullptr, "--util", /*init=*/1};
+  const auto cpus = CPUsType{nullptr, "--cpus", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/3};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/4};
+  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", /*init=*/-1};
   auto cfg        = legate::detail::Config{};
 
   ASSERT_THAT(
@@ -162,12 +162,12 @@ TEST_F(ConfigureOpenMPThreadsUnit, AutoConfigFail)
 
 TEST_F(ConfigureOpenMPThreadsUnit, AutoConfigFailNoCPUs)
 {
-  const auto core = MockCoreModuleConfig{0, /* should_fail */ false};
-  const auto util = UtilType{nullptr, "--util", 1};
-  const auto cpus = CPUsType{nullptr, "--cpus", 2};
-  const auto gpus = GPUsType{nullptr, "--gpus", 3};
-  const auto omps = OpenMPsType{nullptr, "--omps", 4};
-  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", -1};
+  const auto core = MockCoreModuleConfig{/*num_cpus=*/0, /* should_fail */ false};
+  const auto util = UtilType{nullptr, "--util", /*init=*/1};
+  const auto cpus = CPUsType{nullptr, "--cpus", /*init=*/2};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/3};
+  const auto omps = OpenMPsType{nullptr, "--omps", /*init=*/4};
+  auto ompthreads = OpenMPThreadsType{nullptr, "--ompthreads", /*init=*/-1};
   auto cfg        = legate::detail::Config{};
 
   ASSERT_THAT(
@@ -186,11 +186,11 @@ TEST_F(ConfigureOpenMPThreadsUnit, AutoConfigFailNotEnoughOMPThreads)
 {
   constexpr auto NUM_CPUS = 1;
   const auto core         = MockCoreModuleConfig{NUM_CPUS, /* should_fail */ false};
-  const auto util         = UtilType{nullptr, "--util", 1};
-  const auto cpus         = CPUsType{nullptr, "--cpus", 2};
-  const auto gpus         = GPUsType{nullptr, "--gpus", 3};
-  const auto omps         = OpenMPsType{nullptr, "--omps", 4};
-  auto ompthreads         = OpenMPThreadsType{nullptr, "--ompthreads", -1};
+  const auto util         = UtilType{nullptr, "--util", /*init=*/1};
+  const auto cpus         = CPUsType{nullptr, "--cpus", /*init=*/2};
+  const auto gpus         = GPUsType{nullptr, "--gpus", /*init=*/3};
+  const auto omps         = OpenMPsType{nullptr, "--omps", /*init=*/4};
+  auto ompthreads         = OpenMPThreadsType{nullptr, "--ompthreads", /*init=*/-1};
   auto cfg                = legate::detail::Config{};
 
   ASSERT_THAT(

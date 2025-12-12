@@ -41,7 +41,8 @@ class CPUCommunicatorAllGatherTester : public legate::LegateTask<CPUCommunicator
     const auto num_tasks         = context.get_launch_domain().get_volume();
     std::vector<std::int64_t> recv_buffer(num_tasks, 0);
 
-    collAllgather(&value, recv_buffer.data(), 1, legate::comm::coll::CollDataType::CollInt64, comm);
+    collAllgather(
+      &value, recv_buffer.data(), /*count=*/1, legate::comm::coll::CollDataType::CollInt64, comm);
     ASSERT_THAT(recv_buffer, ::testing::Each(value));
   }
 };
@@ -353,8 +354,8 @@ void test_cpu_communicator_manual(std::int32_t ndim, legate::LocalTaskID task_id
     },
     legate::int32());
 
-  auto launch_shape    = legate::full<std::uint64_t>(ndim, 1);
-  auto tile_shape      = legate::full<std::uint64_t>(ndim, 1);
+  auto launch_shape    = legate::full<std::uint64_t>(ndim, /*init=*/1);
+  auto tile_shape      = legate::full<std::uint64_t>(ndim, /*init=*/1);
   const auto num_tasks = std::min<std::size_t>(num_procs, SIZE);
 
   launch_shape[0] = num_tasks;

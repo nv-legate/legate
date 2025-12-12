@@ -346,7 +346,7 @@ TEST_P(ToDLPackUnitUnsupportedLegateTypeInput, Unsupported)
 
     const auto ty = [&]() -> legate::Type {
       if (code == legate::Type::Code::FIXED_ARRAY) {
-        return legate::fixed_array_type(legate::int64(), 2);
+        return legate::fixed_array_type(legate::int64(), /*N=*/2);
       }
       if (code == legate::Type::Code::STRUCT) {
         return legate::struct_type({legate::int64(), legate::int64()});

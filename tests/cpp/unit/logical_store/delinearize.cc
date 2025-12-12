@@ -111,7 +111,7 @@ TEST_P(DelinearizeScalarStoreTest, Basic)
   const auto [sizes, delinearize_shape] = GetParam();
   auto runtime                          = legate::Runtime::get_runtime();
   auto store                            = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  auto delinearize                      = store.delinearize(0, sizes);
+  auto delinearize                      = store.delinearize(/*dim=*/0, sizes);
 
   ASSERT_EQ(delinearize.extents().data(), delinearize_shape);
   ASSERT_TRUE(delinearize.transformed());

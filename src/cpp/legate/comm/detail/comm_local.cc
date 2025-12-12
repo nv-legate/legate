@@ -85,8 +85,11 @@ class Init : public detail::LegionTask<Init> {
     const auto unique_id = task->futures[0].get_result<int>();
     auto comm            = std::make_unique<legate::comm::coll::Coll_Comm>();
 
-    legate::comm::coll::collCommCreate(
-      comm.get(), static_cast<int>(num_ranks), static_cast<int>(point), unique_id, nullptr);
+    legate::comm::coll::collCommCreate(comm.get(),
+                                       static_cast<int>(num_ranks),
+                                       static_cast<int>(point),
+                                       unique_id,
+                                       /*mapping_table=*/nullptr);
     return comm.release();
   }
 

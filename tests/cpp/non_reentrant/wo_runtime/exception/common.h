@@ -36,7 +36,8 @@ class TracedExceptionFixture : public DefaultFixture {
   // exactly once, and on construction of a TracedException object. So we need to ensure that
   // all tests are disabling color output.
   legate::test::Environment::TemporaryEnvVar force_color_{"FORCE_COLOR", nullptr};
-  legate::test::Environment::TemporaryEnvVar no_color_{"NO_COLOR", "1", true};
+  legate::test::Environment::TemporaryEnvVar no_color_{
+    "NO_COLOR", /*value=*/"1", /*overwrite=*/true};
 };
 
 [[nodiscard]] inline std::vector<std::string> split_string(std::string_view str)

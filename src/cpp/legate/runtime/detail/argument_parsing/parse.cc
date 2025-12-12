@@ -664,14 +664,15 @@ ParsedArgs parse_args(std::vector<std::string> args)
   auto single_controller_execution = parser.add_argument(
     "--single-controller-execution",
     "Enable single controller execution in which the top-level task only runs on rank 0.",
-    false);
+    /*init=*/false);
 
   single_controller_execution.argparse_argument().hidden();
 
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Profiling and logging");
 
-  auto profile      = parser.add_argument("--profile", "Whether to collect profiling logs", false);
+  auto profile =
+    parser.add_argument("--profile", "Whether to collect profiling logs", /*init=*/false);
   auto profile_name = parser.add_argument(
     "--profile-name",
     "Base filename for profiling logs\n"
@@ -685,13 +686,13 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "Enabling call provenance will cause stack trace information to be included in Legion "
     "profiles, progress output, nvtx ranges, and some error messages. Enabling --profile "
     "will automatically enable --provenance.",
-    false);
+    /*init=*/false);
   auto log_levels  = parser.add_argument("--logging", logging_help_str(), std::string{});
   auto log_dir     = parser.add_argument("--logdir",
                                      "Directory to emit logfiles to, defaults to current directory",
                                      std::filesystem::current_path());
   auto log_to_file = parser.add_argument(
-    "--log-to-file", "Redirect logging output to a file inside --logdir", false);
+    "--log-to-file", "Redirect logging output to a file inside --logdir", /*init=*/false);
 
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Debugging");
@@ -699,7 +700,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
   auto freeze_on_error = parser.add_argument(
     "--freeze-on-error",
     "If the program crashes, freeze execution right before exit so a debugger can be attached",
-    false);
+    /*init=*/false);
   auto empty_task =
     parser.add_argument("--use-empty-task",
                         "Execute an empty dummy task in place of each task execution.\n"
@@ -751,7 +752,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "This feature is currently marked experimental, and should not be relied upon. The current "
     "implementation may offer performance improvements in some circumstances, but it may also "
     "lead to slowdowns in others. Future improvements will seek to optimize this further.",
-    false);
+    /*init=*/false);
 
   experimental_copy_path.argparse_argument().hidden();
 

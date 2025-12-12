@@ -34,15 +34,17 @@ namespace legate {
 /*static*/ void SumReduction<Complex<Half>>::fill_redop_desc(
   cuda::detail::CUDAModuleManager* manager, Realm::Cuda::CudaRedOpDesc* desc)
 {
-  desc->redop_id      = static_cast<Realm::ReductionOpID>(REDOP_ID);
-  desc->apply_excl    = manager->load_function_from_fatbin(detail::redop_complex_fatbin,
-                                                        "legate_sum_redop_complex_half_apply_excl");
+  desc->redop_id = static_cast<Realm::ReductionOpID>(REDOP_ID);
+  desc->apply_excl =
+    manager->load_function_from_fatbin(detail::redop_complex_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_complex_half_apply_excl");
   desc->apply_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_half_apply_non_excl");
-  desc->fold_excl    = manager->load_function_from_fatbin(detail::redop_complex_fatbin,
-                                                       "legate_sum_redop_complex_half_fold_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_half_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_complex_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_complex_half_fold_excl");
   desc->fold_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_half_fold_non_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_half_fold_non_excl");
 }
 
 /*static*/ void ProdReduction<Complex<Half>>::fill_redop_desc(
@@ -50,13 +52,14 @@ namespace legate {
 {
   desc->redop_id   = static_cast<Realm::ReductionOpID>(REDOP_ID);
   desc->apply_excl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_prod_redop_complex_half_apply_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_prod_redop_complex_half_apply_excl");
   desc->apply_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_prod_redop_complex_half_apply_non_excl");
-  desc->fold_excl    = manager->load_function_from_fatbin(detail::redop_complex_fatbin,
-                                                       "legate_prod_redop_complex_half_fold_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_prod_redop_complex_half_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_complex_fatbin,
+                                       /*kernel_name=*/"legate_prod_redop_complex_half_fold_excl");
   desc->fold_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_prod_redop_complex_half_fold_non_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_prod_redop_complex_half_fold_non_excl");
 }
 
 // ==========================================================================================
@@ -66,13 +69,14 @@ namespace legate {
 {
   desc->redop_id   = static_cast<Realm::ReductionOpID>(REDOP_ID);
   desc->apply_excl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_float_apply_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_float_apply_excl");
   desc->apply_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_float_apply_non_excl");
-  desc->fold_excl    = manager->load_function_from_fatbin(detail::redop_complex_fatbin,
-                                                       "legate_sum_redop_complex_float_fold_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_float_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_complex_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_complex_float_fold_excl");
   desc->fold_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_float_fold_non_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_float_fold_non_excl");
 }
 
 /*static*/ void ProdReduction<Complex<float>>::fill_redop_desc(
@@ -80,13 +84,14 @@ namespace legate {
 {
   desc->redop_id   = static_cast<Realm::ReductionOpID>(REDOP_ID);
   desc->apply_excl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_prod_redop_complex_float_apply_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_prod_redop_complex_float_apply_excl");
   desc->apply_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_prod_redop_complex_float_apply_non_excl");
-  desc->fold_excl    = manager->load_function_from_fatbin(detail::redop_complex_fatbin,
-                                                       "legate_prod_redop_complex_float_fold_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_prod_redop_complex_float_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_complex_fatbin,
+                                       /*kernel_name=*/"legate_prod_redop_complex_float_fold_excl");
   desc->fold_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_prod_redop_complex_float_fold_non_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_prod_redop_complex_float_fold_non_excl");
 }
 
 // ==========================================================================================
@@ -96,13 +101,14 @@ namespace legate {
 {
   desc->redop_id   = static_cast<Realm::ReductionOpID>(REDOP_ID);
   desc->apply_excl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_double_apply_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_double_apply_excl");
   desc->apply_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_double_apply_non_excl");
-  desc->fold_excl    = manager->load_function_from_fatbin(detail::redop_complex_fatbin,
-                                                       "legate_sum_redop_complex_double_fold_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_double_apply_non_excl");
+  desc->fold_excl =
+    manager->load_function_from_fatbin(detail::redop_complex_fatbin,
+                                       /*kernel_name=*/"legate_sum_redop_complex_double_fold_excl");
   desc->fold_nonexcl = manager->load_function_from_fatbin(
-    detail::redop_complex_fatbin, "legate_sum_redop_complex_double_fold_non_excl");
+    detail::redop_complex_fatbin, /*kernel_name=*/"legate_sum_redop_complex_double_fold_non_excl");
 }
 
 }  // namespace legate

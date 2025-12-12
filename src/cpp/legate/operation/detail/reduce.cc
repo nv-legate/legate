@@ -62,7 +62,8 @@ void Reduce::launch(Strategy* p_strategy)
   if (n_tasks > 1) {
     projections.reserve(static_cast<std::size_t>(radix_));
     for (std::int32_t i = 0; i < radix_; i++) {
-      projections.emplace_back(std::initializer_list<SymbolicExpr>{SymbolicExpr{0, radix_, i}});
+      projections.emplace_back(
+        std::initializer_list<SymbolicExpr>{SymbolicExpr{/*dim=*/0, radix_, i}});
     }
   }
 
@@ -112,7 +113,7 @@ void Reduce::launch(Strategy* p_strategy)
     // if this is not the last iteration of the while loop, we generate
     // a new output region
     if (n_tasks != 1) {
-      new_output = runtime.create_store(input_->type(), 1);
+      new_output = runtime.create_store(input_->type(), /*dim=*/1);
       launcher.add_output(BaseArrayArg{OutputRegionArg{new_output.get(), field_space, field_id}});
     } else {
       launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(), field_space, field_id}});

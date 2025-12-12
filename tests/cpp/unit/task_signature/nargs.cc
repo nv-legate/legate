@@ -23,7 +23,7 @@ TEST_F(TaskSignatureNargsUnit, Basic)
 {
   constexpr auto nargs = legate::detail::TaskSignature::Nargs{};
 
-  nargs_util::test_single_value(nargs, 0);
+  nargs_util::test_single_value(nargs, /*value=*/0);
 }
 
 TEST_F(TaskSignatureNargsUnit, SingleValue)

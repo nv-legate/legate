@@ -31,7 +31,7 @@ void kill_process()
 #ifndef __SANITIZE_ADDRESS__          // already defined by recent GCC
 #ifdef __has_feature                  // Clang (and modern GCC) gate
 #if __has_feature(address_sanitizer)  // Clang with -fsanitize=address
-#define __SANITIZE_ADDRESS__
+#define __SANITIZE_ADDRESS__          // NOLINT(bugprone-reserved-identifier)
 #endif
 #endif
 #endif

@@ -39,9 +39,9 @@ TaskSignature& TaskSignature::inputs(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::inputs(std::uint32_t low_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::inputs(std::uint32_t lower_bound, std::uint32_t upper_bound)
 {
-  impl_()->inputs({{low_bound, upper_bound}});
+  impl_()->inputs({{lower_bound, upper_bound}});
   return *this;
 }
 
@@ -51,9 +51,9 @@ TaskSignature& TaskSignature::outputs(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::outputs(std::uint32_t low_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::outputs(std::uint32_t lower_bound, std::uint32_t upper_bound)
 {
-  impl_()->outputs({{low_bound, upper_bound}});
+  impl_()->outputs({{lower_bound, upper_bound}});
   return *this;
 }
 
@@ -63,9 +63,9 @@ TaskSignature& TaskSignature::scalars(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::scalars(std::uint32_t low_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::scalars(std::uint32_t lower_bound, std::uint32_t upper_bound)
 {
-  impl_()->scalars({{low_bound, upper_bound}});
+  impl_()->scalars({{lower_bound, upper_bound}});
   return *this;
 }
 
@@ -75,9 +75,9 @@ TaskSignature& TaskSignature::redops(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::redops(std::uint32_t low_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::redops(std::uint32_t lower_bound, std::uint32_t upper_bound)
 {
-  impl_()->redops({{low_bound, upper_bound}});
+  impl_()->redops({{lower_bound, upper_bound}});
   return *this;
 }
 

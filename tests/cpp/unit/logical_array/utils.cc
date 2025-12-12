@@ -29,7 +29,7 @@ legate::LogicalArray create_array_with_type(const legate::Type& type,
 const legate::StructType& struct_type()
 {
   static const auto t =
-    legate::struct_type(true, legate::uint16(), legate::int64(), legate::float32())
+    legate::struct_type(/*align=*/true, legate::uint16(), legate::int64(), legate::float32())
       .as_struct_type();
 
   return t;

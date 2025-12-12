@@ -34,7 +34,7 @@ class UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
   store1.bind_empty_data();
   store2.bind_empty_data();
   static_cast<void>(store3.create_output_buffer<std::uint64_t, LEGATE_MAX_DIM>(
-    legate::Point<LEGATE_MAX_DIM>{1}, true));
+    legate::Point<LEGATE_MAX_DIM>{1}, /*bind_buffer=*/true));
 }
 
 class Config {
@@ -74,7 +74,7 @@ INSTANTIATE_TEST_SUITE_P(ShapeUnit,
 TEST_F(ShapeUnit, Unbound)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::int16(), 1);
+  auto store   = runtime->create_store(legate::int16(), /*dim=*/1);
   auto shape   = store.shape();
 
   ASSERT_EQ(shape.ndim(), store.dim());
@@ -131,7 +131,7 @@ TEST_F(ShapeUnit, OperatorEqualUnbound)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto store1  = runtime->create_store(legate::int32(), LEGATE_MAX_DIM);
-  auto store2  = runtime->create_store(legate::int32(), 1);
+  auto store2  = runtime->create_store(legate::int32(), /*dim=*/1);
   auto shape1  = store1.shape();
   auto shape2  = store2.shape();
 

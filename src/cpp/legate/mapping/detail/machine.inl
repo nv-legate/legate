@@ -42,7 +42,7 @@ inline ProcessorSpan::ProcessorSpan(std::uint32_t offset,
 }
 
 inline ProcessorSpan::ProcessorSpan(legate::Span<const Processor> procs)
-  : ProcessorSpan{0, static_cast<std::uint32_t>(procs.size()), procs}
+  : ProcessorSpan{/*offset=*/0, static_cast<std::uint32_t>(procs.size()), procs}
 {
 }
 

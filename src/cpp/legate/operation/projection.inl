@@ -15,7 +15,7 @@ inline SymbolicExpr::SymbolicExpr(std::uint32_t dim, std::int32_t weight, std::i
 {
 }
 
-inline SymbolicExpr::SymbolicExpr(std::uint32_t dim) : SymbolicExpr{dim, 1} {}
+inline SymbolicExpr::SymbolicExpr(std::uint32_t dim) : SymbolicExpr{dim, /*weight=*/1} {}
 
 inline std::uint32_t SymbolicExpr::dim() const { return dim_; }
 
@@ -53,6 +53,9 @@ inline SymbolicExpr SymbolicExpr::operator+(std::int32_t other) const
 
 inline SymbolicExpr dimension(std::uint32_t dim) { return SymbolicExpr{dim}; }
 
-inline SymbolicExpr constant(std::int32_t value) { return {SymbolicExpr::UNSET, 0, value}; }
+inline SymbolicExpr constant(std::int32_t value)
+{
+  return {SymbolicExpr::UNSET, /*weight=*/0, value};
+}
 
 }  // namespace legate

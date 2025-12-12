@@ -48,7 +48,7 @@ template <typename El, typename Ex, typename L, typename A>
 constexpr typename FlatMDSpanView<::cuda::std::mdspan<El, Ex, L, A>>::iterator
 FlatMDSpanView<::cuda::std::mdspan<El, Ex, L, A>>::cbegin() const noexcept
 {
-  return iterator{{}, span_, 0};
+  return iterator{{}, span_, /*idx=*/0};
 }
 
 template <typename El, typename Ex, typename L, typename A>

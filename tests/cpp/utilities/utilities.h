@@ -37,7 +37,7 @@ class RegisterOnceFixture : public DefaultFixture {
     auto* const runtime = legate::Runtime::get_runtime();
     auto created        = false;
     const auto library  = runtime->find_or_create_library(
-      Config::LIBRARY_NAME, legate::ResourceConfig{}, nullptr, {}, &created);
+      Config::LIBRARY_NAME, legate::ResourceConfig{}, /*mapper=*/nullptr, {}, &created);
 
     if (created) {
       Config::registration_callback(library);

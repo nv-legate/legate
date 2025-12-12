@@ -39,7 +39,7 @@ TEST_F(AliasViaPromote, Bug1)
   runtime->issue_fill(store, legate::Scalar{int64_t{42}});
 
   auto task  = runtime->create_task(library, Checker::TASK_CONFIG.task_id());
-  auto part1 = task.add_output(store.promote(1, 100));
+  auto part1 = task.add_output(store.promote(/*extra_dim=*/1, /*dim_size=*/100));
   task.add_constraint(legate::broadcast(part1, {0}));
   runtime->submit(std::move(task));
 }

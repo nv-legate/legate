@@ -67,8 +67,8 @@ void test_array_data(legate::PhysicalStore& store,
   auto descriptor_store                     = list_array.descriptor().data();
   auto vardata_store                        = list_array.vardata().data();
   static constexpr std::int64_t SHAPE_BOUND = 100;
-  auto buffer =
-    vardata_store.create_output_buffer<std::int64_t, DIM>(legate::Point<1>{SHAPE_BOUND}, true);
+  auto buffer = vardata_store.create_output_buffer<std::int64_t, DIM>(legate::Point<1>{SHAPE_BOUND},
+                                                                      /*bind_buffer=*/true);
 
   if (unbound) {
     ASSERT_NO_THROW(descriptor_store.bind_empty_data());
@@ -98,13 +98,13 @@ void test_array_data(legate::PhysicalStore& store,
   }
 
   test_array_data(descriptor_store, unbound, legate::Type::Code::STRUCT, DIM);
-  test_array_data(vardata_store, true, legate::Type::Code::INT64, DIM);
+  test_array_data(vardata_store, /*is_unbound=*/true, legate::Type::Code::INT64, DIM);
 
   auto desc = array.child(0).data();
   auto var  = array.child(1).data();
 
   test_array_data(desc, unbound, legate::Type::Code::STRUCT, DIM);
-  test_array_data(var, true, legate::Type::Code::INT64, DIM);
+  test_array_data(var, /*is_unbound=*/true, legate::Type::Code::INT64, DIM);
 
   ASSERT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
   ASSERT_THROW(static_cast<void>(array.child(-1)), std::out_of_range);
@@ -134,7 +134,7 @@ TEST_P(NullableCreateListArrayTest, BoundListArray)
   static constexpr std::int32_t SHAPE_BOUND = 6;
   auto logical_array = runtime->create_array({SHAPE_BOUND}, arr_type, nullable);
 
-  test_create_list_array_task(logical_array, nullable, false);
+  test_create_list_array_task(logical_array, nullable, /*unbound=*/false);
 }
 
 TEST_P(NullableCreateListArrayTest, UnboundListArray)
@@ -142,9 +142,9 @@ TEST_P(NullableCreateListArrayTest, UnboundListArray)
   const auto nullable = GetParam();
   auto runtime        = legate::Runtime::get_runtime();
   auto arr_type       = legate::list_type(legate::int64()).as_list_type();
-  auto logical_array  = runtime->create_array(arr_type, 1, nullable);
+  auto logical_array  = runtime->create_array(arr_type, /*dim=*/1, nullable);
 
-  test_create_list_array_task(logical_array, nullable, true);
+  test_create_list_array_task(logical_array, nullable, /*unbound=*/true);
 }
 
 }  // namespace physical_array_create_list_test

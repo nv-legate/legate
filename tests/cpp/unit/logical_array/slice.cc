@@ -160,8 +160,9 @@ TEST_P(SliceFixedArrayTest, Basic)
 {
   const auto [type, nullable, params] = GetParam();
   const auto [dim, slice, shape]      = params;
-  auto bound_array = logical_array_util_test::create_array_with_type(type, true, nullable);
-  auto sliced      = bound_array.slice(dim, slice);
+  auto bound_array =
+    logical_array_util_test::create_array_with_type(type, /*bound=*/true, nullable);
+  auto sliced = bound_array.slice(dim, slice);
 
   ASSERT_EQ(sliced.extents().data(), shape);
 }
@@ -170,7 +171,7 @@ TEST_P(NonSliceTest, Basic)
 {
   const auto [type, nullable] = GetParam();
 
-  test_negative_slice(type, false, nullable, 0, legate::Slice{});
+  test_negative_slice(type, /*bound=*/false, nullable, /*dim=*/0, legate::Slice{});
 }
 
 TEST_P(NegativeSliceDimTest, Basic)
@@ -178,7 +179,7 @@ TEST_P(NegativeSliceDimTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [dim, slice]             = params;
 
-  test_negative_slice(type, true, nullable, dim, slice);
+  test_negative_slice(type, /*bound=*/true, nullable, dim, slice);
 }
 
 TEST_P(NegativeSlieBoundsTest, Basic)
@@ -186,7 +187,7 @@ TEST_P(NegativeSlieBoundsTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [dim, slice]             = params;
 
-  test_negative_slice(type, true, nullable, dim, slice);
+  test_negative_slice(type, /*bound=*/true, nullable, dim, slice);
 }
 
 }  // namespace logical_array_slice_test

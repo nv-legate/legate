@@ -328,7 +328,7 @@ TEST_F(FormatterUnit, ExecutionFence)
 {
   // To hit format operation
   const legate::InternalSharedPtr<legate::detail::Operation> smart_ptr{
-    new legate::detail::ExecutionFence{1, false}};
+    new legate::detail::ExecutionFence{/*unique_id=*/1, /*block=*/false}};
   constexpr std::string_view expect_str = "ExecutionFence:1";
 
   ASSERT_EQ(fmt::format("{}", *smart_ptr), expect_str);
@@ -392,7 +392,7 @@ TEST_F(FormatterUnit, TransformedBoundLogicalStore)
 {
   const auto runtime        = legate::Runtime::get_runtime();
   const auto bound_store    = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  const auto promoted       = bound_store.promote(0, 5);
+  const auto promoted       = bound_store.promote(/*extra_dim=*/0, /*dim_size=*/5);
   const auto& promoted_impl = promoted.impl();
 
   ASSERT_THAT(

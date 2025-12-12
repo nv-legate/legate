@@ -185,8 +185,8 @@ void test_normal_copy(const std::vector<std::uint64_t>& shape, const legate::Sca
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto type   = seed.type();
-  auto input  = runtime->create_store(legate::Shape{shape}, type, true /*optimize_scalar*/);
-  auto output = runtime->create_store(legate::Shape{shape}, type, true /*optimize_scalar*/);
+  auto input  = runtime->create_store(legate::Shape{shape}, type, /*optimize_scalar=*/true);
+  auto output = runtime->create_store(legate::Shape{shape}, type, /*optimize_scalar=*/true);
 
   fill_input(library, input, seed);
   runtime->issue_copy(output, input);

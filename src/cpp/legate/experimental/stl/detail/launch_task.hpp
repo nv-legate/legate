@@ -272,7 +272,7 @@ class Function<Fn> {
    */
   void operator()(AutoTask& task) const
   {
-    task.add_scalar_arg(Scalar{binary_type(sizeof(fn)), std::addressof(fn), true});
+    task.add_scalar_arg(Scalar{binary_type(sizeof(fn)), std::addressof(fn), /*copy=*/true});
   }
 };
 
@@ -383,7 +383,7 @@ class Reduction<Store, Fun> {
     const auto kind = record_reduction_for_<element_type_of_t<Store>, Fun>();
 
     task.add_reduction(data, kind, std::move(part));
-    task.add_scalar_arg(Scalar{binary_type(sizeof(fn)), std::addressof(fn), true});
+    task.add_scalar_arg(Scalar{binary_type(sizeof(fn)), std::addressof(fn), /*copy=*/true});
   }
 };
 

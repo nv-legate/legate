@@ -69,7 +69,7 @@ class InlineLaunchUnit : public RegisterOnceFixture<Config> {
 
  private:
   legate::test::Environment::TemporaryEnvVar legate_config_{"LEGATE_CONFIG",
-                                                            "--inline-task-launch ",
+                                                            /*value=*/"--inline-task-launch ",
                                                             /* overwrite */ true};
 };
 

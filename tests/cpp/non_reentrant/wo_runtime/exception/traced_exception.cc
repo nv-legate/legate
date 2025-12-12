@@ -89,13 +89,16 @@ using TracedExceptionDeathTest = TracedExceptionUnit;
 
 class TracedNonStdException : public legate::detail::TracedExceptionBase {
  public:
-  TracedNonStdException() : TracedExceptionBase{std::make_exception_ptr(NonStdException{}), 0} {}
+  TracedNonStdException()
+    : TracedExceptionBase{std::make_exception_ptr(NonStdException{}), /*skip_frames=*/0}
+  {
+  }
 };
 
 class TracedNestedNonStdException : public legate::detail::TracedExceptionBase {
  public:
   TracedNestedNonStdException()
-    : TracedExceptionBase{std::make_exception_ptr(TracedNonStdException{}), 0}
+    : TracedExceptionBase{std::make_exception_ptr(TracedNonStdException{}), /*skip_frames=*/0}
   {
   }
 };

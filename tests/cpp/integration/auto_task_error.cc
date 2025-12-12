@@ -22,7 +22,7 @@ TEST_F(AutoTask, InvalidUnboundArray)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::simple::LIBRARY_NAME);
 
-  auto unbound_array = runtime->create_array(legate::int64(), 1);
+  auto unbound_array = runtime->create_array(legate::int64(), /*dim=*/1);
 
   auto task = runtime->create_task(library, task::simple::HelloTask::TASK_CONFIG.task_id());
 
@@ -39,8 +39,9 @@ TEST_F(AutoTask, InvalidListArray)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::simple::LIBRARY_NAME);
 
-  auto type       = legate::list_type(legate::int64());
-  auto descriptor = runtime->create_array(legate::Shape{2}, legate::rect_type(1), true);
+  auto type = legate::list_type(legate::int64());
+  auto descriptor =
+    runtime->create_array(legate::Shape{2}, legate::rect_type(1), /*nullable=*/true);
   auto vardata    = runtime->create_array(legate::Shape{3}, legate::int64());
   auto list_array = runtime->create_list_array(descriptor, vardata, type);
 

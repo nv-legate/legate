@@ -75,7 +75,7 @@ void Attachment::detach(bool unordered)
                  region, !allocations_.front()->read_only(), unordered);
              },
              [&](const Legion::ExternalResources& resources) {
-               return Runtime::get_runtime().detach(resources, false /*flush*/, unordered);
+               return Runtime::get_runtime().detach(resources, /*flush=*/false, unordered);
              }},
     handle_));
 }

@@ -49,13 +49,13 @@ void test_scalar_out()
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   const legate::Shape extents{16};
-  auto input  = runtime->create_store(extents, legate::int64(), false /* optimize_scalar */);
+  auto input  = runtime->create_store(extents, legate::int64(), /*optimize_scalar=*/false);
   auto output = runtime->create_store(legate::Scalar{int64_t{0}});
 
   runtime->issue_fill(input, legate::Scalar{int64_t{123}});
 
   {
-    auto sliced   = input.slice(0, legate::Slice{2, 3});
+    auto sliced   = input.slice(/*dim=*/0, legate::Slice{2, 3});
     auto task     = runtime->create_task(library, Copy::TASK_CONFIG.task_id());
     auto part_in  = task.add_input(sliced);
     auto part_out = task.add_output(output);

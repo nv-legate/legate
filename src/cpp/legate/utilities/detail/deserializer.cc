@@ -347,7 +347,7 @@ void CopyDeserializer::unpack_impl(RegionField& value)
   auto&& req = curr_reqs_->get()[idx];
 
   value = RegionField{
-    req, dim, idx + req_index_offset_, static_cast<Legion::FieldID>(fid), false /*unbound*/};
+    req, dim, idx + req_index_offset_, static_cast<Legion::FieldID>(fid), /*unbound=*/false};
 }
 
 }  // namespace legate::mapping::detail

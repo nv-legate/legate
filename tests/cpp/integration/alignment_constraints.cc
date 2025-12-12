@@ -196,14 +196,19 @@ void test_alignment_transformed()
   initialize(store3);
   initialize(store4);
 
-  launch_tester(store1.promote(1, 10), store2);
-  launch_tester(store1, store2.project(1, 5));
-  launch_tester(store1.promote(1, 10), store3.project(2, 0));
-  launch_tester(store1.promote(1, 10).promote(2, 2), store3);
-  launch_tester(store1.promote(1, 5), store2.slice(1, legate::Slice{3, 8}));
-  launch_tester(store1.promote(0, 10).transpose({1, 0}), store2);
-  launch_tester(store1.delinearize(0, {10, 10}), store4);
-  launch_tester(store4.transpose({1, 0}).promote(0, 1), store4.promote(0, 1));
+  launch_tester(store1.promote(/*extra_dim=*/1, /*dim_size=*/10), store2);
+  launch_tester(store1, store2.project(/*dim=*/1, /*index=*/5));
+  launch_tester(store1.promote(/*extra_dim=*/1, /*dim_size=*/10),
+                store3.project(/*dim=*/2, /*index=*/0));
+  launch_tester(
+    store1.promote(/*extra_dim=*/1, /*dim_size=*/10).promote(/*extra_dim=*/2, /*dim_size=*/2),
+    store3);
+  launch_tester(store1.promote(/*extra_dim=*/1, /*dim_size=*/5),
+                store2.slice(/*dim=*/1, legate::Slice{3, 8}));
+  launch_tester(store1.promote(/*extra_dim=*/0, /*dim_size=*/10).transpose({1, 0}), store2);
+  launch_tester(store1.delinearize(/*dim=*/0, {10, 10}), store4);
+  launch_tester(store4.transpose({1, 0}).promote(/*extra_dim=*/0, /*dim_size=*/1),
+                store4.promote(/*extra_dim=*/0, /*dim_size=*/1));
 }
 
 void test_redundant_alignment()

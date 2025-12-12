@@ -22,7 +22,7 @@ namespace {
 // NOLINTNEXTLINE(readability-identifier-naming)
 void test_rows_of_2D_store()
 {
-  auto store      = stl::create_store<std::int64_t>({4, 5}, 0);
+  auto store      = stl::create_store<std::int64_t>({4, 5}, /*value=*/0);
   auto store_span = stl::as_mdspan(store);
 
   auto rows = stl::rows_of(store);
@@ -68,7 +68,7 @@ void test_rows_of_2D_store()
 // NOLINTNEXTLINE(readability-identifier-naming)
 void test_columns_of_2D_store()
 {
-  auto store                         = stl::create_store<std::int64_t>({4, 5}, 0);
+  auto store                         = stl::create_store<std::int64_t>({4, 5}, /*value=*/0);
   auto store_span                    = stl::as_mdspan(store);
   const legate::PhysicalStore pstore = stl::detail::get_logical_store(store).get_physical_store();
   auto acc                           = pstore.read_accessor<std::int64_t, 2>();

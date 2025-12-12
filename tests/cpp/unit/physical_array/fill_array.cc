@@ -228,7 +228,7 @@ TEST_P(NullableFillArrayTest, BoundPrimitiveArray)
   const auto nullable = GetParam();
   auto runtime        = legate::Runtime::get_runtime();
   auto logical_array  = runtime->create_array({1, 4}, legate::int32(), nullable);
-  test_fill_array_task(logical_array, nullable, false);
+  test_fill_array_task(logical_array, nullable, /*unbound=*/false);
 }
 
 TEST_P(NullableFillArrayTest, UnboundPrimitiveArray)
@@ -237,7 +237,7 @@ TEST_P(NullableFillArrayTest, UnboundPrimitiveArray)
   auto runtime              = legate::Runtime::get_runtime();
   static constexpr auto DIM = 2;
   auto logical_array        = runtime->create_array(legate::int32(), DIM, nullable);
-  test_fill_array_task(logical_array, nullable, true);
+  test_fill_array_task(logical_array, nullable, /*unbound=*/true);
 }
 
 }  // namespace physical_array_fill_test

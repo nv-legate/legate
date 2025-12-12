@@ -199,7 +199,7 @@ legate::LogicalStore wrap_fill_value(const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto result  = runtime->create_store(legate::Shape{1}, value.type(), true);
+  auto result  = runtime->create_store(legate::Shape{1}, value.type(), /*optimize_scalar=*/true);
 
   auto task = runtime->create_task(context, legate::LocalTaskID{WRAP_FILL_VAL_TASK});
   task.add_output(result);
@@ -216,7 +216,7 @@ void test_fill_index(std::int32_t dim, std::uint64_t size, bool nullable)
   auto lhs = runtime->create_array(legate::full(static_cast<std::uint64_t>(dim), size),
                                    legate::int64(),
                                    nullable /*nullable*/,
-                                   true /*optimize_scalar*/);
+                                   /*optimize_scalar=*/true);
   auto v   = legate::Scalar{int64_t{10}};
 
   // fill input array with some values
@@ -260,7 +260,7 @@ void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool 
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), false /*nullable*/);
+  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), /*nullable=*/false);
   auto v       = legate::Scalar{10.0};
 
   // Type mismatch
@@ -283,7 +283,7 @@ TEST_P(Whole, Single)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  const legate::Scope scope{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
+  const legate::Scope scope{machine.slice(/*from=*/0, /*to=*/1, legate::mapping::TaskTarget::CPU)};
 
   const auto& [nullable, dim, size] = GetParam();
   test_fill_index(dim, size, nullable);
@@ -342,7 +342,7 @@ TEST_F(FillTests, FillUnboundStoreWithStore)
 TEST_F(FillTests, FillStructArrayWithScalar)
 {
   auto runtime      = legate::Runtime::get_runtime();
-  auto struct_array = runtime->create_array(legate::struct_type(true, legate::int64()));
+  auto struct_array = runtime->create_array(legate::struct_type(/*align=*/true, legate::int64()));
   const auto value  = legate::Scalar{10};
 
   ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },
@@ -353,7 +353,7 @@ TEST_F(FillTests, FillStructArrayWithScalar)
 TEST_F(FillTests, FillStructArrayWithStore)
 {
   auto runtime      = legate::Runtime::get_runtime();
-  auto struct_array = runtime->create_array(legate::struct_type(true, legate::int64()));
+  auto struct_array = runtime->create_array(legate::struct_type(/*align=*/true, legate::int64()));
   const auto value  = runtime->create_store(legate::int64());
 
   ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },

@@ -117,8 +117,8 @@ TEST_F(FixedArrayTypeUnit, FixedArrayTypeBadCast)
 
 TEST_F(FixedArrayTypeUnit, Equal)
 {
-  auto type1 = legate::fixed_array_type(legate::uint32(), 1);
-  auto type2 = legate::fixed_array_type(legate::uint32(), 1);
+  auto type1 = legate::fixed_array_type(legate::uint32(), /*N=*/1);
+  auto type2 = legate::fixed_array_type(legate::uint32(), /*N=*/1);
 
   ASSERT_TRUE(type1 == type2);
 }
@@ -126,7 +126,7 @@ TEST_F(FixedArrayTypeUnit, Equal)
 TEST_F(FixedArrayTypeUnit, NotEqual)
 {
   auto type1 = legate::uint16();
-  auto type2 = legate::fixed_array_type(legate::uint32(), 1);
+  auto type2 = legate::fixed_array_type(legate::uint32(), /*N=*/1);
 
   ASSERT_FALSE(type2 == type1);
 }

@@ -32,7 +32,7 @@ legate::LogicalStore create_normal_store(std::uint32_t index, const legate::Shap
 
   switch (index) {
     case 0: store = runtime->create_store(shape, legate::int32()); break;
-    case 1: store = runtime->create_store(shape, legate::int32(), true /*optimize_scalar*/); break;
+    case 1: store = runtime->create_store(shape, legate::int32(), /*optimize_scalar=*/true); break;
     default: break;
   }
   return store;

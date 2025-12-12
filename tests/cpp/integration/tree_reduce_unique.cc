@@ -53,7 +53,7 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
     }
 
     auto result = output.create_output_buffer<std::int64_t, 1>(
-      static_cast<legate::coord_t>(dedup_set.size()), true);
+      static_cast<legate::coord_t>(dedup_set.size()), /*bind_buffer=*/true);
     std::int64_t pos = 0;
     for (auto e : dedup_set) {
       result[pos++] = e;
@@ -86,7 +86,8 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 
     const std::size_t size = dedup_set.size();
     std::int64_t pos       = 0;
-    auto result = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size}, true);
+    auto result =
+      output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size}, /*bind_buffer=*/true);
     for (auto e : dedup_set) {
       result[pos++] = e;
     }
@@ -141,13 +142,13 @@ TEST_F(TreeReduceUnique, All)
   runtime->submit(std::move(task_fill));
 
   auto task_unique = runtime->create_task(context, UniqueTask::TASK_CONFIG.task_id(), {num_tasks});
-  auto intermediate_result = runtime->create_store(legate::int64(), 1);
+  auto intermediate_result = runtime->create_store(legate::int64(), /*dim=*/1);
   task_unique.add_input(part);
   task_unique.add_output(intermediate_result);
   runtime->submit(std::move(task_unique));
 
-  auto result =
-    runtime->tree_reduce(context, UniqueReduceTask::TASK_CONFIG.task_id(), intermediate_result, 4);
+  auto result = runtime->tree_reduce(
+    context, UniqueReduceTask::TASK_CONFIG.task_id(), intermediate_result, /*radix=*/4);
 
   EXPECT_FALSE(result.unbound());
 

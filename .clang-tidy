@@ -197,4 +197,16 @@ CheckOptions:
   readability-identifier-naming.ScopedEnumConstantCase: 'UPPER_CASE'
   readability-magic-numbers.IgnoredIntegerValues: '0;1;2;3;4;5;6;7;8;9'
   bugprone-suspicious-stringview-data-usage.AllowedCallees: '^::legate::detail::BasicZStringView'
+  # There are some single-argument functions that we would not like to ignore
+  # (`to_string(bool provenance = false)` comes to mind), but setting this to false makes
+  # clang-tidy warn on a bunch of "obvious" calls, like `set_dim(1)` or
+  # `with_concurrent(true)`.
+  bugprone-argument-comment.IgnoreSingleArgument: true
+  bugprone-argument-comment.CommentBoolLiterals: true
+  bugprone-argument-comment.CommentIntegerLiterals: true
+  bugprone-argument-comment.CommentFloatLiterals: true
+  bugprone-argument-comment.CommentStringLiterals: true
+  bugprone-argument-comment.CommentCharacterLiterals: true
+  bugprone-argument-comment.CommentUserDefinedLiterals: true
+  bugprone-argument-comment.CommentNullPtrs: true
 ...

@@ -44,7 +44,7 @@ TEST_P(ConfigureFBMemUnit, Preset)
 {
   constexpr auto FBMEM_SIZE = 128;
   auto fbmem                = FBMemType{nullptr, "--fbmem", ScaledType{FBMEM_SIZE, MB, "MiB"}};
-  const auto gpus           = GPUsType{nullptr, "--gpus", 0};
+  const auto gpus           = GPUsType{nullptr, "--gpus", /*init=*/0};
 
   legate::detail::configure_fbmem(/* auto_config */ GetParam(), /* cuda */ nullptr, gpus, &fbmem);
   ASSERT_EQ(fbmem.value().unscaled_value(), FBMEM_SIZE);
@@ -52,8 +52,8 @@ TEST_P(ConfigureFBMemUnit, Preset)
 
 TEST_P(ConfigureFBMemUnit, UnsetNoGPUs)
 {
-  auto fbmem      = FBMemType{nullptr, "--fbmem", ScaledType{-1, MB, "MiB"}};
-  const auto gpus = GPUsType{nullptr, "--gpus", 0};
+  auto fbmem      = FBMemType{nullptr, "--fbmem", ScaledType{/*value=*/-1, MB, "MiB"}};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/0};
 
   legate::detail::configure_fbmem(/* auto_config */ GetParam(), /* cuda */ nullptr, gpus, &fbmem);
   ASSERT_EQ(fbmem.value().unscaled_value(), 0);
@@ -62,8 +62,8 @@ TEST_P(ConfigureFBMemUnit, UnsetNoGPUs)
 TEST_P(ConfigureFBMemUnit, UnsetNoCUDA)
 {
   constexpr auto MINIMAL_MEM = 256;
-  auto fbmem                 = FBMemType{nullptr, "--fbmem", ScaledType{-1, MB, "MiB"}};
-  const auto gpus            = GPUsType{nullptr, "--gpus", 1};
+  auto fbmem                 = FBMemType{nullptr, "--fbmem", ScaledType{/*value=*/-1, MB, "MiB"}};
+  const auto gpus            = GPUsType{nullptr, "--gpus", /*init=*/1};
 
   legate::detail::configure_fbmem(/* auto_config */ GetParam(), /* cuda */ nullptr, gpus, &fbmem);
   ASSERT_EQ(fbmem.value().unscaled_value(), MINIMAL_MEM);
@@ -157,8 +157,8 @@ TEST_F(ConfigureFBMemUnit, AutoConfigCUDA)
     }
   };
 
-  auto fbmem      = FBMemType{nullptr, "--fbmem", ScaledType{-1, MB, "MiB"}};
-  const auto gpus = GPUsType{nullptr, "--gpus", 1};
+  auto fbmem      = FBMemType{nullptr, "--fbmem", ScaledType{/*value=*/-1, MB, "MiB"}};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/1};
   auto cuda       = MockCUDAModuleConfig{};
 
   {
@@ -188,8 +188,8 @@ TEST_F(ConfigureFBMemUnit, AutoConfigFail)
     }
   };
 
-  auto fbmem      = FBMemType{nullptr, "--fbmem", ScaledType{-1, MB, "MiB"}};
-  const auto gpus = GPUsType{nullptr, "--gpus", 1};
+  auto fbmem      = FBMemType{nullptr, "--fbmem", ScaledType{/*value=*/-1, MB, "MiB"}};
+  const auto gpus = GPUsType{nullptr, "--gpus", /*init=*/1};
   auto cuda       = MockCUDAModuleConfig{};
 
   ASSERT_THAT(

@@ -251,10 +251,16 @@ void task_body(const legate::TaskContext& context, bool is_device)
 
 }  // namespace
 
-/*static*/ void HDF5Read::cpu_variant(legate::TaskContext context) { task_body(context, false); }
+/*static*/ void HDF5Read::cpu_variant(legate::TaskContext context)
+{
+  task_body(context, /*is_device=*/false);
+}
 
 /*static*/ void HDF5Read::omp_variant(legate::TaskContext context) { cpu_variant(context); }
 
-/*static*/ void HDF5Read::gpu_variant(legate::TaskContext context) { task_body(context, true); }
+/*static*/ void HDF5Read::gpu_variant(legate::TaskContext context)
+{
+  task_body(context, /*is_device=*/true);
+}
 
 }  // namespace legate::io::hdf5::detail

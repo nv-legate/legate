@@ -70,7 +70,7 @@ class Environment {
     ~TemporaryEnvVar()
     {
       if (prev_value_.has_value()) {
-        Environment::set_env_var(name_.c_str(), prev_value_->c_str(), true);
+        Environment::set_env_var(name_.c_str(), prev_value_->c_str(), /*overwrite=*/true);
       } else {
         Environment::unset_env_var(name_.c_str());
       }

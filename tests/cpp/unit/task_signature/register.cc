@@ -43,7 +43,11 @@ class RangeTask : public legate::LegateTask<RangeTask> {
   // NOLINTNEXTLINE(cert-err58-cpp)
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}}.with_signature(
-      legate::TaskSignature{}.inputs(1, 2).outputs(1, 2).redops(1, 2).scalars(1, 2));
+      legate::TaskSignature{}
+        .inputs(/*lower_bound=*/1, /*upper_bound=*/2)
+        .outputs(/*lower_bound=*/1, /*upper_bound=*/2)
+        .redops(/*lower_bound=*/1, /*upper_bound=*/2)
+        .scalars(/*lower_bound=*/1, /*upper_bound=*/2));
 
   static void cpu_variant(legate::TaskContext) {}
 };
@@ -337,9 +341,9 @@ namespace {
     legate::TaskSignature{}  // The task expects exactly 2 inputs...
       .inputs(2)
       // But may take at least 3 and no more than 5 outputs...
-      .outputs(3, 5)
+      .outputs(/*lower_bound=*/3, /*upper_bound=*/5)
       // While taking an unbounded number of scalars (but must have at least 1)
-      .scalars(1, legate::TaskSignature::UNBOUNDED)
+      .scalars(/*lower_bound=*/1, legate::TaskSignature::UNBOUNDED)
       // With the following constraints imposed on the arguments
       .constraints(
         {{// Align the first input with the first output

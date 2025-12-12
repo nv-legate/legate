@@ -205,10 +205,10 @@ TYPED_TEST(TupleUnit, Insert)
   const legate::tuple<typename TypeParam::value_type> tuple{1, 2, 3};
   const legate::tuple<typename TypeParam::value_type> tuple_empty{};
 
-  const auto tuple1 = tuple.insert(2, 10);
+  const auto tuple1 = tuple.insert(/*pos=*/2, 10);
   ASSERT_EQ(tuple1, (legate::tuple<typename TypeParam::value_type>{1, 2, 10, 3}));
 
-  const auto tuple2 = tuple_empty.insert(0, 10);
+  const auto tuple2 = tuple_empty.insert(/*pos=*/0, 10);
   ASSERT_EQ(tuple2, (legate::tuple<typename TypeParam::value_type>{10}));
 }
 
@@ -217,10 +217,10 @@ TYPED_TEST(TupleUnit, InsertInplace)
   legate::tuple<typename TypeParam::value_type> tuple{1, 2, 3};
   legate::tuple<typename TypeParam::value_type> tuple_empty{};
 
-  tuple.insert_inplace(3, 10);
+  tuple.insert_inplace(/*pos=*/3, 10);
   ASSERT_EQ(tuple, (legate::tuple<typename TypeParam::value_type>{1, 2, 3, 10}));
 
-  tuple_empty.insert_inplace(0, 10);
+  tuple_empty.insert_inplace(/*pos=*/0, 10);
   ASSERT_EQ(tuple_empty, (legate::tuple<typename TypeParam::value_type>{10}));
 }
 
@@ -273,10 +273,10 @@ TYPED_TEST(TupleUnit, RemoveInplace)
 TYPED_TEST(TupleUnit, Update)
 {
   const legate::tuple<typename TypeParam::value_type> tuple{1, 2, 3, 4, 5};
-  const auto tuple1 = tuple.update(0, 10);
+  const auto tuple1 = tuple.update(/*pos=*/0, 10);
   ASSERT_EQ(tuple1, (legate::tuple<typename TypeParam::value_type>{10, 2, 3, 4, 5}));
 
-  const auto tuple2 = tuple.update(4, 10);
+  const auto tuple2 = tuple.update(/*pos=*/4, 10);
   ASSERT_EQ(tuple2, (legate::tuple<typename TypeParam::value_type>{1, 2, 3, 4, 10}));
 }
 

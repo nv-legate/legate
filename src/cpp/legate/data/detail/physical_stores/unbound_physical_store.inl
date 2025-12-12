@@ -21,9 +21,9 @@ inline UnboundPhysicalStore::UnboundPhysicalStore(
                   std::move(type),
                   GlobalRedopID{-1},
                   std::move(transform),
-                  false,
-                  false,
-                  false},
+                  /*readable=*/false,
+                  /*writable=*/false,
+                  /*reducible=*/false},
     unbound_field_{std::move(unbound_field)}
 {
 }

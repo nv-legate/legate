@@ -21,7 +21,7 @@ class LEGATE_EXPORT FixupRanges : public LegateTask<FixupRanges> {
     legate::TaskConfig{LocalTaskID{CoreTask::FIXUP_RANGES}}.with_signature(
       legate::TaskSignature{}
         .inputs(0)
-        .outputs(0, legate::TaskSignature::UNBOUNDED)
+        .outputs(/*lower_bound=*/0, legate::TaskSignature::UNBOUNDED)
         .scalars(0)
         .redops(0)
         .constraints({Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}

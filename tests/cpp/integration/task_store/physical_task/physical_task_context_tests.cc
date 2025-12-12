@@ -142,7 +142,7 @@ TEST_F(PhysicalTaskContextTests, PhysicalTaskMixedInputOutput)
   // Verify: input (42) + 10 = output (52). No fence needed - PhysicalTask executes inline
   constexpr auto MIXED_IO_INCREMENT = 10;  // Must match value in MixedIOTask
   const auto expected_value         = initial_value + MIXED_IO_INCREMENT;
-  dim_dispatch(2, VerifyOutputBody{}, array.data(), expected_value);
+  dim_dispatch(/*dim=*/2, VerifyOutputBody{}, array.data(), expected_value);
 }
 
 // Test direct PhysicalTask creation has launch index [0,0]
@@ -195,7 +195,7 @@ TEST_F(TaskStoreTests, PhysicalTaskInlineExecution)
   runtime->submit(std::move(task));
 
   // Verify inline execution: if deferred, this would fail without execution_fence
-  dim_dispatch(2, VerifyOutputBody{}, array.data(), initial_value);
+  dim_dispatch(/*dim=*/2, VerifyOutputBody{}, array.data(), initial_value);
 }
 
 }  // namespace test_task_store

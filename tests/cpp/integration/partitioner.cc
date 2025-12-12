@@ -31,7 +31,7 @@ struct Checker : public legate::LegateTask<Checker> {
   {
     // Does not work with inline task launch, since no tasks are ever parallelized in that
     // mode.
-    if (!legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.get(false)) {
+    if (!legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.get(/*default_value=*/false)) {
       EXPECT_FALSE(context.is_single_task());
     }
   }

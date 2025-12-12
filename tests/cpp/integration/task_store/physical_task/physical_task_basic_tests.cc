@@ -21,8 +21,9 @@ constexpr std::string_view BASIC_TEST_LIBRARY_NAME = "test_physical_task_basic";
 legate::PhysicalArray make_physical_array(const legate::Shape& shape, bool optimize_scalar)
 {
   auto* runtime      = legate::Runtime::get_runtime();
-  auto store         = optimize_scalar ? runtime->create_store(shape, legate::int32(), true)
-                                       : runtime->create_store(shape, legate::int32());
+  auto store         = optimize_scalar
+                         ? runtime->create_store(shape, legate::int32(), /*optimize_scalar=*/true)
+                         : runtime->create_store(shape, legate::int32());
   auto logical_array = legate::LogicalArray{store};
   return logical_array.get_physical_array();
 }
@@ -112,7 +113,7 @@ void physical_task_normal_output(const legate::PhysicalArray& array)
   auto expected_value = in_value1;
   // Force synchronization - ensure PhysicalTask executes before verification
   runtime->issue_execution_fence(true);  // block=true waits for completion
-  dim_dispatch(2, VerifyOutputBody{}, array.data(), expected_value);
+  dim_dispatch(/*dim=*/2, VerifyOutputBody{}, array.data(), expected_value);
 }
 
 void physical_task_normal_reduction(const legate::PhysicalArray& array)
@@ -142,7 +143,7 @@ void physical_task_normal_reduction(const legate::PhysicalArray& array)
   auto expected_value = in_value1;
   // Force synchronization - ensure PhysicalTask executes before verification
   runtime->issue_execution_fence(true);  // block=true waits for completion
-  dim_dispatch(2, VerifyOutputBody{}, array.data(), expected_value);
+  dim_dispatch(/*dim=*/2, VerifyOutputBody{}, array.data(), expected_value);
 }
 
 // Simple API tests that just verify PhysicalTask methods can be called without exceptions

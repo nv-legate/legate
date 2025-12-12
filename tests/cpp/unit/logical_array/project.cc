@@ -98,8 +98,9 @@ TEST_P(ProjectFixedArrayTest, Basic)
 {
   const auto [type, nullable, params] = GetParam();
   const auto [dim, index, shape]      = params;
-  auto bound_array = logical_array_util_test::create_array_with_type(type, true, nullable);
-  auto projected   = bound_array.project(dim, index);
+  auto bound_array =
+    logical_array_util_test::create_array_with_type(type, /*bound=*/true, nullable);
+  auto projected = bound_array.project(dim, index);
 
   ASSERT_EQ(projected.extents().data(), shape);
 }
@@ -108,7 +109,7 @@ TEST_P(NonProjectTest, Basic)
 {
   const auto [type, nullable] = GetParam();
 
-  test_negative_project(type, false, nullable, 0, 0);
+  test_negative_project(type, /*bound=*/false, nullable, /*dim=*/0, /*index=*/0);
 }
 
 TEST_P(NegativeProjectDimTest, Basic)
@@ -116,7 +117,7 @@ TEST_P(NegativeProjectDimTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [dim, index]             = params;
 
-  test_negative_project(type, true, nullable, dim, index);
+  test_negative_project(type, /*bound=*/true, nullable, dim, index);
 }
 
 TEST_P(NegativeProjectIndexTest, Basic)
@@ -124,7 +125,7 @@ TEST_P(NegativeProjectIndexTest, Basic)
   const auto [type, nullable, params] = GetParam();
   const auto [dim, index]             = params;
 
-  test_negative_project(type, true, nullable, dim, index);
+  test_negative_project(type, /*bound=*/true, nullable, dim, index);
 }
 
 }  // namespace logical_array_project_test

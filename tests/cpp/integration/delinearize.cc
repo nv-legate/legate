@@ -81,10 +81,11 @@ void test_delinearize()
     runtime->submit(std::move(task));
   }
   {
-    auto transformed = input.promote(0, 1).delinearize(1, {8, 2});
-    auto task        = runtime->create_task(library, Copy::TASK_CONFIG.task_id());
-    auto part_in     = task.add_input(transformed);
-    auto part_out    = task.add_output(output);
+    auto transformed =
+      input.promote(/*extra_dim=*/0, /*dim_size=*/1).delinearize(/*dim=*/1, {8, 2});
+    auto task     = runtime->create_task(library, Copy::TASK_CONFIG.task_id());
+    auto part_in  = task.add_input(transformed);
+    auto part_out = task.add_output(output);
     task.add_constraint(legate::align(part_out, part_in));
     runtime->submit(std::move(task));
   }

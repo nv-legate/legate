@@ -51,11 +51,13 @@ TEST_F(UnboundNullableArray, Bug1)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto library  = runtime->find_library(Config::LIBRARY_NAME);
-  const auto int_arr  = runtime->create_array(legate::int64(), 1, true /*nullable*/);
+  const auto int_arr  = runtime->create_array(legate::int64(), /*dim=*/1, /*nullable=*/true);
   const auto list_arr =
-    runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/);
+    runtime->create_array(legate::list_type(legate::int64()), /*dim=*/1, /*nullable=*/true);
   const auto struct_arr =
-    runtime->create_array(legate::struct_type(true, legate::int64()), 1, true /*nullable*/);
+    runtime->create_array(legate::struct_type(/*align=*/true, legate::int64()),
+                          /*dim=*/1,
+                          /*nullable=*/true);
 
   auto task = runtime->create_task(library, Initialize::TASK_CONFIG.task_id());
   task.add_output(int_arr);
@@ -68,13 +70,15 @@ TEST_F(UnboundNullableArray, Bug2)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto library  = runtime->find_library(Config::LIBRARY_NAME);
-  const auto int_arr  = runtime->create_array(legate::int64(), 1, true /*nullable*/);
+  const auto int_arr  = runtime->create_array(legate::int64(), /*dim=*/1, /*nullable=*/true);
   const auto list_arr =
-    runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/);
+    runtime->create_array(legate::list_type(legate::int64()), /*dim=*/1, /*nullable=*/true);
   const auto struct_arr =
-    runtime->create_array(legate::struct_type(true, legate::int64()), 1, true /*nullable*/);
+    runtime->create_array(legate::struct_type(/*align=*/true, legate::int64()),
+                          /*dim=*/1,
+                          /*nullable=*/true);
   const auto dummy_arr =
-    runtime->create_array(legate::Shape{4}, legate::int64(), true /*nullable*/);
+    runtime->create_array(legate::Shape{4}, legate::int64(), /*nullable=*/true);
 
   auto task = runtime->create_task(library, Initialize::TASK_CONFIG.task_id());
   task.add_output(int_arr);

@@ -362,7 +362,7 @@ std::vector<legate::LogicalStore> create_stores(const std::vector<legate::Scalar
   for (auto&& [idx, scalar] : legate::detail::enumerate(scalars)) {
     auto store = runtime->create_store(legate::Shape{legate::full((idx % 3) + 1, std::uint64_t{1})},
                                        scalar.type(),
-                                       true /*optimize_scalar*/);
+                                       /*optimize_scalar=*/true);
     runtime->issue_fill(store, create_zero(scalar.type()));
     result.push_back(std::move(store));
   }

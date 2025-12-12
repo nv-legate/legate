@@ -43,7 +43,7 @@ TEST_F(SingletonIndexTask, Bug1)
   runtime->issue_fill(store, legate::Scalar{int64_t{42}});
 
   auto task  = runtime->create_task(library, Checker::TASK_CONFIG.task_id());
-  auto part1 = task.add_output(store.project(0, 0));
+  auto part1 = task.add_output(store.project(/*dim=*/0, /*index=*/0));
   auto part2 = task.add_output(runtime->create_store(legate::Scalar{42}));
   task.add_constraint(legate::align(part1, part2));
   task.add_communicator("cpu");
