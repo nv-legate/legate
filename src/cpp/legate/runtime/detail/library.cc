@@ -63,8 +63,12 @@ Library::Library(ConstructKey,
 /*static*/ void Library::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
                                           const Legion::UntypedBuffer& buffer)
 {
+  // Under single-controller execution, only the controller will call this method; however,
+  // callback must be executed on all workers, so register the callback globally.
+  const bool global = Runtime::get_runtime().config().single_controller_execution();
+
   Legion::Runtime::perform_registration_callback(
-    callback, buffer, false /*global*/, false /*dedup*/);
+    callback, buffer, global /*global*/, false /*dedup*/);
 }
 
 GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
