@@ -192,6 +192,7 @@ set(
   integration/req_analyzer.cc
   integration/scalar_out.cc
   integration/scale_constraints.cc
+  integration/store_colocation.cc
   integration/streaming_checker.cc
   integration/task_misc.cc
   integration/tasks/task_simple.cc
@@ -250,14 +251,20 @@ set(
   unit/machine/global_machine.cc
   unit/machine/local_machine.cc
   unit/machine/local_machine_selector.cc
-  unit/mapping/base_array.cc
+  unit/mapping/array/base_array.cc
+  unit/mapping/array/list_array.cc
+  unit/mapping/array/struct_array.cc
   unit/mapping/common_api.cc
   unit/mapping/dim_ordering.cc
   unit/mapping/instance_manager.cc
   unit/mapping/instance_mapping_policy.cc
-  unit/mapping/list_array.cc
+  unit/mapping/store/api_test.cc
+  unit/mapping/store/colocate.cc
+  unit/mapping/store/domain.cc
+  unit/mapping/store/future_wrapper.cc
+  unit/mapping/store/properties.cc
+  unit/mapping/store/transform.cc
   unit/mapping/store_mapping.cc
-  unit/mapping/struct_array.cc
   unit/partition/image.cc
   unit/partition/nopartition.cc
   unit/partition/tiling.cc

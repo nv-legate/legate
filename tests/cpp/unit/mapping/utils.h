@@ -13,7 +13,7 @@
 #include <legate/mapping/detail/store.h>
 #include <legate/utilities/detail/tuple.h>
 
-namespace mapping_array_test {
+namespace mapping_utils_test {
 
 // Helper function to create a test store using FutureWrapper
 [[nodiscard]] inline legate::mapping::detail::Store create_test_store(const legate::Shape& shape,
@@ -38,4 +38,4 @@ namespace mapping_array_test {
                                         std::move(transform)};
 }
 
-}  // namespace mapping_array_test
+}  // namespace mapping_utils_test

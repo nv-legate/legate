@@ -6,12 +6,12 @@
 
 #include <gtest/gtest.h>
 
-#include <unit/mapping/array_test_utils.h>
+#include <unit/mapping/utils.h>
 #include <utilities/utilities.h>
 
 namespace mapping_list_array_test {
 
-using mapping_array_test::create_test_store;
+using mapping_utils_test::create_test_store;
 
 namespace {
 
