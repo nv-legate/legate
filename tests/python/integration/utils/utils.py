@@ -3,9 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import os
-import sys
-from subprocess import PIPE, STDOUT, CompletedProcess, run
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -124,37 +121,3 @@ class UnversionedDLPack:
         return self.arr.__dlpack__(
             stream=stream, dl_device=dl_device, copy=copy
         )
-
-
-def subprocess_helper(
-    file: str, case: str, env: dict[str, str]
-) -> CompletedProcess[bytes]:
-    """Helper for launching test case in a new legate process."""
-    try:
-        import coverage  # type: ignore[import-not-found]  # noqa: F401, PLC0415
-
-        cov_args = ["coverage", "run", "-m"]
-    except ModuleNotFoundError:
-        cov_args = []
-
-    pruned_env = os.environ.copy()
-    del pruned_env["REALM_BACKTRACE"]
-    pruned_env.update(env)
-
-    return run(
-        [
-            sys.executable,
-            "-m",
-            *cov_args,
-            "pytest",
-            file,
-            "-sv",
-            "-k",
-            case,
-            "--runxfail",
-        ],
-        stdout=PIPE,
-        stderr=STDOUT,
-        check=False,
-        env=pruned_env,
-    )

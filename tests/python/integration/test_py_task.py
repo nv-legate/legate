@@ -16,6 +16,9 @@ except ModuleNotFoundError:
     cupy = None
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from subprocess import CompletedProcess
+
     from numpy.typing import NDArray
 
 import pytest
@@ -442,22 +445,21 @@ class TestPyTask:
         or get_legate_runtime().machine.preferred_target != TaskTarget.CPU,
         reason="CPU only test",
     )
-    def test_throws_exception(self) -> None:
-        proc = utils.subprocess_helper(
-            __file__,
-            "test_throws_exception_impl",
-            {
-                "LEGATE_MAX_EXCEPTION_SIZE": "15000",
-                "LEGATE_AUTO_CONFIG": "0",
-                "LEGATE_CONFIG": "--cpus 1",
-            },
-        )
-        assert not proc.returncode, proc.stdout
+    def test_throws_exception(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        if run_subprocess:
+            run_subprocess(
+                __file__,
+                "TestPyTask::test_throws_exception",
+                {
+                    "LEGATE_MAX_EXCEPTION_SIZE": "15000",
+                    "LEGATE_AUTO_CONFIG": "0",
+                    "LEGATE_CONFIG": "--cpus 1",
+                },
+            )
+            return
 
-    @pytest.mark.xfail(
-        run=False, reason="should only be invoked by test_throws_exception"
-    )
-    def test_throws_exception_impl(self) -> None:
         @task(
             variants=tuple(VariantCode),
             options=VariantOptions(may_throw_exception=True),

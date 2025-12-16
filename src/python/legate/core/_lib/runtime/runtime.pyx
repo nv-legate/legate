@@ -238,20 +238,21 @@ cdef void _maybe_reraise_legate_exception(
         (pkl_bytes,) = e.args
         exn_obj = pickle.loads(pkl_bytes)
         raise exn_obj
-    if isinstance(e, LegateTaskException):
-        (message, index) = e.args
-        try:
+    if isinstance(e, LegateTaskException):  # pragma: no cover
+        (message, index) = e.args  # pragma: no cover
+        try:  # pragma: no cover
             exn_type = (
-                RuntimeError
-                if exception_types is None
-                else exception_types[index]
+                RuntimeError  # pragma: no cover
+                if exception_types is None  # pragma: no cover
+                else exception_types[index]  # pragma: no cover
             )
-        except IndexError:
-            raise RuntimeError(
-                f"Invalid exception index ({index}) while mapping task "
-                f"exception: \"{message}\""
+        except IndexError:  # pragma: no cover
+            raise RuntimeError(  # pragma: no cover
+                f"Invalid exception index ({index}) "  # pragma: no cover
+                "while mapping task "
+                f"exception: \"{message}\""  # pragma: no cover
             )
-        raise exn_type(message)
+        raise exn_type(message)  # pragma: no cover
     raise
 
 cdef class Runtime(Unconstructable):
@@ -1151,7 +1152,9 @@ cdef class Runtime(Unconstructable):
         if ordering is None:
             cpp_ordering = _DimOrdering.c_order()
         elif not isinstance(ordering, DimOrdering):
-            raise TypeError("ordering must be a DimOrdering instance")
+            raise TypeError(  # pragma: no cover
+                "ordering must be a DimOrdering instance"  # pragma: no cover
+            )
         else:
             cpp_ordering = (<DimOrdering>ordering)._handle
 
@@ -1620,7 +1623,7 @@ cdef void _cleanup_legate_runtime():
     # Don't use get_legate_runtime() here since we don't want to inadvertently
     # (re)start the runtime
     if _runtime is None:
-        return
+        return  # pragma: no cover
 
     # Collect before so we ensure that any dangling user references are
     # released. We cannot guarantee that all of them are, but this should make

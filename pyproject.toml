@@ -350,6 +350,8 @@ exclude_lines = [
     "@abstract"
 ]
 omit = [
+  "**/legate/__init__.py",
+  "**/legate/install_info.py",
   "**/legate/_version.py",
   "**/legate/util/*",
   "**/legate/_sphinxext/*",
@@ -358,4 +360,5 @@ omit = [
   "**/legate/jupyter/*",
   "**/legate/issue.py",
   "**/legate/driver/*",
+  "**/legate/timing/*",
 ]

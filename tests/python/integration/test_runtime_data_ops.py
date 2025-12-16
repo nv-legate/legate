@@ -3,13 +3,25 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from typing import Any
+import os
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
 import numpy as np
 
 import pytest
 
-from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
+from legate.core import (
+    LEGATE_MAX_DIM,
+    ResourceConfig,
+    Scalar,
+    VariantCode,
+    VariantOptions,
+    get_legate_runtime,
+    types as ty,
+)
+from legate.core.task import InputArray, OutputStore, PyTask
 
 from .utils import tasks, utils
 from .utils.data import (
@@ -231,11 +243,63 @@ class TestStoreOps:
         runtime.issue_fill(store, val_store)
         assert (arr == val).all()
 
-    @pytest.mark.skip(reason="not implemented yet")
+    @pytest.mark.xfail(
+        get_legate_runtime().machine.count() > 2,
+        run=False,
+        reason="PyTask can't take arbitrary number of inputs yet",
+    )
+    @pytest.mark.skipif(
+        get_legate_runtime().machine.count() >= 2
+        and not os.getenv("LEGATE_TEST"),
+        reason="Require multinode to match number of args",
+    )
     def test_tree_reduce(self) -> None:
-        # TODO(wonchanl): can't bind buffer to unbound PhysicalStore from
-        # cython yet
-        pass
+        runtime = get_legate_runtime()
+        lib, created = runtime.find_or_create_library(
+            "test_tree_reduce",
+            config=ResourceConfig(max_dyn_tasks=10),
+            default_options={
+                v: VariantOptions(has_allocations=True) for v in VariantCode
+            },
+        )
+        assert created
+
+        def set_task_one(part1: InputArray, out: OutputStore) -> None:
+            lib = tasks.numpy_or_cupy(part1.data().get_inline_allocation())
+            unique = lib.unique(lib.asarray(part1))
+            buf = out.create_output_buffer((unique.shape[0],))
+            lib.asarray(buf)[:] = unique
+
+        def set_task_two(
+            part1: InputArray, part2: InputArray, out: OutputStore
+        ) -> None:
+            lib = tasks.numpy_or_cupy(part1.data().get_inline_allocation())
+            arr1 = lib.asarray(part1)
+            arr2 = lib.asarray(part2)
+            unique = lib.unique(
+                lib.concatenate([lib.unique(arr1), lib.unique(arr2)])
+            )
+            buf = out.create_output_buffer((unique.shape[0],))
+            lib.asarray(buf)[:] = unique
+
+        reducer: dict[int, Callable[..., None]] = {
+            1: set_task_one,
+            2: set_task_two,
+        }
+
+        reduce_task = PyTask(
+            func=reducer[runtime.machine.count()],
+            variants=tuple(VariantCode),
+            library=lib,
+        )
+
+        arr = np.array([1, 2, 2, 3, 2, 3, 4])
+        store = runtime.create_store_from_buffer(
+            ty.int64, arr.shape, arr, read_only=True
+        )
+        out = runtime.tree_reduce(lib, reduce_task.task_id, store)
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(np.asarray(out), np.unique(arr))
 
 
 class TestArrayOps:
@@ -380,6 +444,22 @@ class TestStoreOpsErrors:
         # with read-only privileges
         with pytest.raises(RuntimeError):
             runtime.prefetch_bloated_instances(store, (1, 2, 3), (3, 2, 1))
+
+    @pytest.fixture
+    def preserve_seed_state(self) -> Generator[None, Any, Any]:
+        state = np.random.get_state()
+        yield
+        np.random.set_state(state)
+
+    @pytest.mark.usefixtures("preserve_seed_state")
+    def test_rand_seed_warn(self) -> None:
+        # Not exactly runtime, just not worth a new file.
+        msg = """
+        Seeding the random number generator with a non-constant value
+        inside Legate can lead to undefined behavior and/or errors when
+        the program is executed with multiple ranks."""
+        with pytest.warns(Warning, match=msg):
+            np.random.seed()
 
 
 if __name__ == "__main__":

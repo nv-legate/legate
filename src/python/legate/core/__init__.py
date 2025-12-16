@@ -23,7 +23,7 @@ import numpy as _np  # noqa: ICN001
 # TODO(cryos, jfaibussowit)
 # Implement the same loading logic from libucx on the C++ side, and remove
 # this workaround.
-def _maybe_import_ucx_module() -> Any:
+def _maybe_import_ucx_module() -> Any:  # pragma: no cover
     import os  # noqa: PLC0415
 
     from ..install_info import wheel_build  # noqa: PLC0415

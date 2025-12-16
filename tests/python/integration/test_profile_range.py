@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import subprocess
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -16,7 +17,7 @@ from legate.core import get_legate_runtime
 from .utils import tasks
 
 TEST_FILE = """\
-from legate.core import ProfileRange, VariantCode
+from legate.core import ProfileRange, VariantCode, get_legate_runtime
 from legate.core.task import task
 
 @task(variants=tuple(VariantCode))
@@ -24,6 +25,7 @@ def profile_range_task() -> None:
     with ProfileRange("foobarbaz"):
         pass
 
+assert get_legate_runtime().config().profile
 profile_range_task()
 """
 
@@ -40,10 +42,13 @@ class TestProfileRange:
         with tempfile.TemporaryDirectory() as tmpdir:
             modpath = Path(tmpdir) / "prtest.py"
             modpath.write_text(TEST_FILE)
+            cov_args = []
+            if bool(os.environ.get("COVERAGE_RUN")) and find_spec("coverage"):
+                cov_args = ["-m", "coverage", "run"]
             env["LEGATE_CONFIG"] = f"--profile --logdir {tmpdir}"
             env["LEGATE_AUTO_CONFIG"] = "0"
             subprocess.run(
-                [sys.executable, modpath],
+                [sys.executable, *cov_args, modpath],
                 capture_output=True,
                 text=True,
                 env=env,

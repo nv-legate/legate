@@ -8,22 +8,39 @@ import os
 import sys
 import json
 import atexit
-from subprocess import PIPE, STDOUT, run
-from unittest import mock
+import inspect
+from typing import TYPE_CHECKING, Any
+
+from legate.core._lib.mapping.mapping import TaskTarget
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from subprocess import CompletedProcess
+from pathlib import Path
 
 import pytest
 
+from legate import settings
 from legate.core import (
     Library,
     Machine,
     Scope,
-    TaskTarget,
     get_legate_runtime,
     track_provenance,
+    types as ty,
 )
+from legate.core._lib.runtime.runtime import (  # type: ignore[attr-defined]
+    _LegateOutputStream,
+    _Provenance,
+)
+from legate.core.task import InputStore, task
 
 
 class Test_track_provenance:
+    @pytest.fixture
+    def patch_provenance(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(_Provenance, "config_value", lambda: True)
+
     @pytest.mark.parametrize("nested", (True, False, None))
     def test_docstring(self, nested: bool | None) -> None:
         kw = {} if nested is None else {"nested": nested}
@@ -44,48 +61,49 @@ class Test_track_provenance:
 
         assert wrapped is func
 
+    @pytest.mark.usefixtures("patch_provenance")
     def test_unnested(self) -> None:
-        with mock.patch(
-            "legate.core._lib.runtime.runtime._Provenance.config_value"
-        ) as mp:
-            mp.return_value = True
+        @track_provenance()
+        def func() -> str:
+            return Scope.provenance()
 
-            @track_provenance()
-            def func() -> str:
-                return Scope.provenance()
+        @track_provenance()
+        def unnested() -> str:
+            return func()
 
-            @track_provenance()
-            def unnested() -> str:
-                return func()
+        human, machine = json.loads(unnested())
+        assert "test_runtime.py" in human
+        assert "test_runtime.py" in machine["file"]
+        assert "line" in machine
 
-            human, machine = json.loads(unnested())
-            assert "test_runtime.py" in human
-            assert "test_runtime.py" in machine["file"]
-            assert "line" in machine
-
+    @pytest.mark.usefixtures("patch_provenance")
     def test_nested(self) -> None:
-        with mock.patch(
-            "legate.core._lib.runtime.runtime._Provenance.config_value"
-        ) as mp:
-            mp.return_value = True
+        @track_provenance()
+        def func() -> str:
+            return Scope.provenance()
 
-            @track_provenance()
-            def func() -> str:
-                return Scope.provenance()
+        @track_provenance(nested=True)
+        def nested() -> str:
+            return func()
 
-            @track_provenance(nested=True)
-            def nested() -> str:
-                return func()
+        human, machine = json.loads(nested())
+        assert "test_runtime.py" in human
+        assert "test_runtime.py" in machine["file"]
+        assert "line" in machine
 
-            human, machine = json.loads(nested())
-            assert "test_runtime.py" in human
-            assert "test_runtime.py" in machine["file"]
-            assert "line" in machine
+    @pytest.mark.usefixtures("patch_provenance")
+    def test_no_frame(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(inspect, "currentframe", lambda: None)
+
+        @track_provenance()
+        def func() -> str:
+            return Scope.provenance()
+
+        human, machine = json.loads(func())
+        assert human == "<unknown>"
+        assert machine["file"] == "<unknown>"
 
 
-@pytest.mark.xfail(
-    run=False, reason="should only be invoked by test_shutdown_callback()"
-)
 class TestShutdownCallback:
     counter = 0
 
@@ -101,7 +119,18 @@ class TestShutdownCallback:
     def assert_reset(cls) -> None:
         assert cls.counter == 0
 
-    def test_basic_shutdown_callback(self) -> None:
+    def test_basic_shutdown_callback(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        if run_subprocess:
+            run_subprocess(
+                __file__,
+                "TestShutdownCallback::test_basic_shutdown_callback",
+                {},
+                check=True,
+            )
+            return
+
         count = TestShutdownCallback.counter
         runtime = get_legate_runtime()
         runtime.add_shutdown_callback(TestShutdownCallback.increase)
@@ -110,7 +139,14 @@ class TestShutdownCallback:
         runtime.finish()
         assert TestShutdownCallback.counter == count + 1
 
-    def test_LIFO(self) -> None:
+    def test_LIFO(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        if run_subprocess:
+            run_subprocess(
+                __file__, "TestShutdownCallback and test_LIFO", {}, check=False
+            )
+            return
         TestShutdownCallback.counter = 99
         runtime = get_legate_runtime()
         runtime.add_shutdown_callback(TestShutdownCallback.increase)
@@ -119,7 +155,14 @@ class TestShutdownCallback:
         runtime.finish()
         assert TestShutdownCallback.counter == 1
 
-    def test_duplicate_callback(self) -> None:
+    def test_duplicate_callback(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        if run_subprocess:
+            run_subprocess(
+                __file__, "TestShutdownCallback::test_LIFO", {}, check=True
+            )
+            return
         count = TestShutdownCallback.counter
         runtime = get_legate_runtime()
         for _ in range(5):
@@ -127,7 +170,14 @@ class TestShutdownCallback:
         runtime.finish()
         assert TestShutdownCallback.counter == count + 5
 
-    def test_atexit(self) -> None:
+    def test_atexit(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        if run_subprocess:
+            run_subprocess(
+                __file__, "TestShutdownCallback::test_atexit", {}, check=True
+            )
+            return
         count = TestShutdownCallback.counter
         runtime = get_legate_runtime()
         runtime.add_shutdown_callback(TestShutdownCallback.increase)
@@ -138,44 +188,74 @@ class TestShutdownCallback:
         assert TestShutdownCallback.counter == count + 1
 
 
-@pytest.mark.xfail(
-    get_legate_runtime().machine.preferred_target == TaskTarget.GPU,
-    reason="aborts python subprocess",
-)
-@pytest.mark.parametrize(
-    "test_case",
-    [f for f in dir(TestShutdownCallback) if f.startswith("test")],
-    ids=str,
-)
-def test_shutdown_callback(test_case: str) -> None:
-    try:
-        import coverage  # type: ignore[import-not-found]  # noqa: F401, PLC0415
+class TestRealmBacktrace:
+    def test_realm_backtrace_faulthandler(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        assert run_subprocess, (
+            "Runtime init completed with "
+            "realm_backtrace and python faulthandler both enabled"
+        )
+        env = {"REALM_BACKTRACE": "1", "PYTHONFAULTHANDLER": "1"}
+        msg = (
+            "REALM_BACKTRACE and the Python fault handler are "
+            "mutually exclusive and cannot both be enabled"
+        )
+        with pytest.raises(RuntimeError, match=msg):
+            run_subprocess(
+                __file__, "test_realm_backtrace_faulthandler", env, check=True
+            )
 
-        cov_args = ["coverage", "run", "-m"]
-    except ModuleNotFoundError:
-        cov_args = []
+    @pytest.mark.parametrize("val", ["0", "1"])
+    def test_realm_backtrace_set(
+        self,
+        val: str,
+        run_subprocess: Callable[..., CompletedProcess[Any]] | None,
+    ) -> None:
+        if run_subprocess:
+            env = {"REALM_BACKTRACE": val}
+            run_subprocess(
+                __file__,
+                f"TestRealmBacktrace::test_realm_backtrace_set[{val}]",
+                env,
+                faulthandler=False,
+            )
+            return
+        backtrace = os.getenv("REALM_BACKTRACE")
+        assert backtrace is not None
+        get_legate_runtime().finish()
+        assert os.getenv("REALM_BACKTRACE") == backtrace
 
-    pruned_env = os.environ.copy()
+    def test_realm_backtrace_unset(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        if run_subprocess:
+            run_subprocess(
+                __file__, "TestRealmBacktrace::test_realm_backtrace_unset", {}
+            )
+            return
+        # by the time we got here, runtime should have set the env var
+        assert os.getenv("REALM_BACKTRACE") is not None
+        get_legate_runtime().finish()
+        assert os.getenv("REALM_BACKTRACE") is None
 
-    del pruned_env["REALM_BACKTRACE"]
+    def test_realm_backtrace_invalid(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        assert run_subprocess, (
+            "Runtime init completed with invalid REALM_BACKTRACE value"
+        )
 
-    proc = run(
-        [
-            sys.executable,
-            "-m",
-            *cov_args,
-            "pytest",
-            __file__,
-            "-k",
-            f"TestShutdownCallback and {test_case}",
-            "--runxfail",
-        ],
-        stdout=PIPE,
-        stderr=STDOUT,
-        check=False,
-        env=pruned_env,
-    )
-    assert not proc.returncode, proc.stdout
+        env = {"REALM_BACKTRACE": "foo"}
+        with pytest.raises(
+            RuntimeError, match="Invalid value for REALM_BACKTRACE"
+        ):
+            run_subprocess(
+                __file__,
+                "TestRealmBacktrace::test_realm_backtrace_invalid",
+                env,
+                faulthandler=False,
+            )
 
 
 class TestRuntime:
@@ -183,16 +263,6 @@ class TestRuntime:
         runtime = get_legate_runtime()
         runtime.create_library("foo")
         assert runtime.find_library("foo")
-
-    def test_get_new_task_id(self) -> None:
-        runtime = get_legate_runtime()
-        test_lib = runtime.create_library("test_get_new_task_id")
-        # TODO(wonchanl) [issue 1435]
-        # can't configure libraries in python
-        # terminate called after throwing an instance of 'std::overflow_error'
-        #   what():  The scope ran out of IDs
-        with pytest.raises(OverflowError, match="The scope ran out of IDs"):
-            test_lib.get_new_task_id()
 
     def test_submit_non_task(self) -> None:
         msg = "Unknown type of operation"
@@ -211,6 +281,60 @@ class TestRuntime:
     def test_issue_mapping_fence(self) -> None:
         # just checking nothing's broken by it
         get_legate_runtime().issue_mapping_fence()
+
+    @pytest.mark.skipif(
+        not settings.settings.limit_stdout(),
+        reason="test requires limit_stdout",
+    )
+    def test_limit_stdout(self, capsys: pytest.CaptureFixture[Any]) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int64, shape=(3, 3, 3))
+        store.fill(0)
+
+        @task
+        def task_with_stdout(_: InputStore) -> None:
+            sys.stdout.writelines("foo")
+
+        task_with_stdout(store)
+        runtime.issue_execution_fence(block=True)
+        out, err = capsys.readouterr()
+        if (
+            os.getenv("LEGATE_TEST")
+            and runtime.machine.preferred_target != TaskTarget.OMP
+        ):
+            expected = "foo" * len(runtime.machine)
+        else:
+            expected = "foo"
+        assert out.strip() == expected
+        sys.stdout.write("bar")
+        out, err = capsys.readouterr()
+        if runtime.node_id != 0:
+            assert not out
+        else:
+            assert out == "bar"
+        assert not err
+
+    def test_output_stream(self, tmp_path: Path) -> None:
+        runtime = get_legate_runtime()
+        tmp_file = tmp_path / "tmp.txt"
+        # not using context here to close through _LegateOutputStream later
+        f = Path.open(tmp_file, "w")
+        stream = _LegateOutputStream(f, runtime.node_id)
+        assert stream.fileno() == f.fileno()
+        assert not stream.isatty()
+        stream.write("foo")
+        stream.writelines("bar")
+        stream.flush()
+        stream.close()
+        assert f.closed
+        with pytest.raises(ValueError, match="I/O operation on closed file"):
+            stream.fileno()
+        with Path.open(tmp_file, "r") as f:
+            content = f.readlines()
+        assert "\n".join(content) == "foobar"
+        # for code coverage
+        with pytest.raises(AttributeError):
+            stream.set_parent(stream)
 
 
 class TestRuntimeError:

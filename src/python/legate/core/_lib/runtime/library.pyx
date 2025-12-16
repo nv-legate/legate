@@ -92,8 +92,10 @@ cdef class Library(Unconstructable):
         Scalar
             The tunable.
         """
-        return Scalar.from_handle(
-            self._handle.get_tunable(tunable_id, dtype._handle)
+        return Scalar.from_handle(  # pragma: no cover
+            self._handle.get_tunable(  # pragma: no cover
+                tunable_id, dtype._handle  # pragma: no cover
+            )
         )
 
     cpdef _GlobalTaskID register_task(self, TaskInfo task_info):

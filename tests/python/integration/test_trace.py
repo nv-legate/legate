@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from legate.core import LogicalStore, Scalar, get_legate_runtime, types as ty
@@ -26,9 +28,10 @@ def launch_task(store: LogicalStore) -> None:
     taskB(store, store)
 
 
-@pytest.mark.skip(
+@pytest.mark.skipif(
+    not bool(os.getenv("COVERAGE_RUN")),
     reason="Tracing cannot be used until we add "
-    "launch-time return size handling"
+    "launch-time return size handling",
 )
 def test_trace() -> None:
     runtime = get_legate_runtime()
