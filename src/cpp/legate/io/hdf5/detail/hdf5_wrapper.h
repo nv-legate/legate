@@ -292,6 +292,13 @@ class HDF5DataSet : public HDF5Object {
   [[nodiscard]] HDF5DataSpace data_space() const;
 
   /**
+   * @brief Check if the dataset is stored contiguously.
+   *
+   * @return True if the dataset is stored contiguously, false otherwise.
+   */
+  [[nodiscard]] H5D_layout_t get_layout() const;
+
+  /**
    * @brief Write data into the dataset.
    *
    * @param mem_space_id Identifier of the memory dataspace.
@@ -367,6 +374,13 @@ class HDF5PropertyList : public HDF5Object {
    * @param type The type of property list to create.
    */
   explicit HDF5PropertyList(Type type);
+
+  /**
+   * @brief Construct a property list from an existing dataset.
+   *
+   * @param plist_id The property list ID.
+   */
+  explicit HDF5PropertyList(hid_t plist_id);
 };
 
 /**
@@ -378,6 +392,20 @@ class HDF5DataSetCreatePropertyList : public HDF5PropertyList {
    * @brief Construct a dataset creation property list.
    */
   HDF5DataSetCreatePropertyList();
+
+  /**
+   * @brief Construct a dataset creation property list from an existing dataset.
+   *
+   * @param plist_id The property list ID.
+   */
+  explicit HDF5DataSetCreatePropertyList(hid_t plist_id);
+
+  /**
+   * @brief Get the layout of the dataset.
+   *
+   * @return The layout.
+   */
+  [[nodiscard]] H5D_layout_t get_layout() const;
 
   /**
    * @brief Define a virtual dataset mapping to a source dataset.

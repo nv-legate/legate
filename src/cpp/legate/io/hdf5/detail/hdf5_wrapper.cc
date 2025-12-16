@@ -523,6 +523,42 @@ void h5d_read(const HDF5MaybeLockGuard& lock,
   return space;
 }
 
+/**
+ * @brief Get the creation property list from a dataset.
+ *
+ * @param lock The lock to use.
+ * @param dset_id The dataset ID.
+ * @return The creation property list from the dataset.
+ */
+[[nodiscard]] hid_t h5d_get_create_plist(const HDF5MaybeLockGuard& lock, hid_t dset_id)
+{
+  const hid_t plist_id = HDF5_CALL_NO_ERROR_PRINTING(H5Dget_create_plist(dset_id));
+
+  if (plist_id == H5I_INVALID_HID) {
+    throw_hdf5_exception(lock, "Failed to get creation property list from the dataset");
+  }
+
+  return plist_id;
+}
+
+/**
+ * @brief Get the layout of a property list.
+ *
+ * @param lock The lock to use.
+ * @param plist_id The property list ID.
+ * @return The layout of the property list.
+ */
+[[nodiscard]] H5D_layout_t h5p_get_layout(const HDF5MaybeLockGuard& lock, hid_t plist_id)
+{
+  const H5D_layout_t layout = HDF5_CALL_NO_ERROR_PRINTING(H5Pget_layout(plist_id));
+
+  if (layout == H5D_LAYOUT_ERROR) {
+    throw_hdf5_exception(lock, "Failed to get layout from property list");
+  }
+
+  return layout;
+}
+
 // ==========================================================================================
 
 namespace nothrow {
@@ -947,6 +983,11 @@ std::string HDF5DataSet::name() const { return h5i_get_name({}, hid()); }
 
 HDF5DataSpace HDF5DataSet::data_space() const { return HDF5DataSpace{h5d_get_space({}, hid())}; }
 
+H5D_layout_t HDF5DataSet::get_layout() const
+{
+  return HDF5DataSetCreatePropertyList{hid()}.get_layout();
+}
+
 void HDF5DataSet::write(hid_t mem_space_id,
                         hid_t file_space_id,
                         hid_t dxpl_id,
@@ -1056,12 +1097,24 @@ HDF5PropertyList::HDF5PropertyList(Type type)
 {
 }
 
+HDF5PropertyList::HDF5PropertyList(hid_t plist_id) : HDF5Object{plist_id, nothrow::h5p_close} {}
+
 // ==========================================================================================
 
 HDF5DataSetCreatePropertyList::HDF5DataSetCreatePropertyList()
   : HDF5PropertyList{Type::DATASET_CREATE}
 {
 }
+
+HDF5DataSetCreatePropertyList::HDF5DataSetCreatePropertyList(hid_t plist_id)
+  : HDF5PropertyList{[&] {
+      const auto lock = HDF5MaybeLockGuard{};
+      return h5d_get_create_plist(lock, plist_id);
+    }()}
+{
+}
+
+H5D_layout_t HDF5DataSetCreatePropertyList::get_layout() const { return h5p_get_layout({}, hid()); }
 
 void HDF5DataSetCreatePropertyList::set_virtual(const HDF5DataSpace& vds_space,
                                                 legate::detail::ZStringView file,
