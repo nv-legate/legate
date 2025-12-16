@@ -127,7 +127,12 @@ class LegateDriver:
             return 0
 
         if self.config.multi_node.nodes > 1 and self.config.console:
-            msg = "Cannot start console with more than one node."
+            msg = (
+                "Cannot start a REPL in multi-node mode. You must pass an "
+                "executable (or path to a Python module) to run. If you wish "
+                "to start an interactive Python REPL, you may only do so in "
+                "single-node mode."
+            )
             raise RuntimeError(msg)
 
         if self.config.other.timing:

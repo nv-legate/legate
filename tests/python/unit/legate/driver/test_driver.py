@@ -133,10 +133,13 @@ class TestDriver:
         )
         driver = m.LegateDriver(config, SYSTEM)
 
-        with pytest.raises(
-            RuntimeError,
-            match=re.escape("Cannot start console with more than one node."),
-        ):
+        msg = re.escape(
+            "Cannot start a REPL in multi-node mode. You must pass an "
+            "executable (or path to a Python module) to run. If you wish "
+            "to start an interactive Python REPL, you may only do so in "
+            "single-node mode."
+        )
+        with pytest.raises(RuntimeError, match=msg):
             driver.run()
 
     @pytest.mark.parametrize("launch", LAUNCHERS)
