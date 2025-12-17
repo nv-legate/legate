@@ -18,6 +18,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstring>
+#include <integration/comm/common_comm.h>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -224,35 +225,6 @@ class UCCIntegrationTest : public DefaultFixture {
   std::shared_ptr<SharedMemoryAllgather> shared_memory_allgather_{};
 };
 
-// Type-to-CollDataType mapping
-template <typename T>
-struct TypeToCollDataType;
-
-template <>
-struct TypeToCollDataType<std::int8_t> {
-  static constexpr auto VALUE = legate::comm::coll::CollDataType::CollInt8;
-};
-
-template <>
-struct TypeToCollDataType<std::int32_t> {
-  static constexpr auto VALUE = legate::comm::coll::CollDataType::CollInt;
-};
-
-template <>
-struct TypeToCollDataType<std::int64_t> {
-  static constexpr auto VALUE = legate::comm::coll::CollDataType::CollInt64;
-};
-
-template <>
-struct TypeToCollDataType<double> {
-  static constexpr auto VALUE = legate::comm::coll::CollDataType::CollDouble;
-};
-
-template <>
-struct TypeToCollDataType<float> {
-  static constexpr auto VALUE = legate::comm::coll::CollDataType::CollFloat;
-};
-
 // Define the types we want to test
 using TestTypes = ::testing::Types<std::int8_t, std::int32_t, std::int64_t, double, float>;
 
@@ -260,7 +232,7 @@ using TestTypes = ::testing::Types<std::int8_t, std::int32_t, std::int64_t, doub
 template <typename T>
 class UCCIntegrationTypedTest : public UCCIntegrationTest {
  protected:
-  static constexpr auto COLL_TYPE = TypeToCollDataType<T>::VALUE;
+  static constexpr auto COLL_TYPE = common_comm::TypeToCollDataType<T>::VALUE;
 
   /**
    * @brief Performs all-gather operation with verification for a specific rank

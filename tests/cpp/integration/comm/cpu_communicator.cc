@@ -15,8 +15,6 @@
 
 namespace cpu_communicator {
 
-// NOLINTBEGIN(readability-magic-numbers)
-
 namespace {
 
 constexpr std::size_t SIZE = 100;
@@ -77,9 +75,11 @@ class CPUAllreduceTester : public legate::LegateTask<CPUAllreduceTester> {
 
   static void test_prod(legate::comm::coll::CollComm comm, std::int64_t num_tasks)
   {
+    // NOLINTBEGIN(readability-magic-numbers)
     constexpr std::size_t count = 3;
     std::vector<double> send_buffer(count, 2.0);
     std::vector<double> recv_buffer(count, 0.0);
+    // NOLINTEND(readability-magic-numbers)
 
     collAllreduce(send_buffer.data(),
                   recv_buffer.data(),
@@ -159,6 +159,70 @@ class CPUAllreduceTester : public legate::LegateTask<CPUAllreduceTester> {
     ASSERT_THAT(recv_buffer, ::testing::Each(expected_bor));
   }
 
+  static void test_band(legate::comm::coll::CollComm comm, std::int64_t task_index)
+  {
+    constexpr std::size_t count = 1;
+    // Each rank sets a bit
+    const std::int32_t rank_bit = 1 << task_index;
+    std::vector<std::int32_t> send_buffer(count, rank_bit);
+    std::vector<std::int32_t> recv_buffer(count, 0);
+
+    collAllreduce(send_buffer.data(),
+                  recv_buffer.data(),
+                  count,
+                  legate::comm::coll::CollDataType::CollInt,
+                  legate::ReductionOpKind::AND,
+                  comm);
+
+    // Expected: 0 (no bits should be set)
+    const std::int32_t expected_band = 0;
+
+    ASSERT_THAT(recv_buffer, ::testing::Each(expected_band));
+  }
+
+  static void test_bxor(legate::comm::coll::CollComm comm,
+                        std::int64_t num_tasks,
+                        std::int64_t task_index)
+  {
+    constexpr std::size_t count = 1;
+    // Each rank sets a bit
+    const std::int32_t rank_bit = 1 << task_index;
+    std::vector<std::int32_t> send_buffer(count, rank_bit);
+    std::vector<std::int32_t> recv_buffer(count, 0);
+
+    collAllreduce(send_buffer.data(),
+                  recv_buffer.data(),
+                  count,
+                  legate::comm::coll::CollDataType::CollInt,
+                  legate::ReductionOpKind::XOR,
+                  comm);
+
+    // Expected: all lower num_tasks bits should be set
+    const std::int32_t expected_bxor = (1 << num_tasks) - 1;
+
+    ASSERT_THAT(recv_buffer, ::testing::Each(expected_bxor));
+  }
+
+  static void test_sum_with_same_buffer(legate::comm::coll::CollComm comm,
+                                        std::int64_t num_tasks,
+                                        std::int64_t task_index)
+  {
+    constexpr std::size_t count = 5;
+    std::vector<std::int64_t> send_buffer(count, task_index + 1);
+
+    collAllreduce(send_buffer.data(),
+                  send_buffer.data(),
+                  count,
+                  legate::comm::coll::CollDataType::CollInt64,
+                  legate::ReductionOpKind::ADD,
+                  comm);
+
+    // Expected sum: 1 + 2 + ... + num_tasks = num_tasks * (num_tasks + 1) / 2
+    const std::int64_t expected_sum = (num_tasks * (num_tasks + 1)) / 2;
+
+    ASSERT_THAT(send_buffer, ::testing::Each(expected_sum));
+  }
+
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE((context.is_single_task() && context.communicators().empty()) ||
@@ -176,6 +240,9 @@ class CPUAllreduceTester : public legate::LegateTask<CPUAllreduceTester> {
     test_max(comm, static_cast<std::int64_t>(num_tasks), task_index);
     test_min(comm, task_index);
     test_bor(comm, static_cast<std::int64_t>(num_tasks), task_index);
+    test_band(comm, task_index);
+    test_bxor(comm, static_cast<std::int64_t>(num_tasks), task_index);
+    test_sum_with_same_buffer(comm, static_cast<std::int64_t>(num_tasks), task_index);
   }
 };
 
@@ -335,7 +402,7 @@ void test_cpu_communicator_auto(std::int32_t ndim, legate::LocalTaskID task_id)
   task.add_output(store, part);
   task.add_communicator("cpu");
   runtime->submit(std::move(task));
-  runtime->issue_execution_fence(true);
+  runtime->issue_execution_fence(/* block */ true);
 }
 
 void test_cpu_communicator_manual(std::int32_t ndim, legate::LocalTaskID task_id)
@@ -367,7 +434,7 @@ void test_cpu_communicator_manual(std::int32_t ndim, legate::LocalTaskID task_id
   task.add_output(part);
   task.add_communicator("cpu");
   runtime->submit(std::move(task));
-  runtime->issue_execution_fence(true);
+  runtime->issue_execution_fence(/* block */ true);
 }
 
 }  // namespace
@@ -433,142 +500,5 @@ TEST_P(CPUCommunicatorParameterized, AllreduceManualTask)
 }
 
 INSTANTIATE_TEST_SUITE_P(CPUCommunicatorTests, CPUCommunicatorParameterized, testing::Values(1, 3));
-
-class CPUAllreduceExceptionTester : public legate::LegateTask<CPUAllreduceExceptionTester> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{2}};
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
-
-  static void test_invalid_count(legate::comm::coll::CollComm comm)
-  {
-    std::vector<std::int32_t> send_buffer(5, 1);
-    std::vector<std::int32_t> recv_buffer(5, 0);
-
-    ASSERT_THAT(
-      [&]() {
-        collAllreduce(send_buffer.data(),
-                      recv_buffer.data(),
-                      0,
-                      legate::comm::coll::CollDataType::CollInt,
-                      legate::ReductionOpKind::ADD,
-                      comm);
-      },
-      testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("Invalid count: <= 0")));
-  }
-
-  static void test_null_send_buffer(legate::comm::coll::CollComm comm)
-  {
-    std::vector<std::int32_t> recv_buffer(5, 0);
-
-    ASSERT_THAT(
-      [&]() {
-        collAllreduce(nullptr,
-                      recv_buffer.data(),
-                      recv_buffer.size(),
-                      legate::comm::coll::CollDataType::CollInt,
-                      legate::ReductionOpKind::ADD,
-                      comm);
-      },
-      testing::ThrowsMessage<std::invalid_argument>(
-        ::testing::HasSubstr("Invalid sendbuf: nullptr")));
-  }
-
-  static void test_null_recv_buffer(legate::comm::coll::CollComm comm)
-  {
-    std::vector<std::int32_t> send_buffer(5, 1);
-
-    ASSERT_THAT(
-      [&]() {
-        collAllreduce(send_buffer.data(),
-                      nullptr,  // Invalid: null pointer
-                      send_buffer.size(),
-                      legate::comm::coll::CollDataType::CollInt,
-                      legate::ReductionOpKind::ADD,
-                      comm);
-      },
-      testing::ThrowsMessage<std::invalid_argument>(
-        ::testing::HasSubstr("Invalid recvbuf: nullptr")));
-  }
-
-  static void test_bitwise_ops_on_float(legate::comm::coll::CollComm comm)
-  {
-    std::vector<float> send_buffer(5, 1.0F);
-    std::vector<float> recv_buffer(5, 0.0F);
-
-    for (auto op : {legate::ReductionOpKind::OR,
-                    legate::ReductionOpKind::AND,
-                    legate::ReductionOpKind::XOR}) {
-      ASSERT_THAT(
-        [&]() {
-          collAllreduce(send_buffer.data(),
-                        recv_buffer.data(),
-                        recv_buffer.size(),
-                        legate::comm::coll::CollDataType::CollFloat,
-                        op,
-                        comm);
-        },
-        testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr(
-          "all_reduce does not support float or double reduction with bitwise operations")));
-    }
-  }
-
-  static void cpu_variant(legate::TaskContext context)
-  {
-    ASSERT_TRUE((context.is_single_task() && context.communicators().empty()) ||
-                context.communicators().size() == 1);
-    if (context.is_single_task()) {
-      return;
-    }
-
-    auto comm = context.communicators().at(0).get<legate::comm::coll::CollComm>();
-
-    test_invalid_count(comm);
-    test_null_send_buffer(comm);
-    test_null_recv_buffer(comm);
-    test_bitwise_ops_on_float(comm);
-  }
-};
-
-class ConfigWithExceptions {
- public:
-  static constexpr std::string_view LIBRARY_NAME = "test_cpu_communicator_exceptions";
-
-  static void registration_callback(legate::Library library)
-  {
-    CPUAllreduceExceptionTester::register_variants(library);
-  }
-};
-
-class CPUCommunicatorExceptions : public RegisterOnceFixture<ConfigWithExceptions> {};
-
-TEST_F(CPUCommunicatorExceptions, AllreduceExceptionHandling)
-{
-  constexpr std::int32_t ndim = 3;
-  const auto num_procs        = legate::get_machine().count(legate::mapping::TaskTarget::CPU);
-
-  if (num_procs <= 1) {
-    GTEST_SKIP() << num_procs;
-  }
-
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(ConfigWithExceptions::LIBRARY_NAME);
-  auto store   = runtime->create_store(
-    legate::Shape{
-      legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)
-    },
-    legate::int32());
-
-  auto task = runtime->create_task(context, CPUAllreduceExceptionTester::TASK_CONFIG.task_id());
-  auto part = task.declare_partition();
-
-  task.add_output(store, part);
-  task.add_communicator("cpu");
-  runtime->submit(std::move(task));
-  runtime->issue_execution_fence(true);
-}
-
-// NOLINTEND(readability-magic-numbers)
 
 }  // namespace cpu_communicator

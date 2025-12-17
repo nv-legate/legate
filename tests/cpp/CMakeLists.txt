@@ -162,7 +162,6 @@ set(
   integration/copy_gather_scatter.cc
   integration/copy_normal.cc
   integration/copy_scatter.cc
-  integration/cpu_communicator.cc
   integration/delinearize.cc
   integration/exception.cc
   integration/field_reuse.cc
@@ -195,6 +194,9 @@ set(
   integration/store_colocation.cc
   integration/streaming_checker.cc
   integration/task_misc.cc
+  integration/comm/cpu_allreduce_typed.cc
+  integration/comm/cpu_communicator.cc
+  integration/comm/cpu_comm_exception.cc
   integration/tasks/task_simple.cc
   integration/task_store/auto_task_tests.cc
   integration/task_store/manual_task_tests.cc
@@ -405,6 +407,8 @@ set(
   non_reentrant/wo_runtime/init/init.cc
   non_reentrant/wo_runtime/streaming/streaming.cc
   non_reentrant/wo_runtime/inline_launch/basic.cc
+  non_reentrant/wo_runtime/comm/backend_network.cc
+  non_reentrant/wo_runtime/comm/coll_abort.cc
 )
 
 legate_configure_test(
