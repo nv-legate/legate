@@ -17,12 +17,9 @@ inline NoPartition::Kind NoPartition::kind() const { return Kind::NO_PARTITION; 
 
 inline bool NoPartition::is_complete_for(const detail::Storage& /*storage*/) const { return true; }
 
-inline bool NoPartition::satisfies_restrictions(const Restrictions& /*restrictions*/) const
-{
-  return true;
-}
-
 inline bool NoPartition::is_convertible() const { return true; }
+
+inline bool NoPartition::is_invertible() const { return true; }
 
 inline Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion /*region*/,
                                                        bool /*complete*/) const
@@ -43,6 +40,8 @@ inline Tiling::Kind Tiling::kind() const { return Kind::TILING; }
 
 inline bool Tiling::is_convertible() const { return true; }
 
+inline bool Tiling::is_invertible() const { return true; }
+
 inline bool Tiling::has_launch_domain() const { return true; }
 
 inline Span<const std::uint64_t> Tiling::tile_shape() const { return tile_shape_; }
@@ -61,27 +60,31 @@ inline bool Tiling::has_color(Span<const std::uint64_t> color) const
 
 // ==========================================================================================
 
-inline Weighted::Kind Weighted::kind() const { return Kind::WEIGHTED; }
+inline Opaque::Kind Opaque::kind() const { return Kind::OPAQUE; }
 
-inline bool Weighted::is_convertible() const { return false; }
+inline bool Opaque::is_convertible() const { return false; }
 
-inline bool Weighted::is_complete_for(const detail::Storage& /*storage*/) const
+inline bool Opaque::is_invertible() const { return false; }
+
+inline bool Opaque::is_complete_for(const detail::Storage& /*storage*/) const
 {
-  // Partition-by-weight partitions are complete by definition
+  // We use Opaque partitions only for unbound stores, so they are always complete
   return true;
 }
 
-inline bool Weighted::has_launch_domain() const { return true; }
+inline bool Opaque::has_launch_domain() const { return true; }
 
-inline Domain Weighted::launch_domain() const { return color_domain_; }
+inline Domain Opaque::launch_domain() const { return color_domain_; }
 
-inline Span<const std::uint64_t> Weighted::color_shape() const { return color_shape_; }
+inline Span<const std::uint64_t> Opaque::color_shape() const { return color_shape_; }
 
 // ==========================================================================================
 
 inline Image::Kind Image::kind() const { return Kind::IMAGE; }
 
 inline bool Image::is_convertible() const { return false; }
+
+inline bool Image::is_invertible() const { return false; }
 
 inline bool Image::is_complete_for(const detail::Storage& /*storage*/) const
 {

@@ -91,14 +91,17 @@ TEST_F(ImageTest, LaunchDomain)
 
 TEST_F(ImageTest, SatisfiesRestrictions)
 {
-  auto restrictions1 = legate::detail::Restrictions{legate::detail::Restriction::ALLOW};
-  ASSERT_TRUE(image->satisfies_restrictions(restrictions1));
+  auto restrictions1 =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW}};
+  ASSERT_TRUE(restrictions1.are_satisfied_by(*image));
 
-  auto restrictions2 = legate::detail::Restrictions{legate::detail::Restriction::AVOID};
-  ASSERT_TRUE(image->satisfies_restrictions(restrictions2));
+  auto restrictions2 =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::AVOID}};
+  ASSERT_TRUE(restrictions2.are_satisfied_by(*image));
 
-  auto restrictions3 = legate::detail::Restrictions{legate::detail::Restriction::FORBID};
-  ASSERT_TRUE(image->satisfies_restrictions(restrictions3));
+  auto restrictions3 =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::FORBID}};
+  ASSERT_TRUE(restrictions3.are_satisfied_by(*image));
 }
 
 TEST_F(ImageTest, SatisfiesRestrictionsNegative)
@@ -107,14 +110,12 @@ TEST_F(ImageTest, SatisfiesRestrictionsNegative)
     GTEST_SKIP() << "Sizes are only checked in debug builds";
   }
 
-  auto restrictions1 = legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
-                                                    legate::detail::Restriction::AVOID};
-  ASSERT_THROW(static_cast<void>(image->satisfies_restrictions(restrictions1)),
-               std::invalid_argument);
+  auto restrictions1 = legate::detail::Restrictions{legate::detail::SmallVector{
+    legate::detail::Restriction::ALLOW, legate::detail::Restriction::AVOID}};
+  ASSERT_THROW(static_cast<void>(restrictions1.are_satisfied_by(*image)), std::invalid_argument);
 
   auto restrictions2 = legate::detail::Restrictions{};
-  ASSERT_THROW(static_cast<void>(image->satisfies_restrictions(restrictions2)),
-               std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(restrictions2.are_satisfied_by(*image)), std::invalid_argument);
 }
 
 TEST_F(ImageTest, Scale)

@@ -12,7 +12,7 @@
 
 #include <utilities/utilities.h>
 
-namespace weighted {
+namespace opaque {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
@@ -75,7 +75,7 @@ struct Tester : public legate::LegateTask<Tester> {
 
 class Config {
  public:
-  static constexpr std::string_view LIBRARY_NAME = "test_weighted";
+  static constexpr std::string_view LIBRARY_NAME = "test_opaque";
 
   static void registration_callback(legate::Library library)
   {
@@ -84,7 +84,7 @@ class Config {
   }
 };
 
-class Weighted : public RegisterOnceFixture<Config> {};
+class Opaque : public RegisterOnceFixture<Config> {};
 
 void initialize(legate::Runtime* runtime,
                 legate::Library library,
@@ -115,7 +115,7 @@ void check(legate::Runtime* runtime,
   runtime->submit(std::move(task));
 }
 
-void test_weighted(std::uint32_t num_stores)
+void test_opaque(std::uint32_t num_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
@@ -133,11 +133,11 @@ void test_weighted(std::uint32_t num_stores)
 }  // namespace
 
 // Test case with single unbound store
-TEST_F(Weighted, Single) { test_weighted(1); }
+TEST_F(Opaque, Single) { test_opaque(1); }
 
 // Test case with multiple unbound stores
-TEST_F(Weighted, Multiple) { test_weighted(3); }
+TEST_F(Opaque, Multiple) { test_opaque(3); }
 
 // NOLINTEND(readability-magic-numbers)
 
-}  // namespace weighted
+}  // namespace opaque

@@ -122,14 +122,13 @@ void Reduce::launch(Strategy* p_strategy)
     // Every reduction task returns exactly one unbound store
     launcher.set_future_size(sizeof(std::size_t));
 
-    launch_domain = Domain{DomainPoint{0}, DomainPoint{static_cast<coord_t>(n_tasks - 1)}};
-    auto result   = launcher.execute(launch_domain);
+    launcher.execute(Domain{DomainPoint{0}, DomainPoint{static_cast<coord_t>(n_tasks - 1)}});
 
     if (n_tasks != 1) {
-      auto weighted = Weighted{result, launch_domain};
-
-      auto output_partition =
-        create_store_partition(new_output, make_internal_shared<Weighted>(std::move(weighted)));
+      const auto& key_partition = new_output->get_current_key_partition();
+      LEGATE_ASSERT(key_partition.has_value());
+      auto output_partition = create_store_partition(
+        new_output, *key_partition);  // NOLINT(bugprone-unchecked-optional-access)
       input_          = new_output;
       input_partition = output_partition;
     }

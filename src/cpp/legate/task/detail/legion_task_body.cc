@@ -126,18 +126,15 @@ std::vector<ReturnValue> LegionTaskContext::get_return_values_() const
 {
   std::vector<ReturnValue> return_values;
 
-  return_values.reserve(get_unbound_stores_().size() + get_scalar_stores_().size() +
-                        can_raise_exception());
-  for (auto&& store : get_unbound_stores_()) {
-    return_values.push_back(store->as_unbound_store().pack_weight());
-  }
+  return_values.reserve(get_scalar_stores_().size() + can_raise_exception());
+
   for (auto&& store : get_scalar_stores_()) {
     return_values.push_back(store->as_future_store().pack());
   }
   // If this is a reduction task, we do sanity checks on the invariants
   // the Python code relies on.
   if (legion_task_().tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
-    if (return_values.size() != 1 || get_unbound_stores_().size() != 1) {
+    if (get_unbound_stores_().size() != 1) {
       LEGATE_ABORT("Reduction tasks must have only one unbound output and no others");
     }
   }

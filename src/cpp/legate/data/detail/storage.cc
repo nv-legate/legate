@@ -579,10 +579,7 @@ void Storage::free_early()
              storage_data_);
 }
 
-Restrictions Storage::compute_restrictions() const
-{
-  return {tags::size_tag, dim(), Restriction::ALLOW};
-}
+Restrictions Storage::compute_restrictions() const { return Restrictions{dim()}; }
 
 std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
   const mapping::detail::Machine& machine,
@@ -592,7 +589,7 @@ std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
   const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
-      (*key_partition_)->satisfies_restrictions(restrictions)) {
+      restrictions.are_satisfied_by(**key_partition_)) {
     return key_partition_;
   }
   if (parent_.has_value()) {

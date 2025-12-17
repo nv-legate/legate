@@ -23,15 +23,14 @@ using TransformShiftUnit = DefaultFixture;
 
 TEST_F(TransformShiftUnit, ShiftConvert)
 {
-  auto transform          = legate::make_internal_shared<legate::detail::Shift>(1, 2);
-  auto restrictions_tuple = legate::tuple<legate::detail::Restriction>{
-    std::vector<legate::detail::Restriction>({legate::detail::Restriction::ALLOW,
-                                              legate::detail::Restriction::FORBID,
-                                              legate::detail::Restriction::AVOID})};
-  auto restrictions = legate::detail::Restrictions{restrictions_tuple};
-  auto result       = transform->convert(restrictions, /*forbid_fake_dim=*/true);
+  auto transform = legate::make_internal_shared<legate::detail::Shift>(1, 2);
+  auto restrictions =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::FORBID,
+                                                             legate::detail::Restriction::AVOID}};
+  auto result = transform->convert(restrictions, /*forbid_fake_dim=*/true);
 
-  ASSERT_THAT(result, ::testing::ContainerEq(restrictions));
+  ASSERT_EQ(result, restrictions);
   ASSERT_EQ(transform->target_ndim(0), 0);
   ASSERT_TRUE(transform->is_convertible());
 
@@ -70,14 +69,12 @@ TEST_F(TransformShiftUnit, ShiftConvertExtents)
 
 TEST_F(TransformShiftUnit, ShiftInvertRestrictions)
 {
-  auto transform = legate::make_internal_shared<legate::detail::Shift>(2, 5);
-  auto restrictions_tuple =
-    legate::tuple<legate::detail::Restriction>{std::vector<legate::detail::Restriction>(
-      {legate::detail::Restriction::ALLOW, legate::detail::Restriction::AVOID})};
-  auto restrictions = legate::detail::Restrictions{restrictions_tuple};
+  auto transform    = legate::make_internal_shared<legate::detail::Shift>(2, 5);
+  auto restrictions = legate::detail::Restrictions{legate::detail::SmallVector{
+    legate::detail::Restriction::ALLOW, legate::detail::Restriction::AVOID}};
   auto result       = transform->invert(restrictions);
 
-  ASSERT_THAT(result, ::testing::ContainerEq(restrictions));
+  ASSERT_THAT(result, restrictions);
 }
 
 TEST_F(TransformShiftUnit, ShiftInvertSymbolicPoint)

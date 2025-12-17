@@ -374,7 +374,7 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
 
 void LogicalTask::demux_scalar_stores_(const Legion::Future& result, std::size_t future_size)
 {
-  auto return_layout = TaskReturnLayoutForUnpack{unbound_outputs_.size() * sizeof(std::size_t)};
+  auto return_layout        = TaskReturnLayoutForUnpack{};
   const auto compute_offset = [&](const InternalSharedPtr<LogicalStore>& store) {
     return return_layout.next(store->type()->size(), store->type()->alignment());
   };
@@ -403,7 +403,7 @@ void LogicalTask::demux_scalar_stores_(const Legion::FutureMap& result,
                                        const Domain& launch_domain,
                                        std::size_t future_size)
 {
-  auto return_layout = TaskReturnLayoutForUnpack{unbound_outputs_.size() * sizeof(std::size_t)};
+  auto return_layout        = TaskReturnLayoutForUnpack{};
   const auto compute_offset = [&](const InternalSharedPtr<Type>& type) {
     return return_layout.next(type->size(), type->alignment());
   };

@@ -845,7 +845,16 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer_() const;
 
   [[nodiscard]] std::pair<Legion::OutputRegion, Legion::FieldID> get_output_field_() const;
-  void update_num_elements_(std::size_t num_elements) const;
+  /*
+   * @brief Indicate that a buffer has been assigned to a physical store.
+   *
+   * A physical store is considered bound if and only if a buffer has been assigned to it
+   * and this function `set_bound_(true)` has been called. Binding can only be done once
+   * for unbounded stores, duplicate binding throws an error.
+   *
+   * @param bound Indicating if a buffer is assigned or not.
+   */
+  void set_bound_(bool bound) const;
 
   SharedPtr<detail::PhysicalStore> impl_{};
   // This member exists purely to solve the temporary store problem. It is illegal for Physical

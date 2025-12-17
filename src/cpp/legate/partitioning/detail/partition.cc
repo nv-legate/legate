@@ -139,14 +139,6 @@ bool Tiling::is_disjoint_for(const Domain& launch_domain) const
          (!launch_domain.is_valid() || launch_domain.get_volume() <= array_volume(color_shape_));
 }
 
-bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
-{
-  constexpr auto satisfies_restriction = [](Restriction r, std::uint64_t ext) {
-    return r != Restriction::FORBID || ext == 1;
-  };
-  return array_all_of(satisfies_restriction, restrictions, color_shape());
-}
-
 InternalSharedPtr<Partition> Tiling::scale(Span<const std::uint64_t> factors) const
 {
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> new_tile_shape;
@@ -326,99 +318,74 @@ std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, of
 
 // ==========================================================================================
 
-Weighted::Weighted(Legion::FutureMap weights, const Domain& color_domain)
-  : weights_{std::move(weights)},
+Opaque::Opaque(Legion::IndexSpace ispace,
+               Legion::IndexPartition ipartition,
+               const Domain& color_domain)
+  : ispace_{std::move(ispace)},
+    ipartition_{std::move(ipartition)},
     color_domain_{color_domain},
     color_shape_{detail::from_domain(color_domain)}
 {
 }
 
-Weighted::~Weighted()
+bool Opaque::operator==(const Opaque& other) const
 {
-  if (detail::has_started() || !weights_.exists()) {
-    return;
-  }
-  // FIXME: Leak the FutureMap handle if the runtime has already shut down, as there's no hope
-  // that this would be collected by the Legion runtime
-  static_cast<void>(std::make_unique<Legion::FutureMap>(std::move(weights_)).release());
-}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
-
-bool Weighted::operator==(const Weighted& other) const
-{
-  // Since both color_domain_ and color_shape_ are derived from weights_, they don't need to
-  // be compared
-  return weights_ == other.weights_;
+  // Equality check on index partitions is sufficient
+  return ipartition_ == other.ipartition_;
 }
 
-bool Weighted::operator<(const Weighted& other) const { return weights_ < other.weights_; }
+bool Opaque::operator<(const Opaque& other) const { return ipartition_ < other.ipartition_; }
 
-bool Weighted::is_disjoint_for(const Domain& launch_domain) const
+bool Opaque::is_disjoint_for(const Domain& launch_domain) const
 {
   // TODO(wonchanl): The check really should be that every two points from the launch domain are
   // mapped to two different colors
   return !launch_domain.is_valid() || launch_domain.get_volume() <= color_domain_.get_volume();
 }
 
-bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
-{
-  constexpr auto satisfies_restriction = [](Restriction r, std::uint64_t ext) {
-    return r != Restriction::FORBID || ext == 1;
-  };
-
-  return array_all_of(satisfies_restriction, restrictions, color_shape());
-}
-
-InternalSharedPtr<Partition> Weighted::scale(Span<const std::uint64_t> /*factors*/) const
+InternalSharedPtr<Partition> Opaque::scale(Span<const std::uint64_t> /*factors*/) const
 {
   throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
-InternalSharedPtr<Partition> Weighted::bloat(Span<const std::uint64_t> /*low_offsts*/,
-                                             Span<const std::uint64_t> /*high_offsets*/) const
+InternalSharedPtr<Partition> Opaque::bloat(Span<const std::uint64_t> /*low_offsts*/,
+                                           Span<const std::uint64_t> /*high_offsets*/) const
 {
   throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
-Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool) const
+Legion::LogicalPartition Opaque::construct(Legion::LogicalRegion region, bool) const
 {
-  auto&& runtime          = detail::Runtime::get_runtime();
-  auto&& part_mgr         = runtime.partition_manager();
-  const auto& index_space = region.get_index_space();
-  auto index_partition    = part_mgr.find_index_partition(index_space, *this);
-
-  if (index_partition != Legion::IndexPartition::NO_PART) {
-    return runtime.create_logical_partition(region, index_partition);
+  auto&& runtime     = detail::Runtime::get_runtime();
+  const auto& target = region.get_index_space();
+  if (target == ispace_) {
+    return runtime.create_logical_partition(region, ipartition_);
   }
 
-  auto&& color_space = runtime.find_or_create_index_space(color_shape_);
-
-  index_partition = runtime.create_weighted_partition(index_space, color_space, weights_);
-  part_mgr.record_index_partition(index_space, *this, index_partition);
-  return runtime.create_logical_partition(region, index_partition);
+  return runtime.create_logical_partition(
+    region, runtime.create_intersection_partition(target, ipartition_));
 }
 
-std::string Weighted::to_string() const
+std::string Opaque::to_string() const
 {
-  std::string result = "Weighted({";
-
-  if (weights_.exists()) {
-    for (Domain::DomainPointIterator it{color_domain_}; it; ++it) {
-      auto& p = *it;
-
-      fmt::format_to(std::back_inserter(result),
-                     "{}:{},",
-                     fmt::streamed(p),
-                     weights_.get_result<std::size_t>(p));
-    }
-  }
-
-  result += "})";
-  return result;
+  return fmt::format(
+    "Opaque(IndexPartition({}, {}))", ipartition_.get_id(), ipartition_.get_tree_id());
 }
 
-InternalSharedPtr<Partition> Weighted::convert(
+InternalSharedPtr<Partition> Opaque::convert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& transform) const
+{
+  if (transform->identity()) {
+    return self;
+  }
+  throw TracedException<std::runtime_error>{
+    "We can not convert an Opaque Partition without identity transformation"};
+}
+
+InternalSharedPtr<Partition> Opaque::invert(
   const InternalSharedPtr<Partition>& self,
   const InternalSharedPtr<TransformStack>& transform) const
 {
@@ -426,28 +393,6 @@ InternalSharedPtr<Partition> Weighted::convert(
     return self;
   }
   throw TracedException<NonInvertibleTransformation>{};
-}
-
-InternalSharedPtr<Partition> Weighted::invert(
-  const InternalSharedPtr<Partition>& self,
-  const InternalSharedPtr<TransformStack>& transform) const
-{
-  if (transform->identity()) {
-    return self;
-  }
-
-  const auto color_domain = [&] {
-    const auto inverted =
-      transform->invert_color_shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape()});
-
-    return to_domain(inverted);
-  }();
-  // Weighted partitions are created only for 1D stores. So, if we're here, the 1D store to which
-  // this partition is applied would be a degenerate N-D store such that all but one dimension are
-  // of extent 1. So, we only need to delinearize the future map holding the weights so the domain
-  // matches the color domain.
-  return create_weighted(Runtime::get_runtime().delinearize_future_map(weights_, color_domain),
-                         color_domain);
 }
 
 // ==========================================================================================
@@ -473,15 +418,6 @@ bool Image::is_disjoint_for(const Domain& launch_domain) const
 {
   // Disjointedness check for image partitions is expensive, so we give a sound answer;
   return !launch_domain.is_valid();
-}
-
-bool Image::satisfies_restrictions(const Restrictions& restrictions) const
-{
-  constexpr auto satisfies_restriction = [](Restriction r, std::uint64_t ext) {
-    return r != Restriction::FORBID || ext == 1;
-  };
-
-  return array_all_of(satisfies_restriction, restrictions, color_shape());
 }
 
 InternalSharedPtr<Partition> Image::scale(Span<const std::uint64_t> /*factors*/) const
@@ -603,10 +539,11 @@ InternalSharedPtr<Tiling> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX_DI
     std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));
 }
 
-InternalSharedPtr<Weighted> create_weighted(const Legion::FutureMap& weights,
-                                            const Domain& color_domain)
+InternalSharedPtr<Opaque> create_opaque(Legion::IndexSpace ispace,
+                                        Legion::IndexPartition ipartition,
+                                        const Domain& color_domain)
 {
-  return make_internal_shared<Weighted>(weights, color_domain);
+  return make_internal_shared<Opaque>(ispace, ipartition, color_domain);
 }
 
 InternalSharedPtr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,

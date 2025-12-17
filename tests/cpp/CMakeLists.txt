@@ -209,7 +209,7 @@ set(
   integration/tree_reduce_unique.cc
   integration/tunable.cc
   integration/variant_options_precedence.cc
-  integration/weighted.cc
+  integration/opaque.cc
   # unit
   unit/attachment.cc
   unit/constraint.cc
@@ -270,7 +270,7 @@ set(
   unit/partition/image.cc
   unit/partition/nopartition.cc
   unit/partition/tiling.cc
-  unit/partition/weighted.cc
+  unit/partition/opaque.cc
   unit/physical_array/create_array.cc
   unit/physical_array/create_list_array.cc
   unit/physical_array/create_string_array.cc

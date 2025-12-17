@@ -60,8 +60,10 @@ Legion::DomainAffineTransform DimBroadcast::inverse_transform(std::int32_t in_di
 
 Restrictions DimBroadcast::convert(Restrictions restrictions, bool forbid_fake_dim) const
 {
-  restrictions.at(dim_) = (forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
-  return restrictions;
+  return std::move(restrictions).map([&](auto&& dim_res) {
+    dim_res.at(dim_) = forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID;
+    return dim_res;
+  });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::convert_extents(

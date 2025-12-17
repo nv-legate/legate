@@ -69,9 +69,11 @@ Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) co
 
 Restrictions Promote::convert(Restrictions restrictions, bool forbid_fake_dim) const
 {
-  restrictions.insert(restrictions.begin() + extra_dim_,
-                      forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
-  return restrictions;
+  return std::move(restrictions).map([&](auto&& dim_res) {
+    dim_res.insert(dim_res.begin() + extra_dim_,
+                   forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
+    return dim_res;
+  });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_color(
@@ -110,8 +112,10 @@ proj::SymbolicPoint Promote::invert(proj::SymbolicPoint point) const
 
 Restrictions Promote::invert(Restrictions restrictions) const
 {
-  restrictions.erase(restrictions.begin() + extra_dim_);
-  return restrictions;
+  return std::move(restrictions).map([&](auto&& dim_res) {
+    dim_res.erase(dim_res.begin() + extra_dim_);
+    return dim_res;
+  });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::invert_color(

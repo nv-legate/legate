@@ -369,6 +369,19 @@ class Runtime {
   [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(
     Span<const std::uint64_t> extents);
   [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(const Domain& domain);
+  /*
+   * @brief Create equal partition.
+   *
+   * Create 'color_space' index subspaces (one for each point) in a common partition of
+   * the 'parent' index space.
+   *
+   * @param index_space The parent Index Space.
+   * @param color_space The color space describing the sub spaces of the partition.
+   *
+   * @return The new Partition.
+   */
+  [[nodiscard]] Legion::IndexPartition create_equal_partition(
+    const Legion::IndexSpace& index_space, const Legion::IndexSpace& color_space);
   [[nodiscard]] Legion::IndexPartition create_restricted_partition(
     const Legion::IndexSpace& index_space,
     const Legion::IndexSpace& color_space,
@@ -379,6 +392,20 @@ class Runtime {
     const Legion::IndexSpace& index_space,
     const Legion::IndexSpace& color_space,
     const Legion::FutureMap& weights);
+  /*
+   * @brief Create a partition by intersection.
+   *
+   * Intersect an existing partition with a parent index space in order to generate a new partition
+   * where each subregion is the intersection of the parent with the corresponding subregion in the
+   * original partition.
+   *
+   * @param parent The parent Index Space.
+   * @param ipartition The existing Partition.
+   *
+   * @return The new Partition.
+   */
+  [[nodiscard]] Legion::IndexPartition create_intersection_partition(
+    const Legion::IndexSpace& parent, const Legion::IndexPartition& ipartition);
   [[nodiscard]] Legion::IndexPartition create_image_partition(
     const Legion::IndexSpace& index_space,
     const Legion::IndexSpace& color_space,

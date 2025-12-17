@@ -21,32 +21,12 @@ namespace legate::detail {
 UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out,
                                        Legion::FieldID fid,
                                        bool partitioned)
-  : partitioned_{partitioned},
-    num_elements_{sizeof(std::size_t),
-                  find_memory_kind_for_executing_processor(),
-                  nullptr /*init_value*/,
-                  alignof(std::size_t)},
-    out_{out},
-    fid_{fid}
+  : partitioned_{partitioned}, out_{out}, fid_{fid}
 {
-}
-
-ReturnValue UnboundRegionField::pack_weight() const
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    if (!bound_) {
-      LEGATE_ABORT(
-        "Found an uninitialized unbound store. Please make sure you return buffers to all unbound "
-        "stores in the task");
-    }
-  }
-  return {num_elements_, sizeof(std::size_t), alignof(std::size_t)};
 }
 
 void UnboundRegionField::bind_empty_data(std::int32_t ndim)
 {
-  update_num_elements(0);
-
   DomainPoint extents;
 
   extents.dim = ndim;
@@ -58,13 +38,6 @@ void UnboundRegionField::bind_empty_data(std::int32_t ndim)
 
   out_.return_data(extents, fid_, empty_buffer.get_instance(), false);
   bound_ = true;
-}
-
-void UnboundRegionField::update_num_elements(std::size_t num_elements)
-{
-  const AccessorWO<std::size_t, 1> acc{num_elements_, sizeof(num_elements), false};
-
-  acc[0] = num_elements;
 }
 
 }  // namespace legate::detail

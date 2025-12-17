@@ -80,8 +80,10 @@ Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) 
 
 Restrictions Transpose::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
-  // No in-place available
-  return array_map(restrictions, axes_);
+  return std::move(restrictions).map([&](auto&& dim_res) {
+    // No in-place available
+    return array_map(dim_res, axes_);
+  });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_color(
@@ -120,8 +122,10 @@ proj::SymbolicPoint Transpose::invert(proj::SymbolicPoint point) const
 
 Restrictions Transpose::invert(Restrictions restrictions) const
 {
-  // No in-place available
-  return array_map(restrictions, inverse_);
+  return std::move(restrictions).map([&](auto&& dim_res) {
+    // No in-place available
+    return array_map(dim_res, inverse_);
+  });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::invert_color(

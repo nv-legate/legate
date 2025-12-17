@@ -60,15 +60,16 @@ TEST_F(TransformBroadcastUnit, BroadcastInverseTransform)
 
 TEST_F(TransformBroadcastUnit, BroadcastConvertRestrictions)
 {
-  auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto restrictions =
-    transform->convert(legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
-                                                    legate::detail::Restriction::ALLOW,
-                                                    legate::detail::Restriction::ALLOW},
-                       /*forbid_fake_dim=*/true);
-  auto expected = legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
-                                               legate::detail::Restriction::FORBID,
-                                               legate::detail::Restriction::ALLOW};
+  auto transform    = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
+  auto restrictions = transform->convert(
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::ALLOW}},
+    /*forbid_fake_dim=*/true);
+  auto expected =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::FORBID,
+                                                             legate::detail::Restriction::ALLOW}};
 
   ASSERT_EQ(restrictions, expected);
 }
@@ -127,14 +128,15 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertSymbolicPoint)
 
 TEST_F(TransformBroadcastUnit, BroadcastInvertRestrictions)
 {
-  auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto restrictions =
-    transform->invert(legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
-                                                   legate::detail::Restriction::ALLOW,
-                                                   legate::detail::Restriction::ALLOW});
-  auto expected = legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
-                                               legate::detail::Restriction::ALLOW,
-                                               legate::detail::Restriction::ALLOW};
+  auto transform    = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
+  auto restrictions = transform->invert(
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::ALLOW}});
+  auto expected =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::ALLOW}};
 
   ASSERT_EQ(restrictions, expected);
 }

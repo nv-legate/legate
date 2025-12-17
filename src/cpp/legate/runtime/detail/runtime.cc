@@ -1266,6 +1266,13 @@ const Legion::IndexSpace& Runtime::find_or_create_index_space(const Domain& doma
   return it->second;
 }
 
+Legion::IndexPartition Runtime::create_equal_partition(const Legion::IndexSpace& index_space,
+                                                       const Legion::IndexSpace& color_space)
+{
+  return get_legion_runtime()->create_equal_partition(
+    get_legion_context(), index_space, color_space);
+}
+
 Legion::IndexPartition Runtime::create_restricted_partition(
   const Legion::IndexSpace& index_space,
   const Legion::IndexSpace& color_space,
@@ -1283,6 +1290,17 @@ Legion::IndexPartition Runtime::create_weighted_partition(const Legion::IndexSpa
 {
   return get_legion_runtime()->create_partition_by_weights(
     get_legion_context(), index_space, weights, color_space);
+}
+
+Legion::IndexPartition Runtime::create_intersection_partition(
+  const Legion::IndexSpace& parent, const Legion::IndexPartition& ipartition)
+{
+  return get_legion_runtime()->create_partition_by_intersection(get_legion_context(),
+                                                                parent,
+                                                                ipartition,
+                                                                LEGION_COMPUTE_KIND,
+                                                                LEGION_AUTO_GENERATE_ID,
+                                                                /* dominates */ true);
 }
 
 Legion::IndexPartition Runtime::create_image_partition(

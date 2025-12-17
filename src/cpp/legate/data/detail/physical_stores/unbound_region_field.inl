@@ -15,7 +15,6 @@ namespace legate::detail {
 inline UnboundRegionField::UnboundRegionField(UnboundRegionField&& other) noexcept
   : bound_{std::exchange(other.bound_, false)},
     partitioned_{std::exchange(other.partitioned_, false)},
-    num_elements_{std::exchange(other.num_elements_, Legion::UntypedDeferredValue{})},
     out_{std::exchange(other.out_, Legion::OutputRegion{})},
     fid_{std::exchange(other.fid_, -1)}
 {
@@ -24,11 +23,10 @@ inline UnboundRegionField::UnboundRegionField(UnboundRegionField&& other) noexce
 inline UnboundRegionField& UnboundRegionField::operator=(UnboundRegionField&& other) noexcept
 {
   if (this != &other) {
-    bound_        = std::exchange(other.bound_, false);
-    partitioned_  = std::exchange(other.partitioned_, false);
-    num_elements_ = std::exchange(other.num_elements_, Legion::UntypedDeferredValue{});
-    out_          = std::exchange(other.out_, Legion::OutputRegion{});
-    fid_          = std::exchange(other.fid_, -1);
+    bound_       = std::exchange(other.bound_, false);
+    partitioned_ = std::exchange(other.partitioned_, false);
+    out_         = std::exchange(other.out_, Legion::OutputRegion{});
+    fid_         = std::exchange(other.fid_, -1);
   }
   return *this;
 }

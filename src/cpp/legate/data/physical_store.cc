@@ -220,9 +220,6 @@ std::pair<Legion::OutputRegion, Legion::FieldID> PhysicalStore::get_output_field
   return impl()->as_unbound_store().get_output_field();
 }
 
-void PhysicalStore::update_num_elements_(std::size_t num_elements) const
-{
-  impl()->as_unbound_store().update_num_elements(num_elements);
-}
+void PhysicalStore::set_bound_(bool bound) const { impl()->as_unbound_store().set_bound(bound); }
 
 }  // namespace legate

@@ -10,6 +10,7 @@
 #include <legate/data/detail/transform/delinearize.h>
 #include <legate/data/detail/transform/promote.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/utilities/detail/small_vector.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -99,17 +100,17 @@ TEST_F(TilingTest, LaunchDomain)
 
 TEST_F(TilingTest, SatisfiesRestrictions)
 {
-  auto restrictions1 = legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
-                                                    legate::detail::Restriction::AVOID};
-  ASSERT_TRUE(tiling->satisfies_restrictions(restrictions1));
+  auto restrictions1 = legate::detail::Restrictions{legate::detail::SmallVector{
+    legate::detail::Restriction::ALLOW, legate::detail::Restriction::AVOID}};
+  ASSERT_TRUE(restrictions1.are_satisfied_by(*tiling));
 
-  auto restrictions2 = legate::detail::Restrictions{legate::detail::Restriction::AVOID,
-                                                    legate::detail::Restriction::FORBID};
-  ASSERT_FALSE(tiling->satisfies_restrictions(restrictions2));
+  auto restrictions2 = legate::detail::Restrictions{legate::detail::SmallVector{
+    legate::detail::Restriction::AVOID, legate::detail::Restriction::FORBID}};
+  ASSERT_FALSE(restrictions2.are_satisfied_by(*tiling));
 
-  auto restrictions3 = legate::detail::Restrictions{legate::detail::Restriction::FORBID,
-                                                    legate::detail::Restriction::FORBID};
-  ASSERT_FALSE(tiling->satisfies_restrictions(restrictions3));
+  auto restrictions3 = legate::detail::Restrictions{legate::detail::SmallVector{
+    legate::detail::Restriction::FORBID, legate::detail::Restriction::FORBID}};
+  ASSERT_FALSE(restrictions3.are_satisfied_by(*tiling));
 }
 
 TEST_F(TilingTest, SatisfiesRestrictionsNegative)
@@ -118,15 +119,15 @@ TEST_F(TilingTest, SatisfiesRestrictionsNegative)
     GTEST_SKIP() << "Sizes are only checked in debug builds";
   }
 
-  auto restrictions1 = legate::detail::Restrictions{legate::detail::Restriction::ALLOW,
-                                                    legate::detail::Restriction::AVOID,
-                                                    legate::detail::Restriction::FORBID};
-  ASSERT_THROW(static_cast<void>(tiling->satisfies_restrictions(restrictions1)),
-               std::invalid_argument);
+  auto restrictions1 =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW,
+                                                             legate::detail::Restriction::AVOID,
+                                                             legate::detail::Restriction::FORBID}};
+  ASSERT_THROW(static_cast<void>(restrictions1.are_satisfied_by(*tiling)), std::invalid_argument);
 
-  auto restrictions2 = legate::detail::Restrictions{legate::detail::Restriction::ALLOW};
-  ASSERT_THROW(static_cast<void>(tiling->satisfies_restrictions(restrictions2)),
-               std::invalid_argument);
+  auto restrictions2 =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW}};
+  ASSERT_THROW(static_cast<void>(restrictions2.are_satisfied_by(*tiling)), std::invalid_argument);
 }
 
 TEST_F(TilingTest, IsDisjointFor)

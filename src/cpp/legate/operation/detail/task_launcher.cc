@@ -120,7 +120,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   auto result = runtime.dispatch(index_task, output_requirements);
 
-  post_process_unbound_stores_(result, launch_domain, output_requirements);
+  post_process_unbound_stores_(launch_domain, output_requirements);
   for (auto&& arg : outputs_) {
     std::visit([](auto&& a) { a.perform_invalidations(); }, arg);
   }
@@ -333,14 +333,12 @@ void TaskLauncher::post_process_unbound_stores_(
 void TaskLauncher::post_process_unbound_store_(const Legion::Domain& launch_domain,
                                                const OutputRegionArg* arg,
                                                const Legion::OutputRequirement& req,
-                                               const Legion::FutureMap& weights,
                                                const mapping::detail::Machine& machine,
                                                const ParallelPolicy& parallel_policy)
 {
-  auto&& runtime  = Runtime::get_runtime();
-  auto&& part_mgr = runtime.partition_manager();
-  auto* store     = arg->store();
-  auto& shape     = store->shape();
+  auto&& runtime = Runtime::get_runtime();
+  auto* store    = arg->store();
+  auto& shape    = store->shape();
   // This must be done before importing the region field below, as the field manager expects the
   // index space to be available
   if (shape->unbound()) {
@@ -351,20 +349,14 @@ void TaskLauncher::post_process_unbound_store_(const Legion::Domain& launch_doma
     runtime.import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
   store->set_region_field(std::move(region_field));
 
-  // TODO(wonchanl): Need to handle key partitions for multi-dimensional unbound stores
-  if (store->dim() > 1) {
-    return;
-  }
-
-  auto partition = create_weighted(weights, launch_domain);
-  store->set_key_partition(machine, parallel_policy, partition);
-
-  const auto& index_partition = req.partition.get_index_partition();
-  part_mgr.record_index_partition(req.parent.get_index_space(), *partition, index_partition);
+  store->set_key_partition(
+    machine,
+    parallel_policy,
+    create_opaque(
+      req.parent.get_index_space(), req.partition.get_index_partition(), launch_domain));
 }
 
 void TaskLauncher::post_process_unbound_stores_(
-  const Legion::FutureMap& result,
   const Legion::Domain& launch_domain,
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
@@ -382,32 +374,10 @@ void TaskLauncher::post_process_unbound_stores_(
 
   import_output_regions_(runtime, output_requirements);
 
-  if (unbound_stores.size() == 1) {
-    auto* arg       = unbound_stores.front();
+  for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores)) {
     const auto& req = output_requirements[arg->requirement_index()];
 
-    post_process_unbound_store_(launch_domain, arg, req, result, machine_, parallel_policy());
-  } else {
-    for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores)) {
-      const auto& req = output_requirements[arg->requirement_index()];
-
-      if (arg->store()->dim() == 1) {
-        post_process_unbound_store_(
-          launch_domain,
-          arg,
-          req,
-          runtime.extract_scalar(parallel_policy(),
-                                 result,
-                                 static_cast<std::uint32_t>(idx) * sizeof(std::size_t),
-                                 sizeof(std::size_t),
-                                 get_future_size_(),
-                                 launch_domain),
-          machine_,
-          parallel_policy());
-      } else {
-        post_process_unbound_store_(launch_domain, arg, req, result, machine_, parallel_policy());
-      }
-    }
+    post_process_unbound_store_(launch_domain, arg, req, machine_, parallel_policy());
   }
 }
 

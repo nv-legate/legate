@@ -46,10 +46,11 @@ TEST_F(NoPartitionTest, IsConvertible) { ASSERT_TRUE(nopartition->is_convertible
 TEST_F(NoPartitionTest, SatisfiesRestrictions)
 {
   auto restrictions1 = legate::detail::Restrictions{};
-  ASSERT_TRUE(nopartition->satisfies_restrictions(restrictions1));
+  ASSERT_TRUE(restrictions1.are_satisfied_by(*nopartition));
 
-  auto restrictions2 = legate::detail::Restrictions{legate::detail::Restriction::FORBID};
-  ASSERT_TRUE(nopartition->satisfies_restrictions(restrictions2));
+  auto restrictions2 =
+    legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::FORBID}};
+  ASSERT_TRUE(restrictions2.are_satisfied_by(*nopartition));
 }
 
 TEST_F(NoPartitionTest, LaunchDomain)

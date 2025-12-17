@@ -251,10 +251,9 @@ Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
   auto [out, fid] = get_output_field_();
 
   auto result = out.create_buffer<T, DIM>(extents, fid, nullptr, bind_buffer);
-  // We will use this value only when the unbound store is 1D
-  if (bind_buffer) {
-    update_num_elements_(extents[0]);
-  }
+
+  set_bound_(bind_buffer);
+
   return result;
 }
 
@@ -301,8 +300,7 @@ void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents)
   auto [out, fid] = get_output_field_();
 
   out.return_data(extents, fid, buffer);
-  // We will use this value only when the unbound store is 1D
-  update_num_elements_(extents[0]);
+  set_bound_(true);
 }
 
 template <typename T>

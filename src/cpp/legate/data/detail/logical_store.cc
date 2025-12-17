@@ -462,7 +462,10 @@ void LogicalStore::allow_out_of_order_destruction()
 
 Restrictions LogicalStore::compute_restrictions(bool is_output) const
 {
-  return transform_->convert(get_storage()->compute_restrictions(), is_output);
+  auto result = transform_->convert(get_storage()->compute_restrictions(), is_output);
+
+  result.set_require_invertible(transformed());
+  return result;
 }
 
 Legion::ProjectionID LogicalStore::compute_projection(
@@ -528,7 +531,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
   const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
-      (*key_partition_)->satisfies_restrictions(restrictions)) {
+      restrictions.are_satisfied_by(**key_partition_)) {
     return *key_partition_;
   }
 
@@ -566,7 +569,7 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
   const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((new_num_pieces == num_pieces_) && key_partition_.has_value() &&
-      (*key_partition_)->satisfies_restrictions(restrictions)) {
+      restrictions.are_satisfied_by(**key_partition_)) {
     return true;
   }
   return transform_->is_convertible() &&
@@ -629,10 +632,6 @@ void LogicalStore::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
 {
   if (has_scalar_storage()) {
     std::ignore = layout->next(type()->size(), type()->alignment());
-  } else if (unbound()) {
-    // The number of elements for each unbound store is stored in a buffer of type
-    // std::size_t
-    std::ignore = layout->next(sizeof(std::size_t), alignof(std::size_t));
   }
 }
 

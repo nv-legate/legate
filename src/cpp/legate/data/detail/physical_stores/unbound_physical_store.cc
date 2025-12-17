@@ -13,8 +13,6 @@
 
 namespace legate::detail {
 
-ReturnValue UnboundPhysicalStore::pack_weight() const { return unbound_field_.pack_weight(); }
-
 Domain UnboundPhysicalStore::domain() const
 {
   throw TracedException<std::invalid_argument>{
@@ -51,8 +49,7 @@ void UnboundPhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>& buffer,
 
   out.return_data(DomainPoint{extents}, fid, buffer.get_instance(), false /*check_constraints*/);
 
-  // We will use this value only when the unbound store is 1D
-  update_num_elements(extents[0]);
+  set_bound(true);
 }
 
 void UnboundPhysicalStore::bind_data(const InternalSharedPtr<TaskLocalBuffer>& buffer,
@@ -64,8 +61,7 @@ void UnboundPhysicalStore::bind_data(const InternalSharedPtr<TaskLocalBuffer>& b
   auto [out, fid] = get_output_field();
 
   out.return_data(extents, fid, buffer->legion_buffer().get_instance());
-  // We will use this value only when the unbound store is 1D
-  update_num_elements(static_cast<std::size_t>(extents[0]));
+  unbound_field_.set_bound(true);
 }
 
 void UnboundPhysicalStore::check_valid_binding(bool bind_buffer) const
@@ -83,10 +79,6 @@ void UnboundPhysicalStore::check_buffer_dimension(std::int32_t dim) const
   }
 }
 
-void UnboundPhysicalStore::update_num_elements(std::size_t num_elements)
-{
-  unbound_field_.update_num_elements(num_elements);
-  unbound_field_.set_bound(true);
-}
+void UnboundPhysicalStore::set_bound(bool bound) { unbound_field_.set_bound(bound); }
 
 }  // namespace legate::detail

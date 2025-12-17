@@ -62,13 +62,12 @@ class UnboundPhysicalStore final : public PhysicalStore {
    */
   void bind_data(const InternalSharedPtr<TaskLocalBuffer>& buffer, const DomainPoint& extents);
 
-  [[nodiscard]] ReturnValue pack_weight() const;
-
   void check_valid_binding(bool bind_buffer) const;
   void check_buffer_dimension(std::int32_t dim) const;
 
   [[nodiscard]] std::pair<Legion::OutputRegion, Legion::FieldID> get_output_field() const;
-  void update_num_elements(std::size_t num_elements);
+
+  void set_bound(bool bound);
 
  private:
   UnboundRegionField unbound_field_{};

@@ -31,10 +31,7 @@ class UnboundRegionField {
 
   void bind_empty_data(std::int32_t dim);
 
-  [[nodiscard]] ReturnValue pack_weight() const;
-
   void set_bound(bool bound);
-  void update_num_elements(std::size_t num_elements);
 
   [[nodiscard]] const Legion::OutputRegion& get_output_region() const;
   [[nodiscard]] Legion::FieldID get_field_id() const;

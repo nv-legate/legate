@@ -102,19 +102,21 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(std::int32_t in_dim
 
 Restrictions Delinearize::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
-  Restrictions result;
+  return std::move(restrictions).map([&](auto&& dim_res) {
+    SmallVector<Restriction> result{};
 
-  result.reserve(restrictions.size() + (sizes_.size() - 1));
-  for (auto dim = 0; dim <= dim_; ++dim) {
-    result.push_back(restrictions[dim]);
-  }
-  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-    result.push_back(Restriction::FORBID);
-  }
-  for (std::uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim) {
-    result.push_back(restrictions[dim]);
-  }
-  return result;
+    result.reserve(dim_res.size() + (sizes_.size() - 1));
+    for (auto dim = 0; dim <= dim_; ++dim) {
+      result.push_back(dim_res[dim]);
+    }
+    for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+      result.push_back(Restriction::FORBID);
+    }
+    for (std::uint32_t dim = dim_ + 1; dim < dim_res.size(); ++dim) {
+      result.push_back(dim_res[dim]);
+    }
+    return result;
+  });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::convert_color(
@@ -157,17 +159,19 @@ proj::SymbolicPoint Delinearize::invert(proj::SymbolicPoint point) const
 
 Restrictions Delinearize::invert(Restrictions restrictions) const
 {
-  Restrictions result;
+  return std::move(restrictions).map([&](auto&& dim_res) {
+    SmallVector<Restriction> result{};
 
-  result.reserve(restrictions.size() - (sizes_.size() - 1));
-  for (auto dim = 0; dim <= dim_; ++dim) {
-    result.push_back(restrictions[dim]);
-  }
+    result.reserve(dim_res.size() - (sizes_.size() - 1));
+    for (auto dim = 0; dim <= dim_; ++dim) {
+      result.push_back(dim_res[dim]);
+    }
 
-  for (auto dim = dim_ + sizes_.size(); dim < restrictions.size(); ++dim) {
-    result.push_back(restrictions[dim]);
-  }
-  return result;
+    for (auto dim = dim_ + sizes_.size(); dim < dim_res.size(); ++dim) {
+      result.push_back(dim_res[dim]);
+    }
+    return result;
+  });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::invert_color(

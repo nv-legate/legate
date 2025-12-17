@@ -48,8 +48,6 @@ class ConstraintSolver::UnionFindEntry {
     return self;
   }
 
-  void restrict_all() { std::fill(restrictions.begin(), restrictions.end(), Restriction::FORBID); }
-
   const Variable* partition_symbol{};
   Restrictions restrictions{};
   UnionFindEntry* next{};
@@ -66,7 +64,7 @@ ConstraintSolver::EquivClass::EquivClass(const UnionFindEntry* entry)
 
   while (next) {
     partition_symbols.emplace_back(next->partition_symbol);
-    join_inplace(restrictions, next->restrictions);
+    restrictions.join_inplace(next->restrictions);
     next = next->next;
   }
 }
@@ -140,15 +138,12 @@ void ConstraintSolver::solve_constraints()
     auto* const equiv_class = table.at(*broadcast.variable());
 
     if (axes.empty()) {
-      equiv_class->restrict_all();
+      equiv_class->restrictions.restrict_all_dimensions();
       return;
     }
 
     for (auto&& ax : axes) {
-      // TODO(wonchanl): We want to check the axis eagerly and raise an exception
-      // if it is out of bounds
-      LEGATE_ASSERT(ax < equiv_class->restrictions.size());
-      equiv_class->restrictions[ax] = Restriction::FORBID;
+      equiv_class->restrictions.restrict_dimension(ax);
     }
   };
 

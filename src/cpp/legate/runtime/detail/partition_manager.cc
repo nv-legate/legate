@@ -67,32 +67,6 @@ Span<const std::uint32_t> PartitionManager::get_factors(const mapping::detail::M
 
 namespace {
 
-[[nodiscard]] std::tuple<SmallVector<std::size_t, LEGATE_MAX_DIM>,
-                         SmallVector<std::uint32_t, LEGATE_MAX_DIM>,
-                         std::int64_t>
-prune_dimensions(const Restrictions& restrictions, Span<const std::uint64_t> shape)
-{
-  // Prune out any dimensions that are 1
-  SmallVector<std::size_t, LEGATE_MAX_DIM> temp_shape{};
-  SmallVector<std::uint32_t, LEGATE_MAX_DIM> temp_dims{};
-  std::int64_t volume = 1;
-
-  temp_dims.reserve(shape.size());
-  temp_shape.reserve(shape.size());
-  for (auto&& [dim, rest] :
-       legate::detail::enumerate(legate::detail::zip_equal(restrictions, shape))) {
-    auto&& [restr, extent] = rest;
-
-    if (1 == extent || restr == Restriction::FORBID) {
-      continue;
-    }
-    temp_shape.push_back(extent);
-    temp_dims.push_back(dim);
-    volume *= static_cast<std::int64_t>(extent);
-  }
-  return {std::move(temp_shape), std::move(temp_dims), volume};
-}
-
 [[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_1d(
   std::int64_t max_pieces, Span<const std::size_t> shape)
 {
@@ -236,7 +210,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   }
 
   // Prune out any dimensions that are 1
-  auto [temp_shape, temp_dims, volume] = prune_dimensions(restrictions, shape);
+  auto [temp_shape, temp_dims, volume] = restrictions.prune_dimensions(shape);
 
   // Figure out how many shards we can make with this array
   std::int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
@@ -339,12 +313,6 @@ Legion::IndexPartition PartitionManager::find_index_partition(const Legion::Inde
   return find_index_partition_impl(tiling_cache_, index_space, tiling);
 }
 
-Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
-                                                              const Weighted& weighted) const
-{
-  return find_index_partition_impl(weighted_cache_, index_space, weighted);
-}
-
 Legion::IndexPartition PartitionManager::find_image_partition(
   const Legion::IndexSpace& index_space,
   const Legion::LogicalPartition& func_partition,
@@ -359,13 +327,6 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
                                               const Legion::IndexPartition& index_partition)
 {
   tiling_cache_[{index_space, tiling}] = index_partition;
-}
-
-void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
-                                              const Weighted& weighted,
-                                              const Legion::IndexPartition& index_partition)
-{
-  weighted_cache_[{index_space, weighted}] = index_partition;
 }
 
 void PartitionManager::record_image_partition(const Legion::IndexSpace& index_space,

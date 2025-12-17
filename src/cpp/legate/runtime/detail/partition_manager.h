@@ -58,8 +58,6 @@ class PartitionManager {
 
   [[nodiscard]] Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
                                                             const Tiling& tiling) const;
-  [[nodiscard]] Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
-                                                            const Weighted& weighted) const;
   [[nodiscard]] Legion::IndexPartition find_image_partition(
     const Legion::IndexSpace& index_space,
     const Legion::LogicalPartition& func_partition,
@@ -68,9 +66,6 @@ class PartitionManager {
 
   void record_index_partition(const Legion::IndexSpace& index_space,
                               const Tiling& tiling,
-                              const Legion::IndexPartition& index_partition);
-  void record_index_partition(const Legion::IndexSpace& index_space,
-                              const Weighted& weighted,
                               const Legion::IndexPartition& index_partition);
   void record_image_partition(const Legion::IndexSpace& index_space,
                               const Legion::LogicalPartition& func_partition,
@@ -90,8 +85,6 @@ class PartitionManager {
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
   std::unordered_map<TilingCacheKey, Legion::IndexPartition, hasher<TilingCacheKey>>
     tiling_cache_{};
-  using WeightedCacheKey = std::pair<Legion::IndexSpace, Weighted>;
-  std::map<WeightedCacheKey, Legion::IndexPartition> weighted_cache_{};
   using ImageCacheKey =
     std::tuple<Legion::IndexSpace, Legion::LogicalPartition, Legion::FieldID, ImageComputationHint>;
   std::map<ImageCacheKey, Legion::IndexPartition> image_cache_{};

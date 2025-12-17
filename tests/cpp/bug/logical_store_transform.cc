@@ -65,7 +65,7 @@ class CopyTask : public legate::LegateTask<CopyTask> {
 
 class Config {
  public:
-  static constexpr std::string_view LIBRARY_NAME = "test_transform_on_weighted_partition";
+  static constexpr std::string_view LIBRARY_NAME = "test_rejecting_opaque_partition";
 
   static void registration_callback(legate::Library library)
   {
@@ -146,7 +146,7 @@ void add_and_copy(const legate::LogicalArray& output,
 
 }  // namespace
 
-TEST_F(LogicalStoreTransform, WeightedBug1)
+TEST_F(LogicalStoreTransform, OpaqueShouldBeRejected)
 {
   auto runtime = legate::Runtime::get_runtime();
 

@@ -125,14 +125,12 @@ class TaskLauncher {
   void post_process_unbound_stores_(
     const std::vector<Legion::OutputRequirement>& output_requirements);
   void post_process_unbound_stores_(
-    const Legion::FutureMap& result,
     const Legion::Domain& launch_domain,
     const std::vector<Legion::OutputRequirement>& output_requirements);
 
   void post_process_unbound_store_(const Legion::Domain& launch_domain,
                                    const OutputRegionArg* arg,
                                    const Legion::OutputRequirement& req,
-                                   const Legion::FutureMap& weights,
                                    const mapping::detail::Machine& machine,
                                    const ParallelPolicy& parallel_policy);
 
