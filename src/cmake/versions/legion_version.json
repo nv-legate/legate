@@ -2,7 +2,7 @@
     "packages": {
         "Legion": {
             "git_shallow": false,
-            "git_tag": "e7703dfb8d5a961a5682461ba4704cc1710da08b",
+            "git_tag": "0b27339f9bb7d991cdd2ee57af4271beb7a959cd",
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
             "version": "25.09.0"
         }
