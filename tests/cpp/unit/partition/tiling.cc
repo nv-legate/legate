@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <legate/partitioning/detail/partition/tiling.h>
+
 #include <legate.h>
 
 #include <legate/data/detail/logical_store.h>

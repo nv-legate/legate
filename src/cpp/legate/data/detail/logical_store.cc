@@ -26,6 +26,8 @@
 #include <legate/operation/detail/store_projection.h>
 #include <legate/operation/projection.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/image.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>

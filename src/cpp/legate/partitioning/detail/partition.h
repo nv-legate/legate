@@ -6,25 +6,28 @@
 
 #pragma once
 
-#include <legate/data/detail/transform/transform_stack.h>
-#include <legate/mapping/detail/machine.h>
-#include <legate/partitioning/constraint.h>
-#include <legate/partitioning/detail/restriction.h>
-#include <legate/utilities/detail/hash.h>
-#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
+#include <cstdint>
 #include <iosfwd>
-#include <memory>
 #include <string>
 
 namespace legate::detail {
 
 class LogicalStore;
 class Storage;
+class TransformStack;
+class Restrictions;
 
+/**
+ * @brief Abstract base class representing a partitioning strategy.
+ *
+ * A Partition describes how an index space or region is divided into subregions.
+ * Implementations define the partition kind, how to check validity and constraints,
+ * and how to construct Legion partitions or transform them.
+ */
 class Partition {
  public:
   enum class Kind : std::uint8_t {
@@ -41,11 +44,35 @@ class Partition {
   Partition& operator=(const Partition&)     = default;
   Partition& operator=(Partition&&) noexcept = default;
 
+  /**
+   * @brief Returns the specific kind of this partition.
+   * @return The partition kind.
+   */
   [[nodiscard]] virtual Kind kind() const = 0;
 
+  /**
+   * @brief Checks whether this partition fully covers the given storage.
+   *
+   * @param storage The storage to check completeness against.
+   * @return True if the partition completely covers the storage.
+   */
   [[nodiscard]] virtual bool is_complete_for(const detail::Storage& storage) const = 0;
-  [[nodiscard]] virtual bool is_disjoint_for(const Domain& launch_domain) const    = 0;
-  [[nodiscard]] virtual bool is_convertible() const                                = 0;
+
+  /**
+   * @brief Checks whether this partition is disjoint for the given launch domain.
+   *
+   * @param launch_domain The domain of tasks or points launched.
+   * @return True if all subregions are disjoint within the provided domain.
+   */
+  [[nodiscard]] virtual bool is_disjoint_for(const Domain& launch_domain) const = 0;
+
+  /**
+   * @brief Indicates whether this partition can be converted (via transform).
+   *
+   * @return True if the partition supports conversion.
+   */
+  [[nodiscard]] virtual bool is_convertible() const = 0;
+
   /**
    *
    * @brief Indicate whether this partition is invertible or not.
@@ -55,444 +82,89 @@ class Partition {
    */
   [[nodiscard]] virtual bool is_invertible() const = 0;
 
+  /**
+   * @brief Produces a scaled version of this partition.
+   *
+   * @param factors Scale factors applied to each dimension.
+   * @return A new Partition instance representing the scaled partition.
+   */
   [[nodiscard]] virtual InternalSharedPtr<Partition> scale(
     Span<const std::uint64_t> factors) const = 0;
+
+  /**
+   * @brief Expands (bloats) the partition by applying offsets to its bounds.
+   *
+   * @param low_offsets  Offsets applied to the lower bounds.
+   * @param high_offsets Offsets applied to the upper bounds.
+   * @return A new bloated Partition instance.
+   */
   [[nodiscard]] virtual InternalSharedPtr<Partition> bloat(
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const = 0;
 
+  /**
+   * @brief Constructs a Legion logical partition from this partition description.
+   *
+   * @param region   The parent logical region.
+   * @param complete Whether Legion should consider this partition complete.
+   * @return The created LogicalPartition.
+   */
   // NOLINTNEXTLINE(google-default-arguments)
   [[nodiscard]] virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                            bool complete = false) const = 0;
 
+  /**
+   * @brief Returns whether this partition defines a launch domain.
+   *
+   * @return True if a launch domain exists.
+   */
   [[nodiscard]] virtual bool has_launch_domain() const = 0;
-  [[nodiscard]] virtual Domain launch_domain() const   = 0;
 
+  /**
+   * @brief Returns the launch domain associated with this partition.
+   *
+   * @return The launch domain.
+   *
+   * @note Only valid if has_launch_domain() is true.
+   */
+  [[nodiscard]] virtual Domain launch_domain() const = 0;
+
+  /**
+   * @brief Returns a human-readable string describing the partition.
+   *
+   * @return A string representation.
+   */
   [[nodiscard]] virtual std::string to_string() const = 0;
 
+  /**
+   * @brief Returns the shape (size) of the partition's color space.
+   *
+   * @return A span of dimension sizes.
+   */
   [[nodiscard]] virtual Span<const std::uint64_t> color_shape() const = 0;
 
+  /**
+   * @brief Converts this partition using the given transform stack.
+   *
+   * @param self       A shared pointer to this partition.
+   * @param transform  The transformation stack to apply.
+   * @return A new converted Partition.
+   */
   [[nodiscard]] virtual InternalSharedPtr<Partition> convert(
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const = 0;
+
+  /**
+   * @brief Applies the inverse of the given transform to this partition.
+   *
+   * @param self       A shared pointer to this partition.
+   * @param transform  The transformation stack whose inverse is applied.
+   * @return A new inverted Partition.
+   */
   [[nodiscard]] virtual InternalSharedPtr<Partition> invert(
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const = 0;
 };
 
-class NoPartition : public Partition {
- public:
-  [[nodiscard]] Kind kind() const override;
-
-  [[nodiscard]] bool is_complete_for(const detail::Storage& /*storage*/) const override;
-  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
-  [[nodiscard]] bool is_convertible() const override;
-  /**
-   * @brief Indicate whether this partition is invertible or not.
-   */
-  [[nodiscard]] bool is_invertible() const override;
-
-  [[nodiscard]] InternalSharedPtr<Partition> scale(
-    Span<const std::uint64_t> factors) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
-
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion /*region*/,
-                                                   bool /*complete*/) const override;
-
-  [[nodiscard]] bool has_launch_domain() const override;
-  [[nodiscard]] Domain launch_domain() const override;
-
-  [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
-
-  [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> invert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-};
-
-class Tiling : public Partition {
- public:
-  /**
-   * @brief Construct a `Tiling` partition.
-   *
-   * An example of a Tiling we can create, over a 1d index space:
-   *
-   * @code
-   * Tiling(tile_shape=(3,), color_shape=(4,), offsets=(1,))
-   *
-   *                          offset
-   *                          V
-   * indices:              0  1  2  3  4  5  6  7  8  9 10 11 12
-   * tile for color (0,)      *  *  *
-   * tile for color (1,)               *  *  *
-   * tile for color (2,)                        *  *  *
-   * tile for color (3,)                                 *  *  *
-   * @endcode
-   *
-   * This formulation is somewhat overconstrained. In theory, you could deduce `color_shape`
-   * from `tile_shape` when applying the tiling to a given store.
-   *
-   * @param tile_shape The size that each sub-tile must be.
-   * @param color_shape The number of colors in each dimension.
-   * @param offsets The number of entries to skip per dimension.
-   */
-  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
-  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
-
-  bool operator==(const Tiling& other) const;
-
-  [[nodiscard]] Kind kind() const override;
-
-  [[nodiscard]] bool is_complete_for(const detail::Storage& storage) const override;
-  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
-  [[nodiscard]] bool is_convertible() const override;
-  /**
-   * @brief Indicate whether this partition is invertible or not.
-   */
-  [[nodiscard]] bool is_invertible() const override;
-
-  [[nodiscard]] InternalSharedPtr<Partition> scale(
-    Span<const std::uint64_t> factors) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
-
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                                   bool complete) const override;
-
-  [[nodiscard]] bool has_launch_domain() const override;
-  [[nodiscard]] Domain launch_domain() const override;
-
-  [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] Span<const std::uint64_t> tile_shape() const;
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
-
-  [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> invert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-
-  [[nodiscard]] Span<const std::int64_t> offsets() const;
-  [[nodiscard]] Span<const std::uint64_t> strides() const;
-  [[nodiscard]] bool has_color(Span<const std::uint64_t> color) const;
-
-  /**
-   * @brief Apply the tiling to the extents of a parent Store and retrieve the extents of a
-   * particular child Store.
-   *
-   * If `extents` is smaller than, or not otherwise compatible with the parent extents for
-   * which this `Tiling` was constructed, then the resultant child extents are "clipped" (size
-   * 0).
-   *
-   * For example, given the example detailed in the constructor (a size 13 parent), suppose we
-   * map this to a 6-element substore. There is no way to split 6 elements into 4 sets of 3
-   * elements. In that case the children would have extents 3, 2, 0 and 0.
-   *
-   * `color` specifies the `i, (j, k, ...)`-th color within the tiling, corresponding to a
-   * particular child. So, for example for a tiling which produces:
-   *
-   * @code
-   * A B
-   * C D
-   * @endcode
-   *
-   * passing `color = (1, 1)` gives you `D`.
-   *
-   * @param extents The extents of the region on which to apply the tiling.
-   * @param color The color corresponding to the child Store to retrieve.
-   *
-   * @return The sub-region of `extents` corresponding to `color`.
-   */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> get_child_extents(
-    Span<const std::uint64_t> extents, Span<const std::uint64_t> color) const;
-  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> get_child_offsets(
-    Span<const std::uint64_t> color) const;
-
-  [[nodiscard]] std::size_t hash() const;
-
- private:
-  bool overlapped_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
-};
-
-/**
- * @brief Opaque partitions are primarily used for representing partition information
- *        of unbounded stores.
- */
-class Opaque : public Partition {
- public:
-  /**
-   * @brief Construct an `Opaque` partition.
-   *
-   * An opaque partition represents the partitions of unbounded stores. We can construct this
-   * partition without having concrete (completely constructed) IndexSpace and IndexPartition, hence
-   * the name "opaque". This is useful to make progress in the cases where the same partition will
-   * be applied to some other store or may be used as a key partition. The nature of unbounded store
-   * is such that the bounds are only known when the task producing the store actually completes
-   * execution. By having a opaque partition we can still make progress without having to wait for
-   * all the details of the partition being available, which happens only after the task executes.
-   *
-   * @param ispace The IndexSpace for this partition (name only).
-   * @param ipartition The IndexPartition (name only).
-   * @param color_domain The domain of the partition.
-   */
-  Opaque(Legion::IndexSpace ispace, Legion::IndexPartition ipartition, const Domain& color_domain);
-
-  bool operator==(const Opaque& other) const;
-  bool operator<(const Opaque& other) const;
-
-  /**
-   * @brief Return the kind of this partition
-   */
-  [[nodiscard]] Kind kind() const override;
-  /**
-   * @brief Indicate if the partition is disjoint for a given launch domain
-   */
-  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
-  /**
-   * @brief Indicate if the partition is convertible. Always return false.
-   *
-   * The opacity of the partition makes it non-convertible. For converting we
-   * need access to the shape of the partition and that is not available for
-   * Opaque partitions.
-   */
-  [[nodiscard]] bool is_convertible() const override;
-  /**
-   * @brief Indicate if the partition is invertible. Always return false.
-   *
-   * The opacity of the partition makes it non-invertible. For inverting we
-   * need access to the shape of the partition and that is not available for
-   * Opaque partitions.
-   */
-  [[nodiscard]] bool is_invertible() const override;
-  /**
-   * @brief Indicate if the partition covers a given storage. Always return true, as Opaque
-   * partitions are created only for unbound stores and thus are complete by construction.
-   */
-  [[nodiscard]] bool is_complete_for(const detail::Storage& /*storage*/) const override;
-  /**
-   * @brief Scale the partition by given factors. Not implemented.
-   */
-  [[nodiscard]] InternalSharedPtr<Partition> scale(
-    Span<const std::uint64_t> factors) const override;
-  /**
-   * @brief Bloat each chunk in the partition by given offsets. Not implemented.
-   */
-  [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
-  /**
-   * @brief Construct a Legion logical partition for a given Legion logical region.
-   *
-   * @param region The region we're trying to partition.
-   * @param complete To indicate if the partition is complete or not.
-   */
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                                   bool complete) const override;
-  /**
-   * @brief Indicate if the partition's color shape can be converted into a launch domain.
-   * Always return true.
-   */
-  [[nodiscard]] bool has_launch_domain() const override;
-  /**
-   * @brief Convert the partition's color shape into a launch domain.
-   */
-  [[nodiscard]] Domain launch_domain() const override;
-  /**
-   * @brief Return a human-readable representation of the partition in a string
-   */
-  [[nodiscard]] std::string to_string() const override;
-  /**
-   * @brief Return the partition's color shape
-   */
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
-  /**
-   * @brief Convert the partition using a given transformation stack. Raise
-   * runtime_error unless the transformation is the identity.
-   *
-   * Only identity works as we can not access information like the shape of
-   * an Opaque transformation.
-   *
-   * @param self       A shared pointer to this partition.
-   * @param transform  The transformation stack to apply.
-   */
-  [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-  /**
-   * @brief Invert the partition using a given transformation stack. Raise
-   * NonInvertibleTransformation unless the transformation is the identity.
-   *
-   * Only identity works as we can not access information like the shape of
-   * an Opaque transformation.
-   *
-   * @param self       A shared pointer to this partition.
-   * @param transform  The transformation stack to apply.
-   */
-  [[nodiscard]] InternalSharedPtr<Partition> invert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-
-  Opaque(const Opaque&)                = default;
-  Opaque& operator=(const Opaque&)     = default;
-  Opaque(Opaque&&) noexcept            = default;
-  Opaque& operator=(Opaque&&) noexcept = default;
-
- private:
-  Legion::IndexSpace ispace_{};
-  Legion::IndexPartition ipartition_{};
-  Domain color_domain_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
-};
-
-class Image : public Partition {
- public:
-  /**
-   * @brief Construct an `Image` partition.
-   *
-   * An Image partition of store A is derived from a partition of store B by interpreting indices
-   * contained in B as a function from B's domain to A's domain (hence the name "image"); store B is
-   * called the @a function store of the image partition. The function store may contain rectangles
-   * instead of indices, in which case the rectangles are logically expanded to individual points
-   * they contain.
-   *
-   * The following show two examples of Image partitions, one where the function store has indices
-   * and one with rectangles.
-   *
-   * With indices:
-   * @code
-   *                     color
-   *               (0)         (1)
-   * function: [0,1,3,4,5], [2,6,7,8]
-   *
-   * indices:                  0  1  2  3  4  5  6  7  8
-   * sub-store for color (0)   *  *     *  *  *
-   * sub-store for color (1)         *           *  *  *
-   * @endcode
-   *
-   * With rectangles:
-   * @code
-   *                          color
-   *                  (0)               (1)
-   * function: [ [0,1], [3,5] ], [ [2,2], [6,8] ]
-   *
-   * indices:                  0  1  2  3  4  5  6  7  8
-   * sub-store for color (0)   *  *     *  *  *
-   * sub-store for color (1)         *           *  *  *
-   * @endcode
-   *
-   * Image partitions are neither disjoint nor complete (i.e., cover the entire store).
-   *
-   * The image computation is done precisely when the `hint` is
-   * legate::ImageComputationHint::NO_HINT, or approximate with the other two values (see
-   * legate::ImageComputationHint).
-   *
-   * @param func The function store
-   * @param func_partition the function store's partition to use in image computation
-   * @param machine the machine on which the image computation tasks are launched
-   * @param hint a hint to the image computation (precise vs. approximate)
-   */
-  Image(InternalSharedPtr<detail::LogicalStore> func,
-        InternalSharedPtr<Partition> func_partition,
-        mapping::detail::Machine machine,
-        ImageComputationHint hint);
-
-  bool operator==(const Image& other) const;
-
-  [[nodiscard]] Kind kind() const override;
-
-  [[nodiscard]] bool is_complete_for(const detail::Storage& storage) const override;
-  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
-  [[nodiscard]] bool is_convertible() const override;
-  /**
-   * @brief Indicate whether this partition is invertible or not.
-   */
-  [[nodiscard]] bool is_invertible() const override;
-
-  [[nodiscard]] InternalSharedPtr<Partition> scale(
-    Span<const std::uint64_t> factors) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> bloat(
-    Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
-
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                                   bool complete) const override;
-
-  [[nodiscard]] bool has_launch_domain() const override;
-  [[nodiscard]] Domain launch_domain() const override;
-
-  [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
-
-  [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> invert(
-    const InternalSharedPtr<Partition>& self,
-    const InternalSharedPtr<TransformStack>& transform) const override;
-
-  /**
-   * @brief Return the function store of this image partition.
-   *
-   * See legate::detail::Image::Image to learn about the role of function store.
-   *
-   * @return The function store of this `Image` partition
-   */
-  [[nodiscard]] const InternalSharedPtr<detail::LogicalStore>& func() const;
-
- private:
-  InternalSharedPtr<detail::LogicalStore> func_;
-  InternalSharedPtr<Partition> func_partition_{};
-  mapping::detail::Machine machine_{};
-  ImageComputationHint hint_{};
-};
-
-[[nodiscard]] InternalSharedPtr<NoPartition> create_no_partition();
-
-[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets = {});
-
-[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
-
-/*
- * @brief Create an Opaque Partition.
- *
- * @param ispace The name of the Index Space.
- * @param iparam The name of the Partition.
- * @param color_domain The domain of the partition.
- *
- * @return The Opaque partition pointer.
- */
-[[nodiscard]] InternalSharedPtr<Opaque> create_opaque(Legion::IndexSpace ispace,
-                                                      Legion::IndexPartition ipartition,
-                                                      const Domain& color_domain);
-
-[[nodiscard]] InternalSharedPtr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
-                                                    InternalSharedPtr<Partition> func_partition,
-                                                    mapping::detail::Machine machine,
-                                                    ImageComputationHint hint);
-
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 
 }  // namespace legate::detail
-
-#include <legate/partitioning/detail/partition.inl>

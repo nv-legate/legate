@@ -1,18 +1,17 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION & AFFILIATES. All rights
- * reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION &
+ * AFFILIATES. All rights reserved. SPDX-License-Identifier: Apache-2.0
  */
 
 #pragma once
 
-#include <legate/data/shape.h>
-#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/hash.h>
 #include <legate/utilities/hash.h>
 #include <legate/utilities/span.h>
 
+#include <cstdint>
 #include <map>
 #include <tuple>
 #include <unordered_map>
@@ -23,6 +22,8 @@ namespace legate {
 
 class ParallelPolicy;
 
+enum class ImageComputationHint : std::uint8_t;
+
 }  // namespace legate
 
 namespace legate::mapping::detail {
@@ -32,8 +33,6 @@ class Machine;
 }  // namespace legate::mapping::detail
 
 namespace legate::detail {
-
-class Runtime;
 
 class PartitionManager {
  public:

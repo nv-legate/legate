@@ -10,6 +10,8 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/store_analyzer.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
+#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>

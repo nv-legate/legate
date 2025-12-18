@@ -7,7 +7,7 @@
 #include <legate.h>
 
 #include <legate/data/detail/logical_store.h>
-#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 
 #include <gtest/gtest.h>
 

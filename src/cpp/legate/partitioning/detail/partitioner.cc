@@ -10,6 +10,7 @@
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
 

@@ -4,13 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <legate/partitioning/detail/partition/image.h>
+
 #include <legate.h>
 
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/transform/delinearize.h>
 #include <legate/data/detail/transform/non_invertible_transformation.h>
 #include <legate/data/detail/transform/promote.h>
-#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -9,7 +9,7 @@
 #include <legate.h>
 
 #include <legate/data/detail/logical_store.h>
-#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/utilities/detail/tuple.h>
 
 #include <gtest/gtest.h>
