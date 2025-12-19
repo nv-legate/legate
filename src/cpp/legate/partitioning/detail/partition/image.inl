@@ -10,8 +10,6 @@
 
 namespace legate::detail {
 
-inline Image::Kind Image::kind() const { return Kind::IMAGE; }
-
 inline bool Image::is_complete_for(const detail::Storage& /*storage*/) const
 {
   // Completeness check for image partitions is expensive, so we give a sound answer

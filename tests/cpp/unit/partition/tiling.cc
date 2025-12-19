@@ -49,8 +49,6 @@ class TilingTest : public DefaultFixture {
   legate::InternalSharedPtr<legate::detail::Tiling> tiling;
 };
 
-TEST_F(TilingTest, Kind) { ASSERT_EQ(tiling->kind(), legate::detail::Partition::Kind::TILING); }
-
 TEST_F(TilingTest, Shape)
 {
   auto expected_tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};

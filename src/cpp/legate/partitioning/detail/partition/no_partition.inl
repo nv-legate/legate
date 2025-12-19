@@ -10,13 +10,13 @@
 
 namespace legate::detail {
 
-inline NoPartition::Kind NoPartition::kind() const { return Kind::NO_PARTITION; }
-
 inline bool NoPartition::is_complete_for(const detail::Storage& /*storage*/) const { return true; }
 
 inline bool NoPartition::is_convertible() const { return true; }
 
 inline bool NoPartition::is_invertible() const { return true; }
+
+inline bool NoPartition::has_color_shape() const { return false; }
 
 inline Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion /*region*/,
                                                        bool /*complete*/) const

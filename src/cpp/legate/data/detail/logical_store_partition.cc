@@ -10,25 +10,17 @@
 
 #include <legate/data/detail/partition_placement_info.h>
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/shape.h>
 #include <legate/data/detail/transform/shift.h>
 #include <legate/data/detail/transform/transform_stack.h>
-#include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/launcher_arg.h>
-#include <legate/operation/detail/operation.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/operation/projection.h>
 #include <legate/partitioning/detail/partition.h>
-#include <legate/partitioning/detail/partitioner.h>
-#include <legate/runtime/detail/partition_manager.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/runtime/detail/projection.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/detail/shard.h>
-#include <legate/task/detail/task_return_layout.h>
-#include <legate/tuning/parallel_policy.h>
 #include <legate/type/detail/types.h>
-#include <legate/utilities/detail/array_algorithms.h>
-#include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/legion_utilities.h>
@@ -41,9 +33,7 @@
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
 
-#include <algorithm>
 #include <cstddef>
-#include <numeric>
 #include <stdexcept>
 #include <utility>
 
@@ -52,11 +42,12 @@ namespace legate::detail {
 InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
 {
-  if (partition_->kind() != Partition::Kind::TILING) {
+  const auto* const tiling = dynamic_cast<const Tiling*>(partition_.get());
+
+  if (!tiling) {
     throw TracedException<std::runtime_error>{
       "Child stores can be retrieved only from tile partitions"};
   }
-  const auto* tiling = static_cast<const Tiling*>(partition_.get());
 
   if (!tiling->has_color(color)) {
     throw TracedException<std::out_of_range>{

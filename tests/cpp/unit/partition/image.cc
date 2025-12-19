@@ -45,8 +45,6 @@ class ImageTest : public DefaultFixture {
   legate::InternalSharedPtr<legate::detail::Image> image;
 };
 
-TEST_F(ImageTest, Kind) { ASSERT_EQ(image->kind(), legate::detail::Partition::Kind::IMAGE); }
-
 TEST_F(ImageTest, Compare)
 {
   auto image1 = legate::detail::Image{*image};

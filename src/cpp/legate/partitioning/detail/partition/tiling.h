@@ -81,11 +81,6 @@ class Tiling final : public Partition {
   bool operator==(const Tiling& other) const;
 
   /**
-   * @copydoc Partition::kind()
-   */
-  [[nodiscard]] Kind kind() const override;
-
-  /**
    * @copydoc Partition::is_complete_for()
    *
    * A tiling is complete only if its tiles collectively cover the given storage exactly.
@@ -150,6 +145,11 @@ class Tiling final : public Partition {
    * @return A span describing the tile size per dimension.
    */
   [[nodiscard]] Span<const std::uint64_t> tile_shape() const;
+
+  /**
+   * @copydoc Partition::has_color_shape().
+   */
+  [[nodiscard]] bool has_color_shape() const override;
 
   /**
    * @copydoc Partition::color_shape()

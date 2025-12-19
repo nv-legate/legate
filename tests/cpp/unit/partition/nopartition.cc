@@ -26,11 +26,6 @@ class NoPartitionTest : public DefaultFixture {
   legate::InternalSharedPtr<legate::detail::NoPartition> nopartition;
 };
 
-TEST_F(NoPartitionTest, Kind)
-{
-  ASSERT_EQ(nopartition->kind(), legate::detail::Partition::Kind::NO_PARTITION);
-}
-
 TEST_F(NoPartitionTest, IsCompleteFor)
 {
   // This store itself does not actually matter, we just need to create one in order to get a
@@ -74,7 +69,9 @@ TEST_F(NoPartitionTest, Scale)
 {
   constexpr std::uint64_t factors[] = {2, 2};
   auto scaled                       = nopartition->scale(factors);
-  ASSERT_EQ(scaled->kind(), legate::detail::Partition::Kind::NO_PARTITION);
+
+  ASSERT_THAT(scaled.get(),
+              ::testing::WhenDynamicCastTo<legate::detail::NoPartition*>(::testing::_));
 }
 
 TEST_F(NoPartitionTest, Bloat)
@@ -82,7 +79,9 @@ TEST_F(NoPartitionTest, Bloat)
   constexpr std::uint64_t low_offsets[]  = {0, 0};
   constexpr std::uint64_t high_offsets[] = {1, 1};
   auto bloated                           = nopartition->bloat(low_offsets, high_offsets);
-  ASSERT_EQ(bloated->kind(), legate::detail::Partition::Kind::NO_PARTITION);
+
+  ASSERT_THAT(bloated.get(),
+              ::testing::WhenDynamicCastTo<legate::detail::NoPartition*>(::testing::_));
 }
 
 TEST_F(NoPartitionTest, Construct)

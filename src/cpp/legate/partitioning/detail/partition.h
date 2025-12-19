@@ -30,25 +30,12 @@ class Restrictions;
  */
 class Partition {
  public:
-  enum class Kind : std::uint8_t {
-    NO_PARTITION,
-    TILING,
-    OPAQUE,
-    IMAGE,
-  };
-
   Partition()                                = default;
   virtual ~Partition()                       = default;
   Partition(const Partition&)                = default;
   Partition(Partition&&) noexcept            = default;
   Partition& operator=(const Partition&)     = default;
   Partition& operator=(Partition&&) noexcept = default;
-
-  /**
-   * @brief Returns the specific kind of this partition.
-   * @return The partition kind.
-   */
-  [[nodiscard]] virtual Kind kind() const = 0;
 
   /**
    * @brief Checks whether this partition fully covers the given storage.
@@ -134,6 +121,15 @@ class Partition {
    * @return A string representation.
    */
   [[nodiscard]] virtual std::string to_string() const = 0;
+
+  /**
+   * @brief Returns whether this partition defines a color space. In effect, this determines
+   * whether a call to `color_shape()` is well-formed. The overwhelming majority of partitions
+   * are expected to have a color shape.
+   *
+   * @return `true` if the partition has a color shape, `false` otherwise..
+   */
+  [[nodiscard]] virtual bool has_color_shape() const = 0;
 
   /**
    * @brief Returns the shape (size) of the partition's color space.

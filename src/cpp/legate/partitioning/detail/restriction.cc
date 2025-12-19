@@ -7,6 +7,7 @@
 #include <legate/partitioning/detail/restriction.h>
 
 #include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -49,7 +50,9 @@ bool Restrictions::are_satisfied_by(const Partition& partition) const
     return false;
   }
 
-  if (partition.kind() == Partition::Kind::NO_PARTITION) {
+  if (!partition.has_color_shape()) {
+    // Currently only NoPartition has no color shape
+    LEGATE_ASSERT(dynamic_cast<const NoPartition*>(&partition));
     return true;
   }
 

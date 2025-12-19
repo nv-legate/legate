@@ -122,6 +122,8 @@ std::string Image::to_string() const
                      hint_);
 }
 
+bool Image::has_color_shape() const { return func_partition_->has_color_shape(); }
+
 Span<const std::uint64_t> Image::color_shape() const { return func_partition_->color_shape(); }
 
 InternalSharedPtr<Partition> Image::convert(

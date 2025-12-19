@@ -10,8 +10,6 @@
 
 namespace legate::detail {
 
-inline Opaque::Kind Opaque::kind() const { return Kind::OPAQUE; }
-
 inline bool Opaque::is_convertible() const { return false; }
 
 inline bool Opaque::is_invertible() const { return false; }
@@ -25,6 +23,8 @@ inline bool Opaque::is_complete_for(const detail::Storage& /*storage*/) const
 inline bool Opaque::has_launch_domain() const { return true; }
 
 inline Domain Opaque::launch_domain() const { return color_domain_; }
+
+inline bool Opaque::has_color_shape() const { return true; }
 
 inline Span<const std::uint64_t> Opaque::color_shape() const { return color_shape_; }
 

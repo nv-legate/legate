@@ -47,10 +47,6 @@ class Opaque final : public Partition {
   bool operator<(const Opaque& other) const;
 
   /**
-   * @brief Return the kind of this partition
-   */
-  [[nodiscard]] Kind kind() const override;
-  /**
    * @brief Indicate if the partition is disjoint for a given launch domain
    */
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
@@ -106,6 +102,12 @@ class Opaque final : public Partition {
    * @brief Return a human-readable representation of the partition in a string
    */
   [[nodiscard]] std::string to_string() const override;
+
+  /**
+   * @copydoc Partition::has_color_shape().
+   */
+  [[nodiscard]] bool has_color_shape() const override;
+
   /**
    * @brief Return the partition's color shape
    */

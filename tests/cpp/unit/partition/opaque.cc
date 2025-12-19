@@ -54,8 +54,6 @@ class OpaqueTest : public DefaultFixture {
   Legion::IndexPartition partition;
 };
 
-TEST_F(OpaqueTest, Kind) { ASSERT_EQ(opaque->kind(), legate::detail::Partition::Kind::OPAQUE); }
-
 TEST_F(OpaqueTest, Compare)
 {
   auto runtime      = legate::Runtime::get_runtime();

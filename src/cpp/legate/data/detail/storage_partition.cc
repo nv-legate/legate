@@ -11,6 +11,7 @@
 #include <legate/data/detail/shape.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/formatters.h>
@@ -46,11 +47,12 @@ InternalSharedPtr<Storage> StoragePartition::get_child_storage(
 {
   LEGATE_ASSERT(self.get() == this);
 
-  if (partition_->kind() != Partition::Kind::TILING) {
+  const auto* const tiling = dynamic_cast<Tiling*>(partition_.get());
+
+  if (!tiling) {
     throw TracedException<std::runtime_error>{"Sub-storage is implemented only for tiling"};
   }
 
-  auto tiling        = static_cast<Tiling*>(partition_.get());
   auto child_extents = tiling->get_child_extents(parent_->extents(), color);
   auto child_offsets = tiling->get_child_offsets(color);
 
@@ -61,11 +63,12 @@ InternalSharedPtr<Storage> StoragePartition::get_child_storage(
 InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
   Span<const std::uint64_t> color)
 {
-  if (partition_->kind() != Partition::Kind::TILING) {
+  const auto* const tiling = dynamic_cast<Tiling*>(partition_.get());
+
+  if (!tiling) {
     throw TracedException<std::runtime_error>{"Sub-storage is implemented only for tiling"};
   }
 
-  auto tiling = static_cast<Tiling*>(partition_.get());
   return parent_->get_region_field()->get_child(tiling, color, complete_);
 }
 

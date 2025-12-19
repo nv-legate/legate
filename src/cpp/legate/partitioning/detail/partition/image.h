@@ -92,11 +92,6 @@ class Image final : public Partition {
   bool operator==(const Image& other) const;
 
   /**
-   * @copydoc Partition::kind()
-   */
-  [[nodiscard]] Kind kind() const override;
-
-  /**
    * @copydoc Partition::is_complete_for()
    */
   [[nodiscard]] bool is_complete_for(const detail::Storage& storage) const override;
@@ -165,6 +160,11 @@ class Image final : public Partition {
    * @copydoc Partition::to_string()
    */
   [[nodiscard]] std::string to_string() const override;
+
+  /**
+   * @copydoc Partition::has_color_shape().
+   */
+  [[nodiscard]] bool has_color_shape() const override;
 
   /**
    * @copydoc Partition::color_shape()
