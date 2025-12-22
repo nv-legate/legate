@@ -52,8 +52,8 @@ jobs:
           #
           export MATRIX="
           # arm64
-          #- { PY_VER: '3.11' }
-          #- { PY_VER: '3.12' }
+          - { PY_VER: '3.11' }
+          - { PY_VER: '3.12' }
           - { PY_VER: '3.13' }
           "
 
@@ -66,7 +66,7 @@ jobs:
   build:
     name: arm64, py${{ matrix.PY_VER }} (optional)
     needs: compute-matrix
-    timeout-minutes: 30
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.compute-matrix.outputs.MATRIX) }}
@@ -119,3 +119,11 @@ jobs:
         with:
           name: wheel-${{ env.BUILD_NAME }}
           path: wheelhouse/*.whl
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.PY_VER }}
+
+      - name: Run Tests
+        run: ./continuous_integration/scripts/test_wheel_mac.bash
