@@ -21,7 +21,7 @@ from types import NoneType, UnionType
 from typing import (
     Any,  # pragma: no cover
     TypeVar,
-    _UnionGenericAlias,
+    Union,
     get_args as typing_get_args,
     get_origin as typing_get_origin,
 )
@@ -66,6 +66,7 @@ cdef tuple[type, ...] _BASE_TYPES = _BASE_PHYSICAL_TYPES + _BASE_LOGICAL_TYPES
 cdef tuple[type, ...] _INPUT_TYPES = (InputStore, InputArray)
 cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore, OutputArray)
 cdef tuple[type, ...] _REDUCTION_TYPES = (ReductionStore, ReductionArray)
+cdef set _UNION_TYPES = {Union, UnionType}
 
 
 cdef try_unpack_simple_store(arg: LegateDataInterface, name: str):
@@ -127,31 +128,30 @@ cdef inline type _unpack_union_type(object annotation):
     return ret
 
 
+cdef inline bool _is_union_type(object x):
+    return typing_get_origin(x) in _UNION_TYPES
+
+
 cdef void _assert_union_types_are_what_we_expect():
     import builtins
-    from typing import Optional, Union
+    from typing import Optional
 
     # Use builtins module here to make triply sure that Cython isn't
     # transforming any of these types, and that they are pure python
     # types. Cannot use builtins.None because None is a keyword, so we have to
     # getattr it.
     x = builtins.int | getattr(builtins, "None")
-    assert isinstance(x, UnionType)
+    assert _is_union_type(x)
     x = Optional[builtins.int]
-    assert isinstance(x, _UnionGenericAlias)
+    assert _is_union_type(x)
     x = Union[builtins.int, getattr(builtins, "None")]
-    assert isinstance(x, _UnionGenericAlias)
+    assert _is_union_type(x)
 
 
 _assert_union_types_are_what_we_expect()
 
 cdef inline type _unpack_type(object annotation):
-    if isinstance(annotation, (UnionType, _UnionGenericAlias)):
-        # _UnionGenericAlias is needed to catch all 3 of the "union" variants:
-        #
-        # 1. 'x | y' -> UnionType
-        # 2. 'Optional[x]' -> _UnionGenericAlias
-        # 3. 'Union[x, y]' -> _UnionGenericAlias
+    if _is_union_type(annotation):
         return _unpack_union_type(annotation)
     return _unpack_generic_type(annotation)
 
