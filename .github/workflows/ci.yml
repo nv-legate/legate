@@ -1,21 +1,13 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-name: pr
+name: ci
 
 on:
   push:
     branches:
-      - "pull-request/[0-9]+"
-
-concurrency:
-  group: >-
-    ${{
-      (github.ref == 'refs/heads/main' || startsWith(github.ref_name, 'branch-')) &&
-      format('{0}-{1}', github.workflow, github.run_id) ||
-      format('{0}-{1}', github.workflow, github.ref_name)
-    }}
-  cancel-in-progress: true
+      - "branch-*"
+      - "main"
 
 defaults:
   run:
@@ -51,32 +43,15 @@ jobs:
     uses: ./.github/workflows/wheels-build.yml
     with:
       build-type: pull-request
-      matrix_filter: group_by(.ARCH) | map(max_by(.PY_VER|split(".")|map(tonumber)))
   wheels-test:
     needs: wheels-build
     secrets: inherit
     uses: ./.github/workflows/wheels-test.yml
     with:
       build-type: pull-request
-      matrix_filter: group_by(.ARCH) | map(max_by(.PY_VER|split(".")|map(tonumber)))
   wheels-mac:
     name: wheels-mac (optional)
     secrets: inherit
     uses: ./.github/workflows/wheels-mac.yml
     with:
       build-type: pull-request
-      matrix_filter: '[max_by(.PY_VER|split(".")|map(tonumber))]'
-  source-tests-pass:
-    if: always()
-    needs:
-      - source-build-cpu
-      - source-build-gpu
-      - source-test-cpu
-      - source-test-gpu
-      - wheels-build
-      - wheels-test
-    runs-on: linux-amd64-cpu4
-    steps:
-      - name: Check job results
-        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
-        run: exit 1
