@@ -87,7 +87,7 @@ jobs:
           ls -lAhR "${CONDA_OUTPUT}"
 
       - name: Upload gasnet wrapper artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: ${{ env.ARTIFACT_PATH }}

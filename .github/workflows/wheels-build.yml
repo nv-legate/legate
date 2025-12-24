@@ -140,7 +140,7 @@ jobs:
       - name: C++ wheel upload
         env:
           BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12-py${{ matrix.PY_VER }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: legate-wheel-${{ env.BUILD_NAME }}
           path: final-dist/*.whl
