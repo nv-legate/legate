@@ -65,6 +65,7 @@ requirements:
     - cmake
     - make
     - rust >={{ rust_min_version }}
+    - {{ stdlib("c") }}
     - {{ compiler('c') }}
     - libclang
     - clang
