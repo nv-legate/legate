@@ -7,7 +7,7 @@ from __future__ import annotations
 from contextlib import ExitStack
 from typing import TYPE_CHECKING, Any, Self, TextIO
 
-from ..info import _nested_dict_pretty_print, info as legate_info
+from ..info import _nested_dict_pretty_print
 from .info import benchmark_info
 
 if TYPE_CHECKING:
@@ -21,9 +21,15 @@ class BenchmarkLog(ExitStack):
     uid: np.uint64
     file: TextIO
     columns: list[str]
+    metadata: dict[str, Any]
 
     def __init__(
-        self, name: str, uid: np.uint64, columns: list[str], file: TextIO
+        self,
+        name: str,
+        uid: np.uint64,
+        columns: list[str],
+        file: TextIO,
+        metadata: dict[str, Any],
     ) -> None:
         """Create a context manager for collecting benchmark data in a table.
 
@@ -40,12 +46,16 @@ class BenchmarkLog(ExitStack):
             The names for the columns of data that will be collected.
         file: TextIO
             An output text stream to accept the data as it is collected.
+        metadata: dict[str, Any]
+            Dictionary of metadata that will be included in the header
+            of the table.
         """
         super().__init__()
         self.name = name
         self.uid = uid
         self.columns = columns
         self.file = file
+        self.metadata = metadata
 
     def _log_metadata(self, _metadata: str) -> None:
         raise NotImplementedError
@@ -64,7 +74,7 @@ class BenchmarkLog(ExitStack):
     def _generate_and_log_metadata(self) -> None:
         info: dict[str, Any] = {}
         info["Benchmark"] = benchmark_info(self.name, self.uid)
-        info.update(legate_info())
+        info.update(self.metadata)
         lines = "\n".join(_nested_dict_pretty_print(info))
         self._log_metadata(lines)
 

@@ -135,3 +135,32 @@ def test_metadata() -> None:
     ]
     for entry in expected:
         assert re.search(entry, metadata) is not None
+
+
+def test_custom_metadata() -> None:
+    outfile = io.StringIO()
+    input_metadata = {
+        "Custom Field": {"Custom Subfield 1": 0, "Custom Subfield 2": 1}
+    }
+    with benchmark_log(
+        "basic", ["size", "time"], out=outfile, metadata=input_metadata
+    ):
+        pass
+    string = outfile.getvalue()
+    infile = io.StringIO(string)
+    header = filter(lambda r: r[0] == "#", infile)
+    metadata = "".join(line.strip("#") for line in header)
+    expected = [
+        "Benchmark *:",
+        "  Name *:",
+        "  ID *:",
+        "  Time *:",
+        "  Global rank *:",
+        "  Local rank *:",
+        "  Node *:",
+        "Custom Field *:",
+        "  Custom Subfield 1 *:",
+        "  Custom Subfield 2 *:",
+    ]
+    for entry in expected:
+        assert re.search(entry, metadata) is not None

@@ -7,24 +7,25 @@ from __future__ import annotations
 import sys
 import secrets
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, Any, TextIO, cast
 
 import numpy as np
 
 from ..core import get_legate_runtime, types as ty
 from ..core.task import OutputArray, task
 from ..settings import settings as legate_settings
+from ._benchmark.log import BenchmarkLog
 from ._benchmark.log_csv import BenchmarkLogCSV
 from ._benchmark.log_from_filename import BenchmarkLogFromFilename
 from ._benchmark.log_rich import BenchmarkLogRich
 from ._benchmark.settings import settings
+from .info import info as legate_info
 
 if TYPE_CHECKING:
     import os
 
-    from ._benchmark.log import BenchmarkLog
 
-__all__ = ["benchmark_log"]
+__all__ = ["BenchmarkLog", "BenchmarkLogFromFilename", "benchmark_log"]
 
 
 def _num_nodes() -> int:
@@ -78,7 +79,11 @@ def _use_rich(out: TextIO) -> bool:
 
 
 def benchmark_log(
-    name: str, columns: list[str], out: TextIO | None = None
+    name: str,
+    columns: list[str],
+    *,
+    out: TextIO | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> BenchmarkLog | BenchmarkLogFromFilename:
     """
     Create a context manager for logging tables of data generated for
@@ -105,6 +110,10 @@ def benchmark_log(
         for a set of output csv files (one per rank) in that directory.  For
         example, if `name` is `mybench`, then rank `P` will write its
         benchmark data to `mybench_[unique hex string].P.csv`.
+    metadata: dict[str, Any] | None = None
+        Optional dictionary of metadata that will be included in the header
+        of the table.  If `None`, `legate.util.info.info()` will be used to
+        generate the metadata.
 
     Returns
     -------
@@ -114,14 +123,16 @@ def benchmark_log(
     """
     uid = _benchmark_uid()
     file = _benchmark_file(out)
+    if metadata is None:
+        metadata = cast(dict[str, Any], legate_info())
     if file is not None:
         if _use_rich(file):
-            return BenchmarkLogRich(name, uid, columns, file)
-        return BenchmarkLogCSV(name, uid, columns, file)
+            return BenchmarkLogRich(name, uid, columns, file, metadata)
+        return BenchmarkLogCSV(name, uid, columns, file, metadata)
 
     file_name = _benchmark_file_name(name, uid)
 
     def thunk(file: TextIO) -> BenchmarkLog:
-        return BenchmarkLogCSV(name, uid, columns, file)
+        return BenchmarkLogCSV(name, uid, columns, file, metadata)
 
     return BenchmarkLogFromFilename(file_name, thunk)

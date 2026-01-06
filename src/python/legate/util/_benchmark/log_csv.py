@@ -11,12 +11,19 @@ from typing import TYPE_CHECKING, TextIO
 from .log import BenchmarkLog
 
 if TYPE_CHECKING:
+    from typing import Any
+
     import numpy as np
 
 
 class BenchmarkLogCSV(BenchmarkLog):
     def __init__(
-        self, name: str, uid: np.uint64, columns: list[str], file: TextIO
+        self,
+        name: str,
+        uid: np.uint64,
+        columns: list[str],
+        file: TextIO,
+        metadata: dict[str, Any],
     ) -> None:
         """
         Create a context for logging benchmark information to a .csv file.
@@ -26,7 +33,7 @@ class BenchmarkLogCSV(BenchmarkLog):
         Most users should just call `benchmark_log()` instead of calling this
         directly.
         """
-        super().__init__(name, uid, columns, file)
+        super().__init__(name, uid, columns, file, metadata)
         self.csv = csv.writer(file, dialect="unix", quoting=csv.QUOTE_MINIMAL)
 
     def _log_metadata(self, metadata: str) -> None:

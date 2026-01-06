@@ -14,6 +14,8 @@ from rich.table import Table
 from .log import BenchmarkLog
 
 if TYPE_CHECKING:
+    from typing import Any
+
     import numpy as np
 
 
@@ -21,7 +23,12 @@ class BenchmarkLogRich(BenchmarkLog):
     """A class for pretty-printing benchmark data to the screen."""
 
     def __init__(
-        self, name: str, uid: np.uint64, columns: list[str], file: TextIO
+        self,
+        name: str,
+        uid: np.uint64,
+        columns: list[str],
+        file: TextIO,
+        metadata: dict[str, Any],
     ) -> None:
         """
         Create a context manager to pretty-print benchmark data to the screen.
@@ -32,7 +39,7 @@ class BenchmarkLogRich(BenchmarkLog):
         directly.
         """
         assert file.isatty()
-        super().__init__(name, uid, columns, file)
+        super().__init__(name, uid, columns, file, metadata)
         self.console = Console(file=file)
         self.table = Table(title=f"Benchmark [bold]{name}[/bold] Data")
 
