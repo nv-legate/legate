@@ -52,8 +52,6 @@ invalid_yaml: {{ network }}
 {% endif %}
 {% set network_tag='_'+network %}
 
-# UCX build constraint removed - using conda-forge version
-
 package:
   name: {{ name|lower }}
   version: {{ version }}
@@ -125,9 +123,10 @@ build:
     - cuda-nvtx-dev
     - libcufile
     - libcufile-dev
-    # If you bump this, also update get_nccl.cmake
-    - nccl <2.29
+    - nccl
     - cuda-nvcc
+    # Ignore UCX run exports so we can provide our own run export.
+    - ucx
 {% if network == 'gex' %}
     # When we build packages for GEX, we expect a system provided MPI.
     # Installing OpenMPI causes issues with GEX builds on Perlmutter (because of hwloc).
@@ -180,36 +179,38 @@ requirements:
   host:
     - zlib
     - python
-    - cython >=3.0.1
+    - cython {{ cython_version }}
     - scikit-build-core
-    - setuptools_scm
+    - setuptools_scm {{ setuptools_scm_version }}
     - rich
-    - hdf5
+    - hdf5 {{ hdf5_version }}
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
 {% if gpu_enabled_bool %}
     - cuda-version ={{ cuda_version }}
-    # these are all constrained by cuda-version
     # If you bump this, also update get_nccl.cmake
-    - nccl <2.29
+    - nccl {{ nccl_version }}
+    # CUDA development packages (these are all constrained by cuda-version)
     - cuda-cudart-dev
     - cuda-nvtx-dev
     - cuda-nvml-dev
     - cuda-driver-dev
-    - libcufile-dev
+    - libcufile-dev {{ libcufile_version }}
 {% endif %}
 {% if network == 'ucx' %}
-    - ucx
-    - ucc
+    - ucx {{ ucx_version }}
+    - ucc {{ ucc_version }}
 {% endif %}
-    # Avoid conda-forge's external_* stub builds (no libmpi). See issue #3287.
-    - openmpi >=5,<6 h*
+    # Avoid conda-forge external_* stub builds (no libmpi) by requiring the h*
+    # build string; see
+    # https://github.com/nv-legate/legate.internal/issues/3287.
+    - openmpi {{ openmpi_version }} h*
 
   # Runtime python dependencies
   run:
     - numpy {{ numpy_version }}
-    - zarr <3
+    - zarr {{ zarr_version }}
     - zstd
     - nvidia-ml-py
     - {{ openmp_lib }}
@@ -220,23 +221,25 @@ requirements:
     # including __cuda here in 'run' ensures that 'conda install' always
     # prefers the CPU-only packages in environments without CUDA
     - __cuda
+    # pin_compatible packages (tied to CUDA version)
     - {{ pin_compatible('cuda-version', min_pin='x', max_pin='x') }}
     - {{ pin_compatible('cuda-cudart',  min_pin='x', max_pin='x') }}
     - {{ pin_compatible('cuda-nvtx',    min_pin='x', max_pin='x') }}
-    - libcufile      >=1.0,<2
+    - libcufile      {{ libcufile_version }}
     # If you bump this, also update get_nccl.cmake
-    - nccl           >=2.0,<2.29
+    - nccl           {{ nccl_version }}
 {% endif %}
     - rich
 {% if network == 'ucx' %}
-    - ucx
+    - ucx {{ ucx_version }}
 {% endif %}
 
   run_constrained:
     - python >= 3.11
     - dask[distributed]
-    # Avoid conda-forge external_* stub builds (no libmpi); see issue #3287.
-    - openmpi >=5,<6 h*
+    # Avoid conda-forge external_* stub builds (no libmpi) by requiring the h*
+    # build string; see issue #3287.
+    - openmpi {{ openmpi_version }} h*
 
 test:
   imports:
