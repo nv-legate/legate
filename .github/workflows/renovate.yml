@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+name: Renovate
+
+concurrency:
+  group: renovate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  schedule:
+    # Run every week at 2am UTC on Monday
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Dry run mode'
+        type: boolean
+        required: false
+        default: false
+      logLevel:
+        description: 'Log level'
+        type: choice
+        required: false
+        default: 'info'
+        options:
+          - debug
+          - info
+          - warn
+          - error
+          - fatal
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  renovate:
+    runs-on: linux-amd64-cpu4
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Renovate config
+        id: config
+        run: |
+          echo "dry_run=${{ inputs.dryRun || 'false' }}" >> "${GITHUB_OUTPUT}"
+          echo "log_level=${{ inputs.logLevel || 'info' }}" >> "${GITHUB_OUTPUT}"
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v40.1.0
+        env:
+          LOG_LEVEL: ${{ steps.config.outputs.log_level }}
+          RENOVATE_DRY_RUN: ${{ steps.config.outputs.dry_run }}
+        with:
+          configurationFile: scripts/maint/renovate.json5
+          token: ${{ secrets.GITHUB_TOKEN }}

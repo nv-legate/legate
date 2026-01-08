@@ -41,6 +41,7 @@ docs/legate/source/generated/
 .vscode
 _cmake_test_compile
 !cmake/versions.json
+!scripts/maint/renovate.json5
 legate.code-workspace
 *.prof
 examples/cpp/build

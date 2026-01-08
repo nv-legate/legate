@@ -1,0 +1,102 @@
+// SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES.
+// SPDX-License-Identifier: Apache-2.0
+{
+    $schema: "https://docs.renovatebot.com/renovate-schema.json",
+    commitMessageExtra: "to {{newValue}}",
+    commitMessagePrefix: "chore(deps):",
+    commitMessageTopic: "{{depName}}",
+    // Renovate's container image includes python3, but not python.
+    allowedCommands: [
+        "^python3 scripts/maint/renovate_update_conda_upper_bounds\\.py --dep [a-z0-9_]+ --new-version [0-9a-zA-Z._+-]+$",
+    ],
+    customManagers: [
+        {
+            // Update conda_build_config.yaml `*_version` entries while preserving the
+            // existing constraint "shape" (operators, excludes, etc).
+            //
+            // The actual version selection logic lives in
+            // scripts/maint/renovate_update_conda_upper_bounds.py, which:
+            // - Updates the last "<..."/"<=..." upper bound in the constraint
+            // - Preserves the operator (< vs <=) and the number of components
+            // - Leaves other parts of the constraint unchanged (e.g., "!=2.1.0")
+            //
+            // The auto-replace template adds a marker comment so we always have a
+            // file change to trigger postUpgradeTasks, even if the constraint line
+            // itself would not change.
+            autoReplaceStringTemplate: '{{{depName}}}_version:\n{{{commentBlock}}}{{{indent}}}# renovate-conda-bound: dep={{{depName}}} newVersion={{{newVersion}}}\n{{{blankLines}}}{{{indent}}}- "{{{currentValue}}}"{{{trailing}}}',
+            customType: "regex",
+            datasourceTemplate: "conda",
+            depNameTemplate: "{{{depName}}}",
+            description: "Update conda package upper bounds (preserve constraint style)",
+            managerFilePatterns: [
+                // Match all conda_build_config.yaml files in any conda subdirectory
+                "/conda/.*/conda_build_config\\.yaml$/",
+            ],
+            matchStrings: [
+                // This pattern matches:
+                // - Package name: (?<depName>[a-z0-9_]+)_version:
+                // - Optional comment block: (?<commentBlock>(?:[ \t]*#.*\n)*)
+                // - Optional blank lines between comments and list items:
+                //   (?<blankLines>(?:[ \t]*\n)*)
+                // - List item indentation: (?<indent>[ \t]*)
+                // - The version string with >= and upper bound: - "(?<currentValue>...)"
+                // - Optional trailing selectors/comments captured as (?<trailing>...)
+                // Example match:
+                // numpy_version:
+                //   # Comment here
+                //   - ">=1.22,<2.0,!=2.1.0"
+                '(?<depName>[a-z0-9_]+)_version:\\s*\\n(?<commentBlock>(?:[ \\t]*#.*\\n)*)(?<blankLines>(?:[ \\t]*\\n)*)(?<indent>[ \\t]*)-\\s*"(?<currentValue>[^"]*<\\=?\\d[^"]*)"(?<trailing>\\s*#.*)?',
+            ],
+            versioningTemplate: "conda",
+        },
+    ],
+    extends: ["config:recommended", ":disableRateLimiting"],
+    labels: ["Build"],
+    packageRules: [
+        {
+            description: "Use conda-forge for conda upper bound lookups",
+            matchDatasources: ["conda"],
+            matchManagers: ["custom.regex"],
+            registryUrls: ["https://api.anaconda.org/package/conda-forge"],
+        },
+        {
+            commitMessageExtra: "to {{newValue}} (preserves version excludes)",
+            description: "Custom commit message for packages with excludes",
+            // Match any version string that contains != (version excludes)
+            matchCurrentValue: "/.*!=/",
+            matchManagers: ["custom.regex"],
+        },
+    ],
+    prBodyColumns: [
+        "Package",
+        "Type",
+        "Change",
+        "Age",
+        "Adoption",
+        "Passing",
+        "Confidence",
+    ],
+    prBodyDefinitions: {
+        Adoption: "The percentage of this package's users who are using this version",
+        Age: "The age column shows how long ago the new version was released",
+        Confidence: "The confidence level of this update based on the above metrics",
+        Passing: "The percentage of updates that have passed CI tests",
+    },
+    prBodyNotes: [
+        "This PR updates the upper bounds for conda package dependencies.",
+        "Please review the changes and ensure they don't break compatibility.",
+        "Run the full test suite before merging.",
+    ],
+    prConcurrentLimit: 3,
+    prCreation: "not-pending",
+    pruneStaleBranches: true,
+    rebaseWhen: "auto",
+    semanticCommits: "enabled",
+    timezone: "UTC",
+    postUpgradeTasks: {
+        commands: [
+            "python3 scripts/maint/renovate_update_conda_upper_bounds.py --dep {{{depName}}} --new-version {{{newVersion}}}",
+        ],
+        fileFilters: ["conda/**/conda_build_config.yaml"],
+    },
+}
