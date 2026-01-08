@@ -16,8 +16,6 @@ inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
 {
   auto&& code = type()->code;
 
-  // Structs are only allowed if they are rect types.
-  LEGATE_ASSERT(code != Type::Code::STRUCT || is_rect_type(type()));
   LEGATE_ASSERT(code != Type::Code::STRING && code != Type::Code::LIST);
 }
 
