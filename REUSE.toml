@@ -24,7 +24,7 @@ path = [
     "src/CMakePresets.json",
     "src/cmake/versions/patches/realm_365.diff"
 ]
-SPDX-FileCopyrightText = "Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-FileCopyrightText = "Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
 
 # Patches for other projects we build.
@@ -32,7 +32,7 @@ SPDX-License-Identifier = "Apache-2.0"
 path = [
     "src/cmake/patches/**"
 ]
-SPDX-FileCopyrightText = "Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-FileCopyrightText = "Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
 
 # Image files.
@@ -53,5 +53,5 @@ path = [
     "docs/legate/source/manual/usage/images/cg_boxes.png",
     "docs/legate/source/manual/usage/images/cg_gaps.png"
 ]
-SPDX-FileCopyrightText = "Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
+SPDX-FileCopyrightText = "Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
