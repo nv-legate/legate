@@ -196,6 +196,7 @@ class TestLogging:
             "user_logging_levels",
             "logdir",
             "log_to_file",
+            "benchmark_to_file",
         }
 
     def test_mixin(self) -> None:
@@ -298,7 +299,10 @@ class TestConfig:
         )
 
         assert c.logging == m.Logging(
-            user_logging_levels=None, logdir=Path.cwd(), log_to_file=False
+            user_logging_levels=None,
+            logdir=Path.cwd(),
+            log_to_file=False,
+            benchmark_to_file=False,
         )
 
         assert c.debugging == m.Debugging(

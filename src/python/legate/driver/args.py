@@ -457,6 +457,15 @@ logging.add_argument(
 )
 
 
+logging.add_argument(
+    "--benchmark-to-file",
+    dest="benchmark_to_file",
+    action="store_true",
+    required=False,
+    help="Redirect output of `benchmark_log()` to a file inside --logdir",
+)
+
+
 debugging = parser.add_argument_group("Debugging")
 
 

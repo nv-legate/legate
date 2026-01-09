@@ -73,4 +73,6 @@ Python
 
 .. rubric:: Utilities
 
+- Add `--benchmark-to-file` switch to the legate driver.
+
 .. rubric:: I/O

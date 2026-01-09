@@ -124,6 +124,7 @@ class Logging(DataclassMixin):
     user_logging_levels: str | None
     logdir: Path
     log_to_file: bool
+    benchmark_to_file: bool
 
 
 @dataclass(frozen=True)

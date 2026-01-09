@@ -162,6 +162,9 @@ class Launcher:  # noqa: PLW1641
                 config.logging.logdir / "gasnet_%.log"
             )
 
+        if config.logging.benchmark_to_file:
+            env["LEGATE_BENCHMARK_OUT"] = str(config.logging.logdir)
+
         custom_env_vars = set(env)
 
         full_env = dict(system.env)

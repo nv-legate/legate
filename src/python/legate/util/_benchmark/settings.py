@@ -23,6 +23,10 @@ class BenchmarkSettings(Settings):
 
             This is a read-only environment variable setting used by the
             runtime.
+
+            The legate launcher has a command-line option --benchmark-to-file,
+            which is equivalent to setting LEGATE_BENCHMARK_OUT to the
+            directory specified by --logdir.
             """,
     )
     use_rich: EnvOnlySetting[bool] = EnvOnlySetting(

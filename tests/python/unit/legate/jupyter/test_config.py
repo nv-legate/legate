@@ -79,7 +79,10 @@ class TestConfig:
         )
 
         assert c.logging == m.Logging(
-            user_logging_levels=None, logdir=Path(), log_to_file=False
+            user_logging_levels=None,
+            logdir=Path(),
+            log_to_file=False,
+            benchmark_to_file=False,
         )
 
         assert c.debugging == m.Debugging(

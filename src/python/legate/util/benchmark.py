@@ -107,8 +107,11 @@ def benchmark_log(
         case benchmark data will be written to `sys.stdout` (see also
         `LEGATE_LIMIT_STDOUT`).  If instead this is a directory, e.g.
         `LEGATE_BENCHMARK_OUT=${PWD}`, then a unique basename will be generated
-        for a set of output csv files (one per rank) in that directory.  For
-        example, if `name` is `mybench`, then rank `P` will write its
+        for a set of output csv files (one per rank) in that directory.
+        (The legate command line option ` --benchmark-to-file` is equivalent to
+        setting `LEGATE_BENCHMARK_OUT` to have the same value as the directory
+        as `--logdir`.)
+        For example, if `name` is `mybench`, then rank `P` will write its
         benchmark data to `mybench_[unique hex string].P.csv`.
     metadata: dict[str, Any] | None = None
         Optional dictionary of metadata that will be included in the header
