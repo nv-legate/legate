@@ -73,7 +73,7 @@ TEST_F(OffloadAPI, GPUToHostOffload)
   dbg() << "TOTAL FBMEM = " << total_fbmem;
 
   // occupy > 50%  of fbmem so that two tasks can't launch without offloading
-  const auto STORE_SIZE = (num_nodes * total_fbmem * 8) / 10;
+  const auto STORE_SIZE = (num_nodes * total_fbmem * 6) / 10;
 
   auto store1 = runtime->create_store(legate::Shape{STORE_SIZE}, legate::int8());
   auto store2 = runtime->create_store(legate::Shape{STORE_SIZE}, legate::int8());

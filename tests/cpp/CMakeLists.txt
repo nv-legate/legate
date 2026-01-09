@@ -234,11 +234,9 @@ set(
   unit/logical_array/slice.cc
   unit/logical_array/transpose.cc
   unit/logical_array/utils.cc
-  unit/logical_array/offload_to.cc
   unit/logical_store/create_store.cc
   unit/logical_store/delinearize.cc
   unit/logical_store/equal_storage.cc
-  unit/logical_store/offload_to.cc
   unit/logical_store/overlaps.cc
   unit/logical_store/partition.cc
   unit/logical_store/physical_store.cc
@@ -393,6 +391,8 @@ endif()
 set(
   non_reentrant_with_runtime_SRC
   non_reentrant/death_example.cc
+  unit/logical_store/offload_to.cc
+  unit/logical_array/offload_to.cc
   non_reentrant/oom_message.cc
   non_reentrant/runtime.cc
   non_reentrant/shutdown_callback.cc
