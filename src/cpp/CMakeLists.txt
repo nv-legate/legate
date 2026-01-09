@@ -685,7 +685,8 @@ foreach(target legate_obj legate)
   # conda environment.
   #
   # Similarly, we want the MPI wrapper to load as early as possible, since it provides our
-  # MPI symbols.
+  # MPI symbols. Not too early as it brings in MPI include directories that might be in the
+  # conda environment!
   #
   # Use TARGET_NAME_IF_EXISTS here because it does not add the MPI wrapper as a strict
   # dependency of Legate. We want this because:
@@ -694,8 +695,6 @@ foreach(target legate_obj legate)
   # 2. Adding it as a strict target-level dependency would mean that we would also need to
   #    install the cmake export files alongside Legate, which we don't want because we want
   #    them to be able to override it with their own install/build of it.
-  target_link_libraries("${target}" PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>)
-
   target_link_libraries(
     "${target}"
     PUBLIC libcudacxx::libcudacxx Realm::Realm Legion::Legion
@@ -705,6 +704,7 @@ foreach(target legate_obj legate)
       kvikio::kvikio
       cpptrace::cpptrace
   )
+  target_link_libraries("${target}" PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>)
 
   if(Legion_USE_OpenMP)
     target_link_libraries("${target}" PUBLIC OpenMP::OpenMP_CXX)
