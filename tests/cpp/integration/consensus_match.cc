@@ -29,7 +29,7 @@ void register_tasks()
 }
 
 struct Thing {
-  bool flag;
+  std::int32_t flag;
   std::int32_t number;
 
   bool operator==(const Thing& other) const { return flag == other.flag && number == other.number; }
@@ -52,26 +52,23 @@ TEST_F(Integration, ConsensusMatch)
   // All shards insert 4 items, but in a different order.
   for (int i = 0; i < 4; ++i) {
     input.emplace_back();
-    // Make sure the padding bits have deterministic values. Apparently there is no reliable way to
-    // force the compiler to do zero initialization.
-    std::memset(&input.back(), 0, sizeof(Thing));
     // We silence the lint below because 0-3 covers any % 4
     // NOLINTNEXTLINE(bugprone-switch-missing-default-case)
     switch ((i + sid) % 4) {
       case 0:  // shared between shards
-        input.back().flag   = true;
+        input.back().flag   = 1;
         input.back().number = -1;
         break;
       case 1:  // unique among shards
-        input.back().flag   = true;
+        input.back().flag   = 1;
         input.back().number = static_cast<std::int32_t>(sid);
         break;
       case 2:  // shared between shards
-        input.back().flag   = false;
+        input.back().flag   = 0;
         input.back().number = -2;
         break;
       case 3:  // unique among shards
-        input.back().flag   = false;
+        input.back().flag   = 0;
         input.back().number = static_cast<std::int32_t>(sid);
         break;
     }

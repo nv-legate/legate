@@ -521,19 +521,16 @@ class Runtime {
   void discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void issue_mapping_fence();
   /**
-   * @brief Issue a consesus match on discarded fields in multi-rank runs.
+   * @brief Process outstanding field match results and issue matches for locally freed fields with
+   * multiple ranks. No-op in single-rank execution.
    */
   void issue_field_match();
   void issue_execution_fence(bool block = false);
   [[nodiscard]] InternalSharedPtr<LogicalStore> get_timestamp(Timing::Precision precision);
-  // NOTE: If the type T contains any padding bits, make sure the entries *in the vector* are
-  // deterministically zero'd out on all shards, e.g. by doing the initialization as follows:
-  //   struct Fred { bool flag; int number; };
-  //   std::vector<Fred> input;
-  //   input.emplace_back();
-  //   memset(&input.back(), 0, sizeof(Fred));
-  //   input.back().flag = true;
-  //   input.back().flag = number;
+  /**
+   * @brief Issue a consensus match for given values. The type of the values must have no padding
+   * (otherwise the compiler will complain).
+   */
   template <typename T>
   [[nodiscard]] ConsensusMatchResult<T> issue_consensus_match(std::vector<T>&& input);
 

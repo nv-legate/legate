@@ -8,12 +8,17 @@
 
 #include <legion.h>
 
+#include <type_traits>
 #include <vector>
 
 namespace legate::detail {
 
 template <typename T>
 class ConsensusMatchResult {
+  // Forbid consensus match using padded types. It's onerous for the caller to make sure the padded
+  // parts are zeroed out correctly (so they won't cause accidental mismatches).
+  static_assert(std::has_unique_object_representations_v<T>);
+
   friend class Runtime;
   ConsensusMatchResult(std::vector<T>&& input, Legion::Context ctx, Legion::Runtime* runtime);
 

@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <optional>
 #include <queue>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -83,8 +82,6 @@ class MatchItem {
   bool operator==(const MatchItem& rhs) const;
   [[nodiscard]] std::size_t hash() const noexcept;
 };
-
-static_assert(std::has_unique_object_representations_v<MatchItem>);
 
 class ConsensusMatchingFieldManager final : public FieldManager {
  public:
