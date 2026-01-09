@@ -65,6 +65,7 @@ jobs:
     uses: ./.github/workflows/wheels-mac.yml
     with:
       build-type: pull-request
+      matrix_filter: '[max_by(.PY_VER|split(".")|map(tonumber))]'
   source-tests-pass:
     if: always()
     needs:
