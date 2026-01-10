@@ -25,7 +25,8 @@ inline FreeFieldInfo::FreeFieldInfo(InternalSharedPtr<Shape> shape_,
 
 // ==========================================================================================
 
-inline MatchItem::MatchItem(Legion::RegionTreeID tid_, Legion::FieldID fid_) : tid{tid_}, fid{fid_}
+inline MatchItem::MatchItem(Legion::RegionTreeID tid_, Legion::FieldID fid_)
+  : tid{tid_}, fid{static_cast<std::uint64_t>(fid_)}
 {
 }
 

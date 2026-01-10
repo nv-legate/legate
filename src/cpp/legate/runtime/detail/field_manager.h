@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <optional>
 #include <queue>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -75,11 +76,15 @@ class MatchItem {
   MatchItem(Legion::RegionTreeID tid, Legion::FieldID fid);
 
   Legion::RegionTreeID tid{};
-  Legion::FieldID fid{};
+  // Use an unsigned 64-bit integer instead of Legion::FieldID here so the compiler won't add any
+  // padding that will cause consensus match to fail on garbage padding.
+  std::uint64_t fid{};
 
   bool operator==(const MatchItem& rhs) const;
   [[nodiscard]] std::size_t hash() const noexcept;
 };
+
+static_assert(std::has_unique_object_representations_v<MatchItem>);
 
 class ConsensusMatchingFieldManager final : public FieldManager {
  public:
