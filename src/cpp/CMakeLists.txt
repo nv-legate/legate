@@ -425,6 +425,7 @@ target_sources(
     legate/runtime/detail/mpi_detection.cc
     legate/runtime/detail/streaming/analysis.cc
     legate/runtime/detail/streaming/generation.cc
+    legate/runtime/detail/streaming/dependency_checker.cc
     legate/runtime/detail/streaming/disallowed_operation_checker.cc
     legate/runtime/detail/streaming/launch_domain_equality_checker.cc
     legate/runtime/detail/streaming/util.cc

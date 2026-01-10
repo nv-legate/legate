@@ -15,6 +15,7 @@
 #include <legate/partitioning/detail/partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/detail/streaming/base_operation_checker.h>
+#include <legate/runtime/detail/streaming/dependency_checker.h>
 #include <legate/runtime/detail/streaming/disallowed_operation_checker.h>
 #include <legate/runtime/detail/streaming/generation.h>
 #include <legate/runtime/detail/streaming/launch_domain_equality_checker.h>
@@ -94,7 +95,8 @@ std::optional<InternalSharedPtr<Strategy>> get_strategy(const InternalSharedPtr<
 {
   DisallowedOp disallowed_op;
   LaunchDomainEquality launch_domain_eq;
-  std::array<BaseOperationChecker*, 2> checkers = {&disallowed_op, &launch_domain_eq};
+  DependencyChecker dep_check;
+  std::array<BaseOperationChecker*, 3> checkers = {&disallowed_op, &launch_domain_eq, &dep_check};
 
   auto check_one_op = [&](const InternalSharedPtr<Operation>& op,
                           const std::optional<InternalSharedPtr<Strategy>>& strategy) {

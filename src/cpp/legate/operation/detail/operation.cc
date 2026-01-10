@@ -119,14 +119,6 @@ void Operation::record_partition_(
   const auto& mapped_store  = it->second;
 
   if (inserted) {
-    switch (access_mode) {
-      case AccessMode::READ: input_args_.emplace_back(StoreArg{mapped_store, variable}); break;
-      case AccessMode::WRITE: output_args_.emplace_back(StoreArg{mapped_store, variable}); break;
-      case AccessMode::REDUCE:
-        reduction_args_.emplace_back(StoreArg{mapped_store, variable});
-        break;
-    }
-
     try {
       part_mappings_.try_emplace(mapped_store, variable);
     } catch (...) {
@@ -137,6 +129,27 @@ void Operation::record_partition_(
   } else if (mapped_store->id() != sid) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Variable {} is already assigned to another store", *variable)};
+  }
+
+  // structured bindings can't be captured, hence cap_it, and cap_inserted
+  auto emplace_with_try_catch = [&, cap_it = it, cap_inserted = inserted](auto* vec_ptr) {
+    try {
+      vec_ptr->emplace_back(StoreArg{mapped_store, variable});
+    } catch (...) {
+      // strong exception guarantee
+      if (cap_inserted) {
+        store_mappings_.erase(cap_it);
+      }
+      throw;
+    }
+  };
+
+  // moving after exception checks but keep out of if(inserted) because we want to
+  // track reads, writes, reductions separately.
+  switch (access_mode) {
+    case AccessMode::READ: emplace_with_try_catch(&input_args_); break;
+    case AccessMode::WRITE: emplace_with_try_catch(&output_args_); break;
+    case AccessMode::REDUCE: emplace_with_try_catch(&reduction_args_); break;
   }
 }
 

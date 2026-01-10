@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <legate/redop/redop.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/detail/streaming/analysis.h>
 
@@ -24,12 +25,14 @@ constexpr std::size_t DIM = 2;
 
 constexpr val_ty INIT_VAL = 3;
 
-constexpr std::size_t EXTENT = 1024;
+constexpr std::size_t EXTENT = 2048;  // big enough to force partitioning even on
+                                      // GPUs
 
 enum TaskIDs : std::uint8_t {
   INIT,
   SUM,
   CHECK,
+  REDUCE,
 };
 
 class InitTask : public legate::LegateTask<InitTask> {
@@ -94,6 +97,23 @@ class CheckTask : public legate::LegateTask<CheckTask> {
   }
 };
 
+struct ReduceTask : public legate::LegateTask<ReduceTask> {
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{REDUCE}};
+
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto store_a = context.reduction(0).data();
+    auto acc_a   = store_a.reduce_accessor<legate::SumReduction<val_ty>, false, DIM>();
+
+    const auto shape = store_a.shape<DIM>();
+
+    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+      acc_a.reduce(*it, 0);
+    }
+  }
+};
+
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "streaming_checker";
@@ -103,6 +123,7 @@ class Config {
     InitTask::register_variants(library);
     SumTask::register_variants(library);
     CheckTask::register_variants(library);
+    ReduceTask::register_variants(library);
   }
 };
 
@@ -173,6 +194,15 @@ void launch_manual_init_task(const legate::LogicalStore& store_a,
   runtime->submit(std::move(init_task));
 }
 
+void launch_reduction(const legate::LogicalStore& store_a)
+{
+  auto rt       = legate::Runtime::get_runtime();
+  auto library  = rt->find_library(Config::LIBRARY_NAME);
+  auto red_task = rt->create_task(library, ReduceTask::TASK_CONFIG.task_id());
+  red_task.add_reduction(store_a, legate::ReductionOpKind::ADD);
+  rt->submit(std::move(red_task));
+}
+
 }  // namespace
 
 class StreamingChecker : public RegisterOnceFixture<Config>,
@@ -191,7 +221,7 @@ TEST_P(StreamingChecker, EmptyStreamingScope)
   ASSERT_NO_THROW(delete scope);
 }
 
-TEST_P(StreamingChecker, SimpleScopeAutoTask)
+TEST_P(StreamingChecker, PointwiseAutoTask)
 {
   auto [store_a, store_b]   = create_stores();
   const auto streaming_mode = GetParam();
@@ -203,6 +233,54 @@ TEST_P(StreamingChecker, SimpleScopeAutoTask)
 
   // deleting the scope causes task scheduling window to flush and submit tasks for
   // execution.
+  ASSERT_NO_THROW(delete scope);
+}
+
+TEST_P(StreamingChecker, ReductionAfterRead)
+{
+  auto [store_a, store_b]   = create_stores();
+  const auto streaming_mode = GetParam();
+  const auto* scope         = create_streaming_scope(streaming_mode);
+
+  launch_init_task(store_a, store_b);
+  launch_sum_task(store_a, store_b);
+  launch_check_task(store_a, store_b);
+  launch_reduction(store_a);
+
+  ASSERT_NO_THROW(delete scope);
+}
+
+TEST_P(StreamingChecker, ReductionAfterWrite)
+{
+  auto [store_a, store_b]   = create_stores();
+  const auto streaming_mode = GetParam();
+  const auto* scope         = create_streaming_scope(streaming_mode);
+
+  launch_init_task(store_a, store_b);
+  launch_reduction(store_a);
+
+  ASSERT_NO_THROW(delete scope);
+}
+
+//===============================================================================//
+
+TEST_F(StreamingChecker, WindowFlushRelaxed)
+{
+  const auto* scope = create_streaming_scope(legate::StreamingMode::RELAXED);
+  ASSERT_NO_THROW(legate::detail::Runtime::get_runtime().flush_scheduling_window());
+  ASSERT_NO_THROW(delete scope);
+}
+
+TEST_F(StreamingChecker, WindowFlushStrict)
+{
+  const auto* scope = create_streaming_scope(legate::StreamingMode::STRICT);
+  ASSERT_THAT(
+    [] {
+      legate::detail::Runtime::get_runtime().flush_scheduling_window();
+      return 0;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("flush_scheduling_window called from inside a streaming scope")));
   ASSERT_NO_THROW(delete scope);
 }
 
@@ -271,24 +349,214 @@ TEST_F(StreamingChecker, UnequalLaunchDomainStrict)
       ::testing::HasSubstr("Failed Streaming Check Launch Domain Equality")));
 }
 
-TEST_F(StreamingChecker, WindowFlushRelaxed)
+TEST_F(StreamingChecker, ReadAfterReduction)
 {
-  const auto* scope = create_streaming_scope(legate::StreamingMode::RELAXED);
-  ASSERT_NO_THROW(legate::detail::Runtime::get_runtime().flush_scheduling_window());
-  ASSERT_NO_THROW(delete scope);
-}
+  auto [store_a, store_b] = create_stores();
+  const auto* scope       = create_streaming_scope(legate::StreamingMode::STRICT);
 
-TEST_F(StreamingChecker, WindowFlushStrict)
-{
-  const auto* scope = create_streaming_scope(legate::StreamingMode::STRICT);
+  launch_init_task(store_a, store_b);
+  launch_reduction(store_a);
+  launch_check_task(store_a, store_b);
+
   ASSERT_THAT(
-    [] {
-      legate::detail::Runtime::get_runtime().flush_scheduling_window();
-      return 0;
+    [&] {
+      delete scope;
+      scope = nullptr;
     },
     ::testing::ThrowsMessage<std::invalid_argument>(
-      ::testing::HasSubstr("flush_scheduling_window called from inside a streaming scope")));
-  ASSERT_NO_THROW(delete scope);
+      ::testing::HasSubstr("Failed Dependency Check due to reading a store being reduced")));
+}
+
+TEST_F(StreamingChecker, WriteAfterReduction)
+{
+  auto [store_a, store_b] = create_stores();
+  const auto* scope       = create_streaming_scope(legate::StreamingMode::STRICT);
+
+  launch_init_task(store_a, store_b);
+  launch_reduction(store_a);
+  launch_init_task(store_a, store_b);
+
+  ASSERT_THAT(
+    [&] {
+      delete scope;
+      scope = nullptr;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Failed Dependency Check due to writing a store being reduced")));
+}
+
+TEST_F(StreamingChecker, ReductionAfterReduction)
+{
+  auto [store_a, store_b] = create_stores();
+  const auto* scope       = create_streaming_scope(legate::StreamingMode::STRICT);
+
+  launch_init_task(store_a, store_b);
+  launch_reduction(store_a);
+  launch_reduction(store_a);
+
+  ASSERT_THAT(
+    [&] {
+      delete scope;
+      scope = nullptr;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Failed Dependency Check due to multiple reductions on the store")));
+}
+
+TEST_F(StreamingChecker, NonPointwiseDependencyReadAfterWrite)
+{
+  auto [store_a, store_b] = create_stores();
+  const auto* scope       = create_streaming_scope(legate::StreamingMode::STRICT);
+
+  // 1. Launch a writer task
+  // 2. Launch a reader task with a constraint so that partitioning is different
+  // from the first task.
+  launch_init_task(store_a, store_b);
+
+  auto runtime    = legate::Runtime::get_runtime();
+  auto library    = runtime->find_library(Config::LIBRARY_NAME);
+  auto check_task = runtime->create_task(library, CheckTask::TASK_CONFIG.task_id());
+
+  auto in_a = check_task.add_input(store_a);
+
+  check_task.add_input(store_b);
+
+  check_task.add_constraint(legate::broadcast(in_a));
+  runtime->submit(std::move(check_task));
+
+  ASSERT_THAT(
+    [&] {
+      delete scope;
+      scope = nullptr;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Failed Dependency Check due to RAW dependency, unequal partitioning")));
+}
+
+TEST_F(StreamingChecker, NonPointwiseDependencyWriteAfterWrite)
+{
+  auto [store_a, store_b] = create_stores();
+  const auto* scope       = create_streaming_scope(legate::StreamingMode::STRICT);
+
+  // 1. Launch a writer task
+  // 2. Launch a writer task with a constraint so that partitioning is different
+  // from the first task.
+  launch_init_task(store_a, store_b);
+
+  auto runtime   = legate::Runtime::get_runtime();
+  auto library   = runtime->find_library(Config::LIBRARY_NAME);
+  auto init_task = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
+
+  auto out_a = init_task.add_output(store_a);
+  init_task.add_output(store_b);
+
+  init_task.add_constraint(legate::broadcast(out_a));
+  runtime->submit(std::move(init_task));
+
+  ASSERT_THAT(
+    [&] {
+      delete scope;
+      scope = nullptr;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Failed Dependency Check due to WAW dependency, unequal partitioning")));
+}
+
+TEST_F(StreamingChecker, NonPointwiseDependencyWriteAfterRead)
+{
+  auto [store_a, store_b] = create_stores();
+  launch_init_task(store_a, store_b);
+
+  const auto* scope = create_streaming_scope(legate::StreamingMode::STRICT);
+  launch_check_task(store_a, store_b);
+
+  // 1. Launch a reader task
+  // 2. Launch a writer task with a constraint so that partitioning is different
+  // from the previous task.
+  launch_check_task(store_a, store_b);
+
+  auto runtime   = legate::Runtime::get_runtime();
+  auto library   = runtime->find_library(Config::LIBRARY_NAME);
+  auto init_task = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
+
+  auto out_a = init_task.add_output(store_a);
+  init_task.add_output(store_b);
+
+  init_task.add_constraint(legate::broadcast(out_a));
+  runtime->submit(std::move(init_task));
+
+  ASSERT_THAT(
+    [&] {
+      delete scope;
+      scope = nullptr;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Failed Dependency Check due to WAR dependency, unequal partitioning")));
+}
+
+TEST_F(StreamingChecker, NonPointwiseDependencyReduceAfterWrite)
+{
+  auto [store_a, store_b] = create_stores();
+  const auto* scope       = create_streaming_scope(legate::StreamingMode::STRICT);
+
+  // 1. Launch a writer task
+  // 2. Launch a reduce task with a constraint so that partitioning is different
+  // from the previous task.
+  auto runtime   = legate::Runtime::get_runtime();
+  auto library   = runtime->find_library(Config::LIBRARY_NAME);
+  auto init_task = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
+
+  auto out_a = init_task.add_output(store_a);
+  init_task.add_output(store_b);
+
+  init_task.add_constraint(legate::broadcast(out_a));
+  runtime->submit(std::move(init_task));
+
+  launch_reduction(store_a);
+
+  ASSERT_THAT(
+    [&] {
+      delete scope;
+      scope = nullptr;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Failed Dependency Check due to non pointwise dependency between "
+                           "reduction and a previous write")));
+}
+
+TEST_F(StreamingChecker, NonPointwiseDependencyReduceAfterRead)
+{
+  auto [store_a, store_b] = create_stores();
+
+  launch_init_task(store_a, store_b);
+
+  const auto* scope = create_streaming_scope(legate::StreamingMode::STRICT);
+
+  // 1. Launch a reader task
+  // 2. Launch a reduce task with a constraint so that partitioning is different
+  // from the previous task.
+
+  auto runtime    = legate::Runtime::get_runtime();
+  auto library    = runtime->find_library(Config::LIBRARY_NAME);
+  auto check_task = runtime->create_task(library, CheckTask::TASK_CONFIG.task_id());
+
+  auto in_a = check_task.add_input(store_a);
+
+  check_task.add_input(store_b);
+
+  check_task.add_constraint(legate::broadcast(in_a));
+  runtime->submit(std::move(check_task));
+
+  launch_reduction(store_a);
+
+  ASSERT_THAT(
+    [&] {
+      delete scope;
+      scope = nullptr;
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Failed Dependency Check due to non pointwise dependency between "
+                           "reduction and a previous read")));
 }
 
 }  // namespace streaming_checker
