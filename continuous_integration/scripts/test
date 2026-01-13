@@ -75,7 +75,8 @@ run_test_or_analysis() {
         "python")
             rapids-logger "Executing python tests..."
 
-            ucx_libs=(ucx openmpi openssh)
+            # Only test tooling here; runtime deps should come from the legate conda package.
+            test_libs=(openssh)
 
             set +u
             # shellcheck disable=SC2154
@@ -83,9 +84,9 @@ run_test_or_analysis() {
                                -y \
                                -n "${CONDA_ENV}" \
                                -c conda-forge \
-                               psutil pytest pytest-mock ipython jupyter_client cupy "${ucx_libs[@]}"
+                               psutil pytest pytest-mock ipython jupyter_client cupy "${test_libs[@]}"
 
-            hdf5_libs=('zarr<3' h5py)
+            hdf5_libs=(h5py)
             # shellcheck disable=SC2154
             rapids-conda-retry install \
                                -y \
@@ -134,10 +135,11 @@ run_test_or_analysis() {
                                psutil
 
             set +u
+            # Only test tooling here; runtime deps should come from the legate conda package.
             rapids-conda-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
-                               ucx openmpi openssh
+                               openssh
             set -u
 
             cd "${LEGATE_DIR}"
