@@ -3,5 +3,5 @@
 // SPDX-License-Identifier: Apache-2.0
 {
     $schema: "https://docs.renovatebot.com/renovate-schema.json",
-    extends: ["../scripts/maint/renovate.json5"],
+    extends: ["local>scripts/maint/renovate.json5"],
 }
