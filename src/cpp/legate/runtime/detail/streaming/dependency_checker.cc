@@ -174,6 +174,17 @@ bool DependencyChecker::analyze_inputs_(const InternalSharedPtr<Operation>& op,
           }
           break;
         case AccessMode::REDUCE:  // Read after Reduce
+          if (store->volume() == 1) {
+            if (const auto& ld = strategy.launch_domain(*op); ld.get_volume() == 1) {
+              // This is a hack to allow a singleton task (specifically HDF5Write)
+              // to pass this check, where we encode a control dependency using a
+              // dummy data dependency with a store that is reduced by the prior
+              // task and read by the current task. No actual reduction on the
+              // store performed but reduction is needed to encode a dependency on
+              // all the leaf tasks of the prior task.
+              continue;
+            }
+          }
           return fail_with_msg_(store, in_info, last_access, "reading a store being reduced", ctx);
       }
     }

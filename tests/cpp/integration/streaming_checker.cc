@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <legate/io/hdf5/interface.h>
 #include <legate/redop/redop.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/detail/streaming/analysis.h>
@@ -557,6 +558,28 @@ TEST_F(StreamingChecker, NonPointwiseDependencyReduceAfterRead)
     ::testing::ThrowsMessage<std::invalid_argument>(
       ::testing::HasSubstr("Failed Dependency Check due to non pointwise dependency between "
                            "reduction and a previous read")));
+}
+
+// We need HDF5Write to always pass in STRICT mode
+TEST_F(StreamingChecker, HDF5WritePass)
+{
+  if constexpr (!LEGATE_DEFINED(LEGATE_USE_HDF5)) {
+    GTEST_SKIP() << "Legate was not configured with HDF5 support";
+  }
+
+  auto runtime              = legate::Runtime::get_runtime();
+  constexpr auto SHAPE_SIZE = 16;
+  const auto array          = runtime->create_array(legate::Shape{SHAPE_SIZE}, legate::int8());
+
+  runtime->issue_fill(array, legate::Scalar{std::int8_t{0}});
+
+  const auto* scope      = create_streaming_scope(legate::StreamingMode::STRICT);
+  constexpr auto dataset = "my_dataset";
+  const auto h5_file     = std::filesystem::current_path() / "test" / "foo.h5";
+
+  legate::io::hdf5::to_file(array, h5_file, dataset);
+
+  ASSERT_NO_THROW(delete scope);
 }
 
 }  // namespace streaming_checker
