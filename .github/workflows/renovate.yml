@@ -66,5 +66,5 @@ jobs:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_REQUIRE_CONFIG: required
         with:
-          configurationFile: scripts/maint/renovate.json5
+          configurationFile: .github/renovate-global.json5
           token: ${{ secrets.GITHUB_TOKEN }}
