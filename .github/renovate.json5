@@ -1,0 +1,7 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026-2026 NVIDIA CORPORATION & AFFILIATES.
+//                         All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+{
+    $schema: "https://docs.renovatebot.com/renovate-schema.json",
+    extends: ["../scripts/maint/renovate.json5"],
+}
