@@ -11,14 +11,20 @@
 #include <H5Fpublic.h>
 #include <H5Gpublic.h>
 #include <H5Ppublic.h>
+#include <H5Tpublic.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <memory>
+#include <string>
 #include <string_view>
 #include <utilities/utilities.h>
+#include <vector>
 
 namespace test_io_hdf5_read {
 
@@ -147,6 +153,145 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
   }
 };
 
+/**
+ * @brief Test parameter for parameterized HDF5 type deduction tests.
+ */
+struct TypeTestParam {
+  hid_t hdf5_type;           ///< HDF5 native type
+  legate::Type legate_type;  ///< Expected legate type
+  std::string name;          ///< Test name for display
+};
+
+/**
+ * @brief Helper function to create an HDF5 file with data of a specific type.
+ *
+ * @tparam T The C++ type of the data.
+ * @param file_path The path to the HDF5 file.
+ * @param dataset_name The name of the dataset.
+ * @param hdf5_type The HDF5 type identifier.
+ * @param data The data to write.
+ */
+template <typename T>
+void create_hdf5_file_with_type(const std::filesystem::path& file_path,
+                                const std::string& dataset_name,
+                                hid_t hdf5_type,
+                                const std::vector<T>& data)
+{
+  const auto file = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  ASSERT_GE(file, 0);
+
+  const auto dims  = std::array<hsize_t, 1>{data.size()};
+  const auto space = H5Screate_simple(dims.size(), dims.data(), nullptr);
+  ASSERT_GE(space, 0);
+
+  const auto dset =
+    H5Dcreate(file, dataset_name.c_str(), hdf5_type, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  ASSERT_GE(dset, 0);
+
+  ASSERT_GE(H5Dwrite(dset, hdf5_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data()), 0);
+  ASSERT_GE(H5Sclose(space), 0);
+  ASSERT_GE(H5Dclose(dset), 0);
+  ASSERT_GE(H5Fclose(file), 0);
+}
+
+/**
+ * @brief Helper function to create an HDF5 file with boolean data.
+ *
+ * This uses an enum type with TRUE/FALSE members, which is how legate stores boolean data
+ * in HDF5 files. H5T_NATIVE_HBOOL is just an alias for std::uint8_t on most systems and would
+ * be read back as UNSIGNED_INTEGER, not BOOL.
+ *
+ * @param file_path The path to the HDF5 file.
+ * @param dataset_name The name of the dataset.
+ * @param size The number of elements.
+ */
+void create_hdf5_file_with_bool(const std::filesystem::path& file_path,
+                                const std::string& dataset_name,
+                                std::size_t size)
+{
+  const auto file = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(file, 0);
+
+  const auto dims  = std::array<hsize_t, 1>{size};
+  const auto space = H5Screate_simple(dims.size(), dims.data(), nullptr);
+
+  ASSERT_GE(space, 0);
+
+  // Create a boolean enum type with TRUE/FALSE members (same as legate's writer)
+  // H5T_NATIVE_HBOOL is just std::uint8_t and won't be recognized as boolean when reading
+  const auto bool_type = H5Tenum_create(H5T_NATIVE_INT8);
+
+  ASSERT_GE(bool_type, 0);
+
+  constexpr std::int8_t false_val = 0;
+  constexpr std::int8_t true_val  = 1;
+
+  ASSERT_GE(H5Tenum_insert(bool_type, "FALSE", &false_val), 0);
+  ASSERT_GE(H5Tenum_insert(bool_type, "TRUE", &true_val), 0);
+
+  const auto dset =
+    H5Dcreate(file, dataset_name.c_str(), bool_type, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(dset, 0);
+
+  // Use a raw array instead of std::vector<bool> which is a problematic specialization
+  auto data = std::make_unique<std::int8_t[]>(size);
+
+  for (std::size_t i = 0; i < size; ++i) {
+    data[i] = (i % 2) == 0 ? 1 : 0;
+  }
+
+  ASSERT_GE(H5Dwrite(dset, bool_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.get()), 0);
+  ASSERT_GE(H5Tclose(bool_type), 0);
+  ASSERT_GE(H5Sclose(space), 0);
+  ASSERT_GE(H5Dclose(dset), 0);
+  ASSERT_GE(H5Fclose(file), 0);
+}
+
+/**
+ * @brief Helper to create HDF5 file with sequential data of type T.
+ */
+template <typename T>
+void create_hdf5_file_with_sequential_type(const std::filesystem::path& file_path,
+                                           const std::string& dataset_name,
+                                           hid_t hdf5_type,
+                                           std::size_t size)
+{
+  auto data = std::vector<T>(size);
+
+  for (std::size_t i = 0; i < size; ++i) {
+    data[i] = static_cast<T>(i);
+  }
+  create_hdf5_file_with_type(file_path, dataset_name, hdf5_type, data);
+}
+
+/**
+ * @brief Get the HDF5 type for float16 (IEEE 754 half-precision).
+ */
+[[nodiscard]] hid_t get_float16_hdf5_type()
+{
+  // IEEE 754 half-precision (float16) bit layout:
+  // - Sign bit at position 15
+  // - Exponent: 5 bits starting at position 10
+  // - Mantissa: 10 bits starting at position 0
+  // - Exponent bias: 15
+  constexpr auto SIGN_BIT_POS  = 15;
+  constexpr auto EXP_BIT_POS   = 10;
+  constexpr auto EXP_BITS      = 5;
+  constexpr auto MANTISSA_POS  = 0;
+  constexpr auto MANTISSA_BITS = 10;
+  constexpr auto EXP_BIAS      = 15;
+  constexpr auto FLOAT16_SIZE  = 2;
+
+  const auto type = H5Tcopy(H5T_IEEE_F32LE);
+
+  H5Tset_fields(type, SIGN_BIT_POS, EXP_BIT_POS, EXP_BITS, MANTISSA_POS, MANTISSA_BITS);
+  H5Tset_size(type, FLOAT16_SIZE);
+  H5Tset_ebias(type, EXP_BIAS);
+  return type;
+}
+
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_io_hdf5_read";
@@ -176,6 +321,43 @@ class IOHDF5ReadUnit : public RegisterOnceFixture<Config> {
   // NOLINTNEXTLINE(cert-err58-cpp)
   static inline auto base_path = std::filesystem::temp_directory_path() / "legate";
 };
+
+class IOHDF5ReadTypeDeduction : public RegisterOnceFixture<Config>,
+                                public ::testing::WithParamInterface<TypeTestParam> {
+ public:
+  void SetUp() override
+  {
+    RegisterOnceFixture::SetUp();
+    ASSERT_NO_THROW(std::filesystem::create_directories(base_path));
+  }
+
+  void TearDown() override
+  {
+    RegisterOnceFixture::TearDown();
+    ASSERT_NO_THROW(static_cast<void>(std::filesystem::remove_all(base_path)));
+  }
+
+  // NOLINTNEXTLINE(cert-err58-cpp)
+  static inline auto base_path = std::filesystem::temp_directory_path() / "legate_type_tests";
+};
+
+// NOLINTNEXTLINE(cert-err58-cpp)
+INSTANTIATE_TEST_SUITE_P(
+  IOHDF5ReadUnit,
+  IOHDF5ReadTypeDeduction,
+  ::testing::Values(TypeTestParam{H5T_NATIVE_HBOOL, legate::bool_(), "bool"},
+                    TypeTestParam{H5T_NATIVE_INT8, legate::int8(), "int8"},
+                    TypeTestParam{H5T_NATIVE_INT16, legate::int16(), "int16"},
+                    TypeTestParam{H5T_NATIVE_INT32, legate::int32(), "int32"},
+                    TypeTestParam{H5T_NATIVE_INT64, legate::int64(), "int64"},
+                    TypeTestParam{H5T_NATIVE_UINT8, legate::uint8(), "uint8"},
+                    TypeTestParam{H5T_NATIVE_UINT16, legate::uint16(), "uint16"},
+                    TypeTestParam{H5T_NATIVE_UINT32, legate::uint32(), "uint32"},
+                    TypeTestParam{H5T_NATIVE_UINT64, legate::uint64(), "uint64"},
+                    TypeTestParam{get_float16_hdf5_type(), legate::float16(), "float16"},
+                    TypeTestParam{H5T_NATIVE_FLOAT, legate::float32(), "float32"},
+                    TypeTestParam{H5T_NATIVE_DOUBLE, legate::float64(), "float64"}),
+  [](const ::testing::TestParamInfo<TypeTestParam>& param_info) { return param_info.param.name; });
 
 }  // namespace
 
@@ -301,6 +483,51 @@ TEST_F(IOHDF5ReadUnit, TwoDimensional)
   verify_task.add_input(read_array);
   verify_task.add_scalar_arg(legate::Scalar{Y});
   runtime->submit(std::move(verify_task));
+}
+
+TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
+{
+  constexpr auto SIZE    = 10;
+  constexpr auto DATASET = "/test_dataset";
+  const auto& param      = GetParam();
+  const auto file_path   = base_path / (param.name + ".h5");
+
+  // Create HDF5 file with appropriate data based on type
+  if (param.legate_type == legate::bool_()) {
+    create_hdf5_file_with_bool(file_path, DATASET, SIZE);
+  } else if (param.legate_type == legate::int8()) {
+    create_hdf5_file_with_sequential_type<std::int8_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::int16()) {
+    create_hdf5_file_with_sequential_type<std::int16_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::int32()) {
+    create_hdf5_file_with_sequential_type<std::int32_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::int64()) {
+    create_hdf5_file_with_sequential_type<std::int64_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::uint8()) {
+    create_hdf5_file_with_sequential_type<std::uint8_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::uint16() || param.legate_type == legate::float16()) {
+    // float16 stored as uint16 bit pattern
+    create_hdf5_file_with_sequential_type<std::uint16_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::uint32()) {
+    create_hdf5_file_with_sequential_type<std::uint32_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::uint64()) {
+    create_hdf5_file_with_sequential_type<std::uint64_t>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::float32()) {
+    create_hdf5_file_with_sequential_type<float>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::float64()) {
+    create_hdf5_file_with_sequential_type<double>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else {
+    GTEST_FAIL() << "Unhandled type in test: " << param.name;
+  }
+
+  // Read the array back and verify type deduction
+  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+
+  ASSERT_EQ(read_array.shape(), legate::Shape{SIZE});
+  ASSERT_EQ(read_array.type(), param.legate_type)
+    << "Type mismatch for " << param.name << ": expected " << param.legate_type.to_string()
+    << ", got " << read_array.type().to_string();
+  ASSERT_EQ(read_array.dim(), 1);
 }
 
 }  // namespace test_io_hdf5_read

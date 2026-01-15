@@ -16,6 +16,7 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <fstream>
 #include <limits>
 #include <random>
 #include <string>
@@ -312,6 +313,67 @@ TEST_P(IOHDF5WriteUnit, Basic)
     task.add_input(array);
     task.add_input(array_copy);
 
+    runtime->submit(std::move(task));
+  }
+}
+
+// Test that combine_vds correctly ignores stale sub-files from previous iterations
+// This covers the branch in parse_sub_vds_file where index_point is outside launch_domain
+TEST_F(IOHDF5WriteUnit, IgnoresStaleSubFiles)
+{
+  auto* const runtime = legate::Runtime::get_runtime();
+  const auto lib      = runtime->find_library(Config::LIBRARY_NAME);
+  const auto type     = legate::int32();
+  const auto shape    = legate::Shape{5, 5};
+  const auto array    = runtime->create_array(shape, type);
+
+  // Initialize array with iota values
+  {
+    auto task = runtime->create_task(lib, IotaTask::TASK_CONFIG.task_id());
+    task.add_scalar_arg(legate::Scalar{shape.extents() - 1});
+    task.add_output(array);
+    runtime->submit(std::move(task));
+  }
+
+  const auto h5_file = base_path / "stale_test.h5";
+  const auto dataset = std::string{"my_dataset"};
+
+  // First write - creates VDS directory and sub-files
+  legate::io::hdf5::to_file(array, h5_file, dataset);
+  runtime->issue_execution_fence(/* block */ true);
+
+  // Compute VDS directory path (same logic as to_vds_dir in interface.cc)
+  auto vds_dir = h5_file;
+
+  vds_dir.replace_filename(h5_file.stem().native() + "_legate_vds");
+
+  // Create a "stale" sub-file with an index_point outside the current bounds
+  // The file name format is: {index_point}_lo_{lo_point}_hi_{hi_point}.h5
+  // We use index_point=(999,999) which should be outside any reasonable 2D launch domain
+  const auto stale_file = vds_dir / "999_999_lo_0_0_hi_4_4.h5";
+
+  {
+    auto f = std::ofstream{stale_file};
+    f << "dummy content";  // Content doesn't matter, just need the file to exist
+  }
+  ASSERT_TRUE(std::filesystem::exists(stale_file));
+
+  // Second write - combine_vds should ignore the stale file
+  legate::io::hdf5::to_file(array, h5_file, dataset);
+  runtime->issue_execution_fence(/* block */ true);
+
+  // Verify the output file is valid by reading it back
+  const auto array_copy = legate::io::hdf5::from_file(h5_file, dataset);
+
+  ASSERT_EQ(array_copy.dim(), array.dim());
+  ASSERT_EQ(array_copy.shape(), array.shape());
+  ASSERT_EQ(array_copy.type(), array.type());
+
+  // Verify data integrity
+  {
+    auto task = runtime->create_task(lib, CheckerTask::TASK_CONFIG.task_id());
+    task.add_input(array);
+    task.add_input(array_copy);
     runtime->submit(std::move(task));
   }
 }

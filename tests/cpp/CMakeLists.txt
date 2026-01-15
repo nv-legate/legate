@@ -335,7 +335,12 @@ set(
 )
 
 if(legate_USE_HDF5)
-  list(APPEND with_runtime_SRC unit/io/hdf5/read.cc unit/io/hdf5/write.cc)
+  list(
+    APPEND with_runtime_SRC
+    unit/io/hdf5/negative.cc
+    unit/io/hdf5/read.cc
+    unit/io/hdf5/write.cc
+  )
   list(APPEND with_runtime_TARGETS HDF5::HDF5)
 endif()
 
