@@ -11,8 +11,6 @@ import atexit
 import inspect
 from typing import TYPE_CHECKING, Any
 
-from legate.core._lib.mapping.mapping import TaskTarget
-
 if TYPE_CHECKING:
     from collections.abc import Callable
     from subprocess import CompletedProcess
@@ -25,6 +23,7 @@ from legate.core import (
     Library,
     Machine,
     Scope,
+    TaskContext,
     get_legate_runtime,
     track_provenance,
     types as ty,
@@ -288,23 +287,23 @@ class TestRuntime:
     )
     def test_limit_stdout(self, capsys: pytest.CaptureFixture[Any]) -> None:
         runtime = get_legate_runtime()
-        store = runtime.create_store(ty.int64, shape=(3, 3, 3))
+        store = runtime.create_store(
+            ty.int64, shape=(len(runtime.machine) * 10,)
+        )
         store.fill(0)
 
+        single = False
+
         @task
-        def task_with_stdout(_: InputStore) -> None:
+        def task_with_stdout(ctx: TaskContext, _: InputStore) -> None:
+            nonlocal single
+            single = ctx.is_single_task()
             sys.stdout.writelines("foo")
 
         task_with_stdout(store)
         runtime.issue_execution_fence(block=True)
         out, err = capsys.readouterr()
-        if (
-            os.getenv("LEGATE_TEST")
-            and runtime.machine.preferred_target != TaskTarget.OMP
-        ):
-            expected = "foo" * len(runtime.machine)
-        else:
-            expected = "foo"
+        expected = "foo" if single else "foo" * len(runtime.machine)
         assert out.strip() == expected
         sys.stdout.write("bar")
         out, err = capsys.readouterr()
