@@ -361,8 +361,8 @@ cdef class AutoTask(Unconstructable):
 
         Parameters
         ----------
-        exception_type : type
-            The type of exception thrown by the task.
+        exception_type : `type`
+            The exception class thrown by the task.
         """
         with nogil:
             self._handle.throws_exception(True)
@@ -373,8 +373,10 @@ cdef class AutoTask(Unconstructable):
         r"""
         Get the exception types thrown by the task.
 
-        :returns: The types of exceptions thrown by the task.
-        :rtype: tuple[type, ...]
+        Returns
+        -------
+        tuple
+            The exception classes thrown by the task.
         """
         return tuple(self._exception_types.keys())
 
@@ -715,8 +717,8 @@ cdef class ManualTask(Unconstructable):
 
         Parameters
         ----------
-        exception_type : type
-            The type of exception thrown by the task.
+        exception_type : `type`
+            The exception class thrown by the task.
         """
         with nogil:
             self._handle.throws_exception(True)
@@ -727,8 +729,10 @@ cdef class ManualTask(Unconstructable):
         r"""
         Get the exception types thrown by the task.
 
-        :returns: The types of exceptions thrown by the task.
-        :rtype: tuple[type, ...]
+        Returns
+        -------
+        tuple
+            The exception classes thrown by the task.
         """
         return tuple(self._exception_types.keys())
 
