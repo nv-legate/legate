@@ -36,20 +36,36 @@ namespace {
  * @param file_path The path to the HDF5 file.
  * @param dataset_name The name of the dataset.
  * @param dims The dimensions of the dataset.
+ * @param chunk_dims Optional chunk dimensions. If provided, creates a chunked dataset;
+ *                   otherwise creates a contiguous dataset.
  */
 template <std::size_t NDIM>
 void create_hdf5_file_with_sequential_data(const std::filesystem::path& file_path,
                                            const std::string& dataset_name,
-                                           const std::array<hsize_t, NDIM>& dims)
+                                           const std::array<hsize_t, NDIM>& dims,
+                                           const std::array<hsize_t, NDIM>* chunk_dims = nullptr)
 {
   const auto file = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
   ASSERT_GE(file, 0);
 
   const auto space = H5Screate_simple(dims.size(), dims.data(), nullptr);
+
   ASSERT_GE(space, 0);
 
-  const auto dset = H5Dcreate(
-    file, dataset_name.c_str(), H5T_IEEE_F32LE, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  // Create dataset creation property list (with optional chunking)
+  hid_t dcpl = H5P_DEFAULT;
+
+  if (chunk_dims != nullptr) {
+    dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+    ASSERT_GE(dcpl, 0);
+    ASSERT_GE(H5Pset_chunk(dcpl, NDIM, chunk_dims->data()), 0);
+  }
+
+  const auto dset =
+    H5Dcreate(file, dataset_name.c_str(), H5T_IEEE_F32LE, space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
   ASSERT_GE(dset, 0);
 
   std::size_t total_size = 1;
@@ -67,9 +83,177 @@ void create_hdf5_file_with_sequential_data(const std::filesystem::path& file_pat
   ASSERT_GE(H5Dwrite(dset, H5T_IEEE_F32LE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data()), 0);
 
   // Clean up HDF5 resources
+  if (dcpl != H5P_DEFAULT) {
+    ASSERT_GE(H5Pclose(dcpl), 0);
+  }
   ASSERT_GE(H5Sclose(space), 0);
   ASSERT_GE(H5Dclose(dset), 0);
   ASSERT_GE(H5Fclose(file), 0);
+}
+
+/**
+ * @brief Helper function to create a Virtual Dataset (VDS) with sequential float data
+ *
+ * Creates multiple source HDF5 files tiled along the slowest dimension, then combines
+ * them into a single VDS file.
+ *
+ * @param vds_file_path The path to the main VDS file.
+ * @param source_dir The directory to store source files.
+ * @param dataset_name The name of the dataset.
+ * @param dims The total dimensions of the virtual dataset.
+ * @param num_files Number of files along the slowest dimension.
+ * @param chunk_dims Optional chunk dimensions. If provided, source files use chunked storage;
+ *                   otherwise they use contiguous storage.
+ */
+template <std::size_t NDIM>
+void create_vds_with_sequential_data(const std::filesystem::path& vds_file_path,
+                                     const std::filesystem::path& source_dir,
+                                     const std::string& dataset_name,
+                                     const std::array<hsize_t, NDIM>& dims,
+                                     std::size_t num_files,
+                                     const std::array<hsize_t, NDIM>* chunk_dims = nullptr)
+{
+  static_assert(NDIM >= 1, "VDS requires at least 1 dimension");
+  ASSERT_TRUE(std::filesystem::create_directories(source_dir));
+
+  const hsize_t total_slowest_dim = dims[0];
+  const hsize_t tile_size         = (total_slowest_dim + num_files - 1) / num_files;
+
+  // Calculate the size of one "slice" (product of all dims except the slowest)
+  std::size_t slice_size = 1;
+  for (std::size_t d = 1; d < NDIM; ++d) {
+    slice_size *= dims[d];
+  }
+
+  // Create source files and track their paths
+  std::vector<std::filesystem::path> source_paths;
+
+  for (std::size_t tile_idx = 0; tile_idx < num_files; ++tile_idx) {
+    const hsize_t start_idx     = tile_idx * tile_size;
+    const hsize_t end_idx       = std::min(start_idx + tile_size, total_slowest_dim);
+    const hsize_t this_tile_dim = end_idx - start_idx;
+
+    if (this_tile_dim == 0) {
+      break;
+    }
+
+    std::array<hsize_t, NDIM> src_dims = dims;
+    src_dims[0]                        = this_tile_dim;
+
+    const auto src_file_path = source_dir / ("tile_" + std::to_string(tile_idx) + ".h5");
+    source_paths.push_back(src_file_path);
+
+    // Create source file
+    const auto src_file = H5Fcreate(src_file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    ASSERT_GE(src_file, 0);
+
+    const auto src_space = H5Screate_simple(NDIM, src_dims.data(), nullptr);
+
+    ASSERT_GE(src_space, 0);
+
+    // Create dataset creation property list (with optional chunking)
+    hid_t src_dcpl = H5P_DEFAULT;
+
+    if (chunk_dims != nullptr) {
+      // Clamp chunk dimensions to not exceed source file dimensions
+      std::array<hsize_t, NDIM> clamped_chunk_dims;
+
+      for (std::size_t d = 0; d < NDIM; ++d) {
+        clamped_chunk_dims[d] = std::min((*chunk_dims)[d], src_dims[d]);
+      }
+
+      src_dcpl = H5Pcreate(H5P_DATASET_CREATE);
+      ASSERT_GE(src_dcpl, 0);
+      ASSERT_GE(H5Pset_chunk(src_dcpl, NDIM, clamped_chunk_dims.data()), 0);
+    }
+
+    const auto src_dset = H5Dcreate(src_file,
+                                    dataset_name.c_str(),
+                                    H5T_IEEE_F32LE,
+                                    src_space,
+                                    H5P_DEFAULT,
+                                    src_dcpl,
+                                    H5P_DEFAULT);
+    ASSERT_GE(src_dset, 0);
+
+    // Fill source data with sequential values based on global position
+    const std::size_t src_total = this_tile_dim * slice_size;
+    std::vector<float> src_data(src_total);
+
+    for (hsize_t local_slow = 0; local_slow < this_tile_dim; ++local_slow) {
+      const hsize_t global_slow = start_idx + local_slow;
+
+      for (std::size_t slice_idx = 0; slice_idx < slice_size; ++slice_idx) {
+        const std::size_t global_index = (global_slow * slice_size) + slice_idx;
+        const std::size_t local_index  = (local_slow * slice_size) + slice_idx;
+
+        src_data[local_index] = static_cast<float>(global_index);
+      }
+    }
+
+    ASSERT_GE(H5Dwrite(src_dset, H5T_IEEE_F32LE, H5S_ALL, H5S_ALL, H5P_DEFAULT, src_data.data()),
+              0);
+
+    // Clean up source file resources
+    if (src_dcpl != H5P_DEFAULT) {
+      ASSERT_GE(H5Pclose(src_dcpl), 0);
+    }
+    ASSERT_GE(H5Sclose(src_space), 0);
+    ASSERT_GE(H5Dclose(src_dset), 0);
+    ASSERT_GE(H5Fclose(src_file), 0);
+  }
+
+  // Create the VDS file
+  const auto vds_file = H5Fcreate(vds_file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  ASSERT_GE(vds_file, 0);
+
+  const auto vds_space = H5Screate_simple(NDIM, dims.data(), nullptr);
+  ASSERT_GE(vds_space, 0);
+
+  // Create dataset creation property list for VDS
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+  ASSERT_GE(dcpl, 0);
+
+  // Add virtual mappings for each source file
+  for (std::size_t tile_idx = 0; tile_idx < source_paths.size(); ++tile_idx) {
+    const hsize_t start_idx     = tile_idx * tile_size;
+    const hsize_t end_idx       = std::min(start_idx + tile_size, total_slowest_dim);
+    const hsize_t this_tile_dim = end_idx - start_idx;
+
+    std::array<hsize_t, NDIM> src_dims = dims;
+    src_dims[0]                        = this_tile_dim;
+
+    std::array<hsize_t, NDIM> vds_start{};
+    vds_start[0] = start_idx;
+    std::array<hsize_t, NDIM> vds_count{};
+    vds_count.fill(1);
+    std::array<hsize_t, NDIM> vds_block = src_dims;
+
+    ASSERT_GE(
+      H5Sselect_hyperslab(
+        vds_space, H5S_SELECT_SET, vds_start.data(), nullptr, vds_count.data(), vds_block.data()),
+      0);
+
+    const auto src_space = H5Screate_simple(NDIM, src_dims.data(), nullptr);
+    ASSERT_GE(src_space, 0);
+    ASSERT_GE(H5Sselect_all(src_space), 0);
+
+    ASSERT_GE(H5Pset_virtual(
+                dcpl, vds_space, source_paths[tile_idx].c_str(), dataset_name.c_str(), src_space),
+              0);
+
+    ASSERT_GE(H5Sclose(src_space), 0);
+  }
+
+  const auto vds_dset = H5Dcreate(
+    vds_file, dataset_name.c_str(), H5T_IEEE_F32LE, vds_space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
+  ASSERT_GE(vds_dset, 0);
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(vds_space), 0);
+  ASSERT_GE(H5Dclose(vds_dset), 0);
+  ASSERT_GE(H5Fclose(vds_file), 0);
 }
 
 struct OpaqueType {
@@ -359,6 +543,29 @@ INSTANTIATE_TEST_SUITE_P(
                     TypeTestParam{H5T_NATIVE_DOUBLE, legate::float64(), "float64"}),
   [](const ::testing::TestParamInfo<TypeTestParam>& param_info) { return param_info.param.name; });
 
+void submit_verify_2d_task(const legate::LogicalArray& read_array, std::uint32_t y)
+{
+  auto* runtime    = legate::Runtime::get_runtime();
+  auto lib         = runtime->find_library(Config::LIBRARY_NAME);
+  auto verify_task = runtime->create_task(lib, Verify2DTask::TASK_CONFIG.task_id());
+
+  verify_task.add_input(read_array);
+  verify_task.add_scalar_arg(legate::Scalar{y});
+  runtime->submit(std::move(verify_task));
+}
+
+void submit_verify_3d_task(const legate::LogicalArray& read_array, std::uint32_t y, std::uint32_t z)
+{
+  auto* runtime    = legate::Runtime::get_runtime();
+  auto lib         = runtime->find_library(Config::LIBRARY_NAME);
+  auto verify_task = runtime->create_task(lib, Verify3DTask::TASK_CONFIG.task_id());
+
+  verify_task.add_input(read_array);
+  verify_task.add_scalar_arg(legate::Scalar{y});
+  verify_task.add_scalar_arg(legate::Scalar{z});
+  runtime->submit(std::move(verify_task));
+}
+
 }  // namespace
 
 TEST_F(IOHDF5ReadUnit, Binary)
@@ -434,6 +641,7 @@ TEST_F(IOHDF5ReadUnit, ThreeDimensional)
 
   // Create 3D HDF5 file with sequential data
   constexpr auto dims = std::array<hsize_t, 3>{X, Y, Z};
+
   create_hdf5_file_with_sequential_data(file_path, DATASET, dims);
 
   // Read the 3D array back using Legate HDF5 interface
@@ -445,14 +653,7 @@ TEST_F(IOHDF5ReadUnit, ThreeDimensional)
   ASSERT_EQ(read_array.dim(), DIM);
 
   // Verify the data pattern
-  auto* runtime = legate::Runtime::get_runtime();
-  auto lib      = runtime->find_library(Config::LIBRARY_NAME);
-
-  auto verify_task = runtime->create_task(lib, Verify3DTask::TASK_CONFIG.task_id());
-  verify_task.add_input(read_array);
-  verify_task.add_scalar_arg(legate::Scalar{Y});
-  verify_task.add_scalar_arg(legate::Scalar{Z});
-  runtime->submit(std::move(verify_task));
+  submit_verify_3d_task(read_array, Y, Z);
 }
 
 TEST_F(IOHDF5ReadUnit, TwoDimensional)
@@ -465,24 +666,19 @@ TEST_F(IOHDF5ReadUnit, TwoDimensional)
 
   // Create 2D HDF5 file with sequential data
   constexpr auto dims = std::array<hsize_t, 2>{X, Y};
+
   create_hdf5_file_with_sequential_data(file_path, DATASET, dims);
 
   // Read the 2D array back using Legate HDF5 interface
   const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
 
   // Verify dimensions and shape
-  EXPECT_EQ(read_array.shape().volume(), X * Y);
-  EXPECT_EQ(read_array.type(), legate::float32());
-  EXPECT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_array.shape().volume(), X * Y);
+  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_array.dim(), DIM);
 
   // Verify the data pattern
-  auto* runtime = legate::Runtime::get_runtime();
-  auto lib      = runtime->find_library(Config::LIBRARY_NAME);
-
-  auto verify_task = runtime->create_task(lib, Verify2DTask::TASK_CONFIG.task_id());
-  verify_task.add_input(read_array);
-  verify_task.add_scalar_arg(legate::Scalar{Y});
-  runtime->submit(std::move(verify_task));
+  submit_verify_2d_task(read_array, Y);
 }
 
 TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
@@ -528,6 +724,142 @@ TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
     << "Type mismatch for " << param.name << ": expected " << param.legate_type.to_string()
     << ", got " << read_array.type().to_string();
   ASSERT_EQ(read_array.dim(), 1);
+}
+
+TEST_F(IOHDF5ReadUnit, ThreeDimensionalChunked)
+{
+  constexpr auto X       = 400;
+  constexpr auto Y       = 300;
+  constexpr auto Z       = 200;
+  constexpr auto DATASET = "/three_dimensional";
+  constexpr auto DIM     = 3;
+  const auto file_path   = base_path / "three_d.h5";
+
+  // Create 3D HDF5 file with sequential data
+  constexpr auto dims       = std::array<hsize_t, 3>{X, Y, Z};
+  constexpr auto chunk_dims = std::array<hsize_t, 3>{50, 300, 200};
+
+  create_hdf5_file_with_sequential_data(file_path, DATASET, dims, &chunk_dims);
+
+  // Read the 3D array back using Legate HDF5 interface
+  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+
+  // Verify dimensions and shape
+  ASSERT_EQ(read_array.shape().volume(), X * Y * Z);
+  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_array.dim(), DIM);
+
+  // Verify the data pattern
+  submit_verify_3d_task(read_array, Y, Z);
+}
+
+TEST_F(IOHDF5ReadUnit, TwoDimensionalChunked)
+{
+  constexpr auto X       = 100;
+  constexpr auto Y       = 500;
+  constexpr auto DATASET = "/two_dimensional";
+  constexpr auto DIM     = 2;
+  const auto file_path   = base_path / "two_d.h5";
+
+  // Create 2D HDF5 file with sequential data
+  constexpr auto dims       = std::array<hsize_t, 2>{X, Y};
+  constexpr auto chunk_dims = std::array<hsize_t, 2>{50, 100};
+
+  create_hdf5_file_with_sequential_data(file_path, DATASET, dims, &chunk_dims);
+
+  // Read the 2D array back using Legate HDF5 interface
+  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+
+  // Verify dimensions and shape
+  ASSERT_EQ(read_array.shape().volume(), X * Y);
+  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_array.dim(), DIM);
+
+  // Verify the data pattern
+  submit_verify_2d_task(read_array, Y);
+}
+
+TEST_F(IOHDF5ReadUnit, TwoDimensionalVDS)
+{
+  constexpr auto X         = 100;
+  constexpr auto Y         = 500;
+  constexpr auto NUM_FILES = 4;
+  constexpr auto DATASET   = "/two_dimensional";
+  constexpr auto DIM       = 2;
+  const auto vds_file_path = base_path / "two_d_vds.h5";
+  const auto source_dir    = base_path / "two_d_vds_source";
+
+  // Create 2D HDF5 file with sequential data
+  constexpr auto dims = std::array<hsize_t, 2>{X, Y};
+
+  create_vds_with_sequential_data(vds_file_path, source_dir, DATASET, dims, NUM_FILES);
+
+  // Read the 2D array back using Legate HDF5 interface
+  const auto read_array = legate::io::hdf5::from_file(vds_file_path, DATASET);
+
+  // Verify dimensions and shape
+  ASSERT_EQ(read_array.shape().volume(), X * Y);
+  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_array.dim(), DIM);
+
+  // Verify the data pattern
+  submit_verify_2d_task(read_array, Y);
+}
+
+TEST_F(IOHDF5ReadUnit, ThreeDimensionalVDS)
+{
+  constexpr auto X         = 100;
+  constexpr auto Y         = 500;
+  constexpr auto Z         = 200;
+  constexpr auto NUM_FILES = 4;
+  constexpr auto DATASET   = "/three_dimensional";
+  constexpr auto DIM       = 3;
+  const auto vds_file_path = base_path / "three_d_vds.h5";
+  const auto source_dir    = base_path / "three_d_vds_source";
+
+  // Create 2D HDF5 file with sequential data
+  constexpr auto dims = std::array<hsize_t, DIM>{X, Y, Z};
+
+  create_vds_with_sequential_data(vds_file_path, source_dir, DATASET, dims, NUM_FILES);
+
+  // Read the 2D array back using Legate HDF5 interface
+  const auto read_array = legate::io::hdf5::from_file(vds_file_path, DATASET);
+
+  // Verify dimensions and shape
+  ASSERT_EQ(read_array.shape().volume(), X * Y * Z);
+  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_array.dim(), DIM);
+
+  // Verify the data pattern
+  submit_verify_3d_task(read_array, Y, Z);
+}
+
+TEST_F(IOHDF5ReadUnit, TwoDimensionalVDSChunked)
+{
+  constexpr auto X         = 100;
+  constexpr auto Y         = 500;
+  constexpr auto NUM_FILES = 4;
+  constexpr auto DATASET   = "/two_dimensional";
+  constexpr auto DIM       = 2;
+  const auto vds_file_path = base_path / "two_d_vds.h5";
+  const auto source_dir    = base_path / "two_d_vds_source";
+
+  // Create 2D HDF5 file with chunked data
+  constexpr auto dims       = std::array<hsize_t, 2>{X, Y};
+  constexpr auto chunk_dims = std::array<hsize_t, 2>{50, 100};
+
+  create_vds_with_sequential_data(vds_file_path, source_dir, DATASET, dims, NUM_FILES, &chunk_dims);
+
+  // Read the 2D array back using Legate HDF5 interface
+  const auto read_array = legate::io::hdf5::from_file(vds_file_path, DATASET);
+
+  // Verify dimensions and shape
+  ASSERT_EQ(read_array.shape().volume(), X * Y);
+  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_array.dim(), DIM);
+
+  // Verify the data pattern
+  submit_verify_2d_task(read_array, Y);
 }
 
 }  // namespace test_io_hdf5_read

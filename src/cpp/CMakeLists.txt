@@ -498,6 +498,10 @@ if(legate_USE_HDF5)
     PRIVATE
       legate/io/hdf5/detail/interface.cc
       legate/io/hdf5/detail/read.cc
+      legate/io/hdf5/detail/hdf5_partitioner.cc
+      legate/io/hdf5/detail/partitioners/chunked_partitioner.cc
+      legate/io/hdf5/detail/partitioners/contiguous_partitioner.cc
+      legate/io/hdf5/detail/partitioners/vds_partitioner.cc
       legate/io/hdf5/detail/write_vds.cc
       legate/io/hdf5/detail/combine_vds.cc
       legate/io/hdf5/detail/hdf5_wrapper.cc

@@ -10,6 +10,7 @@
 #include <legate/data/shape.h>
 #include <legate/experimental/io/detail/library.h>
 #include <legate/io/hdf5/detail/combine_vds.h>
+#include <legate/io/hdf5/detail/hdf5_partitioner.h>
 #include <legate/io/hdf5/detail/hdf5_wrapper.h>
 #include <legate/io/hdf5/detail/read.h>
 #include <legate/io/hdf5/detail/write_vds.h>
@@ -18,13 +19,14 @@
 #include <legate/tuning/scope.h>
 #include <legate/type/types.h>
 #include <legate/utilities/abort.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/type_traits.h>
 
 #include <fmt/format.h>
 #include <fmt/std.h>
 
-#include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <stdexcept>
 #include <string_view>
@@ -114,14 +116,13 @@ namespace {
  *
  * @param dataset The HDF5 dataset.
  * @param shape The shape of the dataset.
- * @param rt The runtime.
  *
  * @return The LogicalArray.
  */
 [[nodiscard]] LogicalArray create_output_array(const wrapper::HDF5DataSet& dataset,
-                                               const Shape& shape,
-                                               Runtime* rt)
+                                               const Shape& shape)
 {
+  auto* rt              = Runtime::get_runtime();
   const auto array_type = deduce_type_from_dataset(dataset);
 
   // Safe to call volume here. We constructed the shape ourselves, so it is always ready and
@@ -131,40 +132,26 @@ namespace {
 }
 
 /**
- * @brief Read a HDF5 dataset with tiling along the slowest dimension. This is a heuristic to read
- * the dataset efficiently without doing strided reads.
+ * @brief Submit a tiled HDF5 read task and return the result array.
+ *
+ * Creates an output array, partitions it by the given tile shape, and submits
+ * a parallel read task.
  *
  * @param native_path The path to the HDF5 file.
  * @param shape The shape of the dataset.
- * @param num_tiles The number of tiles to use for the tiling strategy.
+ * @param tile_shape The shape of each tile for partitioning.
  * @param dataset The dataset to read.
  *
- * @return The LogicalArray read from the dataset.
+ * @return The LogicalArray that will contain the read data.
  */
-[[nodiscard]] LogicalArray from_file_with_tiling_slowest_dimension(
-  std::string_view native_path,
-  const Shape& shape,
-  std::size_t num_tiles,
-  const wrapper::HDF5DataSet& dataset,
-  Runtime* rt)
+[[nodiscard]] LogicalArray submit_tiled_read_task(std::string_view native_path,
+                                                  const Shape& shape,
+                                                  Span<const std::uint64_t> tile_shape,
+                                                  const wrapper::HDF5DataSet& dataset)
 {
-  const auto slowest_dim      = 0;
-  const auto slowest_dim_size = static_cast<std::size_t>(shape.extents()[slowest_dim]);
-
-  std::size_t tile_size_slowest = (slowest_dim_size + num_tiles - 1) / num_tiles;
-  tile_size_slowest             = std::clamp(tile_size_slowest, std::size_t{1}, slowest_dim_size);
-
-  // Create tile shape - only tile along slowest dimension, keep full size for others
-  legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape{
-    legate::detail::tags::size_tag, shape.ndim(), 0ULL};
-
-  for (std::uint32_t i = 0; i < shape.ndim(); ++i) {
-    tile_shape[i] = shape[i];
-  }
-  tile_shape[slowest_dim] = tile_size_slowest;
-
-  auto ret       = create_output_array(dataset, shape, rt);
+  auto ret       = create_output_array(dataset, shape);
   auto partition = ret.data().partition_by_tiling(tile_shape);
+  auto* rt       = Runtime::get_runtime();
 
   // Create task with launch shape equal to the partition's color shape
   auto task = rt->create_task(experimental::io::detail::core_io_library(),
@@ -206,18 +193,18 @@ LogicalArray from_file(const std::filesystem::path& file_path, std::string_view 
   const std::size_t num_tiles =
     static_cast<std::size_t>(machine.count()) * parallel_policy.overdecompose_factor();
 
-  // if the dataset is stored contiguously and has more than 1 dimension, is not empty
-  // and num_tiles is greater than the size of the slowest dimension, then we can
-  // use the tiling strategy along the slowest dimension
-  // to read the dataset efficiently without doing strided reads.
-  if (dataset.get_layout() == H5D_CONTIGUOUS && shape.ndim() > 1 && shape.volume() > 0 &&
-      num_tiles < shape[0]) {
-    return from_file_with_tiling_slowest_dimension(native_path, shape, num_tiles, dataset, rt);
+  // try to use a tiling strategy to match the layout of the dataset in files. If the dataset layout
+  // is not supported, then we use an auto task, which will be parallelized automatically
+  // by the runtime
+  auto tile_shape = get_partition_tile_shape(shape, num_tiles, native_path, dataset);
+
+  if (tile_shape) {
+    return submit_tiled_read_task(native_path, shape, *tile_shape, dataset);
   }
 
   // this is the fallback case, we use an auto task, which will be parallelized automatically
   // by the runtime
-  auto ret  = create_output_array(dataset, shape, rt);
+  auto ret  = create_output_array(dataset, shape);
   auto task = rt->create_task(experimental::io::detail::core_io_library(),
                               detail::HDF5Read::TASK_CONFIG.task_id());
 

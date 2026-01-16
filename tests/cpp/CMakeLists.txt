@@ -340,6 +340,7 @@ if(legate_USE_HDF5)
     unit/io/hdf5/negative.cc
     unit/io/hdf5/read.cc
     unit/io/hdf5/write.cc
+    unit/io/hdf5/partitioner.cc
   )
   list(APPEND with_runtime_TARGETS HDF5::HDF5)
 endif()

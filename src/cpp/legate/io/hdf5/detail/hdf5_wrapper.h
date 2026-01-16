@@ -299,6 +299,13 @@ class HDF5DataSet : public HDF5Object {
   [[nodiscard]] H5D_layout_t get_layout() const;
 
   /**
+   * @brief Get the dataset creation property list.
+   *
+   * @return Dataset creation property list.
+   */
+  [[nodiscard]] HDF5DataSetCreatePropertyList get_create_plist() const;
+
+  /**
    * @brief Write data into the dataset.
    *
    * @param mem_space_id Identifier of the memory dataspace.
@@ -311,6 +318,25 @@ class HDF5DataSet : public HDF5Object {
   void read(hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void* buf) const;
   void read(
     hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void* buf) const;
+};
+
+/**
+ * @brief A wrapped HDF5 virtual space object.
+ */
+class HDF5VirtualSpace : public HDF5Object {
+ public:
+  explicit HDF5VirtualSpace(hid_t hid, std::size_t index);
+
+  /**
+   * @brief Get the bounding box of a hyperslab selection.
+   *
+   * Returns the block coordinates and offset coordinates.
+   *
+   * @return Pair of vectors: (block coordinates, offset coordinates).
+   */
+  [[nodiscard]] std::pair<legate::detail::SmallVector<hsize_t>,
+                          legate::detail::SmallVector<hsize_t>>
+  get_select_bounds(std::size_t ndim) const;
 };
 
 /**
@@ -408,6 +434,15 @@ class HDF5DataSetCreatePropertyList : public HDF5PropertyList {
   [[nodiscard]] H5D_layout_t get_layout() const;
 
   /**
+   * @brief Get the chunk dimensions for a chunked dataset.
+   *
+   * @param ndim Number of dimensions in the dataset.
+   *
+   * @return Vector of chunk dimensions, or empty if not chunked.
+   */
+  [[nodiscard]] legate::detail::SmallVector<hsize_t> get_chunk_dims(std::size_t ndim) const;
+
+  /**
    * @brief Define a virtual dataset mapping to a source dataset.
    *
    * @param vds_space Dataspace of the virtual dataset.
@@ -432,6 +467,31 @@ class HDF5DataSetCreatePropertyList : public HDF5PropertyList {
                    legate::detail::ZStringView file,
                    legate::detail::ZStringView src_dset_name,
                    const HDF5DataSpace& src_space);
+
+  /**
+   * @brief Get the number of virtual mappings in the property list.
+   *
+   * @return The number of virtual mappings.
+   */
+  [[nodiscard]] std::size_t virtual_count() const;
+
+  /**
+   * @brief Get the source filename for a virtual mapping.
+   *
+   * @param index Index of the virtual mapping.
+   *
+   * @return Source filename.
+   */
+  [[nodiscard]] std::string virtual_filename(std::size_t index) const;
+
+  /**
+   * @brief Get the source dataset name for a virtual mapping.
+   *
+   * @param index Index of the virtual mapping.
+   *
+   * @return Source dataset name.
+   */
+  [[nodiscard]] std::string virtual_dsetname(std::size_t index) const;
 };
 
 /**

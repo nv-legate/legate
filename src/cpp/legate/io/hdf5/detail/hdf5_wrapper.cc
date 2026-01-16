@@ -604,6 +604,151 @@ void h5p_set_virtual(const HDF5MaybeLockGuard& lock,
   }
 }
 
+// ==========================================================================================
+// Virtual dataset helper functions
+// ==========================================================================================
+
+/**
+ * @brief Get the number of virtual mappings in a dataset creation property list.
+ *
+ * @param lock Thread safety lock.
+ * @param dcpl Dataset creation property list ID.
+ *
+ * @return Number of virtual mappings.
+ */
+[[nodiscard]] std::size_t h5p_get_virtual_count(const HDF5MaybeLockGuard& lock, hid_t dcpl)
+{
+  std::size_t count = 0;
+  const auto err    = HDF5_CALL_NO_ERROR_PRINTING(H5Pget_virtual_count(dcpl, &count));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, "Failed to get virtual mapping count");
+  }
+
+  return count;
+}
+
+/**
+ * @brief Get the virtual dataspace for a mapping.
+ *
+ * @param lock Thread safety lock.
+ * @param dcpl Dataset creation property list ID.
+ * @param index Index of the virtual mapping.
+ *
+ * @return Virtual dataspace ID (caller takes ownership).
+ */
+[[nodiscard]] hid_t h5p_get_virtual_vspace(const HDF5MaybeLockGuard& lock,
+                                           hid_t dcpl,
+                                           std::size_t index)
+{
+  const auto space_id =
+    HDF5_CALL_NO_ERROR_PRINTING(H5Pget_virtual_vspace(dcpl, static_cast<std::size_t>(index)));
+
+  if (space_id < 0) {
+    throw_hdf5_exception(lock, "Failed to get virtual dataspace");
+  }
+
+  return space_id;
+}
+
+/**
+ * @brief Get the source filename for a virtual mapping.
+ *
+ * @param lock Thread safety lock.
+ * @param dcpl Dataset creation property list ID.
+ * @param index Index of the virtual mapping.
+ *
+ * @return Source filename.
+ */
+[[nodiscard]] std::string h5p_get_virtual_filename(const HDF5MaybeLockGuard& lock,
+                                                   hid_t dcpl,
+                                                   std::size_t index)
+{
+  // First call to get the required buffer size
+  const auto size = HDF5_CALL_NO_ERROR_PRINTING(H5Pget_virtual_filename(dcpl, index, nullptr, 0));
+
+  if (size < 0) {
+    throw_hdf5_exception(lock, "Failed to get virtual filename size");
+  }
+
+  // Allocate buffer and get the filename
+  std::string filename{};
+
+  filename.resize(static_cast<std::size_t>(size));
+
+  const auto err = HDF5_CALL_NO_ERROR_PRINTING(
+    H5Pget_virtual_filename(dcpl, index, filename.data(), filename.size() + 1));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, "Failed to get virtual filename");
+  }
+
+  return filename;
+}
+
+/**
+ * @brief Get the source dataset name for a virtual mapping.
+ *
+ * @param lock Thread safety lock.
+ * @param dcpl Dataset creation property list ID.
+ * @param index Index of the virtual mapping.
+ *
+ * @return Source dataset name.
+ */
+[[nodiscard]] std::string h5p_get_virtual_dsetname(const HDF5MaybeLockGuard& lock,
+                                                   hid_t dcpl,
+                                                   std::size_t index)
+{
+  // First call to get the required buffer size
+  const auto size = HDF5_CALL_NO_ERROR_PRINTING(H5Pget_virtual_dsetname(dcpl, index, nullptr, 0));
+
+  if (size < 0) {
+    throw_hdf5_exception(lock, "Failed to get virtual dataset name size");
+  }
+
+  // Allocate buffer and get the dataset name
+  std::string dsetname{};
+
+  dsetname.resize(static_cast<std::size_t>(size));
+
+  const auto err = HDF5_CALL_NO_ERROR_PRINTING(
+    H5Pget_virtual_dsetname(dcpl, index, dsetname.data(), dsetname.size() + 1));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, "Failed to get virtual dataset name");
+  }
+
+  return dsetname;
+}
+
+/**
+ * @brief Get the block sizes and offsets of a hyperslab selection.
+ *
+ * @param lock Thread safety lock.
+ * @param space_id Dataspace ID with a selection.
+ * @param ndim Number of dimensions of the dataspace.
+ *
+ * @return Pair of vectors: (block sizes, block offsets).
+ */
+[[nodiscard]] std::pair<legate::detail::SmallVector<hsize_t, LEGATE_MAX_DIM>,
+                        legate::detail::SmallVector<hsize_t, LEGATE_MAX_DIM>>
+h5s_get_select_bounds(const HDF5MaybeLockGuard& lock, hid_t space_id, std::size_t ndim)
+{
+  legate::detail::SmallVector<hsize_t> offset{legate::detail::tags::size_tag, ndim, 0};
+  legate::detail::SmallVector<hsize_t> block{legate::detail::tags::size_tag, ndim, 0};
+  legate::detail::SmallVector<hsize_t> count{legate::detail::tags::size_tag, ndim, 0};
+  legate::detail::SmallVector<hsize_t> stride{legate::detail::tags::size_tag, ndim, 0};
+
+  const auto err = HDF5_CALL_NO_ERROR_PRINTING(
+    H5Sget_regular_hyperslab(space_id, offset.data(), stride.data(), count.data(), block.data()));
+
+  if (err < 0) {
+    throw_hdf5_exception(lock, "Failed to get selection bounds");
+  }
+
+  return {std::move(block), std::move(offset)};
+}
+
 void h5p_set_fapl_gds(const HDF5MaybeLockGuard& lock,
                       hid_t fapl_id,
                       std::size_t alignment,
@@ -988,6 +1133,11 @@ H5D_layout_t HDF5DataSet::get_layout() const
   return HDF5DataSetCreatePropertyList{hid()}.get_layout();
 }
 
+HDF5DataSetCreatePropertyList HDF5DataSet::get_create_plist() const
+{
+  return HDF5DataSetCreatePropertyList{hid()};
+}
+
 void HDF5DataSet::write(hid_t mem_space_id,
                         hid_t file_space_id,
                         hid_t dxpl_id,
@@ -1007,6 +1157,21 @@ void HDF5DataSet::read(
   hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void* buf) const
 {
   h5d_read({}, hid(), mem_type_id, mem_space_id, file_space_id, dxpl_id, buf);
+}
+
+HDF5VirtualSpace::HDF5VirtualSpace(hid_t hid, std::size_t index)
+  : HDF5Object{[&] {
+                 const auto lock = HDF5MaybeLockGuard{};
+                 return h5p_get_virtual_vspace(lock, hid, index);
+               }(),
+               nothrow::h5s_close}
+{
+}
+
+std::pair<legate::detail::SmallVector<hsize_t>, legate::detail::SmallVector<hsize_t>>
+HDF5VirtualSpace::get_select_bounds(std::size_t ndim) const
+{
+  return h5s_get_select_bounds({}, hid(), ndim);
 }
 
 // ==========================================================================================
@@ -1116,6 +1281,27 @@ HDF5DataSetCreatePropertyList::HDF5DataSetCreatePropertyList(hid_t plist_id)
 
 H5D_layout_t HDF5DataSetCreatePropertyList::get_layout() const { return h5p_get_layout({}, hid()); }
 
+legate::detail::SmallVector<hsize_t> HDF5DataSetCreatePropertyList::get_chunk_dims(
+  std::size_t ndim) const
+{
+  legate::detail::SmallVector<hsize_t> chunk_dims{legate::detail::tags::size_tag, ndim, 0};
+
+  // Only chunked datasets have chunk dimensions
+  if (get_layout() != H5D_CHUNKED) {
+    return {};
+  }
+
+  const auto lock = HDF5MaybeLockGuard{};
+  const auto ret =
+    HDF5_CALL_NO_ERROR_PRINTING(H5Pget_chunk(hid(), static_cast<int>(ndim), chunk_dims.data()));
+
+  if (ret < 0) {
+    throw_hdf5_exception(lock, "Failed to get chunk dimensions");
+  }
+
+  return chunk_dims;
+}
+
 void HDF5DataSetCreatePropertyList::set_virtual(const HDF5DataSpace& vds_space,
                                                 legate::detail::ZStringView file,
                                                 const HDF5DataSet& src_dset,
@@ -1130,6 +1316,21 @@ void HDF5DataSetCreatePropertyList::set_virtual(const HDF5DataSpace& vds_space,
                                                 const HDF5DataSpace& src_space)
 {
   h5p_set_virtual({}, hid(), vds_space.hid(), file, src_dset_name, src_space.hid());
+}
+
+std::size_t HDF5DataSetCreatePropertyList::virtual_count() const
+{
+  return h5p_get_virtual_count({}, hid());
+}
+
+std::string HDF5DataSetCreatePropertyList::virtual_filename(std::size_t index) const
+{
+  return h5p_get_virtual_filename({}, hid(), index);
+}
+
+std::string HDF5DataSetCreatePropertyList::virtual_dsetname(std::size_t index) const
+{
+  return h5p_get_virtual_dsetname({}, hid(), index);
 }
 
 // ==========================================================================================
