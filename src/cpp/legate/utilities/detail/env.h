@@ -84,6 +84,19 @@ class EnvironmentVariable<std::uint32_t> : public EnvironmentVariableBase {
   void set(std::uint32_t value, bool overwrite = true) const;
 };
 
+// TODO(amberhassaan): add checks for integer type env variables.
+// Tracked via : https://github.com/nv-legate/legate.internal/issues/3407
+template <>
+class EnvironmentVariable<std::int32_t> : public EnvironmentVariableBase {
+ public:
+  using EnvironmentVariableBase::EnvironmentVariableBase;
+
+  [[nodiscard]] std::optional<std::int32_t> get() const;
+  [[nodiscard]] std::int32_t get(std::int32_t default_value,
+                                 std::optional<std::int32_t> test_value = std::nullopt) const;
+  void set(std::int32_t value, bool overwrite = true) const;
+};
+
 template <>
 class EnvironmentVariable<std::string> : public EnvironmentVariableBase {
  public:
@@ -110,13 +123,13 @@ LEGATE_DEFINE_ENV_VAR(bool, LEGATE_LOG_MAPPING);
 LEGATE_DEFINE_ENV_VAR(bool, LEGATE_LOG_PARTITIONING);
 LEGATE_DEFINE_ENV_VAR(bool, LEGATE_WARMUP_NCCL);
 LEGATE_DEFINE_ENV_VAR(std::string, LEGION_DEFAULT_ARGS);
-LEGATE_DEFINE_ENV_VAR(std::uint32_t, LEGATE_MAX_EXCEPTION_SIZE);
+LEGATE_DEFINE_ENV_VAR(std::int32_t, LEGATE_MAX_EXCEPTION_SIZE);
 LEGATE_DEFINE_ENV_VAR(std::int64_t, LEGATE_MIN_CPU_CHUNK);
 LEGATE_DEFINE_ENV_VAR(std::int64_t, LEGATE_MIN_GPU_CHUNK);
 LEGATE_DEFINE_ENV_VAR(std::int64_t, LEGATE_MIN_OMP_CHUNK);
-LEGATE_DEFINE_ENV_VAR(std::uint32_t, LEGATE_WINDOW_SIZE);
-LEGATE_DEFINE_ENV_VAR(std::uint32_t, LEGATE_FIELD_REUSE_FRAC);
-LEGATE_DEFINE_ENV_VAR(std::uint32_t, LEGATE_FIELD_REUSE_FREQ);
+LEGATE_DEFINE_ENV_VAR(std::int32_t, LEGATE_WINDOW_SIZE);
+LEGATE_DEFINE_ENV_VAR(std::int32_t, LEGATE_FIELD_REUSE_FRAC);
+LEGATE_DEFINE_ENV_VAR(std::int32_t, LEGATE_FIELD_REUSE_FREQ);
 LEGATE_DEFINE_ENV_VAR(bool, LEGATE_CONSENSUS);
 LEGATE_DEFINE_ENV_VAR(bool, LEGATE_DISABLE_MPI);
 LEGATE_DEFINE_ENV_VAR(std::string, LEGATE_CONFIG);

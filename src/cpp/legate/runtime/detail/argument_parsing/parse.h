@@ -28,13 +28,13 @@ class ParsedArgs {
   Argument<bool> inline_task_launch;
   Argument<bool> single_controller_execution;
   Argument<bool> show_usage;
-  Argument<std::uint32_t> max_exception_size;
+  Argument<std::int32_t> max_exception_size;
   Argument<std::int64_t> min_cpu_chunk;
   Argument<std::int64_t> min_gpu_chunk;
   Argument<std::int64_t> min_omp_chunk;
-  Argument<std::uint32_t> window_size;
-  Argument<std::uint32_t> field_reuse_frac;
-  Argument<std::uint32_t> field_reuse_freq;
+  Argument<std::int32_t> window_size;
+  Argument<std::int32_t> field_reuse_frac;
+  Argument<std::int32_t> field_reuse_freq;
   Argument<bool> consensus;
   Argument<bool> disable_mpi;
   Argument<bool> io_use_vfd_gds;

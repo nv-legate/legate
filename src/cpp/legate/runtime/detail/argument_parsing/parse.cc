@@ -107,6 +107,7 @@ std::string ParsedArgs::config_summary() const
   print_var(io_use_vfd_gds);
   print_var(cpus);
   print_var(gpus);
+  print_var(omps);
   print_var(ompthreads);
   print_var(util);
   print_var(sysmem);
@@ -122,6 +123,7 @@ std::string ParsedArgs::config_summary() const
   print_var(log_to_file);
   print_var(freeze_on_error);
   print_var(cuda_driver_path);
+  print_var(experimental_copy_path);
   ret += "==============================================";
   return ret;
 }
@@ -360,6 +362,74 @@ const std::shared_ptr<argparse::ArgumentParser>& LegateArgumentParser::parser() 
   return parser_;
 }
 
+/**
+ * @brief Value getter that is overloaded for Scaled types.
+ *
+ * @param arg The argument.
+ *
+ * @return value of the argument.
+ */
+template <typename T>
+T get_value(const Argument<T>& arg)
+{
+  return arg.value();
+}
+
+/**
+ * @brief Overload for Scaled types.
+ */
+template <typename T>
+T get_value(const Argument<Scaled<T>>& arg)
+{
+  return arg.value().scaled_value();
+}
+
+/**
+ * @brief Callable object that is passed to ``Argument::action`` to check if the
+ * value is negative.
+ *
+ * @see Argument::action
+ *
+ * @throws ``std::out_of_range`` exception if the value is negative.
+ */
+class CheckNonNegative {
+ public:
+  template <typename T>
+  T operator()(std::string_view, const Argument<T>* arg_val) const
+  {
+    if (auto v = get_value(*arg_val); v < 0) {
+      throw TracedException<std::out_of_range>{
+        fmt::format("{} ({}) must be >= 0, have {}", descriptive_name, arg_val->flag(), v)};
+    }
+    return arg_val->value();
+  }
+
+  std::string_view descriptive_name;
+};
+
+/**
+ * @brief Callable object that is passed to ``Argument::action`` to check if the
+ * value is not positive.
+ *
+ * @see Argument::action
+ *
+ * @throws ``std::out_of_range`` exception if the value is not positive
+ */
+class CheckPositive {
+ public:
+  template <typename T>
+  T operator()(std::string_view, const Argument<T>* arg_val) const
+  {
+    if (auto v = get_value(*arg_val); v <= 0) {
+      throw TracedException<std::out_of_range>{
+        fmt::format("{} ({}) must be > 0, have {}", descriptive_name, arg_val->flag(), v)};
+    }
+    return arg_val->value();
+  }
+
+  std::string_view descriptive_name;
+};
+
 }  // namespace
 
 ParsedArgs parse_args(std::vector<std::string> args)
@@ -438,24 +508,12 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "which the cores are oversubscribed is unspecified.",
     DEFAULT_CPUS);
 
-  cpus.action([](std::string_view, const Argument<std::int32_t>* cpus_arg) {
-    if (cpus_arg->value() < 0) {
-      throw TracedException<std::out_of_range>{
-        fmt::format("Number of CPU cores must be >=0, have {}", cpus_arg->value())};
-    }
-    return cpus_arg->value();
-  });
+  cpus.action(CheckNonNegative{"Number of CPU cores"});
 
   auto gpus =
     parser.add_argument("--gpus", "Number of GPUs to reserve per rank, must be >=0.", DEFAULT_GPUS);
 
-  gpus.action([](std::string_view, const Argument<std::int32_t>* gpus_arg) {
-    if (gpus_arg->value() < 0) {
-      throw TracedException<std::out_of_range>{
-        fmt::format("Number of GPUs must be >=0, have {}", gpus_arg->value())};
-    }
-    return gpus_arg->value();
-  });
+  gpus.action(CheckNonNegative{"Number of GPUs"});
 
   auto omps = parser.add_argument(
     "--omps",
@@ -470,26 +528,14 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "oversubscription is identical to that of regular CPU cores.",
     DEFAULT_OMPS);
 
-  omps.action([](std::string_view, const Argument<std::int32_t>* omps_arg) {
-    if (omps_arg->value() < 0) {
-      throw TracedException<std::out_of_range>{
-        fmt::format("Number of OpenMP groups must be >=0, have {}", omps_arg->value())};
-    }
-    return omps_arg->value();
-  });
+  omps.action(CheckNonNegative{"Number of OpenMP groups"});
 
   auto ompthreads =
     parser.add_argument("--ompthreads",
                         "Number of threads (reserved CPU cores) per OpenMP group, must be >=0",
                         DEFAULT_OMPTHREADS);
 
-  ompthreads.action([](std::string_view, const Argument<std::int32_t>* ompthreads_arg) {
-    if (ompthreads_arg->value() < 0) {
-      throw TracedException<std::out_of_range>{fmt::format(
-        "Number of threads per OpenMP group must be >=0, have {}", ompthreads_arg->value())};
-    }
-    return ompthreads_arg->value();
-  });
+  ompthreads.action(CheckNonNegative{"Number of threads per OpenMP group"});
 
   auto util = parser.add_argument(
     "--utility",
@@ -505,35 +551,44 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "For best performance, it is recommended that utility threads each reserve a unique core.",
     DEFAULT_UTILITY);
 
-  util.action([](std::string_view, const Argument<std::int32_t>* util_arg) {
-    if (util_arg->value() < 1) {
-      throw TracedException<std::out_of_range>{
-        fmt::format("Number of utility threads must be >0, have {}", util_arg->value())};
-    }
-    return util_arg->value();
-  });
+  util.action(CheckPositive{"Number of utility threads"});
 
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Memory allocation");
 
-  auto sysmem  = parser.add_scaled_argument("--sysmem",
+  auto sysmem = parser.add_scaled_argument("--sysmem",
                                            "Size (in MiB) of DRAM memory to reserve per rank",
                                            Scaled{DEFAULT_SYSMEM, MB, "MiB"});
+
+  sysmem.action(CheckPositive{"Size (in MiB) of DRAM Memory"});
+
   auto numamem = parser.add_scaled_argument(
     "--numamem",
     "Size (in MiB) of NUMA-specific DRAM memory to reserve per NUMA domain",
     Scaled{DEFAULT_NUMAMEM, MB, "MiB"});
+
+  numamem.action(CheckNonNegative{"Size (in MiB) of NUMA Memory"});
+
   auto fbmem = parser.add_scaled_argument(
     "--fbmem",
     "Size (in MiB) of GPU (or \"framebuffer\") memory to reserve per GPU",
     Scaled{DEFAULT_FBMEM, MB, "MiB"});
+
+  fbmem.action(CheckNonNegative{"Size (in MiB) of GPU Memory"});
+
   auto zcmem = parser.add_scaled_argument(
     "--zcmem",
     "Size (in MiB) of GPU-registered (or \"zero-copy\") DRAM memory to reserve per GPU",
     Scaled{DEFAULT_ZCMEM, MB, "MiB"});
-  auto regmem             = parser.add_scaled_argument("--regmem",
+
+  zcmem.action(CheckNonNegative{"Size (in MiB) of Zero-Copy Memory"});
+
+  auto regmem = parser.add_scaled_argument("--regmem",
                                            "Size (in MiB) of NIC-registered DRAM memory to reserve",
                                            Scaled{DEFAULT_REGMEM, MB, "MiB"});
+
+  regmem.action(CheckNonNegative{"Size (in MiB) of NIC-registered Memory"});
+
   auto max_exception_size = parser.add_argument(
     "--max-exception-size",
     "Maximum size (in bytes) to allocate for exception messages.\n"
@@ -542,6 +597,8 @@ ParsedArgs parse_args(std::vector<std::string> args)
     LEGATE_MAX_EXCEPTION_SIZE.get(LEGATE_MAX_EXCEPTION_SIZE_DEFAULT,
                                   LEGATE_MAX_EXCEPTION_SIZE_TEST));
 
+  max_exception_size.action(CheckPositive{"Size (in bytes) of exception messages"});
+
   auto min_cpu_chunk = parser.add_argument(
     "--min-cpu-chunk",
     "Minimum CPU chunk size (in bytes).\n"
@@ -549,6 +606,9 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "If using CPUs, any task operating on arrays smaller than this will not be parallelized across "
     "more than one core.",
     LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST));
+
+  min_cpu_chunk.action(CheckPositive{"Minimum CPU chunk size (in bytes)"});
+
   auto min_gpu_chunk = parser.add_argument(
     "--min-gpu-chunk",
     "Minimum GPU chunk size (in bytes).\n"
@@ -556,6 +616,9 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "If using GPUs, any task operating on arrays smaller than this will not be parallelized across "
     "more than one core.",
     LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST));
+
+  min_gpu_chunk.action(CheckPositive{"Minimum GPU chunk size (in bytes)"});
+
   auto min_omp_chunk = parser.add_argument(
     "--min-omp-chunk",
     "Minimum OpenMP chunk size (in bytes)."
@@ -564,6 +627,8 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "across more than one OpenMP group.",
     LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST));
 
+  min_omp_chunk.action(CheckPositive{"Minimum OpenMP chunk size (in bytes)"});
+
   // ------------------------------------------------------------------------------------------
   parser.parser()->add_group("Execution control");
 
@@ -571,6 +636,9 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "--window-size",
     "Maximum size of the submitted operation queue before forced flush.",
     LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST));
+
+  window_size.action(CheckPositive{"Maximum size of Operation Queue"});
+
   auto warmup_nccl = parser.add_argument(
     "--warmup-nccl",
     "Perform a warmup for NCCL on startup.\n"
@@ -614,6 +682,9 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "\n"
     "See help string of --consensus for more information on what a consensus match constitutes.",
     LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST));
+
+  field_reuse_frac.action(CheckPositive{"Field Reuse Fraction (in bytes)"});
+
   auto field_reuse_freq = parser.add_argument(
     "--field-reuse-frequency",
     "The size (in number of stores) of the discarded store/array field cache to retain.\n"
@@ -625,6 +696,9 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "Higher values may result in faster execution (as more stores may be constructed out of the "
     "cache) at the tradeoff of higher memory usage.",
     LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST));
+
+  field_reuse_freq.action(CheckPositive{"Number of discarded stores/arrays to cache"});
+
   auto consensus = parser.add_argument(
     "--consensus",
     "Whether to perform the RegionField consensus match operation on single-node runs (for "

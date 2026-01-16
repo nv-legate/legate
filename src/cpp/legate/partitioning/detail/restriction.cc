@@ -97,13 +97,13 @@ void Restrictions::join_inplace(const Restrictions& other)
 
 [[nodiscard]] std::tuple<SmallVector<std::size_t, LEGATE_MAX_DIM>,
                          SmallVector<std::uint32_t, LEGATE_MAX_DIM>,
-                         std::int64_t>
+                         std::uint64_t>
 Restrictions::prune_dimensions(Span<const std::uint64_t> shape) const
 {
   // Prune out any dimensions that are 1
   SmallVector<std::size_t, LEGATE_MAX_DIM> temp_shape{};
   SmallVector<std::uint32_t, LEGATE_MAX_DIM> temp_dims{};
-  std::int64_t volume = 1;
+  std::uint64_t volume = 1;
 
   temp_dims.reserve(shape.size());
   temp_shape.reserve(shape.size());
@@ -115,7 +115,7 @@ Restrictions::prune_dimensions(Span<const std::uint64_t> shape) const
     }
     temp_shape.push_back(extent);
     temp_dims.push_back(dim);
-    volume *= static_cast<std::int64_t>(extent);
+    volume *= extent;
   }
   return {std::move(temp_shape), std::move(temp_dims), volume};
 }

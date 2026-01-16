@@ -474,7 +474,7 @@ TEST_F(ParseArgsUnit, CPUsInvalid)
 {
   ASSERT_THAT([] { static_cast<void>(legate::detail::parse_args({"dummy", "--cpus", "-1"})); },
               ::testing::ThrowsMessage<std::out_of_range>(
-                ::testing::HasSubstr("Number of CPU cores must be >=0, have -1")));
+                ::testing::HasSubstr("Number of CPU cores (--cpus) must be >= 0, have -1")));
 }
 
 TEST_F(ParseArgsUnit, GPUs)
@@ -489,7 +489,7 @@ TEST_F(ParseArgsUnit, GPUsInvalid)
 {
   ASSERT_THAT([] { static_cast<void>(legate::detail::parse_args({"dummy", "--gpus", "-1"})); },
               ::testing::ThrowsMessage<std::out_of_range>(
-                ::testing::HasSubstr("Number of GPUs must be >=0, have -1")));
+                ::testing::HasSubstr("Number of GPUs (--gpus) must be >= 0, have -1")));
 }
 
 TEST_F(ParseArgsUnit, OMPs)
@@ -504,7 +504,7 @@ TEST_F(ParseArgsUnit, OMPsInvalid)
 {
   ASSERT_THAT([] { static_cast<void>(legate::detail::parse_args({"dummy", "--omps", "-1"})); },
               ::testing::ThrowsMessage<std::out_of_range>(
-                ::testing::HasSubstr("Number of OpenMP groups must be >=0, have -1")));
+                ::testing::HasSubstr("Number of OpenMP groups (--omps) must be >= 0, have -1")));
 }
 
 TEST_F(ParseArgsUnit, OMPThreads)
@@ -519,8 +519,8 @@ TEST_F(ParseArgsUnit, OMPThreadsInvalid)
 {
   ASSERT_THAT(
     [] { static_cast<void>(legate::detail::parse_args({"dummy", "--ompthreads", "-1"})); },
-    ::testing::ThrowsMessage<std::out_of_range>(
-      ::testing::HasSubstr("Number of threads per OpenMP group must be >=0, have -1")));
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr(
+      "Number of threads per OpenMP group (--ompthreads) must be >= 0, have -1")));
 }
 
 TEST_F(ParseArgsUnit, Util)
@@ -535,7 +535,7 @@ TEST_F(ParseArgsUnit, UtilInvalid)
 {
   ASSERT_THAT([] { static_cast<void>(legate::detail::parse_args({"dummy", "--utility", "0"})); },
               ::testing::ThrowsMessage<std::out_of_range>(
-                ::testing::HasSubstr("Number of utility threads must be >0, have 0")));
+                ::testing::HasSubstr("Number of utility threads (--utility) must be > 0, have 0")));
 }
 
 TEST_F(ParseArgsUnit, Sysmem)

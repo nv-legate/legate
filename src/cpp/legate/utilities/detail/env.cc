@@ -124,6 +124,15 @@ template <>
   return std::nullopt;
 }
 
+template <>
+[[nodiscard]] std::optional<std::int32_t> read_env(ZStringView variable)
+{
+  if (const auto v = read_env<std::int64_t>(std::move(variable)); v.has_value()) {
+    return static_cast<std::int32_t>(*v);
+  }
+  return std::nullopt;
+}
+
 template <typename T, typename U = T>
 [[nodiscard]] T read_env_with_defaults(std::optional<T> (*read_env_impl_fn)(ZStringView),
                                        ZStringView variable,
@@ -225,6 +234,25 @@ std::uint32_t EnvironmentVariable<std::uint32_t>::get(std::uint32_t default_valu
 }
 
 void EnvironmentVariable<std::uint32_t>::set(std::uint32_t value, bool overwrite) const
+{
+  EnvironmentVariableBase::set_(std::to_string(value), overwrite);
+}
+
+// ==========================================================================================
+
+std::optional<std::int32_t> EnvironmentVariable<std::int32_t>::get() const
+{
+  return read_env<std::int32_t>(*this);
+}
+
+std::int32_t EnvironmentVariable<std::int32_t>::get(std::int32_t default_value,
+                                                    std::optional<std::int32_t> test_value) const
+{
+  return read_env_with_defaults(
+    read_env<std::int32_t>, *this, default_value, std::move(test_value));
+}
+
+void EnvironmentVariable<std::int32_t>::set(std::int32_t value, bool overwrite) const
 {
   EnvironmentVariableBase::set_(std::to_string(value), overwrite);
 }

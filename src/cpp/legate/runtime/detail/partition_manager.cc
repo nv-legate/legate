@@ -22,7 +22,7 @@ namespace legate::detail {
 
 namespace {
 
-[[nodiscard]] std::int64_t min_shard_volume()
+[[nodiscard]] std::uint64_t min_shard_volume()
 {
   const auto& local_machine = Runtime::get_runtime().local_machine();
 
@@ -68,7 +68,7 @@ Span<const std::uint32_t> PartitionManager::get_factors(const mapping::detail::M
 namespace {
 
 [[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_1d(
-  std::int64_t max_pieces, Span<const std::size_t> shape)
+  std::uint64_t max_pieces, Span<const std::size_t> shape)
 {
   SmallVector<std::size_t, LEGATE_MAX_DIM> result;
 
@@ -77,7 +77,7 @@ namespace {
 }
 
 [[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_2d(
-  std::int64_t max_pieces, Span<const std::size_t> shape)
+  std::uint64_t max_pieces, Span<const std::size_t> shape)
 {
   // Two dimensional so we can use square root to try and generate as square a pieces
   // as possible since most often we will be doing matrix operations with these
@@ -95,11 +95,11 @@ namespace {
   // try rounding n both up and down
   constexpr auto EPSILON = 1e-12;
 
-  auto n1 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n + EPSILON)));
+  auto n1 = std::max<std::uint64_t>(1, static_cast<std::uint64_t>(std::floor(n + EPSILON)));
   while (max_pieces % n1 != 0) {
     --n1;
   }
-  auto n2 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n - EPSILON)));
+  auto n2 = std::max<std::uint64_t>(1, static_cast<std::uint64_t>(std::floor(n - EPSILON)));
   while (max_pieces % n2 != 0) {
     ++n2;
   }
@@ -131,7 +131,7 @@ namespace {
 [[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_nd(
   Span<const std::uint32_t> factors,
   std::size_t ndim,
-  std::int64_t max_pieces,
+  std::uint64_t max_pieces,
   Span<const std::size_t> shape)
 {
   // For higher dimensions we care less about "square"-ness and more about evenly dividing
@@ -213,7 +213,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   auto [temp_shape, temp_dims, volume] = restrictions.prune_dimensions(shape);
 
   // Figure out how many shards we can make with this array
-  std::int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
+  std::uint64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
   LEGATE_CHECK(volume == 0 || max_pieces > 0);
   // If we can only make one piece return that now
   if (max_pieces <= 1) {
@@ -229,7 +229,8 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   // Apparently captured structured bindings are only since C++20. Why on earth did the
   // committee not allow this in C++17????
   LEGATE_CPP_VERSION_TODO(20, "Use captured structured bindings instead");
-  auto temp_result = [&](SmallVector<std::size_t, LEGATE_MAX_DIM>* shape_2, std::int64_t volume_2) {
+  auto temp_result = [&](SmallVector<std::size_t, LEGATE_MAX_DIM>* shape_2,
+                         std::uint64_t volume_2) {
     switch (ndim) {
       case 1: return compute_shape_1d(max_pieces, *shape_2);
       case 2: {

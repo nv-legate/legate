@@ -122,7 +122,7 @@ class Restrictions {
    */
   [[nodiscard]] std::tuple<SmallVector<std::size_t, LEGATE_MAX_DIM>,
                            SmallVector<std::uint32_t, LEGATE_MAX_DIM>,
-                           std::int64_t>
+                           std::uint64_t>
   prune_dimensions(Span<const std::uint64_t> shape) const;
 
  private:
