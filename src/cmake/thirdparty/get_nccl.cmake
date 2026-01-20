@@ -43,7 +43,7 @@ function(validate_nccl_version)
 
   set(nccl_version "${nccl_major}.${nccl_minor}")
   # If you bump this, also bump it on all dependency lists.
-  set(required_nccl_version 2.28)
+  set(required_nccl_version 2.27)
 
   if("${required_nccl_version}" VERSION_LESS "${nccl_version}")
     message(FATAL_ERROR "Detected NCCL version ${nccl_version}, but "

@@ -63,7 +63,7 @@ extensions = [
     "legate._sphinxext.releases",
 ]
 
-suppress_warnings = ["ref.myst"]
+suppress_warnings = ["ref.myst", "duplicate_declaration.cpp"]
 exclude_patterns = [
     # Without this, Sphinx will emit warnings saying "dev.rst not included in
     # any toctree". But dev.rst is a symlink to the latest version, so we don't
@@ -110,8 +110,6 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
 }
-
-suppress_warnings = ["duplicate_declaration.cpp"]
 
 mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
 

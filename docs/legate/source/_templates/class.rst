@@ -8,7 +8,9 @@
 
 .. autoclass:: {{ objname }}
 
+   {% if '__init__' in methods %}
    .. automethod:: {{ objname }}.__init__
+   {% endif %}
 
    {% block attributes %}
    {% if attributes %}
