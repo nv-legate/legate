@@ -6,6 +6,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from packaging.version import Version
+
 try:
     import cupy  # type: ignore[import-not-found]
 except ModuleNotFoundError:
@@ -466,8 +468,9 @@ class TestLogicalStoreOperationErrors:
         reason="test requires GPU",
     )
     def test_cupy_from_sysmem(self) -> None:
-        if not cupy:
-            pytest.skip(reason="test requires cupy")
+        # prior to 13.6.0 cupy fallbacks to numpy and passes
+        if not cupy or Version(cupy.__version__) < Version("13.6.0"):
+            pytest.skip(reason="test requires cupy 13.6.0 or above")
         _, store = utils.random_array_and_store((3, 2, 1))
         msg = (
             "Physical store in a host-only memory does not support the CUDA "

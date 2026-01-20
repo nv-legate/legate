@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from packaging.version import Version
+
 try:
     import cupy  # type: ignore[import-not-found]
 except ModuleNotFoundError:
@@ -253,7 +255,10 @@ class TestArrayCreationErrors:
     def test_nullable_array_interface(self) -> None:
         runtime = get_legate_runtime()
         arr = runtime.create_array(ty.uint16, shape=(1,), nullable=True)
-        msg = "nullable arrays don't support the array interface directly"
+        msg = (
+            "Nested or nullable arrays don't support the array interface "
+            "directly"
+        )
         with pytest.raises(ValueError, match=msg):
             np.asarray(arr.get_physical_array())
 
@@ -263,8 +268,9 @@ class TestArrayCreationErrors:
     )
     def test_nullable_cupy_array_interface(self) -> None:
         # Need to explicitly check cupy existence here
-        if not cupy:
-            pytest.skip(reason="Test requires cupy to be installed")
+        # prior to cupy 13.6.0 it falls back to numpy
+        if not cupy or Version(cupy.__version__) < Version("13.6.0"):
+            pytest.skip(reason="Test requires cupy 13.6.0 or above")
         runtime = get_legate_runtime()
         arr = runtime.create_array(ty.uint16, shape=(1,), nullable=True)
         msg = (
