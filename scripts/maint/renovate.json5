@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 {
     $schema: "https://docs.renovatebot.com/renovate-schema.json",
-    commitMessageExtra: "upper bound refresh",
     commitMessagePrefix: "chore(deps):",
     commitMessageTopic: "{{depName}}",
     customManagers: [
@@ -37,6 +36,34 @@
             ],
             versioningTemplate: "conda",
         },
+        {
+            // Track the default Realm branch and update git_tag to the latest commit.
+            customType: "regex",
+            datasourceTemplate: "git-refs",
+            depNameTemplate: "Realm",
+            description: "Update Realm git_tag from main",
+            managerFilePatterns: ["/src/cmake/versions/realm_version\\.json$/"],
+            matchStrings: [
+                '"git_tag"\\s*:\\s*"(?<currentDigest>[0-9a-f]{40})"',
+            ],
+            currentValueTemplate: "main",
+            packageNameTemplate: "https://github.com/StanfordLegion/realm.git",
+        },
+        {
+            // Track the default Legion branch and update git_tag to the latest commit.
+            customType: "regex",
+            datasourceTemplate: "git-refs",
+            depNameTemplate: "Legion",
+            description: "Update Legion git_tag from master",
+            managerFilePatterns: [
+                "/src/cmake/versions/legion_version\\.json$/",
+            ],
+            matchStrings: [
+                '"git_tag"\\s*:\\s*"(?<currentDigest>[0-9a-f]{40})"',
+            ],
+            currentValueTemplate: "master",
+            packageNameTemplate: "https://gitlab.com/StanfordLegion/legion.git",
+        },
     ],
     extends: ["config:recommended", ":disableRateLimiting"],
     enabledManagers: ["custom.regex"],
@@ -50,6 +77,17 @@
             registryUrls: ["https://api.anaconda.org/package/conda-forge"],
         },
         {
+            commitMessageExtra: "upper bound refresh",
+            description: "Commit message and PR body for conda upper bound updates",
+            matchDatasources: ["conda"],
+            matchManagers: ["custom.regex"],
+            prBodyNotes: [
+                "This PR updates the upper bounds for conda package dependencies.",
+                "Please review the changes and ensure they don't break compatibility.",
+                "Run the full test suite before merging.",
+            ],
+        },
+        {
             commitMessageExtra: "upper bound refresh (preserves excludes)",
             description: "Custom commit message for packages with excludes",
             // Match any version string that contains != (version excludes)
@@ -59,6 +97,7 @@
         {
             description: "Run upper-bound helper for conda updates",
             matchManagers: ["custom.regex"],
+            matchDatasources: ["conda"],
             postUpgradeTasks: {
                 commands: [
                     "python3 scripts/maint/renovate_update_conda_upper_bounds.py --dep {{{depName}}} --new-version {{{newVersion}}}",
@@ -67,13 +106,18 @@
                 fileFilters: ["conda/**/conda_build_config.yaml"],
             },
         },
+        {
+            commitMessageExtra: "git ref refresh",
+            description: "Commit message and PR body for Realm/Legion git ref updates",
+            matchDatasources: ["git-refs"],
+            matchManagers: ["custom.regex"],
+            prBodyNotes: [
+                "This PR updates the pinned git SHA from the default branch.",
+                "Please review and run targeted tests as needed.",
+            ],
+        },
     ],
     prBodyColumns: ["Package", "Change"],
-    prBodyNotes: [
-        "This PR updates the upper bounds for conda package dependencies.",
-        "Please review the changes and ensure they don't break compatibility.",
-        "Run the full test suite before merging.",
-    ],
     prConcurrentLimit: 3,
     prCreation: "immediate",
     recreateWhen: "auto",
