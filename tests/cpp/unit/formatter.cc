@@ -86,6 +86,10 @@ class FormatLegionPrivilegeMode
   : public DefaultFixture,
     public ::testing::WithParamInterface<std::tuple<legion_privilege_mode_t, std::string_view>> {};
 
+class FormatStreamingMode
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::StreamingMode, std::string_view>> {};
+
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
   FormatType,
@@ -220,6 +224,13 @@ INSTANTIATE_TEST_SUITE_P(
                     std::make_tuple(LEGION_DISCARD_MASK, "LEGION_DISCARD_MASK"),
                     std::make_tuple(LEGION_DISCARD_OUTPUT_MASK, "LEGION_DISCARD_OUTPUT_MASK")));
 
+INSTANTIATE_TEST_SUITE_P(
+  FormatterUnit,
+  FormatStreamingMode,
+  ::testing::Values(std::make_tuple(legate::StreamingMode::OFF, "OFF"),
+                    std::make_tuple(legate::StreamingMode::RELAXED, "RELAXED"),
+                    std::make_tuple(legate::StreamingMode::STRICT, "STRICT")));
+
 template <typename>
 using FormatID = ::testing::Test;
 
@@ -292,6 +303,13 @@ TEST_P(FormatDLPackDeviceType, Basic)
 }
 
 TEST_P(FormatLegionPrivilegeMode, Basic)
+{
+  const auto& [format_obj, expect_result] = GetParam();
+
+  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
+TEST_P(FormatStreamingMode, Basic)
 {
   const auto& [format_obj, expect_result] = GetParam();
 

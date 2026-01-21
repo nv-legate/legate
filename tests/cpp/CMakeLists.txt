@@ -372,6 +372,7 @@ set(
   noinit/zip_equal.cc
   noinit/zip_shortest.cc
   noinit/delinearize.cc
+  noinit/unravel.cc
   noinit/argument_parsing/parse_args.cc
   noinit/argument_parsing/gpus.cc
   noinit/argument_parsing/fbmem.cc
