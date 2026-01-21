@@ -286,6 +286,11 @@ set(
   unit/physical_store/reduce_accessor.cc
   unit/physical_store/transform.cc
   unit/physical_store/write_accessor.cc
+  unit/redop/apply.cc
+  unit/redop/complex.cc
+  unit/redop/fold.cc
+  unit/redop/half.cc
+  unit/redop/identity.cc
   unit/scalar/create_primitive_scalar.cc
   unit/scalar/create_struct_scalar.cc
   unit/scalar/create_vector_scalar.cc
