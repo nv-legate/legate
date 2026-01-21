@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+name: Telemetry install reqs
+description: Installs gh and jq for telemetry
+
+inputs:
+  platform:
+    description: The platform to install the dependencies on
+    required: false
+    default: linux
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Telemetry install reqs
+      shell: bash
+      run: |
+        if command -v mamba &> /dev/null; then
+          echo "Using mamba to install gh and jq"
+          mamba install -y -c conda-forge gh jq
+        else
+          echo "Mamba not found, downloading binaries"
+
+          # Determine architecture based on platform
+          if [[ "${{ inputs.platform }}" == "linux-aarch64" ]]; then
+            GH_ARCH="arm64"
+            JQ_ARCH="arm64"
+          else
+            GH_ARCH="amd64"
+            JQ_ARCH="amd64"
+          fi
+
+          # Download and install gh (GitHub CLI)
+          GH_VERSION="2.83.2"
+          curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${GH_ARCH}.tar.gz" | \
+            tar -xz -C /tmp
+          mv "/tmp/gh_${GH_VERSION}_linux_${GH_ARCH}/bin/gh" /usr/local/bin/
+
+          # Download and install jq
+          JQ_VERSION="1.7.1"
+          curl -fsSL "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-${JQ_ARCH}" \
+            -o /tmp/jq
+          mv /tmp/jq /usr/local/bin/jq
+          chmod +x /usr/local/bin/jq
+        fi

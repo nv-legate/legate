@@ -94,6 +94,15 @@ jobs:
     container:
       image: rapidsai/ci-wheel:cuda${{ inputs.cuda_ver }}-${{ inputs.linux_ver }}-py${{ matrix.PY_VER }}
     steps:
+      - name: Telemetry setup
+        uses: rapidsai/shared-actions/telemetry-dispatch-setup@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        with:
+          extra_attributes: "legate.PACKAGER=conda,legate.CUDA_VER=${{ inputs.cuda_ver }},legate.PY_VER=${{ matrix.PY_VER }},legate.ARCH=${{ matrix.ARCH }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Get the SHA
         id: get-sha
         run: |
@@ -144,3 +153,9 @@ jobs:
         with:
           name: legate-wheel-${{ env.BUILD_NAME }}
           path: final-dist/*.whl
+      - name: Telemetry upload attributes
+        uses: rapidsai/shared-actions/telemetry-dispatch-stash-job-artifacts@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        env:
+          GH_TOKEN: ${{ github.token }}

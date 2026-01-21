@@ -19,6 +19,9 @@ on:
       matrix_filter:
         type: string
         default: "."
+      platform:
+        type: string
+        default: "linux"
 
 defaults:
   run:
@@ -86,6 +89,22 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Telemetry install reqs
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        uses: ./.github/actions/telemetry-install-reqs
+        with:
+          platform: ${{ inputs.platform }}
+
+      - name: Telemetry setup
+        uses: rapidsai/shared-actions/telemetry-dispatch-setup@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        with:
+          extra_attributes: "legate.PACKAGER=conda,legate.GCC_VER=${{ matrix.GCC_VER }},legate.BUILD_MODE=${{ matrix.BUILD_MODE }},legate.ARCH=${{ matrix.ARCH }}, legate.TYPE=cpu"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Add default paths to the env
         run: |
           tools_dir="$(pwd)/continuous_integration/scripts/tools"
@@ -144,3 +163,9 @@ jobs:
 
       - name: Run C++ unit tests
         run: ${{ inputs.script }}
+      - name: Telemetry upload attributes
+        uses: rapidsai/shared-actions/telemetry-dispatch-stash-job-artifacts@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        env:
+          GH_TOKEN: ${{ github.token }}

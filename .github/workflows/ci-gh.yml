@@ -22,6 +22,16 @@ on:
   merge_group:
 
 jobs:
+  telemetry-setup:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    env:
+      OTEL_SERVICE_NAME: 'cigh-legate'
+    steps:
+      - name: Telemetry setup
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' }}
+        uses: rapidsai/shared-actions/telemetry-dispatch-stash-base-env-vars@main
+
   build-and-test:
     strategy:
       fail-fast: false
@@ -36,6 +46,7 @@ jobs:
           - release
     uses:
       ./.github/workflows/gh-build-and-test.yml
+    needs: [telemetry-setup]
     with:
       build-mode: ${{ matrix.build-mode }}
       build-type: ci
@@ -58,3 +69,16 @@ jobs:
       - name: Check job results
         if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1
+
+  telemetry-summarize:
+    # This job must use a self-hosted runner to record telemetry traces as the telemetry service is not available on GitHub-hosted runners.
+    runs-on: linux-amd64-cpu4
+    needs: [telemetry-setup, tests-pass]
+    if: ${{ vars.TELEMETRY_ENABLED == 'true' && !cancelled() }}
+    continue-on-error: true
+    steps:
+      - name: Telemetry summarize
+        uses: rapidsai/shared-actions/telemetry-dispatch-summarize@main
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OTEL_SERVICE_NAME: 'cigh-legate'

@@ -20,6 +20,9 @@ on:
       matrix_filter:
         type: string
         default: "."
+      platform:
+        type: string
+        default: "linux"
 
 defaults:
   run:
@@ -94,6 +97,22 @@ jobs:
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
 
       - uses: actions/checkout@v6
+
+      - name: Telemetry install reqs
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        uses: ./.github/actions/telemetry-install-reqs
+        with:
+          platform: ${{ inputs.platform }}
+
+      - name: Telemetry setup
+        uses: rapidsai/shared-actions/telemetry-dispatch-setup@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        with:
+          extra_attributes: "legate.PACKAGER=conda,legate.GCC_VER=${{ matrix.GCC_VER }},legate.BUILD_MODE=${{ matrix.BUILD_MODE }},legate.ARCH=${{ matrix.ARCH }}, legate.TYPE=cpu"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Add default paths to the env
         run: |
@@ -203,3 +222,9 @@ jobs:
           # recompress it.
           compression-level: 0
           path: build.tgz
+      - name: Telemetry upload attributes
+        uses: rapidsai/shared-actions/telemetry-dispatch-stash-job-artifacts@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        env:
+          GH_TOKEN: ${{ github.token }}

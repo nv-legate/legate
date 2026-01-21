@@ -22,13 +22,24 @@ defaults:
     shell: bash
 
 jobs:
+  telemetry-setup:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    env:
+      OTEL_SERVICE_NAME: 'pr-legate'
+    steps:
+      - name: Telemetry setup
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' }}
+        uses: rapidsai/shared-actions/telemetry-dispatch-stash-base-env-vars@main
+
   source-build-cpu:
     secrets: inherit
     uses: ./.github/workflows/source-build-cpu.yml
+    needs: [telemetry-setup]
     with:
       build-type: pull-request
   source-test-cpu:
-    needs: source-build-cpu
+    needs: [source-build-cpu, telemetry-setup]
     secrets: inherit
     uses: ./.github/workflows/source-test-cpu.yml
     with:
@@ -37,10 +48,11 @@ jobs:
   source-build-gpu:
     secrets: inherit
     uses: ./.github/workflows/source-build-gpu.yml
+    needs: [telemetry-setup]
     with:
       build-type: pull-request
   source-test-gpu:
-    needs: source-build-gpu
+    needs: [source-build-gpu, telemetry-setup]
     secrets: inherit
     uses: ./.github/workflows/source-test-gpu.yml
     with:
@@ -49,11 +61,12 @@ jobs:
   wheels-build:
     secrets: inherit
     uses: ./.github/workflows/wheels-build.yml
+    needs: [telemetry-setup]
     with:
       build-type: pull-request
       matrix_filter: group_by(.ARCH) | map(max_by(.PY_VER|split(".")|map(tonumber)))
   wheels-test:
-    needs: wheels-build
+    needs: [wheels-build, telemetry-setup]
     secrets: inherit
     uses: ./.github/workflows/wheels-test.yml
     with:
@@ -63,6 +76,7 @@ jobs:
     name: wheels-mac (optional)
     secrets: inherit
     uses: ./.github/workflows/wheels-mac.yml
+    needs: [telemetry-setup]
     with:
       build-type: pull-request
       matrix_filter: '[max_by(.PY_VER|split(".")|map(tonumber))]'
@@ -80,3 +94,16 @@ jobs:
       - name: Check job results
         if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1
+
+  telemetry-summarize:
+    # This job must use a self-hosted runner to record telemetry traces as the telemetry service is not available on GitHub-hosted runners.
+    runs-on: linux-amd64-cpu4
+    needs: [telemetry-setup, source-tests-pass, wheels-mac]
+    if: ${{ vars.TELEMETRY_ENABLED == 'true' && !cancelled() }}
+    continue-on-error: true
+    steps:
+      - name: Telemetry summarize
+        uses: rapidsai/shared-actions/telemetry-dispatch-summarize@main
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OTEL_SERVICE_NAME: 'pr-legate'
