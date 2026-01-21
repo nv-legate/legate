@@ -363,12 +363,25 @@ class AllocateType : public RegisterOnceFixture<Config>,
                      public ::testing::WithParamInterface<
                        std::tuple<std::size_t, legate::Type::Code, legate::Memory::Kind>> {};
 
-INSTANTIATE_TEST_SUITE_P(
-  ScopedAllocatorUnit,
-  AllocateType,
-  ::testing::Combine(::testing::Values(0, ALLOCATE_BYTES),
-                     ::testing::Values(legate::Type::Code::BOOL, legate::Type::Code::COMPLEX128),
-                     ::testing::Values(legate::Memory::NO_MEMKIND, legate::Memory::SYSTEM_MEM)));
+INSTANTIATE_TEST_SUITE_P(ScopedAllocatorUnit,
+                         AllocateType,
+                         ::testing::Combine(::testing::Values(0, ALLOCATE_BYTES),
+                                            ::testing::Values(legate::Type::Code::BOOL,
+                                                              legate::Type::Code::INT8,
+                                                              legate::Type::Code::INT16,
+                                                              legate::Type::Code::INT32,
+                                                              legate::Type::Code::INT64,
+                                                              legate::Type::Code::UINT8,
+                                                              legate::Type::Code::UINT16,
+                                                              legate::Type::Code::UINT32,
+                                                              legate::Type::Code::UINT64,
+                                                              legate::Type::Code::FLOAT16,
+                                                              legate::Type::Code::FLOAT32,
+                                                              legate::Type::Code::FLOAT64,
+                                                              legate::Type::Code::COMPLEX64,
+                                                              legate::Type::Code::COMPLEX128),
+                                            ::testing::Values(legate::Memory::NO_MEMKIND,
+                                                              legate::Memory::SYSTEM_MEM)));
 
 namespace {
 
