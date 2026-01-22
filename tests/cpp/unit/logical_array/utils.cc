@@ -15,8 +15,7 @@ legate::LogicalArray create_array_with_type(const legate::Type& type,
                                             bool nullable,
                                             bool optimize_scalar)
 {
-  auto runtime               = legate::Runtime::get_runtime();
-  constexpr auto UNBOUND_DIM = 1;
+  auto runtime = legate::Runtime::get_runtime();
 
   if (bound) {
     const auto shape = type.variable_size() ? legate::Shape{10} : legate::Shape{1, 2, 3, 4};

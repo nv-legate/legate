@@ -227,7 +227,10 @@ set(
   unit/timing.cc
   unit/buffer/typed_buffer.cc
   unit/buffer/task_local_buffer.cc
-  unit/logical_array/create_array.cc
+  unit/logical_array/create_list_array.cc
+  unit/logical_array/create_primitive_array.cc
+  unit/logical_array/create_string_array.cc
+  unit/logical_array/create_struct_array.cc
   unit/logical_array/delinearize.cc
   unit/logical_array/project.cc
   unit/logical_array/promote.cc
