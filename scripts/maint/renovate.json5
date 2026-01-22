@@ -68,7 +68,6 @@
     extends: ["config:recommended", ":disableRateLimiting"],
     enabledManagers: ["custom.regex"],
     labels: ["Build"],
-    onboarding: false,
     packageRules: [
         {
             description: "Use conda-forge for conda upper bound lookups",
