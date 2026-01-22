@@ -68,7 +68,7 @@ ucx_version:
   - ">=1.19.0,<1.20"
 
 libcufile_version:
-  - ">=1.0,<1.16"
+  - ">=1.0,<1.17"
 
 nccl_version:
   # Exclude NCCL versions known to cause issues.
