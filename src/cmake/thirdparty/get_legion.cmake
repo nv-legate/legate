@@ -56,6 +56,8 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           "Legion_UCX_DYNAMIC_LOAD ON"
                           # We never want local fields
                           "Legion_DEFAULT_LOCAL_FIELDS 0"
+                          "Legion_MAX_DIM ${Legion_MAX_DIM}"
+                          "Legion_MAX_FIELDS ${Legion_MAX_FIELDS}"
                           "Legion_HIJACK_CUDART OFF"
                           "Legion_BUILD_BINDINGS OFF"
                           "Legion_EMBED_GASNet_CONFIGURE_ARGS ${Legion_EMBED_GASNet_CONFIGURE_ARGS}"
