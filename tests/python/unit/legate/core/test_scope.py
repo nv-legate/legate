@@ -230,6 +230,26 @@ class TestScope:
         assert Scope.machine() == old_machine
 
 
+class TestScopeErrors:
+    def test_nest_same_scope_obj(self) -> None:
+        msg = "Each Scope object can be used only once as a context manager"
+        scope = Scope()
+
+        with pytest.raises(ValueError, match=msg), scope, scope:
+            pass
+
+    @pytest.mark.xfail(reason="issue-3323, reuse works")
+    def test_reuse_scope_obj(self) -> None:
+        msg = "Each Scope object can be used only once as a context manager"
+        scope = Scope()
+        with scope:
+            pass
+
+        # TODO(yimoj) [issue-3323] this is currently allowed
+        with pytest.raises(ValueError, match=msg), scope:
+            pass
+
+
 if __name__ == "__main__":
     import sys
 

@@ -23,6 +23,8 @@ cdef class ParallelPolicy:
             The overdecomposition factor.
             Default = 1
         """
+        if overdecompose_factor < 1:
+            raise ValueError("overdecompose_factor must be 1 or more")
         self._handle = _ParallelPolicy()
         self.streaming_mode = streaming_mode
         self.overdecompose_factor = overdecompose_factor

@@ -26,7 +26,10 @@ import pytest
 from legate.core import (
     ImageComputationHint,
     LogicalArray,
+    ParallelPolicy,
     Scalar,
+    Scope,
+    StreamingMode,
     TaskConfig,
     TaskTarget,
     Type,
@@ -676,6 +679,89 @@ class TestPyTask:
         result_arr = np.asarray(sum_output_store.get_physical_store())
         expected_arr = np.full(shape, 3, dtype=np.int32)
         np.testing.assert_allclose(result_arr, expected_arr)
+
+    @pytest.mark.parametrize(
+        "mode", [StreamingMode.OFF, StreamingMode.RELAXED], ids=repr
+    )
+    @pytest.mark.parametrize("factor", [1, 2, 43])
+    def test_parallel_tasks_with_scalar(
+        self, mode: StreamingMode, factor: int
+    ) -> None:
+        shape = (100, 10, 100)
+        arr1, store1 = utils.create_np_array_and_store(
+            ty.int32, shape, func=np.zeros
+        )
+        arr2, store2 = utils.create_np_array_and_store(
+            ty.int32, shape, func=np.zeros
+        )
+
+        class Counter:
+            def __init__(self, start: int) -> None:
+                self.idx = start
+
+            def increment(self) -> int:
+                self.idx += 1
+                return self.idx
+
+        counters = {1: Counter(0), 2: Counter(1024)}
+
+        @task(variants=tuple(VariantCode))
+        def fill_task(out: OutputStore, counter: int) -> None:
+            out_arr = tasks.asarray(out)
+            out_arr[:] = counters[counter].increment()
+
+        with Scope(
+            parallel_policy=ParallelPolicy(
+                streaming_mode=mode, overdecompose_factor=factor
+            )
+        ):
+            fill_task(store1, 1)
+            fill_task(store2, 2)
+
+        get_legate_runtime().issue_execution_fence(block=True)
+        assert (arr1 <= counters[1].idx).all()
+        assert (arr2 <= counters[2].idx).all()
+
+    @pytest.mark.parametrize(
+        "mode", [StreamingMode.OFF, StreamingMode.RELAXED], ids=repr
+    )
+    @pytest.mark.parametrize("factor", [1, 2, 43])
+    def test_parallel_tasks(self, mode: StreamingMode, factor: int) -> None:
+        runtime = get_legate_runtime()
+        subregions = len(runtime.machine) * factor
+        shape = (2 * subregions,)
+        arr1 = np.arange(2 * subregions)
+        store1 = runtime.create_store_from_buffer(
+            ty.int64, shape, arr1, read_only=False
+        )
+        out1 = runtime.create_store(ty.int64, shape)
+        out2 = runtime.create_store(ty.int64, shape)
+
+        with Scope(
+            parallel_policy=ParallelPolicy(
+                overdecompose_factor=factor, streaming_mode=mode
+            )
+        ):
+            assert Scope.parallel_policy().streaming_mode == mode
+            assert Scope.parallel_policy().overdecompose_factor == factor
+            tasks.copy_store_task(store1, out1)
+            tasks.zeros_task(out2)
+
+        get_legate_runtime().issue_execution_fence(block=True)
+        np.testing.assert_allclose(np.asarray(out1), arr1)
+        assert np.all(np.asarray(out2) == 0)
+
+    def test_flush_scheduling_within_stream(self) -> None:
+        msg = "flush_scheduling_window called from inside a streaming scope"
+        with (
+            Scope(
+                parallel_policy=ParallelPolicy(
+                    streaming_mode=StreamingMode.STRICT, overdecompose_factor=2
+                )
+            ),
+            pytest.raises(ValueError, match=msg),
+        ):
+            get_legate_runtime().issue_execution_fence(block=True)
 
 
 if __name__ == "__main__":
