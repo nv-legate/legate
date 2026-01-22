@@ -60,7 +60,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@v44.2.4
+        uses: renovatebot/github-action@v44.2.5
         env:
           LOG_LEVEL: ${{ steps.config.outputs.log_level }}
           RENOVATE_DRY_RUN: ${{ steps.config.outputs.dry_run }}
