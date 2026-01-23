@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -52,8 +53,12 @@ void test_array_data(legate::PhysicalStore& store,
   ASSERT_EQ(store.dim(), dim);
   ASSERT_EQ(store.type().code(), code);
   if (is_unbound) {
-    ASSERT_THROW(static_cast<void>(store.shape<1>()), std::invalid_argument);
-    ASSERT_THROW(static_cast<void>(store.domain()), std::invalid_argument);
+    ASSERT_THAT([&]() { static_cast<void>(store.shape<1>()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+    ASSERT_THAT([&]() { static_cast<void>(store.domain()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
   }
 }
 
@@ -78,8 +83,12 @@ void test_array_data(legate::PhysicalStore& store,
   ASSERT_EQ(array.type(), legate::string_type());
   ASSERT_TRUE(array.nested());
   if (unbound) {
-    ASSERT_THROW(static_cast<void>(array.shape<DIM>()), std::invalid_argument);
-    ASSERT_THROW(static_cast<void>(array.domain()), std::invalid_argument);
+    ASSERT_THAT([&]() { static_cast<void>(array.shape<DIM>()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+    ASSERT_THAT([&]() { static_cast<void>(array.domain()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
   }
 
   if (nullable) {
@@ -87,13 +96,19 @@ void test_array_data(legate::PhysicalStore& store,
 
     if (null_mask.is_unbound_store()) {
       ASSERT_NO_THROW(null_mask.bind_empty_data());
-      ASSERT_THROW(static_cast<void>(null_mask.shape<DIM>()), std::invalid_argument);
-      ASSERT_THROW(static_cast<void>(null_mask.domain()), std::invalid_argument);
+      ASSERT_THAT([&]() { static_cast<void>(null_mask.shape<DIM>()); },
+                  ::testing::ThrowsMessage<std::invalid_argument>(
+                    ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+      ASSERT_THAT([&]() { static_cast<void>(null_mask.domain()); },
+                  ::testing::ThrowsMessage<std::invalid_argument>(
+                    ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
     }
     ASSERT_EQ(null_mask.type(), legate::bool_());
     ASSERT_EQ(null_mask.dim(), array.dim());
   } else {
-    ASSERT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    ASSERT_THAT([&]() { static_cast<void>(array.null_mask()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr(
+                  "Invalid to retrieve the null mask of a non-nullable array")));
   }
 
   test_array_data(ranges_store, unbound, legate::Type::Code::STRUCT, DIM);
@@ -113,8 +128,12 @@ void test_array_data(legate::PhysicalStore& store,
   test_array_data(descriptor_store, unbound, legate::Type::Code::STRUCT, DIM);
   test_array_data(vardata_store, /*is_unbound=*/true, legate::Type::Code::INT8, DIM);
 
-  ASSERT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
-  ASSERT_THROW(static_cast<void>(array.child(-1)), std::out_of_range);
+  ASSERT_THAT([&]() { static_cast<void>(array.child(2)); },
+              ::testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("List array does not have child 2")));
+  ASSERT_THAT([&]() { static_cast<void>(array.child(-1)); },
+              ::testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("List array does not have child")));
 }
 
 void test_create_string_array_task(legate::LogicalArray& logical_array, bool nullable, bool unbound)

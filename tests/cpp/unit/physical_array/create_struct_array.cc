@@ -6,6 +6,10 @@
 
 #include <legate.h>
 
+#include <legate/data/detail/physical_array.h>
+#include <legate/utilities/detail/small_vector.h>
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -46,7 +50,16 @@ INSTANTIATE_TEST_SUITE_P(
                     std::make_tuple(legate::Shape{1, 2, 4},
                                     legate::struct_type(false, legate::int64(), legate::float32()),
                                     true,
-                                    legate::Rect<3>{{0, 0, 0}, {0, 1, 3}})));
+                                    legate::Rect<3>{{0, 0, 0}, {0, 1, 3}}),
+                    // Non-nullable struct array test cases
+                    std::make_tuple(legate::Shape{1, 2, 4},
+                                    legate::struct_type(true, legate::int64(), legate::float32()),
+                                    false,
+                                    legate::Rect<3>{{0, 0, 0}, {0, 1, 3}}),
+                    std::make_tuple(legate::Shape{4, 5, 6},
+                                    legate::struct_type(false, legate::int64(), legate::float32()),
+                                    false,
+                                    legate::Rect<3>{{0, 0, 0}, {3, 4, 5}})));
 
 }  // namespace
 
@@ -65,7 +78,15 @@ TEST_P(BoundPhysicalStructArrayTest, Create)
   ASSERT_EQ(array.shape<DIM>(), bound_rect);
   ASSERT_EQ((array.domain().bounds<DIM, std::int64_t>()), bound_rect);
 
-  ASSERT_THROW(static_cast<void>(array.data()), std::invalid_argument);
+  // Test internal detail::PhysicalArray APIs
+  // Bound struct array is not unbound
+  ASSERT_FALSE(array.impl()->unbound());
+  // Bound struct array should be valid
+  ASSERT_TRUE(array.impl()->valid());
+
+  ASSERT_THAT([&]() { static_cast<void>(array.data()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Data store of a nested array cannot be retrieved")));
 
   if (nullable) {
     auto null_mask = array.null_mask();
@@ -75,7 +96,9 @@ TEST_P(BoundPhysicalStructArrayTest, Create)
     ASSERT_EQ(null_mask.type(), legate::bool_());
     ASSERT_EQ(null_mask.dim(), array.dim());
   } else {
-    ASSERT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    ASSERT_THAT([&]() { static_cast<void>(array.null_mask()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr(
+                  "Invalid to retrieve the null mask of a non-nullable array")));
   }
 
   auto field_subarray1 = array.child(0);
@@ -102,8 +125,12 @@ TEST_P(NullableCreateStructArrayTest, InvalidBoundStructArrayChild)
                           GetParam());
   auto array = logical_array.get_physical_array();
 
-  ASSERT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
-  ASSERT_THROW(static_cast<void>(array.child(-1)), std::out_of_range);
+  ASSERT_THAT(
+    [&]() { static_cast<void>(array.child(2)); },
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("inplace_vector::at")));
+  ASSERT_THAT(
+    [&]() { static_cast<void>(array.child(-1)); },
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("inplace_vector::at")));
 }
 
 TEST_P(NullableCreateStructArrayTest, InvalidCastBoundStructArray)
@@ -115,8 +142,12 @@ TEST_P(NullableCreateStructArrayTest, InvalidCastBoundStructArray)
                           GetParam());
   auto array = logical_array.get_physical_array();
 
-  ASSERT_THROW(static_cast<void>(array.as_list_array()), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(array.as_string_array()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(array.as_list_array()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Array is not a list array")));
+  ASSERT_THAT([&]() { static_cast<void>(array.as_string_array()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Array is not a string array")));
 }
 
 }  // namespace physical_array_create_struct_test

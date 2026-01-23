@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -13,6 +14,15 @@
 namespace physical_array_create_test {
 
 namespace {
+
+// Helper to extract DIM from Rect<DIM, CoordT>
+template <typename T>
+struct RectDim;
+
+template <std::int32_t D, typename CoordT>
+struct RectDim<Realm::Rect<D, CoordT>> {
+  static constexpr std::int32_t VALUE = D;
+};
 
 class UnboundArrayTask : public legate::LegateTask<UnboundArrayTask> {
  public:
@@ -39,9 +49,11 @@ class CreatePhysicalArrayUnit : public RegisterOnceFixture<Config> {};
 class NullableCreateArrayTest : public CreatePhysicalArrayUnit,
                                 public ::testing::WithParamInterface<bool> {};
 
+using BoundRectVariant = std::variant<legate::Rect<2>, legate::Rect<3>>;
+
 class BoundPhysicalArrayTest
   : public CreatePhysicalArrayUnit,
-    public ::testing::WithParamInterface<std::tuple<legate::Shape, bool, legate::Rect<2>>> {};
+    public ::testing::WithParamInterface<std::tuple<legate::Shape, bool, BoundRectVariant>> {};
 
 INSTANTIATE_TEST_SUITE_P(CreatePhysicalArrayUnit,
                          NullableCreateArrayTest,
@@ -50,8 +62,15 @@ INSTANTIATE_TEST_SUITE_P(CreatePhysicalArrayUnit,
 INSTANTIATE_TEST_SUITE_P(
   CreatePhysicalArrayUnit,
   BoundPhysicalArrayTest,
-  ::testing::Values(std::make_tuple(legate::Shape{2, 4}, true, legate::Rect<2>{{0, 0}, {1, 3}}),
-                    std::make_tuple(legate::Shape{2, 4}, false, legate::Rect<2>{{0, 0}, {1, 3}})));
+  ::testing::Values(
+    std::make_tuple(legate::Shape{2, 4}, true, BoundRectVariant{legate::Rect<2>{{0, 0}, {1, 3}}}),
+    std::make_tuple(legate::Shape{2, 4}, false, BoundRectVariant{legate::Rect<2>{{0, 0}, {1, 3}}}),
+    std::make_tuple(legate::Shape{2, 3, 4},
+                    true,
+                    BoundRectVariant{legate::Rect<3>{{0, 0, 0}, {1, 2, 3}}}),
+    std::make_tuple(legate::Shape{2, 3, 4},
+                    false,
+                    BoundRectVariant{legate::Rect<3>{{0, 0, 0}, {1, 2, 3}}})));
 
 /*static*/ void UnboundArrayTask::cpu_variant(legate::TaskContext context)
 {
@@ -68,14 +87,22 @@ INSTANTIATE_TEST_SUITE_P(
   ASSERT_EQ(array.dim(), DIM);
   ASSERT_EQ(array.type(), legate::uint32());
   ASSERT_FALSE(array.nested());
-  ASSERT_THROW(static_cast<void>(array.shape<DIM>()), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(array.domain()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(array.shape<DIM>()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+  ASSERT_THAT([&]() { static_cast<void>(array.domain()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
 
   ASSERT_TRUE(store.is_unbound_store());
   ASSERT_FALSE(store.is_future());
   ASSERT_EQ(store.dim(), DIM);
-  ASSERT_THROW(static_cast<void>(store.shape<DIM>()), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(store.domain()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(store.shape<DIM>()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+  ASSERT_THAT([&]() { static_cast<void>(store.domain()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
   ASSERT_EQ(store.type(), legate::uint32());
 
   if (nullable) {
@@ -84,53 +111,75 @@ INSTANTIATE_TEST_SUITE_P(
     ASSERT_TRUE(null_mask.is_unbound_store());
     ASSERT_NO_THROW(
       static_cast<void>(null_mask.create_output_buffer<bool, DIM>(legate::Point<DIM>{10}, true)));
-    ASSERT_THROW(static_cast<void>(null_mask.shape<DIM>()), std::invalid_argument);
-    ASSERT_THROW(static_cast<void>(null_mask.domain()), std::invalid_argument);
+    ASSERT_THAT([&]() { static_cast<void>(null_mask.shape<DIM>()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+    ASSERT_THAT([&]() { static_cast<void>(null_mask.domain()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
     ASSERT_EQ(null_mask.type(), legate::bool_());
     ASSERT_EQ(null_mask.dim(), array.dim());
   } else {
-    ASSERT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    ASSERT_THAT([&]() { static_cast<void>(array.null_mask()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr(
+                  "Invalid to retrieve the null mask of a non-nullable array")));
   }
-  ASSERT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(array.as_list_array()), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(array.as_string_array()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(array.child(0)); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Non-nested array has no child sub-array")));
+  ASSERT_THAT([&]() { static_cast<void>(array.as_list_array()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Array is not a list array")));
+  ASSERT_THAT([&]() { static_cast<void>(array.as_string_array()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Array is not a string array")));
 }
 
 }  // namespace
 
 TEST_P(BoundPhysicalArrayTest, Create)
 {
-  const auto [shape, nullable, bound_rect] = GetParam();
-  auto runtime                             = legate::Runtime::get_runtime();
-  auto type                                = legate::int64();
-  auto logical_array                       = runtime->create_array(shape, type, nullable);
-  auto array                               = logical_array.get_physical_array();
-  static constexpr std::int32_t DIM        = 2;
+  const auto [shape, nullable, bound_rect_variant] = GetParam();
+  auto runtime                                     = legate::Runtime::get_runtime();
+  auto type                                        = legate::int64();
+  auto logical_array                               = runtime->create_array(shape, type, nullable);
+  auto array                                       = logical_array.get_physical_array();
 
   ASSERT_EQ(array.nullable(), nullable);
-  ASSERT_EQ(array.dim(), DIM);
   ASSERT_EQ(array.type(), type);
   ASSERT_FALSE(array.nested());
-  ASSERT_EQ(array.shape<DIM>(), bound_rect);
-  ASSERT_EQ((array.domain().bounds<DIM, std::int64_t>()), bound_rect);
 
   auto store = array.data();
 
   ASSERT_FALSE(store.is_unbound_store());
   ASSERT_FALSE(store.is_future());
-  ASSERT_EQ(store.dim(), DIM);
-  ASSERT_EQ(store.shape<DIM>(), bound_rect);
   ASSERT_EQ(store.type(), type);
 
-  if (nullable) {
-    auto null_mask = array.null_mask();
+  const auto is_nullable = nullable;
+  std::visit(
+    [&, is_nullable](const auto& bound_rect) {
+      constexpr std::int32_t DIM = RectDim<std::decay_t<decltype(bound_rect)>>::VALUE;
+      ASSERT_EQ(array.dim(), DIM);
+      ASSERT_EQ(array.shape<DIM>(), bound_rect);
+      ASSERT_EQ((array.domain().bounds<DIM, std::int64_t>()), bound_rect);
+      ASSERT_EQ(store.dim(), DIM);
+      ASSERT_EQ(store.shape<DIM>(), bound_rect);
 
-    ASSERT_EQ(null_mask.shape<DIM>(), array.shape<DIM>());
-    ASSERT_EQ(null_mask.domain(), array.domain());
-    ASSERT_EQ(null_mask.type(), legate::bool_());
-    ASSERT_EQ(null_mask.dim(), array.dim());
-  } else {
-    ASSERT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+      if (is_nullable) {
+        auto null_mask = array.null_mask();
+
+        ASSERT_EQ(null_mask.shape<DIM>(), array.shape<DIM>());
+        ASSERT_EQ(null_mask.domain(), array.domain());
+        ASSERT_EQ(null_mask.type(), legate::bool_());
+        ASSERT_EQ(null_mask.dim(), array.dim());
+      }
+    },
+    bound_rect_variant);
+
+  if (!nullable) {
+    ASSERT_THAT([&]() { static_cast<void>(array.null_mask()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr(
+                  "Invalid to retrieve the null mask of a non-nullable array")));
   }
 }
 
@@ -140,7 +189,9 @@ TEST_P(NullableCreateArrayTest, InvalidBoundArrayChild)
   auto logical_array = runtime->create_array(legate::Shape{1, 3, 4}, legate::uint32(), GetParam());
   auto array         = logical_array.get_physical_array();
 
-  ASSERT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(array.child(0)); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Non-nested array has no child sub-array")));
 }
 
 TEST_P(NullableCreateArrayTest, InvalidCastBoundArray)
@@ -150,8 +201,12 @@ TEST_P(NullableCreateArrayTest, InvalidCastBoundArray)
     runtime->create_array(legate::Shape{1, 3, 4, 2}, legate::int32(), GetParam());
   auto array = logical_array.get_physical_array();
 
-  ASSERT_THROW(static_cast<void>(array.as_list_array()), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(array.as_string_array()), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(array.as_list_array()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Array is not a list array")));
+  ASSERT_THAT([&]() { static_cast<void>(array.as_string_array()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Array is not a string array")));
 }
 
 TEST_P(NullableCreateArrayTest, UnboundArray)
