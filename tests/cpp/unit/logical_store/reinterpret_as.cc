@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>
@@ -165,12 +166,28 @@ TEST_F(ReinterpretAs, Example)
   /// [Reinterpret store data]
 }
 
-TEST_F(LogicalStoreUnit, BadSize)
+TEST_F(ReinterpretAs, BadSize)
 {
   auto* runtime    = legate::Runtime::get_runtime();
   const auto store = runtime->create_store(legate::Shape{1}, legate::int32());
 
-  ASSERT_THROW(static_cast<void>(store.reinterpret_as(legate::int64())), std::invalid_argument);
+  ASSERT_THAT([&] { static_cast<void>(store.reinterpret_as(legate::int64())); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("size of the types must be equal")));
+}
+
+TEST_F(ReinterpretAs, BadAlignment)
+{
+  auto* runtime = legate::Runtime::get_runtime();
+  // int64 has size=8, alignment=8
+  const auto store = runtime->create_store(legate::Shape{1}, legate::int64());
+  // struct(int32, int32) with aligned=true has size=8, alignment=4
+  const auto struct_type = legate::struct_type(/*align=*/true, legate::int32(), legate::int32());
+
+  // Same size but different alignment should throw
+  ASSERT_THAT([&] { static_cast<void>(store.reinterpret_as(struct_type)); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("alignment of the types must be equal")));
 }
 
 }  // namespace logical_store_reinterpret_as_unit

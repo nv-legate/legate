@@ -6,6 +6,10 @@
 
 #include <legate.h>
 
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/logical_store_partition.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
+
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -74,21 +78,33 @@ INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                          ::testing::Values(std::vector<std::uint64_t>({}),
                                            std::vector<std::uint64_t>({1, 2, 3})));
 
+// For BoundStore (2D): tile_shape must be 2-tuple with volume = 0
 INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                          NegativePartitionVolumeTest,
-                         ::testing::Values(std::vector<std::uint64_t>({0}),
+                         ::testing::Values(std::vector<std::uint64_t>({0, 1}),
                                            std::vector<std::uint64_t>({1, 0}),
-                                           std::vector<std::uint64_t>({1, 2, 0})));
+                                           std::vector<std::uint64_t>({0, 0})));
 
 INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                          UnboundStorePartitionTest,
-                         ::testing::Values(std::vector<std::uint64_t>({}),
-                                           std::vector<std::uint64_t>({0})));
+                         ::testing::Values(std::vector<std::uint64_t>({1}),
+                                           std::vector<std::uint64_t>({2}),
+                                           std::vector<std::uint64_t>({1, 2})));
 
 INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                          ColorShapeDimensionSizeTest,
                          ::testing::Values(std::vector<std::uint64_t>({}),
                                            std::vector<std::uint64_t>({1, 2, 3})));
+
+class ColorShapeZeroVolumeTest : public LogicalStorePartitionUnit,
+                                 public ::testing::WithParamInterface<std::vector<std::uint64_t>> {
+};
+
+INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
+                         ColorShapeZeroVolumeTest,
+                         ::testing::Values(std::vector<std::uint64_t>({0, 1}),
+                                           std::vector<std::uint64_t>({1, 0}),
+                                           std::vector<std::uint64_t>({0, 0})));
 
 INSTANTIATE_TEST_SUITE_P(
   LogicalStorePartitionUnit,
@@ -155,13 +171,57 @@ TEST_F(LogicalStorePartitionUnit, ScalarStore)
   ASSERT_EQ(partition.color_shape().data(), std::vector<std::uint64_t>{1});
 }
 
+TEST_F(LogicalStorePartitionUnit, ScalarStoreCreateProjection)
+{
+  auto runtime                         = legate::Runtime::get_runtime();
+  constexpr std::uint64_t SCALAR_VALUE = 10;
+  auto store                           = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  const auto& internal_store           = store.impl();
+  auto no_partition                    = legate::detail::create_no_partition();
+
+  // Create partition for scalar store
+  auto store_partition = legate::detail::create_store_partition(internal_store, no_partition);
+
+  // create_store_projection for scalar store should return empty projection
+  auto projection = store_partition->create_store_projection(Legion::Domain{});
+
+  // Empty StoreProjection has no partition
+  ASSERT_FALSE(projection.partition.exists());
+}
+
+TEST_F(LogicalStorePartitionUnit, GetPlacementInfo)
+{
+  auto runtime   = legate::Runtime::get_runtime();
+  auto store     = runtime->create_store(legate::Shape{8, 8}, legate::int64());
+  auto partition = store.partition_by_tiling({2, 2});
+
+  // Call get_placement_info to cover the interface
+  auto placement_info = partition.get_placement_info();
+
+  // Verify placements is not empty
+  ASSERT_GT(placement_info.placements().size(), 0);
+}
+
 TEST_P(NegativePartitionSizeTest, BoundStore)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto store   = runtime->create_store(legate::Shape{4, 4}, legate::int64());
 
   // shape size mismatch
-  ASSERT_THROW(static_cast<void>(store.partition_by_tiling(GetParam())), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(GetParam())); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Incompatible tile shape: expected a 2-tuple, got a")));
+}
+
+TEST_P(NegativePartitionSizeTest, ScalarStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
+
+  // shape size mismatch
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(GetParam())); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Incompatible tile shape: expected a 1-tuple, got a")));
 }
 
 TEST_P(NegativePartitionVolumeTest, BoundStore)
@@ -170,7 +230,20 @@ TEST_P(NegativePartitionVolumeTest, BoundStore)
   auto store   = runtime->create_store(legate::Shape{4, 4}, legate::int64());
 
   // volume is 0
-  ASSERT_THROW(static_cast<void>(store.partition_by_tiling(GetParam())), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(GetParam())); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Tile shape must have a volume greater than 0")));
+}
+
+TEST_F(LogicalStorePartitionUnit, ScalarStoreVolumeZero)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
+
+  // Scalar store is 1D, so tile_shape must be 1-tuple with volume = 0
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling({0})); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Tile shape must have a volume greater than 0")));
 }
 
 TEST_P(ColorShapeDimensionSizeTest, BoundStore)
@@ -186,24 +259,6 @@ TEST_P(ColorShapeDimensionSizeTest, BoundStore)
                 ::testing::HasSubstr("Incompatible color shape: expected a 2-tuple, got a")));
 }
 
-TEST_P(NegativePartitionSizeTest, ScalarStore)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
-
-  // shape size mismatch
-  ASSERT_THROW(static_cast<void>(store.partition_by_tiling(GetParam())), std::invalid_argument);
-}
-
-TEST_P(NegativePartitionVolumeTest, ScalarStore)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
-
-  // volume is 0
-  ASSERT_THROW(static_cast<void>(store.partition_by_tiling(GetParam())), std::invalid_argument);
-}
-
 TEST_P(ColorShapeDimensionSizeTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -217,12 +272,29 @@ TEST_P(ColorShapeDimensionSizeTest, ScalarStore)
                 ::testing::HasSubstr("Incompatible color shape: expected a 1-tuple, got a")));
 }
 
+TEST_P(ColorShapeZeroVolumeTest, BoundStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{4, 4}, legate::int64());
+  std::vector<std::uint64_t> tile_shape{2, 2};
+  const auto& color_shape = GetParam();
+
+  // color shape volume is 0
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(tile_shape, color_shape)); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Color shape must have a volume greater than 0")));
+}
+
 TEST_P(UnboundStorePartitionTest, Basic)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::int64());
+  // Create unbound store with matching dimension
+  const auto dim = static_cast<std::uint32_t>(GetParam().size());
+  auto store     = runtime->create_store(legate::int64(), dim);
 
-  ASSERT_THROW(static_cast<void>(store.partition_by_tiling(GetParam())), std::invalid_argument);
+  ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(GetParam())); },
+              testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Illegal to access an uninitialized unbound store")));
 }
 
 TEST_P(ChildStoreTest, Basic)
@@ -252,12 +324,47 @@ TEST_P(ForcedColorChildStoreTest, Basic)
 
 TEST_P(NegativeColorTest, Basic)
 {
-  const auto [shape, color] = GetParam();
-  auto runtime              = legate::Runtime::get_runtime();
-  auto store                = runtime->create_store(shape, legate::int64());
-  auto partition            = store.partition_by_tiling({1, 4});
+  const auto& param      = GetParam();
+  const auto& shape      = std::get<0>(param);
+  const auto& test_color = std::get<1>(param);
+  auto runtime           = legate::Runtime::get_runtime();
+  auto store             = runtime->create_store(shape, legate::int64());
+  auto partition         = store.partition_by_tiling({1, 4});
 
-  ASSERT_THROW(static_cast<void>(partition.get_child_store(color)), std::out_of_range);
+  ASSERT_THAT([&]() { static_cast<void>(partition.get_child_store(test_color)); },
+              testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("is invalid for partition of color shape")));
+}
+
+TEST_F(LogicalStorePartitionUnit, UnboundStoreCreatePartition)
+{
+  auto runtime               = legate::Runtime::get_runtime();
+  auto store                 = runtime->create_store(legate::int64());
+  auto no_partition          = legate::detail::create_no_partition();
+  const auto& internal_store = store.impl();
+
+  ASSERT_THAT(
+    [&] {
+      static_cast<void>(legate::detail::create_store_partition(internal_store, no_partition));
+    },
+    testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Unbound store cannot be manually partitioned")));
+}
+
+TEST_F(LogicalStorePartitionUnit, GetChildStoreFromNonTilingPartition)
+{
+  auto runtime               = legate::Runtime::get_runtime();
+  auto store                 = runtime->create_store(legate::Shape{4, 4}, legate::int64());
+  auto no_partition          = legate::detail::create_no_partition();
+  const auto& internal_store = store.impl();
+
+  // Create a LogicalStorePartition with NoPartition (not Tiling)
+  auto store_partition = legate::detail::create_store_partition(internal_store, no_partition);
+
+  // get_child_store only supports Tiling partitions
+  ASSERT_THAT([&] { static_cast<void>(store_partition->get_child_store({0, 0})); },
+              testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("Child stores can be retrieved only from tile partitions")));
 }
 
 }  // namespace logical_store_partition_test

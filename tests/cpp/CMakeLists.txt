@@ -237,6 +237,7 @@ set(
   unit/logical_array/slice.cc
   unit/logical_array/transpose.cc
   unit/logical_array/utils.cc
+  unit/logical_store/broadcast.cc
   unit/logical_store/create_store.cc
   unit/logical_store/delinearize.cc
   unit/logical_store/equal_storage.cc
