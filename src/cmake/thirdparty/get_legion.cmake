@@ -71,6 +71,8 @@ function(
         "Legion_UCX_DYNAMIC_LOAD ON"
         # We never want local fields
         "Legion_DEFAULT_LOCAL_FIELDS 0"
+        "Legion_MAX_DIM ${Legion_MAX_DIM}"
+        "Legion_MAX_FIELDS ${Legion_MAX_FIELDS}"
         "Legion_HIJACK_CUDART OFF"
         "Legion_BUILD_BINDINGS OFF"
         "Legion_EMBED_GASNet_CONFIGURE_ARGS ${Legion_EMBED_GASNet_CONFIGURE_ARGS}"
@@ -82,6 +84,23 @@ function(
         "INSTALL_SUFFIX -legate"
         "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON"
   )
+
+  if(NOT CPM_Legion_SOURCE AND NOT Legion_ROOT AND NOT Legion_DIR)
+    if(
+      DEFINED CPM_PACKAGE_Legion_SOURCE_DIR
+      AND EXISTS "${CPM_PACKAGE_Legion_SOURCE_DIR}/VERSION"
+    )
+      file(READ "${CPM_PACKAGE_Legion_SOURCE_DIR}/VERSION" legion_version_actual)
+      string(STRIP "${legion_version_actual}" legion_version_actual)
+      string(REGEX REPLACE "^legion-" "" legion_version_actual "${legion_version_actual}")
+      if(NOT legion_version_actual VERSION_EQUAL version)
+        message(
+          FATAL_ERROR
+          "Legion version mismatch: expected ${version}, got ${legion_version_actual}"
+        )
+      endif()
+    endif()
+  endif()
 
   legate_export_variables(Legion)
   set_parent_scope(Legion_VERSION)
