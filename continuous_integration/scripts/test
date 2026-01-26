@@ -76,7 +76,7 @@ run_test_or_analysis() {
             rapids-logger "Executing python tests..."
 
             # Only test tooling here; runtime deps should come from the legate conda package.
-            test_libs=(openssh)
+            test_libs=(openssh openmpi)
 
             set +u
             # shellcheck disable=SC2154
