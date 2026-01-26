@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from legate.core import get_legate_runtime
 from legate.core.types import float32, float64, int32, int64
 from legate.io.hdf5 import to_file
-from legate.timing import time
+from legate.util.benchmark import benchmark_log
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -28,9 +28,8 @@ class BenchmarkResult(NamedTuple):
     """Results from a single benchmark write operation."""
 
     wall_time: float
-    legate_time: float
     mb: float
-    legate_throughput: float
+    throughput: float
 
 
 class AggregatedResult(NamedTuple):
@@ -40,7 +39,6 @@ class AggregatedResult(NamedTuple):
     dtype: str
     mb: float
     avg_wall_time: float
-    avg_legate_time: float
     avg_throughput: float
 
 
@@ -103,7 +101,7 @@ def parse_arguments() -> Namespace:
     parser.add_argument(
         "--iterations",
         type=int,
-        default=3,
+        default=1,
         help="number of iterations per configuration",
     )
     parser.add_argument(
@@ -154,11 +152,8 @@ def benchmark_write(
 
     legate_dtype = dtype_map[dtype_str]
 
-    # We use the wall time to measure the time taken by the local process.
-    # We use the legate time to measure the time taken by the Legate runtime
-    # to complete the write operation across all ranks.
+    # Start wall time measurement
     wall_start = pytime.time()
-    legate_start_us = time(units="us")
 
     # Creates an array with the given type and shape and fill it with a
     # constant value of 1. This array is written to a HDF5 file with
@@ -174,86 +169,15 @@ def benchmark_write(
     runtime.issue_execution_fence(block=True)
 
     wall_time = pytime.time() - wall_start
-    legate_time = (time(units="us") - legate_start_us) / 1e6
 
     # Calculate total number of elements
     total_elements = math.prod(shape)
 
     mb_written = total_elements * legate_dtype.size / (1024 * 1024)
-    legate_throughput = mb_written / legate_time if legate_time > 0 else 0
+    throughput = mb_written / wall_time if wall_time > 0 else 0
 
     return BenchmarkResult(
-        wall_time=wall_time,
-        legate_time=legate_time,
-        mb=mb_written,
-        legate_throughput=legate_throughput,
-    )
-
-
-def benchmark_configuration(
-    shape: tuple[int, ...], dtype_str: str, output_dir: Path, iterations: int
-) -> AggregatedResult:
-    """
-    Benchmark a specific shape/dtype configuration.
-
-    Parameters
-    ----------
-    shape : tuple[int, ...]
-        Array shape to benchmark.
-    dtype_str : str
-        Data type to benchmark.
-    output_dir : Path
-        Directory for output files.
-    iterations : int
-        Number of iterations to run.
-
-    Returns
-    -------
-    AggregatedResult
-        Named tuple containing aggregated benchmark results.
-    """
-    shape_str = "x".join(f"{dim:,}" for dim in shape)
-    print(f"Benchmarking shape={shape_str}, dtype={dtype_str}")
-
-    iter_results = []
-    for iteration in range(iterations):
-        output_file = (
-            output_dir
-            / f"benchmark_{shape_str}_{dtype_str}_iter{iteration}.h5"
-        )
-
-        result = benchmark_write(output_file, shape, dtype_str)
-        iter_results.append(result)
-
-        print(
-            f"  Iteration {iteration + 1}: "
-            f"Wall={result.wall_time:.3f}s, "
-            f"Legate={result.legate_time:.3f}s, "
-            f"Throughput={result.legate_throughput:.2f} MB/s"
-        )
-
-    # Calculate averages
-    avg_wall = sum(r.wall_time for r in iter_results) / len(iter_results)
-    avg_legate = sum(r.legate_time for r in iter_results) / len(iter_results)
-    avg_throughput = sum(r.legate_throughput for r in iter_results) / len(
-        iter_results
-    )
-    mb_written = iter_results[0].mb
-
-    print(
-        f"  Average: Wall={avg_wall:.3f}s, "
-        f"Legate={avg_legate:.3f}s, "
-        f"Throughput={avg_throughput:.2f} MB/s"
-    )
-    print()
-
-    return AggregatedResult(
-        shape=shape,
-        dtype=dtype_str,
-        mb=mb_written,
-        avg_wall_time=avg_wall,
-        avg_legate_time=avg_legate,
-        avg_throughput=avg_throughput,
+        wall_time=wall_time, mb=mb_written, throughput=throughput
     )
 
 
@@ -261,55 +185,68 @@ def run_benchmarks(args: Namespace) -> None:
     """Run all benchmark configurations."""
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(BIG_BANNER)
-    print("HDF5 WRITE BENCHMARK")
-    print(BIG_BANNER)
-    print(f"Output directory: {args.output_dir}")
+    shape_str = "x".join(str(dim) for dim in args.shape)
 
-    shape_str = f"({','.join(str(dim) for dim in args.shape)})"
+    # Define columns for the benchmark log
+    columns = ["dtype", "iteration", "mb", "wall_time_s", "throughput_mb_s"]
 
-    print(f"Shape: {shape_str}")
-    print(f"Data types: {args.dtypes}")
-    print(f"Iterations per config: {args.iterations}")
-    print(BIG_BANNER)
-    print()
+    # Additional metadata specific to this benchmark
+    metadata = {
+        "Benchmark Config": {
+            "Shape": shape_str,
+            "Data Types": ", ".join(args.dtypes),
+            "Iterations": args.iterations,
+            "Output Directory": str(args.output_dir),
+        }
+    }
 
-    results = []
+    results: list[AggregatedResult] = []
 
-    for dtype_str in args.dtypes:
-        result = benchmark_configuration(
-            args.shape, dtype_str, args.output_dir, args.iterations
-        )
-        results.append(result)
+    with benchmark_log(
+        f"hdf5_write_{shape_str}", columns=columns, metadata=metadata
+    ) as blog:
+        for dtype_str in args.dtypes:
+            iter_results: list[BenchmarkResult] = []
 
-    print(BIG_BANNER)
-    print("BENCHMARK SUMMARY")
-    print(BIG_BANNER)
-    print(
-        f"{'Shape':>15} {'Type':>8} {'MB':>10} {'Wall(s)':>10} "
-        f"{'Legate(s)':>10} {'Throughput':>12}"
-    )
-    print("-" * 85)
+            for iteration in range(args.iterations):
+                # Use underscores in filename instead of commas for portability
+                safe_shape_str = "x".join(str(dim) for dim in args.shape)
+                filename = (
+                    f"benchmark_{safe_shape_str}_{dtype_str}_"
+                    f"iter{iteration}.h5"
+                )
+                output_file = args.output_dir / filename
 
-    for r in results:
-        shape_str = "x".join(f"{dim:,}" for dim in r.shape)
-        print(
-            f"{shape_str:>15} {r.dtype:>8} {r.mb:10.2f} "
-            f"{r.avg_wall_time:10.3f} {r.avg_legate_time:10.3f} "
-            f"{r.avg_throughput:10.2f} MB/s"
-        )
+                result = benchmark_write(output_file, args.shape, dtype_str)
+                iter_results.append(result)
 
-    print(BIG_BANNER)
+                # Log each iteration to the benchmark framework
+                blog.log(
+                    dtype=dtype_str,
+                    iteration=iteration,
+                    mb=f"{result.mb:.2f}",
+                    wall_time_s=f"{result.wall_time:.3f}",
+                    throughput_mb_s=f"{result.throughput:.2f}",
+                )
 
-    # Find best performance
-    if results:
-        best = max(results, key=lambda x: x.avg_throughput)
-        shape_str = "x".join(f"{dim:,}" for dim in best.shape)
+            # Calculate averages for this dtype
+            avg_wall = sum(r.wall_time for r in iter_results) / len(
+                iter_results
+            )
+            avg_throughput = sum(r.throughput for r in iter_results) / len(
+                iter_results
+            )
+            mb_written = iter_results[0].mb
 
-        print(
-            f"\nBest throughput: {best.avg_throughput:.2f} MB/s "
-            f"(shape={shape_str}, dtype={best.dtype})"
-        )
+            results.append(
+                AggregatedResult(
+                    shape=args.shape,
+                    dtype=dtype_str,
+                    mb=mb_written,
+                    avg_wall_time=avg_wall,
+                    avg_throughput=avg_throughput,
+                )
+            )
 
 
 def main() -> None:
