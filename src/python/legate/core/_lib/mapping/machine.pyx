@@ -250,7 +250,7 @@ cdef class ProcessorRange:
     def __eq__(self, other: ProcessorRange) -> bool:
         if isinstance(other, ProcessorRange):
             return self._handle == other._handle
-        return NotImplemented
+        return NotImplemented  # pragma: no cover
 
     def __ne__(self, other: ProcessorRange) -> bool:
         return not (self._handle == other._handle)
@@ -258,7 +258,7 @@ cdef class ProcessorRange:
     def __lt__(self, other: ProcessorRange) -> bool:
         if isinstance(other, ProcessorRange):
             return self._handle < other._handle
-        return NotImplemented
+        return NotImplemented  # pragma: no cover
 
 
 cdef class Machine:
@@ -526,7 +526,7 @@ cdef class Machine:
             with nogil:
                 ret = self._handle == other._handle
             return ret
-        return NotImplemented
+        return NotImplemented  # pragma: no cover
 
     def __ne__(self, other: Machine) -> bool:
         return not self == other

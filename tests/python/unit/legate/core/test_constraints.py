@@ -77,8 +77,23 @@ class TestVariable:
         # for code coverage purposes
         assert repr(variable_x) == str(variable_x)
 
+    def test_direct_construction(self) -> None:
+        msg = "Variable objects must not be constructed directly"
+        with pytest.raises(ValueError, match=msg):
+            Variable()
+
 
 class TestAlign:
+    def test_empty_args(self) -> None:
+        # align() with 0 or 1 variables returns empty list
+        assert lg.align() == []
+        assert lg.align("x") == []
+
+    def test_invalid_type(self) -> None:
+        # align() with invalid first argument type should raise TypeError
+        with pytest.raises(TypeError, match=re.escape(repr(int))):
+            lg.align(123, 456)  # type: ignore[call-overload]
+
     def test_create_from_str(self) -> None:
         constraint = lg.align("x", "y")
         assert len(constraint) == 1
@@ -219,6 +234,14 @@ class TestBroadcast:
         ):
             lg.broadcast("x", 1)  # type: ignore[call-overload]
 
+    def test_create_bad_variadic_type(self, variable_x: Variable) -> None:
+        # When using variadic signature, passing an invalid type should raise
+        with pytest.raises(TypeError, match=re.escape(repr(int))):
+            lg.broadcast(variable_x, variable_x, 123)  # type: ignore[call-overload]
+
+        with pytest.raises(TypeError, match=re.escape(repr(int))):
+            lg.broadcast("x", "y", 123)  # type: ignore[call-overload]
+
 
 class TestImage:
     def test_create_from_str(self) -> None:
@@ -335,6 +358,16 @@ class TestScale:
                 "asdasd",
                 variable_x,  # type: ignore[call-overload]
             )
+
+    def test_negative_factor(
+        self, variable_x: Variable, variable_y: Variable
+    ) -> None:
+        # Negative factors trigger OverflowError -> ValueError conversion
+        # in tuple_from_iterable (utils.pyx)
+        with pytest.raises(
+            ValueError, match=re.escape("Extent must be a positive number")
+        ):
+            lg.scale((-1,), variable_x, variable_y)
 
 
 OFFSETS: tuple[tuple[int, ...], ...] = ((), (1,), (2, 3, 4))

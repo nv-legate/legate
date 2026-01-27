@@ -135,6 +135,14 @@ class TestProcessorRange:
         assert not r1 < r4
         assert not r1 > r4
 
+    def test_comparison_with_non_processor_range(self) -> None:
+        r = ProcessorRange.create(low=1, high=3, per_node_count=4)
+        msg = "Argument 'other' has incorrect type"
+        with pytest.raises(TypeError, match=msg):
+            _ = r == "not a range"
+        with pytest.raises(TypeError, match=msg):
+            _ = r < "not a range"
+
 
 CPU_RANGE = ProcessorRange.create(low=1, high=3, per_node_count=4)
 OMP_RANGE = ProcessorRange.create(low=0, high=3, per_node_count=2)
@@ -177,6 +185,15 @@ class TestMachine:
             }
         )
         assert m1 == m4
+
+    def test_eq_with_non_machine(self) -> None:
+        m = Machine({TaskTarget.CPU: CPU_RANGE})
+        msg = re.escape(
+            "Argument 'other' has incorrect type "
+            "(expected legate.core._lib.mapping.machine.Machine, got str)"
+        )
+        with pytest.raises(TypeError, match=msg):
+            _ = m == "not a machine"
 
     @pytest.mark.parametrize("n", range(1, len(RANGES) + 1))
     def test_preferred_target(self, n: int) -> None:
