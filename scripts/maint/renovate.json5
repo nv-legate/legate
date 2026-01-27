@@ -115,6 +115,24 @@
                 "Please review and run targeted tests as needed.",
             ],
         },
+        {
+            description: "Sync Realm/Legion versions after git ref updates",
+            matchDatasources: ["git-refs"],
+            matchManagers: ["custom.regex"],
+            matchFileNames: [
+                "src/cmake/versions/legion_version.json",
+                "src/cmake/versions/realm_version.json",
+            ],
+            postUpgradeTasks: {
+                commands: [
+                    "python3 scripts/maint/update_legion_realm_versions.py",
+                ],
+                fileFilters: [
+                    "src/cmake/versions/legion_version.json",
+                    "src/cmake/versions/realm_version.json",
+                ],
+            },
+        },
     ],
     prBodyColumns: ["Package", "Change"],
     prConcurrentLimit: 3,
