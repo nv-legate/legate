@@ -14,12 +14,12 @@ __all__ = ("Annotation", "OrderedSet")
 
 class AnyCallable(Protocol):
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        pass
+        pass  # pragma: no cover
 
 
 class ShutdownCallback(Protocol):
     def __call__(self) -> None:
-        pass
+        pass  # pragma: no cover
 
 
 class Annotation:
