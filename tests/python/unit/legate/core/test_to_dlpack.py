@@ -172,6 +172,23 @@ class TestToDLPack:
         assert is_capsule_type(capsule)
         assert '"dltensor_versioned"' in str(capsule)
 
+    @pytest.mark.skipif(
+        TaskTarget.GPU not in get_legate_runtime().machine.valid_targets,
+        reason="GPU only test (ZCMEM requires CUDA)",
+    )
+    def test_zcmem_dlpack_device(self) -> None:
+        """Test that ZCMEM (pinned memory) returns kDLCUDAHost device type."""
+        store = get_legate_runtime().create_store(
+            dtype=ty.float32, shape=(2, 3)
+        )
+        store.fill(3)
+
+        phys = store.get_physical_store(target=StoreTarget.ZCMEM)
+        device_type, device_id = phys.__dlpack_device__()
+
+        assert device_type == 3
+        assert device_id == 0
+
 
 class TestToDLPackErrors:
     def test_invalid_dl_device(self) -> None:

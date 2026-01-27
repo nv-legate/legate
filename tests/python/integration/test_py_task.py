@@ -277,6 +277,130 @@ class TestPyTask:
             np.asarray(out_store.get_physical_store()), exp_arr
         )
 
+    @pytest.mark.parametrize(
+        "shape",
+        [pytest.param((), marks=pytest.mark.xfail(run=False)), *SHAPES],
+    )
+    def test_bind_deferred(self, shape: tuple[int, ...]) -> None:
+        val1 = 98765
+        shape1 = (1,) * len(shape)
+        val2 = 54321
+        shape2 = shape
+
+        @task(
+            variants=tuple(VariantCode),
+            options=VariantOptions(has_allocations=True),
+        )
+        def mix_bind(out1: tasks.OutputStore, out2: tasks.OutputStore) -> None:
+            buf1 = out2.create_output_buffer(shape, bind=False)
+            tasks.asarray(buf1).fill(val1)
+            buf2 = out1.create_output_buffer(shape, bind=False)
+            tasks.asarray(buf2).fill(val2)
+            out1.bind_data(buf1, shape1)
+            out2.bind_data(buf2, shape2)
+
+        runtime = get_legate_runtime()
+        store1 = runtime.create_store(ty.int32, ndim=len(shape))
+        store2 = runtime.create_store(ty.int32, ndim=len(shape))
+        mix_bind(store1, store2)
+        runtime.issue_execution_fence(block=True)
+        assert store1.shape == shape1
+        assert (np.asarray(store1) == val1).all()
+        assert store2.shape == shape2
+        assert (np.asarray(store2) == val2).all()
+
+    @pytest.mark.xfail(run=False, reason="aborts python")
+    def test_allocate_without_binding(self) -> None:
+        @task(
+            variants=tuple(VariantCode),
+            options=VariantOptions(has_allocations=True),
+        )
+        def forgot_binding(out: tasks.OutputStore) -> None:
+            buf = out.create_output_buffer((3, 2, 1), bind=False)
+            tasks.asarray(buf).fill(1)
+
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int32, ndim=3)
+        # TODO(yimoj)
+        # this should be a pytest.raises when properly handled on python side
+        # {legion}: LEGION PROGRAMMING MODEL EXCEPTION:
+        # did not return any instance for field 10000of output requirement 0
+        forgot_binding(store)
+        runtime.issue_execution_fence(block=True)
+
+    def test_binding_type_mismatch(self) -> None:
+        @task(
+            variants=tuple(VariantCode),
+            options=VariantOptions(has_allocations=True),
+        )
+        def bad_binding(
+            out1: tasks.OutputStore, out2: tasks.OutputStore
+        ) -> None:
+            buf1 = out1.create_output_buffer((3, 2, 1), bind=False)
+            buf2 = out2.create_output_buffer((3, 2, 1), bind=False)
+            msg = (
+                f"Cannot bind data of type {buf1.type} to store of type "
+                f"{buf2.type}, types are not compatible"
+            )
+            with pytest.raises(TypeError, match=msg):
+                out2.bind_data(buf1)
+            # still need to bind these to avoid
+            # LEGION PROGRAMMING MODEL EXCEPTION
+            out1.bind_data(buf1)
+            out2.bind_data(buf2)
+
+        runtime = get_legate_runtime()
+        store1 = runtime.create_store(ty.int32, ndim=3)
+        store2 = runtime.create_store(ty.float64, ndim=3)
+        bad_binding(store1, store2)
+        runtime.issue_execution_fence(block=True)
+
+    @pytest.mark.xfail(run=False, reason="aborts python")
+    def test_binding_without_allocation(self) -> None:
+        @task(variants=tuple(VariantCode))
+        def forgot_allocation(out: tasks.OutputStore) -> None:
+            buf = out.create_output_buffer((3, 2, 1), bind=False)
+            tasks.asarray(buf).fill(1)
+
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int32, ndim=3)
+        # TODO(yimoj)
+        # this should be a pytest.raises when properly handled on python side
+        # {legion}: LEGION RESOURCE EXCEPTION:
+        # Failed to allocate DeferredBuffer/Value/Reduction of 24 bytes for
+        # leaf task TestPyTask.test_binding_without_allocation.<locals>.
+        # bad_binding(UID: 3) in GPU_FB_MEM memory because there was
+        # insufficient space reserved for dynamic allocations. Only 0 bytes
+        # remain of 0 reserved bytes. This means that you set your upper bound
+        # for the amount of dynamic memory required for this task too low.
+        forgot_allocation(store)
+        runtime.issue_execution_fence(block=True)
+
+    @pytest.mark.xfail(run=False, reason="aborts python")
+    def test_rebind(self) -> None:
+        @task(
+            variants=tuple(VariantCode),
+            options=VariantOptions(has_allocations=True),
+        )
+        def bad_binding(
+            out1: tasks.OutputStore, out2: tasks.OutputStore
+        ) -> None:
+            buf1 = out1.create_output_buffer((3, 2, 1), bind=False)
+            # TODO(yimoj) this should be a pytest.raises when properly handled
+            # on python side
+            # const Realm::InstanceLayoutGeneric*
+            # Realm::RegionInstance::get_layout() const: Assertion
+            # `r_impl->metadata.is_valid() && "instance metadata must be valid
+            # before accesses are performed"' failed.
+            out1.bind_data(buf1)
+            out2.bind_data(buf1)
+
+        runtime = get_legate_runtime()
+        store1 = runtime.create_store(ty.int32, ndim=3)
+        store2 = runtime.create_store(ty.int32, ndim=3)
+        bad_binding(store1, store2)
+        runtime.issue_execution_fence(block=True)
+
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     @pytest.mark.parametrize(
         ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str

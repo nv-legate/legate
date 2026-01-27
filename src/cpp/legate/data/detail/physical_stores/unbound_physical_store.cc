@@ -58,9 +58,18 @@ void UnboundPhysicalStore::bind_data(const InternalSharedPtr<TaskLocalBuffer>& b
   check_valid_binding(/* bind_buffer */ true);
   check_buffer_dimension(extents.get_dim());
 
+  // Check type compatibility
+  if (buffer->type() != type()) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Cannot bind data of type {} to store of type {}, types are not compatible.",
+                  *buffer->type(),
+                  *type())};
+  }
+
   auto [out, fid] = get_output_field();
 
-  out.return_data(extents, fid, buffer->legion_buffer().get_instance());
+  out.return_data(
+    extents, fid, buffer->legion_buffer().get_instance(), false /*check_constraints*/);
   unbound_field_.set_bound(true);
 }
 

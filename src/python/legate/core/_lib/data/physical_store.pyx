@@ -282,5 +282,5 @@ cdef class PhysicalStore(Unconstructable):
             # flag is used, but luckily that's what Realm does.
             return (DLDeviceType.kDLCUDAHost, 0)
 
-        m = f"Unhandled store target: {target}"
-        raise AssertionError(m)
+        m = f"Unhandled store target: {target}"  # pragma: no cover
+        raise AssertionError(m)  # pragma: no cover
