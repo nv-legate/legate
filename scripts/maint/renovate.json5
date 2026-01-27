@@ -76,6 +76,27 @@
             registryUrls: ["https://api.anaconda.org/package/conda-forge"],
         },
         {
+            description: "Group conda upper bound updates",
+            matchDatasources: ["conda"],
+            matchManagers: ["custom.regex"],
+            groupName: "Conda upper bounds",
+            groupSlug: "conda-upper-bounds",
+        },
+        {
+            description: "Keep major conda upper bound updates in separate PRs",
+            matchDatasources: ["conda"],
+            matchManagers: ["custom.regex"],
+            matchUpdateTypes: ["major"],
+            groupName: "Conda upper bounds (major): {{depName}}",
+        },
+        {
+            description: "Group Legion/Realm git ref updates",
+            matchDatasources: ["git-refs"],
+            matchManagers: ["custom.regex"],
+            groupName: "Legion + Realm git refs",
+            groupSlug: "legion-realm-git-refs",
+        },
+        {
             commitMessageExtra: "upper bound refresh",
             description: "Commit message and PR body for conda upper bound updates",
             matchDatasources: ["conda"],
