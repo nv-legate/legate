@@ -12,3 +12,7 @@ updates:
       interval: "weekly"
     labels:
       - CI
+    groups:
+      gha-all:
+        patterns:
+          - "*"
