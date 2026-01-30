@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -37,7 +38,9 @@ class ArrayStoreFn {
     }
 
     if (array.nullable()) {
-      ASSERT_THROW(static_cast<void>(legate::PhysicalStore{array}), std::invalid_argument);
+      ASSERT_THAT([&] { static_cast<void>(legate::PhysicalStore{array}); },
+                  ::testing::ThrowsMessage<std::invalid_argument>(
+                    ::testing::HasSubstr("Nullable array cannot be converted to a store")));
     } else {
       auto other = legate::PhysicalStore{array};
 
@@ -94,7 +97,10 @@ class ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
   }
   ASSERT_NO_THROW(static_cast<void>(
     vardata_store.create_output_buffer<std::int64_t, 1>(legate::Point<1>{10}, true)));
-  ASSERT_THROW(static_cast<void>(legate::PhysicalStore{list_array}), std::invalid_argument);
+  ASSERT_THAT([&] { static_cast<void>(legate::PhysicalStore{list_array}); },
+              ::testing::ThrowsMessage<std::invalid_argument>(::testing::AnyOf(
+                ::testing::HasSubstr("Data store of a nested array cannot be retrieved"),
+                ::testing::HasSubstr("Nullable array cannot be converted to a store"))));
 }
 
 class StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
@@ -127,7 +133,10 @@ class StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
   }
   ASSERT_NO_THROW(static_cast<void>(
     chars_store.create_output_buffer<std::int8_t, 1>(legate::Point<1>{10}, true)));
-  ASSERT_THROW(static_cast<void>(legate::PhysicalStore{string_array}), std::invalid_argument);
+  ASSERT_THAT([&] { static_cast<void>(legate::PhysicalStore{string_array}); },
+              ::testing::ThrowsMessage<std::invalid_argument>(::testing::AnyOf(
+                ::testing::HasSubstr("Data store of a nested array cannot be retrieved"),
+                ::testing::HasSubstr("Nullable array cannot be converted to a store"))));
 }
 
 class Config {

@@ -6,9 +6,16 @@
 
 #include <legate.h>
 
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/physical_stores/future_physical_store.h>
+#include <legate/mapping/detail/mapping.h>
+#include <legate/utilities/machine.h>
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
+#include <utility>  // std::as_const
 
 namespace create_future_physical_store_test {
 
@@ -79,9 +86,18 @@ class FutureStoreFn {
     ASSERT_EQ(store.shape<DIM>(), expect_rect);
     ASSERT_EQ(domain.get_dim(), DIM);
     ASSERT_EQ(actual_rect, expect_rect);
+    const auto expected_target =
+      legate::mapping::detail::to_target(legate::find_memory_kind_for_executing_processor(false));
+    ASSERT_EQ(store.target(), expected_target);
 
     // Specific API for future store
     ASSERT_EQ(store.scalar<T>(), scalar.value<T>());
+
+    // Cover const version of as_future_store()
+    const auto& future_store = std::as_const(*store.impl()).as_future_store();
+
+    ASSERT_EQ(future_store.dim(), DIM);
+    ASSERT_FALSE(future_store.is_partitioned());
   }
 };
 
@@ -142,7 +158,9 @@ TEST_F(CreateFuturePhysicalStoreUnit, InvalidDim)
   auto logical_store = runtime->create_store(legate::Scalar{1});
   auto store         = logical_store.get_physical_store();
 
-  ASSERT_THROW(static_cast<void>(store.shape<2>()), std::invalid_argument);
+  ASSERT_THAT(
+    [&] { static_cast<void>(store.shape<2>()); },
+    ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("invalid to retrieve a")));
 }
 
 TEST_F(CreateFuturePhysicalStoreUnit, InvalidBind)
@@ -152,18 +170,54 @@ TEST_F(CreateFuturePhysicalStoreUnit, InvalidBind)
   auto store         = logical_store.get_physical_store();
 
   // Specific APIs for bound/unbound stores
-  ASSERT_THROW(
-    static_cast<void>(store.create_output_buffer<std::uint64_t>(legate::Point<1>::ONES())),
-    std::invalid_argument);
-  ASSERT_THROW(store.bind_empty_data(), std::invalid_argument);
+  ASSERT_THAT(
+    [&] { static_cast<void>(store.create_output_buffer<std::uint64_t>(legate::Point<1>::ONES())); },
+    ::testing::ThrowsMessage<std::invalid_argument>(
+      ::testing::HasSubstr("Store isn't an unbound store")));
+  ASSERT_THAT([&] { store.bind_empty_data(); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Empty data can only be bound to unbound stores")));
+}
+
+TEST_F(CreateFuturePhysicalStoreUnit, InvalidAccess)
+{
+  auto runtime       = legate::Runtime::get_runtime();
+  auto logical_store = runtime->create_store(legate::Scalar{std::int32_t{1}, legate::int32()});
+  auto store         = logical_store.get_physical_store();
+
+  ASSERT_THAT(
+    [&] { static_cast<void>(store.write_accessor<std::int32_t, 1, false>()); },
+    ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("Store isn't writable")));
+  ASSERT_THAT(
+    [&] {
+      static_cast<void>(
+        store.reduce_accessor<Legion::SumReduction<std::int32_t>, false, 1, false>());
+    },
+    ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("Store isn't reducible")));
+}
+
+TEST_F(CreateFuturePhysicalStoreUnit, IsFuture)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto future_store = runtime->create_store(legate::Scalar{FLOAT_VALUE}).get_physical_store();
+  ASSERT_TRUE(future_store.is_future());
+
+  auto bound_store = runtime->create_store({2}, legate::int32()).get_physical_store();
+  ASSERT_FALSE(bound_store.is_future());
 }
 
 TEST_P(NegativeCreateFutureStoreTest, InvalidCreate)
 {
-  const auto [scalar, shape] = GetParam();
-  auto runtime               = legate::Runtime::get_runtime();
+  const auto& params = GetParam();
+  const auto& scalar = std::get<0>(params);
+  const auto& shape  = std::get<1>(params);
+  auto runtime       = legate::Runtime::get_runtime();
 
-  ASSERT_THROW(static_cast<void>(runtime->create_store(scalar, shape)), std::invalid_argument);
+  ASSERT_THAT(
+    [&] { static_cast<void>(runtime->create_store(scalar, shape)); },
+    ::testing::ThrowsMessage<std::invalid_argument>(::testing::AnyOf(
+      ::testing::HasSubstr("fixed-size type"), ::testing::HasSubstr("shape of volume 1"))));
 }
 
 }  // namespace create_future_physical_store_test

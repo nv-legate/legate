@@ -6,9 +6,15 @@
 
 #include <legate.h>
 
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/physical_stores/unbound_physical_store.h>
+#include <legate/data/detail/physical_stores/unbound_region_field.h>
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
+#include <utility>  // std::as_const
 
 namespace create_unbound_physical_store_test {
 
@@ -65,16 +71,24 @@ class UnboundStoreBindFn {
         auto buffer = store.create_output_buffer<T, DIM>(legate::Point<DIM>{UNBOUND_STORE_EXTENTS},
                                                          /*bind_buffer=*/true);
 
-        ASSERT_THROW(store.bind_data(buffer, legate::Point<DIM>::ONES()), std::invalid_argument);
-        ASSERT_THROW(store.bind_empty_data(), std::invalid_argument);
+        ASSERT_THAT([&] { store.bind_data(buffer, legate::Point<DIM>::ONES()); },
+                    ::testing::ThrowsMessage<std::invalid_argument>(
+                      ::testing::HasSubstr("already been bound")));
+        ASSERT_THAT([&] { store.bind_empty_data(); },
+                    ::testing::ThrowsMessage<std::invalid_argument>(
+                      ::testing::HasSubstr("already been bound")));
         break;
       }
       case UnboundStoreOpCode::INVALID_DIM: {
         constexpr std::int32_t INVALID_DIM = (DIM % LEGATE_MAX_DIM) + 1;
 
-        ASSERT_THROW(static_cast<void>(
-                       store.create_output_buffer<T>(legate::Point<INVALID_DIM>::ONES(), true)),
-                     std::invalid_argument);
+        ASSERT_THAT(
+          [&] {
+            static_cast<void>(
+              store.create_output_buffer<T>(legate::Point<INVALID_DIM>::ONES(), true));
+          },
+          ::testing::ThrowsMessage<std::invalid_argument>(
+            ::testing::HasSubstr("invalid to bind a")));
 
         // bind to buffer
         store.bind_empty_data();
@@ -98,17 +112,39 @@ class UnboundStoreCreateFn {
     ASSERT_EQ(store.type().code(), legate::type_code_of_v<T>);
     ASSERT_EQ(store.code(), legate::type_code_of_v<T>);
     ASSERT_FALSE(store.transformed());
+    ASSERT_FALSE(store.is_writable());
+    ASSERT_FALSE(store.is_reducible());
 
-    ASSERT_THROW(static_cast<void>(store.shape<DIM>()), std::invalid_argument);
-    ASSERT_THROW(static_cast<void>(store.domain()), std::invalid_argument);
-    ASSERT_THROW(static_cast<void>(store.get_inline_allocation()), std::invalid_argument);
-    ASSERT_THROW(static_cast<void>(store.target()), std::invalid_argument);
+    ASSERT_THAT([&] { static_cast<void>(store.shape<DIM>()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+    ASSERT_THAT([&] { static_cast<void>(store.domain()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to retrieve the domain of an unbound store")));
+    ASSERT_THAT([&] { static_cast<void>(store.get_inline_allocation()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr(
+                  "Allocation info cannot be retrieved from an unbound store")));
+    ASSERT_THAT([&] { static_cast<void>(store.target()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Target of an unbound store cannot be queried")));
 
     // Specific APIs for future/bound store
-    ASSERT_THROW(static_cast<void>(store.scalar<T>()), std::invalid_argument);
-    ASSERT_THROW(static_cast<void>(store.read_accessor<T, DIM>()), std::invalid_argument);
+    ASSERT_THAT([&] { static_cast<void>(store.scalar<T>()); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Store isn't a scalar store")));
+    const auto bounds =
+      legate::Rect<DIM>{legate::Point<DIM>::ZEROES(), legate::Point<DIM>::ZEROES()};
+    ASSERT_THAT([&] { static_cast<void>(store.read_accessor<T, DIM>(bounds)); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Invalid to create an accessor on an unbound store")));
+
+    // Cover const version of as_unbound_store()
+    const auto& unbound_store = std::as_const(*store.impl()).as_unbound_store();
+
+    ASSERT_EQ(unbound_store.dim(), DIM);
 
     store.bind_empty_data();
+    ASSERT_NO_THROW(static_cast<void>(store.target()));
   }
 };
 
@@ -268,6 +304,17 @@ TEST_P(CreateUnboundStoreTest, InvalidDim)
   const auto [type, dim] = GetParam();
 
   bind_unbound_store_by_task(UnboundStoreOpCode::INVALID_DIM, type, dim);
+}
+
+TEST_F(CreateUnboundPhysicalStoreUnit, UnboundRegionFieldBoundFlag)
+{
+  legate::detail::UnboundRegionField field{};
+
+  field.set_bound(true);
+  ASSERT_TRUE(field.bound());
+
+  field.set_bound(false);
+  ASSERT_FALSE(field.bound());
 }
 
 }  // namespace create_unbound_physical_store_test
