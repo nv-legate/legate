@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from .manual import bootstrap_worker, bootstrap_world
 from .ucp import ucp_setup_peer
 from .ucp_constants import (
     BOOTSTRAP_P2P_PLUGIN,
@@ -21,5 +22,7 @@ __all__ = (
     "WORKER_SELF_INFO",
     "BootstrapMode",
     "BootstrapPluginKind",
+    "bootstrap_worker",
+    "bootstrap_world",
     "ucp_setup_peer",
 )
