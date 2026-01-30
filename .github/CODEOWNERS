@@ -16,6 +16,7 @@ setup.cfg @nv-legate/build-reviewers
 
 # cpp
 src/cpp @nv-legate/cpp-reviewers
+**/io/** @supunkamburugamuve
 
 # cmake
 src/cmake @nv-legate/build-reviewers
