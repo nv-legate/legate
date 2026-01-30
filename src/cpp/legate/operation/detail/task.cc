@@ -109,16 +109,7 @@ void TaskBase::validate()
 
 void TaskBase::inline_launch_() const
 {
-  const auto processor_kind = Runtime::get_runtime().get_executing_processor().kind();
-  const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
-  const auto body           = [&] {
-    const auto variant = library().find_task(local_task_id())->find_variant(variant_code);
-
-    LEGATE_ASSERT(variant.has_value());
-    return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
-  }();
-
-  inline_task_body(*this, variant_code, body);
+  inline_task_body(*this, machine().preferred_variant(), variant_info_().body);
 }
 
 std::string TaskBase::to_string(bool show_provenance) const

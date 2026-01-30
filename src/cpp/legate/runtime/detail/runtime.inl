@@ -87,14 +87,4 @@ inline std::uint32_t Runtime::node_count() const { return local_machine().total_
 
 inline std::uint32_t Runtime::node_id() const { return local_machine().node_id; }
 
-inline bool Runtime::executing_inline_task() const noexcept { return executing_inline_task_; }
-
-inline void Runtime::inline_task_start() noexcept { executing_inline_task_ = true; }
-
-inline void Runtime::inline_task_end() noexcept
-{
-  LEGATE_ASSERT(executing_inline_task_);
-  executing_inline_task_ = false;
-}
-
 }  // namespace legate::detail

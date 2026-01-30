@@ -130,29 +130,26 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   dest.reserve(src.size());
   for (auto&& elem : src) {
     const auto phys_array = std::visit(
-      Overload{
-        [&](const InternalSharedPtr<LogicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
-          // This isn't right. We don't ever consult the users mapper, so an inline-launched
-          // task may select a different memory than the regular task launch would have.
-          //
-          // But the user mapper expects to get a `mapping::Task`, which would require
-          // translating all of the logical stores into the equivalent mapping variants (which,
-          // coincidentally also expect to hold a Legion::Task).
-          const auto target = [&] {
-            switch (variant_code) {
-              case VariantCode::CPU: return legate::mapping::StoreTarget::SYSMEM;
-              case VariantCode::GPU: return legate::mapping::StoreTarget::FBMEM;
-              case VariantCode::OMP: return legate::mapping::StoreTarget::SOCKETMEM;
-            }
-            LEGATE_ABORT("Unhandled variant code: ", to_underlying(variant_code));
-          }();
+      Overload{[&](const InternalSharedPtr<LogicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
+                 // This isn't right. We don't ever consult the users mapper, so an inline-launched
+                 // task may select a different memory than the regular task launch would have.
+                 //
+                 // But the user mapper expects to get a `mapping::Task`, which would require
+                 // translating all of the logical stores into the equivalent mapping variants
+                 // (which, coincidentally also expect to hold a Legion::Task).
+                 const auto target = [&] {
+                   switch (variant_code) {
+                     case VariantCode::CPU: return legate::mapping::StoreTarget::SYSMEM;
+                     case VariantCode::GPU: return legate::mapping::StoreTarget::FBMEM;
+                     case VariantCode::OMP: return legate::mapping::StoreTarget::SOCKETMEM;
+                   }
+                   LEGATE_ABORT("Unhandled variant code: ", to_underlying(variant_code));
+                 }();
 
-          return arr->get_physical_array(target, ignore_future_mutability);
-        },
-        [&](const InternalSharedPtr<PhysicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
-          // For PhysicalArray (PhysicalTask), use directly
-          return arr;
-        }},
+                 return arr->get_physical_array(target, ignore_future_mutability);
+               },
+               [&](const InternalSharedPtr<PhysicalArray>& arr)
+                 -> InternalSharedPtr<PhysicalArray> { return arr; }},
       elem.array);
 
     dest.emplace_back(phys_array);
@@ -162,10 +159,11 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
     }
 
     for (auto&& phys_store : get_stores_cache(*phys_array)) {
-      if (dynamic_cast<const FuturePhysicalStore*>(phys_store.get())) {
+      if (const auto* const fut_store =
+            dynamic_cast<const FuturePhysicalStore*>(phys_store.get())) {
         // Was an output scalar or scalar reduction, save a reference to the deferred buffer so
         // we can create a new future out of it down the line in finalize().
-        deferred_buffers->emplace_back(phys_store->as_future_store().get_buffer());
+        deferred_buffers->emplace_back(fut_store->get_buffer());
       }
     }
   }
@@ -215,6 +213,8 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   } else if (const auto* physical_task = dynamic_cast<const PhysicalTask*>(&task)) {
     deferred_buffers->reserve(physical_task->physical_scalar_outputs().size() +
                               physical_task->physical_scalar_reductions().size());
+  } else {
+    LEGATE_ABORT("Unhandled task kind");
   }
 
   auto outputs    = fill_vector(variant_code,
@@ -251,13 +251,6 @@ execute_task(const TaskBase& task,
   return {std::move(exn), std::move(deferred_buffers)};
 }
 
-// Function overloads for different task types (replaces template specializations)
-void handle_return_values_impl(const LogicalTask& task,
-                               Span<const Legion::UntypedDeferredValue> deferred_buffers);
-void handle_return_values_impl(const PhysicalTask& task,
-                               Span<const Legion::UntypedDeferredValue> deferred_buffers);
-
-// Implementation for LogicalTask (AutoTask/ManualTask behavior)
 void handle_return_values_impl(const LogicalTask& task,
                                Span<const Legion::UntypedDeferredValue> deferred_buffers)
 {
@@ -292,12 +285,9 @@ void handle_return_values_impl(const LogicalTask& task,
   }
 }
 
-// Implementation for PhysicalTask (PhysicalStore behavior)
 void handle_return_values_impl(const PhysicalTask& task,
                                Span<const Legion::UntypedDeferredValue> deferred_buffers)
 {
-  // Direct access to PhysicalTask - no casting needed
-
   const auto scalar_set_future = [&](const InternalSharedPtr<PhysicalStore>& scal,
                                      const Legion::UntypedDeferredValue& buf) {
     // Create a future from the deferred buffer and update the PhysicalStore
@@ -318,7 +308,6 @@ void handle_return_values_impl(const PhysicalTask& task,
   };
   std::size_t idx = 0;
 
-  // Access PhysicalTask's scalar data directly
   const auto& scalar_outputs    = task.physical_scalar_outputs();
   const auto& scalar_reductions = task.physical_scalar_reductions();
 
@@ -350,8 +339,8 @@ void handle_return_values(const TaskBase& task,
 
 void inline_task_body(const TaskBase& task, VariantCode variant_code, VariantImpl variant_impl)
 {
-  const auto _ = [] {
-    Runtime::get_runtime().inline_task_start();
+  const auto _ = [variant_code] {
+    Runtime::get_runtime().inline_task_start(variant_code);
     return legate::make_scope_guard([&]() noexcept { Runtime::get_runtime().inline_task_end(); });
   }();
   const auto get_task_name = [&] { return task.library().get_task_name(task.local_task_id()); };

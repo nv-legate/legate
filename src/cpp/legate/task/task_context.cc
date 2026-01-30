@@ -119,8 +119,7 @@ const Domain& TaskContext::get_launch_domain() const { return impl()->get_launch
 
 mapping::TaskTarget TaskContext::target() const
 {
-  return mapping::detail::to_target(
-    detail::Runtime::get_runtime().get_executing_processor().kind());
+  return mapping::detail::to_target(variant_kind());
 }
 
 mapping::Machine TaskContext::machine() const { return mapping::Machine{impl()->machine()}; }

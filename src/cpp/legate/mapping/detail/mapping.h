@@ -19,6 +19,15 @@
 
 namespace legate::mapping::detail {
 
+/**
+ * @brief Convert a VariantCode to its corresponding TaskTarget.
+ *
+ * @param code The variant code to convert.
+ *
+ * @return The TaskTarget associated with the given VariantCode.
+ */
+[[nodiscard]] TaskTarget to_target(VariantCode code);
+
 [[nodiscard]] TaskTarget to_target(Processor::Kind kind);
 
 [[nodiscard]] TaskTarget get_matching_task_target(StoreTarget target);

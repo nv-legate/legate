@@ -17,6 +17,16 @@
 
 namespace legate::mapping::detail {
 
+TaskTarget to_target(VariantCode code)
+{
+  switch (code) {
+    case VariantCode::GPU: return TaskTarget::GPU;
+    case VariantCode::OMP: return TaskTarget::OMP;
+    case VariantCode::CPU: return TaskTarget::CPU;
+  }
+  LEGATE_ABORT("Unhandled VariantCode ", legate::detail::to_underlying(code));
+}
+
 TaskTarget to_target(Processor::Kind kind)
 {
   switch (kind) {

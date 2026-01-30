@@ -91,8 +91,8 @@ LEGATE_PRAGMA_POP();
 
 namespace legate::detail {
 
-// Thread-local flag to track inline task execution state per thread
-thread_local bool Runtime::executing_inline_task_ = false;
+thread_local std::stack<VariantCode, SmallVector<VariantCode>>
+  Runtime::inline_task_variant_code_{};  // NOLINT(cert-err58-cpp)
 
 Logger& log_legate()
 {
@@ -2384,9 +2384,34 @@ const MapperManager& Runtime::get_mapper_manager_() const
 
 Processor Runtime::get_executing_processor() const
 {
+  // Inline task-launching never sets the Legion context, so we need to use runtime
+  // information from Legate to determine the currently executing processor.
+  if (executing_inline_task()) {
+    const auto task_target = mapping::detail::to_target(inline_task_variant_code_.top());
+
+    if (auto&& range = local_machine().procs(task_target); !range.empty()) {
+      return range.front();
+    }
+
+    LEGATE_ABORT("No processor found for inline task ", to_underlying(task_target));
+  }
+
   // Cannot use member legion_context_ here since we may be calling this function from within a
   // task, where the context will have changed.
   return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
+}
+
+bool Runtime::executing_inline_task() const noexcept { return !inline_task_variant_code_.empty(); }
+
+void Runtime::inline_task_start(VariantCode code) { inline_task_variant_code_.push(code); }
+
+// clang-tidy bug, apparently it doesn't consider thread_local's to affect
+// const-correctness. Making this const would be a compile error because std::stack::pop() is
+// not const.
+void Runtime::inline_task_end()  // NOLINT(readability-make-member-function-const)
+{
+  LEGATE_ASSERT(executing_inline_task());
+  inline_task_variant_code_.pop();
 }
 
 Legion::MapperID Runtime::mapper_id() const { return get_mapper_manager_().mapper_id(); }
