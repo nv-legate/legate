@@ -4,11 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <legate/data/detail/shape.h>
+
 #include <legate.h>
+
+#include <legate/runtime/detail/runtime.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <utilities/utilities.h>
 
 namespace shape_test {
@@ -78,8 +83,12 @@ TEST_F(ShapeUnit, Unbound)
   auto shape   = store.shape();
 
   ASSERT_EQ(shape.ndim(), store.dim());
-  ASSERT_THROW(static_cast<void>(shape.volume()), std::invalid_argument);
-  ASSERT_THROW(static_cast<void>(shape.extents()), std::invalid_argument);
+  ASSERT_THAT([&] { static_cast<void>(shape.volume()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Illegal to access an uninitialized unbound store")));
+  ASSERT_THAT([&] { static_cast<void>(shape.extents()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Illegal to access an uninitialized unbound store")));
 }
 
 TEST_F(ShapeUnit, Bound)
@@ -91,6 +100,11 @@ TEST_F(ShapeUnit, Bound)
   ASSERT_EQ(shape.ndim(), store.dim());
   ASSERT_EQ(shape.volume(), store.volume());
   ASSERT_EQ(shape.extents(), (legate::tuple<std::uint64_t>{1, 3, 5}));
+  ASSERT_EQ(shape.at(0), 1);
+  ASSERT_EQ(shape.at(1), 3);
+  ASSERT_EQ(shape.at(2), 5);
+  ASSERT_FALSE(shape != shape);
+  ASSERT_TRUE((shape != legate::Shape{1, 3, 4}));
 }
 
 TEST_P(CreateShapeTest, Ready)
@@ -173,6 +187,33 @@ TEST_F(ShapeUnit, OperatorEqualBound)
 
   ASSERT_FALSE(bound_shape1 == other_shape);
   ASSERT_FALSE(other_shape == bound_shape2);
+}
+
+TEST_F(ShapeUnit, CopyExtentsFromBound)
+{
+  auto runtime      = legate::Runtime::get_runtime();
+  auto runtime_impl = runtime->impl();
+  std::array<std::uint64_t, 2> extents{2, 3};
+  const auto span        = legate::Span<const std::uint64_t>{extents};
+  const auto index_space = runtime_impl->find_or_create_index_space(span);
+
+  legate::detail::Shape source{2};
+  source.set_index_space(index_space);
+  const auto source_extents = source.extents();
+
+  ASSERT_EQ(source_extents.size(), 2);
+  ASSERT_EQ(source_extents[0], 2);
+  ASSERT_EQ(source_extents[1], 3);
+
+  legate::detail::Shape target{2};
+  target.set_index_space(index_space);
+  target.copy_extents_from(source);
+  ASSERT_TRUE(target.ready());
+  const auto target_extents = target.extents();
+
+  ASSERT_EQ(target_extents.size(), 2);
+  ASSERT_EQ(target_extents[0], 2);
+  ASSERT_EQ(target_extents[1], 3);
 }
 
 }  // namespace shape_test

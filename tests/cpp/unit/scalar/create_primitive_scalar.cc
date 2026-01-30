@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <utilities/utilities.h>
 
 namespace create_primitive_scalar_test {
@@ -196,7 +197,11 @@ class CheckPrimitiveScalarFn {
 
     ASSERT_EQ(scalar.type().code(), code);
     ASSERT_EQ(scalar.size(), sizeof(T));
-    ASSERT_EQ(scalar.values<T>().size(), 1);
+    auto values = scalar.values<T>();
+    auto value  = scalar.value<T>();
+
+    ASSERT_EQ(values.size(), 1);
+    ASSERT_EQ(value, *values.begin());
     ASSERT_NE(scalar.ptr(), nullptr);
   }
 };
@@ -361,7 +366,9 @@ TEST_F(PrimitiveScalarUnit, Empty)
   ASSERT_EQ(scalar.type().code(), legate::Type::Code::NIL);
   ASSERT_EQ(scalar.size(), 0);
   ASSERT_EQ(scalar.ptr(), nullptr);
-  ASSERT_THROW(static_cast<void>(scalar.value<std::int64_t>()), std::invalid_argument);
+  ASSERT_THAT([&] { static_cast<void>(scalar.value<std::int64_t>()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("requested type has size")));
 
   const auto actual_values = scalar.values<std::int64_t>();
 
@@ -376,7 +383,9 @@ TEST_F(PrimitiveScalarUnit, Null)
   ASSERT_EQ(null_scalar.type().code(), legate::Type::Code::NIL);
   ASSERT_EQ(null_scalar.size(), 0);
   ASSERT_EQ(null_scalar.ptr(), nullptr);
-  ASSERT_THROW(static_cast<void>(null_scalar.value<std::int32_t>()), std::invalid_argument);
+  ASSERT_THAT([&] { static_cast<void>(null_scalar.value<std::int32_t>()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("requested type has size")));
 
   const auto actual_values = null_scalar.values<std::int64_t>();
 
@@ -394,6 +403,38 @@ TEST_F(PrimitiveScalarUnit, OperatorEqual)
   ASSERT_EQ(scalar2.size(), scalar1.size());
   ASSERT_EQ(scalar2.value<std::int32_t>(), scalar1.value<std::int32_t>());
   ASSERT_EQ(scalar2.values<std::int32_t>().size(), scalar1.values<std::int32_t>().size());
+}
+
+TEST_F(PrimitiveScalarUnit, DetailScalarClearDataOwn)
+{
+  static constexpr auto VALUE_A = std::int32_t{123};
+  static constexpr auto VALUE_B = std::int32_t{456};
+  auto scal                     = legate::detail::Scalar{VALUE_A};
+  auto other                    = legate::detail::Scalar{VALUE_B};
+
+  // Assignment triggers clear_data_ on owned buffer.
+  scal = other;
+
+  ASSERT_NE(scal.data(), nullptr);
+  ASSERT_EQ(*static_cast<const std::int32_t*>(scal.data()), VALUE_B);
+  ASSERT_EQ(scal.size(), sizeof(std::int32_t));
+}
+
+TEST_F(PrimitiveScalarUnit, DetailScalarClearDataNotOwn)
+{
+  static constexpr auto VALUE_A = std::int32_t{123};
+  static constexpr auto VALUE_B = std::int32_t{456};
+  auto value                    = std::make_unique<std::int32_t>(VALUE_A);
+  auto scal  = legate::detail::Scalar{legate::int32().impl(), value.get(), /*copy=*/false};
+  auto other = legate::detail::Scalar{VALUE_B};
+
+  // Assignment triggers clear_data_ on non-owned buffer.
+  scal = other;
+
+  ASSERT_NE(scal.data(), nullptr);
+  ASSERT_NE(scal.data(), value.get());
+  ASSERT_EQ(*static_cast<const std::int32_t*>(scal.data()), VALUE_B);
+  ASSERT_EQ(scal.size(), sizeof(std::int32_t));
 }
 
 TEST_F(PrimitiveScalarUnit, StringScalarValues)
