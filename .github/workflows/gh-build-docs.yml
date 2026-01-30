@@ -30,7 +30,7 @@ jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.44
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.46
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
