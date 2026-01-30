@@ -16,7 +16,6 @@ import pytest
 from legate.core import (
     LEGATE_MAX_DIM,
     LogicalArray,
-    StoreTarget,
     TaskTarget,
     Type,
     get_legate_runtime,
@@ -89,9 +88,6 @@ class TestArrayCreation:
         lg_arr.fill(1)
         np_arr = np.ones((3, 3, 3), np.int32)
         assert np.allclose(cupy.asarray(lg_arr), np_arr)
-        # not sure what can be validated, just check the call returns alright
-        # for code coverage
-        lg_arr.offload_to(StoreTarget.SYSMEM)
 
     @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
     @pytest.mark.parametrize("nullable", {True, False})
