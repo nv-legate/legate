@@ -73,7 +73,7 @@ jobs:
         env:
           LOG_LEVEL: ${{ steps.config.outputs.log_level }}
           RENOVATE_DRY_RUN: ${{ steps.config.outputs.dry_run }}
-          RENOVATE_ALLOWED_COMMANDS: '["^python3 scripts/maint/renovate_update_conda_upper_bounds\\.py --dep [a-z0-9_]+ --new-version [0-9]+(?:\\.[0-9]+)*$"]'
+          RENOVATE_ALLOWED_COMMANDS: '["^python3 scripts/maint/renovate_update_conda_upper_bounds\\.py --dep [a-z0-9_]+ --new-version [0-9]+(?:\\.[0-9]+)*$","^python3 scripts/maint/update_legion_realm_versions\\.py$"]'
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_REQUIRE_CONFIG: required
         with:
