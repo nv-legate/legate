@@ -71,6 +71,11 @@
     reviewers: ["team:nv-legate/qa-reviewers"],
     packageRules: [
         {
+            description: "Use replace range strategy for custom regex updates",
+            matchManagers: ["custom.regex"],
+            rangeStrategy: "replace",
+        },
+        {
             description: "Use conda-forge for conda upper bound lookups",
             matchDatasources: ["conda"],
             matchManagers: ["custom.regex"],
