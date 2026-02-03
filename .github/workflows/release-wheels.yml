@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026-2026 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+name: Release Wheels
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  wheels-build:
+    secrets: inherit
+    uses: ./.github/workflows/wheels-build.yml
+    with:
+      build-type: pull-request
+  wheels-mac:
+    name: wheels-mac (optional)
+    secrets: inherit
+    uses: ./.github/workflows/wheels-mac.yml
+    with:
+      build-type: pull-request
+
+  upload-pypi:
+    environment: pypi
+    permissions:
+      id-token: write
+    name: Upload to PyPI
+    needs: [wheels-build, wheels-mac]
+    runs-on: linux-amd64-cpu4
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: Display downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          ls -la dist/
+
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          verbose: true
