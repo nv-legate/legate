@@ -72,7 +72,7 @@
     packageRules: [
         {
             description: "Use replace range strategy for custom regex updates",
-            matchManagers: ["custom.regex"],
+            matchManagers: ["regex"],
             rangeStrategy: "replace",
         },
         {
