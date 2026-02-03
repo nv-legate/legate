@@ -957,6 +957,9 @@ HDF5Type::Class HDF5Type::type_class() const
     }
     case H5T_VLEN: return Class::VARIABLE_LENGTH;
     case H5T_ARRAY: return Class::ARRAY;
+#if LEGATE_DEFINED(H5_HAVE_COMPLEX_NUMBERS)
+    case H5T_COMPLEX: return Class::COMPLEX;
+#endif
     case H5T_NO_CLASS: [[fallthrough]];
     case H5T_NCLASSES: break;
   }
@@ -971,6 +974,7 @@ std::string HDF5Type::to_string() const
       case Class::SIGNED_INTEGER: return "int";
       case Class::UNSIGNED_INTEGER: return "uint";
       case Class::FLOAT: return "float";
+      case Class::COMPLEX: return "complex";
       case Class::TIME: return "time";
       case Class::STRING: return "string";
       case Class::BITFIELD: return "bitfield";
@@ -1070,8 +1074,21 @@ namespace {
     case Type::Code::FLOAT32: return H5T_NATIVE_FLOAT;
     case Type::Code::FLOAT64: return H5T_NATIVE_DOUBLE;
     case Type::Code::BINARY: return get_opaque_type(lock, type.size());
-    case Type::Code::COMPLEX64: [[fallthrough]];
-    case Type::Code::COMPLEX128: [[fallthrough]];
+    case Type::Code::COMPLEX64:
+#if LEGATE_DEFINED(H5_HAVE_COMPLEX_NUMBERS)
+      return H5T_NATIVE_FLOAT_COMPLEX;
+#else
+      [[fallthrough]];
+#endif
+    case Type::Code::COMPLEX128:
+#if LEGATE_DEFINED(H5_HAVE_COMPLEX_NUMBERS)
+      return H5T_NATIVE_DOUBLE_COMPLEX;
+#else
+      throw legate::detail::TracedException<std::invalid_argument>{
+        fmt::format("HDF5 version too low to natively support complex numbers (tried to convert {} "
+                    "to HDF5), upgrade to HDF5 version 2.0 or higher for complex support",
+                    type)};
+#endif
     case Type::Code::NIL: [[fallthrough]];
     case Type::Code::FIXED_ARRAY: [[fallthrough]];
     case Type::Code::STRUCT: [[fallthrough]];

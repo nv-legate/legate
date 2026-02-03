@@ -97,20 +97,8 @@ void write_hdf5_file(const std::string& filepath,
 }
 
 class HDF5WriteFn {
-  // We define `is_supported` to handle unsupported dtype through SFINAE. It used to be a
-  // static constexpr bool variable, but then NVC++ complained that it was "never used". Making
-  // it a function hopefully silences this useless warning.
-  template <legate::Type::Code CODE>
-  static constexpr bool is_supported_()
-  {
-    return !legate::is_complex<CODE>::value;
-  }
-
  public:
-  template <
-    legate::Type::Code CODE,
-    std::int32_t DIM,
-    std::enable_if_t<is_supported_<CODE>()>* = nullptr>  // NOLINT(google-readability-casting)
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(const legate::TaskContext& context,
                   const legate::PhysicalStore& store,
                   const std::filesystem::path& filepath,
@@ -196,19 +184,6 @@ class HDF5WriteFn {
     api->stream_synchronize(stream);
     write_hdf5_file(
       filepath, file_space_extents, mem_space_extents, dataset_name, type, gds_on, tmp_ptr);
-  }
-
-  template <legate::Type::Code CODE,
-            std::int32_t DIM,
-            std::enable_if_t<!is_supported_<CODE>()>* = nullptr>
-  void operator()(const legate::TaskContext&,
-                  const legate::PhysicalStore&,
-                  const std::filesystem::path&,
-                  const std::string&,
-                  bool) const
-  {
-    throw legate::detail::TracedException<std::runtime_error>{
-      fmt::format("HDF5 write not supported for {}", CODE)};
   }
 };
 

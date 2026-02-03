@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <complex>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -343,7 +344,6 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
 struct TypeTestParam {
   hid_t hdf5_type;           ///< HDF5 native type
   legate::Type legate_type;  ///< Expected legate type
-  std::string name;          ///< Test name for display
 };
 
 /**
@@ -525,23 +525,35 @@ class IOHDF5ReadTypeDeduction : public RegisterOnceFixture<Config>,
   static inline auto base_path = std::filesystem::temp_directory_path() / "legate_type_tests";
 };
 
+auto make_test_suite_cases()
+{
+  return ::testing::Values(TypeTestParam{H5T_NATIVE_HBOOL, legate::bool_()},
+                           TypeTestParam{H5T_NATIVE_INT8, legate::int8()},
+                           TypeTestParam{H5T_NATIVE_INT16, legate::int16()},
+                           TypeTestParam{H5T_NATIVE_INT32, legate::int32()},
+                           TypeTestParam{H5T_NATIVE_INT64, legate::int64()},
+                           TypeTestParam{H5T_NATIVE_UINT8, legate::uint8()},
+                           TypeTestParam{H5T_NATIVE_UINT16, legate::uint16()},
+                           TypeTestParam{H5T_NATIVE_UINT32, legate::uint32()},
+                           TypeTestParam{H5T_NATIVE_UINT64, legate::uint64()},
+                           TypeTestParam{get_float16_hdf5_type(), legate::float16()},
+                           TypeTestParam{H5T_NATIVE_FLOAT, legate::float32()},
+                           TypeTestParam{H5T_NATIVE_DOUBLE, legate::float64()}
+#if LEGATE_DEFINED(H5_HAVE_COMPLEX_NUMBERS)
+                           ,
+                           TypeTestParam{H5T_NATIVE_FLOAT_COMPLEX, legate::complex64()},
+                           TypeTestParam{H5T_NATIVE_DOUBLE_COMPLEX, legate::complex128()}
+#endif
+  );
+}
+
 // NOLINTNEXTLINE(cert-err58-cpp)
-INSTANTIATE_TEST_SUITE_P(
-  IOHDF5ReadUnit,
-  IOHDF5ReadTypeDeduction,
-  ::testing::Values(TypeTestParam{H5T_NATIVE_HBOOL, legate::bool_(), "bool"},
-                    TypeTestParam{H5T_NATIVE_INT8, legate::int8(), "int8"},
-                    TypeTestParam{H5T_NATIVE_INT16, legate::int16(), "int16"},
-                    TypeTestParam{H5T_NATIVE_INT32, legate::int32(), "int32"},
-                    TypeTestParam{H5T_NATIVE_INT64, legate::int64(), "int64"},
-                    TypeTestParam{H5T_NATIVE_UINT8, legate::uint8(), "uint8"},
-                    TypeTestParam{H5T_NATIVE_UINT16, legate::uint16(), "uint16"},
-                    TypeTestParam{H5T_NATIVE_UINT32, legate::uint32(), "uint32"},
-                    TypeTestParam{H5T_NATIVE_UINT64, legate::uint64(), "uint64"},
-                    TypeTestParam{get_float16_hdf5_type(), legate::float16(), "float16"},
-                    TypeTestParam{H5T_NATIVE_FLOAT, legate::float32(), "float32"},
-                    TypeTestParam{H5T_NATIVE_DOUBLE, legate::float64(), "float64"}),
-  [](const ::testing::TestParamInfo<TypeTestParam>& param_info) { return param_info.param.name; });
+INSTANTIATE_TEST_SUITE_P(IOHDF5ReadUnit,
+                         IOHDF5ReadTypeDeduction,
+                         make_test_suite_cases(),
+                         [](const ::testing::TestParamInfo<TypeTestParam>& param_info) {
+                           return param_info.param.legate_type.to_string();
+                         });
 
 void submit_verify_2d_task(const legate::LogicalArray& read_array, std::uint32_t y)
 {
@@ -686,7 +698,7 @@ TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
   constexpr auto SIZE    = 10;
   constexpr auto DATASET = "/test_dataset";
   const auto& param      = GetParam();
-  const auto file_path   = base_path / (param.name + ".h5");
+  const auto file_path   = base_path / (param.legate_type.to_string() + ".h5");
 
   // Create HDF5 file with appropriate data based on type
   if (param.legate_type == legate::bool_()) {
@@ -712,8 +724,14 @@ TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
     create_hdf5_file_with_sequential_type<float>(file_path, DATASET, param.hdf5_type, SIZE);
   } else if (param.legate_type == legate::float64()) {
     create_hdf5_file_with_sequential_type<double>(file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::complex64()) {
+    create_hdf5_file_with_sequential_type<legate::Complex<float>>(
+      file_path, DATASET, param.hdf5_type, SIZE);
+  } else if (param.legate_type == legate::complex128()) {
+    create_hdf5_file_with_sequential_type<legate::Complex<double>>(
+      file_path, DATASET, param.hdf5_type, SIZE);
   } else {
-    GTEST_FAIL() << "Unhandled type in test: " << param.name;
+    GTEST_FAIL() << "Unhandled type in test: " << param.legate_type.to_string();
   }
 
   // Read the array back and verify type deduction
@@ -721,8 +739,8 @@ TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
 
   ASSERT_EQ(read_array.shape(), legate::Shape{SIZE});
   ASSERT_EQ(read_array.type(), param.legate_type)
-    << "Type mismatch for " << param.name << ": expected " << param.legate_type.to_string()
-    << ", got " << read_array.type().to_string();
+    << "Type mismatch for " << read_array.type().to_string() << ": expected "
+    << param.legate_type.to_string() << ", got " << read_array.type().to_string();
   ASSERT_EQ(read_array.dim(), 1);
 }
 

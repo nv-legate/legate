@@ -81,20 +81,8 @@ void read_hdf5_file(legate::detail::ZStringView filepath,
  * @param store The Legate store to read into
  */
 class HDF5ReadFn {
-  // We define `is_supported` to handle unsupported dtype through SFINAE. It used to be a
-  // static constexpr bool variable, but then NVC++ complained that it was "never used". Making
-  // it a function hopefully silences this useless warning.
-  template <legate::Type::Code CODE>
-  static constexpr bool is_supported_()
-  {
-    return !legate::is_complex<CODE>::value;
-  }
-
  public:
-  template <
-    legate::Type::Code CODE,
-    std::int32_t DIM,
-    typename = std::enable_if_t<is_supported_<CODE>()>>  // NOLINT(google-readability-casting)
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(const legate::TaskContext& context,
                   legate::PhysicalStore* store,
                   bool is_device) const
@@ -195,15 +183,6 @@ class HDF5ReadFn {
       filepath, gds_on, dataset_name, file_offsets, file_space_extents, mem_space_extents, ptr);
     // And then copy from the bounce buffer to the GPU
     cuda::detail::get_cuda_driver_api()->mem_cpy_async(dst, ptr, size * type_size, stream);
-  }
-
-  template <legate::Type::Code CODE,
-            std::int32_t DIM,
-            typename = std::enable_if_t<!is_supported_<CODE>()>>
-  void operator()(const legate::TaskContext&, legate::PhysicalStore*, bool)
-  {
-    throw legate::detail::TracedException<std::runtime_error>{
-      fmt::format("HDF5 read not supported for {}", CODE)};
   }
 };
 

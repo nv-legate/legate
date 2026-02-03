@@ -17,6 +17,8 @@
 #include <legate/io/hdf5/interface.h>
 #include <legate/runtime/runtime.h>
 #include <legate/tuning/scope.h>
+#include <legate/type/complex.h>
+#include <legate/type/half.h>
 #include <legate/type/types.h>
 #include <legate/utilities/abort.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -27,6 +29,7 @@
 #include <fmt/std.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <stdexcept>
 #include <string_view>
@@ -40,11 +43,6 @@ namespace {
 
 [[nodiscard]] Type deduce_type_from_dataset(const wrapper::HDF5DataSet& dset)
 {
-  constexpr std::size_t _8_BIT  = 1;  // 1 byte
-  constexpr std::size_t _16_BIT = 2;  // 2 bytes
-  constexpr std::size_t _32_BIT = 4;  // 4 bytes
-  constexpr std::size_t _64_BIT = 8;  // 8 bytes
-
   const auto dtype  = dset.type();
   const auto dclass = dtype.type_class();
 
@@ -52,10 +50,10 @@ namespace {
     case wrapper::HDF5Type::Class::BOOL: return legate::bool_();
     case wrapper::HDF5Type::Class::SIGNED_INTEGER: {
       switch (const auto s = dtype.size()) {
-        case _8_BIT: return legate::int8();
-        case _16_BIT: return legate::int16();
-        case _32_BIT: return legate::int32();
-        case _64_BIT: return legate::int64();
+        case sizeof(std::int8_t): return legate::int8();
+        case sizeof(std::int16_t): return legate::int16();
+        case sizeof(std::int32_t): return legate::int32();
+        case sizeof(std::int64_t): return legate::int64();
         default:  // legate-lint: no-switch-default
           throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
             fmt::format("unhandled signed integer size: {}", s)};
@@ -63,10 +61,10 @@ namespace {
     }
     case wrapper::HDF5Type::Class::UNSIGNED_INTEGER: {
       switch (const auto s = dtype.size()) {
-        case _8_BIT: return legate::uint8();
-        case _16_BIT: return legate::uint16();
-        case _32_BIT: return legate::uint32();
-        case _64_BIT: return legate::uint64();
+        case sizeof(std::uint8_t): return legate::uint8();
+        case sizeof(std::uint16_t): return legate::uint16();
+        case sizeof(std::uint32_t): return legate::uint32();
+        case sizeof(std::uint64_t): return legate::uint64();
         default:  // legate-lint: no-switch-default
           throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
             fmt::format("unhandled unsigned integer size: {}", s)};
@@ -74,12 +72,21 @@ namespace {
     }
     case wrapper::HDF5Type::Class::FLOAT: {
       switch (const auto s = dtype.size()) {
-        case _16_BIT: return legate::float16();
-        case _32_BIT: return legate::float32();
-        case _64_BIT: return legate::float64();
+        case sizeof(Half): return legate::float16();
+        case sizeof(float): return legate::float32();
+        case sizeof(double): return legate::float64();
         default:  // legate-lint: no-switch-default
           throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
             fmt::format("unhandled floating point size: {}", s)};
+      }
+    }
+    case wrapper::HDF5Type::Class::COMPLEX: {
+      switch (const auto s = dtype.size()) {
+        case sizeof(Complex<float>): return legate::complex64();
+        case sizeof(Complex<double>): return legate::complex128();
+        default:  // legate-lint: no-switch-default
+          throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
+            fmt::format("unhandled complex floating point size: {}", s)};
       }
     }
     case wrapper::HDF5Type::Class::BITFIELD: [[fallthrough]];

@@ -12,6 +12,8 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <H5public.h>
+
 #include <gtest/gtest.h>
 
 #include <cstddef>
@@ -238,10 +240,10 @@ class IOHDF5WriteUnit : public RegisterOnceFixture<Config>,
     case legate::Type::Code::NIL: [[fallthrough]];
     case legate::Type::Code::STRING: [[fallthrough]];
     case legate::Type::Code::BINARY: return true;
-    // HDF5 does not have native complex support, we should approximate this with structure
-    // types ideally.
+    // HDF5 does not have native complex support until 2.0. We could approximate this with
+    // structure types for versions < 2.
     case legate::Type::Code::COMPLEX64: [[fallthrough]];
-    case legate::Type::Code::COMPLEX128: [[fallthrough]];
+    case legate::Type::Code::COMPLEX128: return LEGATE_DEFINED(H5_HAVE_COMPLEX_NUMBERS);
     // These are not supported from our side
     case legate::Type::Code::FIXED_ARRAY: [[fallthrough]];
     case legate::Type::Code::STRUCT: [[fallthrough]];
@@ -250,23 +252,32 @@ class IOHDF5WriteUnit : public RegisterOnceFixture<Config>,
   LEGATE_ABORT("Unhandled type code ", type.code());
 }
 
+[[nodiscard]] auto make_test_values()
+{
+  constexpr auto TEN = 10;
+
+  return ::testing::Values(legate::bool_(),
+                           legate::int8(),
+                           legate::int16(),
+                           legate::int32(),
+                           legate::int64(),
+                           legate::uint8(),
+                           legate::uint16(),
+                           legate::uint32(),
+                           legate::uint64(),
+                           legate::float16(),
+                           legate::float32(),
+                           legate::float64(),
+#if LEGATE_DEFINED(H5_HAVE_COMPLEX_NUMBERS)
+                           legate::complex64(),
+                           legate::complex128(),
+#endif
+                           legate::binary_type(TEN));
+}
+
 }  // namespace
 
-INSTANTIATE_TEST_SUITE_P(,
-                         IOHDF5WriteUnit,
-                         ::testing::Values(legate::bool_(),
-                                           legate::int8(),
-                                           legate::int16(),
-                                           legate::int32(),
-                                           legate::int64(),
-                                           legate::uint8(),
-                                           legate::uint16(),
-                                           legate::uint32(),
-                                           legate::uint64(),
-                                           legate::float16(),
-                                           legate::float32(),
-                                           legate::float64(),
-                                           legate::binary_type(10)));
+INSTANTIATE_TEST_SUITE_P(, IOHDF5WriteUnit, make_test_values());
 
 TEST_P(IOHDF5WriteUnit, Basic)
 {

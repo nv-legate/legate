@@ -183,6 +183,7 @@ class HDF5Type : public HDF5Object {
     SIGNED_INTEGER,
     UNSIGNED_INTEGER,
     FLOAT,
+    COMPLEX,
     TIME,
     STRING,
     BITFIELD,
