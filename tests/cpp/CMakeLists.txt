@@ -224,6 +224,7 @@ set(
   unit/scope.cc
   unit/scoped_allocator.cc
   unit/shape.cc
+  unit/storage.cc
   unit/timing.cc
   unit/buffer/typed_buffer.cc
   unit/buffer/task_local_buffer.cc
