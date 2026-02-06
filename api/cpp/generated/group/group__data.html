@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>data &#8212; NVIDIA legate (26.01.00.dev1+gff73494df)</title>
+    <title>data &#8212; NVIDIA legate (26.01.00.dev114+g548554e2f)</title>
   
   
   
@@ -48,12 +48,12 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=93ed6ddf"></script>
-    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/documentation_options.js?v=c64bd2cc"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=4ea706d9"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/generated/group/group__data';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev114+g548554e2f)</p>
   
 </a></div>
     
@@ -253,11 +253,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev114+g548554e2f)</p>
   
 </a>
 
@@ -2603,7 +2603,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 This routine can be used to determine whether two seemingly unrelated stores refer to the same logical memory region, including through possible transformations in either <code class="docutils literal notranslate"><span class="pre">this</span></code> or <code class="docutils literal notranslate"><span class="pre">other</span></code>.</p>
 <p>The user should note that some transformations <em>do</em> modify the underlying storage. For example, the store produced by slicing will <em>not</em> share the same storage as its parent, and this routine will return false for it:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_store</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">Shape</span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">int64</span><span class="p">());</span>
-<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Slice</span><span class="p">{</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="cm">/*dim=*/</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Slice</span><span class="p">{</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">});</span>
 
 <span class="w">  </span><span class="c1">// Slices partition a store into a parent and sub-store which both cover distinct regions,</span>
 <span class="w">  </span><span class="c1">// and hence don&#39;t share storage.</span>
@@ -3636,6 +3636,28 @@ The user may read from a write-only accessor, but must write to the read-from lo
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore18get_logical_regionEv">
+<span id="_CPPv3NK6legate13PhysicalStore18get_logical_regionEv"></span><span id="_CPPv2NK6legate13PhysicalStore18get_logical_regionEv"></span><span id="legate::PhysicalStore::get_logical_regionC"></span><span class="target" id="classlegate_1_1PhysicalStore_1a2232375d34e96373ae12b75debd66f35"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Legion</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">LogicalRegion</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_logical_region</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<dd><p>Returns the LogicalRegion backing this store (if region-backed) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional LogicalRegion if this store is backed by a Legion region </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore12get_field_idEv">
+<span id="_CPPv3NK6legate13PhysicalStore12get_field_idEv"></span><span id="_CPPv2NK6legate13PhysicalStore12get_field_idEv"></span><span id="legate::PhysicalStore::get_field_idC"></span><span class="target" id="classlegate_1_1PhysicalStore_1a89a237476d433a6caf4948e0f8865b74"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Legion</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">FieldID</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_field_id</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<dd><p>Returns the FieldID of this store (if region-backed) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional FieldID if this store is backed by a Legion region </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore21get_inline_allocationEv">
 <span id="_CPPv3NK6legate13PhysicalStore21get_inline_allocationEv"></span><span id="_CPPv2NK6legate13PhysicalStore21get_inline_allocationEv"></span><span id="legate::PhysicalStore::get_inline_allocationC"></span><span class="target" id="classlegate_1_1PhysicalStore_1afbbd9a3199bfc9db012552fc9fb2b159"></span><a class="reference internal" href="../class/classlegate_1_1InlineAllocation.html#_CPPv4N6legate16InlineAllocationE" title="legate::InlineAllocation"><span class="n"><span class="pre">InlineAllocation</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_inline_allocation</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
 <dd><p>Returns a raw pointer and strides to the allocation. </p>
@@ -4481,6 +4503,8 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0ENK6legate13PhysicalStore4codeE9TYPE_CODEv"><code class="docutils literal notranslate"><span class="pre">code()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_NSt7int32_tEENK6legate13PhysicalStore5shapeE4RectI3DIMEv"><code class="docutils literal notranslate"><span class="pre">shape()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore6domainEv"><code class="docutils literal notranslate"><span class="pre">domain()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore18get_logical_regionEv"><code class="docutils literal notranslate"><span class="pre">get_logical_region()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore12get_field_idEv"><code class="docutils literal notranslate"><span class="pre">get_field_id()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore21get_inline_allocationEv"><code class="docutils literal notranslate"><span class="pre">get_inline_allocation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore6targetEv"><code class="docutils literal notranslate"><span class="pre">target()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore11is_readableEv"><code class="docutils literal notranslate"><span class="pre">is_readable()</span></code></a></li>
@@ -4618,7 +4642,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 
   <p class="copyright">
     
-      Copyright © 2021-2025, NVIDIA.
+      Copyright © 2021-2026, NVIDIA.
       <br/>
     
   </p>

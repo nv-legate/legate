@@ -1,5 +1,5 @@
 ..
-  SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
   SPDX-License-Identifier: Apache-2.0
 
 Using GPUDirect Storage to perform HDF5 file I/O
@@ -29,12 +29,13 @@ for the installation instructions of GPUDirect Storage.
 
 The vfd-gds library will be installed as part of legate installation.
 
-In order to enable GDS for the HDF5 library, do the following before starting legate
-environment.
+In order to enable GDS for the HDF5 library, use the following configuration flag. Legate will
+try to detect if GDS is available and enable it automatically. But if you want to force enable
+it, you can use the following flag.
 
 .. code-block:: sh
 
-   $ export LEGATE_IO_USE_VFD_GDS=1
+   $ export LEGATE_CONFIG="--io-use-vfd-gds"
 
 Read Example
 ------------
@@ -195,8 +196,53 @@ For more GDS specific performance tuning, please refer to
 https://docs.nvidia.com/gpudirect-storage/troubleshooting-guide/index.html
 
 Usually cuFile.json is located at /etc/cufile.json. The user can specify the
-path to the cuFile.json file using the CUFILE_CONFIG_FILE environment variable.
+path to a custom cuFile.json file using the CUFILE_ENV_PATH_JSON environment variable.
 
 .. code-block:: sh
 
    $ export CUFILE_ENV_PATH_JSON=/path/to/cufile.json
+
+HDF5 File Layout
+----------------
+
+Legate optimizes HDF5 file reading by leveraging the underlying file layout. HDF5 supports
+several layout types, and Legate provides specialized handling for contiguous, chunked,
+and virtual layouts.
+
+**Contiguous Layout**
+
+For contiguous datasets, Legate partitions the data by splitting along the slowest-varying
+dimension while preserving the shape of all other dimensions.
+
+**Chunked Layout**
+
+For chunked datasets, Legate uses the chunk dimensions to guide partitioning. It splits
+chunks along the slowest-varying dimension to achieve the desired number of partitions.
+The reads are done according to the chunk sizes so having larger chunk sizes helps
+improve the performance.
+
+**Virtual Dataset Layout**
+
+For virtual datasets, all source files must use the same layout type.
+
+- If the source files use contiguous layout, Legate applies the same partitioning strategy
+  as for regular contiguous datasets. It expects all the source files to have the same
+  block shapes except the edge blocks.
+- If the source files use chunked layout, Legate applies the same partitioning strategy
+  as for regular chunked datasets. It expects all the source files to have the same chunk sizes.
+
+
+Performance Considerations
+--------------------------
+Based on Legate performance testing on distributed file systems such as Lustre, the
+following factors have shown to impact read performance:
+
+1. **File organization**: Virtual datasets with data distributed across multiple source
+   files perform better than a single large file.
+2. **Dataset size**: Larger datasets generally achieve higher throughput than smaller datasets.
+3. **Read parallelism**: Increasing parallelism through cuFile threads and Legate processes
+   improves performance.
+
+Further to extract the maximum performance, it is recommended to use file system specific
+settings such as Lustre file striping where it controls the data placement to the underlying
+storage devices.

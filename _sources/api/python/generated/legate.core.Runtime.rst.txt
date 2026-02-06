@@ -1,5 +1,5 @@
 ﻿..
-  SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
   SPDX-License-Identifier: Apache-2.0
 
 legate.core.Runtime
@@ -9,7 +9,9 @@ legate.core.Runtime
 
 .. autoclass:: Runtime
 
+   
    .. automethod:: Runtime.__init__
+   
 
    
    
@@ -38,6 +40,7 @@ legate.core.Runtime
       ~Runtime.create_array_like
       ~Runtime.create_auto_task
       ~Runtime.create_library
+      ~Runtime.create_logical_store_from_physical
       ~Runtime.create_manual_task
       ~Runtime.create_nullable_array
       ~Runtime.create_store

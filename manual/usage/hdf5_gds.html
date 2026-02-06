@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Using GPUDirect Storage to perform HDF5 file I/O &#8212; NVIDIA legate (26.01.00.dev1+gff73494df)</title>
+    <title>Using GPUDirect Storage to perform HDF5 file I/O &#8212; NVIDIA legate (26.01.00.dev114+g548554e2f)</title>
   
   
   
@@ -48,9 +48,9 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../_static/documentation_options.js?v=93ed6ddf"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/documentation_options.js?v=c64bd2cc"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=4ea706d9"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'manual/usage/hdf5_gds';</script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev114+g548554e2f)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev1+gff73494df) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev114+g548554e2f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.01.00.dev1+gff73494df)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev114+g548554e2f)</p>
   
 </a>
 
@@ -716,9 +716,10 @@ APIs for the i/o.</p>
 <p>Please refer to <a class="reference external" href="https://docs.nvidia.com/gpudirect-storage/troubleshooting-guide/index.html">https://docs.nvidia.com/gpudirect-storage/troubleshooting-guide/index.html</a>
 for the installation instructions of GPUDirect Storage.</p>
 <p>The vfd-gds library will be installed as part of legate installation.</p>
-<p>In order to enable GDS for the HDF5 library, do the following before starting legate
-environment.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_IO_USE_VFD_GDS</span><span class="o">=</span><span class="m">1</span>
+<p>In order to enable GDS for the HDF5 library, use the following configuration flag. Legate will
+try to detect if GDS is available and enable it automatically. But if you want to force enable
+it, you can use the following flag.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">&quot;--io-use-vfd-gds&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -867,10 +868,48 @@ Edit <code class="docutils literal notranslate"><span class="pre">/etc/cufile.js
 <p>For more GDS specific performance tuning, please refer to
 <a class="reference external" href="https://docs.nvidia.com/gpudirect-storage/troubleshooting-guide/index.html">https://docs.nvidia.com/gpudirect-storage/troubleshooting-guide/index.html</a></p>
 <p>Usually cuFile.json is located at /etc/cufile.json. The user can specify the
-path to the cuFile.json file using the CUFILE_CONFIG_FILE environment variable.</p>
+path to a custom cuFile.json file using the CUFILE_ENV_PATH_JSON environment variable.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">CUFILE_ENV_PATH_JSON</span><span class="o">=</span>/path/to/cufile.json
 </pre></div>
 </div>
+</section>
+<section id="hdf5-file-layout">
+<h2>HDF5 File Layout<a class="headerlink" href="#hdf5-file-layout" title="Link to this heading">#</a></h2>
+<p>Legate optimizes HDF5 file reading by leveraging the underlying file layout. HDF5 supports
+several layout types, and Legate provides specialized handling for contiguous, chunked,
+and virtual layouts.</p>
+<p><strong>Contiguous Layout</strong></p>
+<p>For contiguous datasets, Legate partitions the data by splitting along the slowest-varying
+dimension while preserving the shape of all other dimensions.</p>
+<p><strong>Chunked Layout</strong></p>
+<p>For chunked datasets, Legate uses the chunk dimensions to guide partitioning. It splits
+chunks along the slowest-varying dimension to achieve the desired number of partitions.
+The reads are done according to the chunk sizes so having larger chunk sizes helps
+improve the performance.</p>
+<p><strong>Virtual Dataset Layout</strong></p>
+<p>For virtual datasets, all source files must use the same layout type.</p>
+<ul class="simple">
+<li><p>If the source files use contiguous layout, Legate applies the same partitioning strategy
+as for regular contiguous datasets. It expects all the source files to have the same
+block shapes except the edge blocks.</p></li>
+<li><p>If the source files use chunked layout, Legate applies the same partitioning strategy
+as for regular chunked datasets. It expects all the source files to have the same chunk sizes.</p></li>
+</ul>
+</section>
+<section id="performance-considerations">
+<h2>Performance Considerations<a class="headerlink" href="#performance-considerations" title="Link to this heading">#</a></h2>
+<p>Based on Legate performance testing on distributed file systems such as Lustre, the
+following factors have shown to impact read performance:</p>
+<ol class="arabic simple">
+<li><p><strong>File organization</strong>: Virtual datasets with data distributed across multiple source
+files perform better than a single large file.</p></li>
+<li><p><strong>Dataset size</strong>: Larger datasets generally achieve higher throughput than smaller datasets.</p></li>
+<li><p><strong>Read parallelism</strong>: Increasing parallelism through cuFile threads and Legate processes
+improves performance.</p></li>
+</ol>
+<p>Further to extract the maximum performance, it is recommended to use file system specific
+settings such as Lustre file striping where it controls the data placement to the underlying
+storage devices.</p>
 </section>
 </section>
 
@@ -932,6 +971,8 @@ path to the cuFile.json file using the CUFILE_CONFIG_FILE environment variable.<
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gds-not-available">GDS Not Available</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gds-performance-tuning">GDS Performance Tuning</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5-file-layout">HDF5 File Layout</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-considerations">Performance Considerations</a></li>
 </ul>
   </nav></div>
 
@@ -1014,7 +1055,7 @@ path to the cuFile.json file using the CUFILE_CONFIG_FILE environment variable.<
 
   <p class="copyright">
     
-      Copyright © 2021-2025, NVIDIA.
+      Copyright © 2021-2026, NVIDIA.
       <br/>
     
   </p>
