@@ -25,6 +25,9 @@ on:
       cuda-version:
         type: string
         required: false
+    secrets:
+      NV_LEGATE_INTER_REPOS_ACCESS:
+        required: true
 
 jobs:
   build-docs:
@@ -93,6 +96,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
