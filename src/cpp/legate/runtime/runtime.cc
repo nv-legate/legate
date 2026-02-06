@@ -8,6 +8,7 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/data/detail/shape.h>
+#include <legate/data/physical_store.h>
 #include <legate/operation/detail/task.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/scope.h>
@@ -62,6 +63,13 @@ Library Runtime::find_or_create_library(
 
 AutoTask Runtime::create_task(Library library, LocalTaskID task_id)
 {
+  // PhysicalTask variant for inline execution
+  if (is_running_in_task()) {
+    return AutoTask{impl_->create_physical_task_for_inline(*library.impl(), task_id)};
+  }
+  if (impl_->config().enable_inline_task_launch()) {
+    return AutoTask{impl_->create_physical_task(*library.impl(), task_id)};
+  }
   return AutoTask{impl_->create_task(*library.impl(), task_id)};
 }
 
@@ -200,6 +208,16 @@ LogicalStore Runtime::tree_reduce(Library library,
 
 void Runtime::submit(AutoTask&& task)
 {
+  if (task.is_inline_execution_()) {
+    // PhysicalTask variant = inline execution
+    // Execute immediately, skip queue entirely
+    auto impl = task.release_physical_();
+    impl->validate();
+    impl->launch();
+    task.clear_user_refs_();
+    return;
+  }
+
   impl_->submit(task.release_());
   // The following line should never be moved before the `submit()` call above, nor should it be
   // fused with the `release_()` call, because their side effects must be ordered properly in the
@@ -345,6 +363,11 @@ LogicalStore Runtime::create_store(const Shape& shape,
 {
   return LogicalStore{
     impl_->create_store(shape.impl(), type.impl(), allocation.impl(), ordering.impl())};
+}
+
+LogicalStore Runtime::create_logical_store_from_physical(const PhysicalStore& physical_store)
+{
+  return LogicalStore{impl_->create_logical_store_from_physical(physical_store.impl())};
 }
 
 std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(

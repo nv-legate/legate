@@ -130,4 +130,6 @@ Legion::DomainAffineTransform PhysicalStore::get_inverse_transform() const
   return transform_->inverse_transform(dim());
 }
 
+bool PhysicalStore::on_target(mapping::StoreTarget /*target*/) const { return false; }
+
 }  // namespace legate::detail

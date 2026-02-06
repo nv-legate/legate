@@ -17,6 +17,8 @@
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/experimental/io/detail/task.h>
 #include <legate/mapping/detail/core_mapper.h>
 #include <legate/mapping/detail/default_mapper.h>
@@ -323,6 +325,27 @@ InternalSharedPtr<PhysicalTask> Runtime::create_physical_task(const legate::Task
 
   return make_internal_shared<PhysicalTask>(
     library, *variant, task_id, new_op_id(), *machine.impl());
+}
+
+InternalSharedPtr<PhysicalTask> Runtime::create_physical_task_for_inline(const Library& library,
+                                                                         LocalTaskID task_id)
+{
+  if (!legate::is_running_in_task()) {
+    throw TracedException<std::runtime_error>{
+      "create_physical_task_for_inline() can only be called from within a task"};
+  }
+
+  const auto processor    = get_executing_processor();
+  const auto variant_code = mapping::detail::to_variant_code(processor.kind());
+  const auto& task_info   = *library.find_task(task_id);
+  const auto variant      = task_info.find_variant(variant_code);
+
+  if (!variant.has_value()) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Task {} does not have variant for {}", task_info, variant_code)};
+  }
+
+  return make_internal_shared<PhysicalTask>(library, *variant, task_id, new_op_id(), get_machine());
 }
 
 void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,
@@ -2415,6 +2438,44 @@ void Runtime::inline_task_end()  // NOLINT(readability-make-member-function-cons
 }
 
 Legion::MapperID Runtime::mapper_id() const { return get_mapper_manager_().mapper_id(); }
+
+InternalSharedPtr<LogicalStore> Runtime::create_logical_store_from_physical(
+  InternalSharedPtr<PhysicalStore> physical_store)
+{
+  if (!dynamic_cast<const RegionPhysicalStore*>(physical_store.get())) {
+    throw TracedException<std::runtime_error>{
+      "PhysicalStore is not region-backed (cannot create LogicalStore for nested execution)"};
+  }
+
+  auto& region_store  = physical_store->as_region_store();
+  auto [pr, fid]      = region_store.get_region_field();
+  auto logical_region = pr.get_logical_region();
+
+  auto domain = physical_store->domain();
+  auto type   = physical_store->type();
+
+  auto extents = from_domain(domain);
+
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents_copy = extents;
+  auto shape_for_region_field = make_internal_shared<Shape>(std::move(extents_copy));
+  auto shape_for_storage      = make_internal_shared<Shape>(std::move(extents));
+
+  auto field_size   = type->size();
+  auto region_field = make_internal_shared<LogicalRegionField>(
+    shape_for_region_field, field_size, logical_region, fid, std::nullopt, true);
+
+  region_field->mark_already_mapped();
+
+  auto storage =
+    make_internal_shared<Storage>(shape_for_storage, region_field, "from_physical_store");
+
+  auto logical_store_impl = make_internal_shared<LogicalStore>(std::move(storage), type);
+
+  logical_store_impl->set_mapped_physical_store(std::move(physical_store));
+  logical_store_impl->mark_non_transformable();
+
+  return logical_store_impl;
+}
 
 bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }
 

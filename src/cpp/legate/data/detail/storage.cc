@@ -90,6 +90,20 @@ Storage::Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
   }
 }
 
+Storage::Storage(InternalSharedPtr<Shape> shape,
+                 InternalSharedPtr<LogicalRegionField> region_field,
+                 std::string_view provenance)
+  : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
+    shape_{std::move(shape)},
+    provenance_{std::move(provenance)},
+    offsets_{legate::full(dim(), std::int64_t{0})},
+    storage_data_{std::optional<InternalSharedPtr<LogicalRegionField>>{std::move(region_field)}}
+{
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Create " << to_string();
+  }
+}
+
 // Leak is intentional
 // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 Storage::~Storage()

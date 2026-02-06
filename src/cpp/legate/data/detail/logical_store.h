@@ -130,6 +130,16 @@ class LogicalStore {
   [[nodiscard]] const std::optional<InternalSharedPtr<PhysicalStore>>& get_cached_physical_store()
     const;
   [[nodiscard]] bool is_mapped() const;
+
+  // Set the mapped PhysicalStore.
+  // This is used when creating a LogicalStore from an already-mapped PhysicalStore in nested tasks.
+  void set_mapped_physical_store(InternalSharedPtr<PhysicalStore> physical_store);
+
+  // Prevents transform operations (promote, project, slice, transpose, delinearize) on this store.
+  // Used for stores created from PhysicalStores in nested tasks, where transforms would
+  // invalidate the existing physical mapping.
+  void mark_non_transformable();
+
   [[nodiscard]] bool needs_flush() const;
   void detach();
   // Informs the runtime that references to this store may be removed in non-deterministic order
@@ -254,6 +264,7 @@ class LogicalStore {
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
   std::optional<InternalSharedPtr<PhysicalStore>> mapped_{};
+  bool non_transformable_{false};
 };
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(

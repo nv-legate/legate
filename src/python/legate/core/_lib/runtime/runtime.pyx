@@ -31,6 +31,7 @@ from ..data.logical_array cimport (
     to_cpp_logical_array,
 )
 from ..data.logical_store cimport LogicalStore, _LogicalStore
+from ..data.physical_store cimport PhysicalStore, _PhysicalStore
 from ..data.scalar cimport Scalar
 from ..data.shape cimport Shape, _Shape
 from ..mapping.machine cimport Machine
@@ -1175,6 +1176,41 @@ cdef class Runtime(Unconstructable):
         with nogil:
             _handle = self._handle.create_store(
                 std_move(cpp_shape), dtype._handle, std_move(alloc), cpp_ordering
+            )
+        return LogicalStore.from_handle(_handle)
+
+    cpdef LogicalStore create_logical_store_from_physical(
+        self,
+        PhysicalStore physical_store,
+    ):
+        r"""
+        Create a LogicalStore from a PhysicalStore for nested task execution.
+
+        This API enables nested execution by converting a task's input
+        PhysicalStore (representing an already-mapped region) back to a
+        LogicalStore suitable for launching nested operations.
+
+        Parameters
+        ----------
+        physical_store : PhysicalStore
+            The physical store to convert
+
+        Returns
+        -------
+        LogicalStore
+            Logical store wrapping the same region as the physical store
+
+        Raises
+        ------
+        RuntimeError
+            If the physical store is not region-backed
+        """
+        cdef _PhysicalStore cpp_physical = physical_store._handle
+        cdef _LogicalStore _handle
+
+        with nogil:
+            _handle = self._handle.create_logical_store_from_physical(
+                cpp_physical
             )
         return LogicalStore.from_handle(_handle)
 

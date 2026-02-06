@@ -142,10 +142,66 @@ struct PrimeSquareTask : public legate::LegateTask<PrimeSquareTask> {
   }
 };
 
-// Nested AutoTask that creates PhysicalTask internally
+struct SimpleNegationTask : public legate::LegateTask<SimpleNegationTask> {
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{NESTED_TEST_BASE_TASK_ID + 4}};
+
+  static void cpu_variant(legate::TaskContext context)
+  {
+    ASSERT_EQ(context.inputs().size(), 1);
+    ASSERT_EQ(context.outputs().size(), 1);
+
+    auto input_array  = context.input(0);
+    auto output_array = context.output(0);
+
+    auto input_store  = input_array.data();
+    auto output_store = output_array.data();
+
+    auto input_accessor  = input_store.read_accessor<std::int32_t, 1>();
+    auto output_accessor = output_store.write_accessor<std::int32_t, 1>();
+
+    auto domain = input_store.domain();
+    for (legate::PointInRectIterator<1> it{domain}; it.valid(); ++it) {
+      auto point             = *it;
+      output_accessor[point] = -input_accessor[point];
+    }
+  }
+};
+
+struct ParentTaskWithNestedAutoTask : public legate::LegateTask<ParentTaskWithNestedAutoTask> {
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{NESTED_TEST_BASE_TASK_ID + 5}};
+
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto runtime = legate::Runtime::get_runtime();
+    auto library = runtime->find_library(NESTED_TEST_LIBRARY_NAME);
+
+    ASSERT_EQ(context.inputs().size(), 1);
+    ASSERT_EQ(context.outputs().size(), 1);
+
+    auto input_physical_array  = context.input(0);
+    auto output_physical_array = context.output(0);
+
+    auto input_logical_store =
+      runtime->create_logical_store_from_physical(input_physical_array.data());
+    auto output_logical_store =
+      runtime->create_logical_store_from_physical(output_physical_array.data());
+
+    auto input_logical_array  = legate::LogicalArray{input_logical_store};
+    auto output_logical_array = legate::LogicalArray{output_logical_store};
+
+    auto auto_task = runtime->create_task(library, SimpleNegationTask::TASK_CONFIG.task_id());
+    auto_task.add_input(input_logical_array);
+    auto_task.add_output(output_logical_array);
+
+    runtime->submit(std::move(auto_task));
+  }
+};
+
 struct NestedAutoTaskWithPhysicalTask : public legate::LegateTask<NestedAutoTaskWithPhysicalTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{NESTED_TEST_BASE_TASK_ID + 4}};  // Independent task ID
+    legate::TaskConfig{legate::LocalTaskID{NESTED_TEST_BASE_TASK_ID + 6}};  // Independent task ID
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -184,6 +240,8 @@ class NestedTestConfig {
     AutoTaskWithPhysicalTask::register_variants(library);
     ManualTaskWithPhysicalTask::register_variants(library);
     PrimeSquareTask::register_variants(library);
+    SimpleNegationTask::register_variants(library);
+    ParentTaskWithNestedAutoTask::register_variants(library);
     NestedAutoTaskWithPhysicalTask::register_variants(library);
   }
 };
@@ -253,6 +311,116 @@ TEST_F(PhysicalTaskNestedTests, PhysicalTaskNestedInAutoTask)
     auto computed_sqrt       = sqrt_accessor[legate::Point<1>{0}];
     ASSERT_NEAR(computed_sqrt, 4.123F, 0.001F);
   }
+}
+
+TEST_F(PhysicalTaskNestedTests, AutoTaskDelegatesToPhysicalTaskInNestedContext)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(NestedTestConfig::LIBRARY_NAME);
+
+  constexpr std::int32_t SIZE = 10;
+  auto input_store            = runtime->create_store(legate::Shape{SIZE}, legate::int32());
+  {
+    auto input_physical_store = input_store.get_physical_store();
+    auto input_accessor       = input_physical_store.write_accessor<std::int32_t, 1>();
+    for (std::int32_t i = 0; i < SIZE; ++i) {
+      input_accessor[legate::Point<1>{i}] = i + 1;
+    }
+  }
+
+  auto output_store = runtime->create_store(legate::Shape{SIZE}, legate::int32());
+
+  auto parent_task =
+    runtime->create_task(library, ParentTaskWithNestedAutoTask::TASK_CONFIG.task_id());
+  parent_task.add_input(legate::LogicalArray{input_store});
+  parent_task.add_output(output_store);
+
+  runtime->submit(std::move(parent_task));
+  runtime->issue_execution_fence(true);
+  {
+    auto output_physical_store = output_store.get_physical_store();
+    auto output_accessor       = output_physical_store.read_accessor<std::int32_t, 1>();
+    for (std::int32_t i = 0; i < SIZE; ++i) {
+      auto expected = -(i + 1);
+      auto actual   = output_accessor[legate::Point<1>{i}];
+      ASSERT_EQ(actual, expected) << "Mismatch at index " << i;
+    }
+  }
+}
+
+TEST_F(PhysicalTaskNestedTests, CreateLogicalStoreFromPhysical)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto store    = runtime->create_store(legate::Shape{5}, legate::int32());
+  auto physical = store.get_physical_store();
+
+  auto logical = runtime->create_logical_store_from_physical(physical);
+
+  ASSERT_EQ(logical.dim(), 1);
+  ASSERT_EQ(logical.extents()[0], 5);
+  ASSERT_EQ(logical.type(), legate::int32());
+}
+
+TEST_F(PhysicalTaskNestedTests, CreateLogicalStoreFromPhysicalMultiDim)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto store_2d    = runtime->create_store(legate::Shape{3, 4}, legate::float32());
+  auto physical_2d = store_2d.get_physical_store();
+  auto logical_2d  = runtime->create_logical_store_from_physical(physical_2d);
+
+  ASSERT_EQ(logical_2d.dim(), 2);
+  ASSERT_EQ(logical_2d.extents()[0], 3);
+  ASSERT_EQ(logical_2d.extents()[1], 4);
+
+  auto store_3d    = runtime->create_store(legate::Shape{2, 3, 4}, legate::int64());
+  auto physical_3d = store_3d.get_physical_store();
+  auto logical_3d  = runtime->create_logical_store_from_physical(physical_3d);
+
+  ASSERT_EQ(logical_3d.dim(), 3);
+  ASSERT_EQ(logical_3d.extents()[0], 2);
+  ASSERT_EQ(logical_3d.extents()[1], 3);
+  ASSERT_EQ(logical_3d.extents()[2], 4);
+}
+
+TEST_F(PhysicalTaskNestedTests, CreateLogicalStoreFromPhysicalRejectsFuture)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto scalar_store =
+    runtime->create_store(legate::Shape{1}, legate::int32(), /*optimize_scalar=*/true);
+  auto physical = scalar_store.get_physical_store();
+
+  EXPECT_THROW((void)runtime->create_logical_store_from_physical(physical), std::runtime_error);
+}
+
+TEST_F(PhysicalTaskNestedTests, LogicalStoreFromPhysicalRejectsTransform)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  constexpr std::int64_t test_dim = 10;
+  auto store    = runtime->create_store(legate::Shape{test_dim, test_dim}, legate::int32());
+  auto physical = store.get_physical_store();
+  auto logical  = runtime->create_logical_store_from_physical(physical);
+
+  EXPECT_THROW((void)logical.slice(0, legate::Slice{2, 5}), std::runtime_error);
+  EXPECT_THROW((void)logical.transpose({1, 0}), std::runtime_error);
+  EXPECT_THROW((void)logical.promote(0, 5), std::runtime_error);
+  EXPECT_THROW((void)logical.project(0, 0), std::runtime_error);
+  EXPECT_THROW((void)logical.delinearize(0, {2, 5}), std::runtime_error);
+}
+
+TEST_F(PhysicalTaskNestedTests, LogicalStorePointsToSamePhysical)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto store           = runtime->create_store(legate::Shape{5, 5}, legate::int32());
+  auto input_physical  = store.get_physical_store();
+  auto logical         = runtime->create_logical_store_from_physical(input_physical);
+  auto output_physical = logical.get_physical_store();
+
+  EXPECT_EQ(input_physical.impl().get(), output_physical.impl().get());
 }
 
 }  // namespace test_task_store

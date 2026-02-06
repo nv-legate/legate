@@ -121,7 +121,8 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
                      std::uint32_t field_size,
                      Legion::LogicalRegion lr,
                      Legion::FieldID fid,
-                     std::optional<InternalSharedPtr<LogicalRegionField>> parent = std::nullopt);
+                     std::optional<InternalSharedPtr<LogicalRegionField>> parent = std::nullopt,
+                     bool non_owning                                             = false);
 
   ~LogicalRegionField() noexcept;
 
@@ -145,6 +146,12 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
               InternalSharedPtr<ExternalAllocation> allocation);
   void attach(Legion::ExternalResources external_resources,
               std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
+  /**
+   * @brief Marks this region field as already mapped.
+   *
+   * Used when wrapping an existing PhysicalStore in nested task execution.
+   */
+  void mark_already_mapped();
   void detach();
   void allow_out_of_order_destruction();
   void release_region_field() noexcept;
@@ -177,6 +184,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   bool released_{};
   bool mapped_{};
   bool destroyed_out_of_order_{};
+  bool non_owning_{};  // If true, skips Legion cleanup (wraps existing PhysicalStore)
 
   // This object is updated in a deferred manner by a ReleaseRegionField operation
   InternalSharedPtr<PhysicalState> physical_state_{};

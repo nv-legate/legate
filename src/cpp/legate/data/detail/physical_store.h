@@ -86,6 +86,15 @@ class PhysicalStore {
   void check_scalar_store() const;
   void check_unbound_store() const;
 
+  /**
+   * @brief Check whether this store's data resides on the given target.
+   *
+   * @param target The store target to check against.
+   *
+   * @return `true` if the store's data is on the specified target, `false` otherwise.
+   */
+  [[nodiscard]] virtual bool on_target(mapping::StoreTarget target) const;
+
  protected:
   InternalSharedPtr<detail::TransformStack> transform_{};
   InternalSharedPtr<Type> type_{};

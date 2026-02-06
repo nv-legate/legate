@@ -36,6 +36,7 @@ class PhysicalStore;
 class CommunicatorFactory;
 class ConstraintSolver;
 class Library;
+class PhysicalTask;
 class VariantInfo;
 
 class TaskBase : public Operation {
@@ -45,8 +46,7 @@ class TaskBase : public Operation {
            LocalTaskID task_id,
            std::uint64_t unique_id,
            std::int32_t priority,
-           mapping::detail::Machine machine,
-           bool can_inline_launch);
+           mapping::detail::Machine machine);
 
  public:
   void validate() override;
@@ -55,10 +55,6 @@ class TaskBase : public Operation {
   void set_side_effect(bool has_side_effect);
   void throws_exception(bool can_throw_exception);
 
- protected:
-  void inline_launch_() const;
-
- public:
   [[nodiscard]] std::string to_string(bool show_provenance) const override;
   [[nodiscard]] bool needs_flush() const override;
   [[nodiscard]] bool supports_replicated_write() const override;
@@ -103,7 +99,6 @@ class TaskBase : public Operation {
   SmallVector<TaskArrayArg> outputs_{};
   SmallVector<TaskArrayArg> reductions_{};
   SmallVector<GlobalRedopID> reduction_ops_{};
-  bool can_inline_launch_{};
 };
 
 class LogicalTask : public TaskBase {
@@ -113,8 +108,7 @@ class LogicalTask : public TaskBase {
               LocalTaskID task_id,
               std::uint64_t unique_id,
               std::int32_t priority,
-              mapping::detail::Machine machine,
-              bool can_inline_launch);
+              mapping::detail::Machine machine);
 
  public:
   // LogicalTask-specific scalar methods (non-virtual)
@@ -186,6 +180,9 @@ class AutoTask final : public LogicalTask {
                      std::int32_t redop_kind,
                      const Variable* partition_symbol);
 
+  // Override to delegate to PhysicalTask in nested mode
+  void add_scalar_arg(InternalSharedPtr<Scalar> scalar);
+
   [[nodiscard]] const Variable* find_or_declare_partition(
     const InternalSharedPtr<LogicalArray>& array);
 
@@ -206,6 +203,9 @@ class AutoTask final : public LogicalTask {
 
  private:
   void fixup_ranges_(Strategy& strategy);
+
+  // For nested task execution: if set, AutoTask delegates to PhysicalTask
+  InternalSharedPtr<PhysicalTask> nested_physical_task_{};
 
   SmallVector<InternalSharedPtr<Constraint>> constraints_{};
   SmallVector<LogicalArray*> arrays_to_fixup_{};

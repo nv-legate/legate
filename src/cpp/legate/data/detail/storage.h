@@ -58,6 +58,12 @@ class Storage {
           InternalSharedPtr<StoragePartition> parent,
           SmallVector<std::uint64_t, LEGATE_MAX_DIM> color,
           SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
+  /**
+   * @brief Create a RegionField-backed storage from an existing LogicalRegionField.
+   */
+  Storage(InternalSharedPtr<Shape> shape,
+          InternalSharedPtr<LogicalRegionField> region_field,
+          std::string_view provenance);
   ~Storage();
 
   Storage(Storage&&) noexcept            = default;

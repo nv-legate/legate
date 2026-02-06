@@ -600,6 +600,17 @@ class LEGATE_EXPORT Runtime {
     const ExternalAllocation& allocation,
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
   /**
+   * @brief Creates a LogicalStore from a PhysicalStore for nested task execution
+   *
+   * This API enables composability by allowing library operations (which expect LogicalStores)
+   * to be called from within user tasks (which receive PhysicalStores).
+   *
+   * @param physical_store PhysicalStore to convert
+   * @return LogicalStore wrapping the same Legion region
+   */
+  [[nodiscard]] LogicalStore create_logical_store_from_physical(
+    const PhysicalStore& physical_store);
+  /**
    * @brief Creates a store by attaching to multiple existing allocations.
    *
    * External allocations must be read-only.

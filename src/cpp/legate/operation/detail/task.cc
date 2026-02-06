@@ -11,6 +11,7 @@
 #include <legate/data/detail/array_tasks.h>
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/logical_arrays/list_logical_array.h>
+#include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/operation/detail/launcher_arg.h>
@@ -22,12 +23,14 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/runtime.h>
 #include <legate/task/detail/inline_task_body.h>
 #include <legate/task/detail/returned_exception.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/detail/task_return.h>
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/task/detail/variant_info.h>
+#include <legate/task/task_context.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/cpp_version.h>
 #include <legate/utilities/detail/align.h>
@@ -55,8 +58,7 @@ TaskBase::TaskBase(const Library& library,
                    LocalTaskID task_id,
                    std::uint64_t unique_id,
                    std::int32_t priority,
-                   mapping::detail::Machine machine,
-                   bool can_inline_launch)
+                   mapping::detail::Machine machine)
   : Operation{unique_id, priority, std::move(machine)},
     library_{library},
     vinfo_{variant_info},
@@ -64,8 +66,7 @@ TaskBase::TaskBase(const Library& library,
     concurrent_{variant_info.options.concurrent},
     has_side_effect_{variant_info.options.has_side_effect},
     can_throw_exception_{variant_info.options.may_throw_exception},
-    can_elide_device_ctx_sync_{variant_info.options.elide_device_ctx_sync},
-    can_inline_launch_{can_inline_launch}
+    can_elide_device_ctx_sync_{variant_info.options.elide_device_ctx_sync}
 {
   if (const auto& signature = variant_info.signature; signature.has_value()) {
     constexpr auto nargs_upper_limit = [](const std::optional<TaskSignature::Nargs>& nargs) {
@@ -107,11 +108,6 @@ void TaskBase::validate()
   }
 }
 
-void TaskBase::inline_launch_() const
-{
-  inline_task_body(*this, machine().preferred_variant(), variant_info_().body);
-}
-
 std::string TaskBase::to_string(bool show_provenance) const
 {
   auto result = fmt::format("{}:{}", library().get_task_name(local_task_id()), unique_id_);
@@ -139,10 +135,8 @@ LogicalTask::LogicalTask(const Library& library,
                          LocalTaskID task_id,
                          std::uint64_t unique_id,
                          std::int32_t priority,
-                         mapping::detail::Machine machine,
-                         bool can_inline_launch)
-  : TaskBase{
-      library, variant_info, task_id, unique_id, priority, std::move(machine), can_inline_launch}
+                         mapping::detail::Machine machine)
+  : TaskBase{library, variant_info, task_id, unique_id, priority, std::move(machine)}
 {
   if (const auto& communicators = variant_info.options.communicators; communicators.has_value()) {
     for (auto&& comm : *communicators) {
@@ -199,30 +193,7 @@ void LogicalTask::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
 
-void LogicalTask::launch_task_(Strategy* strategy)
-{
-  auto launch_fast = can_inline_launch_;
-
-  if (launch_fast) {
-    // TODO(jfaibussowit)
-    // Inline launch not yet supported for unbound arrays. Not yet clear what to do to
-    // materialize the buffers (as sizes aren't yet known).
-    launch_fast = std::none_of(outputs_.begin(), outputs_.end(), [](const TaskArrayArg& array_arg) {
-      return std::visit(
-        Overload{[](const InternalSharedPtr<LogicalArray>& arr) -> bool { return arr->unbound(); },
-                 [](const InternalSharedPtr<PhysicalArray>&) -> bool {
-                   return false;  // PhysicalArray is never unbound
-                 }},
-        array_arg.array);
-    });
-  }
-
-  if (launch_fast) {
-    inline_launch_();
-  } else {
-    legion_launch_(strategy);
-  }
-}
+void LogicalTask::launch_task_(Strategy* strategy) { legion_launch_(strategy); }
 
 void LogicalTask::legion_launch_(Strategy* strategy_ptr)
 {
@@ -468,14 +439,13 @@ AutoTask::AutoTask(const Library& library,
                    std::uint64_t unique_id,
                    std::int32_t priority,
                    mapping::detail::Machine machine)
-  : LogicalTask{library,
-                variant_info,
-                task_id,
-                unique_id,
-                priority,
-                std::move(machine),
-                /* can_inline_launch */ Runtime::get_runtime().config().enable_inline_task_launch()}
+  : LogicalTask{library, variant_info, task_id, unique_id, priority, std::move(machine)}
 {
+}
+
+void AutoTask::add_scalar_arg(InternalSharedPtr<Scalar> scalar)
+{
+  TaskBase::add_scalar_arg(std::move(scalar));
 }
 
 const Variable* AutoTask::add_input(InternalSharedPtr<LogicalArray> array)
@@ -559,6 +529,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
   if (array->type()->variable_size()) {
     throw TracedException<std::invalid_argument>{"List/string arrays cannot be used for reduction"};
   }
+
   auto legion_redop_id = array->type()->find_reduction_operator(redop_kind);
 
   array->record_scalar_reductions(this, legion_redop_id);
@@ -689,13 +660,7 @@ ManualTask::ManualTask(const Library& library,
                        std::uint64_t unique_id,
                        std::int32_t priority,
                        mapping::detail::Machine machine)
-  : LogicalTask{library,
-                variant_info,
-                task_id,
-                unique_id,
-                priority,
-                std::move(machine),
-                /* can_inline_launch */ false},
+  : LogicalTask{library, variant_info, task_id, unique_id, priority, std::move(machine)},
     strategy_{make_internal_shared<Strategy>()}
 {
   strategy_->set_launch_domain(*this, launch_domain);
@@ -835,13 +800,7 @@ PhysicalTask::PhysicalTask(const Library& library,
                            LocalTaskID task_id,
                            std::uint64_t unique_id,
                            mapping::detail::Machine machine)
-  : TaskBase{library,
-             variant_info,
-             task_id,
-             unique_id,
-             /*priority=*/0,
-             std::move(machine),
-             /*can_inline_launch=*/true}
+  : TaskBase{library, variant_info, task_id, unique_id, /*priority=*/0, std::move(machine)}
 {
 }
 
@@ -876,11 +835,17 @@ void PhysicalTask::add_scalar_reduction(InternalSharedPtr<PhysicalStore> store,
 
 void PhysicalTask::launch()
 {
-  // PhysicalTask always uses inline launch - never goes through Legion
-  inline_launch_();
-}
+  const auto processor_kind = Runtime::get_runtime().get_executing_processor().kind();
+  const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
+  const auto body           = [&] {
+    const auto variant = library().find_task(local_task_id())->find_variant(variant_code);
 
-// Note: PhysicalTask doesn't need launch_task_() - it uses inline_launch_() directly
+    LEGATE_ASSERT(variant.has_value());
+    return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
+  }();
+
+  inline_task_body(*this, variant_code, body);
+}
 
 void PhysicalTask::fixup_ranges_(Strategy&)
 {

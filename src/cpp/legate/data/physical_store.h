@@ -651,6 +651,20 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] Domain domain() const;
 
   /**
+   * @brief Returns the LogicalRegion backing this store (if region-backed)
+   *
+   * @return Optional LogicalRegion if this store is backed by a Legion region
+   */
+  [[nodiscard]] std::optional<Legion::LogicalRegion> get_logical_region() const;
+
+  /**
+   * @brief Returns the FieldID of this store (if region-backed)
+   *
+   * @return Optional FieldID if this store is backed by a Legion region
+   */
+  [[nodiscard]] std::optional<Legion::FieldID> get_field_id() const;
+
+  /**
    * @brief Returns a raw pointer and strides to the allocation
    *
    * @return An `InlineAllocation` object holding a raw pointer and strides

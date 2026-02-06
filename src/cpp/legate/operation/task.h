@@ -264,11 +264,20 @@ class LEGATE_EXPORT AutoTask {
   [[nodiscard]] const SharedPtr<detail::AutoTask>& impl_()  // NOLINT(readability-identifier-naming)
     const;
 
+  /**
+   * @brief Returns true if this AutoTask will execute inline.
+   *
+   * This occurs when the task was created in a nested task context.
+   */
+  [[nodiscard]] bool is_inline_execution_() const;  // NOLINT(readability-identifier-naming)
+
  private:
   friend class Runtime;
   explicit AutoTask(InternalSharedPtr<detail::AutoTask> impl);
+  explicit AutoTask(InternalSharedPtr<detail::PhysicalTask> impl);
 
   [[nodiscard]] SharedPtr<detail::AutoTask> release_();
+  [[nodiscard]] SharedPtr<detail::PhysicalTask> release_physical_();
   [[nodiscard]] InternalSharedPtr<detail::LogicalArray> record_user_ref_(LogicalArray array);
   void clear_user_refs_();
 

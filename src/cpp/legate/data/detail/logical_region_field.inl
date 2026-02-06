@@ -52,12 +52,14 @@ inline LogicalRegionField::LogicalRegionField(
   std::uint32_t field_size,
   Legion::LogicalRegion lr,
   Legion::FieldID fid,
-  std::optional<InternalSharedPtr<LogicalRegionField>> parent)
+  std::optional<InternalSharedPtr<LogicalRegionField>> parent,
+  bool non_owning)
   : shape_{std::move(shape)},
     field_size_{field_size},
     lr_{std::move(lr)},
     fid_{fid},
     parent_{std::move(parent)},
+    non_owning_{non_owning},
     physical_state_{make_internal_shared<PhysicalState>()}
 {
 }

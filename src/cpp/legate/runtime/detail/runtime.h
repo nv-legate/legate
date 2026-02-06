@@ -160,6 +160,23 @@ class Runtime {
    */
   [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task(
     const legate::TaskContext& context, const Library& library, LocalTaskID task_id);
+
+  /**
+   * @brief Creates a PhysicalTask for inline execution in nested task context.
+   *
+   * This method creates a PhysicalTask using the current executing processor's context.
+   * It should only be called when is_running_in_task() returns true. This is used
+   * internally by AutoTask when created in a nested context to enable immediate
+   * inline execution.
+   *
+   * @param library The library containing the task implementation
+   * @param task_id Local task identifier within the library
+   * @return A shared pointer to the created PhysicalTask
+   * @throws std::runtime_error if not running inside a task
+   */
+  [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task_for_inline(
+    const Library& library, LocalTaskID task_id);
+
   void issue_copy(InternalSharedPtr<LogicalStore> target,
                   InternalSharedPtr<LogicalStore> source,
                   std::optional<std::int32_t> redop);
@@ -310,6 +327,20 @@ class Runtime {
     InternalSharedPtr<Type> type,
     Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
     InternalSharedPtr<mapping::detail::DimOrdering> ordering);
+
+  /**
+   * @brief Creates a LogicalStore wrapping an existing PhysicalStore.
+   *
+   * Used in nested task execution to convert a PhysicalStore into a LogicalStore
+   * that can be passed to library operations. The resulting store shares the same
+   * Legion region and is marked as already-mapped and non-transformable.
+   *
+   * @param physical_store The PhysicalStore to wrap. Must be region-backed.
+   * @return LogicalStore wrapping the same Legion region.
+   * @throws std::runtime_error if the PhysicalStore is not region-backed.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalStore> create_logical_store_from_physical(
+    InternalSharedPtr<PhysicalStore> physical_store);
 
   void prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
                                   SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,

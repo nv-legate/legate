@@ -30,4 +30,6 @@ inline const Legion::PhysicalRegion& RegionField::get_physical_region() const
 
 inline Legion::FieldID RegionField::get_field_id() const { return fid_; }
 
+inline Legion::LogicalRegion RegionField::get_logical_region() const { return lr_; }
+
 }  // namespace legate::detail

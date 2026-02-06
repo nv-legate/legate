@@ -69,6 +69,8 @@ inline Legion::FutureMap LogicalStore::get_future_map() const
 // user created a physical store with. The storage_ holds the ground truth
 inline bool LogicalStore::is_mapped() const { return get_storage()->is_mapped(); }
 
+inline void LogicalStore::mark_non_transformable() { non_transformable_ = true; }
+
 inline bool LogicalStore::needs_flush() const { return unbound() || is_mapped(); }
 
 inline const std::optional<InternalSharedPtr<Partition>>& LogicalStore::get_current_key_partition()
@@ -107,6 +109,11 @@ inline const std::optional<InternalSharedPtr<PhysicalStore>>&
 LogicalStore::get_cached_physical_store() const
 {
   return mapped_;
+}
+
+inline void LogicalStore::set_mapped_physical_store(InternalSharedPtr<PhysicalStore> physical_store)
+{
+  mapped_ = std::move(physical_store);
 }
 
 }  // namespace legate::detail

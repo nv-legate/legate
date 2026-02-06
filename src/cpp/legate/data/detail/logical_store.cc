@@ -148,6 +148,10 @@ InternalSharedPtr<LogicalStore> LogicalStore::reinterpret_as(InternalSharedPtr<T
 
 InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size)
 {
+  if (non_transformable_) {
+    throw TracedException<std::runtime_error>{
+      "Cannot promote LogicalStore created from PhysicalStore in nested task"};
+  }
   if (extra_dim < 0 || extra_dim > static_cast<std::int32_t>(dim())) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Invalid promotion on dimension {} for a {}-D store", extra_dim, dim())};
@@ -165,6 +169,10 @@ InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, st
 
 InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64_t index)
 {
+  if (non_transformable_) {
+    throw TracedException<std::runtime_error>{
+      "Cannot project LogicalStore created from PhysicalStore in nested task"};
+  }
   auto&& old_extents = extents();
 
   if (d < 0 || d >= static_cast<std::int32_t>(dim())) {
@@ -219,6 +227,10 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
                                                      Slice slice)
 {
   LEGATE_ASSERT(self.get() == this);
+  if (non_transformable_) {
+    throw TracedException<std::runtime_error>{
+      "Cannot slice LogicalStore created from PhysicalStore in nested task"};
+  }
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Invalid slicing of dimension {} for a {}-D store", dim, this->dim())};
@@ -276,6 +288,10 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
 InternalSharedPtr<LogicalStore> LogicalStore::transpose(
   SmallVector<std::int32_t, LEGATE_MAX_DIM> axes)
 {
+  if (non_transformable_) {
+    throw TracedException<std::runtime_error>{
+      "Cannot transpose LogicalStore created from PhysicalStore in nested task"};
+  }
   if (axes.size() != dim()) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Dimension Mismatch: expected {} axes, but got {}", dim(), axes.size())};
@@ -301,6 +317,10 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(
 InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
   std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes)
 {
+  if (non_transformable_) {
+    throw TracedException<std::runtime_error>{
+      "Cannot delinearize LogicalStore created from PhysicalStore in nested task"};
+  }
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Invalid delinearization on dimension {} for a {}-D store", dim, this->dim())};

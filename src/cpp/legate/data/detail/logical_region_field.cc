@@ -144,6 +144,8 @@ void LogicalRegionField::unmap()
   physical_state_->unmap();
 }
 
+void LogicalRegionField::mark_already_mapped() { mapped_ = true; }
+
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
                                 InternalSharedPtr<ExternalAllocation> allocation)
 {
@@ -210,6 +212,12 @@ void LogicalRegionField::allow_out_of_order_destruction()
 void LogicalRegionField::release_region_field() noexcept
 {
   if (released_ || parent().has_value()) {
+    return;
+  }
+
+  // Skip Legion cleanup if non-owning
+  if (non_owning_) {
+    released_ = true;
     return;
   }
 

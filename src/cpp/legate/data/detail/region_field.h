@@ -43,6 +43,7 @@ class RegionField {
 
   [[nodiscard]] const Legion::PhysicalRegion& get_physical_region() const;
   [[nodiscard]] Legion::FieldID get_field_id() const;
+  [[nodiscard]] Legion::LogicalRegion get_logical_region() const;
 
  private:
   std::int32_t dim_{-1};

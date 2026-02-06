@@ -32,4 +32,11 @@ InlineAllocation RegionPhysicalStore::get_inline_allocation() const
   return region_field_.get_inline_allocation();
 }
 
+Legion::LogicalRegion RegionPhysicalStore::get_logical_region() const
+{
+  return get_region_field().first.get_logical_region();
+}
+
+Legion::FieldID RegionPhysicalStore::get_field_id() const { return get_region_field().second; }
+
 }  // namespace legate::detail
