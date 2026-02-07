@@ -1,6 +1,0 @@
-legate.core.Runtime.create\_logical\_store\_from\_physical
-==========================================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Runtime.create_logical_store_from_physical

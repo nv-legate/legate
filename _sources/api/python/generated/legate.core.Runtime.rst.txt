@@ -40,7 +40,6 @@ legate.core.Runtime
       ~Runtime.create_array_like
       ~Runtime.create_auto_task
       ~Runtime.create_library
-      ~Runtime.create_logical_store_from_physical
       ~Runtime.create_manual_task
       ~Runtime.create_nullable_array
       ~Runtime.create_store
