@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (26.03.00.dev0)</title>
+    <title>runtime &#8212; NVIDIA legate (26.01.00.dev116+gc3dfa2b45)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=d7ed3147"></script>
+    <script src="../../../../_static/documentation_options.js?v=a8fb014e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -57,7 +57,7 @@ SPDX-License-Identifier: Apache-2.0
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '26.03';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '26.01';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev116+gc3dfa2b45)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev116+gc3dfa2b45)</p>
   
 </a>
 
@@ -1942,6 +1942,27 @@ SPDX-License-Identifier: Apache-2.0
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Logical store. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime34create_logical_store_from_physicalERK13PhysicalStore">
+<span id="_CPPv3N6legate7Runtime34create_logical_store_from_physicalERK13PhysicalStore"></span><span id="_CPPv2N6legate7Runtime34create_logical_store_from_physicalERK13PhysicalStore"></span><span id="legate::Runtime::create_logical_store_from_physical__PhysicalStoreCR"></span><span class="target" id="classlegate_1_1Runtime_1a17df217a9dc460793656d074c2c256ae"></span><a class="reference internal" href="../class/classlegate_1_1LogicalStore.html#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_logical_store_from_physical</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1PhysicalStore.html#_CPPv4N6legate13PhysicalStoreE" title="legate::PhysicalStore"><span class="n"><span class="pre">PhysicalStore</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">physical_store</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><br /></dt>
+<dd><p>Creates a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> from a <a class="reference internal" href="group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref">PhysicalStore</span></a> for nested task execution. </p>
+<p>This API enables composability by allowing library operations (which expect LogicalStores) to be called from within user tasks (which receive PhysicalStores).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>physical_store</strong> – <a class="reference internal" href="group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref">PhysicalStore</span></a> to convert </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> wrapping the same Legion region </p>
 </dd>
 </dl>
 </dd></dl>
@@ -5024,6 +5045,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_storeERK6ScalarRK5Shape"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK4TypePvbRKN7mapping11DimOrderingE"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK4TypeRK18ExternalAllocationRKN7mapping11DimOrderingE"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime34create_logical_store_from_physicalERK13PhysicalStore"><code class="docutils literal notranslate"><span class="pre">create_logical_store_from_physical()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK5tupleINSt8uint64_tEERK4TypeRKNSt6vectorINSt4pairI18ExternalAllocation5tupleINSt8uint64_tEEEEEERKN7mapping11DimOrderingE"><code class="docutils literal notranslate"><span class="pre">create_store()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime26prefetch_bloated_instancesERK12LogicalStore4SpanIKNSt8uint64_tEE4SpanIKNSt8uint64_tEEb"><code class="docutils literal notranslate"><span class="pre">prefetch_bloated_instances()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate7Runtime19issue_mapping_fenceEv"><code class="docutils literal notranslate"><span class="pre">issue_mapping_fence()</span></code></a></li>

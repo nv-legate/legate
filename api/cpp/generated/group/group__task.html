@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>task &#8212; NVIDIA legate (26.03.00.dev0)</title>
+    <title>task &#8212; NVIDIA legate (26.01.00.dev116+gc3dfa2b45)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=d7ed3147"></script>
+    <script src="../../../../_static/documentation_options.js?v=a8fb014e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,7 +58,7 @@ SPDX-License-Identifier: Apache-2.0
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '26.03';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '26.01';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev116+gc3dfa2b45)</p>
   
 </a></div>
     
@@ -253,11 +253,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.01.00.dev116+gc3dfa2b45) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (26.01.00.dev116+gc3dfa2b45)</p>
   
 </a>
 
@@ -1219,6 +1219,13 @@ c
 <dd class="field-odd"><p><strong>name</strong> – The name of the communicator to use for this task </p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate8AutoTask20is_inline_execution_Ev">
+<span id="_CPPv3NK6legate8AutoTask20is_inline_execution_Ev"></span><span id="_CPPv2NK6legate8AutoTask20is_inline_execution_Ev"></span><span id="legate::AutoTask::is_inline_execution_C"></span><span class="target" id="classlegate_1_1AutoTask_1aed311c5a514c426b7909feff37364741"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">is_inline_execution_</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
+<dd><p>Returns true if this <a class="reference internal" href="#classlegate_1_1AutoTask"><span class="std std-ref">AutoTask</span></a> will execute inline. </p>
+<p>This occurs when the task was created in a nested task context. </p>
 </dd></dl>
 
 </div>
@@ -3063,6 +3070,7 @@ Has no effect on non-device variants (for example CPU variants).</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask15set_side_effectEb"><code class="docutils literal notranslate"><span class="pre">set_side_effect()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask16throws_exceptionEb"><code class="docutils literal notranslate"><span class="pre">throws_exception()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask16add_communicatorENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">add_communicator()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate8AutoTask20is_inline_execution_Ev"><code class="docutils literal notranslate"><span class="pre">is_inline_execution_()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8AutoTask4ImplE"><code class="docutils literal notranslate"><span class="pre">legate::AutoTask::Impl</span></code></a></li>
 </ul>
 </li>
