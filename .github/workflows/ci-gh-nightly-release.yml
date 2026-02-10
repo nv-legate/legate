@@ -237,7 +237,7 @@ jobs:
     steps:
       - &update-moving-branch-step
         name: Move ${{ env.MOVING_BRANCH }} forward
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const owner = context.repo.owner;
