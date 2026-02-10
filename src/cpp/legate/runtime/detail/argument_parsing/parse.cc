@@ -87,14 +87,15 @@ std::string ParsedArgs::config_summary() const
   fmt::format_to(std::back_inserter(ret),
                  "==============================================\n"
                  "Legate configuration summary:\n");
+  // If a variable is worth reporting here, please consider if it should be
+  // added as a property to legate.core._lib.runtime.detail.config.Config
   print_var(auto_config);
   print_var(show_progress);
   print_var(empty_task);
   print_var(warmup_nccl);
   print_var(inline_task_launch);
   print_var(single_controller_execution);
-  // No point printing this one, obviously we are showing usage
-  // print_var(show_usage);
+  print_var(show_usage);
   print_var(max_exception_size);
   print_var(min_cpu_chunk);
   print_var(min_gpu_chunk);
@@ -614,7 +615,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "Minimum GPU chunk size (in bytes).\n"
     "\n"
     "If using GPUs, any task operating on arrays smaller than this will not be parallelized across "
-    "more than one core.",
+    "more than one GPU.",
     LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST));
 
   min_gpu_chunk.action(CheckPositive{"Minimum GPU chunk size (in bytes)"});

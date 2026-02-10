@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 import sys
 import json
@@ -211,11 +210,25 @@ def machine_info() -> MachineInfo:
     }
 
 
+def _runtime_info() -> dict[str, Any]:
+    # we import this here because importing anything from
+    # ..core will try to start the runtime, and we want
+    # other functions in this module to be usable from legate-issue,
+    # which shouldn't require the runtime
+    from ..core import get_legate_runtime  # noqa: PLC0415
+
+    config = get_legate_runtime().config()
+    config_dict = {}
+    for attr in filter(lambda a: not a.startswith("__"), config.__dir__()):
+        config_dict[attr] = getattr(config, attr)
+    return config_dict
+
+
 Info = TypedDict(
     "Info",
     {
         "Program": str,
-        "Legate runtime configuration": str,
+        "Legate runtime configuration": dict[str, Any],
         "Machine": MachineInfo,
         "System info": SystemInfo,
         "Package versions": PackageVersions,
@@ -234,9 +247,7 @@ def info() -> Info:
     """
     return {
         "Program": " ".join(sys.argv),
-        "Legate runtime configuration": os.getenv(
-            "LEGATE_CONFIG", default="None"
-        ),
+        "Legate runtime configuration": _runtime_info(),
         "Machine": machine_info(),
         "System info": system_info(),
         "Package versions": package_versions(),
