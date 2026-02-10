@@ -207,3 +207,177 @@ jobs:
       source-repo: "${{ github.repository_owner }}/legate.internal"
       dest-repo: "${{ github.repository_owner }}/legate"
     secrets: inherit
+
+  update-nightly-main-branch:
+    name: Update nightly-main branch
+    if: >-
+      ${{
+        always() &&
+        github.repository_owner == 'nv-legate' &&
+        github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      }}
+    needs:
+      - cu129-tests
+      - cu129
+      - cu130-tests
+      - cu130
+      - cpu-tests
+      - cpu-packages
+      - build-nightly-docs
+      - push_code
+    runs-on: linux-amd64-cpu4
+    concurrency:
+      group: ${{ format('{0}-{1}', github.workflow, 'nightly-main-ref') }}
+      cancel-in-progress: false
+    timeout-minutes: 15
+    env:
+      TARGET_SHA: ${{ github.event.inputs.ref-sha || github.sha }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      MOVING_BRANCH: nightly-main
+    steps:
+      - &update-moving-branch-step
+        name: Move ${{ env.MOVING_BRANCH }} forward
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const targetSha = process.env.TARGET_SHA;
+            const defaultBranch = process.env.DEFAULT_BRANCH;
+            const movingBranch = process.env.MOVING_BRANCH;
+
+            if (!targetSha) {
+              core.setFailed("TARGET_SHA must be set.");
+              return;
+            }
+            if (!defaultBranch) {
+              core.setFailed("DEFAULT_BRANCH must be set.");
+              return;
+            }
+
+            let compare;
+            try {
+              compare = await github.rest.repos.compareCommitsWithBasehead({
+                owner,
+                repo,
+                basehead: `${targetSha}...${defaultBranch}`,
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                core.notice(
+                  `Target SHA ${targetSha} is unavailable; skipping ${movingBranch}.`,
+                );
+                return;
+              }
+              throw error;
+            }
+
+            const status = compare.data.status;
+            if (status !== "ahead" && status !== "identical") {
+              core.notice(
+                `Skipping ${movingBranch}: ${targetSha} is not on ${defaultBranch} (compare status=${status}).`,
+              );
+              return;
+            }
+
+            const ref = `heads/${movingBranch}`;
+            const fullRef = `refs/${ref}`;
+
+            const getRef = async () =>
+              github.rest.git.getRef({
+                owner,
+                repo,
+                ref,
+              });
+
+            const updateRef = async () =>
+              github.rest.git.updateRef({
+                owner,
+                repo,
+                ref,
+                sha: targetSha,
+                force: false,
+              });
+
+            let refExists = false;
+            try {
+              await getRef();
+              refExists = true;
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
+
+            if (!refExists) {
+              try {
+                await github.rest.git.createRef({
+                  owner,
+                  repo,
+                  ref: fullRef,
+                  sha: targetSha,
+                });
+                core.info(`Created ${movingBranch} at ${targetSha}.`);
+                return;
+              } catch (error) {
+                if (error.status === 422) {
+                  core.notice(
+                    `${movingBranch} appeared concurrently; retrying fast-forward update.`,
+                  );
+                  try {
+                    await updateRef();
+                    core.info(`Updated ${movingBranch} to ${targetSha}.`);
+                    return;
+                  } catch (retryError) {
+                    if (retryError.status === 422) {
+                      core.notice(
+                        `Skipping ${movingBranch}: refusing non-fast-forward update (${retryError.message}).`,
+                      );
+                      return;
+                    }
+                    throw retryError;
+                  }
+                }
+                throw error;
+              }
+            }
+
+            try {
+              await updateRef();
+              core.info(`Updated ${movingBranch} to ${targetSha}.`);
+              return;
+            } catch (error) {
+              if (error.status === 422) {
+                core.notice(
+                  `Skipping ${movingBranch}: refusing non-fast-forward update (${error.message}).`,
+                );
+                return;
+              }
+              throw error;
+            }
+
+  update-nightly-uploaded-main-branch:
+    name: Update nightly-uploaded-main branch
+    if: >-
+      ${{
+        github.repository_owner == 'nv-legate' &&
+        github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+        needs.cu129.result == 'success' &&
+        needs.cu130.result == 'success' &&
+        needs.cpu-packages.result == 'success'
+      }}
+    needs:
+      - cu129
+      - cu130
+      - cpu-packages
+    runs-on: linux-amd64-cpu4
+    concurrency:
+      group: ${{ format('{0}-{1}', github.workflow, 'nightly-uploaded-main-ref') }}
+      cancel-in-progress: false
+    timeout-minutes: 15
+    env:
+      TARGET_SHA: ${{ github.event.inputs.ref-sha || github.sha }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      MOVING_BRANCH: nightly-uploaded-main
+    steps:
+      - *update-moving-branch-step
