@@ -59,6 +59,10 @@ Python
 
 .. rubric:: General
 
+- Add ``legate.core.Runtime.config()`` that provides information
+  about about legate's configuration (and which is considered an implementation
+  detail and has no guarantee of stability across versions).
+
 .. rubric:: Data
 
 .. rubric:: Mapping
