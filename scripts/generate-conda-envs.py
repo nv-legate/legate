@@ -19,9 +19,6 @@ Req = str
 Reqs = tuple[Req, ...]
 OSType = Literal["linux", "osx"]
 
-MAX_SANITIZER_VERSION = (11, 4)
-MAX_SANITIZER_VERSION_STR = ".".join(map(str, MAX_SANITIZER_VERSION))
-
 
 def V(version: str) -> tuple[int, ...]:
     padded_version = ([*version.split("."), "0", "0"])[:3]
@@ -183,7 +180,7 @@ class BuildConfig(SectionConfig):
         if self.ucx:
             pkgs += ("ucx>=1.16", "ucc")
         if self.sanitizers:
-            pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
+            pkgs += ("libsanitizer",)
         if self.os == "linux":
             pkgs += ("elfutils",)
         return sorted(pkgs)
@@ -223,7 +220,7 @@ class RuntimeConfig(SectionConfig):
             "zarr<3",
         )
         if self.sanitizers:
-            pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
+            pkgs += ("libsanitizer",)
         return pkgs
 
 

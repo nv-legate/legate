@@ -54,12 +54,6 @@ generate_yaml_file() {
   # shellcheck disable=SC2154
   ${SED} -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
 
-  # shellcheck disable=SC2154
-  if [[ ${LEGATE_BUILD_MODE} == *sanitizer* ]]; then
-    # shellcheck disable=SC2154
-    echo "  - libsanitizer <=${MAX_LIBSANITIZER_VERSION}" >> "${yaml_file}";
-  fi
-
   mkdir -p /tmp/out/
   cp "${yaml_file}" /tmp/out/
   mkdir -p /tmp/env_yaml
