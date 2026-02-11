@@ -1,0 +1,4 @@
+legate::mapping::ProxyInstanceMappingPolicy
+===========================================
+
+.. doxygenclass:: legate::mapping::ProxyInstanceMappingPolicy

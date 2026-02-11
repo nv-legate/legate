@@ -39,6 +39,8 @@ C++
 
 .. rubric:: I/O
 
+- Add native support for HDF5 complex types since HDF5 2.0. Users wanting to read/write
+  complex data must have at least HDF5 2.0 installed to enable support.
 
 Python
 ------
