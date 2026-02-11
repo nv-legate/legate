@@ -270,6 +270,7 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuGetErrorName, &get_error_name_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemAllocAsync, &mem_alloc_async_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemAllocManaged, &mem_alloc_managed_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeAsync, &mem_free_async_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemcpyAsync, &mem_cpy_async_);
 
@@ -281,6 +282,7 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventCreate, &event_create_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventRecord, &event_record_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventSynchronize, &event_synchronize_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventQuery, &event_query_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventElapsedTime, &event_elapsed_time_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventDestroy, &event_destroy_);
 
@@ -305,6 +307,7 @@ void CUDADriverAPI::read_symbols_()
   if (!ctx_synchronize_cu_12_ && !ctx_synchronize_cu_13_) {
     throw_null_driver_request("cuCtxSynchronize");
   }
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuCtxRecordEvent, &ctx_record_event_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuKernelGetFunction, &kernel_get_function_);
 
@@ -374,6 +377,15 @@ void* CUDADriverAPI::mem_alloc_async(std::size_t num_bytes, CUstream stream) con
 
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(mem_alloc_async_(&ret, num_bytes, stream));
+  return reinterpret_cast<void*>(ret);  // NOLINT(performance-no-int-to-ptr)
+}
+
+void* CUDADriverAPI::mem_alloc_managed(std::size_t num_bytes, unsigned int flags) const
+{
+  CUdeviceptr ret{};
+
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(mem_alloc_managed_(&ret, num_bytes, flags));
   return reinterpret_cast<void*>(ret);  // NOLINT(performance-no-int-to-ptr)
 }
 
@@ -449,6 +461,12 @@ void CUDADriverAPI::event_synchronize(CUevent event) const
 {
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(event_synchronize_(event));
+}
+
+CUresult CUDADriverAPI::event_query(CUevent event) const
+{
+  check_initialized_();
+  return event_query_(event);
 }
 
 float CUDADriverAPI::event_elapsed_time(CUevent start, CUevent end) const
@@ -536,6 +554,12 @@ void CUDADriverAPI::ctx_synchronize(CUcontext ctx) const
   } else {
     abort_null_driver_fn("cuCtxSynchronize");
   }
+}
+
+void CUDADriverAPI::ctx_record_event(CUcontext ctx, CUevent event) const
+{
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(ctx_record_event_(ctx, event));
 }
 
 CUfunction CUDADriverAPI::kernel_get_function(CUkernel kernel) const

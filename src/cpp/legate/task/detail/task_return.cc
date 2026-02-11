@@ -7,6 +7,7 @@
 #include <legate/task/detail/task_return.h>
 
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/cuda/detail/cuda_util.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/returned_exception_common.h>
 #include <legate/utilities/detail/align.h>
@@ -70,9 +71,7 @@ void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_s
     //        potentially launched with different streams, within the task. Until we find
     //        the right approach, we simply synchronize the device before proceeding.
     if (kind == Processor::TOC_PROC) {
-      auto&& api = cuda::detail::get_cuda_driver_api();
-
-      api->ctx_synchronize(api->ctx_get_current());
+      cuda::detail::sync_current_ctx();
     }
   }
 

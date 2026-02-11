@@ -283,6 +283,7 @@ target_sources(
     legate/comm/detail/logger.cc
     legate/comm/detail/thread_comm.cc
     legate/cuda/detail/cuda_driver_api.cc
+    legate/cuda/detail/cuda_util.cc
     legate/cuda/detail/module_manager.cc
     legate/data/allocator.cc
     legate/data/buffer.cc

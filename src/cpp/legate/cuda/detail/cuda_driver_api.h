@@ -46,6 +46,8 @@ class CUDADriverAPI {
   [[nodiscard]] const char* get_error_name(CUresult error) const;
 
   [[nodiscard]] void* mem_alloc_async(std::size_t num_bytes, CUstream stream) const;
+  [[nodiscard]] void* mem_alloc_managed(std::size_t num_bytes,
+                                        unsigned int flags = CU_MEM_ATTACH_GLOBAL) const;
   void mem_free_async(void** ptr, CUstream stream) const;
   void mem_cpy_async(CUdeviceptr dst,
                      CUdeviceptr src,
@@ -61,6 +63,7 @@ class CUDADriverAPI {
   [[nodiscard]] CUevent event_create(unsigned int flags = 0) const;
   void event_record(CUevent event, CUstream stream) const;
   void event_synchronize(CUevent event) const;
+  [[nodiscard]] CUresult event_query(CUevent event) const;
   [[nodiscard]] float event_elapsed_time(CUevent start, CUevent end) const;
   void event_destroy(CUevent* event) const;
 
@@ -72,6 +75,7 @@ class CUDADriverAPI {
   void ctx_push_current(CUcontext ctx) const;
   [[nodiscard]] CUcontext ctx_pop_current() const;
   void ctx_synchronize(CUcontext ctx) const;
+  void ctx_record_event(CUcontext ctx, CUevent event) const;
 
   [[nodiscard]] CUfunction kernel_get_function(CUkernel kernel) const;
 
@@ -129,6 +133,9 @@ class CUDADriverAPI {
   CUresult (*get_error_name_)(CUresult error, const char** str)   = nullptr;
 
   CUresult (*mem_alloc_async_)(CUdeviceptr* dptr, std::size_t num_bytes, CUstream stream) = nullptr;
+  CUresult (*mem_alloc_managed_)(CUdeviceptr* dptr,
+                                 std::size_t num_bytes,
+                                 unsigned int flags)                                      = nullptr;
   CUresult (*mem_free_async_)(CUdeviceptr ptr, CUstream stream)                           = nullptr;
   CUresult (*mem_cpy_async_)(CUdeviceptr dst,
                              CUdeviceptr src,
@@ -143,6 +150,7 @@ class CUDADriverAPI {
   CUresult (*event_create_)(CUevent* event, unsigned int flags)          = nullptr;
   CUresult (*event_record_)(CUevent event, CUstream stream)              = nullptr;
   CUresult (*event_synchronize_)(CUevent event)                          = nullptr;
+  CUresult (*event_query_)(CUevent event)                                = nullptr;
   CUresult (*event_elapsed_time_)(float* ms, CUevent start, CUevent end) = nullptr;
   CUresult (*event_destroy_)(CUevent event)                              = nullptr;
 
@@ -156,6 +164,7 @@ class CUDADriverAPI {
   CUresult (*ctx_pop_current_)(CUcontext* ctx)                       = nullptr;
   CUresult (*ctx_synchronize_cu_12_)()                               = nullptr;
   CUresult (*ctx_synchronize_cu_13_)(CUcontext ctx)                  = nullptr;
+  CUresult (*ctx_record_event_)(CUcontext ctx, CUevent event)        = nullptr;
 
   CUresult (*kernel_get_function_)(CUfunction* func, CUkernel kernel) = nullptr;
 

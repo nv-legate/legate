@@ -36,11 +36,27 @@ using CUkernel   = ::CUkern_st*;
 enum CUlibraryOption : int;
 enum CUjit_option : int;
 
+enum CUmemAttach_flags : int {
+  CU_MEM_ATTACH_GLOBAL = 0x1,
+  CU_MEM_ATTACH_HOST   = 0x2,
+  CU_MEM_ATTACH_SINGLE = 0x4,
+};
+
 #ifdef CU_STREAM_PER_THREAD
 #define LEGATE_CU_STREAM_DEFAULT CU_STREAM_PER_THREAD
 #else
 #define LEGATE_CU_STREAM_DEFAULT ((CUstream)0x2)
 #endif
+
+#ifdef CUDA_VERSION
+// We have CUDA
+inline constexpr CUresult LEGATE_CUDA_SUCCESS         = CUDA_SUCCESS;
+inline constexpr CUresult LEGATE_CUDA_ERROR_NOT_READY = CUDA_ERROR_NOT_READY;
+#else
+inline constexpr CUresult LEGATE_CUDA_SUCCESS         = 0;
+inline constexpr CUresult LEGATE_CUDA_ERROR_NOT_READY = 600;
+#endif
+
 // NOLINTEND
 
 }  // namespace legate
