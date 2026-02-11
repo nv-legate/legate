@@ -18,7 +18,8 @@ path = [
     "src/cmake/versions/legion_version.json",
     "src/python/legate/legate_jupyter.json",
     "src/cmake/presets/*.json",
-    "src/CMakePresets.json"
+    "src/CMakePresets.json",
+    "src/cmake/versions/patches/add_region_instance_accessors.diff"
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
