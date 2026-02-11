@@ -339,6 +339,8 @@ target_sources(
     legate/mapping/mapping.cc
     legate/mapping/operation.cc
     legate/mapping/store.cc
+    legate/mapping/proxy_store_mapping.cc
+    legate/mapping/proxy_instance_mapping_policy.cc
     legate/mapping/detail/array.cc
     legate/mapping/detail/base_mapper.cc
     legate/mapping/detail/core_mapper.cc
@@ -349,6 +351,7 @@ target_sources(
     legate/mapping/detail/mapping.cc
     legate/mapping/detail/operation.cc
     legate/mapping/detail/store.cc
+    legate/mapping/detail/proxy_store_mapping.cc
     legate/operation/projection.cc
     legate/operation/task.cc
     legate/operation/detail/attach.cc
@@ -454,6 +457,7 @@ target_sources(
     legate/tuning/scope.cc
     legate/task/detail/task_signature.cc
     legate/task/detail/task_config.cc
+    legate/task/detail/store_mapping_signature.cc
     legate/type/types.cc
     legate/type/half.cc
     legate/type/detail/types.cc
@@ -912,6 +916,8 @@ install(
     legate/mapping/operation.inl
     legate/mapping/store.h
     legate/mapping/store.inl
+    legate/mapping/proxy_store_mapping.h
+    legate/mapping/proxy_store_mapping.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/mapping
 )
 

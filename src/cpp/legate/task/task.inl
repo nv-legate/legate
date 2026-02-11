@@ -84,11 +84,11 @@ template <typename T>
   const TaskConfig& task_config,
   const std::map<VariantCode, VariantOptions>& all_options)
 {
-  auto task_info = TaskInfo{task_name_().to_string()};
+  auto task_info = TaskInfo{task_name_().to_string(), task_config};
 
-  detail::VariantHelper<T, detail::CPUVariant>::record(lib, task_config, all_options, &task_info);
-  detail::VariantHelper<T, detail::OMPVariant>::record(lib, task_config, all_options, &task_info);
-  detail::VariantHelper<T, detail::GPUVariant>::record(lib, task_config, all_options, &task_info);
+  detail::VariantHelper<T, detail::CPUVariant>::record(lib, all_options, &task_info);
+  detail::VariantHelper<T, detail::OMPVariant>::record(lib, all_options, &task_info);
+  detail::VariantHelper<T, detail::GPUVariant>::record(lib, all_options, &task_info);
   return task_info;
 }
 

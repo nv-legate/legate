@@ -106,7 +106,7 @@ class StoreMapping {
 
  private:
   InstanceMappingPolicy policy_{};
-  std::vector<const Store*> stores_{};
+  legate::detail::SmallVector<const Store*> stores_{};
 };
 
 }  // namespace legate::mapping::detail

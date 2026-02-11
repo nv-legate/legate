@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/task/detail/task_config.h>
 #include <legate/task/detail/variant_info.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/zstring_view.h>
@@ -32,8 +33,9 @@ class TaskInfo {
    * @brief Construct a TaskInfo
    *
    * @param task_name The name of the task, usually gotten via demangling std::type_info.
+   * @param task_config The task configuration.
    */
-  explicit TaskInfo(std::string task_name);
+  TaskInfo(std::string task_name, InternalSharedPtr<TaskConfig> task_config);
 
   /**
    * @brief Append a new variant to the task.
@@ -80,6 +82,11 @@ class TaskInfo {
    */
   [[nodiscard]] detail::ZStringView name() const;
 
+  /**
+   * @return The task configuration.
+   */
+  [[nodiscard]] const InternalSharedPtr<TaskConfig>& task_config() const;
+
  private:
   /**
    * @return The set of registered variants.
@@ -92,6 +99,7 @@ class TaskInfo {
   [[nodiscard]] std::map<VariantCode, VariantInfo>& variants_();
 
   std::string task_name_{};
+  InternalSharedPtr<TaskConfig> task_config_{};
   std::map<VariantCode, VariantInfo> task_variants_{};
 };
 

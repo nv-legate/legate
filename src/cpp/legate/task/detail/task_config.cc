@@ -19,6 +19,11 @@ void TaskConfig::signature(InternalSharedPtr<TaskSignature> signature)
 
 void TaskConfig::variant_options(const VariantOptions& options) { variant_options_ = options; }
 
+void TaskConfig::store_mappings(StoreMappingSignature store_mappings)
+{
+  store_mappings_ = std::move(store_mappings);
+}
+
 bool operator==(const TaskConfig& lhs, const TaskConfig& rhs) noexcept
 {
   if (std::addressof(lhs) == std::addressof(rhs)) {
@@ -36,10 +41,17 @@ bool operator==(const TaskConfig& lhs, const TaskConfig& rhs) noexcept
   const auto& lhs_sig = lhs.signature();
   const auto& rhs_sig = rhs.signature();
 
-  if (lhs_sig.has_value() && rhs_sig.has_value()) {
-    return (**lhs_sig) == (**rhs_sig);
+  if (lhs_sig.has_value() != rhs_sig.has_value()) {
+    return false;
   }
-  return !lhs_sig.has_value() && !rhs_sig.has_value();
+
+  if (lhs_sig.has_value() && rhs_sig.has_value()) {
+    if ((**lhs_sig) != (**rhs_sig)) {
+      return false;
+    }
+  }
+
+  return lhs.store_mappings() == rhs.store_mappings();
 }
 
 bool operator!=(const TaskConfig& lhs, const TaskConfig& rhs) noexcept { return !(lhs == rhs); }

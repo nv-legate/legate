@@ -10,9 +10,9 @@
 
 namespace legate::detail {
 
-inline TaskInfo::TaskInfo(std::string task_name) : task_name_{std::move(task_name)} {}
-
 inline detail::ZStringView TaskInfo::name() const { return task_name_; }
+
+inline const InternalSharedPtr<TaskConfig>& TaskInfo::task_config() const { return task_config_; }
 
 inline const std::map<VariantCode, VariantInfo>& TaskInfo::variants_() const
 {

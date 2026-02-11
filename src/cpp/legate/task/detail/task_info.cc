@@ -21,6 +21,11 @@
 
 namespace legate::detail {
 
+TaskInfo::TaskInfo(std::string task_name, InternalSharedPtr<TaskConfig> task_config)
+  : task_name_{std::move(task_name)}, task_config_{std::move(task_config)}
+{
+}
+
 static_assert(!is_pure_move_constructible_v<Legion::CodeDescriptor>,
               "Use by value and std::move for Legion::CodeDescriptor");
 

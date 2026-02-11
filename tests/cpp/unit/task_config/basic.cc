@@ -26,6 +26,7 @@ TEST_F(TaskConfigUnit, Empty)
   ASSERT_EQ(config.task_id(), task_id);
   ASSERT_EQ(config.task_signature(), std::nullopt);
   ASSERT_EQ(config.variant_options(), std::nullopt);
+  ASSERT_EQ(config.store_mappings(), std::nullopt);
 }
 
 TEST_F(TaskConfigUnit, Signature)
@@ -37,6 +38,7 @@ TEST_F(TaskConfigUnit, Signature)
   ASSERT_EQ(config.task_id(), task_id);
   ASSERT_THAT(config.task_signature(), ::testing::Optional(signature));
   ASSERT_EQ(config.variant_options(), std::nullopt);
+  ASSERT_EQ(config.store_mappings(), std::nullopt);
 }
 
 TEST_F(TaskConfigUnit, VariantOptions)
@@ -61,6 +63,21 @@ TEST_F(TaskConfigUnit, VariantOptions)
   const auto& vopts = optional_vopts->get();  // NOLINT(bugprone-unchecked-optional-access)
 
   ASSERT_EQ(vopts, options);
+}
+
+TEST_F(TaskConfigUnit, StoreMappings)
+{
+  // Need to use std::vector here. Tried to use std::array and regular array[], but then
+  // Googletest tries to make a copy of the values. This results in compile errors because
+  // ProxyStoreMapping is not default constructable.
+  const std::vector<legate::mapping::ProxyStoreMapping> expected = {
+    {legate::proxy::inputs, legate::mapping::StoreTarget::FBMEM},
+    {legate::proxy::outputs,
+     legate::mapping::ProxyInstanceMappingPolicy{}.with_exact(true).with_redundant(false)}};
+  const auto config   = legate::TaskConfig{legate::LocalTaskID{2}}.with_store_mappings({expected});
+  const auto mappings = config.store_mappings();
+
+  ASSERT_THAT(mappings, ::testing::Optional(::testing::ContainerEq(expected)));
 }
 
 TEST_F(TaskConfigUnit, EqSelf)

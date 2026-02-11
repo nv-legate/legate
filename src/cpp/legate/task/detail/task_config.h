@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/task/detail/store_mapping_signature.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
@@ -54,6 +55,13 @@ class TaskConfig {
   void variant_options(const VariantOptions& options);
 
   /**
+   * @brief Register task-wide mapping options.
+   *
+   * @param store_mappings The store mapping signature.
+   */
+  void store_mappings(StoreMappingSignature store_mappings);
+
+  /**
    * @return The local task ID for this task.
    */
   [[nodiscard]] LocalTaskID task_id() const;
@@ -69,6 +77,11 @@ class TaskConfig {
    */
   [[nodiscard]] const std::optional<VariantOptions>& variant_options() const;
 
+  /**
+   * @return The task-wide mapping options for the task, or `std::nullopt` if none were set.
+   */
+  [[nodiscard]] const std::optional<StoreMappingSignature>& store_mappings() const;
+
   friend bool operator==(const TaskConfig& lhs, const TaskConfig& rhs) noexcept;
   friend bool operator!=(const TaskConfig& lhs, const TaskConfig& rhs) noexcept;
 
@@ -76,6 +89,7 @@ class TaskConfig {
   LocalTaskID task_id_{};
   std::optional<InternalSharedPtr<TaskSignature>> signature_{};
   std::optional<VariantOptions> variant_options_{};
+  std::optional<StoreMappingSignature> store_mappings_{};
 };
 
 }  // namespace legate::detail

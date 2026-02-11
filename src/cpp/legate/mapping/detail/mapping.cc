@@ -249,7 +249,8 @@ StoreMapping::StoreMapping(InstanceMappingPolicy policy, const Store* store)
 }
 
 StoreMapping::StoreMapping(InstanceMappingPolicy policy, Span<const Store* const> stores)
-  : policy_{std::move(policy)}, stores_{stores.begin(), stores.end()}
+  : policy_{std::move(policy)},
+    stores_{legate::detail::tags::iterator_tag, stores.begin(), stores.end()}
 {
 }
 

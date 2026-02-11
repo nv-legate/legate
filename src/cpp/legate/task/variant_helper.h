@@ -20,7 +20,6 @@ namespace legate {
 
 class TaskContext;
 class Library;
-class TaskConfig;
 
 }  // namespace legate
 
@@ -95,7 +94,6 @@ template <typename T, template <typename...> typename SELECTOR, bool VALID = SEL
 class VariantHelper {
  public:
   static void record(const legate::Library& /*lib*/,
-                     const TaskConfig& /*task_config*/,
                      const std::map<VariantCode, VariantOptions>& /*all_options*/,
                      legate::TaskInfo* /*task_info*/)
   {
@@ -106,7 +104,6 @@ template <typename T, template <typename...> typename SELECTOR>
 class VariantHelper<T, SELECTOR, true> {
  public:
   static void record(const legate::Library& lib,
-                     const TaskConfig& task_config,
                      const std::map<VariantCode, VariantOptions>& all_options,
                      legate::TaskInfo* task_info)
   {
@@ -124,7 +121,6 @@ class VariantHelper<T, SELECTOR, true> {
                               variant_kind,
                               variant_impl,
                               entry,
-                              task_config,
                               options,
                               all_options);
     } else {
@@ -140,7 +136,6 @@ class VariantHelper<T, SELECTOR, true> {
                               variant_kind,
                               variant_impl,
                               entry,
-                              task_config,
                               options,
                               all_options);
     }

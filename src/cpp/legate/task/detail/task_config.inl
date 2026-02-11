@@ -22,4 +22,9 @@ inline const std::optional<VariantOptions>& TaskConfig::variant_options() const
   return variant_options_;
 }
 
+inline const std::optional<StoreMappingSignature>& TaskConfig::store_mappings() const
+{
+  return store_mappings_;
+}
+
 }  // namespace legate::detail

@@ -8,7 +8,6 @@ from libcpp.unordered_map cimport unordered_map as std_unordered_map
 
 from ..._lib.task.task_context cimport _TaskContext, TaskContext
 from ..._lib.task.task_info cimport _TaskInfo
-from ..._lib.task.task_config cimport _TaskConfig
 from ..._lib.runtime.library cimport _Library
 from ..._lib.utilities.typedefs cimport TaskFuncPtr, VariantImpl
 from ..._lib.utilities.abort cimport LEGATE_ABORT
@@ -415,8 +414,7 @@ cdef extern from "legate/task/task_info.h" nogil:
       const legate::Library &core_lib,
       legate::VariantCode variant_kind,
       legate::VariantImpl cy_entry,
-      legate::Processor::TaskFuncPtr py_entry,
-      const legate::TaskConfig& config)
+      legate::Processor::TaskFuncPtr py_entry)
     {
       handle->add_variant_(
         legate::TaskInfo::AddVariantKey{},
@@ -424,7 +422,6 @@ cdef extern from "legate/task/task_info.h" nogil:
         variant_kind,
         cy_entry,
         py_entry,
-        config,
         /* decl_options */ nullptr
       );
     }
@@ -437,13 +434,12 @@ cdef extern from "legate/task/task_info.h" nogil:
             const _Library&,
             VariantCode,
             VariantImpl,
-            TaskFuncPtr,
-            const _TaskConfig&
+            TaskFuncPtr
         ) except+
 
 
 cdef void finalize_variant_registration(
-    TaskInfo task_info, TaskConfig config, Library library, VariantCode code
+    TaskInfo task_info, Library library, VariantCode code
 ):
     cdef TaskFuncPtr entry
 
@@ -459,6 +455,5 @@ cdef void finalize_variant_registration(
             library._handle,
             code,
             legate_python_task_entry,
-            entry,
-            config._handle
+            entry
         )

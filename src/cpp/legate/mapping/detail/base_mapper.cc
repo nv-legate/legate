@@ -611,7 +611,15 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
                                                  const Legion::Task& legion_task,
                                                  Task* task)
 {
-  auto client_mappings = task->library().get_mapper().store_mappings(mapping::Task{task}, options);
+  auto client_mappings = [&] {
+    auto&& lib = task->library();
+
+    if (auto&& sm = lib.find_task(task->task_id())->task_config()->store_mappings();
+        sm.has_value()) {
+      return sm->apply(*task, options);
+    }
+    return lib.get_mapper().store_mappings(mapping::Task{task}, options);
+  }();
 
   return initialize_mapping_categories(key, client_mappings, mapper_name, legion_task);
 }

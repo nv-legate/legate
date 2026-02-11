@@ -332,6 +332,7 @@ set(
   unit/streaming/nested_scopes.cc
   unit/streaming/process_streaming_run.cc
   unit/task/physical_task.cc
+  unit/proxy_store_mapping.cc
   # experimental
   experimental/stl/elementwise.cc
   experimental/stl/fill.cc

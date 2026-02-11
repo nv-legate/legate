@@ -11,6 +11,7 @@
 #include <legate/task/task_signature.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <functional>
@@ -23,6 +24,12 @@ namespace legate::detail {
 class TaskConfig;
 
 }  // namespace legate::detail
+
+namespace legate::mapping {
+
+class ProxyStoreMapping;
+
+}  // namespace legate::mapping
 
 namespace legate {
 
@@ -54,6 +61,8 @@ class LEGATE_EXPORT TaskConfig {
   TaskConfig& operator=(TaskConfig&&) noexcept = default;
   ~TaskConfig();
 
+  explicit TaskConfig(InternalSharedPtr<detail::TaskConfig> impl);
+
   /**
    * @brief Construct a TaskConfig.
    *
@@ -78,6 +87,14 @@ class LEGATE_EXPORT TaskConfig {
   TaskConfig& with_variant_options(const VariantOptions& options);
 
   /**
+   * @brief Pre-declare the mapping decisions for each argument to the task.
+   *
+   * @param store_mappings The proxy mapping decisions.
+   * @return A reference to `this`.
+   */
+  TaskConfig& with_store_mappings(Span<const mapping::ProxyStoreMapping> store_mappings);
+
+  /**
    * @return The local task ID for this task.
    */
   [[nodiscard]] LocalTaskID task_id() const;
@@ -91,6 +108,8 @@ class LEGATE_EXPORT TaskConfig {
    * @return The variant options, if set, `std::nullopt` otherwise.
    */
   [[nodiscard]] std::optional<std::reference_wrapper<const VariantOptions>> variant_options() const;
+
+  [[nodiscard]] std::optional<std::vector<mapping::ProxyStoreMapping>> store_mappings() const;
 
   [[nodiscard]] const SharedPtr<detail::TaskConfig>& impl() const;
 

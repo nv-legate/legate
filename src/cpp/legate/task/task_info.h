@@ -66,8 +66,9 @@ class LEGATE_EXPORT TaskInfo {
    * @brief Construct a `TaskInfo`.
    *
    * @param task_name The name of the task.
+   * @param task_config The configuration options for the task.
    */
-  explicit TaskInfo(std::string task_name);
+  explicit TaskInfo(std::string task_name, const TaskConfig& task_config);
 
   /**
    * @brief Construct a `TaskInfo`.
@@ -116,20 +117,17 @@ class LEGATE_EXPORT TaskInfo {
    * @param vid The variant type to register.
    * @param body The variant function pointer.
    * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
-   * @param task_config The task-wide configuration options.
    * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
    * none were found.
    * @param registration_options Variant options specified at task registration time.
    */
-  void add_variant_(  // NOLINT(readability-identifier-naming)
-    AddVariantKey,
-    const Library& library,
-    VariantCode vid,
-    VariantImpl body,
-    Processor::TaskFuncPtr entry,
-    const TaskConfig& task_config,
-    const VariantOptions* decl_options,
-    const std::map<VariantCode, VariantOptions>& registration_options = {});
+  void add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
+                    const Library& library,
+                    VariantCode vid,
+                    VariantImpl body,
+                    Processor::TaskFuncPtr entry,
+                    const VariantOptions* decl_options,
+                    const std::map<VariantCode, VariantOptions>& registration_options = {});
 
   // These are "private" insofar that the access key is private
   /**
@@ -139,26 +137,28 @@ class LEGATE_EXPORT TaskInfo {
    * @param vid The variant type to register.
    * @param body The variant function pointer.
    * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
-   * @param task_config The task-wide configuration options.
    * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
    * none were found.
    * @param registration_options Variant options specified at task registration time.
    */
   template <typename T>
-  void add_variant_(  // NOLINT(readability-identifier-naming)
-    AddVariantKey,
-    const Library& library,
-    VariantCode vid,
-    LegionVariantImpl<T> body,
-    Processor::TaskFuncPtr entry,
-    const TaskConfig& task_config,
-    const VariantOptions* decl_options,
-    const std::map<VariantCode, VariantOptions>& registration_options = {});
+  void add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
+                    const Library& library,
+                    VariantCode vid,
+                    LegionVariantImpl<T> body,
+                    Processor::TaskFuncPtr entry,
+                    const VariantOptions* decl_options,
+                    const std::map<VariantCode, VariantOptions>& registration_options = {});
 
   /**
    * @return A human-readable representation of the Task.
    */
   [[nodiscard]] std::string to_string() const;
+
+  /**
+   * @return The task-wide configuration options.
+   */
+  [[nodiscard]] TaskConfig task_config() const;
 
   /**
    * @return The private implementation pointer.

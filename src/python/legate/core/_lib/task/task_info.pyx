@@ -22,11 +22,10 @@ from .task_config cimport TaskConfig
 
 cdef class TaskInfo(Unconstructable):
     @staticmethod
-    cdef TaskInfo from_handle(_TaskInfo handle, _LocalTaskID local_task_id):
+    cdef TaskInfo from_handle(_TaskInfo handle):
         cdef TaskInfo result = TaskInfo.__new__(TaskInfo)
 
         result._handle = std_move(handle)
-        result._local_id = local_task_id
         result._registered_variants = {}
         return result
 
@@ -44,7 +43,12 @@ cdef class TaskInfo(Unconstructable):
         self._registered_variants = {}
 
     cdef _LocalTaskID get_local_id(self):
-        return self._local_id
+        cdef _LocalTaskID id
+
+        with nogil:
+            id = self._handle.task_config().task_id()
+
+        return id
 
     def __repr__(self) -> str:
         r"""
@@ -77,12 +81,10 @@ cdef class TaskInfo(Unconstructable):
         str name,
         list[tuple[VariantCode, object]] variants,
     ):
-        cdef _LocalTaskID task_id = config.task_id
-
         if not variants:
             m = (
                 "Cannot construct task info "
-                f"(local id: {task_id}, name: {name})."
+                f"(local id: {config.task_id}, name: {name})."
                 " Variants must not be empty."
             )
             raise ValueError(m)
@@ -90,13 +92,12 @@ cdef class TaskInfo(Unconstructable):
         cdef TaskInfo task_info
 
         task_info = TaskInfo.from_handle(
-            _TaskInfo(name.encode()), task_id
+            _TaskInfo(name.encode(), config._handle)
         )
 
         cdef VariantCode variant_kind
         for variant_kind, variant_fn in variants:
             task_info.add_variant_config(
-                config=config,
                 library=library,
                 variant_kind=variant_kind,
                 fn=variant_fn
@@ -177,7 +178,6 @@ cdef class TaskInfo(Unconstructable):
 
     cdef void add_variant_config(
         self,
-        TaskConfig config,
         Library library,
         VariantCode variant_kind,
         object fn
@@ -197,7 +197,7 @@ cdef class TaskInfo(Unconstructable):
             )
 
         finalize_variant_registration(
-            task_info=self, config=config, library=library, code=variant_kind
+            task_info=self, library=library, code=variant_kind
         )
         # do this last to preserve strong exception guarantee
         self._registered_variants[variant_kind] = fn
@@ -226,7 +226,6 @@ cdef class TaskInfo(Unconstructable):
             ``variant_kind``.
         """
         self.add_variant_config(
-            config=TaskConfig(self._local_id),
             library=get_legate_runtime().core_library,
             variant_kind=variant_kind,
             fn=fn

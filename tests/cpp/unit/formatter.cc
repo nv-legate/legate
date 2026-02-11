@@ -377,8 +377,7 @@ TEST_F(FormatterUnit, Alignment)
 
 TEST_F(FormatterUnit, TaskInfo)
 {
-  const auto task_info = legate::TaskInfo{"test_task"};
-
+  auto task_info = legate::TaskInfo{"test_task", legate::TaskConfig{legate::LocalTaskID{0}}};
   ASSERT_EQ(fmt::format("{}", task_info), "test_task {}");
 }
 

@@ -19,7 +19,7 @@ from ..utilities.shared_ptr cimport _SharedPtr
 from ..runtime.library cimport Library
 from .variant_options cimport _VariantOptions
 from .variant_info cimport _VariantInfo
-from .task_config cimport TaskConfig
+from .task_config cimport _TaskConfig, TaskConfig
 
 cdef extern from "legate/task/task_info.h" namespace "legate" nogil:
     cdef cppclass _TaskInfoImpl "legate::detail::TaskInfo":
@@ -27,9 +27,10 @@ cdef extern from "legate/task/task_info.h" namespace "legate" nogil:
 
     cdef cppclass _TaskInfo "legate::TaskInfo":
         _TaskInfo() except+
-        _TaskInfo(std_string) except+
+        _TaskInfo(std_string, const _TaskConfig&) except+
         std_optional[_VariantInfo] find_variant(VariantCode) except+
-        std_string_view  name() except+
+        std_string_view name() except+
+        _TaskConfig task_config() except+
         # add_variant's final argument is defaulted in C++, this is the only
         # way I knew how to do the same in Cython. = {}, = (), or
         # = std_map[...]() all did not work...
@@ -45,11 +46,10 @@ cdef extern from "legate/task/task_info.h" namespace "legate" nogil:
 cdef class TaskInfo(Unconstructable):
     cdef:
         _TaskInfo _handle
-        _LocalTaskID _local_id
         dict _registered_variants
 
     @staticmethod
-    cdef TaskInfo from_handle(_TaskInfo, _LocalTaskID)
+    cdef TaskInfo from_handle(_TaskInfo)
 
     @staticmethod
     cdef TaskInfo from_variants_config(
@@ -64,7 +64,6 @@ cdef class TaskInfo(Unconstructable):
     cpdef bool has_variant(self, VariantCode)
     cdef void add_variant_config(
         self,
-        TaskConfig config,
         Library library,
         VariantCode variant_kind,
         object fn

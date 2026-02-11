@@ -25,11 +25,10 @@ void TaskInfo::add_variant_(AddVariantKey,
                             VariantCode vid,
                             VariantImpl body,
                             Processor::TaskFuncPtr entry,
-                            const TaskConfig& task_config,
                             const VariantOptions* decl_options,
                             const std::map<VariantCode, VariantOptions>& registration_options)
 {
-  const auto& task_config_impl = task_config.impl();
+  const auto& task_config = impl()->task_config();
 
   auto&& options = [&]() -> const VariantOptions& {
     // 1. The variant options (if any) supplied at the call-site of `register_variants()`.
@@ -43,7 +42,7 @@ void TaskInfo::add_variant_(AddVariantKey,
     }
 
     // 3. The variant options provided by TASK_CONFIG.
-    if (const auto& task_options = task_config_impl->variant_options(); task_options.has_value()) {
+    if (const auto& task_options = task_config->variant_options(); task_options.has_value()) {
       return *task_options;
     }
 
@@ -60,7 +59,7 @@ void TaskInfo::add_variant_(AddVariantKey,
 
   std::optional<InternalSharedPtr<detail::TaskSignature>> signature;
 
-  if (const auto& sig = task_config_impl->signature(); sig.has_value()) {
+  if (const auto& sig = task_config->signature(); sig.has_value()) {
     signature.emplace(*sig);
   }
 
@@ -69,8 +68,8 @@ void TaskInfo::add_variant_(AddVariantKey,
 
 // ==========================================================================================
 
-TaskInfo::TaskInfo(std::string task_name)
-  : impl_{legate::make_shared<detail::TaskInfo>(std::move(task_name))}
+TaskInfo::TaskInfo(std::string task_name, const TaskConfig& config)
+  : impl_{legate::make_shared<detail::TaskInfo>(std::move(task_name), config.impl())}
 {
 }
 
@@ -85,6 +84,8 @@ std::optional<VariantInfo> TaskInfo::find_variant(VariantCode vid) const
 }
 
 std::string TaskInfo::to_string() const { return impl()->to_string(); }
+
+TaskConfig TaskInfo::task_config() const { return TaskConfig{impl()->task_config()}; }
 
 std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
 {

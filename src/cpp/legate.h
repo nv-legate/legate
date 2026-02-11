@@ -23,6 +23,8 @@
 #include <legate/data/scalar.h>
 #include <legate/mapping/mapping.h>
 #include <legate/mapping/operation.h>
+#include <legate/mapping/proxy_instance_mapping_policy.h>
+#include <legate/mapping/proxy_store_mapping.h>
 #include <legate/operation/projection.h>
 #include <legate/operation/task.h>
 #include <legate/partitioning/constraint.h>
