@@ -73,7 +73,7 @@ jobs:
       LEGATE_ARCH: arch-ci-lint
       LEGATE_DIR: ${{ github.workspace }}
     runs-on: 'linux-amd64-cpu16'
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: true
     if: ${{ github.repository_owner == 'nv-legate' }}
