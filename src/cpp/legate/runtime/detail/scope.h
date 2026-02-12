@@ -18,6 +18,8 @@
 
 namespace legate::detail {
 
+class Config;
+
 class Scope {
   using Machine = legate::mapping::detail::Machine;
 
@@ -93,13 +95,21 @@ class Scope {
    */
   [[nodiscard]] std::uint32_t exchange_scheduling_window_size(std::uint32_t window_size);
 
+  /**
+   * @brief Initialize global scope.
+   *
+   * @param config Legate configuration.
+   */
+  explicit Scope(const Config& config);
+
  private:
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
   ExceptionMode exception_mode_{ExceptionMode::IMMEDIATE};
   std::string provenance_{};
   InternalSharedPtr<Machine> machine_{};
-  ParallelPolicy parallel_policy_{};
   std::uint32_t scheduling_window_size_{1};
+
+  ParallelPolicy parallel_policy_;
 };
 
 }  // namespace legate::detail

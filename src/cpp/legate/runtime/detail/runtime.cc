@@ -122,6 +122,7 @@ constexpr const char* const TOPLEVEL_NAME    = "Toplevel Task";
 Runtime::Runtime(Config config)
   : legion_runtime_{Legion::Runtime::get_runtime()},
     config_{std::move(config)},
+    scope_{this->config()},
     field_reuse_size_{local_machine().calculate_field_reuse_size(this->config().field_reuse_frac())}
 {
   static_cast<void>(scope_.exchange_scheduling_window_size(this->config().window_size()));
@@ -2192,7 +2193,7 @@ std::int32_t Runtime::finish()
 
   communicator_manager_.reset();
   partition_manager_.reset();
-  scope_ = Scope{};
+  scope_ = Scope{config()};
   comm::coll::finalize();
   // Mappers get raw pointers to Libraries, so just in case any of the above launched residual
   // cleanup tasks, we issue another fence here before we clear the Libraries.
@@ -2318,7 +2319,7 @@ extern void register_exception_reduction_op(const Library& context);
                              : std::make_unique<FieldManager>();
   runtime.communicator_manager_.emplace();
   runtime.partition_manager_.emplace();
-  static_cast<void>(runtime.scope_.exchange_machine(runtime.create_toplevel_machine()));
+  static_cast<void>(runtime.scope().exchange_machine(runtime.create_toplevel_machine()));
 
   comm::register_builtin_communicator_factories(runtime.core_library());
 

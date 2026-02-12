@@ -179,6 +179,7 @@ set(
   integration/mapping.cc
   integration/mixed_dim.cc
   integration/multi_scalar_out.cc
+  integration/parallel_policy.cc
   integration/partitioner.cc
   integration/physical_task.cc
   integration/projection.cc
@@ -219,6 +220,7 @@ set(
   unit/future_wrapper.cc
   unit/library.cc
   unit/logical_region_field.cc
+  unit/parallel_policy.cc
   unit/registration.cc
   unit/runtime.cc
   unit/scope.cc

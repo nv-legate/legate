@@ -17,6 +17,19 @@
  * @brief Class definition for legate::ParallelPolicy
  */
 
+namespace legate::mapping {
+
+enum class TaskTarget : std::uint8_t;
+
+}  // namespace legate::mapping
+
+namespace legate::detail {
+
+class Scope;
+class Config;
+
+}  // namespace legate::detail
+
 namespace legate {
 
 /**
@@ -98,6 +111,20 @@ class LEGATE_EXPORT ParallelPolicy {
    * @see set_overdecompose_factor.
    */
   ParallelPolicy& with_overdecompose_factor(std::uint32_t overdecompose_factor);
+
+  /**
+   * @brief Sets partitioning threshold for target processor kind.
+   *
+   * This knob signals to the runtime that all stores whose volume is greater than
+   * the threshold should be partitioned for the specified target processor kind.
+   * Users may specify different thresholds for different task targets at the same
+   * time.
+   *
+   * @param target Task target processor kind.
+   * @param threshold partitioning threshold.
+   */
+  ParallelPolicy& with_partitioning_threshold(mapping::TaskTarget target, std::uint64_t threshold);
+
   /**
    * @brief Returns the streaming flag.
    *
@@ -119,6 +146,16 @@ class LEGATE_EXPORT ParallelPolicy {
    * @return The over-decomposing factor.
    */
   [[nodiscard]] std::uint32_t overdecompose_factor() const;
+
+  /**
+   * @brief Read the partitioning threshold for a give TaskTarget.
+   *
+   * @param target The target processor kind.
+   *
+   * @return Partitioning threshold.
+   */
+  [[nodiscard]] std::uint64_t partitioning_threshold(mapping::TaskTarget target) const;
+
   /**
    * @brief Checks equality between `ParallelPolicy`s.
    *
@@ -128,6 +165,7 @@ class LEGATE_EXPORT ParallelPolicy {
    * @return false Otherwise.
    */
   [[nodiscard]] bool operator==(const ParallelPolicy& other) const;
+
   /**
    * @brief Checks inequality between `ParallelPolicy`s.
    *
@@ -138,9 +176,43 @@ class LEGATE_EXPORT ParallelPolicy {
    */
   [[nodiscard]] bool operator!=(const ParallelPolicy& other) const;
 
+  /**
+   * @brief Initialize ParallelPolicy to system defined defaults.
+   *
+   * Initializes the ParallelPolicy members to default values defined by the system
+   * configuration, which can be controlled via ``LEGATE_CONFIG`` environment
+   * variable. Details:
+   * - streaming_mode() : StreamingMode::OFF
+   * - overdecompose_factor() : 1
+   * - partitioning_threshold(CPU) : ``--cpu_chunk_size`` in ``LEGATE_CONFIG``
+   * - partitioning_threshold(GPU) : ``gpu_chunk_size`` in ``LEGATE_CONFIG``
+   * - partitioning_threshold(OMP) : ``omp_chunk_size`` in ``LEGATE_CONFIG``
+   *
+   * @note Legate runtime must be initialized before creating any ParallelPolicy
+   * instance.
+   */
+  ParallelPolicy();
+
+  class PrivateKey {
+    PrivateKey() = default;
+
+    friend class detail::Scope;
+  };
+
+  /**
+   * @brief Initialize ParallelPolicy using config parameters.
+   *
+   * @param config Legate configuration.
+   */
+  ParallelPolicy(const detail::Config& config, PrivateKey);
+
  private:
   StreamingMode streaming_mode_{StreamingMode::OFF};
   std::uint32_t overdecompose_factor_{1};
+  // these members are initialized to correct values in the constructor
+  std::uint64_t cpu_partitioning_threshold_;
+  std::uint64_t gpu_partitioning_threshold_;
+  std::uint64_t omp_partitioning_threshold_;
 };
 
 /** @} */

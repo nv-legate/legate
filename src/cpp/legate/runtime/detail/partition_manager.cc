@@ -16,35 +16,8 @@
 
 #include <algorithm>
 #include <cmath>
-#include <numeric>
 
 namespace legate::detail {
-
-namespace {
-
-[[nodiscard]] std::uint64_t min_shard_volume()
-{
-  const auto& local_machine = Runtime::get_runtime().local_machine();
-
-  // TODO(wonchanl): make these configurable via Scope
-  if (local_machine.has_gpus()) {
-    // Make sure we can get at least 1M elements on each GPU
-    return Runtime::get_runtime().config().min_gpu_chunk();
-  }
-  if (local_machine.has_omps()) {
-    // Make sure we get at least 128K elements on each OpenMP
-    return Runtime::get_runtime().config().min_omp_chunk();
-  }
-  // Make sure we can get at least 8KB elements on each CPU
-  return Runtime::get_runtime().config().min_cpu_chunk();
-}
-
-}  // namespace
-
-PartitionManager::PartitionManager() : min_shard_volume_{min_shard_volume()}
-{
-  LEGATE_CHECK(min_shard_volume_ > 0);
-}
 
 Span<const std::uint32_t> PartitionManager::get_factors(const mapping::detail::Machine& machine)
 {
@@ -212,8 +185,9 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   // Prune out any dimensions that are 1
   auto [temp_shape, temp_dims, volume] = restrictions.prune_dimensions(shape);
 
+  auto min_shard_volume = parallel_policy.partitioning_threshold(machine.preferred_target());
   // Figure out how many shards we can make with this array
-  std::uint64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
+  std::uint64_t max_pieces = (volume + min_shard_volume - 1) / min_shard_volume;
   LEGATE_CHECK(volume == 0 || max_pieces > 0);
   // If we can only make one piece return that now
   if (max_pieces <= 1) {

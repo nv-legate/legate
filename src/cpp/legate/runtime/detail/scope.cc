@@ -12,6 +12,9 @@
 #include <utility>
 
 namespace legate::detail {
+
+Scope::Scope(const Config& config) : parallel_policy_{config, ParallelPolicy::PrivateKey{}} {}
+
 namespace {
 
 /**

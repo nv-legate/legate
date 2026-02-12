@@ -667,7 +667,7 @@ class Runtime {
   std::unordered_map<RegionManagerKey, RegionManager> region_managers_{};
   std::optional<CommunicatorManager> communicator_manager_{};
   std::optional<PartitionManager> partition_manager_{};
-  Scope scope_{};
+  Scope scope_;
 
   std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
 

@@ -36,7 +36,7 @@ namespace legate::detail {
 
 class PartitionManager {
  public:
-  PartitionManager();
+  PartitionManager() = default;
 
   PartitionManager(const PartitionManager&)            = delete;
   PartitionManager& operator=(const PartitionManager&) = delete;
@@ -78,7 +78,6 @@ class PartitionManager {
                                   ImageComputationHint hint);
 
  private:
-  std::uint64_t min_shard_volume_{};
   std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> all_factors_{};
 
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;

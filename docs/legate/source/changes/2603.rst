@@ -31,6 +31,18 @@ C++
 
 .. rubric:: Tasks
 
+.. rubric:: Tuning
+
+- Add support for setting and reading partitioning threshold in ``legate::ParallelPolicy``, via methods:
+
+  - ``set_partitioning_threshold()`` to set the partitioning threshold for a given
+    target processor kind.
+  - ``partitioning_threshold()`` to read the partitioning_threshold for a given
+    target processor kind.
+
+  This allows users to control partitioning policy for stores for various kinds of target
+  processors, e.g., force partitioning of small stores.
+
 .. rubric:: Types
 
 .. rubric:: Runtime
