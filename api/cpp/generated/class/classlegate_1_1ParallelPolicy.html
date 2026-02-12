@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::ParallelPolicy &#8212; NVIDIA legate (26.03.00.dev11+g29004556b)</title>
+    <title>legate::ParallelPolicy &#8212; NVIDIA legate (26.03.00.dev16+g58da4ed50)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=69e8cd56"></script>
+    <script src="../../../../_static/documentation_options.js?v=9ad7bec9"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@ SPDX-License-Identifier: Apache-2.0
 
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="legate::PartitionPlacement" href="classlegate_1_1PartitionPlacement.html" />
+    <link rel="next" title="legate::ParallelPolicy::PrivateKey" href="classlegate_1_1ParallelPolicy_1_1PrivateKey.html" />
     <link rel="prev" title="legate::OrReduction" href="classlegate_1_1OrReduction.html" />
 
 
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev11+g29004556b)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev16+g58da4ed50)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev11+g29004556b)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev16+g58da4ed50)</p>
   
 </a>
 
@@ -480,6 +480,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1MinReduction_3_01Half_01_4.html">legate::MinReduction&lt; Half &gt;</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1OrReduction.html">legate::OrReduction</a></li>
 <li class="toctree-l4 current active"><a class="current reference internal" href="#">legate::ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="classlegate_1_1ParallelPolicy_1_1PrivateKey.html">legate::ParallelPolicy::PrivateKey</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PartitionPlacement.html">legate::PartitionPlacement</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PartitionPlacementInfo.html">legate::PartitionPlacementInfo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
@@ -755,6 +756,28 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14ParallelPolicy27with_partitioning_thresholdEN7mapping10TaskTargetENSt8uint64_tE">
+<span id="_CPPv3N6legate14ParallelPolicy27with_partitioning_thresholdEN7mapping10TaskTargetENSt8uint64_tE"></span><span id="_CPPv2N6legate14ParallelPolicy27with_partitioning_thresholdEN7mapping10TaskTargetENSt8uint64_tE"></span><span id="legate::ParallelPolicy::with_partitioning_threshold__mapping::TaskTarget.std::uint64_t"></span><span class="target" id="classlegate_1_1ParallelPolicy_1af84b5d9c57afffdf447adfd9b3b23ab3"></span><a class="reference internal" href="#_CPPv4N6legate14ParallelPolicyE" title="legate::ParallelPolicy"><span class="n"><span class="pre">ParallelPolicy</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_partitioning_threshold</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TaskTarget</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">threshold</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14ParallelPolicy27with_partitioning_thresholdEN7mapping10TaskTargetENSt8uint64_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets partitioning threshold for target processor kind. </p>
+<p>This knob signals to the runtime that all stores whose volume is greater than the threshold should be partitioned for the specified target processor kind. Users may specify different thresholds for different task targets at the same time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> – Task target processor kind. </p></li>
+<li><p><strong>threshold</strong> – partitioning threshold. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate14ParallelPolicy9streamingEv">
 <span id="_CPPv3NK6legate14ParallelPolicy9streamingEv"></span><span id="_CPPv2NK6legate14ParallelPolicy9streamingEv"></span><span id="legate::ParallelPolicy::streamingC"></span><span class="target" id="classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">streaming</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate14ParallelPolicy9streamingEv" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns the streaming flag. </p>
@@ -786,6 +809,26 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The over-decomposing factor. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate14ParallelPolicy22partitioning_thresholdEN7mapping10TaskTargetE">
+<span id="_CPPv3NK6legate14ParallelPolicy22partitioning_thresholdEN7mapping10TaskTargetE"></span><span id="_CPPv2NK6legate14ParallelPolicy22partitioning_thresholdEN7mapping10TaskTargetE"></span><span id="legate::ParallelPolicy::partitioning_threshold__mapping::TaskTargetC"></span><span class="target" id="classlegate_1_1ParallelPolicy_1a641b6bce326aed03e2ca2d0b1c498274"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">partitioning_threshold</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TaskTarget</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate14ParallelPolicy22partitioning_thresholdEN7mapping10TaskTargetE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Read the partitioning threshold for a give TaskTarget. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> – The target processor kind.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Partitioning threshold. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -824,7 +867,41 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 </dd></dl>
 
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14ParallelPolicy14ParallelPolicyEv">
+<span id="_CPPv3N6legate14ParallelPolicy14ParallelPolicyEv"></span><span id="_CPPv2N6legate14ParallelPolicy14ParallelPolicyEv"></span><span id="legate::ParallelPolicy::ParallelPolicy"></span><span class="target" id="classlegate_1_1ParallelPolicy_1a50cc095f333197abe08bb72e50f31274"></span><span class="sig-name descname"><span class="n"><span class="pre">ParallelPolicy</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14ParallelPolicy14ParallelPolicyEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Initialize <a class="reference internal" href="../group/group__tuning.html#classlegate_1_1ParallelPolicy"><span class="std std-ref">ParallelPolicy</span></a> to system defined defaults. </p>
+<p>Initializes the <a class="reference internal" href="../group/group__tuning.html#classlegate_1_1ParallelPolicy"><span class="std std-ref">ParallelPolicy</span></a> members to default values defined by the system configuration, which can be controlled via <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> environment variable. Details:<ul class="simple">
+<li><p><a class="reference internal" href="../group/group__tuning.html#classlegate_1_1ParallelPolicy_1af208de7a75a70268c631636b838fdf43"><span class="std std-ref">streaming_mode()</span></a> : <a class="reference internal" href="../group/group__tuning.html#group__tuning_1gga6de0ae1305b045b90d6c1a137ee3e7c8a88559a0cfd8250c9d65970cc145c92d4"><span class="std std-ref">StreamingMode::OFF</span></a></p></li>
+<li><p><a class="reference internal" href="../group/group__tuning.html#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref">overdecompose_factor()</span></a> : 1</p></li>
+<li><p>partitioning_threshold(CPU) : <code class="docutils literal notranslate"><span class="pre">--cpu_chunk_size</span></code> in <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code></p></li>
+<li><p>partitioning_threshold(GPU) : <code class="docutils literal notranslate"><span class="pre">gpu_chunk_size</span></code> in <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code></p></li>
+<li><p>partitioning_threshold(OMP) : <code class="docutils literal notranslate"><span class="pre">omp_chunk_size</span></code> in <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code></p></li>
+</ul>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Legate runtime must be initialized before creating any <a class="reference internal" href="../group/group__tuning.html#classlegate_1_1ParallelPolicy"><span class="std std-ref">ParallelPolicy</span></a> instance. </p>
 </div>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14ParallelPolicy14ParallelPolicyERKN6detail6ConfigE10PrivateKey">
+<span id="_CPPv3N6legate14ParallelPolicy14ParallelPolicyERKN6detail6ConfigE10PrivateKey"></span><span id="_CPPv2N6legate14ParallelPolicy14ParallelPolicyERKN6detail6ConfigE10PrivateKey"></span><span id="legate::ParallelPolicy::ParallelPolicy__detail::ConfigCR.PrivateKey"></span><span class="target" id="classlegate_1_1ParallelPolicy_1a08cffadb3f92f0804d41010cb1f1a129"></span><span class="sig-name descname"><span class="n"><span class="pre">ParallelPolicy</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../group/group__partitioning.html#_CPPv4N6legate6detailE" title="legate::detail"><span class="n"><span class="pre">detail</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Config</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">config</span></span></em>, <em class="sig-param"><a class="reference internal" href="#_CPPv4N6legate14ParallelPolicy10PrivateKeyE" title="legate::ParallelPolicy::PrivateKey"><span class="n"><span class="pre">PrivateKey</span></span></a></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate14ParallelPolicy14ParallelPolicyERKN6detail6ConfigE10PrivateKey" title="Link to this definition">#</a><br /></dt>
+<dd><p>Initialize <a class="reference internal" href="../group/group__tuning.html#classlegate_1_1ParallelPolicy"><span class="std std-ref">ParallelPolicy</span></a> using config parameters. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> – Legate configuration. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate14ParallelPolicy10PrivateKeyE">
+<span id="_CPPv3N6legate14ParallelPolicy10PrivateKeyE"></span><span id="_CPPv2N6legate14ParallelPolicy10PrivateKeyE"></span><span id="legate::ParallelPolicy::PrivateKey"></span><span class="target" id="classlegate_1_1ParallelPolicy_1_1PrivateKey"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PrivateKey</span></span></span><a class="headerlink" href="#_CPPv4N6legate14ParallelPolicy10PrivateKeyE" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </section>
@@ -849,11 +926,11 @@ SPDX-License-Identifier: Apache-2.0
       </div>
     </a>
     <a class="right-next"
-       href="classlegate_1_1PartitionPlacement.html"
+       href="classlegate_1_1ParallelPolicy_1_1PrivateKey.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">legate::PartitionPlacement</p>
+        <p class="prev-next-title">legate::ParallelPolicy::PrivateKey</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -881,11 +958,16 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicyE"><code class="docutils literal notranslate"><span class="pre">legate::ParallelPolicy</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy14with_streamingE13StreamingMode"><code class="docutils literal notranslate"><span class="pre">with_streaming()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy25with_overdecompose_factorENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">with_overdecompose_factor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy27with_partitioning_thresholdEN7mapping10TaskTargetENSt8uint64_tE"><code class="docutils literal notranslate"><span class="pre">with_partitioning_threshold()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicy9streamingEv"><code class="docutils literal notranslate"><span class="pre">streaming()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicy14streaming_modeEv"><code class="docutils literal notranslate"><span class="pre">streaming_mode()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicy20overdecompose_factorEv"><code class="docutils literal notranslate"><span class="pre">overdecompose_factor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicy22partitioning_thresholdEN7mapping10TaskTargetE"><code class="docutils literal notranslate"><span class="pre">partitioning_threshold()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicyeqERK14ParallelPolicy"><code class="docutils literal notranslate"><span class="pre">operator==()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate14ParallelPolicyneERK14ParallelPolicy"><code class="docutils literal notranslate"><span class="pre">operator!=()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy14ParallelPolicyEv"><code class="docutils literal notranslate"><span class="pre">ParallelPolicy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy14ParallelPolicyERKN6detail6ConfigE10PrivateKey"><code class="docutils literal notranslate"><span class="pre">ParallelPolicy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate14ParallelPolicy10PrivateKeyE"><code class="docutils literal notranslate"><span class="pre">legate::ParallelPolicy::PrivateKey</span></code></a></li>
 </ul>
 </li>
 </ul>

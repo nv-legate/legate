@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (26.03.00.dev11+g29004556b)</title>
+    <title>runtime &#8212; NVIDIA legate (26.03.00.dev16+g58da4ed50)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=69e8cd56"></script>
+    <script src="../../../../_static/documentation_options.js?v=9ad7bec9"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev11+g29004556b)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev16+g58da4ed50)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev11+g29004556b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev11+g29004556b)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev16+g58da4ed50)</p>
   
 </a>
 
@@ -480,6 +480,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1MinReduction_3_01Half_01_4.html">legate::MinReduction&lt; Half &gt;</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1OrReduction.html">legate::OrReduction</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ParallelPolicy.html">legate::ParallelPolicy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1ParallelPolicy_1_1PrivateKey.html">legate::ParallelPolicy::PrivateKey</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PartitionPlacement.html">legate::PartitionPlacement</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PartitionPlacementInfo.html">legate::PartitionPlacementInfo</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../class/classlegate_1_1PhysicalArray.html">legate::PhysicalArray</a></li>
@@ -2407,6 +2408,21 @@ SPDX-License-Identifier: Apache-2.0
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail15check_alignmentENSt6size_tE">
 <span id="_CPPv3N6legate6detail15check_alignmentENSt6size_tE"></span><span id="_CPPv2N6legate6detail15check_alignmentENSt6size_tE"></span><span id="legate::detail::check_alignment__std::s"></span><span class="target" id="buffer_8cc_1aadf8d588bc1d3ebdb9f30fa4d6c2c70d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">check_alignment</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">alignment</span></span></em><span class="sig-paren">)</span><br /></dt>
 <dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail23maybe_advise_huge_pagesEPKvNSt6size_tE">
+<span id="_CPPv3N6legate6detail23maybe_advise_huge_pagesEPKvNSt6size_tE"></span><span id="_CPPv2N6legate6detail23maybe_advise_huge_pagesEPKvNSt6size_tE"></span><span id="legate::detail::maybe_advise_huge_pages__voidCP.std::s"></span><span class="target" id="allocation__cache_8cc_1abab183f4bcfbab878570e980fad9244c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">maybe_advise_huge_pages</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Attempt to advise the OS to use huge pages for the given allocation. </p>
+<p>Only done if the allocation is sufficiently large enough and if on Linux system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ptr</strong> – The pointer to the allocation to advise. </p></li>
+<li><p><strong>size</strong> – The size of the allocation to advise. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail20register_array_tasksER7Library">
@@ -5147,6 +5163,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13show_progressEPKN6Legion4TaskEN6Legion7ContextEPN6Legion7RuntimeE"><code class="docutils literal notranslate"><span class="pre">show_progress()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail15check_alignmentENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">check_alignment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail23maybe_advise_huge_pagesEPKvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">maybe_advise_huge_pages()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail20register_array_tasksER7Library"><code class="docutils literal notranslate"><span class="pre">register_array_tasks()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail25partition_store_by_tilingERK17InternalSharedPtrI12LogicalStoreE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMENSt8optionalI11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMEEE"><code class="docutils literal notranslate"><span class="pre">partition_store_by_tiling()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail22create_store_partitionERK17InternalSharedPtrI12LogicalStoreE17InternalSharedPtrI9PartitionENSt8optionalIbEE"><code class="docutils literal notranslate"><span class="pre">create_store_partition()</span></code></a></li>

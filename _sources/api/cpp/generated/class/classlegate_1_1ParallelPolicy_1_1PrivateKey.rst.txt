@@ -1,0 +1,4 @@
+legate::ParallelPolicy::PrivateKey
+==================================
+
+.. doxygenclass:: legate::ParallelPolicy::PrivateKey
