@@ -230,6 +230,17 @@ TEST_F(TransformDelinearizeUnit, DelinearizeInvertPoint)
   auto expected = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{6, -1, 6, 7};
 
   ASSERT_EQ(result, expected);
+
+  // dim_ = 0, sizes_ = {2, 1, 3}, num_extra_dims = 2, dim_ + num_extra_dims = 2
+  // Input dims {0, 1, 2, 3}:
+  // - remove_if removes d=1,2 (since 1 > 0 && 1 <= 2, 2 > 0 && 2 <= 2)
+  // - remaining {0, 3} goes through transform:
+  //   - d=0: 0 > 2 is false, returns 0 (covers false branch)
+  //   - d=3: 3 > 2 is true, returns 3 - 2 = 1 (covers true branch)
+  auto dims          = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0, 1, 2, 3};
+  auto inverted_dims = transform->invert_dims(std::move(dims));
+
+  ASSERT_THAT(inverted_dims, ::testing::ElementsAre(0, 1));
 }
 
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertPointNegative)

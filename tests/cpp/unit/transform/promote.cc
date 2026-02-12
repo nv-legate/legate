@@ -73,4 +73,32 @@ TEST_F(TransformPromoteUnit, PromoteInvertColorNegative)
   }
 }
 
+TEST_F(TransformPromoteUnit, PromoteInvertDimsContainsExtraDim)
+{
+  // extra_dim_ = 2
+  auto transform = legate::make_internal_shared<legate::detail::Promote>(2, 3);
+
+  // dims = {0, 1, 2, 3} contains extra_dim_ = 2
+  // After invert: remove 2, then adjust dims > 2: 3 becomes 2
+  // Result: {0, 1, 2}
+  auto dims     = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0, 1, 2, 3};
+  auto inverted = transform->invert_dims(std::move(dims));
+
+  ASSERT_THAT(inverted, ::testing::ElementsAre(0, 1, 2));
+}
+
+TEST_F(TransformPromoteUnit, PromoteInvertDimsNotContainsExtraDim)
+{
+  // extra_dim_ = 2
+  auto transform = legate::make_internal_shared<legate::detail::Promote>(2, 3);
+
+  // dims = {0, 1, 3} does NOT contain extra_dim_ = 2
+  // After invert: no erase, only adjust dims > 2: 3 becomes 2
+  // Result: {0, 1, 2}
+  auto dims     = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0, 1, 3};
+  auto inverted = transform->invert_dims(std::move(dims));
+
+  ASSERT_THAT(inverted, ::testing::ElementsAre(0, 1, 2));
+}
+
 }  // namespace transform_promote_test

@@ -84,6 +84,12 @@ TEST_F(TransformBroadcastUnit, BroadcastConvertColor)
   ASSERT_EQ(color, expected);
   ASSERT_EQ(transform->target_ndim(1), 1);
   ASSERT_TRUE(transform->is_convertible());
+
+  // Also test invert_dims
+  auto dims          = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0, 1};
+  auto inverted_dims = transform->invert_dims(std::move(dims));
+
+  ASSERT_THAT(inverted_dims, ::testing::ElementsAre(0, 1));
 }
 
 TEST_F(TransformBroadcastUnit, BroadcastConvertColorShape)
@@ -124,6 +130,16 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertSymbolicPoint)
   auto expected = legate::SymbolicPoint{legate::dimension(0), legate::constant(0)};
 
   ASSERT_EQ(sympoint, expected);
+}
+
+TEST_F(TransformBroadcastUnit, BroadcastInvertSymbolicPointOutOfRange)
+{
+  // dim_ = 1, but point only has 1 element (index 0), so at(1) is out of range
+  auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
+
+  ASSERT_THAT(
+    [&] { static_cast<void>(transform->invert(legate::SymbolicPoint{legate::dimension(0)})); },
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("_M_range_check")));
 }
 
 TEST_F(TransformBroadcastUnit, BroadcastInvertRestrictions)
