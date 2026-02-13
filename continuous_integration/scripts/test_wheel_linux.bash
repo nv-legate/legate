@@ -39,5 +39,11 @@ rapids-logger "Running python tests on 1 GPU machine ..."
 LEGATE_CONFIG="--fbmem 4000 --gpus 1 --auto-config 0" \
     python -m pytest \
     --color=yes \
+    --ignore tests/python/wo_runtime \
     tests/python \
+    -s
+LEGATE_CONFIG="--fbmem 4000 --gpus 1 --auto-config 0" \
+    python -m pytest \
+    --color=yes \
+    tests/python/wo_runtime \
     -s

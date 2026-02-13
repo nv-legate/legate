@@ -11,14 +11,13 @@ from typing import TYPE_CHECKING, Any, TextIO, cast
 
 import numpy as np
 
-from ..core import get_legate_runtime, types as ty
-from ..core.task import OutputArray, task
 from ..settings import settings as legate_settings
 from ._benchmark.log import BenchmarkLog
 from ._benchmark.log_csv import BenchmarkLogCSV
 from ._benchmark.log_from_filename import BenchmarkLogFromFilename
 from ._benchmark.log_rich import BenchmarkLogRich
 from ._benchmark.settings import settings
+from .has_started import runtime_has_started
 from .info import info as legate_info
 
 if TYPE_CHECKING:
@@ -28,29 +27,19 @@ if TYPE_CHECKING:
 __all__ = ["BenchmarkLog", "BenchmarkLogFromFilename", "benchmark_log"]
 
 
-def _num_nodes() -> int:
+def _node_info() -> tuple[int, int]:
+    # local import to avoid starting the runtime unless requested
+    from ..core import get_legate_runtime  # noqa: PLC0415
+
     runtime = get_legate_runtime()
     machine = runtime.get_machine()
     nodes = machine.get_node_range()
-    return nodes[1] - nodes[0]
-
-
-@task
-def _pick_one_uid(uid: np.uint64, out: OutputArray) -> None:
-    np.asarray(out)[:] = uid
+    return (nodes[1] - nodes[0], runtime.node_id)
 
 
 def _benchmark_uid() -> np.uint64:
-    """Create a random identifier that is the same on all ranks."""
-    uid = np.uint64(int.from_bytes(secrets.token_bytes(8)))
-    if _num_nodes() > 1:
-        arr = np.array([0], dtype=np.uint64)
-        store = get_legate_runtime().create_store_from_buffer(
-            ty.uint64, arr.shape, arr, read_only=False
-        )
-        _pick_one_uid(uid, store)
-        return np.asarray(store.get_physical_store())[0]
-    return uid
+    """Create a random identifier."""
+    return np.uint64(int.from_bytes(secrets.token_bytes(8)))
 
 
 def _benchmark_file(out: TextIO | None) -> TextIO | None:
@@ -62,19 +51,21 @@ def _benchmark_file(out: TextIO | None) -> TextIO | None:
     return None
 
 
-def _benchmark_file_name(name: str, uid: np.uint64) -> os.PathLike[str]:
+def _benchmark_file_name(
+    name: str, uid: np.uint64, node_id: int
+) -> os.PathLike[str]:
     log_location = settings.out()
     assert log_location != "stdout"
     name_start = name.replace(" ", "")
-    local_name = f"{name_start}_{uid:016x}.{get_legate_runtime().node_id}.csv"
+    local_name = f"{name_start}_{uid:016x}.{node_id}.csv"
     return Path(log_location) / local_name
 
 
-def _use_rich(out: TextIO) -> bool:
+def _use_rich(out: TextIO, num_nodes: int) -> bool:
     if out.isatty() and settings.use_rich():
         # live updating from multiple ranks won't work, so require there to be
         # only one rank (or only one rank using stdout)
-        return _num_nodes() == 1 or legate_settings.limit_stdout()
+        return num_nodes == 1 or legate_settings.limit_stdout()
     return False
 
 
@@ -84,6 +75,7 @@ def benchmark_log(
     *,
     out: TextIO | None = None,
     metadata: dict[str, Any] | None = None,
+    start_runtime: bool = True,
 ) -> BenchmarkLog | BenchmarkLogFromFilename:
     """
     Create a context manager for logging tables of data generated for
@@ -117,6 +109,13 @@ def benchmark_log(
         Optional dictionary of metadata that will be included in the header
         of the table.  If `None`, `legate.util.info.info()` will be used to
         generate the metadata.
+    start_runtime: bool = True
+        By default, `benchmark_log()` uses the legate runtime to populate
+        metadata and, in multi-rank programs, to determine a globally unique id
+        for each benchmark.  If `start_runtime=False` is specified, the legate
+        runtime will not be started if it is not already running: each rank in
+        a multiprocess program will generate a different id, and metadata about
+        the runtime and machine configuration of legate will be missing.
 
     Returns
     -------
@@ -125,15 +124,28 @@ def benchmark_log(
         a row of benchmark data to the table.
     """
     uid = _benchmark_uid()
+    num_nodes = 1
+    node_id = 0
+
+    use_runtime = start_runtime or runtime_has_started()
+    if use_runtime:
+        # local import to avoid starting the runtime unless requested
+        from ._benchmark.id import _consensus_uid  # noqa: PLC0415
+
+        num_nodes, node_id = _node_info()
+        uid = _consensus_uid(uid)
+
     file = _benchmark_file(out)
     if metadata is None:
-        metadata = cast(dict[str, Any], legate_info())
+        metadata = cast(
+            dict[str, Any], legate_info(start_runtime=start_runtime)
+        )
     if file is not None:
-        if _use_rich(file):
+        if _use_rich(file, num_nodes):
             return BenchmarkLogRich(name, uid, columns, file, metadata)
         return BenchmarkLogCSV(name, uid, columns, file, metadata)
 
-    file_name = _benchmark_file_name(name, uid)
+    file_name = _benchmark_file_name(name, uid, node_id)
 
     def thunk(file: TextIO) -> BenchmarkLog:
         return BenchmarkLogCSV(name, uid, columns, file, metadata)

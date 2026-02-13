@@ -15,6 +15,7 @@ from textwrap import indent
 from typing import Any, TypedDict
 
 from .. import install_info
+from .has_started import runtime_has_started
 
 
 class BuildInfo(TypedDict):
@@ -228,8 +229,8 @@ Info = TypedDict(
     "Info",
     {
         "Program": str,
-        "Legate runtime configuration": dict[str, Any],
-        "Machine": MachineInfo,
+        "Legate runtime configuration": dict[str, Any] | str,
+        "Machine": MachineInfo | str,
         "System info": SystemInfo,
         "Package versions": PackageVersions,
         "Package details": PackageDists,
@@ -238,17 +239,32 @@ Info = TypedDict(
 )
 
 
-def info() -> Info:
+def info(*, start_runtime: bool = True) -> Info:
     """
     Construct a dictionary of information about the current legate program
     that can be used for debugging or for reproducibility.
 
-    returns: a hierarchical dictionary of information strings"
+    Parameters
+    ----------
+    start_runtime: bool = True
+        If `True`, the legate runtime will be started (if it has not already
+        been) to get information that depends on the runtime.  If `False` and
+        the runtime has not been started, information that depends on the
+        runtime will be missing.
+
+    Returns
+    -------
+    Info
+        A hierarchical dictionary of information strings
     """
+    use_runtime = start_runtime or runtime_has_started()
+    NO_RUNTIME = "(unavailable, legate runtime not started)"
     return {
         "Program": " ".join(sys.argv),
-        "Legate runtime configuration": _runtime_info(),
-        "Machine": machine_info(),
+        "Legate runtime configuration": (
+            NO_RUNTIME if not use_runtime else _runtime_info()
+        ),
+        "Machine": (NO_RUNTIME if not use_runtime else machine_info()),
         "System info": system_info(),
         "Package versions": package_versions(),
         "Package details": package_dists(),

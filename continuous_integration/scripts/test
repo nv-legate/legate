@@ -102,14 +102,21 @@ run_test_or_analysis() {
             case "${GPUS_COUNT}" in
               "0")
                 rapids-logger "Using CPUs ..."
-                LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
+                LEGATE_AUTO_CONFIG=0 pytest --color=yes --ignore tests/python/wo_runtime tests/python -s
+                LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python/wo_runtime -s
                 ;;
               "1")
                 rapids-logger "Using 1 GPU ..."
                 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" \
                           pytest \
                           --color=yes \
+                          --ignore tests/python/wo_runtime \
                           tests/python \
+                          -s
+                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" \
+                          pytest \
+                          --color=yes \
+                          tests/python/wo_runtime \
                           -s
                 ;;
               "2")
@@ -117,7 +124,13 @@ run_test_or_analysis() {
                 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" \
                           pytest \
                           --color=yes \
+                          --ignore tests/python/wo_runtime \
                           tests/python \
+                          -s
+                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" \
+                          pytest \
+                          --color=yes \
+                          tests/python/wo_runtime \
                           -s
                 ;;
               *)
