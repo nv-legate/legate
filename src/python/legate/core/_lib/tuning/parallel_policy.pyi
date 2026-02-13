@@ -5,6 +5,8 @@
 from enum import IntEnum, unique
 from typing import cast
 
+from ..mapping.mapping import TaskTarget
+
 @unique
 class StreamingMode(IntEnum):
     OFF = cast(int, ...)
@@ -17,6 +19,9 @@ class ParallelPolicy:
         *,
         streaming_mode: StreamingMode = ...,
         overdecompose_factor: int = 1,
+        partitioning_threshold: dict[TaskTarget, int]
+        | tuple[TaskTarget, int]
+        | None = None,
     ) -> None: ...
     @property
     def streaming(self) -> bool: ...
@@ -28,3 +33,7 @@ class ParallelPolicy:
     def overdecompose_factor(self) -> int: ...
     @overdecompose_factor.setter
     def overdecompose_factor(self, overdecompose_factor: int) -> int: ...
+    def partitioning_threshold(self, target: TaskTarget) -> int: ...
+    def set_partitioning_threshold(
+        self, target: TaskTarget, threshold: int
+    ) -> None: ...

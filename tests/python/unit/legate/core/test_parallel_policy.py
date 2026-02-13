@@ -4,11 +4,18 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
-from legate.core import ParallelPolicy, Scope, StreamingMode
+from legate.core import ParallelPolicy, Scope, StreamingMode, TaskTarget
 
 OVERDECOMPOSE_FACTOR = 42
+
+# arbitrary values that we are less likely to set as default
+CPU_THRESHOLD = 9
+OMP_THRESHOLD = 17
+GPU_THRESHOLD = 53
 
 
 class TestParallelPolicy:
@@ -53,6 +60,48 @@ class TestParallelPolicy:
         assert a.__eq__(123) is NotImplemented
         assert a.__ne__(123) is NotImplemented
 
+    def test_partitioning_threshold(self) -> None:
+        a = ParallelPolicy(
+            partitioning_threshold=(TaskTarget.CPU, CPU_THRESHOLD)
+        )
+        b = ParallelPolicy()
+        assert a != b
+        assert (
+            a.partitioning_threshold(TaskTarget.CPU)
+            == CPU_THRESHOLD
+            != b.partitioning_threshold(TaskTarget.CPU)
+        )
+        assert a.partitioning_threshold(
+            TaskTarget.GPU
+        ) == b.partitioning_threshold(TaskTarget.GPU)
+        assert a.partitioning_threshold(
+            TaskTarget.OMP
+        ) == b.partitioning_threshold(TaskTarget.OMP)
+
+        c = ParallelPolicy(
+            partitioning_threshold={
+                TaskTarget.CPU: CPU_THRESHOLD,
+                TaskTarget.GPU: GPU_THRESHOLD,
+                TaskTarget.OMP: OMP_THRESHOLD,
+            }
+        )
+        assert (
+            a.partitioning_threshold(TaskTarget.CPU)
+            == c.partitioning_threshold(TaskTarget.CPU)
+            == CPU_THRESHOLD
+        )
+        assert c.partitioning_threshold(TaskTarget.GPU) == GPU_THRESHOLD
+        assert c.partitioning_threshold(TaskTarget.OMP) == OMP_THRESHOLD
+
+    def test_set_partitioning_threshold(self) -> None:
+        a = ParallelPolicy()
+        a.set_partitioning_threshold(TaskTarget.CPU, CPU_THRESHOLD)
+        assert a.partitioning_threshold(TaskTarget.CPU) == CPU_THRESHOLD
+        a.set_partitioning_threshold(TaskTarget.GPU, GPU_THRESHOLD)
+        assert a.partitioning_threshold(TaskTarget.GPU) == GPU_THRESHOLD
+        a.set_partitioning_threshold(TaskTarget.OMP, OMP_THRESHOLD)
+        assert a.partitioning_threshold(TaskTarget.OMP) == OMP_THRESHOLD
+
 
 class TestParallelPolicyErrors:
     @pytest.mark.parametrize("factor", [-1, -2147483649])
@@ -65,6 +114,20 @@ class TestParallelPolicyErrors:
         msg = "overdecompose_factor must be 1 or more"
         with pytest.raises(ValueError, match=msg):
             ParallelPolicy(overdecompose_factor=0)
+
+    def test_invalid_partitioning_threshold_type(self) -> None:
+        msg = "an integer is required"
+        with pytest.raises(TypeError, match=re.escape(msg)):
+            ParallelPolicy(
+                partitioning_threshold=("a", 3)  # type: ignore[arg-type]
+            )
+
+    def test_invalid_partitioning_threshold_tuple(self) -> None:
+        msg = "partitioning_threshold must be a tuple of (TaskTarget, int)"
+        with pytest.raises(ValueError, match=re.escape(msg)):
+            ParallelPolicy(
+                partitioning_threshold=()  # type: ignore[arg-type]
+            )
 
 
 if __name__ == "__main__":

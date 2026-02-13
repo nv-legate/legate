@@ -67,6 +67,20 @@ Python
 
 .. rubric:: Tasks
 
+.. rubric:: Tuning
+
+- Add support for setting and reading partitioning threshold in ``legate.core.ParallelPolicy``,
+  via methods:
+
+    - ``set_partitioning_threshold()`` to set partitioning threshold for a target
+      processor kind.
+
+    - ``partitioning_threshold()`` to read the partitioning_threshold for a target
+      processor kind.
+
+  This functionality allows users to control partitioning decisions of stores, for
+  various kinds of target processors, e.g., force partitioning of small stores.
+
 .. rubric:: Types
 
 .. rubric:: Runtime
