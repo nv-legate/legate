@@ -67,10 +67,33 @@ Python
 
 .. rubric:: Tasks
 
+.. rubric:: Tuning
+
+- Add support for setting and reading partitioning threshold in ``legate.core.ParallelPolicy``,
+  via methods:
+
+    - ``set_partitioning_threshold()`` to set partitioning threshold for a target
+      processor kind.
+
+    - ``partitioning_threshold()`` to read the partitioning_threshold for a target
+      processor kind.
+
+  This functionality allows users to control partitioning decisions of stores, for
+  various kinds of target processors, e.g., force partitioning of small stores.
+
 .. rubric:: Types
 
 .. rubric:: Runtime
 
 .. rubric:: Utilities
+
+- Add ``legate.util.has_started.runtime_has_started()`` for testing if the
+  legate runtime has started.  (Note that the runtime is automatically started
+  by importing ``legate.core``, so this function is only needed in settings
+  where ``legate.core`` is not directly imported.)
+- Add ``start_runtime`` keyword argument to ``legate.util.info.info()`` and
+  ``legate.util.benchmark.benchmark_log()``.  If ``start_runtime=False`` is
+  specified, the runtime will not be started as a side-effect of calling those
+  functions.
 
 .. rubric:: I/O

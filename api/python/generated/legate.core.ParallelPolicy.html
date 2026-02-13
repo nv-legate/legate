@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.ParallelPolicy &#8212; NVIDIA legate (26.03.00.dev16+g58da4ed50)</title>
+    <title>legate.core.ParallelPolicy &#8212; NVIDIA legate (26.03.00.dev18+g332b53945)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=9ad7bec9"></script>
+    <script src="../../../_static/documentation_options.js?v=16d62137"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev18+g332b53945) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev18+g332b53945) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev16+g58da4ed50)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev18+g332b53945)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev16+g58da4ed50) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev18+g332b53945) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev18+g332b53945) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev16+g58da4ed50)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev18+g332b53945)</p>
   
 </a>
 
@@ -716,6 +716,9 @@ SPDX-License-Identifier: Apache-2.0
 <dd><em class="sig-param"><span class="n"><span class="pre">StreamingMode</span> <span class="pre">streaming_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">StreamingMode</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">StreamingMode.OFF</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">uint32_t</span> <span class="pre">overdecompose_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">partitioning_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict[TaskTarget</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">uint64_t]</span> <span class="pre">|</span> <span class="pre">tuple[TaskTarget</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">uint64_t]</span> <span class="pre">|</span> <span class="pre">None</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#legate.core.ParallelPolicy" title="Link to this definition">#</a></dt>
@@ -727,9 +730,24 @@ SPDX-License-Identifier: Apache-2.0
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>streaming_mode</strong> (<em>StreamingMode</em>) – Enum that enables streaming in STRICT or RELAXED mode.
 Default = OFF</p></li>
-<li><p><strong>overdecompose_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – The overdecomposition factor.
+<li><p><strong>overdecompose_factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – The over-decomposition factor.
 Default = 1</p></li>
+<li><p><strong>partitioning_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><em>TaskTarget</em><em>, </em><em>uint64_t</em><em>]</em>) – <div class="line-block">
+<div class="line">tuple[TaskTarget, uint64_t]</div>
+</div>
+<p>Partitioning thresholds for various processor types specified as
+either a tuple or dictionary of [TaskTarget, int]. Default thresholds
+are picked based on Legate Runtime’s configuration controlled by the
+environment variable LEGATE_CONFIG.
+Default = None</p>
+</p></li>
 </ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If any of the following happen:
+    1) overdecompose_factor &lt; 1
+    2) partitioning_threshold is not a tuple or dict
+    3) partitioning_threshold is not a tuple of [TaskTarget, uint64_t]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -769,6 +787,12 @@ Default = 1</p></li>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="legate.core.ParallelPolicy.__ne__.html#legate.core.ParallelPolicy.__ne__" title="legate.core.ParallelPolicy.__ne__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__ne__</span></code></a>(value, /)</p></td>
 <td><p>Return self!=value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.ParallelPolicy.partitioning_threshold.html#legate.core.ParallelPolicy.partitioning_threshold" title="legate.core.ParallelPolicy.partitioning_threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partitioning_threshold</span></code></a>(self, TaskTarget target)</p></td>
+<td><p>Get the value of partitioning_threshold for a processor type.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.ParallelPolicy.set_partitioning_threshold.html#legate.core.ParallelPolicy.set_partitioning_threshold" title="legate.core.ParallelPolicy.set_partitioning_threshold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_partitioning_threshold</span></code></a>(self, ...)</p></td>
+<td><p>Set the partitioning_threshold for a processor type.</p></td>
 </tr>
 </tbody>
 </table>

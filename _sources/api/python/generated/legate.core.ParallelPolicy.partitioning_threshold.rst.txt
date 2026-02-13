@@ -1,0 +1,6 @@
+legate.core.ParallelPolicy.partitioning\_threshold
+==================================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: ParallelPolicy.partitioning_threshold
