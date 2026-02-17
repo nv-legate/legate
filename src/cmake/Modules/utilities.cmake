@@ -13,8 +13,7 @@ macro(legate_string_escape_re_chars output_var input_var)
   # Escapes all special regex characters detailed at
   # https://cmake.org/cmake/help/latest/command/string.html#regex-specification
   string(
-    REGEX REPLACE
-    [[(\.|\-|\+|\*|\^|\$|\?|\||\(|\)|\[|\])]]
+    REGEX REPLACE [[(\.|\-|\+|\*|\^|\$|\?|\||\(|\)|\[|\])]]
     [[\\\1]]
     ${output_var}
     "${${input_var}}"

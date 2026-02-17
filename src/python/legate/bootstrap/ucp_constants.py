@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Final
 
 # Environment variable constants
@@ -14,9 +14,9 @@ BOOTSTRAP_P2P_PLUGIN: Final[str] = "BOOTSTRAP_P2P_PLUGIN"
 REALM_UCP_BOOTSTRAP_MODE: Final[str] = "REALM_UCP_BOOTSTRAP_MODE"
 
 
-class BootstrapPluginKind(str, Enum):
+class BootstrapPluginKind(StrEnum):
     UCP = "realm_ucp_bootstrap_p2p.so"
 
 
-class BootstrapMode(str, Enum):
+class BootstrapMode(StrEnum):
     P2P = "p2p"

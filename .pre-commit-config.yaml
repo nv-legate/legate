@@ -4,7 +4,7 @@
 ---
 repos:
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
         types: [yaml]
@@ -31,7 +31,7 @@ repos:
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         name: validate and format JSON5 files
@@ -87,7 +87,7 @@ repos:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes", "-L", "cancelled"] # don't spell check cancelled
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v21.1.7'
+    rev: 'v21.1.8'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
@@ -98,13 +98,13 @@ repos:
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.8
+    rev: v0.15.1
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.19.0'
+    rev: 'v1.19.1'
     hooks:
       - id: mypy
         pass_filenames: false
@@ -122,7 +122,7 @@ repos:
           "git+https://github.com/nv-legate/aedifix@1.10.0"
         ]
   - repo: https://github.com/MarcoGorelli/cython-lint
-    rev: v0.18.1
+    rev: v0.19.0
     hooks:
       - id: cython-lint
       - id: double-quote-cython-strings
@@ -144,7 +144,7 @@ repos:
       - id: shellcheck
         args: ['--rcfile', './scripts/pre-commit/shellcheckrc']
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.9
+    rev: v1.7.11
     hooks:
       - id: actionlint
         types: [yaml]
@@ -153,7 +153,7 @@ repos:
         args: [-config-file=scripts/pre-commit/actionlint.yml]
         entry: env SHELLCHECK_OPTS="--enable=all --severity=style" actionlint
   - repo: https://github.com/BlankSpruce/gersemi
-    rev: 0.24.0
+    rev: 0.26.0
     hooks:
       - id: gersemi
         args: [

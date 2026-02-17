@@ -184,9 +184,7 @@ class SettingBase(Generic[T]):
         help: str = "",  # noqa: A002
     ) -> None:
         self._default = default
-        self._convert = (
-            convert if convert else typing_cast(Converter[T], convert_str)
-        )
+        self._convert = convert or typing_cast(Converter[T], convert_str)
         self._help = help
         self._name = name
 

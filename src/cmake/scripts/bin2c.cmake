@@ -23,8 +23,7 @@ endforeach()
 file(READ "${IN_FILE}" FILE_CONTENTS_HEX HEX)
 # Prefix the hex values with 0x
 string(
-  REGEX REPLACE
-  "([0-9a-f][0-9a-f])"
+  REGEX REPLACE "([0-9a-f][0-9a-f])"
   "0x\\1,"
   FILE_CONTENTS_HEX
   "${FILE_CONTENTS_HEX}"

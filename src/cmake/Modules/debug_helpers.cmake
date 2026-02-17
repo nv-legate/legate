@@ -12,15 +12,13 @@ if(NOT _LEGATE_CMAKE_PROPERTY_LIST)
 
   # Convert command output into a CMake list
   string(
-    REGEX REPLACE
-    ";"
+    REGEX REPLACE ";"
     "\\\\;"
     _LEGATE_CMAKE_PROPERTY_LIST
     "${_LEGATE_CMAKE_PROPERTY_LIST}"
   )
   string(
-    REGEX REPLACE
-    "\n"
+    REGEX REPLACE "\n"
     ";"
     _LEGATE_CMAKE_PROPERTY_LIST
     "${_LEGATE_CMAKE_PROPERTY_LIST}"

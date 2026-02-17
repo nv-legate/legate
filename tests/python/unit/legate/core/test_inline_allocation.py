@@ -164,7 +164,7 @@ class TestInlineAllocation:
             assert cai["typestr"] == dtype.to_numpy_dtype().str
             # 1 below is a magic number we use as a stand-in for nullptr, which
             # numpy apparently does not like.
-            assert cai["data"] == (alloc.ptr if alloc.ptr else 1, False)
+            assert cai["data"] == (alloc.ptr or 1, False)
             assert cai["strides"] == arr.strides
             # stream is either None, or an integer. If None, then no sync is
             # required by the consumer. 0 is disallowed outright because it is
