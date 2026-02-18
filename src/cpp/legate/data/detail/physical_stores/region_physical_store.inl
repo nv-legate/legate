@@ -34,11 +34,6 @@ inline mapping::StoreTarget RegionPhysicalStore::target() const { return region_
 
 inline bool RegionPhysicalStore::is_partitioned() const { return region_field_.is_partitioned(); }
 
-inline bool RegionPhysicalStore::on_target(mapping::StoreTarget target) const
-{
-  return region_field_.target() == target;
-}
-
 inline std::pair<Legion::PhysicalRegion, Legion::FieldID> RegionPhysicalStore::get_region_field()
   const
 {

@@ -115,7 +115,7 @@ class AllocationCache {
   Deleter deleter_{};
 
   // A stack of allocations of the same size that are held by the cache and are not freed yet.
-  using SizedAllocationStack = std::stack<void*, cuda::std::inplace_vector<void*, MAX_BIN_COUNT>>;
+  using SizedAllocationStack = std::stack<void*, ::cuda::std::inplace_vector<void*, MAX_BIN_COUNT>>;
 
   // The map of allocations by size that are not yet freed but can be reused.
   std::unordered_map<std::uint64_t, SizedAllocationStack> allocations_;

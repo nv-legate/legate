@@ -35,4 +35,30 @@ void sync_current_ctx()
   } while (true);
 }
 
+void stream_synchronize_minimal(CUstream stream)
+{
+  auto&& api = get_cuda_driver_api();
+  auto event = api->event_create();
+
+  LEGATE_SCOPE_GUARD(api->event_destroy(&event));
+
+  // Synchronize on the null stream
+  api->event_record(event, stream);
+
+  do {
+    const auto result = api->event_query(event);
+
+    if (result == LEGATE_CUDA_ERROR_NOT_READY) {
+      continue;
+    }
+
+    if (result == LEGATE_CUDA_SUCCESS) {
+      break;
+    }
+
+    cuda::detail::throw_cuda_driver_error(
+      result, /*expression=*/"api->event_query(event)", __FILE__, __func__, __LINE__);
+  } while (true);
+}
+
 }  // namespace legate::cuda::detail

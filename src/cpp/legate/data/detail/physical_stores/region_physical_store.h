@@ -40,7 +40,6 @@ class RegionPhysicalStore final : public PhysicalStore {
   [[nodiscard]] bool is_partitioned() const override;
 
   // region field specific interface
-  [[nodiscard]] bool on_target(mapping::StoreTarget target) const override;
   [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field() const;
   [[nodiscard]] Legion::LogicalRegion get_logical_region() const;
   [[nodiscard]] Legion::FieldID get_field_id() const;

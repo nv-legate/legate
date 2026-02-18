@@ -317,6 +317,7 @@ target_sources(
     legate/data/detail/physical_arrays/struct_physical_array.cc
     legate/data/detail/physical_store.cc
     legate/data/detail/physical_stores/future_physical_store.cc
+    legate/data/detail/physical_stores/inline_physical_store.cc
     legate/data/detail/physical_stores/region_physical_store.cc
     legate/data/detail/physical_stores/unbound_physical_store.cc
     legate/data/detail/physical_stores/unbound_region_field.cc
@@ -334,6 +335,7 @@ target_sources(
     legate/data/detail/region_field.cc
     legate/data/detail/user_storage_tracker.cc
     legate/data/detail/buffer.cc
+    legate/data/detail/inline_storage.cc
     legate/experimental/trace.cc
     legate/mapping/array.cc
     legate/mapping/machine.cc

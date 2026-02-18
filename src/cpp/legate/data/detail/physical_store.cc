@@ -7,6 +7,7 @@
 #include <legate/data/detail/physical_store.h>
 
 #include <legate/data/detail/physical_stores/future_physical_store.h>
+#include <legate/data/detail/physical_stores/inline_physical_store.h>
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -50,6 +51,16 @@ FuturePhysicalStore& PhysicalStore::as_future_store()
 const FuturePhysicalStore& PhysicalStore::as_future_store() const
 {
   return dynamic_cast<const FuturePhysicalStore&>(*this);
+}
+
+InlinePhysicalStore& PhysicalStore::as_inline_store()
+{
+  return dynamic_cast<InlinePhysicalStore&>(*this);
+}
+
+const InlinePhysicalStore& PhysicalStore::as_inline_store() const
+{
+  return dynamic_cast<const InlinePhysicalStore&>(*this);
 }
 
 void PhysicalStore::check_shape_dimension(std::int32_t dim) const
@@ -129,7 +140,5 @@ Legion::DomainAffineTransform PhysicalStore::get_inverse_transform() const
 {
   return transform_->inverse_transform(dim());
 }
-
-bool PhysicalStore::on_target(mapping::StoreTarget /*target*/) const { return false; }
 
 }  // namespace legate::detail

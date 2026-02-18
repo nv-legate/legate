@@ -26,6 +26,7 @@ namespace legate::detail {
 class RegionPhysicalStore;
 class UnboundPhysicalStore;
 class FuturePhysicalStore;
+class InlinePhysicalStore;
 
 class PhysicalStore {
  public:
@@ -73,6 +74,20 @@ class PhysicalStore {
   [[nodiscard]] const UnboundPhysicalStore& as_unbound_store() const;
   [[nodiscard]] FuturePhysicalStore& as_future_store();
   [[nodiscard]] const FuturePhysicalStore& as_future_store() const;
+  /**
+   * @brief Cast to the underlying implementation as an inline storage store.
+   *
+   * @throw std::bad_cast If the underlying implementation is not an inline storage store.
+   * @return The underlying implementation as an inline storage store.
+   */
+  [[nodiscard]] InlinePhysicalStore& as_inline_store();
+  /**
+   * @brief Cast to the underlying implementation as a const inline storage store.
+   *
+   * @throw std::bad_cast If the underlying implementation is not an inline storage store.
+   * @return The underlying implementation as a const inline storage store.
+   */
+  [[nodiscard]] const InlinePhysicalStore& as_inline_store() const;
 
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
   [[nodiscard]] GlobalRedopID get_redop_id() const;
@@ -85,15 +100,6 @@ class PhysicalStore {
   void check_reduction_access() const;
   void check_scalar_store() const;
   void check_unbound_store() const;
-
-  /**
-   * @brief Check whether this store's data resides on the given target.
-   *
-   * @param target The store target to check against.
-   *
-   * @return `true` if the store's data is on the specified target, `false` otherwise.
-   */
-  [[nodiscard]] virtual bool on_target(mapping::StoreTarget target) const;
 
  protected:
   InternalSharedPtr<detail::TransformStack> transform_{};

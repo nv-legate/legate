@@ -17,6 +17,36 @@ namespace legate::detail {
 class RegionField {
  public:
   RegionField() = default;
+
+  /** @brief Constructor for a region field.
+   *
+   * This constructor assumes the domain of this region field is the same
+   * as that of the logical region which could be a subset of the domain
+   * of the physical region.  However, the physical region provides
+   * the actual memory allocation for the region field.
+   *
+   * @param dim The dimension of the region field.
+   * @param lr The logical region of the region field (could be a subset of the physical region).
+   * @param pr The physical region of the region field.
+   * @param fid The field ID of the region field.
+   * @param partitioned Whether the region field is partitioned.
+   */
+  RegionField(std::int32_t dim,
+              Legion::LogicalRegion lr,
+              Legion::PhysicalRegion pr,
+              Legion::FieldID fid,
+              bool partitioned);
+
+  /** @brief Constructor for a region field.
+   *
+   * This constructor assumes the domain of this region field is the same
+   * as the domain of the entire physical region.
+   *
+   * @param dim The dimension of the region field.
+   * @param pr The physical region of the region field.
+   * @param fid The field ID of the region field.
+   * @param partitioned Whether the region field is partitioned.
+   */
   RegionField(std::int32_t dim, Legion::PhysicalRegion pr, Legion::FieldID fid, bool partitioned);
 
   RegionField(RegionField&& other) noexcept            = default;

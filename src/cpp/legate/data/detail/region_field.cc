@@ -12,19 +12,25 @@
 namespace legate::detail {
 
 RegionField::RegionField(std::int32_t dim,
+                         Legion::LogicalRegion lr,
                          Legion::PhysicalRegion pr,
                          Legion::FieldID fid,
                          bool partitioned)
-  : dim_{dim},
-    pr_{std::move(pr)},
-    lr_{get_physical_region().get_logical_region()},
-    fid_{fid},
-    partitioned_{partitioned}
+  : dim_{dim}, pr_{std::move(pr)}, lr_{std::move(lr)}, fid_{fid}, partitioned_{partitioned}
 {
   const auto priv = get_physical_region().get_privilege();
   readable_       = static_cast<bool>(priv & LEGION_READ_PRIV);
   writable_       = static_cast<bool>(priv & LEGION_WRITE_PRIV);
   reducible_      = static_cast<bool>(priv & LEGION_REDUCE) || (is_readable() && is_writable());
+}
+
+RegionField::RegionField(std::int32_t dim,
+                         Legion::PhysicalRegion pr,
+                         Legion::FieldID fid,
+                         bool partitioned)
+  // Immediate lambda to ensure get_logical_region() is executed before pr is moved-from
+  : RegionField{dim, [&] { return pr.get_logical_region(); }(), std::move(pr), fid, partitioned}
+{
 }
 
 bool RegionField::valid() const

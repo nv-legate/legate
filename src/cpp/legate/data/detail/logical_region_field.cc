@@ -130,7 +130,11 @@ RegionField LogicalRegionField::map(legate::mapping::StoreTarget target)
     return (*parent())->map(target);
   }
   set_mapped(true);
-  return {dim(), physical_state_->ensure_mapping(lr_, fid_, target), fid_, /*partitioned=*/false};
+  return {dim(),
+          region(),
+          physical_state_->ensure_mapping(region(), field_id(), target),
+          field_id(),
+          /*partitioned=*/false};
 }
 
 void LogicalRegionField::unmap()
