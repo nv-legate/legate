@@ -11,6 +11,10 @@ import pytest
 import legate.driver.args as m
 from legate.util import defaults
 
+from ...util import is_multi_node
+
+pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
+
 
 class TestParserDefaults:
     def test_allow_abbrev(self) -> None:

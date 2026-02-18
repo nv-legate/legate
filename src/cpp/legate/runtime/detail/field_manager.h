@@ -52,6 +52,15 @@ class FieldManager {
     Legion::FieldID field_id);
   virtual void free_field(FreeFieldInfo info, bool unordered);
   /**
+   * @brief Deallocate all cached field attachments and clear internal queues.
+   *
+   * This must be called before destroying the FieldManager to avoid re-entrant destruction:
+   * the destructor deallocates attachments, which can cascade through DLPack deleters back
+   * into release_region_field() -> free_field(), while the FieldManager is mid-destruction.
+   * Draining first ensures the destructor has nothing left to clean up.
+   */
+  virtual void drain();
+  /**
    * @brief Issue a consesus match on discarded fields in multi-rank runs.
    */
   virtual void issue_field_match();
@@ -87,6 +96,15 @@ class ConsensusMatchingFieldManager final : public FieldManager {
  public:
   ~ConsensusMatchingFieldManager() final;
 
+  /**
+   * @brief Deallocate all cached field attachments and clear internal queues.
+   *
+   * This must be called before destroying the FieldManager to avoid re-entrant destruction:
+   * the destructor deallocates attachments, which can cascade through DLPack deleters back
+   * into release_region_field() -> free_field(), while the FieldManager is mid-destruction.
+   * Draining first ensures the destructor has nothing left to clean up.
+   */
+  void drain() override;
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field(
     InternalSharedPtr<Shape> shape, std::uint32_t field_size) override;
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(

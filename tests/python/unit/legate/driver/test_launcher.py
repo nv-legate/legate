@@ -13,7 +13,7 @@ import legate.driver.launcher as m
 from legate.util.shared_args import LAUNCHERS
 from legate.util.system import System
 
-from ...util import powerset_nonempty
+from ...util import is_multi_node, powerset_nonempty
 
 if TYPE_CHECKING:
     from legate.util.types import LauncherType
@@ -48,6 +48,9 @@ def test_LAUNCHER_VAR_PREFIXES() -> None:
         "NVIDIA_",
         "LD_",
     )
+
+
+pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
 
 
 class TestLauncher:

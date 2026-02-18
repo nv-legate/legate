@@ -101,9 +101,22 @@ run_test_or_analysis() {
 
             case "${GPUS_COUNT}" in
               "0")
-                rapids-logger "Using CPUs ..."
+
+                rapids-logger "Using CPUs (single rank)..."
                 LEGATE_AUTO_CONFIG=0 pytest --color=yes --ignore tests/python/wo_runtime tests/python -s
                 LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python/wo_runtime -s
+
+                rapids-logger "Using CPUs (multi-rank: 2 ranks)..."
+                LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 legate \
+                          --launcher mpirun \
+                          --launcher-extra="--allow-run-as-root" \
+                          --ranks-per-node 2 \
+                          --cpus 2 \
+                          -m pytest \
+                          --color=yes \
+                          --ignore tests/python/wo_runtime \
+                          tests/python \
+                          -s
                 ;;
               "1")
                 rapids-logger "Using 1 GPU ..."
@@ -120,18 +133,32 @@ run_test_or_analysis() {
                           -s
                 ;;
               "2")
-                rapids-logger "Using 2 GPUs ..."
+                rapids-logger "Using 2 GPUs (single rank)..."
                 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" \
                           pytest \
                           --color=yes \
                           --ignore tests/python/wo_runtime \
                           tests/python \
                           -s
+
                 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" \
                           pytest \
                           --color=yes \
                           tests/python/wo_runtime \
                           -s
+
+                rapids-logger "Using 2 GPUs (multi-rank: 2 ranks, 1 GPU each)..."
+                LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 legate \
+                          --launcher mpirun \
+                          --launcher-extra="--allow-run-as-root" \
+                          --ranks-per-node 2 \
+                          --gpus 1 \
+                          --fbmem 4000 \
+                          -m pytest \
+                          --color=yes \
+                          --ignore tests/python/wo_runtime \
+                          tests/python \
+                         -s
                 ;;
               *)
                 rapids-logger "Invalid case: $2"

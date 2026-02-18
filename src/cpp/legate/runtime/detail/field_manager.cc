@@ -14,10 +14,30 @@ namespace legate::detail {
 
 FieldManager::~FieldManager()
 {
-  // We are shutting down, so just free all the buffer copies we've made to attach to
-  for (auto&& [_, queue] : ordered_free_fields_) {
-    for (; !queue.empty(); queue.pop()) {
-      queue.front().state->deallocate_attachment(/* wait_on_detach */ false);
+  // drain() should have been called before destruction. If not, the destructor deallocating
+  // attachments can trigger a re-entrant call back into the (mid-destruction) FieldManager.
+  LEGATE_ASSERT(ordered_free_fields_.empty());
+}
+
+void FieldManager::drain()
+{
+  // Move all fields out of the internal queues before destruction. Deallocating attachments can
+  // cascade through DLPack deleters -> PhysicalStore -> LogicalStore -> UserStorageTracker ->
+  // free_early() -> release_region_field() -> free_field(), which would re-enter the FieldManager.
+  // By draining into a local collection and clearing our state first, any re-entrant free_field()
+  // call will simply insert into an empty (but valid) FieldManager rather than hitting a
+  // mid-destruction object.
+  //
+  // We loop until the queues are fully empty, because each pass can trigger re-entrant free_field()
+  // calls that add new items. The loop terminates because the number of live fields is finite and
+  // strictly decreasing.
+  while (!ordered_free_fields_.empty()) {
+    auto local_fields = std::exchange(ordered_free_fields_, {});
+
+    for (auto&& [_, queue] : local_fields) {
+      for (; !queue.empty(); queue.pop()) {
+        queue.front().state->deallocate_attachment(/* wait_on_detach */ false);
+      }
     }
   }
 }
@@ -111,13 +131,35 @@ InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field_(
 
 ConsensusMatchingFieldManager::~ConsensusMatchingFieldManager()
 {
-  // We are shutting down, so just free all the buffer copies we've made to attach to, without
-  // waiting on the detachments to finish.
-  for (auto&& [_, info] : info_for_match_items_) {
-    info.state->deallocate_attachment(/* wait_on_detach */ false);
-  }
-  for (auto&& info : unordered_free_fields_) {
-    info.state->deallocate_attachment(/* wait_on_detach */ false);
+  // drain() should have been called before destruction.
+  LEGATE_ASSERT(info_for_match_items_.empty());
+  LEGATE_ASSERT(unordered_free_fields_.empty());
+}
+
+void ConsensusMatchingFieldManager::drain()
+{
+  // Drain our own collections as well as the base class ordered queues. We loop because
+  // deallocating attachments can re-entrantly call free_field() (see FieldManager::drain()).
+  // Each pass drains all three collections; re-entrant additions land in one of the (now-empty)
+  // collections and are picked up by the next iteration.
+  while (true) {
+    FieldManager::drain();
+
+    if (info_for_match_items_.empty() && unordered_free_fields_.empty()) {
+      break;
+    }
+
+    auto local_match_items = std::exchange(info_for_match_items_, {});
+
+    for (auto&& [_, info] : local_match_items) {
+      info.state->deallocate_attachment(/* wait_on_detach */ false);
+    }
+
+    auto local_unordered = std::exchange(unordered_free_fields_, {});
+
+    for (auto&& info : local_unordered) {
+      info.state->deallocate_attachment(/* wait_on_detach */ false);
+    }
   }
 }
 

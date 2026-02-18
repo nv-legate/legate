@@ -16,6 +16,8 @@ from legate.core import (
     types as ty,
 )
 
+from ...util import is_multi_node
+
 if TYPE_CHECKING:
     from legate.core import Type
 
@@ -47,6 +49,7 @@ class TestToDLPack:
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
     @pytest.mark.parametrize("target", tuple(TaskTarget))
+    @pytest.mark.skipif(is_multi_node(), reason="single node only")
     def test_basic(
         self, shape: tuple[int, ...], legate_type: Type, target: TaskTarget
     ) -> None:
@@ -73,6 +76,7 @@ class TestToDLPack:
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
+    @pytest.mark.skipif(is_multi_node(), reason="single node only")
     def test_to_numpy(self, shape: tuple[int, ...], legate_type: Type) -> None:
         VALUE = 3
         store = get_legate_runtime().create_store(
@@ -96,6 +100,7 @@ class TestToDLPack:
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
+    @pytest.mark.skipif(is_multi_node(), reason="single node only")
     def test_to_numpy_must_copy(
         self, shape: tuple[int, ...], legate_type: Type
     ) -> None:
@@ -128,6 +133,7 @@ class TestToDLPack:
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
+    @pytest.mark.skipif(is_multi_node(), reason="single node only")
     def test_to_numpy_never_copy(
         self, shape: tuple[int, ...], legate_type: Type
     ) -> None:

@@ -239,6 +239,11 @@ const Processor& ProcessorSpan::operator[](std::uint32_t idx) const
 
 std::string ProcessorSpan::to_string() const { return fmt::format("{}", fmt::streamed(*this)); }
 
+std::uint32_t ProcessorSpan::local_proc_count() const
+{
+  return static_cast<std::uint32_t>(procs_.size());
+}
+
 std::ostream& operator<<(std::ostream& os, const ProcessorSpan& range)
 {
   os << "{offset: " << range.offset_ << ", total processor count: " << range.total_proc_count_

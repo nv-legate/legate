@@ -1775,20 +1775,20 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     auto hi           = key_functor->project_point(sharding_domain.hi());
     auto p            = key_functor->project_point(copy.index_point);
 
-    const std::uint32_t total_tasks_count = legate::detail::linearize(lo, hi, hi) + 1;
-
     // Calculate index for target processor (e.g., GPU)
-    // Use the local range's offset because LocalProcessorRange::operator[] subtracts this offset
-    auto target_idx =
-      (legate::detail::linearize(lo, hi, p) * target_range.total_proc_count() / total_tasks_count) +
-      target_range.offset();
+    // Use local_proc_count() and modulo to ensure we only map to processors available on this rank
+    const auto target_local_idx =
+      legate::detail::linearize(lo, hi, p) % target_range.local_proc_count();
+    const auto target_idx = target_local_idx + target_range.offset();
+
     target_proc = target_range[static_cast<std::uint32_t>(target_idx)];
 
     // Calculate index for host processor (e.g., CPU)
-    // Use the local range's offset because LocalProcessorRange::operator[] subtracts this offset
-    auto host_idx =
-      (legate::detail::linearize(lo, hi, p) * host_range.total_proc_count() / total_tasks_count) +
-      host_range.offset();
+    // Use local_proc_count() and modulo to ensure we only map to processors available on this rank
+    const auto host_local_idx =
+      legate::detail::linearize(lo, hi, p) % host_range.local_proc_count();
+    const auto host_idx = host_local_idx + host_range.offset();
+
     host_proc = host_range[static_cast<std::uint32_t>(host_idx)];
   } else {
     target_proc = target_range.first();

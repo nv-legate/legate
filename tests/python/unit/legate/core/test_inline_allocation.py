@@ -17,6 +17,13 @@ from legate.core import (
 )
 from legate.core.task import InputStore, task
 
+from ...util import is_multi_node
+
+pytestmark = pytest.mark.skipif(
+    is_multi_node(),
+    reason="These tests cause others after them to fail on multi-rank tests.",
+)
+
 
 def compute_strides(shape: tuple[int, ...], dtype: Type) -> tuple[int, ...]:
     if not len(shape):

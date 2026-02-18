@@ -14,6 +14,8 @@ import legate.driver.command as m
 from legate import install_info
 from legate.driver.launcher import RANK_ENV_VARS
 
+from ...util import is_multi_node
+
 if TYPE_CHECKING:
     from legate.util.types import LauncherType
 
@@ -27,6 +29,9 @@ def test___all__() -> None:
 
 def test_LEGATE_GLOBAL_RANK_SUBSTITUTION() -> None:
     assert m.LEGATE_GLOBAL_RANK_SUBSTITUTION == "%%LEGATE_GLOBAL_RANK%%"
+
+
+pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
 
 
 def test_CMD_PARTS() -> None:

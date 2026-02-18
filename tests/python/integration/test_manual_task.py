@@ -27,6 +27,7 @@ from legate.core.task import task
 
 from .utils import tasks, utils
 from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES
+from .utils.utils import is_multi_node
 
 
 class TestManualTask:
@@ -380,6 +381,10 @@ class TestManualTask:
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(out_arr, in_arr)
 
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="test_side_effect not supported in multi-rank mode",
+    )
     def test_side_effect(self) -> None:
         class foo:
             val = 0

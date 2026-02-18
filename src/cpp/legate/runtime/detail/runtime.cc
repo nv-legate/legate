@@ -2189,6 +2189,10 @@ std::int32_t Runtime::finish()
 
   // We finally deallocate managers
   region_managers_.clear();
+  // Drain the field manager's cached fields before destroying it. Deallocating attachments
+  // during destruction can cascade back into field_manager_ while it is mid-destruction.
+  // Draining first processes all cached fields while the manager is still fully alive.
+  field_manager_->drain();
   field_manager_.reset();
 
   communicator_manager_.reset();

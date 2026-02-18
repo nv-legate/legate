@@ -21,6 +21,8 @@ from legate.driver.launcher import RANK_ENV_VARS, Launcher
 from legate.util.shared_args import LAUNCHERS
 from legate.util.system import System
 
+from ...util import is_multi_node
+
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
@@ -32,6 +34,8 @@ if TYPE_CHECKING:
 SYSTEM = System()
 
 CONSOLE = Console(color_system=None, soft_wrap=True)
+
+pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
 
 
 class TestDriver:

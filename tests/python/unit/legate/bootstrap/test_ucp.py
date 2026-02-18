@@ -23,6 +23,10 @@ from legate.bootstrap import (
     ucp_setup_peer,
 )
 
+from ...util import is_multi_node
+
+pytestmark = pytest.mark.skipif(is_multi_node(), reason="single node only")
+
 
 class TestUcpSetupPeer:
     @pytest.fixture

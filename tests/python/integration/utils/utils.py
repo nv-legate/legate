@@ -121,3 +121,19 @@ class UnversionedDLPack:
         return self.arr.__dlpack__(
             stream=stream, dl_device=dl_device, copy=copy
         )
+
+
+def is_multi_node() -> bool:
+    """Return True if the current Legate runtime spans multiple nodes.
+
+    Returns
+    -------
+    bool
+        True if the runtime spans more than one node, False otherwise.
+    """
+    from legate.core import get_legate_runtime  # noqa: PLC0415
+
+    runtime = get_legate_runtime()
+    machine = runtime.get_machine()
+    nodes = machine.get_node_range()
+    return (nodes[1] - nodes[0]) > 1

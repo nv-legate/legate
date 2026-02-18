@@ -140,6 +140,12 @@ class ProcessorSpan {
    * @return The offset value used for indexing processors in the range.
    */
   [[nodiscard]] std::uint32_t offset() const;
+  /**
+   * @brief Returns the number of processors locally available in this span.
+   *
+   * @return The local processor count (size of the underlying processor array).
+   */
+  [[nodiscard]] std::uint32_t local_proc_count() const;
 
   friend std::ostream& operator<<(std::ostream& os, const ProcessorSpan& range);
 

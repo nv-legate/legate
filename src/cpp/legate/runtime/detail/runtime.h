@@ -391,6 +391,7 @@ class Runtime {
 
   [[nodiscard]] RegionManager& find_or_create_region_manager(const Legion::IndexSpace& index_space);
   [[nodiscard]] FieldManager& field_manager();
+
   [[nodiscard]] CommunicatorManager& communicator_manager();
   [[nodiscard]] const CommunicatorManager& communicator_manager() const;
   [[nodiscard]] PartitionManager& partition_manager();

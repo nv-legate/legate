@@ -4,8 +4,12 @@
 
 from __future__ import annotations
 
+import pytest
+
 import legate.driver.args as m
 from legate.util import defaults
+
+from ...util import is_multi_node
 
 
 class TestParserDefaults:
@@ -28,9 +32,11 @@ class TestParserDefaults:
 
     # multi_node
 
+    @pytest.mark.skipif(is_multi_node(), reason="Single node test")
     def test_nodes(self) -> None:
         assert m.parser.get_default("nodes") == defaults.LEGATE_NODES
 
+    @pytest.mark.skipif(is_multi_node(), reason="Single node test")
     def test_ranks_per_node(self) -> None:
         assert (
             m.parser.get_default("ranks_per_node")

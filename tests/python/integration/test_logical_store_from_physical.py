@@ -5,8 +5,12 @@ from __future__ import annotations
 
 import numpy as np
 
+import pytest
+
 from legate.core import get_legate_runtime, types as ty
 from legate.core.task import InputStore, OutputStore, task
+
+from .utils.utils import is_multi_node
 
 
 @task
@@ -33,6 +37,7 @@ def verify_api_2d_task(inp: InputStore, result_out: OutputStore) -> None:
     result[2] = logical.extents[1]
 
 
+@pytest.mark.skipif(is_multi_node(), reason="Store partitioned across ranks")
 class TestNestedExecution:
     def test_create_logical_from_physical(self) -> None:
         runtime = get_legate_runtime()

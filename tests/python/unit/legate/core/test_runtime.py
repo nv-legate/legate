@@ -34,6 +34,8 @@ from legate.core._lib.runtime.runtime import (  # type: ignore[attr-defined]
 )
 from legate.core.task import InputStore, task
 
+from ...util import is_multi_node
+
 
 class Test_track_provenance:
     @pytest.fixture
@@ -118,6 +120,7 @@ class TestShutdownCallback:
     def assert_reset(cls) -> None:
         assert cls.counter == 0
 
+    @pytest.mark.skipif(is_multi_node(), reason="single node only")
     def test_basic_shutdown_callback(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -138,6 +141,7 @@ class TestShutdownCallback:
         runtime.finish()
         assert TestShutdownCallback.counter == count + 1
 
+    @pytest.mark.skipif(is_multi_node(), reason="single node only")
     def test_LIFO(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -154,6 +158,10 @@ class TestShutdownCallback:
         runtime.finish()
         assert TestShutdownCallback.counter == 1
 
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="Test spawns a sub-process and only works on single node",
+    )
     def test_duplicate_callback(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -169,6 +177,10 @@ class TestShutdownCallback:
         runtime.finish()
         assert TestShutdownCallback.counter == count + 5
 
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="Test spawns a sub-process and only works on single node",
+    )
     def test_atexit(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -187,6 +199,10 @@ class TestShutdownCallback:
         assert TestShutdownCallback.counter == count + 1
 
 
+@pytest.mark.skipif(
+    is_multi_node(),
+    reason="Test spawns a sub-process and only works on single node",
+)
 class TestRealmBacktrace:
     def test_realm_backtrace_faulthandler(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -206,6 +222,10 @@ class TestRealmBacktrace:
             )
 
     @pytest.mark.parametrize("val", ["0", "1"])
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="Test spawns a sub-process and only works on single node",
+    )
     def test_realm_backtrace_set(
         self,
         val: str,
@@ -225,6 +245,10 @@ class TestRealmBacktrace:
         get_legate_runtime().finish()
         assert os.getenv("REALM_BACKTRACE") == backtrace
 
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="Test spawns a sub-process and only works on single node",
+    )
     def test_realm_backtrace_unset(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -238,6 +262,10 @@ class TestRealmBacktrace:
         get_legate_runtime().finish()
         assert os.getenv("REALM_BACKTRACE") is None
 
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="Test spawns a sub-process and only works on single node",
+    )
     def test_realm_backtrace_invalid(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -313,6 +341,9 @@ class TestRuntime:
             assert out == "bar"
         assert not err
 
+    @pytest.mark.skipif(
+        is_multi_node(), reason="In multi-node, the directory can get deleted "
+    )
     def test_output_stream(self, tmp_path: Path) -> None:
         runtime = get_legate_runtime()
         tmp_file = tmp_path / "tmp.txt"

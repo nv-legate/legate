@@ -8,11 +8,40 @@ import math
 from pathlib import Path
 
 import zarr  # type: ignore # noqa: PGH003
+import numpy as np
 import zarr.core  # type: ignore # noqa: PGH003
 
-from ... import LogicalArray, Type, get_legate_runtime
+from ... import (
+    LogicalArray,
+    Type,
+    VariantCode,
+    get_legate_runtime,
+    types as ty,
+)
 from ...data_interface import LogicalArrayLike, as_logical_array
+from ...task import InputStore, task
 from . import tile
+
+
+@task(variants=tuple(VariantCode))
+def init_zarr_dir_task(
+    _input_store: InputStore,
+    dirpath: str,
+    array_shape: tuple[int, ...],
+    array_dtype: str,
+    chunks: tuple[int, ...],
+) -> None:
+    """Task to initialize Zarr directory structure (single-instance)."""
+    # Convert chunks sentinel (-1,) back to None
+    chunks_arg = tuple(chunks) if chunks[0] > 0 else None
+    zarr.open_array(
+        dirpath,
+        shape=array_shape,
+        dtype=np.dtype(array_dtype),
+        mode="w",
+        chunks=chunks_arg,
+        compressor=None,
+    )
 
 
 def _get_padded_shape(  # type: ignore # noqa: PGH003
@@ -71,22 +100,44 @@ def write_array(
     """
     ary = as_logical_array(ary)
 
-    dirpath = Path(dirpath)
+    if not ary.shape:
+        msg = "Cannot write a 0-dimensional (scalar) array to Zarr"
+        raise ValueError(msg)
 
-    # We use Zarr to write the meta data
-    zarr_ary = zarr.open_array(
-        dirpath,
-        shape=ary.shape,
-        dtype=ary.type.to_numpy_dtype(),
-        mode="w",
-        # pyright hallucinates types for these zarr parameters
-        chunks=chunks,  # pyright: ignore[reportArgumentType]
-        compressor=None,  # pyright: ignore[reportArgumentType]
+    dirpath = Path(dirpath)
+    runtime = get_legate_runtime()
+
+    array_shape = ary.shape
+    array_dtype = str(ary.type.to_numpy_dtype())
+
+    if chunks is None:
+        chunks_arg: tuple[int, ...] = (-1,)
+    elif isinstance(chunks, int):
+        chunks_arg = (chunks,) * len(array_shape)
+    else:
+        chunks_arg = tuple(chunks)
+
+    # Create and execute a manual task with a single instance
+    # This ensures the zarr directory is created only once across all ranks
+    manual_task = runtime.create_manual_task(
+        init_zarr_dir_task.library,
+        init_zarr_dir_task.task_id,
+        (1,),  # Single instance
     )
+    manual_task.add_input(ary.data)
+    manual_task.add_scalar_arg(str(dirpath), ty.string_type)
+    manual_task.add_scalar_arg(array_shape, (ty.int64,))
+    manual_task.add_scalar_arg(array_dtype, ty.string_type)
+    manual_task.add_scalar_arg(chunks_arg, (ty.int64,))
+    manual_task.execute()
+    runtime.issue_execution_fence(block=True)
+
+    # Now read the metadata that was created
+    zarr_ary = zarr.open_array(dirpath, mode="r+")
+
     # TODO: minimize the copy needed when padding
     shape, padded = _get_padded_shape(zarr_ary)
     if padded:
-        runtime = get_legate_runtime()
         padded_ary = runtime.create_array(
             Type.from_numpy_dtype(zarr_ary.dtype), shape
         )

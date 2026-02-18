@@ -26,6 +26,7 @@ from legate.core.data_interface import (
     as_logical_array,
 )
 
+from ...util import is_multi_node
 from .util.task_util import make_input_array
 
 
@@ -157,7 +158,8 @@ class Test_as_logical_array:
 
 class TestOffload:
     @pytest.mark.skipif(
-        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
+        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0
+        or is_multi_node(),
         reason="test requires GPU",
     )
     def test_store_offload(
@@ -190,8 +192,9 @@ class TestOffload:
         offload_to(obj, target=StoreTarget.FBMEM)
 
     @pytest.mark.skipif(
-        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
-        reason="test requires GPU",
+        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0
+        or is_multi_node(),
+        reason="test requires GPU and single node",
     )
     def test_offload_no_duplicate(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -212,7 +215,8 @@ class TestOffload:
         offload_to(lg_arr, target=StoreTarget.FBMEM)
 
     @pytest.mark.skipif(
-        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
+        len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0
+        or (is_multi_node()),
         reason="test requires GPU",
     )
     def test_store_offload_overload(

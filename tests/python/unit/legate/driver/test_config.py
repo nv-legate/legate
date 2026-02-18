@@ -16,10 +16,12 @@ import legate.driver.config as m
 from legate.util import defaults
 from legate.util.types import DataclassMixin
 
-from ...util import powerset
+from ...util import is_multi_node, powerset
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
+
+pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
 
 
 class TestMultiNode:

@@ -29,6 +29,10 @@ from legate.bootstrap import (
     manual,
 )
 
+from ...util import is_multi_node
+
+pytestmark = pytest.mark.skipif(is_multi_node(), reason="single node only")
+
 
 @pytest.fixture
 def preserve_env() -> Generator[None]:

@@ -38,6 +38,7 @@ from .utils.data import (
     SCALAR_VALS,
     SHAPES,
 )
+from .utils.utils import is_multi_node
 
 
 class TestAutoTask:
@@ -146,7 +147,7 @@ class TestAutoTask:
             tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
 
-        in_arr_np = np.empty(shape=shape, dtype=np.int32)
+        in_arr_np = np.zeros(shape=shape, dtype=np.int32)
         in_store = runtime.create_store_from_buffer(
             ty.int32, in_arr_np.shape, in_arr_np, False
         )
@@ -202,7 +203,7 @@ class TestAutoTask:
         out_store = runtime.create_store(ty.int32, shape)
         auto_task.add_output(out_store)
 
-        arr_np = np.empty(shape=shape, dtype=np.int32)
+        arr_np = np.zeros(shape=shape, dtype=np.int32)
 
         auto_task.add_scalar_arg(arr_np)
         auto_task.execute()
@@ -287,6 +288,10 @@ class TestAutoTask:
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(out_arr, in_arr)
 
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="test_side_effect not supported in multi-rank mode",
+    )
     def test_side_effect(self) -> None:
         class foo:
             val = 0

@@ -56,6 +56,7 @@ from legate.core.task import (
 
 from .utils import tasks, utils
 from .utils.data import ARRAY_TYPES, LARGE_SHAPES, SCALAR_VALS, SHAPES
+from .utils.utils import is_multi_node
 
 
 class TestPyTask:
@@ -117,6 +118,7 @@ class TestPyTask:
     def test_cupy_dlpack_input_output(self, shape: tuple[int, ...]) -> None:
         if not cupy:
             pytest.skip(reason="test requires cupy")
+        cupy.random.seed(42)
         arr = cupy.random.rand(*shape)
         out_arr = cupy.empty(shape)
         store = from_dlpack(arr)
@@ -471,6 +473,7 @@ class TestPyTask:
         )
         out_arr, out_store = utils.zero_array_and_store(ty.float64, (0,))
         tasks.array_sum_task(in_store, out_store)
+        runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(out_arr, np.sum(in_arr))
 
     def test_reduction_constraint(self) -> None:
@@ -490,6 +493,7 @@ class TestPyTask:
 
         out_arr, out_store = utils.zero_array_and_store(ty.float64, (10,))
         array_sum_task(in_store, out_store)
+        runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(out_arr, np.sum(in_arr))
 
     @pytest.mark.parametrize(
@@ -850,6 +854,7 @@ class TestPyTask:
         "mode", [StreamingMode.OFF, StreamingMode.RELAXED], ids=repr
     )
     @pytest.mark.parametrize("factor", [1, 2, 43])
+    @pytest.mark.skipif(is_multi_node(), reason="single node only")
     def test_parallel_tasks(self, mode: StreamingMode, factor: int) -> None:
         runtime = get_legate_runtime()
         subregions = len(runtime.machine) * factor
