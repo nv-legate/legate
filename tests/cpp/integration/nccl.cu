@@ -12,6 +12,7 @@
 
 #include <nccl.h>
 #include <utilities/utilities.h>
+#include <vector>
 
 namespace test_nccl {
 
@@ -36,20 +37,24 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     const std::size_t num_tasks = context.get_launch_domain().get_volume();
 
     auto recv_buffer =
-      legate::create_buffer<std::uint64_t>(num_tasks, legate::Memory::Kind::Z_COPY_MEM);
-    auto send_buffer = legate::create_buffer<std::uint64_t>(1, legate::Memory::Kind::Z_COPY_MEM);
+      legate::create_buffer<std::uint64_t>(num_tasks, legate::Memory::Kind::GPU_FB_MEM);
+    auto send_buffer = legate::create_buffer<std::uint64_t>(1, legate::Memory::Kind::GPU_FB_MEM);
 
     auto* p_recv = recv_buffer.ptr(0);
     auto* p_send = send_buffer.ptr(0);
 
-    for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
-      p_recv[idx] = 0;
-    }
-    *p_send = SEND_VALUE;
+    auto h_recv = std::vector<std::uint64_t>(num_tasks, 0);
+    auto h_send = std::vector<std::uint64_t>(1, SEND_VALUE);
 
     auto stream = context.get_task_stream();
+    auto&& api  = legate::cuda::detail::get_cuda_driver_api();
+
+    api->mem_cpy_async(p_recv, h_recv.data(), num_tasks * sizeof(*p_recv), stream);
+    api->mem_cpy_async(p_send, h_send.data(), sizeof(*p_send), stream);
 
     /// [NCCL collective operation]
+    // These fences appear to be necessary on our dual-GPU T4 runners.
+    // See https://github.com/nv-legate/legate.internal/issues/3569.
     // The barrier must happen before the NCCL calls begin
     context.concurrent_task_barrier();
     auto result = ncclAllGather(p_send, p_recv, 1, ncclUint64, *comm, stream);
@@ -59,9 +64,10 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     context.concurrent_task_barrier();
     /// [NCCL collective operation]
 
-    legate::cuda::detail::get_cuda_driver_api()->stream_synchronize(stream);
+    api->mem_cpy_async(h_recv.data(), p_recv, num_tasks * sizeof(*p_recv), stream);
+    api->stream_synchronize(stream);
     for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
-      EXPECT_EQ(p_recv[idx], SEND_VALUE);
+      EXPECT_EQ(h_recv[idx], SEND_VALUE);
     }
   }
 };
@@ -92,6 +98,7 @@ void test_nccl_auto(std::int32_t ndim)
   task.add_output(store, part);
   task.add_communicator("nccl");
   runtime->submit(std::move(task));
+  runtime->issue_execution_fence(true);
 }
 
 void test_nccl_manual(std::int32_t ndim)
@@ -117,13 +124,12 @@ void test_nccl_manual(std::int32_t ndim)
   task.add_output(part);
   task.add_communicator("nccl");
   runtime->submit(std::move(task));
+  runtime->issue_execution_fence(true);
 }
 
 }  // namespace
 
-// NCCL tests have been very flakey in CI, so we disable them for now. See tracking issue
-// https://github.com/nv-legate/legate.internal/issues/2664 for further discussion.
-TEST_F(NCCL, DISABLED_Auto)
+TEST_F(NCCL, Auto)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
@@ -137,7 +143,7 @@ TEST_F(NCCL, DISABLED_Auto)
   }
 }
 
-TEST_F(NCCL, DISABLED_Manual)
+TEST_F(NCCL, Manual)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
