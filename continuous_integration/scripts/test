@@ -80,11 +80,13 @@ run_test_or_analysis() {
 
             set +u
             # shellcheck disable=SC2154
+            # Temporary workaround for CuPy 14.0.0 regression; see
+            # https://github.com/nv-legate/legate.internal/issues/3579.
             rapids-conda-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                -c conda-forge \
-                               psutil pytest pytest-mock ipython jupyter_client cupy "${test_libs[@]}"
+                               psutil pytest pytest-mock ipython jupyter_client "cupy!=14.0.0" "${test_libs[@]}"
 
             hdf5_libs=(h5py)
             # shellcheck disable=SC2154

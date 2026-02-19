@@ -108,7 +108,7 @@ def create_hdf5_file(
     manual_task.add_scalar_arg(str(filename), ty.string_type)
     manual_task.add_scalar_arg(dataset_name, ty.string_type)
     # Use (-1,) as sentinel for None chunks
-    manual_task.add_scalar_arg(chunks if chunks else (-1,), (ty.int64,))
+    manual_task.add_scalar_arg(chunks or (-1,), (ty.int64,))
     # Pass flag indicating if original data was scalar
     manual_task.add_scalar_arg(is_scalar, ty.bool_)
     manual_task.execute()
