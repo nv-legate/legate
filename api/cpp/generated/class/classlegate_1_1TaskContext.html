@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::TaskContext &#8212; NVIDIA legate (26.03.00.dev21+gd487abc26)</title>
+    <title>legate::TaskContext &#8212; NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=b2de3063"></script>
+    <script src="../../../../_static/documentation_options.js?v=2622871f"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev21+gd487abc26) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev21+gd487abc26) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev21+gd487abc26)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev21+gd487abc26) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev21+gd487abc26) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev21+gd487abc26)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</p>
   
 </a>
 
@@ -989,7 +989,9 @@ SPDX-License-Identifier: Apache-2.0
 <li><p>perform another barrier</p></li>
 </ul>
 </p>
-<div class="highlight-cuda notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="c1">// The barrier must happen before the NCCL calls begin</span>
+<div class="highlight-cuda notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="c1">// These fences appear to be necessary on our dual-GPU T4 runners.</span>
+<span class="w">    </span><span class="c1">// See https://github.com/nv-legate/legate.internal/issues/3569.</span>
+<span class="w">    </span><span class="c1">// The barrier must happen before the NCCL calls begin</span>
 <span class="w">    </span><span class="n">context</span><span class="p">.</span><span class="n">concurrent_task_barrier</span><span class="p">();</span>
 <span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ncclAllGather</span><span class="p">(</span><span class="n">p_send</span><span class="p">,</span><span class="w"> </span><span class="n">p_recv</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">ncclUint64</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">comm</span><span class="p">,</span><span class="w"> </span><span class="n">stream</span><span class="p">);</span>
 <span class="w">    </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">ncclSuccess</span><span class="p">);</span>
