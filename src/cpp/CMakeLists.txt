@@ -1233,8 +1233,8 @@ legate_add_external_tidy_target(
 
 install(
   FILES
-    ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1.py
-    ${LEGATE_DIR}/share/legate/examples/io/hdf5/hdf5_write_benchmark.py
+    ${LEGATE_DIR}/share/legate/examples/io/hdf5/read.py
+    ${LEGATE_DIR}/share/legate/examples/io/hdf5/write.py
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5
 )
 

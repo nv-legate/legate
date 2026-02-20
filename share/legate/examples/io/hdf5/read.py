@@ -13,6 +13,7 @@ import h5py
 from legate.core import get_legate_runtime
 from legate.io.hdf5 import from_file
 from legate.util.benchmark import benchmark_log
+from legate.util.info import info as legate_info
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -34,7 +35,7 @@ def parse_arguments() -> Namespace:
 
     Returns
     -------
-    Parsed arguments containing filename and number of ranks.
+    Parsed arguments containing filename and benchmark options.
     """
     parser = ArgumentParser(
         description="Benchmark HDF5 read performance using Legate."
@@ -43,17 +44,18 @@ def parse_arguments() -> Namespace:
         "filename", type=Path, help="prefix for the HDF5 file names"
     )
     parser.add_argument(
-        "--n_rank",
-        type=int,
-        default=1,
-        metavar="int",
-        help="number of ranks (files)",
-    )
-    parser.add_argument(
         "--iterations",
         type=int,
         default=3,
         help="number of iterations to run (default: 3)",
+    )
+    parser.add_argument(
+        "--max-throughput",
+        type=float,
+        default=None,
+        metavar="MB/s",
+        help="max theoretical throughput of the cluster in MB/s; "
+        "stored as metadata for comparison with benchmark results",
     )
     args = parser.parse_args()
 
@@ -61,9 +63,6 @@ def parse_arguments() -> Namespace:
         parser.error(f"File path {args.filename} does not exist")
     if not args.filename.is_file():
         parser.error(f"File path {args.filename} must be a readable file")
-
-    if args.n_rank <= 0:
-        parser.error(f"Number of ranks must be > 0 (have {args.n_rank})")
 
     return args
 
@@ -95,15 +94,13 @@ def traverse_datasets(hdf_file: h5py.File) -> Iterator[str]:
     yield from h5py_dataset_iterator(hdf_file)
 
 
-def read_hdf5_once(filename: Path, n_rank: int) -> ReadResult:
+def read_hdf5_once(filename: Path) -> ReadResult:
     """Read HDF5 datasets once and return timing results.
 
     Parameters
     ----------
     filename: Path
         Path to the toplevel HDF5 file.
-    n_rank: int
-        Number of ranks (iterations over the file).
 
     Returns
     -------
@@ -117,11 +114,10 @@ def read_hdf5_once(filename: Path, n_rank: int) -> ReadResult:
     wall_start = pytime.time()
 
     fname = str(filename)
-    for _ in range(n_rank):
-        with h5py.File(fname, "r") as hdf_file:
-            for dset in traverse_datasets(hdf_file):
-                data = from_file(fname, dataset_name=dset)
-                total_size += data.size * data.type.size
+    with h5py.File(fname, "r") as hdf_file:
+        for dset in traverse_datasets(hdf_file):
+            data = from_file(fname, dataset_name=dset)
+            total_size += data.size * data.type.size
 
     # Block to ensure all operations complete
     runtime.issue_execution_fence(block=True)
@@ -139,20 +135,22 @@ def read_hdf5_once(filename: Path, n_rank: int) -> ReadResult:
     )
 
 
-def process_hdf5_files(filename: Path, n_rank: int, iterations: int) -> None:
+def process_hdf5_files(
+    filename: Path, iterations: int, max_throughput_mb_s: float | None = None
+) -> None:
     r"""Read HDF5 datasets and benchmark throughput using the legate benchmark
-    framework. The datasets are virtual datasets stored across files. Each rank
-    opens the top level file and recurses through all the datasets and reads
-    them simultaneously.
+    framework. Opens the top-level file and recurses through all datasets,
+    reading them and logging timing/throughput.
 
     Parameters
     ----------
     filename: Path
         Path to the toplevel HDF5 file.
-    n_rank: int
-        Number of ranks (files).
     iterations: int
         Number of benchmark iterations.
+    max_throughput_mb_s: float, optional
+        Max theoretical throughput of the cluster in MB/s; stored as metadata
+        for comparison with benchmark results.
     """
     # Define columns for the benchmark log
     columns = [
@@ -165,12 +163,11 @@ def process_hdf5_files(filename: Path, n_rank: int, iterations: int) -> None:
 
     # Additional metadata specific to this benchmark
     metadata = {
-        "Benchmark Config": {
-            "File": str(filename),
-            "N Rank": n_rank,
-            "Iterations": iterations,
-        }
+        "Benchmark Config": {"File": str(filename), "Iterations": iterations},
+        **legate_info(),
     }
+    if max_throughput_mb_s is not None:
+        metadata["Max throughput (MB/s)"] = f"{max_throughput_mb_s:.2f}"
 
     results: list[ReadResult] = []
 
@@ -178,10 +175,9 @@ def process_hdf5_files(filename: Path, n_rank: int, iterations: int) -> None:
         "hdf5_read", columns=columns, metadata=metadata
     ) as blog:
         for iteration in range(iterations):
-            result = read_hdf5_once(filename, n_rank)
+            result = read_hdf5_once(filename)
             results.append(result)
 
-            # Log each iteration to the benchmark framework
             blog.log(
                 iteration=iteration,
                 total_bytes=result.total_bytes,
@@ -198,7 +194,9 @@ def main() -> None:
     using the legate benchmark framework.
     """
     args = parse_arguments()
-    process_hdf5_files(args.filename, args.n_rank, args.iterations)
+    process_hdf5_files(
+        args.filename, args.iterations, max_throughput_mb_s=args.max_throughput
+    )
 
 
 if __name__ == "__main__":

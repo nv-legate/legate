@@ -16,6 +16,7 @@ from legate.core import get_legate_runtime
 from legate.core.types import float32, float64, int32, int64
 from legate.io.hdf5 import to_file
 from legate.util.benchmark import benchmark_log
+from legate.util.info import info as legate_info
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -109,6 +110,14 @@ def parse_arguments() -> Namespace:
         action="store_true",
         help="overwrite existing output directory",
     )
+    parser.add_argument(
+        "--max-throughput",
+        type=float,
+        default=None,
+        metavar="MB/s",
+        help="max theoretical throughput of the cluster in MB/s; "
+        "stored as metadata for comparison with benchmark results",
+    )
     args = parser.parse_args()
 
     if args.output_dir.exists() and not args.overwrite:
@@ -197,8 +206,11 @@ def run_benchmarks(args: Namespace) -> None:
             "Data Types": ", ".join(args.dtypes),
             "Iterations": args.iterations,
             "Output Directory": str(args.output_dir),
-        }
+        },
+        **legate_info(),
     }
+    if args.max_throughput is not None:
+        metadata["Max throughput (MB/s)"] = f"{args.max_throughput:.2f}"
 
     results: list[AggregatedResult] = []
 
@@ -209,7 +221,6 @@ def run_benchmarks(args: Namespace) -> None:
             iter_results: list[BenchmarkResult] = []
 
             for iteration in range(args.iterations):
-                # Use underscores in filename instead of commas for portability
                 safe_shape_str = "x".join(str(dim) for dim in args.shape)
                 filename = (
                     f"benchmark_{safe_shape_str}_{dtype_str}_"
@@ -220,7 +231,6 @@ def run_benchmarks(args: Namespace) -> None:
                 result = benchmark_write(output_file, args.shape, dtype_str)
                 iter_results.append(result)
 
-                # Log each iteration to the benchmark framework
                 blog.log(
                     dtype=dtype_str,
                     iteration=iteration,
@@ -229,7 +239,6 @@ def run_benchmarks(args: Namespace) -> None:
                     throughput_mb_s=f"{result.throughput:.2f}",
                 )
 
-            # Calculate averages for this dtype
             avg_wall = sum(r.wall_time for r in iter_results) / len(
                 iter_results
             )
