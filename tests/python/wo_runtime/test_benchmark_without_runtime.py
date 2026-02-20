@@ -23,6 +23,7 @@ def test_metadata_without_runtime() -> None:
     metadata = "".join(line.strip("#") for line in header)
     expected = [
         r"Legate runtime configuration *: *\(unavailable, legate runtime not started\)",  # noqa: E501
+        r"Realm runtime configuration *: *\(unavailable, legate runtime not started\)",  # noqa: E501
         r"Machine *: *\(unavailable, legate runtime not started\)",
     ]
     for entry in expected:

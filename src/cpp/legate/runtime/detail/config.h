@@ -11,6 +11,7 @@
 #include <legate/utilities/detail/env_defaults.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 namespace legate::detail {
@@ -56,4 +57,18 @@ class LEGATE_PYTHON_EXPORT Config {
 
 #undef LEGATE_CONFIG_VAR
 
+/**
+ * @brief Return a value from a Realm configuration module.
+ *
+ * @param module_name The name of the Realm module
+ * @param property_name The property name
+ *
+ * @return The value if the module exists and has the requested property, and no value otherwise.
+ */
+template <typename T>
+[[nodiscard]] std::optional<T> get_realm_config_property(const std::string& module_name,
+                                                         const std::string& property_name);
+
 }  // namespace legate::detail
+
+#include <legate/runtime/detail/config.inl>

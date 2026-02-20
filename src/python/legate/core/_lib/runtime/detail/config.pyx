@@ -2,9 +2,9 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from ...utilities.unconstructable cimport Unconstructable
-from .config cimport _Config
+from libc.stdint cimport int32_t, int64_t
 
+from ...utilities.unconstructable cimport Unconstructable
 
 cdef class Config(Unconstructable):
     """
@@ -240,3 +240,136 @@ cdef class Config(Unconstructable):
         :rtype: bool
         """
         return self._handle.experimental_copy_path()
+
+
+ctypedef fused ConfigType:
+    int32_t
+    int64_t
+
+cdef int32_t INT32_T = -1
+cdef int64_t INT64_T = -1
+
+cdef object get_realm_config_property(
+    ConfigType T,
+    str module_name,
+    str property_name,
+):
+    cdef std_optional[ConfigType] v
+    # in most cases cython can handle transforming str to a std::string, but
+    # without this explicit transformation to bytes a runtime error occurs:
+    #
+    #       File "<stringsource>", line 15, in
+    #         string.from_py
+    #           .__pyx_convert_string_from_py_6libcpp_6string_std__in_string
+    #     TypeError: expected bytes, str found
+    mod = bytes(module_name, "utf-8")
+    prop = bytes(property_name, "utf-8")
+    if ConfigType is int32_t:
+        v = _get_realm_config_property[int32_t](mod, prop)
+    else:
+        assert ConfigType is int64_t
+        v = _get_realm_config_property[int64_t](mod, prop)
+    if v.has_value():
+        return int(v.value())
+    return None
+
+
+cdef class RealmConfig:
+    """
+    Realm configuration access interface.
+
+    .. warning::
+        This class is considered an implementation detail and its members
+        have no guarantee of stability across versions.
+    """
+
+    @property
+    def cpus(self) -> int | None:
+        r"""
+        Number of standalone CPU cores reserved per rank.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT32_T, "core", "cpu")
+
+    @property
+    def util(self) -> int | None:
+        r"""
+        Number of threads per rank used for runtime meta-work.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT32_T, "core", "util")
+
+    @property
+    def sysmem(self) -> int | None:
+        r"""
+        Size in bytes of DRAM memory reserved per rank.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT64_T, "core", "sysmem")
+
+    @property
+    def regmem(self) -> int | None:
+        r"""
+        Size in bytes of reserved NIC-registered DRAM memory.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT64_T, "core", "regmem")
+
+    @property
+    def gpus(self) -> int | None:
+        r"""
+        Number of GPUs reserved per rank.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT32_T, "cuda", "cpu")
+
+    @property
+    def fbmem(self) -> int | None:
+        r"""
+        Size in bytes of GPU (or "framebuffer") memory reserved per GPU.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT64_T, "cuda", "fbmem")
+
+    @property
+    def zcmem(self) -> int | None:
+        r"""
+        Size in bytes of GPU-registered (or "zero-copy") DRAM memory reserved
+        per GPU.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT64_T, "cuda", "zcmem")
+
+    @property
+    def omps(self) -> int | None:
+        r"""
+        Number of OpenMP groups per rank.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT32_T, "openmp", "ocpu")
+
+    @property
+    def ompthreads(self) -> int | None:
+        r"""
+        Number of threads (reserved GPU cores) per OpenMP group.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT32_T, "openmp", "othr")
+
+    @property
+    def numamem(self) -> int | None:
+        r"""
+        Size in bytes of NUMA-specific DRAM memory to reserve per NUMA domain.
+
+        :rtype: int | None
+        """
+        return get_realm_config_property(INT32_T, "numa", "numamem")

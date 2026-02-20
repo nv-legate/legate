@@ -220,7 +220,17 @@ def _runtime_info() -> dict[str, Any]:
 
     config = get_legate_runtime().config()
     config_dict = {}
-    for attr in filter(lambda a: not a.startswith("__"), config.__dir__()):
+    for attr in filter(lambda a: not a.startswith("__"), dir(config)):
+        config_dict[attr] = getattr(config, attr)
+    return config_dict
+
+
+def _realm_runtime_info() -> dict[str, Any]:
+    from ..core import get_legate_runtime  # noqa: PLC0415
+
+    config = get_legate_runtime().realm_config()
+    config_dict = {}
+    for attr in filter(lambda a: not a.startswith("__"), dir(config)):
         config_dict[attr] = getattr(config, attr)
     return config_dict
 
@@ -230,6 +240,7 @@ Info = TypedDict(
     {
         "Program": str,
         "Legate runtime configuration": dict[str, Any] | str,
+        "Realm runtime configuration": dict[str, Any] | str,
         "Machine": MachineInfo | str,
         "System info": SystemInfo,
         "Package versions": PackageVersions,
@@ -263,6 +274,9 @@ def info(*, start_runtime: bool = True) -> Info:
         "Program": " ".join(sys.argv),
         "Legate runtime configuration": (
             NO_RUNTIME if not use_runtime else _runtime_info()
+        ),
+        "Realm runtime configuration": (
+            NO_RUNTIME if not use_runtime else _realm_runtime_info()
         ),
         "Machine": (NO_RUNTIME if not use_runtime else machine_info()),
         "System info": system_info(),

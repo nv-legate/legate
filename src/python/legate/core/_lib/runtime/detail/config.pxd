@@ -4,6 +4,7 @@
 
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
+from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 from ...utilities.unconstructable cimport Unconstructable
 
@@ -31,8 +32,19 @@ cdef extern from "legate/runtime/detail/config.h" namespace "legate" nogil:
         bool provenance() except+
         bool experimental_copy_path() except+
 
+cdef extern from "legate/runtime/detail/config.h" \
+  namespace "legate::detail" nogil:
+    std_optional[T] _get_realm_config_property \
+      "legate::detail::get_realm_config_property" [T] (
+            const std_string &module_name,
+            const std_string &property_name
+    ) except+
+
 cdef class Config(Unconstructable):
     cdef const _Config* _handle
 
     @staticmethod
     cdef Config from_handle(const _Config* handle)
+
+cdef class RealmConfig:
+    pass

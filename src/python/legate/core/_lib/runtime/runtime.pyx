@@ -47,7 +47,7 @@ from ..utilities.utils cimport (
     uint64_tuple_from_iterable,
 )
 from .library cimport Library, _Library
-from .detail.config cimport Config
+from .detail.config cimport Config, RealmConfig
 
 from ....settings import settings
 from ...utils import AnyCallable, ShutdownCallback
@@ -1459,6 +1459,17 @@ cdef class Runtime(Unconstructable):
             The runtime configuration object.
         """
         return Config.from_handle(&self._handle.config())
+
+    cpdef RealmConfig realm_config(self):
+        r"""
+        Get the Realm runtime configuration.
+
+        Returns
+        -------
+        Config
+            The runtime configuration object.
+        """
+        return RealmConfig()
 
 
 cdef tuple[bool, bool] _set_realm_backtrace(str value):

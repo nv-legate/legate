@@ -29,7 +29,7 @@ from ..type.types cimport Type, _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain, _LocalTaskID, VariantCode
 from ..utilities.unconstructable cimport Unconstructable
-from .detail.config cimport _Config, Config
+from .detail.config cimport _Config, Config, RealmConfig
 from .library cimport Library, _Library
 from .resource cimport _ResourceConfig, ResourceConfig
 
@@ -258,6 +258,7 @@ cdef class Runtime(Unconstructable):
     cdef void begin_trace(self, uint32_t)
     cdef void end_trace(self, uint32_t)
     cpdef Config config(self)
+    cpdef RealmConfig realm_config(self)
 
 cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()

@@ -104,6 +104,7 @@ def test_metadata() -> None:
         "  Node *:",
         "Program *:",
         "Legate runtime configuration *:",
+        "Realm runtime configuration *:",
         "Machine *:",
         "  Preferred target *:",
         "  GPU *:",
