@@ -1,0 +1,6 @@
+legate.core.Runtime.realm\_config
+=================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.realm_config

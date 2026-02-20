@@ -95,5 +95,6 @@ Python
   ``legate.util.benchmark.benchmark_log()``.  If ``start_runtime=False`` is
   specified, the runtime will not be started as a side-effect of calling those
   functions.
+- Add ``legate.core.Runtime.realm_config()``.
 
 .. rubric:: I/O

@@ -59,6 +59,7 @@ legate.core.Runtime
       ~Runtime.issue_scatter
       ~Runtime.issue_scatter_gather
       ~Runtime.prefetch_bloated_instances
+      ~Runtime.realm_config
       ~Runtime.start_profiling_range
       ~Runtime.stop_profiling_range
       ~Runtime.submit

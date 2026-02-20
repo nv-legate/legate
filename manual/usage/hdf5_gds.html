@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Using GPUDirect Storage to perform HDF5 file I/O &#8212; NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</title>
+    <title>Using GPUDirect Storage to perform HDF5 file I/O &#8212; NVIDIA legate (26.03.00.dev25+g9732f9dff)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../_static/documentation_options.js?v=2622871f"></script>
+    <script src="../../_static/documentation_options.js?v=ddcb4770"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev25+g9732f9dff)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev25+g9732f9dff)</p>
   
 </a>
 
@@ -731,7 +731,7 @@ it, you can use the following flag.</p>
 <h2>Read Example<a class="headerlink" href="#read-example" title="Link to this heading">#</a></h2>
 <p>Below is the output of an example python program which iterates all the datasets in a HDF5
 file and reads the data. The source code for the example may be found at
-<a class="github reference external" href="https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/ex1.py">nv-legate/legate</a>.</p>
+<a class="github reference external" href="https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/read.py">nv-legate/legate</a>.</p>
 <p>The program prints throughput numbers based on the total amount of data read over total
 elapsed time. Please note that this is not a standard benchmark to calculate I/O
 throughput. However, it can give an approximate throughput value.</p>
@@ -750,7 +750,7 @@ throughput. However, it can give an approximate throughput value.</p>
 <span class="w">  </span>--sysmem<span class="w"> </span><span class="m">15000</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--fbmem<span class="w"> </span><span class="m">80000</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--zcmem<span class="w"> </span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>share/legate/examples/io/hdf5/ex1.py<span class="w"> </span>/path/to/hdf/data<span class="w"> </span>--n_rank<span class="w"> </span><span class="m">1</span>
+<span class="w">  </span>share/legate/examples/io/hdf5/read.py<span class="w"> </span>/path/to/hdf/data<span class="w"> </span>--n_rank<span class="w"> </span><span class="m">1</span>
 IO<span class="w"> </span>MODE<span class="w"> </span>:<span class="w"> </span>GDS
 Total<span class="w"> </span>Data<span class="w"> </span>Read:<span class="w"> </span><span class="m">17179869184</span>
 Total<span class="w"> </span>Turnaround<span class="w"> </span>Time<span class="w"> </span><span class="o">(</span>seconds<span class="o">)</span>:<span class="w"> </span><span class="m">31</span>.506664514541626
@@ -772,7 +772,7 @@ Throughput<span class="w"> </span><span class="o">(</span>MB/sec<span class="o">
 <span class="w">  </span>--io-use-vfd-gds<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--fbmem<span class="w"> </span><span class="m">80000</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--zcmem<span class="w"> </span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>share/legate/examples/io/hdf5/ex1.py<span class="w"> </span>/path/to/hdf/data<span class="w"> </span>--n_rank<span class="w"> </span><span class="m">4</span>
+<span class="w">  </span>share/legate/examples/io/hdf5/read.py<span class="w"> </span>/path/to/hdf/data<span class="w"> </span>--n_rank<span class="w"> </span><span class="m">4</span>
 IO<span class="w"> </span>MODE<span class="w"> </span>:<span class="w"> </span>GDS
 IO<span class="w"> </span>MODE<span class="w"> </span>:<span class="w"> </span>GDS
 IO<span class="w"> </span>MODE<span class="w"> </span>:<span class="w"> </span>GDS
@@ -794,7 +794,7 @@ Throughput<span class="w"> </span><span class="o">(</span>MB/sec<span class="o">
 </section>
 <section id="write-example">
 <h2>Write Example<a class="headerlink" href="#write-example" title="Link to this heading">#</a></h2>
-<p>The write example can be found at <a class="github reference external" href="https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/hdf5_write_benchmark.py">nv-legate/legate</a>.</p>
+<p>The write example can be found at <a class="github reference external" href="https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/write.py">nv-legate/legate</a>.</p>
 <p>The example writes data to a HDF5 file and measures the throughput.</p>
 </section>
 <section id="example-usage">
@@ -808,7 +808,7 @@ Throughput<span class="w"> </span><span class="o">(</span>MB/sec<span class="o">
 <span class="w">  </span>--sysmem<span class="w"> </span><span class="m">15000</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--fbmem<span class="w"> </span><span class="m">40000</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--zcmem<span class="w"> </span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>share/legate/examples/io/hdf5/hdf5_write_benchmark.py<span class="w"> </span>--output-dir<span class="w"> </span>/path/to/output<span class="w"> </span>--sizes<span class="w"> </span><span class="m">1000000</span><span class="w"> </span>--dtypes<span class="w"> </span>float32<span class="w"> </span>--iterations<span class="w"> </span><span class="nv">3</span>
+<span class="w">  </span>share/legate/examples/io/hdf5/write.py<span class="w"> </span>--output-dir<span class="w"> </span>/path/to/output<span class="w"> </span>--sizes<span class="w"> </span><span class="m">1000000</span><span class="w"> </span>--dtypes<span class="w"> </span>float32<span class="w"> </span>--iterations<span class="w"> </span><span class="nv">3</span>
 
 <span class="w">   </span><span class="o">===============================================================================</span>
 <span class="w">   </span>HDF5<span class="w"> </span>WRITE<span class="w"> </span><span class="nv">BENCHMARK</span>

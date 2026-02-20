@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.Runtime &#8212; NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</title>
+    <title>legate.core.Runtime &#8212; NVIDIA legate (26.03.00.dev25+g9732f9dff)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=2622871f"></script>
+    <script src="../../../_static/documentation_options.js?v=ddcb4770"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev25+g9732f9dff)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev23+gb2d14d1d8) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev25+g9732f9dff) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev23+gb2d14d1d8)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev25+g9732f9dff)</p>
   
 </a>
 
@@ -812,16 +812,19 @@ SPDX-License-Identifier: Apache-2.0
 <tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Runtime.prefetch_bloated_instances.html#legate.core.Runtime.prefetch_bloated_instances" title="legate.core.Runtime.prefetch_bloated_instances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prefetch_bloated_instances</span></code></a>(self, ...)</p></td>
 <td><p>Gives the runtime a hint that the store can benefit from bloated instances.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Runtime.start_profiling_range.html#legate.core.Runtime.start_profiling_range" title="legate.core.Runtime.start_profiling_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_profiling_range</span></code></a>(self)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Runtime.realm_config.html#legate.core.Runtime.realm_config" title="legate.core.Runtime.realm_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">realm_config</span></code></a>(self)</p></td>
+<td><p>Get the Realm runtime configuration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Runtime.start_profiling_range.html#legate.core.Runtime.start_profiling_range" title="legate.core.Runtime.start_profiling_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_profiling_range</span></code></a>(self)</p></td>
 <td><p>Start a Legion profiling range.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Runtime.stop_profiling_range.html#legate.core.Runtime.stop_profiling_range" title="legate.core.Runtime.stop_profiling_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_profiling_range</span></code></a>(self, str provenance)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Runtime.stop_profiling_range.html#legate.core.Runtime.stop_profiling_range" title="legate.core.Runtime.stop_profiling_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_profiling_range</span></code></a>(self, str provenance)</p></td>
 <td><p>Stop a Legion profiling range.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Runtime.submit.html#legate.core.Runtime.submit" title="legate.core.Runtime.submit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">submit</span></code></a>(self, op)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Runtime.submit.html#legate.core.Runtime.submit" title="legate.core.Runtime.submit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">submit</span></code></a>(self, op)</p></td>
 <td><p>Submit a task for execution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.Runtime.tree_reduce.html#legate.core.Runtime.tree_reduce" title="legate.core.Runtime.tree_reduce"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree_reduce</span></code></a>(self, Library library, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.Runtime.tree_reduce.html#legate.core.Runtime.tree_reduce" title="legate.core.Runtime.tree_reduce"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree_reduce</span></code></a>(self, Library library, ...)</p></td>
 <td><p>Performs a user-defined reduction by building a tree of reduction tasks.</p></td>
 </tr>
 </tbody>
