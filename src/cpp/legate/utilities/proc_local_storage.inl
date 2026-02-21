@@ -15,9 +15,9 @@ namespace legate {
 
 namespace detail {
 
-[[nodiscard]] std::size_t processor_id();
+[[nodiscard]] LEGATE_EXPORT std::size_t processor_id();
 
-[[noreturn]] void throw_invalid_proc_local_storage_access(const std::type_info&);
+[[noreturn]] LEGATE_EXPORT void throw_invalid_proc_local_storage_access(const std::type_info&);
 
 }  // namespace detail
 
