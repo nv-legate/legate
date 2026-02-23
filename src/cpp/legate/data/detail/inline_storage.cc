@@ -123,16 +123,13 @@ namespace {
       auto&& api = cuda::detail::get_cuda_driver_api();
 
       return legate::ExternalAllocation::create_zcmem(
-        api->mem_alloc_managed(size),
+        api->mem_alloc_host(size),
         size,
         /*read_only=*/false,
         [api](void* ptr) {
           const cuda::detail::AutoPrimaryContext free_ctx{0};
 
-          // Use null stream if the runtime has already finished.
-          auto&& stream = has_finished() ? nullptr : Runtime::get_runtime().get_cuda_stream();
-
-          api->mem_free_async(&ptr, stream);
+          api->mem_free_host(&ptr);
         });
     }
   }

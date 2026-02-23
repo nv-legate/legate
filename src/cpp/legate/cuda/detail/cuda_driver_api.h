@@ -48,7 +48,9 @@ class CUDADriverAPI {
   [[nodiscard]] void* mem_alloc_async(std::size_t num_bytes, CUstream stream) const;
   [[nodiscard]] void* mem_alloc_managed(std::size_t num_bytes,
                                         unsigned int flags = CU_MEM_ATTACH_GLOBAL) const;
+  [[nodiscard]] void* mem_alloc_host(std::size_t num_bytes) const;
   void mem_free_async(void** ptr, CUstream stream) const;
+  void mem_free_host(void** ptr) const;
   void mem_cpy_async(CUdeviceptr dst,
                      CUdeviceptr src,
                      std::size_t num_bytes,
@@ -136,7 +138,9 @@ class CUDADriverAPI {
   CUresult (*mem_alloc_managed_)(CUdeviceptr* dptr,
                                  std::size_t num_bytes,
                                  unsigned int flags)                                      = nullptr;
+  CUresult (*mem_alloc_host_)(void** dptr, std::size_t num_bytes)                         = nullptr;
   CUresult (*mem_free_async_)(CUdeviceptr ptr, CUstream stream)                           = nullptr;
+  CUresult (*mem_free_host_)(void* ptr)                                                   = nullptr;
   CUresult (*mem_cpy_async_)(CUdeviceptr dst,
                              CUdeviceptr src,
                              std::size_t num_bytes,

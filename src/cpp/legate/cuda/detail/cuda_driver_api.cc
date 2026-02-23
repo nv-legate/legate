@@ -271,7 +271,9 @@ void CUDADriverAPI::read_symbols_()
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemAllocAsync, &mem_alloc_async_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemAllocManaged, &mem_alloc_managed_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemAllocHost, &mem_alloc_host_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeAsync, &mem_free_async_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeHost, &mem_free_host_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemcpyAsync, &mem_cpy_async_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamCreate, &stream_create_);
@@ -389,10 +391,26 @@ void* CUDADriverAPI::mem_alloc_managed(std::size_t num_bytes, unsigned int flags
   return reinterpret_cast<void*>(ret);  // NOLINT(performance-no-int-to-ptr)
 }
 
+void* CUDADriverAPI::mem_alloc_host(std::size_t num_bytes) const
+{
+  void* ret{};  // NOLINT(misc-const-correctness)
+
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(mem_alloc_host_(&ret, num_bytes));
+  return ret;
+}
+
 void CUDADriverAPI::mem_free_async(void** ptr, CUstream stream) const
 {
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(mem_free_async_(reinterpret_cast<CUdeviceptr>(*ptr), stream));
+  *ptr = nullptr;
+}
+
+void CUDADriverAPI::mem_free_host(void** ptr) const
+{
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(mem_free_host_(*ptr));
   *ptr = nullptr;
 }
 
