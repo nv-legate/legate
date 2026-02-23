@@ -111,7 +111,10 @@ namespace {
         [api](void* ptr) {
           const cuda::detail::AutoPrimaryContext free_ctx{0};
 
-          api->mem_free_async(&ptr, Runtime::get_runtime().get_cuda_stream());
+          // Use null stream if the runtime has already finished.
+          auto&& stream = has_finished() ? nullptr : Runtime::get_runtime().get_cuda_stream();
+
+          api->mem_free_async(&ptr, stream);
         });
     }
     case mapping::StoreTarget::ZCMEM: {
@@ -126,7 +129,10 @@ namespace {
         [api](void* ptr) {
           const cuda::detail::AutoPrimaryContext free_ctx{0};
 
-          api->mem_free_async(&ptr, Runtime::get_runtime().get_cuda_stream());
+          // Use null stream if the runtime has already finished.
+          auto&& stream = has_finished() ? nullptr : Runtime::get_runtime().get_cuda_stream();
+
+          api->mem_free_async(&ptr, stream);
         });
     }
   }
