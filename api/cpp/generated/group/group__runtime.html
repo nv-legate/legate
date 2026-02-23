@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (26.03.00.dev26+gfbfecf529)</title>
+    <title>runtime &#8212; NVIDIA legate (26.03.00.dev28+g1fc44557b)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=00cff414"></script>
+    <script src="../../../../_static/documentation_options.js?v=df94a4a9"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev26+gfbfecf529) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev26+gfbfecf529) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev28+g1fc44557b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev28+g1fc44557b) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev26+gfbfecf529)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev28+g1fc44557b)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev26+gfbfecf529) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev26+gfbfecf529) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.03.00.dev28+g1fc44557b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.03.00.dev28+g1fc44557b) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.03.00.dev26+gfbfecf529)</p>
+    <p class="title logo__title">NVIDIA legate (26.03.00.dev28+g1fc44557b)</p>
   
 </a>
 
@@ -4750,7 +4750,38 @@ This routine is thread-safe, and may be called multiple times. However, only the
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail9to_domainE4SpanIKNSt8uint64_tEE">
 <span id="_CPPv3N6legate6detail9to_domainE4SpanIKNSt8uint64_tEE"></span><span id="_CPPv2N6legate6detail9to_domainE4SpanIKNSt8uint64_tEE"></span><span id="legate::detail::to_domain__Span:std::uint64_tC:"></span><span class="target" id="tuple_8cc_1a7953050ab81e5ee72b898aae313de117"></span><span class="n"><span class="pre">Domain</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_domain</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="group__data.html#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd></dd></dl>
+<dd><p>Converts a shape to a domain. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the shape is empty, a 1D {0, 0} domain is returned.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> – The shape to convert.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The domain. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail21to_maybe_empty_domainE4SpanIKNSt8uint64_tEE">
+<span id="_CPPv3N6legate6detail21to_maybe_empty_domainE4SpanIKNSt8uint64_tEE"></span><span id="_CPPv2N6legate6detail21to_maybe_empty_domainE4SpanIKNSt8uint64_tEE"></span><span id="legate::detail::to_maybe_empty_domain__Span:std::uint64_tC:"></span><span class="target" id="tuple_8cc_1ab143969c2a356fc6601ddfdb85c8dc72"></span><span class="n"><span class="pre">Domain</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_maybe_empty_domain</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="group__data.html#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Converts a shape to a domain. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the shape is empty, an empty domain {} is returned.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> – The shape to convert.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The domain. </p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail15to_domain_pointE4SpanIKNSt8uint64_tEE">
@@ -5396,6 +5427,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail12safe_strtollE1TPKcPPc"><code class="docutils literal notranslate"><span class="pre">safe_strtoll()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail25install_terminate_handlerEv"><code class="docutils literal notranslate"><span class="pre">install_terminate_handler()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail9to_domainE4SpanIKNSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">to_domain()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail21to_maybe_empty_domainE4SpanIKNSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">to_maybe_empty_domain()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail15to_domain_pointE4SpanIKNSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">to_domain_point()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11from_domainERK6Domain"><code class="docutils literal notranslate"><span class="pre">from_domain()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail25throw_invalid_tuple_sizesENSt6size_tENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">throw_invalid_tuple_sizes()</span></code></a></li>
