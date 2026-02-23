@@ -921,6 +921,8 @@ install(
     legate/mapping/store.inl
     legate/mapping/proxy_store_mapping.h
     legate/mapping/proxy_store_mapping.inl
+    legate/mapping/proxy_instance_mapping_policy.h
+    legate/mapping/proxy_instance_mapping_policy.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/mapping
 )
 
