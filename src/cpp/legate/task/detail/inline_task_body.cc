@@ -7,6 +7,7 @@
 #include <legate/task/detail/inline_task_body.h>
 
 #include <legate/comm/communicator.h>
+#include <legate/cuda/detail/cuda_util.h>
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
@@ -247,6 +248,13 @@ execute_task(const TaskBase& task,
   auto ctx              = make_inline_task_context(task, variant_code, &deferred_buffers);
   auto exn =
     task_detail::task_body(legate::TaskContext{&ctx}, variant_impl, std::forward<F>(get_task_name));
+
+  // Normally implicit device synchronization is handled for us by Realm, but in the fast-path
+  // we bypass Legion/Realm entirely so we need to handle the sync ourselves.
+  if (variant_code == VariantCode::GPU && !task.can_elide_device_ctx_sync() &&
+      Runtime::get_runtime().config().enable_inline_task_launch()) {
+    cuda::detail::sync_current_ctx();
+  }
 
   return {std::move(exn), std::move(deferred_buffers)};
 }

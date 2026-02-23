@@ -40,10 +40,7 @@ inline bool LogicalStore::overlaps(const InternalSharedPtr<LogicalStore>& other)
   return get_storage()->overlaps(other->storage_);
 }
 
-inline bool LogicalStore::has_scalar_storage() const
-{
-  return get_storage()->kind() != Storage::Kind::REGION_FIELD;
-}
+inline bool LogicalStore::has_scalar_storage() const { return get_storage()->has_scalar_storage(); }
 
 inline const InternalSharedPtr<Type>& LogicalStore::type() const { return type_; }
 

@@ -150,7 +150,7 @@ class TestStoreCreationErrors:
 
     def test_get_unbound_physical_store(self) -> None:
         runtime = get_legate_runtime()
-        msg = "Unbound store cannot be inlined mapped"
+        msg = "Unbound storages cannot be inlined mapped"
         store = runtime.create_store(ty.int64)
         with pytest.raises(ValueError, match=msg):
             store.get_physical_store()

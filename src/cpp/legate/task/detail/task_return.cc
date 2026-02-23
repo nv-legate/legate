@@ -13,6 +13,7 @@
 #include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/zip.h>
 #include <legate/utilities/machine.h>
+#include <legate/utilities/scope_guard.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstddef>

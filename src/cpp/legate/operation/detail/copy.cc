@@ -6,6 +6,8 @@
 
 #include <legate/operation/detail/copy.h>
 
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/physical_store.h>
 #include <legate/operation/detail/copy_launcher.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/constraint_solver.h>
@@ -65,6 +67,23 @@ void Copy::validate()
   }
 }
 
+namespace {
+
+class InlineCopy {
+ public:
+  template <Type::Code CODE, std::int32_t DIM>
+  void operator()(const legate::PhysicalStore& src, legate::PhysicalStore* target) const
+  {
+    const auto src_span  = src.template span_read_accessor<type_of_t<CODE>, DIM>();
+    const auto dest_span = target->template span_write_accessor<type_of_t<CODE>, DIM>();
+
+    for_each_in_extent(src_span.extents(),
+                       [&](auto... indices) { dest_span(indices...) = src_span(indices...); });
+  }
+};
+
+}  // namespace
+
 void Copy::launch(Strategy* p_strategy)
 {
   if (target_.store->has_scalar_storage()) {
@@ -72,6 +91,20 @@ void Copy::launch(Strategy* p_strategy)
     target_.store->set_future(source_.store->get_future());
     return;
   }
+
+  if (target_.store->get_storage()->kind() == Storage::Kind::INLINE_STORAGE ||
+      source_.store->get_storage()->kind() == Storage::Kind::INLINE_STORAGE) {
+    const auto src_phys =
+      legate::PhysicalStore{source_.store->get_physical_store(mapping::StoreTarget::SYSMEM,
+                                                              /*ignore_future_mutability=*/false)};
+    auto target_phys =
+      legate::PhysicalStore{target_.store->get_physical_store(mapping::StoreTarget::SYSMEM,
+                                                              /*ignore_future_mutability=*/false)};
+
+    double_dispatch(src_phys.dim(), src_phys.type().code(), InlineCopy{}, src_phys, &target_phys);
+    return;
+  }
+
   auto& strategy       = *p_strategy;
   auto launcher        = CopyLauncher{machine_, priority()};
   auto&& launch_domain = strategy.launch_domain(*this);

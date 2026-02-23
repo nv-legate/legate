@@ -179,7 +179,6 @@ set(
   integration/mapping.cc
   integration/mixed_dim.cc
   integration/multi_scalar_out.cc
-  integration/parallel_policy.cc
   integration/partitioner.cc
   integration/physical_task.cc
   integration/projection.cc
@@ -221,7 +220,6 @@ set(
   unit/future_wrapper.cc
   unit/library.cc
   unit/logical_region_field.cc
-  unit/parallel_policy.cc
   unit/registration.cc
   unit/runtime.cc
   unit/scope.cc
@@ -335,7 +333,6 @@ set(
   unit/streaming/nested_scopes.cc
   unit/streaming/process_streaming_run.cc
   unit/task/physical_task.cc
-  unit/proxy_store_mapping.cc
   # experimental
   experimental/stl/elementwise.cc
   experimental/stl/fill.cc
@@ -430,6 +427,7 @@ set(
   non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/comm/backend_network.cc
   non_reentrant/wo_runtime/comm/coll_abort.cc
+  non_reentrant/wo_runtime/inline_storage/basic.cc
 )
 
 legate_configure_test(

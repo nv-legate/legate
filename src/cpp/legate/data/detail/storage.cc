@@ -8,16 +8,26 @@
 
 #include <legate_defines.h>
 
+#include <legate/data/detail/buffer.h>
+#include <legate/data/detail/external_allocation.h>
+#include <legate/data/detail/future_wrapper.h>
+#include <legate/data/detail/physical_stores/future_physical_store.h>
+#include <legate/data/detail/physical_stores/inline_physical_store.h>
+#include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/detail/storage_partition.h>
+#include <legate/data/external_allocation.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/dispatch.h>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -25,6 +35,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
+#include <stdexcept>
 #include <utility>
 
 namespace legate::detail {
@@ -41,7 +53,11 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
 {
   // initialize storage_data_, prioritizing an optimized scalar storage but deferring
   // to region fields if unable to do so
-  if (optimize_scalar && unbound()) {
+  auto&& runtime = Runtime::get_runtime();
+
+  if (runtime.config().enable_inline_task_launch()) {
+    storage_data_.emplace<std::optional<InternalSharedPtr<InlineStorage>>>(std::nullopt);
+  } else if (optimize_scalar && unbound()) {
     storage_data_.emplace<std::optional<Legion::FutureMap>>(std::nullopt);
   } else if (optimize_scalar && this->shape()->ready() && (this->shape()->volume() == 1)) {
     // Note we do not blindly check the shape volume as it would flush the scheduling window
@@ -49,7 +65,6 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
   } else if (unbound()) {
     storage_data_.emplace<std::optional<InternalSharedPtr<LogicalRegionField>>>(std::nullopt);
   } else {
-    auto&& runtime = Runtime::get_runtime();
     storage_data_.emplace<std::optional<InternalSharedPtr<LogicalRegionField>>>(
       runtime.create_region_field(this->shape(), field_size));
     runtime.attach_alloc_info(get_region_field(), this->provenance());
@@ -60,13 +75,25 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
   }
 }
 
-Storage::Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::string_view provenance)
+Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::string_view provenance)
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{std::move(shape)},
     provenance_{std::move(provenance)},
-    offsets_{legate::full(dim(), std::int64_t{0})},
-    storage_data_{std::optional<Legion::Future>{std::move(future)}}
+    offsets_{tags::size_tag, dim(), 0}
 {
+  if (Runtime::get_runtime().config().enable_inline_task_launch()) {
+    // No alignment guarantee for the pointer provided by Scalar,
+    // so we need to create a new allocation and copy the data over.
+    const Domain domain            = to_domain(this->shape()->extents());
+    const std::uint32_t field_size = scalar.size();
+    const auto& is = storage_data_.emplace<std::optional<InternalSharedPtr<InlineStorage>>>(
+      make_internal_shared<InlineStorage>(domain, field_size, mapping::StoreTarget::SYSMEM));
+    std::memcpy(
+      (*is)->data(), scalar.data(), field_size);  // NOLINT(bugprone-unchecked-optional-access)
+  } else {
+    storage_data_.emplace<std::optional<Legion::Future>>(
+      Legion::Future::from_untyped_pointer(scalar.data(), scalar.size()));
+  }
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
@@ -85,9 +112,31 @@ Storage::Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
     storage_data_{
       std::optional<InternalSharedPtr<LogicalRegionField>>{(*parent_)->get_child_data(color_)}}
 {
+  if (Runtime::get_runtime().config().enable_inline_task_launch()) {
+    LEGATE_ABORT("Storage partitions not yet supported for manually-managed stores");
+  }
+
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
+}
+
+Storage::Storage(InternalSharedPtr<Shape> shape,
+                 const InternalSharedPtr<Type>& type,
+                 InternalSharedPtr<ExternalAllocation> allocation,
+                 std::string_view provenance)
+  : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
+    shape_{std::move(shape)},
+    provenance_{std::move(provenance)},
+    offsets_{tags::size_tag, dim(), 0}
+{
+  // Only should have physical Storage with InlineStorage when inline task launch is enabled.
+  LEGATE_ASSERT(Runtime::get_runtime().config().enable_inline_task_launch());
+
+  storage_data_.emplace<std::optional<InternalSharedPtr<InlineStorage>>>(
+    make_internal_shared<InlineStorage>(to_domain(this->shape()->extents()),
+                                        type->size(),
+                                        legate::ExternalAllocation{std::move(allocation)}));
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
@@ -104,8 +153,20 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
   }
 }
 
-// Leak is intentional
+namespace {
+
 // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
+template <typename T>
+void intentionally_leak_object(T&& obj)
+{
+  std::ignore = std::make_unique<T>(obj).release();
+}
+
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
+
+}  // namespace
+
+// Leak is intentional
 Storage::~Storage()
 {
   if (has_started()) {
@@ -113,43 +174,40 @@ Storage::~Storage()
   }
 
   try {
-    std::visit(
-      Overload{
-        [&](std::optional<Legion::Future>& future) {
-          if (future.has_value() && future->exists()) {
-            // FIXME: Leak the Future handle if the runtime has already shut down, as there's no
-            // hope that this would be collected by the Legion runtime
-            static_cast<void>(std::make_unique<Legion::Future>(*std::move(future)).release());
-          }
-        },
-        [&](std::optional<Legion::FutureMap>& future_map) {
-          if (future_map.has_value()) {
-            static_cast<void>(
-              std::make_unique<Legion::FutureMap>(*std::move(future_map)).release());
-          }
-        },
-        [&](std::optional<InternalSharedPtr<LogicalRegionField>>&) {
-          // Do nothing
-        },
-      },
-      storage_data_);
+    std::visit(Overload{[](std::optional<Legion::Future>& future) {
+                          if (future.has_value() && future->exists()) {
+                            // FIXME: Leak the Future handle if the runtime has already shut down,
+                            // as there's no hope that this would be collected by the Legion runtime
+                            intentionally_leak_object(std::move(future));
+                          }
+                        },
+                        [](std::optional<Legion::FutureMap>& future_map) {
+                          if (future_map.has_value()) {
+                            intentionally_leak_object(*std::move(future_map));
+                          }
+                        },
+                        [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) {
+                          // Do nothing
+                        },
+                        [](const std::optional<InternalSharedPtr<InlineStorage>>&) {
+                          // Do nothing
+                        }},
+               storage_data_);
   } catch (const std::exception& e) {
     LEGATE_ABORT(e.what());
   }
 }
 
-// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
-
 Storage::Kind Storage::kind() const
 {
   return std::visit(
     Overload{
-      [&](const std::optional<InternalSharedPtr<LogicalRegionField>>&) -> Storage::Kind {
+      [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) -> Storage::Kind {
         return Kind::REGION_FIELD;
       },
-      [&](const std::optional<Legion::Future>&) -> Storage::Kind { return Kind::FUTURE; },
-      [&](const std::optional<Legion::FutureMap>&) -> Storage::Kind { return Kind::FUTURE_MAP; },
-    },
+      [](const std::optional<Legion::Future>&) -> Storage::Kind { return Kind::FUTURE; },
+      [](const std::optional<Legion::FutureMap>&) -> Storage::Kind { return Kind::FUTURE_MAP; },
+      [](const std::optional<InternalSharedPtr<InlineStorage>>&) { return Kind::INLINE_STORAGE; }},
     storage_data_);
 }
 
@@ -228,8 +286,9 @@ namespace {
 
 class EqualVisitor {
  public:
-  bool operator()(const std::optional<InternalSharedPtr<LogicalRegionField>>& lhs_rf,
-                  const std::optional<InternalSharedPtr<LogicalRegionField>>& rhs_rf) const
+  [[nodiscard]] bool operator()(
+    const std::optional<InternalSharedPtr<LogicalRegionField>>& lhs_rf,
+    const std::optional<InternalSharedPtr<LogicalRegionField>>& rhs_rf) const
   {
     if (lhs_rf.has_value() != rhs_rf.has_value()) {
       return false;
@@ -242,19 +301,27 @@ class EqualVisitor {
            (*lhs_rf)->field_id() == (*rhs_rf)->field_id();
   }
 
-  bool operator()(const std::optional<Legion::Future>&, const std::optional<Legion::Future>&) const
+  [[nodiscard]] bool operator()(const std::optional<Legion::Future>&,
+                                const std::optional<Legion::Future>&) const
   {
     return false;
   }
 
-  bool operator()(const std::optional<Legion::FutureMap>&,
-                  const std::optional<Legion::FutureMap>&) const
+  [[nodiscard]] bool operator()(const std::optional<Legion::FutureMap>&,
+                                const std::optional<Legion::FutureMap>&) const
   {
     return false;
+  }
+
+  [[nodiscard]] bool operator()(const std::optional<InternalSharedPtr<InlineStorage>>& lhs,
+                                const std::optional<InternalSharedPtr<InlineStorage>>& rhs) const
+  {
+    // Comparing the shared pointers is sufficient.
+    return lhs == rhs;
   }
 
   template <typename T, typename U, std::enable_if_t<!std::is_same_v<T, U>>* = nullptr>
-  bool operator()(const T&, const U&) const
+  [[nodiscard]] bool operator()(const T&, const U&) const
   {
     LEGATE_ABORT(
       "kind() and other.kind() are the same, but underlying variant types are different. Storage "
@@ -285,14 +352,28 @@ bool Storage::is_mapped() const
 
   // TODO(wonchanl): future- and future map-backed storages are considered unmapped until we
   // implement the full state machine for them (they are currently read only)
-  return std::visit(Overload{
-                      [&](const std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
-                        return rf.has_value() && (*rf)->is_mapped();
-                      },
-                      [&](const std::optional<Legion::Future>&) { return false; },
-                      [&](const std::optional<Legion::FutureMap>&) { return false; },
-                    },
-                    storage_data_);
+  return std::visit(
+    Overload{
+      [](const std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
+        return rf.has_value() && (*rf)->is_mapped();
+      },
+      [](const std::optional<Legion::Future>&) { return false; },
+      [](const std::optional<Legion::FutureMap>&) { return false; },
+      [](const std::optional<InternalSharedPtr<InlineStorage>>& buf) { return buf.has_value(); },
+    },
+    storage_data_);
+}
+
+bool Storage::has_scalar_storage() const
+{
+  return std::visit(
+    Overload{
+      [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) { return false; },
+      [](const std::optional<Legion::Future>&) { return true; },
+      [](const std::optional<Legion::FutureMap>&) { return true; },
+      [](const std::optional<InternalSharedPtr<InlineStorage>>&) { return false; },
+    },
+    storage_data_);
 }
 
 namespace {
@@ -397,6 +478,9 @@ Legion::Future Storage::get_future() const
         // this future map must always exist, otherwise something bad has happened
         return fm->get_future(fm->get_future_map_domain().lo());
       },
+      [](const std::optional<InternalSharedPtr<InlineStorage>>&) -> Legion::Future {
+        LEGATE_ABORT("Cannot get future from InlineStorage-backed storage");
+      },
     },
     storage_data_);
 }
@@ -440,100 +524,173 @@ std::variant<Legion::Future, Legion::FutureMap> Storage::get_future_or_future_ma
         }
         return Runtime::get_runtime().reshape_future_map(future_map, launch_domain);
       },
+      [](const std::optional<InternalSharedPtr<InlineStorage>>&)
+        -> std::variant<Legion::Future, Legion::FutureMap> {
+        LEGATE_ABORT("Cannot get future from InlineStorage-backed storage");
+      },
     },
     storage_data_);
 }
 
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
-  std::visit(Overload{
-               [&](std::optional<InternalSharedPtr<LogicalRegionField>>& storage_rf) {
-                 LEGATE_CHECK(unbound_ && !region_field_().has_value());
-                 LEGATE_CHECK(!parent_.has_value());
+  std::visit(
+    Overload{[&](std::optional<InternalSharedPtr<LogicalRegionField>>& storage_rf) {
+               LEGATE_CHECK(unbound_ && !region_field_().has_value());
+               LEGATE_CHECK(!parent_.has_value());
 
-                 unbound_   = false;
-                 storage_rf = std::move(region_field);
-                 if (destroyed_out_of_order_) {
-                   (*storage_rf)->allow_out_of_order_destruction();
-                 }
-                 Runtime::get_runtime().attach_alloc_info(*storage_rf, provenance());
-               },
-               [](const std::optional<Legion::Future>&) {
-                 LEGATE_ABORT("Cannot set a region field on a future-backed storage.");
-               },
-               [](const std::optional<Legion::FutureMap>&) {
-                 LEGATE_ABORT("Cannot set a region field on a future map-backed storage.");
-               },
+               unbound_   = false;
+               storage_rf = std::move(region_field);
+               if (destroyed_out_of_order_) {
+                 (*storage_rf)->allow_out_of_order_destruction();
+               }
+               Runtime::get_runtime().attach_alloc_info(*storage_rf, provenance());
              },
-             storage_data_);
+             [](const std::optional<Legion::Future>&) {
+               LEGATE_ABORT("Cannot set a region field on a future-backed storage.");
+             },
+             [](const std::optional<Legion::FutureMap>&) {
+               LEGATE_ABORT("Cannot set a region field on a future map-backed storage.");
+             },
+             [](const std::optional<InternalSharedPtr<InlineStorage>>&) {
+               LEGATE_ABORT("Cannot set a region field on a InlineStorage-backed storage.");
+             }},
+    storage_data_);
 }
 
 void Storage::set_future(Legion::Future future, std::size_t scalar_offset)
 {
-  std::visit(Overload{
-               [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) {
-                 LEGATE_ABORT("Cannot set a future on a region field-backed storage.");
-               },
-               [&](std::optional<Legion::Future>& storage_future) {
-                 scalar_offset_ = scalar_offset;
-                 storage_future = std::move(future);
-               },
-               [&](std::optional<Legion::FutureMap>&) {
-                 // If we're here, that means that this was a replicated future that gets updated
-                 // via reductions, so we reset the stale future map and update the kind
-                 // TODO(wonchanl): true future map-backed stores aren't exposed to the user yet
-                 // so if it wasn't replicated, something bad must have happened
-                 LEGATE_CHECK(replicated_);
-                 replicated_    = false;
-                 scalar_offset_ = scalar_offset;
-                 storage_data_.emplace<std::optional<Legion::Future>>(std::move(future));
-               },
+  std::visit(
+    Overload{[](const std::optional<InternalSharedPtr<LogicalRegionField>>&) {
+               LEGATE_ABORT("Cannot set a future on a region field-backed storage.");
              },
-             storage_data_);
+             [&](std::optional<Legion::Future>& storage_future) {
+               scalar_offset_ = scalar_offset;
+               storage_future = std::move(future);
+             },
+             [&](const std::optional<Legion::FutureMap>&) {
+               // If we're here, that means that this was a replicated future that gets
+               // updated via reductions, so we reset the stale future map and update the
+               // kind
+               // TODO(wonchanl): true future map-backed stores aren't exposed to the user
+               // yet so if it wasn't replicated, something bad must have happened
+               LEGATE_CHECK(replicated_);
+               replicated_    = false;
+               scalar_offset_ = scalar_offset;
+               storage_data_.emplace<std::optional<Legion::Future>>(std::move(future));
+             },
+             [](const std::optional<InternalSharedPtr<InlineStorage>>&) {
+               LEGATE_ABORT("Cannot set a future on a region InlineStorage-backed storage.");
+             }},
+    storage_data_);
 }
 
 void Storage::set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset)
 {
-  std::visit(Overload{
-               [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) {
-                 LEGATE_ABORT("Cannot set a future map on a region field-backed storage.");
-               },
-               [&](const std::optional<Legion::Future>&) {
-                 // If this was originally a future-backed storage, it means this storage is now
-                 // backed by a future map with futures having the same value
-                 replicated_    = true;
-                 scalar_offset_ = scalar_offset;
-                 storage_data_.emplace<std::optional<Legion::FutureMap>>(std::move(future_map));
-               },
-               [&](std::optional<Legion::FutureMap>& storage_fm) {
-                 scalar_offset_ = scalar_offset;
-                 storage_fm     = std::move(future_map);
-               },
+  std::visit(
+    Overload{[](const std::optional<InternalSharedPtr<LogicalRegionField>>&) {
+               LEGATE_ABORT("Cannot set a future map on a region field-backed storage.");
              },
-             storage_data_);
+             [&](const std::optional<Legion::Future>&) {
+               // If this was originally a future-backed storage, it means this storage is now
+               // backed by a future map with futures having the same value
+               replicated_    = true;
+               scalar_offset_ = scalar_offset;
+               storage_data_.emplace<std::optional<Legion::FutureMap>>(std::move(future_map));
+             },
+             [&](std::optional<Legion::FutureMap>& storage_fm) {
+               scalar_offset_ = scalar_offset;
+               storage_fm     = std::move(future_map);
+             },
+             [](const std::optional<InternalSharedPtr<InlineStorage>>&) {
+               LEGATE_ABORT("Cannot set a FutureMap on a InlineStorage-backed storage.");
+             }},
+    storage_data_);
 }
 
 // Mapping is a logically non-const operation
-RegionField Storage::map(  // NOLINT(readability-make-member-function-const)
-  legate::mapping::StoreTarget target)
+InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-member-function-const)
+  legate::mapping::StoreTarget target,
+  InternalSharedPtr<Type> type,
+  const InternalSharedPtr<Shape>& shape,
+  InternalSharedPtr<TransformStack> transform,
+  bool ignore_future_mutability,
+  const std::optional<Domain>& domain)
 {
-  return std::visit(Overload{
-                      [&](std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
-                        LEGATE_CHECK(rf.has_value());
+  if (unbound()) {
+    throw TracedException<std::invalid_argument>{"Unbound storages cannot be inlined mapped"};
+  }
 
-                        auto mapped = (*rf)->map(target);
-                        // Set the right subregion so the physical store can see the right domain
-                        mapped.set_logical_region((*rf)->region());
-                        return mapped;
-                      },
-                      [](const std::optional<Legion::Future>&) -> RegionField {
-                        LEGATE_ABORT("Cannot map a future-backed storage.");
-                      },
-                      [](const std::optional<Legion::FutureMap>&) -> RegionField {
-                        LEGATE_ABORT("Cannot map a future-map-backed storage.");
-                      },
-                    },
-                    storage_data_);
+  const auto map_future = [&](const Legion::Future& fut) -> InternalSharedPtr<PhysicalStore> {
+    // TODO(wonchanl): future wrappers from inline mappings are read-only for
+    // now
+    const auto future_domain = to_maybe_empty_domain(extents());
+
+    // If we ignore the mutability of the future, then this future is writable.
+    // Needed by the inline-task fast-path
+    auto future = FutureWrapper{/* read_only */ !ignore_future_mutability,
+                                type->size(),
+                                type->alignment(),
+                                scalar_offset(),
+                                future_domain,
+                                fut};
+
+    return make_internal_shared<FuturePhysicalStore>(
+      shape->ndim(), std::move(type), GlobalRedopID{-1}, std::move(future), transform);
+  };
+
+  return std::visit(
+    Overload{
+      [&](std::optional<InternalSharedPtr<LogicalRegionField>>& rf)
+        -> InternalSharedPtr<PhysicalStore> {
+        LEGATE_CHECK(rf.has_value());
+
+        auto mapped = (*rf)->map(target);
+
+        mapped.set_logical_region((*rf)->region());
+        return make_internal_shared<RegionPhysicalStore>(
+          shape->ndim(), std::move(type), GlobalRedopID{-1}, std::move(mapped), transform);
+      },
+      [&](std::optional<Legion::Future>&) { return map_future(get_future()); },
+      [&](std::optional<Legion::FutureMap>& fm) {
+        LEGATE_CHECK(fm.has_value());
+
+        return map_future(get_future());
+      },
+      [&](std::optional<InternalSharedPtr<InlineStorage>>& is) -> InternalSharedPtr<PhysicalStore> {
+        if (!is.has_value()) {
+          // We need to use the root Storage's shape to create the buffer instead of the
+          // incoming one (or the shape of the current storage) because the incoming shape is
+          // that of the LogicalStore, which may be a subset of another store (e.g. a slice of
+          // some parent store).
+          //
+          // I.e. if we write to the subset, the same writes should also show up in the parent
+          // store, so we need to create a buffer that spans the *entire* space, not just the
+          // LogicalStore.
+          auto* const root = get_root();
+          auto& root_is =
+            std::get<std::optional<InternalSharedPtr<InlineStorage>>>(root->storage_data_);
+
+          if (!root_is.has_value()) {
+            root_is.emplace(make_internal_shared<InlineStorage>(
+              to_domain(root->shape()->extents()), type->size(), target));
+          }
+          is = root_is;
+        }
+
+        LEGATE_ASSERT(domain.has_value());
+
+        (*is)->remap_to(target);
+        return make_internal_shared<InlinePhysicalStore>(shape->ndim(),
+                                                         std::move(type),
+                                                         GlobalRedopID{-1},
+                                                         transform,
+                                                         LEGION_READ_WRITE,
+                                                         *is,
+                                                         *domain);
+      },
+    },
+    storage_data_);
 }
 
 // Unmapping is a logically non-const operation
@@ -547,6 +704,7 @@ void Storage::unmap()  // NOLINT(readability-make-member-function-const)
                },
                [](const std::optional<Legion::Future>&) {},
                [](const std::optional<Legion::FutureMap>&) {},
+               [](const std::optional<InternalSharedPtr<InlineStorage>>&) {},
              },
              storage_data_);
 }
@@ -570,6 +728,7 @@ void Storage::allow_out_of_order_destruction()
                  },
                  [](const std::optional<Legion::Future>&) {},
                  [](const std::optional<Legion::FutureMap>&) {},
+                 [](const std::optional<InternalSharedPtr<InlineStorage>>&) {},
                },
                storage_data_);
   }
@@ -577,19 +736,18 @@ void Storage::allow_out_of_order_destruction()
 
 void Storage::free_early()
 {
-  std::visit(Overload{
-               [&](std::optional<InternalSharedPtr<LogicalRegionField>>&) {
-                 if (!unbound()) {
-                   get_region_field()->release_region_field();
-                 }
-               },
-               [&](std::optional<Legion::Future>&) {
-                 // Do nothing
-               },
-               [&](std::optional<Legion::FutureMap>&) {
-                 // Do nothing
-               },
-             },
+  std::visit(Overload{[&](const std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
+                        if (!unbound()) {
+                          rf.value()->release_region_field();
+                        }
+                      },
+                      [](std::optional<Legion::Future>&) {
+                        // Do nothing
+                      },
+                      [](std::optional<Legion::FutureMap>&) {
+                        // Do nothing
+                      },
+                      [](std::optional<InternalSharedPtr<InlineStorage>>& is) { is.reset(); }},
              storage_data_);
 }
 
@@ -637,12 +795,14 @@ std::string Storage::to_string() const
 {
   const auto kind_str = std::visit(
     Overload{
-      [&](const std::optional<InternalSharedPtr<LogicalRegionField>>&) -> std::string_view {
+      [](const std::optional<InternalSharedPtr<LogicalRegionField>>&) -> std::string_view {
         return "Region";
       },
-      [&](const std::optional<Legion::Future>&) -> std::string_view { return "Future"; },
-      [&](const std::optional<Legion::FutureMap>&) -> std::string_view { return "Future map"; },
-    },
+      [](const std::optional<Legion::Future>&) -> std::string_view { return "Future"; },
+      [](const std::optional<Legion::FutureMap>&) -> std::string_view { return "Future map"; },
+      [](const std::optional<InternalSharedPtr<InlineStorage>>&) -> std::string_view {
+        return "InlineStorage";
+      }},
     storage_data_);
 
   auto result = fmt::format("Storage({}) {{kind: {}, level: {}", id(), kind_str, level());
@@ -659,6 +819,7 @@ std::string Storage::to_string() const
       },
       [](const std::optional<Legion::Future>&) {},
       [](const std::optional<Legion::FutureMap>&) {},
+      [](const std::optional<InternalSharedPtr<InlineStorage>>&) {},
     },
     storage_data_);
   result += '}';

@@ -33,6 +33,18 @@ Domain to_domain(Span<const std::uint64_t> shape)
   return domain;
 }
 
+Domain to_maybe_empty_domain(Span<const std::uint64_t> shape)
+{
+  // When empty domains are serialized, they come out as (0-ed out), 0D Domains
+  // (e.g. when deserialized). However, to_domain() will produce a {0, 0} domain,
+  // i.e. still 0-ed out, but this time it is 1D. So to match these cases,
+  // we return a empty 0D domain here.
+  if (shape.empty()) {
+    return {};
+  }
+  return to_domain(shape);
+}
+
 DomainPoint to_domain_point(Span<const std::uint64_t> shape)
 {
   const auto ndim = static_cast<std::uint32_t>(shape.size());

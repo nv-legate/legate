@@ -663,6 +663,14 @@ ManualTask::ManualTask(const Library& library,
   : LogicalTask{library, variant_info, task_id, unique_id, priority, std::move(machine)},
     strategy_{make_internal_shared<Strategy>()}
 {
+  if (Runtime::get_runtime().config().enable_inline_task_launch() &&
+      launch_domain.get_volume() > 1) {
+    LEGATE_ABORT(
+      fmt::format("ManualTask with inline task launch requires a single-point launch domain. "
+                  "Instead, got domain with volume {}",
+                  launch_domain.get_volume()));
+  }
+
   strategy_->set_launch_domain(*this, launch_domain);
 }
 
@@ -789,7 +797,16 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
   }
 }
 
-void ManualTask::launch() { launch_task_(strategy_.get()); }
+void ManualTask::launch()
+{
+  if (Runtime::get_runtime().config().enable_inline_task_launch()) {
+    LEGATE_ASSERT(launch_domain().get_volume() == 1);
+    inline_task_body(*this, machine().preferred_variant(), variant_info_().body);
+    return;
+  }
+
+  launch_task_(strategy_.get());
+}
 
 ////////////////////////////////////////////////////
 // legate::detail::PhysicalTask
@@ -835,16 +852,22 @@ void PhysicalTask::add_scalar_reduction(InternalSharedPtr<PhysicalStore> store,
 
 void PhysicalTask::launch()
 {
-  const auto processor_kind = Runtime::get_runtime().get_executing_processor().kind();
-  const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
-  const auto body           = [&] {
-    const auto variant = library().find_task(local_task_id())->find_variant(variant_code);
+  if (legate::is_running_in_task()) {
+    const auto processor_kind = Runtime::get_runtime().get_executing_processor().kind();
+    const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
+    const auto body           = [&] {
+      const auto variant = library().find_task(local_task_id())->find_variant(variant_code);
 
-    LEGATE_ASSERT(variant.has_value());
-    return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
-  }();
+      LEGATE_ASSERT(variant.has_value());
+      return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
+    }();
 
-  inline_task_body(*this, variant_code, body);
+    inline_task_body(*this, variant_code, body);
+    return;
+  }
+
+  // If executing first inline task, we would like to use the preferred proc
+  inline_task_body(*this, machine().preferred_variant(), variant_info_().body);
 }
 
 void PhysicalTask::fixup_ranges_(Strategy&)

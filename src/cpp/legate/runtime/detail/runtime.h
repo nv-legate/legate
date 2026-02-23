@@ -714,6 +714,9 @@ class Runtime {
   // inline task. Since inline tasks may now launch inline tasks themselves, this needs to be a
   // stack.
   //
+  // This must be thread-local because multiple Legion tasks can run in parallel,
+  // each potentially launching PhysicalTasks inline on different threads.
+  //
   // This should be static inline, but Apple clang ends up with linker errors:
   //
   // duplicate symbol 'thread-local initialization routine for

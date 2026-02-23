@@ -10,28 +10,13 @@
 #include <legate/mapping/detail/mapping.h>
 #include <legate/operation/detail/task.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
 #include <variant>
 
 namespace legate {
-
-namespace {
-
-[[nodiscard]] mapping::StoreTarget get_inline_store_target()
-{
-  const auto processor = detail::Runtime::get_runtime().get_executing_processor();
-  const auto variant   = mapping::detail::to_variant_code(processor.kind());
-  switch (variant) {
-    case VariantCode::CPU: return mapping::StoreTarget::SYSMEM;
-    case VariantCode::GPU: return mapping::StoreTarget::FBMEM;
-    case VariantCode::OMP: return mapping::StoreTarget::SOCKETMEM;
-  }
-  LEGATE_ABORT("Unhandled variant code");
-}
-
-}  // namespace
 
 ////////////////////////////////////////////////////
 // legate::AutoTask
@@ -130,6 +115,24 @@ SharedPtr<detail::PhysicalTask> AutoTask::release_physical_()
   return pimpl_->release_physical_task();
 }
 
+[[nodiscard]] mapping::StoreTarget AutoTask::get_inline_store_target_() const
+{
+  const auto variant = [&]() {
+    if (legate::is_running_in_task()) {
+      const auto proc = legate::detail::Runtime::get_runtime().get_executing_processor();
+      return mapping::detail::to_variant_code(proc.kind());
+    }
+    return pimpl_->physical_task_impl()->machine().preferred_variant();
+  }();
+
+  switch (variant) {
+    case VariantCode::CPU: return mapping::StoreTarget::SYSMEM;
+    case VariantCode::GPU: return mapping::StoreTarget::FBMEM;
+    case VariantCode::OMP: return mapping::StoreTarget::SOCKETMEM;
+  }
+  LEGATE_ABORT("Unhandled variant code");
+}
+
 bool AutoTask::is_inline_execution_() const { return pimpl_->is_physical_task(); }
 
 InternalSharedPtr<detail::LogicalArray> AutoTask::record_user_ref_(LogicalArray array)
@@ -144,7 +147,7 @@ void AutoTask::clear_user_refs_() { pimpl_->clear_refs(); }
 Variable AutoTask::add_input(LogicalArray array)
 {
   if (is_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target());
+    auto physical_array = array.get_physical_array(get_inline_store_target_());
     pimpl_->physical_task_impl()->add_input(physical_array.impl());
     return Variable{nullptr};
   }
@@ -154,7 +157,7 @@ Variable AutoTask::add_input(LogicalArray array)
 Variable AutoTask::add_output(LogicalArray array)
 {
   if (is_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target());
+    auto physical_array = array.get_physical_array(get_inline_store_target_());
     pimpl_->physical_task_impl()->add_output(physical_array.impl());
     return Variable{nullptr};
   }
@@ -169,7 +172,7 @@ Variable AutoTask::add_reduction(LogicalArray array, ReductionOpKind redop_kind)
 Variable AutoTask::add_reduction(LogicalArray array, std::int32_t redop_kind)
 {
   if (is_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target());
+    auto physical_array = array.get_physical_array(get_inline_store_target_());
     pimpl_->physical_task_impl()->add_reduction(physical_array.impl(), redop_kind);
     return Variable{nullptr};
   }
@@ -179,7 +182,7 @@ Variable AutoTask::add_reduction(LogicalArray array, std::int32_t redop_kind)
 Variable AutoTask::add_input(LogicalArray array, Variable partition_symbol)
 {
   if (is_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target());
+    auto physical_array = array.get_physical_array(get_inline_store_target_());
     pimpl_->physical_task_impl()->add_input(physical_array.impl());
     return Variable{nullptr};
   }
@@ -190,7 +193,7 @@ Variable AutoTask::add_input(LogicalArray array, Variable partition_symbol)
 Variable AutoTask::add_output(LogicalArray array, Variable partition_symbol)
 {
   if (is_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target());
+    auto physical_array = array.get_physical_array(get_inline_store_target_());
     pimpl_->physical_task_impl()->add_output(physical_array.impl());
     return Variable{nullptr};
   }
@@ -211,7 +214,7 @@ Variable AutoTask::add_reduction(LogicalArray array,
                                  Variable partition_symbol)
 {
   if (is_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target());
+    auto physical_array = array.get_physical_array(get_inline_store_target_());
     pimpl_->physical_task_impl()->add_reduction(physical_array.impl(), redop_kind);
     return Variable{nullptr};
   }

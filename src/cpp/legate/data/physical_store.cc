@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
+#include <legate/data/detail/physical_stores/inline_physical_store.h>
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/data/logical_store.h>
@@ -196,7 +197,7 @@ void PhysicalStore::check_unbound_store_() const { impl()->check_unbound_store()
 
 Legion::DomainAffineTransform PhysicalStore::get_inverse_transform_() const
 {
-  return impl()->as_region_store().get_inverse_transform();
+  return impl()->get_inverse_transform();
 }
 
 bool PhysicalStore::is_read_only_future_() const
@@ -236,6 +237,16 @@ std::pair<Legion::OutputRegion, Legion::FieldID> PhysicalStore::get_output_field
   return impl()->as_unbound_store().get_output_field();
 }
 
+std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_instance_() const
+{
+  return impl()->as_inline_store().get_region_instance();
+}
+
 void PhysicalStore::set_bound_(bool bound) const { impl()->as_unbound_store().set_bound(bound); }
+
+bool PhysicalStore::is_inline_storage_() const
+{
+  return dynamic_cast<const detail::InlinePhysicalStore*>(impl().get());
+}
 
 }  // namespace legate

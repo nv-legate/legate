@@ -11,6 +11,7 @@
 #include <legate/data/detail/storage_partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -241,39 +242,6 @@ TEST_F(StorageDeathTest, SetRegionFieldOnFutureMap)
 
   ASSERT_DEATH(storage->set_region_field(std::move(region_field_copy)),
                "Cannot set a region field on a future map-backed");
-}
-
-TEST_F(StorageDeathTest, MapOnFuture)
-{
-  auto runtime      = legate::Runtime::get_runtime();
-  auto future_store = runtime->create_store(legate::Scalar{std::int32_t{7}, legate::int32()});
-  auto storage      = future_store.impl()->get_storage();
-
-  ASSERT_EQ(storage->kind(), legate::detail::Storage::Kind::FUTURE);
-  ASSERT_DEATH(static_cast<void>(storage->map(legate::mapping::StoreTarget::SYSMEM)),
-               "Cannot map a future-backed storage");
-}
-
-TEST_F(StorageDeathTest, MapOnFutureMap)
-{
-  auto runtime      = legate::Runtime::get_runtime();
-  auto future_store = runtime->create_store(legate::Scalar{std::int32_t{8}, legate::int32()});
-  auto storage      = future_store.impl()->get_storage();
-
-  // Convert to FutureMap-backed
-  auto future                 = storage->get_future();
-  auto&& legate_runtime       = legate::detail::Runtime::get_runtime();
-  auto legion_runtime         = legate_runtime.get_legion_runtime();
-  auto legion_context         = legate_runtime.get_legion_context();
-  const Legion::Domain domain = Legion::Domain{Legion::DomainPoint{0}, Legion::DomainPoint{0}};
-  const Legion::IndexSpace is = legion_runtime->create_index_space(legion_context, domain);
-  const Legion::FutureMap fm =
-    legion_runtime->construct_future_map(legion_context, is, {{0, future}});
-  storage->set_future_map(fm, /*scalar_offset=*/0);
-
-  ASSERT_EQ(storage->kind(), legate::detail::Storage::Kind::FUTURE_MAP);
-  ASSERT_DEATH(static_cast<void>(storage->map(legate::mapping::StoreTarget::SYSMEM)),
-               "Cannot map a future-map-backed storage");
 }
 
 TEST_F(StorageUnit, StoragePartitionGetRoot)

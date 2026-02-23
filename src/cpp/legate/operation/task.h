@@ -276,6 +276,13 @@ class LEGATE_EXPORT AutoTask {
   explicit AutoTask(InternalSharedPtr<detail::AutoTask> impl);
   explicit AutoTask(InternalSharedPtr<detail::PhysicalTask> impl);
 
+  /**
+   * @brief Returns the store target for the most preferred processor of this task.
+   *
+   * @return The most preferred store target.
+   */
+  [[nodiscard]] mapping::StoreTarget get_inline_store_target_() const;
+
   [[nodiscard]] SharedPtr<detail::AutoTask> release_();
   [[nodiscard]] SharedPtr<detail::PhysicalTask> release_physical_();
   [[nodiscard]] InternalSharedPtr<detail::LogicalArray> record_user_ref_(LogicalArray array);

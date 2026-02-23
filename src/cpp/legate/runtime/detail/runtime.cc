@@ -62,6 +62,7 @@
 #include <legate/task/variant_options.h>
 #include <legate/tuning/scope.h>
 #include <legate/type/detail/types.h>
+#include <legate/utilities/assert.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/env_defaults.h>
@@ -907,9 +908,8 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
                   *shape,
                   shape->volume())};
   }
-  auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
   auto storage = make_internal_shared<detail::Storage>(
-    std::move(shape), future, get_provenance().as_string_view());
+    std::move(shape), scalar, get_provenance().as_string_view());
   return make_internal_shared<detail::LogicalStore>(std::move(storage), scalar.type());
 }
 
@@ -927,6 +927,13 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
       allocation->size(),
       shape->extents(),
       *type)};
+  }
+
+  if (config().enable_inline_task_launch()) {
+    // Create an allocated Storage directly from the external allocation.
+    auto storage = make_internal_shared<detail::Storage>(
+      shape, type, allocation, get_provenance().as_string_view());
+    return make_internal_shared<detail::LogicalStore>(std::move(storage), std::move(type));
   }
 
   auto store = create_store(shape, std::move(type), /*optimize_scalar=*/false);
@@ -949,6 +956,11 @@ Runtime::IndexAttachResult Runtime::create_store(
   Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
   InternalSharedPtr<mapping::detail::DimOrdering> ordering)
 {
+  if (config().enable_inline_task_launch()) {
+    throw TracedException<std::runtime_error>{
+      "create_store with multiple external allocations is not supported with inline task launch"};
+  }
+
   validate_store_shape(shape, type);
 
   const auto type_size = type->size();
@@ -2323,7 +2335,7 @@ extern void register_exception_reduction_op(const Library& context);
                              : std::make_unique<FieldManager>();
   runtime.communicator_manager_.emplace();
   runtime.partition_manager_.emplace();
-  static_cast<void>(runtime.scope().exchange_machine(runtime.create_toplevel_machine()));
+  static_cast<void>(runtime.scope_.exchange_machine(runtime.create_toplevel_machine()));
 
   comm::register_builtin_communicator_factories(runtime.core_library());
 

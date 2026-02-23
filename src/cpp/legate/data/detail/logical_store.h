@@ -46,12 +46,27 @@ class RegionPhysicalStore;
 class LogicalStore {
  public:
   LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr<Type> type);
-  // This constructor is invoked exclusively by store transformations that construct stores from
-  // immediate extents.
+  /**
+   * @brief Constructs a LogicalStore from a set of extents, storage, type, and transform.
+   *
+   * @note This constructor is invoked exclusively by the store transformations
+   * that constructs stores from immediate extents. As a result, this constructor
+   * should only be used for creating transformed stores.
+   *
+   * @param extents The extents representing the shape of the store.
+   * @param storage The storage backing the store.
+   * @param type The type of the LogicalStore.
+   * @param transform The transform stack over the storage that produced this store.
+   * @param domain The (sub)domain over the root storage that backs this store. This is used for
+   * tracking domain information when avoiding sub-storages such as when inline task launching.
+   *
+   * @return The constructed LogicalStore.
+   */
   LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
                InternalSharedPtr<Storage> storage,
                InternalSharedPtr<Type> type,
-               InternalSharedPtr<TransformStack> transform);
+               InternalSharedPtr<TransformStack> transform,
+               std::optional<Domain> domain = std::nullopt);
 
   LogicalStore(LogicalStore&& other) noexcept            = default;
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
@@ -260,6 +275,13 @@ class LogicalStore {
   InternalSharedPtr<Shape> shape_{};
   InternalSharedPtr<Storage> storage_{};
   InternalSharedPtr<TransformStack> transform_{};
+
+  // The (sub)domain over the root storage that this LogicalStore covers.
+  // Note: this is not the domain/shape of the root storage, but a
+  // possible subset of it. Used for tracking domain information when
+  // avoiding sub-storages such as in inline physical stores to allow for
+  // correct accessors.
+  std::optional<Domain> domain_{};
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};

@@ -44,6 +44,8 @@
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/detail/type_traits.h>
 
+#include <legion/api/values.h>
+
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
@@ -80,7 +82,19 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
     type_{std::move(type)},
     shape_{storage->shape()},
     storage_{std::move(storage)},
-    transform_{make_internal_shared<TransformStack>()}
+    transform_{make_internal_shared<TransformStack>()},
+    domain_{[&shape = shape_]() -> std::optional<Domain> {
+      if (!Runtime::get_runtime().config().enable_inline_task_launch()) {
+        return std::nullopt;
+      }
+
+      // Unbound storages do not have a domain.
+      if (shape->unbound()) {
+        return std::nullopt;
+      }
+
+      return to_maybe_empty_domain(shape->extents());
+    }()}
 {
   assert_fixed_storage_size(this->type());
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -91,12 +105,14 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
 LogicalStore::LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
                            InternalSharedPtr<Storage> storage,
                            InternalSharedPtr<Type> type,
-                           InternalSharedPtr<TransformStack> transform)
+                           InternalSharedPtr<TransformStack> transform,
+                           std::optional<Domain> domain)
   : store_id_{Runtime::get_runtime().get_unique_store_id()},
     type_{std::move(type)},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     storage_{std::move(storage)},
-    transform_{std::move(transform)}
+    transform_{std::move(transform)},
+    domain_{std::move(domain)}
 {
   assert_fixed_storage_size(this->type());
   LEGATE_ASSERT(transform_ != nullptr);
@@ -164,7 +180,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, st
   auto transform = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
 
   return make_internal_shared<LogicalStore>(
-    std::move(new_extents), storage_, type(), std::move(transform));
+    std::move(new_extents), storage_, type(), std::move(transform), domain_);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64_t index)
@@ -191,13 +207,29 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
 
   auto transform = stack(transform_, std::make_unique<Project>(d, index));
   auto substorage =
-    volume() == 0 ? storage_
-                  : slice_storage(storage_,
-                                  transform->invert_extents(new_extents),
-                                  transform->invert_point({tags::size_tag, new_extents.size(), 0}));
+    Runtime::get_runtime().config().enable_inline_task_launch() || volume() == 0
+      ? storage_
+      : slice_storage(storage_,
+                      transform->invert_extents(new_extents),
+                      transform->invert_point({tags::size_tag, new_extents.size(), 0}));
+
+  // New domain over Storage simply restricts to the single dimension in the projection.
+  const auto projected_domain = [&]() -> std::optional<Domain> {
+    if (!domain_.has_value()) {
+      return std::nullopt;
+    }
+    LEGATE_ASSERT(Runtime::get_runtime().config().enable_inline_task_launch());
+
+    DomainPoint lo = domain_->lo();
+    DomainPoint hi = domain_->hi();
+
+    lo[d] = index;
+    hi[d] = index;
+    return Domain{lo, hi};
+  }();
 
   return make_internal_shared<LogicalStore>(
-    std::move(new_extents), std::move(substorage), type(), std::move(transform));
+    std::move(new_extents), std::move(substorage), type(), std::move(transform), projected_domain);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::broadcast(std::int32_t bcast_dim,
@@ -219,7 +251,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::broadcast(std::int32_t bcast_dim,
 
   new_extents[bcast_dim] = dim_size;
   return make_internal_shared<LogicalStore>(
-    std::move(new_extents), storage_, type(), std::move(transform));
+    std::move(new_extents), storage_, type(), std::move(transform), domain_);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<LogicalStore>& self,
@@ -269,20 +301,42 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
     return self;
   }
 
+  auto&& runtime = Runtime::get_runtime();
+
   if (0 == exts[dim]) {
-    return Runtime::get_runtime().create_store(
+    return runtime.create_store(
       make_internal_shared<Shape>(std::move(exts)), type(), /*optimize_scalar=*/false);
   }
 
   auto transform =
     (start == 0) ? transform_ : stack(transform_, std::make_unique<Shift>(dim, -start));
-  auto substorage = volume() == 0
+  auto substorage = runtime.config().enable_inline_task_launch() || volume() == 0
                       ? storage_
                       : slice_storage(storage_,
                                       transform->invert_extents(exts),
                                       transform->invert_point({tags::size_tag, exts.size(), 0}));
-  return make_internal_shared<LogicalStore>(
-    std::move(exts), std::move(substorage), type(), std::move(transform));
+  // Compute the new domain of the root storage that this LogicalStore covers.
+  const auto sstart                     = static_cast<std::int64_t>(start);
+  const auto extent_dim                 = static_cast<std::int64_t>(exts[dim]);
+  const auto sliced_root_storage_domain = [&]() -> std::optional<Domain> {
+    if (!domain_.has_value()) {
+      return std::nullopt;
+    }
+    LEGATE_ASSERT(runtime.config().enable_inline_task_launch());
+
+    DomainPoint lo = domain_->lo();
+    DomainPoint hi = domain_->hi();
+
+    lo[dim] += sstart;
+    hi[dim] = lo[dim] + extent_dim - 1;
+    return Domain{lo, hi};
+  }();
+
+  return make_internal_shared<LogicalStore>(std::move(exts),
+                                            std::move(substorage),
+                                            type(),
+                                            std::move(transform),
+                                            sliced_root_storage_domain);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::transpose(
@@ -311,7 +365,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(
   auto new_extents = array_map<SmallVector<std::uint64_t, LEGATE_MAX_DIM>>(extents(), axes);
   auto transform   = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
   return make_internal_shared<LogicalStore>(
-    std::move(new_extents), storage_, type(), std::move(transform));
+    std::move(new_extents), storage_, type(), std::move(transform), domain_);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
@@ -352,7 +406,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
   auto transform = stack(transform_, std::make_unique<Delinearize>(dim, std::move(sizes)));
 
   return make_internal_shared<LogicalStore>(
-    std::move(new_extents), storage_, type(), std::move(transform));
+    std::move(new_extents), storage_, type(), std::move(transform), domain_);
 }
 
 InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
@@ -403,9 +457,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   legate::mapping::StoreTarget target, bool ignore_future_mutability)
 {
-  if (unbound()) {
-    throw TracedException<std::invalid_argument>{"Unbound store cannot be inlined mapped"};
-  }
+  auto&& storage = get_storage();
 
   // If there's already a physical store for this logical store, just return the cached one.
   // Any operations using this logical store will immediately flush the scheduling window.
@@ -413,7 +465,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
     if ((*mapped_)->target() == target) {
       return *mapped_;
     }
-    get_storage()->unmap();
+    storage->unmap();
     mapped_.reset();
   }
 
@@ -421,42 +473,20 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime().flush_scheduling_window();
 
-  auto&& storage = get_storage();
-  if (storage->kind() == Storage::Kind::FUTURE ||
-      (storage->kind() == Storage::Kind::FUTURE_MAP && storage->replicated())) {
-    // TODO(wonchanl): future wrappers from inline mappings are read-only for now
-    auto domain = [&]() -> Domain {
-      auto&& extents = storage->extents();
+  auto ret = storage->map(target, type(), shape(), transform_, ignore_future_mutability, domain_);
 
-      // Workaround needed for the inline-task fast-path. When empty domains are serialized,
-      // they come out as (0-ed out), 0D Domains when deserialized. However, to_domain() will
-      // produce a {0, 0} domain, i.e. still 0-ed out, but this this time it is 1D. So to match
-      // the serialization case, we return a empty 0D domain here.
-      if (extents.empty()) {
-        return {};
-      }
-      return to_domain(extents);
-    }();
-
-    // If we ignore the mutability of the future, then this future is writable. Needed by the
-    // inline-task fast-path
-    auto future = FutureWrapper{/* read_only */ !ignore_future_mutability,
-                                type()->size(),
-                                type()->alignment(),
-                                storage->scalar_offset(),
-                                domain,
-                                storage->get_future()};
-    // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
-    // remapped to reflect changes by the runtime.
-    return make_internal_shared<FuturePhysicalStore>(
-      dim(), type(), GlobalRedopID{-1}, std::move(future), transform_);
+  switch (storage->kind()) {
+    case Storage::Kind::INLINE_STORAGE: [[fallthrough]];
+    case Storage::Kind::REGION_FIELD: {
+      mapped_ = ret;
+      break;
+    }
+      // Physical stores for future-backed stores shouldn't be cached, as they are
+      // not automatically remapped to reflect changes by the runtime.
+    case Storage::Kind::FUTURE_MAP: [[fallthrough]];
+    case Storage::Kind::FUTURE: break;
   }
-
-  LEGATE_ASSERT(storage->kind() == Storage::Kind::REGION_FIELD);
-  auto region_field = storage->map(target);
-  mapped_           = make_internal_shared<RegionPhysicalStore>(
-    dim(), type(), GlobalRedopID{-1}, std::move(region_field), transform_);
-  return *mapped_;
+  return ret;
 }
 
 // Just because all the member functions used are const, doesn't mean this function
@@ -677,6 +707,9 @@ StoreAnalyzable LogicalStore::to_launcher_arg_(const InternalSharedPtr<LogicalSt
     case Storage::Kind::REGION_FIELD: {
       return region_field_to_launcher_arg_(
         self, variable, strategy, launch_domain, projection, privilege, redop);
+    }
+    case Storage::Kind::INLINE_STORAGE: {
+      LEGATE_ABORT("TODO");
     }
   }
 

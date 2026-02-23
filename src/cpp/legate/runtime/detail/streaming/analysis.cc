@@ -207,8 +207,9 @@ void maybe_update_task_discards(
     auto&& storage = store->get_storage();
 
     switch (storage->kind()) {
-      // Ignore future and future-maps for now, it's not clear how these should be streamed (if
-      // at all).
+        // Ignore future, future-maps, and inline-storage for now, it's not clear how these should
+        // be streamed (if at all).
+      case Storage::Kind::INLINE_STORAGE: [[fallthrough]];
       case Storage::Kind::FUTURE: [[fallthrough]];
       case Storage::Kind::FUTURE_MAP: continue;
       case Storage::Kind::REGION_FIELD: break;

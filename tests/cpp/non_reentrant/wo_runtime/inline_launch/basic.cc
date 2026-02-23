@@ -113,4 +113,64 @@ TEST_P(StoreTarget, Basic)
   runtime->submit(std::move(task));
 }
 
+TEST_F(InlineLaunchUnit, Remapping)
+{
+  constexpr std::size_t REMAP_SIZE   = 8;
+  constexpr std::int64_t REMAP_VALUE = 42;
+
+  auto* const runtime = legate::Runtime::get_runtime();
+  const auto machine  = runtime->get_machine();
+
+  if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
+    GTEST_SKIP() << "Test requires GPU support";
+  }
+
+  const auto lib     = runtime->find_library(Config::LIBRARY_NAME);
+  const auto cpu_mem = machine.only(legate::mapping::TaskTarget::CPU);
+  const auto gpu_mem = machine.only(legate::mapping::TaskTarget::GPU);
+
+  auto store = runtime->create_store(legate::Shape{REMAP_SIZE}, legate::int64());
+
+  {
+    const auto cpu_scope = legate::Scope{cpu_mem};
+
+    runtime->issue_fill(store, legate::Scalar{REMAP_VALUE});
+    const auto phys   = store.get_physical_store();
+    const auto mdspan = phys.span_read_accessor<std::int64_t, 1>();
+
+    ASSERT_EQ(phys.target(), legate::mapping::StoreTarget::SYSMEM);
+    ASSERT_EQ(mdspan.extent(0), REMAP_SIZE);
+
+    for (auto i = 0; i < mdspan.extent(0); ++i) {
+      ASSERT_EQ(mdspan(i), REMAP_VALUE)
+        << "mdspan(" << i << ") = " << mdspan(i) << " != " << REMAP_VALUE;
+    }
+  }
+
+  {
+    // Perform remapping of store onto GPU memory
+    const auto gpu_scope = legate::Scope{gpu_mem};
+
+    auto gpu_task = runtime->create_task(lib, CheckTask::TASK_CONFIG.task_id());
+    gpu_task.add_input(store);
+    runtime->submit(std::move(gpu_task));
+  }
+
+  {
+    // Verify that the store values are retained even when remapping back to CPU memory
+    const auto cpu_scope = legate::Scope{cpu_mem};
+
+    const auto phys   = store.get_physical_store();
+    const auto mdspan = phys.span_read_accessor<std::int64_t, 1>();
+
+    ASSERT_EQ(phys.target(), legate::mapping::StoreTarget::SYSMEM);
+    ASSERT_EQ(mdspan.extent(0), REMAP_SIZE);
+
+    for (auto i = 0; i < mdspan.extent(0); ++i) {
+      ASSERT_EQ(mdspan(i), REMAP_VALUE)
+        << "after remapping: mdspan(" << i << ") = " << mdspan(i) << " != " << REMAP_VALUE;
+    }
+  }
+}
+
 }  // namespace test_inline_launch_basic

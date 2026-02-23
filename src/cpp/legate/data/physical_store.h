@@ -809,7 +809,7 @@ class LEGATE_EXPORT PhysicalStore {
 
   /**
    * @brief Create a standard read/read-write/write-only field accessor over the underlying
-   * data of the store.
+   * data of the store for a physical store backed by a region field.
    *
    * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
    * be useful to disable it wholesale, for example when punning the underlying buffer as some
@@ -831,7 +831,8 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
 
   /**
-   * @brief Create a reduction field accessor over the underlying data.
+   * @brief Create a reduction field accessor over the underlying data for a physical store
+   * backed by a region field.
    *
    * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
    * be useful to disable it wholesale, for example when punning the underlying buffer as some
@@ -852,11 +853,74 @@ class LEGATE_EXPORT PhysicalStore {
   template <typename ACC, typename T, std::int32_t DIM>
   [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
 
+  /**
+   * @brief Create a standard read/read-write/write-only field accessor over the underlying
+   * data of the store for a physical store backed by a region instance (i.e. inline storage).
+   *
+   * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
+   * be useful to disable it wholesale, for example when punning the underlying buffer as some
+   * other data-type. In this case, the user must take care to pass the right field sizes and
+   * shapes to the accessor, but is otherwise free to recast the data as they see fit.
+   *
+   * @tparam ACC The accessor type to create.
+   * @tparam T The value type of the accessor (since Legion accessors don't expose this
+   * directly).
+   * @tparam DIM The dimension of the accessor (and therefore the shape).
+   *
+   * @param bounds The bounds over which the accessor should provide access. Must be within the
+   * bounds of the store's shape.
+   * @param validate_type Whether to perform type size verification.
+   *
+   * @return The accessor.
+   */
+  template <typename ACC, typename T, std::int32_t DIM>
+  [[nodiscard]] ACC create_region_instance_accessor_(const Rect<DIM>& bounds,
+                                                     bool validate_type) const;
+
+  /**
+   * @brief Create a reduction field accessor over the underlying data for a physical store
+   * backed by a deferred buffer.
+   *
+   * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
+   * be useful to disable it wholesale, for example when punning the underlying buffer as some
+   * other data-type. In this case, the user must take care to pass the right field sizes and
+   * shapes to the accessor, but is otherwise free to recast the data as they see fit.
+   *
+   * @tparam ACC The accessor type to create.
+   * @tparam T The value type of the accessor (since Legion accessors don't expose this
+   * directly).
+   * @tparam DIM The dimension of the accessor (and therefore the shape).
+   *
+   * @param bounds The bounds over which the accessor should provide access. Must be within the
+   * bounds of the store's shape.
+   * @param validate_type Whether to perform type size verification.
+   *
+   * @return The accessor.
+   */
+  template <typename ACC, typename T, std::int32_t DIM>
+  [[nodiscard]] ACC create_region_instance_reduction_accessor_(const Rect<DIM>& bounds,
+                                                               bool validate_type) const;
+
   [[nodiscard]] bool is_read_only_future_() const;
   [[nodiscard]] std::size_t get_field_offset_() const;
   [[nodiscard]] const void* get_untyped_pointer_from_future_() const;
   [[nodiscard]] const Legion::Future& get_future_() const;
   [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer_() const;
+
+  /**
+   * @brief Indicates whether the store is an InlinePhysicalStore.
+   *
+   * @return `true` if the store is an inline storage, `false` otherwise.
+   */
+  [[nodiscard]] bool is_inline_storage_() const;
+  /**
+   * @brief Returns the region instance and field ID that backs the underlying physical store.
+   *
+   * @throws std::invalid_cast if the store is not an InlinePhysicalStore.
+   *
+   * @return Pair of the region instance and field ID wrapping the underlying memory allocation.
+   */
+  [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> get_region_instance_() const;
 
   [[nodiscard]] std::pair<Legion::OutputRegion, Legion::FieldID> get_output_field_() const;
   /*

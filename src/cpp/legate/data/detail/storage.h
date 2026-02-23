@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/data/detail/inline_storage.h>
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -37,6 +38,9 @@ class StoragePartition;
 class Type;
 class Shape;
 class Partition;
+class PhysicalStore;
+class TransformStack;
+class ExternalAllocation;
 
 class Storage {
  public:
@@ -44,22 +48,74 @@ class Storage {
     REGION_FIELD,
     FUTURE,
     FUTURE_MAP,
+    INLINE_STORAGE,
   };
 
-  // Create a RegionField-backed or a Future-backed storage.
+  /**
+   * @brief Construct a Storage object lazily.
+   *
+   * The backing of the storage could be backed by a region field
+   * or a future/future map depending on the shape and whether
+   * optimizing for a scalar. If executing with inline task launches,
+   * the storage is an inline storage.
+   *
+   * @param shape The shape of the storage.
+   * @param field_size The size of the field.
+   * @param optimize_scalar Whether to optimize the scalar.
+   * @param provenance The provenance of the storage.
+   */
   Storage(InternalSharedPtr<Shape> shape,
           std::uint32_t field_size,
           bool optimize_scalar,
           std::string_view provenance);
-  // Create a Future-backed storage. Initialized eagerly.
-  Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::string_view provenance);
-  // Create a RegionField-backed sub-storage.
+  /**
+   * @brief Construct a Storage object initialized eagerly from an existing scalar.
+   *
+   * The backing of the storage is a future unless executing with inline task launches,
+   * in which case it is an inline storage. The scalar data is copied into the created storage.
+   *
+   * @param shape The shape of the storage.
+   * @param scalar The scalar to copy into the storage.
+   * @param provenance The provenance of the storage.
+   */
+  Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::string_view provenance);
+  /**
+   * @brief Construct a Storage object representing a sub-storage of a partitioned storage.
+   *
+   * @param extents The extents of the sub-storage.
+   * @param parent The parent storage partition.
+   * @param color The color of the sub-storage (i.e. the index of the sub-storage in the parent
+   * storage partition).
+   * @param offsets The offsets of the sub-storage in the partitioned storage.
+   */
   Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
           InternalSharedPtr<StoragePartition> parent,
           SmallVector<std::uint64_t, LEGATE_MAX_DIM> color,
           SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
   /**
-   * @brief Create a RegionField-backed storage from an existing LogicalRegionField.
+   * @brief Construct a Storage object from an existing external allocation.
+   *
+   * This constructor is only valid when executing with inline task launches.
+   *
+   * Changes to the data underlying this storage will be reflected in the external allocation.
+   *
+   * @param shape The shape of the storage.
+   * @param type The type of the storage.
+   * @param allocation The external allocation that holds the pointer backing the storage.
+   * @param provenance The provenance of the storage.
+   */
+  Storage(InternalSharedPtr<Shape> shape,
+          const InternalSharedPtr<Type>& type,
+          InternalSharedPtr<ExternalAllocation> allocation,
+          std::string_view provenance);
+  /**
+   * @brief Construct a Storage object from an existing LogicalRegionField.
+   *
+   * This constructor creates a Storage from an existing LogicalRegionField.
+   *
+   * @param shape The shape of the storage.
+   * @param region_field The existing LogicalRegionField to use for the storage.
+   * @param provenance The provenance of the storage.
    */
   Storage(InternalSharedPtr<Shape> shape,
           InternalSharedPtr<LogicalRegionField> region_field,
@@ -94,6 +150,7 @@ class Storage {
   [[nodiscard]] std::size_t scalar_offset() const;
   [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] bool is_mapped() const;
+  [[nodiscard]] bool has_scalar_storage() const;
 
   [[nodiscard]] InternalSharedPtr<Storage> slice(
     const InternalSharedPtr<Storage>& self,
@@ -115,7 +172,14 @@ class Storage {
   void set_future(Legion::Future future, std::size_t scalar_offset);
   void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset);
 
-  [[nodiscard]] RegionField map(legate::mapping::StoreTarget target);
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> map(
+    legate::mapping::StoreTarget target,
+    InternalSharedPtr<Type> type,
+    const InternalSharedPtr<Shape>& shape,
+    InternalSharedPtr<TransformStack> transform,
+    bool ignore_future_mutability,
+    const std::optional<Domain>& domain = std::nullopt);
+
   void unmap();
   void allow_out_of_order_destruction();
   void free_early();
@@ -199,8 +263,9 @@ class Storage {
   // std::optional allows us to specify whether the specific variant alternative is set or not.
   std::variant<std::optional<InternalSharedPtr<LogicalRegionField>>,
                std::optional<Legion::Future>,
-               std::optional<Legion::FutureMap>>
-    storage_data_{std::optional<InternalSharedPtr<LogicalRegionField>>{}};
+               std::optional<Legion::FutureMap>,
+               std::optional<InternalSharedPtr<InlineStorage>>>
+    storage_data_{};
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
