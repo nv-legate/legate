@@ -19,6 +19,7 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/task.h>
 #include <legate/task/detail/task_context.h>
+#include <legate/task/detail/task_info.h>
 #include <legate/task/task_context.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/store_iterator_cache.h>
@@ -119,9 +120,49 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
 // ==========================================================================================
 
+/**
+ * @brief Extract the physical array from the task array argument
+ *
+ * @param elem The param to extract from
+ * @param policy The instance mapping policy to use to get the right store location.
+ * @param ignore_future_mutability If the array is future-backed, and has write privileges, we
+ * need to ignore the normal immutability checks for futures.
+ *
+ * @return The physical array.
+ */
+[[nodiscard]] InternalSharedPtr<PhysicalArray> extract_physical_array(
+  const TaskArrayArg& elem,
+  const mapping::InstanceMappingPolicy& policy,
+  bool ignore_future_mutability)
+{
+  if (policy.exact) {
+    // See discussion in https://github.com/nv-legate/legate.internal/issues/3539 for why this
+    // isn't supported right now
+    throw TracedException<std::runtime_error>{
+      "InstanceMappingPolicy::exact not yet supported in inline execution."};
+  }
+
+  if (policy.ordering.has_value() && policy.ordering->kind() != mapping::DimOrdering::Kind::C) {
+    // See discussion in https://github.com/nv-legate/legate.internal/issues/3539 for why this
+    // isn't supported right now
+    throw TracedException<std::runtime_error>{
+      "Dimension orderings other than C (or unspecified) not yet supported in inline execution."};
+  }
+
+  return std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+                               return arr->get_physical_array(policy.target,
+                                                              ignore_future_mutability);
+                             },
+                             [&](const InternalSharedPtr<PhysicalArray>& arr) {
+                               LEGATE_CHECK(arr->data()->target() == policy.target);
+                               return arr;
+                             }},
+                    elem.array);
+}
+
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalArray>> fill_vector(
-  VariantCode variant_code,
   Span<const TaskArrayArg> src,
+  Span<const mapping::InstanceMappingPolicy> mapping_policies,
   bool ignore_future_mutability,
   const StoreIteratorCache<InternalSharedPtr<PhysicalStore>>& get_stores_cache,
   SmallVector<Legion::UntypedDeferredValue>* deferred_buffers)
@@ -129,31 +170,9 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   SmallVector<InternalSharedPtr<PhysicalArray>> dest;
 
   dest.reserve(src.size());
-  for (auto&& elem : src) {
-    const auto phys_array = std::visit(
-      Overload{[&](const InternalSharedPtr<LogicalArray>& arr) -> InternalSharedPtr<PhysicalArray> {
-                 // This isn't right. We don't ever consult the users mapper, so an inline-launched
-                 // task may select a different memory than the regular task launch would have.
-                 //
-                 // But the user mapper expects to get a `mapping::Task`, which would require
-                 // translating all of the logical stores into the equivalent mapping variants
-                 // (which, coincidentally also expect to hold a Legion::Task).
-                 const auto target = [&] {
-                   switch (variant_code) {
-                     case VariantCode::CPU: return legate::mapping::StoreTarget::SYSMEM;
-                     case VariantCode::GPU: return legate::mapping::StoreTarget::FBMEM;
-                     case VariantCode::OMP: return legate::mapping::StoreTarget::SOCKETMEM;
-                   }
-                   LEGATE_ABORT("Unhandled variant code: ", to_underlying(variant_code));
-                 }();
-
-                 return arr->get_physical_array(target, ignore_future_mutability);
-               },
-               [&](const InternalSharedPtr<PhysicalArray>& arr)
-                 -> InternalSharedPtr<PhysicalArray> { return arr; }},
-      elem.array);
-
-    dest.emplace_back(phys_array);
+  for (auto&& [elem, policy] : zip_equal(src, mapping_policies)) {
+    auto&& phys_array =
+      dest.emplace_back(extract_physical_array(elem, policy, ignore_future_mutability));
 
     if (!ignore_future_mutability) {
       continue;
@@ -171,20 +190,91 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   return dest;
 }
 
-[[nodiscard]] InlineTaskContext make_inline_task_context(
-  const TaskBase& task,
-  VariantCode variant_code,
-  SmallVector<Legion::UntypedDeferredValue>* deferred_buffers)
+struct TaskStoreMappingPolicies {
+  SmallVector<mapping::InstanceMappingPolicy> input_policies{};
+  SmallVector<mapping::InstanceMappingPolicy> output_policies{};
+  SmallVector<mapping::InstanceMappingPolicy> reduction_policies{};
+};
+
+/**
+ * @brief Get the default store target options for each variant.
+ *
+ * @param variant_code The variant to get the options for.
+ *
+ * @return The default options.
+ */
+[[nodiscard]] Span<const mapping::StoreTarget> get_default_target_options(VariantCode variant_code)
+{
+  switch (variant_code) {
+    case VariantCode::CPU: {
+      static constexpr auto opts = std::array{mapping::StoreTarget::SYSMEM};
+
+      return opts;
+    }
+    case VariantCode::GPU: {
+      static constexpr auto opts =
+        std::array{mapping::StoreTarget::FBMEM, mapping::StoreTarget::ZCMEM};
+
+      return opts;
+    }
+    case VariantCode::OMP: {
+      static constexpr auto opts =
+        std::array{mapping::StoreTarget::SOCKETMEM, mapping::StoreTarget::SYSMEM};
+
+      return opts;
+    }
+  }
+  LEGATE_ABORT("Unhandled variant code: ", to_underlying(variant_code));
+}
+
+/**
+ * @brief Create the store mapping policies for input, output, and reduction arguments for a task.
+ *
+ * If the user does not fully cover every store argument with their mapping policies, then any
+ * unspecified arguments will receive a default mapping policy.
+ *
+ * @param task The task to generate the policies for.
+ * @param variant_code The variant.
+ *
+ * @return The store mapping policies
+ */
+[[nodiscard]] TaskStoreMappingPolicies make_store_mapping_policies(const TaskBase& task,
+                                                                   VariantCode variant_code)
+{
+  const auto target_options = get_default_target_options(variant_code);
+  auto ret                  = [&] {
+    const auto default_policy =
+      mapping::InstanceMappingPolicy{}.with_target(target_options.front());
+
+    return TaskStoreMappingPolicies{
+      /* input_policies */ {tags::size_tag, task.inputs().size(), default_policy},
+      /* output_policies */ {tags::size_tag, task.outputs().size(), default_policy},
+      /* reduction_policies */ {tags::size_tag, task.reductions().size(), default_policy},
+    };
+  }();
+
+  if (auto&& sm = task.library().find_task(task.local_task_id())->task_config()->store_mappings();
+      sm.has_value()) {
+    sm->apply_inline(
+      task, target_options, &ret.input_policies, &ret.output_policies, &ret.reduction_policies);
+  }
+  return ret;
+}
+
+[[nodiscard]] std::pair<InlineTaskContext, SmallVector<Legion::UntypedDeferredValue>>
+make_inline_task_context(const TaskBase& task, VariantCode variant_code)
 {
   const auto get_stores_cache = StoreIteratorCache<InternalSharedPtr<PhysicalStore>>{};
+  const auto mapping_policies = make_store_mapping_policies(task, variant_code);
+  auto deferred_buffers       = SmallVector<Legion::UntypedDeferredValue>{};
 
-  auto inputs = fill_vector(variant_code,
-                            task.inputs(),
+  auto inputs = fill_vector(task.inputs(),
+                            mapping_policies.input_policies,
                             /* ignore_future_mutability */ false,
                             get_stores_cache,
-                            deferred_buffers);
+                            &deferred_buffers);
   // None of the inputs should ever create an output buffer
-  LEGATE_CHECK(deferred_buffers->empty());
+  LEGATE_CHECK(deferred_buffers.empty());
   // We do these here instead of inline in the function arguments because the order in which
   // these are executed matters. We want to fill up the deferred_bufs_ vector first with output
   // scalars, then with reduction scalars.
@@ -209,32 +299,33 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
   // Reserve space for scalar outputs and reductions based on task type
   if (const auto* logical_task = dynamic_cast<const LogicalTask*>(&task)) {
-    deferred_buffers->reserve(logical_task->scalar_outputs().size() +
-                              logical_task->scalar_reductions().size());
+    deferred_buffers.reserve(logical_task->scalar_outputs().size() +
+                             logical_task->scalar_reductions().size());
   } else if (const auto* physical_task = dynamic_cast<const PhysicalTask*>(&task)) {
-    deferred_buffers->reserve(physical_task->physical_scalar_outputs().size() +
-                              physical_task->physical_scalar_reductions().size());
+    deferred_buffers.reserve(physical_task->physical_scalar_outputs().size() +
+                             physical_task->physical_scalar_reductions().size());
   } else {
     LEGATE_ABORT("Unhandled task kind");
   }
 
-  auto outputs    = fill_vector(variant_code,
-                             task.outputs(),
+  auto outputs    = fill_vector(task.outputs(),
+                             mapping_policies.output_policies,
                              /* ignore_future_mutability */ true,
                              get_stores_cache,
-                             deferred_buffers);
-  auto reductions = fill_vector(variant_code,
-                                task.reductions(),
+                             &deferred_buffers);
+  auto reductions = fill_vector(task.reductions(),
+                                mapping_policies.reduction_policies,
                                 /* ignore_future_mutability */ true,
                                 get_stores_cache,
-                                deferred_buffers);
+                                &deferred_buffers);
 
-  return InlineTaskContext{variant_code,
-                           std::move(inputs),
-                           std::move(outputs),
-                           std::move(reductions),
-                           SmallVector<InternalSharedPtr<Scalar>>{task.scalars()},
-                           &task};
+  return {InlineTaskContext{variant_code,
+                            std::move(inputs),
+                            std::move(outputs),
+                            std::move(reductions),
+                            SmallVector<InternalSharedPtr<Scalar>>{task.scalars()},
+                            &task},
+          std::move(deferred_buffers)};
 }
 
 template <typename F>
@@ -244,8 +335,7 @@ execute_task(const TaskBase& task,
              VariantImpl variant_impl,
              F&& get_task_name)
 {
-  auto deferred_buffers = SmallVector<Legion::UntypedDeferredValue>{};
-  auto ctx              = make_inline_task_context(task, variant_code, &deferred_buffers);
+  auto [ctx, deferred_buffers] = make_inline_task_context(task, variant_code);
   auto exn =
     task_detail::task_body(legate::TaskContext{&ctx}, variant_impl, std::forward<F>(get_task_name));
 

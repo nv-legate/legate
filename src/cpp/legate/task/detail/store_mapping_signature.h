@@ -22,6 +22,8 @@ class Task;
 
 namespace legate::detail {
 
+class TaskBase;
+
 /**
  * @brief Holds a collection of proxy store mappings and can apply them to a task to produce
  * concrete store mappings.
@@ -46,6 +48,22 @@ class StoreMappingSignature {
    */
   [[nodiscard]] std::vector<mapping::StoreMapping> apply(
     const mapping::detail::Task& task, Span<const mapping::StoreTarget> options) const;
+
+  /**
+   * @brief Apply the signature to a task instance being inline executed.
+   *
+   * @param task Task to which the store mappings are applied.
+   * @param options Store target options for the task invocation.
+   * @param input_policies The destination vector to hold the input argument policies.
+   * @param output_policies The destination vector to hold the output argument policies.
+   * @param reduction_policies The destination vector to hold the reduction argument policies.
+   */
+  void apply_inline(
+    const TaskBase& task,
+    Span<const mapping::StoreTarget> options,
+    legate::detail::SmallVector<mapping::InstanceMappingPolicy>* input_policies,
+    legate::detail::SmallVector<mapping::InstanceMappingPolicy>* output_policies,
+    legate::detail::SmallVector<mapping::InstanceMappingPolicy>* reduction_policies) const;
 
   /**
    * @brief Access the proxy store mappings.

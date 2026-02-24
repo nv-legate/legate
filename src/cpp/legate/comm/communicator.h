@@ -39,9 +39,6 @@ class LEGATE_EXPORT Communicator {
   Communicator() = default;
   explicit Communicator(Legion::Future future);
 
-  Communicator(const Communicator&)            = default;
-  Communicator& operator=(const Communicator&) = default;
-
   /**
    * @brief Returns the communicator stored in the wrapper
    *

@@ -89,6 +89,14 @@ class LEGATE_EXPORT TaskConfig {
   /**
    * @brief Pre-declare the mapping decisions for each argument to the task.
    *
+   * Store mapping policies are applied in the order in which they appear in the provided
+   * list. No attempt is made at deduplicating or resolving conflicting store mappings; the
+   * last policy to apply to a particular argument or set of arguments "wins".
+   *
+   * Any task arguments not covered by the provided store mappings will receive the default
+   * store mapping policy (equivalent to `StoreMapping::default_mapping()` with an
+   * appropriately chosen store target).
+   *
    * @param store_mappings The proxy mapping decisions.
    * @return A reference to `this`.
    */

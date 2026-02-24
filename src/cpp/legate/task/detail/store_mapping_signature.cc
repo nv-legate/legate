@@ -26,9 +26,21 @@ std::vector<mapping::StoreMapping> StoreMappingSignature::apply(
 
   ret.reserve(store_mappings().size());
   for (auto&& proxy : store_mappings()) {
-    proxy->apply(task, options, &ret);
+    proxy->apply_legion(task, options, &ret);
   }
   return ret;
+}
+
+void StoreMappingSignature::apply_inline(
+  const TaskBase& task,
+  Span<const mapping::StoreTarget> options,
+  legate::detail::SmallVector<mapping::InstanceMappingPolicy>* input_policies,
+  legate::detail::SmallVector<mapping::InstanceMappingPolicy>* output_policies,
+  legate::detail::SmallVector<mapping::InstanceMappingPolicy>* reduction_policies) const
+{
+  for (auto&& proxy : store_mappings()) {
+    proxy->apply_inline(task, options, input_policies, output_policies, reduction_policies);
+  }
 }
 
 bool operator==(const StoreMappingSignature& lhs, const StoreMappingSignature& rhs)

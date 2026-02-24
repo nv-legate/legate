@@ -10,6 +10,7 @@
 
 #include <legate/mapping/detail/proxy_store_mapping.h>
 #include <legate/mapping/mapping.h>
+#include <legate/operation/detail/task.h>
 #include <legate/partitioning/proxy.h>
 
 #include <gmock/gmock.h>
@@ -114,6 +115,68 @@ TEST_F(ProxyStoreMappingUnit, Apply)
   }
 
   runtime->submit(std::move(task));
+}
+
+TEST_F(ProxyStoreMappingUnit, ApplyInline)
+{
+  auto* const runtime = legate::Runtime::get_runtime();
+  const auto lib      = runtime->find_library(Config::LIBRARY_NAME);
+  auto task           = runtime->create_task(lib, CheckTaskTargetTask::TASK_CONFIG.task_id());
+
+  for (std::size_t i = 0; i < 2; ++i) {
+    auto array = runtime->create_array(legate::Shape{1, i}, legate::int32());
+
+    runtime->issue_fill(array, legate::Scalar{1});
+    task.add_input(std::move(array));
+  }
+
+  {
+    auto array = runtime->create_array(legate::Shape{2, 2}, legate::int32());
+
+    runtime->issue_fill(array, legate::Scalar{1});
+    task.add_output(std::move(array));
+  }
+
+  legate::detail::SmallVector<legate::mapping::InstanceMappingPolicy> input_policies{
+    legate::detail::tags::size_tag,
+    task.impl_()->inputs().size(),
+    legate::mapping::InstanceMappingPolicy{}};
+  legate::detail::SmallVector<legate::mapping::InstanceMappingPolicy> output_policies{
+    legate::detail::tags::size_tag,
+    task.impl_()->outputs().size(),
+    legate::mapping::InstanceMappingPolicy{}};
+  legate::detail::SmallVector<legate::mapping::InstanceMappingPolicy> reduction_policies{
+    legate::detail::tags::size_tag,
+    task.impl_()->reductions().size(),
+    legate::mapping::InstanceMappingPolicy{}};
+
+  const auto policy = legate::mapping::ProxyInstanceMappingPolicy{}
+                        .with_target(legate::mapping::StoreTarget::SYSMEM)
+                        .with_exact(true)
+                        .with_allocation_policy(legate::mapping::AllocPolicy::MUST_ALLOC)
+                        .with_redundant(false)
+                        .with_ordering(legate::mapping::DimOrdering::fortran_order());
+  const auto options = std::array{
+    legate::mapping::StoreTarget::FBMEM,
+    policy.target.value()  // NOLINT(bugprone-unchecked-optional-access)
+  };
+
+  legate::mapping::detail::ProxyStoreMapping{legate::proxy::inputs, policy}.apply_inline(
+    *task.impl_(), options, &input_policies, &output_policies, &reduction_policies);
+  legate::mapping::detail::ProxyStoreMapping{legate::proxy::outputs[0], policy}.apply_inline(
+    *task.impl_(), options, &input_policies, &output_policies, &reduction_policies);
+
+  const auto expected =
+    legate::mapping::InstanceMappingPolicy{}
+      .with_target(policy.target.value())  // NOLINT(bugprone-unchecked-optional-access)
+      .with_exact(policy.exact)
+      .with_allocation_policy(policy.allocation)
+      .with_redundant(policy.redundant)
+      .with_ordering(policy.ordering.value());  // NOLINT(bugprone-unchecked-optional-access)
+
+  ASSERT_THAT(input_policies, ::testing::ElementsAre(expected, expected));
+  ASSERT_THAT(output_policies, ::testing::ElementsAre(expected));
+  ASSERT_THAT(reduction_policies, ::testing::IsEmpty());
 }
 
 }  // namespace proxy_store_mapping_test
