@@ -66,7 +66,7 @@ jobs:
           echo "${{ needs.build-docs.outputs.artifacts-dir }}"
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ needs.build-docs.outputs.artifact-name }}
           path: ${{ needs.build-docs.outputs.artifacts-dir }}
