@@ -131,7 +131,7 @@ jobs:
           echo "${GITHUB_WORKSPACE}/gha-tools/tools" >> "${GITHUB_PATH}"
 
       - name: Download source build from the build job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         env:
           BUILD_NAME: ${{ matrix.ARCH }}-cuda12-gcc${{ matrix.GCC_VER }}-${{ matrix.BUILD_MODE }}
         with:
