@@ -252,8 +252,7 @@ Variable AutoTask::find_or_declare_partition(  // NOLINT(readability-make-member
   const LogicalArray& array)
 {
   if (is_inline_execution_()) {
-    throw detail::TracedException<std::runtime_error>{
-      "Partitioning is not supported for inline task execution"};
+    return Variable{nullptr};
   }
   return Variable{impl_()->find_or_declare_partition(array.impl())};
 }
@@ -261,8 +260,7 @@ Variable AutoTask::find_or_declare_partition(  // NOLINT(readability-make-member
 Variable AutoTask::declare_partition()  // NOLINT(readability-make-member-function-const)
 {
   if (is_inline_execution_()) {
-    throw detail::TracedException<std::runtime_error>{
-      "Partitioning is not supported for inline task execution"};
+    return Variable{nullptr};
   }
   return Variable{impl_()->declare_partition()};
 }

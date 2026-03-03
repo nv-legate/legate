@@ -103,7 +103,7 @@ const DomainPoint& InlineTaskContext::get_task_index() const noexcept
 
 const Domain& InlineTaskContext::get_launch_domain() const noexcept
 {
-  static const auto launch_domain = Domain{DomainPoint{0}, DomainPoint{1}};
+  static const auto launch_domain = Domain{DomainPoint{0}, DomainPoint{0}};
 
   return launch_domain;
 }

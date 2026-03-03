@@ -70,11 +70,11 @@ struct LaunchIndexVerifier : public legate::LegateTask<LaunchIndexVerifier> {
     // PhysicalTask should always be a single task
     ASSERT_TRUE(context.is_single_task());
 
-    // Launch domain is hardcoded to [0,0] to [1,0] in InlineTaskContext (volume = 2)
-    ASSERT_EQ(launch_domain.get_volume(), 2U);
+    // Launch domain is hardcoded to [0,0] to [0,0] in InlineTaskContext (volume = 1)
+    ASSERT_EQ(launch_domain.get_volume(), 1U);
     ASSERT_EQ(launch_domain.lo()[0], 0);
     ASSERT_EQ(launch_domain.lo()[1], 0);
-    ASSERT_EQ(launch_domain.hi()[0], 1);  // hi is inclusive, so domain is [0,0] to [1,0]
+    ASSERT_EQ(launch_domain.hi()[0], 0);  // hi is inclusive, so domain is [0,0] to [0,0]
     ASSERT_EQ(launch_domain.hi()[1], 0);
   }
 };
