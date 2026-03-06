@@ -1,0 +1,6 @@
+﻿legate.util.info.info
+=====================
+
+.. currentmodule:: legate.util.info
+
+.. autofunction:: info

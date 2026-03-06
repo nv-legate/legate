@@ -1,0 +1,6 @@
+legate.util.benchmark.BenchmarkLog.name
+=======================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. autoattribute:: BenchmarkLog.name

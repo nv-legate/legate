@@ -1,0 +1,6 @@
+legate.util.benchmark.BenchmarkLog.\_create\_cb\_wrapper
+========================================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. automethod:: BenchmarkLog._create_cb_wrapper
