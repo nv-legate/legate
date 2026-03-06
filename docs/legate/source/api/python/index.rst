@@ -15,6 +15,7 @@ Python API Reference
    classes
    tasks
    settings
+   util/index
 
 
 Experimental API

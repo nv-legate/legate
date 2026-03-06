@@ -12,12 +12,15 @@ if TYPE_CHECKING:
     import os
     from collections.abc import Callable
     from types import TracebackType
+    from typing import Type  # noqa: UP035
 
     from .log import BenchmarkLog
 
 
 class BenchmarkLogFromFilename:
-    """Wrap a BenchmarkLog in a context that also opens a file."""
+    """Wrap a :py:class:`~legate.util.benchmark.BenchmarkLog` in a context that
+    also opens a file.
+    """
 
     file_name: os.PathLike[str]
     constructor: Callable[[TextIO], BenchmarkLog]
@@ -28,18 +31,20 @@ class BenchmarkLogFromFilename:
         file_name: os.PathLike[str],
         constructor: Callable[[TextIO], BenchmarkLog],
     ) -> None:
-        """Create a context manager that opens a file for a BenchmarkLog.
+        """Create a context manager that opens a file for a
+        :py:class:`~legate.util.benchmark.BenchmarkLog`.
 
-        This class exists so `benchmark_log()` can conditionally open output
-        files, most users should use that function and not call this directly.
+        This class exists so :py:func:`~legate.util.benchmark.benchmark_log`
+        can conditionally open output files, most users should use that
+        function and not call this directly.
 
         Parameters
         ----------
         file_name: os.PathLike[str]
             The path for the file to open.
         constructor: Callable[[TextIO], BenchmarkLog]
-            Thunk for creating a `BenchmarkLog` from the file handle that was
-            opened from `file_name`.
+            Thunk for creating a ``BenchmarkLog`` from the file handle that was
+            opened from ``file_name``.
         """
         self.file_name = file_name
         self.constructor = constructor
@@ -55,7 +60,10 @@ class BenchmarkLogFromFilename:
 
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
+        # this annotation should be type[BaseException], but
+        # sphinx gets confused and thinks we are trying to reference
+        # an under-specified .type attribute, raising a warning
+        exc_type: Type[BaseException] | None,  # noqa: UP006
         exc_value: BaseException | None,
         exc_traceback: TracebackType | None,
     ) -> None:

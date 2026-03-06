@@ -19,6 +19,8 @@ from .has_started import runtime_has_started
 
 
 class BuildInfo(TypedDict):
+    """Information about how legate was configured and built."""
+
     build_type: str
     use_openmp: str
     use_cuda: str
@@ -42,7 +44,7 @@ __all__ = [
 
 
 def build_info() -> BuildInfo:
-    """Information about how legate was configured and built."""
+    """Get information about how legate was configured and built."""
     networks = install_info.networks
     return {
         "build_type": f"{install_info.build_type}",
@@ -145,7 +147,7 @@ SystemInfo = TypedDict(
 
 
 def system_info() -> SystemInfo:
-    """Information about the system on which the program is running."""
+    """Get information about the system on which the program is running."""
     return {
         "Python": f"{sys.version.splitlines()[0]}",
         "Platform": f"{platform.platform()}",
@@ -158,7 +160,7 @@ PackageVersions = dict[str, str]
 
 
 def package_versions() -> PackageVersions:
-    """Versions for packages in the legate and numpy ecosystems."""
+    """Get versions for packages in the legate and numpy ecosystems."""
     return {
         "legion": f"{_legion_version()}",
         "legate": f"{_try_version('legate', '__version__')}",
@@ -184,7 +186,7 @@ def _package_dists() -> PackageDists:
 
 
 def package_dists() -> PackageDists:
-    """Distribution information for packages in the legate ecosystem."""
+    """Get distribution information for packages in the legate ecosystem."""
     return _package_dists().copy()
 
 
@@ -195,7 +197,7 @@ MachineInfo = TypedDict(
 
 
 def machine_info() -> MachineInfo:
-    """Machine information as a dictionary of strings."""
+    """Get machine information as a dictionary of strings."""
     # we import this here because importing anything from
     # ..core will try to start the runtime, and we want
     # other functions in this module to be usable from legate-issue,
@@ -235,6 +237,7 @@ def _realm_runtime_info() -> dict[str, Any]:
     return config_dict
 
 
+#: Info on how and where legate is being run.
 Info = TypedDict(
     "Info",
     {
@@ -258,15 +261,29 @@ def info(*, start_runtime: bool = True) -> Info:
     Parameters
     ----------
     start_runtime: bool = True
-        If `True`, the legate runtime will be started (if it has not already
-        been) to get information that depends on the runtime.  If `False` and
+        If ``True``, the legate runtime will be started (if it has not already
+        been) to get information that depends on the runtime.  If ``False`` and
         the runtime has not been started, information that depends on the
         runtime will be missing.
 
     Returns
     -------
     Info
-        A hierarchical dictionary of information strings
+        A hierarchical dictionary of information strings, with the following
+        top-level keys:
+
+        - ``"Program"``
+        - ``"Legate runtime configuration"``
+        - ``"Realm runtime configuration"``
+        - ``"Machine"``
+        - ``"System info"``
+        - ``"Package versions"``
+        - ``"Package details"``
+        - ``"Legate build configuration"``
+
+        The ``Legate runtime configuration``, ``Realm runtime configuration``,
+        and ``Machine`` only have useful information if the runtime has
+        started.
     """
     use_runtime = start_runtime or runtime_has_started()
     NO_RUNTIME = "(unavailable, legate runtime not started)"

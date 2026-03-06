@@ -92,36 +92,38 @@ def benchmark_log(
     columns: list[str]
         A list of headers for the columns of data in the table.
     out: TextIO | None = None
-        Optional io stream for benchmark data: e.g. `out=sys.stdout` to write
-        benchmark data to the screen.  If `out` is not specified, the
-        destination of benchmark data depends on the `LEGATE_BENCHMARK_OUT`
-        environment variable.  By default, this variable is `stdout`, in which
-        case benchmark data will be written to `sys.stdout` (see also
-        `LEGATE_LIMIT_STDOUT`).  If instead this is a directory, e.g.
-        `LEGATE_BENCHMARK_OUT=${PWD}`, then a unique basename will be generated
-        for a set of output csv files (one per rank) in that directory.
-        (The legate command line option ` --benchmark-to-file` is equivalent to
-        setting `LEGATE_BENCHMARK_OUT` to have the same value as the directory
-        as `--logdir`.)
-        For example, if `name` is `mybench`, then rank `P` will write its
-        benchmark data to `mybench_[unique hex string].P.csv`.
+        Optional io stream for benchmark data: e.g. ``out=sys.stdout`` to write
+        benchmark data to the screen.  If ``out`` is not specified, the
+        destination of benchmark data depends on the :ref:`LEGATE_BENCHMARK_OUT
+        <benchmark-settings>` environment variable.  By default, this variable
+        is ``stdout``, in which case benchmark data will be written to
+        ``sys.stdout`` (see also :ref:`LEGATE_LIMIT_STDOUT <core-settings>`).
+        If instead this is a directory, e.g.  ``LEGATE_BENCHMARK_OUT=${PWD}``,
+        then a unique basename will be generated for a set of output csv files
+        (one per rank) in that directory.  (The legate command line option
+        ``--benchmark-to-file`` is equivalent to setting
+        ``LEGATE_BENCHMARK_OUT`` to have the same value as the directory as
+        ``--logdir``.) For example, if ``name`` is ``mybench``, then rank ``P``
+        will write its benchmark data to ``mybench_[unique hex string].P.csv``.
     metadata: dict[str, Any] | None = None
-        Optional dictionary of metadata that will be included in the header
-        of the table.  If `None`, `legate.util.info.info()` will be used to
-        generate the metadata.
+        Optional dictionary of metadata that will be included in the header of
+        the table.  If ``None``, :py:func:`legate.util.info.info()` will be
+        used to generate the metadata.
     start_runtime: bool = True
-        By default, `benchmark_log()` uses the legate runtime to populate
+        By default, ``benchmark_log()`` uses the legate runtime to populate
         metadata and, in multi-rank programs, to determine a globally unique id
-        for each benchmark.  If `start_runtime=False` is specified, the legate
-        runtime will not be started if it is not already running: each rank in
-        a multiprocess program will generate a different id, and metadata about
-        the runtime and machine configuration of legate will be missing.
+        for each benchmark.  If ``start_runtime=False`` is specified, the
+        legate runtime will not be started if it is not already running: each
+        rank in a multiprocess program will generate a different id, and
+        metadata about the runtime and machine configuration of legate will be
+        missing.
 
     Returns
     -------
     BenchmarkLog | BenchmarkLogFromFilename
-        A context manager whose one method is `log()`, which adds
-        a row of benchmark data to the table.
+        A context manager whose primary method is
+        :py:meth:`~legate.util.benchmark.BenchmarkLog.log`, which adds a row of
+        benchmark data to the table.
     """
     uid = _benchmark_uid()
     num_nodes = 1

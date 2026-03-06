@@ -33,8 +33,8 @@ class BenchmarkLog(ExitStack):
     ) -> None:
         """Create a context manager for collecting benchmark data in a table.
 
-        Most users should use `benchmark_log()` instead of calling this
-        directly.
+        Most users should use :py:func:`~legate.util.benchmark.benchmark_log`
+        instead of calling this directly.
 
         Parameters
         ----------
@@ -56,6 +56,35 @@ class BenchmarkLog(ExitStack):
         self.columns = columns
         self.file = file
         self.metadata = metadata
+
+    def log(self, **kwargs: Any) -> None:
+        """Add a row to a benchmark table created in
+        :py:func:`~legate.util.benchmark.benchmark_log`.
+
+        The arguments should be the columns specified in ``benchmark_log()``,
+        for example:
+
+        .. code-block:: python
+
+           from legate.util.benchmark import benchmark_log
+
+           with benchmark_log("mybench", columns=["time", "size"]) as b:
+               b.log(time=1.0, size=1000)
+
+        If your columns are not valid identifiers, use unpacking:
+
+        .. code-block:: python
+
+           from legate.util.benchmark import benchmark_log
+
+           time="Time (seconds)"
+           size="Florps"
+
+           with benchmark_log("mybench", columns=[time, size]) as b:
+               b.log(**{time: 1.0, size: 1000})
+        """
+        row = self._get_row(kwargs)
+        self._log_row(row)
 
     def _log_metadata(self, _metadata: str) -> None:
         raise NotImplementedError
@@ -79,38 +108,8 @@ class BenchmarkLog(ExitStack):
         self._log_metadata(lines)
 
     def __enter__(self) -> Self:
-        """Open a log file to accept rows recorded with `log()`."""
+        """Open a log file to accept rows recorded with ``log()``."""
         super().__enter__()
         self._generate_and_log_metadata()
         self._log_columns(self.columns)
         return self
-
-    def log(self, **kwargs: Any) -> None:
-        """
-        Add a row to a benchmark table created in `benchmark_log()`.
-
-        Parameters
-        ----------
-        Use the columns specified in `benchmark_log()` as the arguments to
-        `log()`, for example:
-
-        ```
-        from legate.util.benchmark import benchmark_log
-
-        with benchmark_log("mybench", columns=["time", "size"]) as b:
-            b.log(time=1.0, size=1000)
-        ```
-
-        If your columns are not valid identifiers, use unpacking:
-        ```
-        from legate.util.benchmark import benchmark_log
-
-        time="Time (seconds)"
-        size="Florps"
-
-        with benchmark_log("mybench", columns=[time, size]) as b:
-            b.log(**{time: 1.0, size: 1000})
-        ```
-        """
-        row = self._get_row(kwargs)
-        self._log_row(row)
