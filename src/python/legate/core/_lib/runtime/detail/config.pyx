@@ -326,7 +326,7 @@ cdef class RealmConfig:
 
         :rtype: int | None
         """
-        return get_realm_config_property(INT32_T, "cuda", "cpu")
+        return get_realm_config_property(INT32_T, "cuda", "gpu")
 
     @property
     def fbmem(self) -> int | None:
