@@ -1,0 +1,6 @@
+legate.util.benchmark.BenchmarkLog.\_log\_columns
+=================================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. automethod:: BenchmarkLog._log_columns

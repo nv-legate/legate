@@ -42,7 +42,7 @@ Read Example
 
 Below is the output of an example python program which iterates all the datasets in a HDF5
 file and reads the data. The source code for the example may be found at
-https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/ex1.py.
+https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/read.py.
 
 The program prints throughput numbers based on the total amount of data read over total
 elapsed time. Please note that this is not a standard benchmark to calculate I/O
@@ -66,7 +66,7 @@ Assuming the HDF5 data set at /path/to/hdf/data exists, running the example with
      --sysmem 15000 \
      --fbmem 80000 \
      --zcmem 5000 \
-     share/legate/examples/io/hdf5/ex1.py /path/to/hdf/data --n_rank 1
+     share/legate/examples/io/hdf5/read.py /path/to/hdf/data --n_rank 1
    IO MODE : GDS
    Total Data Read: 17179869184
    Total Turnaround Time (seconds): 31.506664514541626
@@ -90,7 +90,7 @@ Running the example with 4 ranks:
      --io-use-vfd-gds \
      --fbmem 80000 \
      --zcmem 5000 \
-     share/legate/examples/io/hdf5/ex1.py /path/to/hdf/data --n_rank 4
+     share/legate/examples/io/hdf5/read.py /path/to/hdf/data --n_rank 4
    IO MODE : GDS
    IO MODE : GDS
    IO MODE : GDS
@@ -111,7 +111,7 @@ Running the example with 4 ranks:
 Write Example
 -------------
 
-The write example can be found at https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/hdf5_write_benchmark.py.
+The write example can be found at https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/write.py.
 
 The example writes data to a HDF5 file and measures the throughput.
 
@@ -129,7 +129,7 @@ Example Usage
      --sysmem 15000 \
      --fbmem 40000 \
      --zcmem 5000 \
-     share/legate/examples/io/hdf5/hdf5_write_benchmark.py --output-dir /path/to/output --sizes 1000000 --dtypes float32 --iterations 3
+     share/legate/examples/io/hdf5/write.py --output-dir /path/to/output --sizes 1000000 --dtypes float32 --iterations 3
 
       ===============================================================================
       HDF5 WRITE BENCHMARK

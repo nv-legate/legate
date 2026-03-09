@@ -1,0 +1,6 @@
+legate.util.benchmark.BenchmarkLog.\_\_subclasshook\_\_
+=======================================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. automethod:: BenchmarkLog.__subclasshook__
