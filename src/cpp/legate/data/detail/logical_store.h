@@ -72,6 +72,7 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
 
   [[nodiscard]] bool unbound() const;
+  [[nodiscard]] bool deferred_bound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
   [[nodiscard]] Span<const std::uint64_t> extents() const;
   [[nodiscard]] std::size_t volume() const;

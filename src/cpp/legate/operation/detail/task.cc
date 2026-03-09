@@ -19,6 +19,7 @@
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
+#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/runtime/detail/communicator_manager.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/region_manager.h>
@@ -184,6 +185,7 @@ void LogicalTask::record_scalar_output(InternalSharedPtr<LogicalStore> store)
 
 void LogicalTask::record_unbound_output(InternalSharedPtr<LogicalStore> store)
 {
+  store->get_storage()->set_bound(true /* bound */);
   unbound_outputs_.push_back(std::move(store));
 }
 
@@ -490,12 +492,14 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
 
 void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol)
 {
-  array->record_scalar_or_unbound_outputs(this);
   // TODO(wonchanl): We will later support structs with list/string fields
   if (const auto list_array = dynamic_pointer_cast<ListLogicalArray>(array);
       list_array && array->unbound()) {
     arrays_to_fixup_.push_back(array.get());
   }
+
+  array->record_scalar_or_unbound_outputs(this);
+
   auto& arg = outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(array));
 
   std::visit(
@@ -694,7 +698,8 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
 {
   if (store->has_scalar_storage()) {
     record_scalar_output(store);
-  } else if (store->unbound()) {
+  }
+  if (store->unbound()) {
     record_unbound_output(store);
   }
   add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
@@ -756,7 +761,7 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
   const auto* partition_symbol = declare_partition();
   auto& arg                    = store_args.emplace_back(
     priv, make_internal_shared<BaseLogicalArray>(store), std::move(projection));
-  const auto unbound = store->unbound();
+  const auto unbound = store->deferred_bound();
 
   const auto privelege_to_access_mode = [](Legion::PrivilegeMode p) {
     switch (p) {
@@ -786,7 +791,12 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
     const auto field_id =
       runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
 
-    strategy_->insert(*partition_symbol, std::move(partition), std::move(field_space), field_id);
+    // Create placeholder Opaque partition
+    const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
+
+    strategy_->insert(*partition_symbol, opaque_partition, std::move(field_space), field_id);
+
+    store->set_key_partition(this->machine(), this->parallel_policy(), opaque_partition);
   } else {
     strategy_->insert(*partition_symbol, std::move(partition));
   }

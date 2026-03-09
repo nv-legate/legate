@@ -34,6 +34,11 @@ ListLogicalArray::ListLogicalArray(InternalSharedPtr<Type> type,
 
 bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
 
+bool ListLogicalArray::deferred_bound() const
+{
+  return descriptor_->deferred_bound() || vardata_->deferred_bound();
+}
+
 InternalSharedPtr<LogicalArray> ListLogicalArray::promote(std::int32_t, std::size_t) const
 {
   throw TracedException<std::runtime_error>{"List array does not support store transformations"};
@@ -129,7 +134,7 @@ void ListLogicalArray::generate_constraints(
   descriptor_->generate_constraints(task, mapping, partition_symbol);
   auto part_vardata = task->declare_partition();
   vardata_->generate_constraints(task, mapping, part_vardata);
-  if (!unbound()) {
+  if (!deferred_bound()) {
     // Need to bypass the signature check here because these generated constraints are not
     // technically visible to the user (you cannot declare different constraints on the "main"
     // store and the nullable store in the signature).

@@ -130,9 +130,7 @@ class TaskLauncher {
 
   void post_process_unbound_store_(const Legion::Domain& launch_domain,
                                    const OutputRegionArg* arg,
-                                   const Legion::OutputRequirement& req,
-                                   const mapping::detail::Machine& machine,
-                                   const ParallelPolicy& parallel_policy);
+                                   const Legion::OutputRequirement& req);
 
   void report_interfering_stores_() const;
   /**

@@ -14,6 +14,7 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/region_manager.h>
@@ -43,6 +44,9 @@ Reduce::Reduce(const Library& library,
 {
   record_partition_(input_part_, input_, AccessMode::READ);
   record_partition_(output_part_, output_, AccessMode::WRITE);
+  if (output_->unbound()) {
+    output_->get_storage()->set_bound(true /* bound */);
+  }
 }
 
 void Reduce::launch(Strategy* p_strategy)
@@ -115,6 +119,11 @@ void Reduce::launch(Strategy* p_strategy)
     if (n_tasks != 1) {
       new_output = runtime.create_store(input_->type(), /*dim=*/1);
       launcher.add_output(BaseArrayArg{OutputRegionArg{new_output.get(), field_space, field_id}});
+
+      // Create placeholder Opaque partition
+      const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
+      new_output->set_key_partition(machine_, parallel_policy_, opaque_partition);
+      new_output->get_storage()->set_bound(true /* bound */);
     } else {
       launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(), field_space, field_id}});
     }

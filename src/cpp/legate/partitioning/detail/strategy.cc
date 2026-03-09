@@ -205,7 +205,7 @@ void Strategy::compute_launch_domains(PrivateKey, const ConstraintSolver& solver
 
     if (partition->has_launch_domain()) {
       domain_resolver.record_launch_domain(partition->launch_domain());
-    } else if (auto&& store = op->find_store(&part_symb); store->unbound()) {
+    } else if (auto&& store = op->find_store(&part_symb); store->deferred_bound()) {
       domain_resolver.record_unbound_store(store->dim());
     } else if (!op->supports_replicated_write() && solver.is_output(part_symb)) {
       domain_resolver.set_must_be_sequential(true);

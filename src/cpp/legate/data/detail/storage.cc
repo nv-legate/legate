@@ -532,11 +532,13 @@ std::variant<Legion::Future, Legion::FutureMap> Storage::get_future_or_future_ma
     storage_data_);
 }
 
+void Storage::set_bound(bool bound) { unbound_ = !bound; }
+
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
   std::visit(
     Overload{[&](std::optional<InternalSharedPtr<LogicalRegionField>>& storage_rf) {
-               LEGATE_CHECK(unbound_ && !region_field_().has_value());
+               LEGATE_CHECK(!region_field_().has_value());
                LEGATE_CHECK(!parent_.has_value());
 
                unbound_   = false;
@@ -737,7 +739,11 @@ void Storage::allow_out_of_order_destruction()
 void Storage::free_early()
 {
   std::visit(Overload{[&](const std::optional<InternalSharedPtr<LogicalRegionField>>& rf) {
-                        if (!unbound()) {
+                        // Unbound stores become deferred bound when they are passed to a task.
+                        // It can be the case that an unbounded store is destroyed without ever
+                        // being passed to a task, hence we need to check both if a store
+                        // is unbound() or deffered_bound() here.
+                        if (!(unbound() || deferred_bound())) {
                           rf.value()->release_region_field();
                         }
                       },

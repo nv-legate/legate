@@ -22,6 +22,8 @@ bool BaseLogicalArray::unbound() const
   return data()->unbound();
 }
 
+bool BaseLogicalArray::deferred_bound() const { return data()->deferred_bound(); }
+
 InternalSharedPtr<LogicalArray> BaseLogicalArray::promote(std::int32_t extra_dim,
                                                           std::size_t dim_size) const
 {
@@ -111,7 +113,8 @@ void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
   if (data()->has_scalar_storage()) {
     task->record_scalar_output(data());
-  } else if (data()->unbound()) {
+  }
+  if (data()->unbound()) {
     task->record_unbound_output(data());
   }
   if (!nullable()) {
@@ -120,7 +123,8 @@ void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 
   if (null_mask()->has_scalar_storage()) {
     task->record_scalar_output(null_mask());
-  } else if (null_mask()->unbound()) {
+  }
+  if (null_mask()->unbound()) {
     task->record_unbound_output(null_mask());
   }
 }

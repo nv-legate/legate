@@ -214,7 +214,6 @@ void auto_task_unbound_output(const legate::LogicalArray& array, std::uint32_t i
   task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
-
   EXPECT_FALSE(array.unbound());
 }
 

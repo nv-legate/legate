@@ -17,6 +17,8 @@ inline bool Storage::replicated() const { return replicated_; }
 
 inline bool Storage::unbound() const { return unbound_; }
 
+inline bool Storage::deferred_bound() const { return !unbound_ && shape()->unbound(); }
+
 inline const InternalSharedPtr<Shape>& Storage::shape() const { return shape_; }
 
 inline Span<const std::uint64_t> Storage::extents() const { return shape()->extents(); }

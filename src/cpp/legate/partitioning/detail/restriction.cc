@@ -8,6 +8,7 @@
 
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
+#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -51,8 +52,9 @@ bool Restrictions::are_satisfied_by(const Partition& partition) const
   }
 
   if (!partition.has_color_shape()) {
-    // Currently only NoPartition has no color shape
-    LEGATE_ASSERT(dynamic_cast<const NoPartition*>(&partition));
+    // Currently NoPartition always has no color shape and Opaque can sometime have no color shape
+    LEGATE_ASSERT(dynamic_cast<const NoPartition*>(&partition) ||
+                  dynamic_cast<const Opaque*>(&partition));
     return true;
   }
 

@@ -176,6 +176,7 @@ TEST_F(TreeReduce, ManualProducerUnbound)
 
   auto result = runtime->tree_reduce(
     context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, static_cast<std::int64_t>(num_tasks));
+
   EXPECT_FALSE(result.unbound());
 }
 
@@ -193,6 +194,7 @@ TEST_F(TreeReduce, ManualProducerSingle)
 
   auto result =
     runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, /*radix=*/4);
+
   EXPECT_FALSE(result.unbound());
 }
 
@@ -215,6 +217,7 @@ TEST_F(TreeReduce, AutoProducerSingle)
 
   auto result =
     runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, /*radix=*/4);
+
   EXPECT_FALSE(result.unbound());
 }
 

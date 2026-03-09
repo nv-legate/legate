@@ -40,6 +40,7 @@ class LogicalArray {
   [[nodiscard]] virtual const InternalSharedPtr<Shape>& shape() const = 0;
   [[nodiscard]] virtual std::size_t volume() const                    = 0;
   [[nodiscard]] virtual bool unbound() const                          = 0;
+  [[nodiscard]] virtual bool deferred_bound() const                   = 0;
   [[nodiscard]] virtual bool nullable() const                         = 0;
   [[nodiscard]] virtual bool nested() const                           = 0;
   [[nodiscard]] virtual std::uint32_t num_children() const            = 0;

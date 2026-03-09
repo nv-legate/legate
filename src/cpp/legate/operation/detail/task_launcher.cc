@@ -334,9 +334,7 @@ void TaskLauncher::post_process_unbound_stores_(
 
 void TaskLauncher::post_process_unbound_store_(const Legion::Domain& launch_domain,
                                                const OutputRegionArg* arg,
-                                               const Legion::OutputRequirement& req,
-                                               const mapping::detail::Machine& machine,
-                                               const ParallelPolicy& parallel_policy)
+                                               const Legion::OutputRequirement& req)
 {
   auto&& runtime = Runtime::get_runtime();
   auto* store    = arg->store();
@@ -351,11 +349,13 @@ void TaskLauncher::post_process_unbound_store_(const Legion::Domain& launch_doma
     runtime.import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
   store->set_region_field(std::move(region_field));
 
-  store->set_key_partition(
-    machine,
-    parallel_policy,
-    create_opaque(
-      req.parent.get_index_space(), req.partition.get_index_partition(), launch_domain));
+  const auto key_partition = store->get_current_key_partition();
+  LEGATE_ASSERT(key_partition.has_value());
+
+  auto opaque_partition = dynamic_cast<Opaque*>(
+    key_partition.value().get());  // NOLINT(bugprone-unchecked-optional-access)
+  opaque_partition->update_partition(
+    req.parent.get_index_space(), req.partition.get_index_partition(), launch_domain);
 }
 
 void TaskLauncher::post_process_unbound_stores_(
@@ -379,7 +379,7 @@ void TaskLauncher::post_process_unbound_stores_(
   for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores)) {
     const auto& req = output_requirements[arg->requirement_index()];
 
-    post_process_unbound_store_(launch_domain, arg, req, machine_, parallel_policy());
+    post_process_unbound_store_(launch_domain, arg, req);
   }
 }
 

@@ -36,6 +36,7 @@ class ListLogicalArray final : public LogicalArray {
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] std::size_t volume() const override;
   [[nodiscard]] bool unbound() const override;
+  [[nodiscard]] bool deferred_bound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] std::uint32_t num_children() const override;

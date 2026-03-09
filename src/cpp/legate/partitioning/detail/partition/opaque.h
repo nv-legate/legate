@@ -139,6 +139,10 @@ class Opaque final : public Partition {
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const override;
 
+  void update_partition(Legion::IndexSpace ispace,
+                        Legion::IndexPartition ipartition,
+                        const Domain& color_domain);
+
   Opaque(const Opaque&)                = default;
   Opaque& operator=(const Opaque&)     = default;
   Opaque(Opaque&&) noexcept            = default;
@@ -150,6 +154,13 @@ class Opaque final : public Partition {
   Domain color_domain_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
 };
+
+/*
+ * @brief Create an Opaque Partition.
+ *
+ * @return The Opaque partition pointer.
+ */
+[[nodiscard]] InternalSharedPtr<Opaque> create_opaque();
 
 /*
  * @brief Create an Opaque Partition.

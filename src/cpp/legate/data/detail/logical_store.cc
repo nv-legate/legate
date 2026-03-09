@@ -674,7 +674,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
 void LogicalStore::pack(BufferBuilder& buffer) const
 {
   buffer.pack<bool>(has_scalar_storage());
-  buffer.pack<bool>(unbound());
+  buffer.pack<bool>(deferred_bound());
   buffer.pack<std::uint32_t>(dim());
   type()->pack(buffer);
   transform_->pack(buffer);
@@ -757,7 +757,8 @@ StoreAnalyzable LogicalStore::future_map_to_launcher_arg_(const Domain& launch_d
                                                           Legion::PrivilegeMode privilege,
                                                           GlobalRedopID redop)
 {
-  if (unbound()) {
+  // We need to check for both as we don't mark scalars as deferred_bound.
+  if (deferred_bound()) {
     return WriteOnlyScalarStoreArg{this, GlobalRedopID{-1} /*redop*/};
   }
   LEGATE_ASSERT(get_storage()->replicated());
@@ -801,7 +802,7 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
   Legion::PrivilegeMode privilege,
   GlobalRedopID redop)
 {
-  if (unbound()) {
+  if (deferred_bound()) {
     auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(*variable);
     return OutputRegionArg{this, field_space, field_id};
   }

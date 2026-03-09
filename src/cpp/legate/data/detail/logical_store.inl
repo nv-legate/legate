@@ -17,6 +17,8 @@ namespace legate::detail {
 
 inline bool LogicalStore::unbound() const { return get_storage()->unbound(); }
 
+inline bool LogicalStore::deferred_bound() const { return get_storage()->deferred_bound(); }
+
 inline const InternalSharedPtr<Shape>& LogicalStore::shape() const { return shape_; }
 
 inline Span<const std::uint64_t> LogicalStore::extents() const { return shape()->extents(); }
@@ -68,7 +70,7 @@ inline bool LogicalStore::is_mapped() const { return get_storage()->is_mapped();
 
 inline void LogicalStore::mark_non_transformable() { non_transformable_ = true; }
 
-inline bool LogicalStore::needs_flush() const { return unbound() || is_mapped(); }
+inline bool LogicalStore::needs_flush() const { return is_mapped(); }
 
 inline const std::optional<InternalSharedPtr<Partition>>& LogicalStore::get_current_key_partition()
   const

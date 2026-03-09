@@ -102,7 +102,23 @@ InternalSharedPtr<Partition> Opaque::invert(
   throw TracedException<NonInvertibleTransformation>{};
 }
 
+void Opaque::update_partition(Legion::IndexSpace ispace,
+                              Legion::IndexPartition ipartition,
+                              const Domain& color_domain)
+{
+  ispace_       = std::move(ispace);
+  ipartition_   = std::move(ipartition);
+  color_domain_ = color_domain;
+  color_shape_  = detail::from_domain(color_domain_);
+}
+
 // ==========================================================================================
+
+InternalSharedPtr<Opaque> create_opaque()
+{
+  return make_internal_shared<Opaque>(
+    Legion::IndexSpace::NO_SPACE, Legion::IndexPartition::NO_PART, Legion::Domain::NO_DOMAIN);
+}
 
 InternalSharedPtr<Opaque> create_opaque(Legion::IndexSpace ispace,
                                         Legion::IndexPartition ipartition,

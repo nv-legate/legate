@@ -119,7 +119,7 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
   // TODO(wonchanl): the extents of an unbound scalar store are derived from the launch domain, but
   // this logic hasn't been implemented yet, as unbound scalar stores are not exposed to the API.
   // The code below works for the only use case in the runtime (approximate image computation)
-  if (store_->unbound()) {
+  if (store_->deferred_bound()) {
     static constexpr std::uint64_t extents[1] = {1};
 
     buffer.pack<std::uint64_t>(extents);

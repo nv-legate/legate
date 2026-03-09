@@ -48,11 +48,15 @@ void Alignment::validate() const
 
   auto&& lhs_store = lhs_->operation()->find_store(lhs_);
   auto&& rhs_store = rhs_->operation()->find_store(rhs_);
-  if (lhs_store->unbound() != rhs_store->unbound()) {
+
+  auto lhs_store_unbound = lhs_store->deferred_bound();
+  auto rhs_store_unbound = rhs_store->deferred_bound();
+
+  if (lhs_store_unbound != rhs_store_unbound) {
     throw TracedException<std::invalid_argument>{
       "Alignment requires the stores to be all normal or all unbound"};
   }
-  if (lhs_store->unbound()) {
+  if (lhs_store_unbound) {
     return;
   }
   if (*lhs_store->shape() != *rhs_store->shape()) {

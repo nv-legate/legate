@@ -47,6 +47,8 @@ bool StructLogicalArray::unbound() const
   return std::any_of(fields_.begin(), fields_.end(), [](auto& array) { return array->unbound(); });
 }
 
+bool StructLogicalArray::deferred_bound() const { return false; }
+
 namespace {
 
 // Some API still take std::vector, so provide a copy of `make_array_from_op()` that produces
@@ -205,7 +207,8 @@ void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 
   if (null_mask()->unbound()) {
     task->record_unbound_output(null_mask());
-  } else if (null_mask()->has_scalar_storage()) {
+  }
+  if (null_mask()->has_scalar_storage()) {
     task->record_scalar_output(null_mask());
   }
 }

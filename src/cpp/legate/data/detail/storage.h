@@ -128,6 +128,7 @@ class Storage {
   [[nodiscard]] std::uint64_t id() const;
   [[nodiscard]] bool replicated() const;
   [[nodiscard]] bool unbound() const;
+  [[nodiscard]] bool deferred_bound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
   [[nodiscard]] Span<const std::uint64_t> extents() const;
   [[nodiscard]] Span<const std::int64_t> offsets() const;
@@ -171,6 +172,7 @@ class Storage {
   void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future, std::size_t scalar_offset);
   void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset);
+  void set_bound(bool bound);
 
   [[nodiscard]] InternalSharedPtr<PhysicalStore> map(
     legate::mapping::StoreTarget target,

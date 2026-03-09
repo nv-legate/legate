@@ -20,11 +20,11 @@ inline bool Opaque::is_complete_for(const detail::Storage& /*storage*/) const
   return true;
 }
 
-inline bool Opaque::has_launch_domain() const { return true; }
+inline bool Opaque::has_launch_domain() const { return color_domain_ != Legion::Domain::NO_DOMAIN; }
 
 inline Domain Opaque::launch_domain() const { return color_domain_; }
 
-inline bool Opaque::has_color_shape() const { return true; }
+inline bool Opaque::has_color_shape() const { return color_domain_ != Legion::Domain::NO_DOMAIN; }
 
 inline Span<const std::uint64_t> Opaque::color_shape() const { return color_shape_; }
 

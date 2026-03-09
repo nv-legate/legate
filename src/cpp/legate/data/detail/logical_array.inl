@@ -10,10 +10,6 @@
 
 namespace legate::detail {
 
-inline bool LogicalArray::needs_flush() const
-{
-  // TODO(wonchanl): We will eventually need to handle unbound stores in the deferred manner
-  return unbound() || is_mapped();
-}
+inline bool LogicalArray::needs_flush() const { return is_mapped(); }
 
 }  // namespace legate::detail

@@ -11,6 +11,7 @@
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
+#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
 
@@ -79,6 +80,12 @@ Strategy Partitioner::partition_stores()
   return strategy;
 }
 
+/*
+ * We filter all unbounded stores and for each of them create a placeholder
+ * Opaque partition. The partition will be filled with needed information like
+ * the IndexSpace, launch domain etc after the task using the unbounded store
+ * is submitted to Legion in post_process_unbounded_store.
+ */
 std::vector<const Variable*> Partitioner::handle_unbound_stores_(
   Span<const Variable* const> partition_symbols, const ConstraintSolver& solver, Strategy* strategy)
 {
@@ -90,14 +97,17 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores_(
       return true;
     }
 
-    if (!part_symb.operation()->find_store(&part_symb)->unbound()) {
+    auto part_store = part_symb.operation()->find_store(&part_symb);
+
+    if (!part_store->deferred_bound()) {
       return false;
     }
 
     auto&& equiv_class = solver.find_equivalence_class(part_symb);
-    const InternalSharedPtr<Partition> partition{create_no_partition()};
-    auto field_space   = runtime.create_field_space();
-    auto next_field_id = RegionManager::FIELD_ID_BASE;
+    // Create placeholder Opaque partition
+    const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
+    auto field_space                                 = runtime.create_field_space();
+    auto next_field_id                               = RegionManager::FIELD_ID_BASE;
 
     for (const auto* symb : equiv_class) {
       if (next_field_id - RegionManager::FIELD_ID_BASE >= RegionManager::MAX_NUM_FIELDS) {
@@ -107,8 +117,14 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores_(
       const auto field_id =
         runtime.allocate_field(field_space, next_field_id++, symb->store()->type()->size());
 
-      strategy->insert(*symb, partition, field_space, field_id);
+      strategy->insert(*symb, opaque_partition, field_space, field_id);
+
+      auto* op   = symb->operation();
+      auto store = op->find_store(symb);
+      store->set_key_partition(op->machine(), op->parallel_policy(), opaque_partition);
+      // store->get_storage()->set_bound(true /* bound */);
     }
+
     return true;
   };
 
