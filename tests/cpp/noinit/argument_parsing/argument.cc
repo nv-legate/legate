@@ -90,11 +90,9 @@ class Values<std::filesystem::path> {
   [[nodiscard]] static std::filesystem::path second_alternate_value() { return "qux/quux/bop"; }
 };
 
-}  // namespace
-
 template <typename T>
 class ArgumentUnit : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
@@ -103,10 +101,13 @@ class ArgumentUnit : public DefaultFixture {
     ASSERT_NE(defaults.second_alternate_value(), defaults.alternate_value());
   }
 
+ public:
   std::shared_ptr<argparse::ArgumentParser> parser{
     std::make_shared<argparse::ArgumentParser>("program")};
   Values<T> defaults{};
 };
+
+}  // namespace
 
 TYPED_TEST_SUITE(ArgumentUnit, ArgumentTypes, );
 
@@ -249,10 +250,14 @@ TYPED_TEST(ArgumentUnit, ToString)
 
 using ArgumentUnitNegative = ArgumentUnit<std::string>;
 
+namespace {
+
 class ThrowingBuffer : public std::streambuf {
  protected:
   int overflow(int) override { throw std::ios_base::failure{"Simulated failure"}; }
 };
+
+}  // namespace
 
 TEST_F(ArgumentUnitNegative, ToStringThrows)
 {

@@ -122,7 +122,8 @@ constexpr bool operator!=(BasicZStringView<C, T> lhs,
 namespace std {
 
 template <typename CharT, typename TraitsT>
-struct hash<legate::detail::BasicZStringView<CharT, TraitsT>> {  // NOLINT(cert-dcl58-cpp)
+// NOLINTNEXTLINE(cert-dcl58-cpp, bugprone-std-namespace-modification)
+struct hash<legate::detail::BasicZStringView<CharT, TraitsT>> {
   [[nodiscard]] constexpr std::size_t operator()(
     const legate::detail::BasicZStringView<CharT, TraitsT>& sv) const noexcept;
 };

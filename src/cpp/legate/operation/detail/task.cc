@@ -443,11 +443,6 @@ AutoTask::AutoTask(const Library& library,
 {
 }
 
-void AutoTask::add_scalar_arg(InternalSharedPtr<Scalar> scalar)
-{
-  TaskBase::add_scalar_arg(std::move(scalar));
-}
-
 const Variable* AutoTask::add_input(InternalSharedPtr<LogicalArray> array)
 {
   auto symb = find_or_declare_partition(array);

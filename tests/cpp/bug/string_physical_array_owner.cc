@@ -50,9 +50,9 @@ class Config {
   }
 };
 
-}  // namespace
-
 class StringPhysicalArrayOwner : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 // See https://github.com/nv-legate/legate.internal/issues/2239
 TEST_F(StringPhysicalArrayOwner, Chars)

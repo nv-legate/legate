@@ -20,8 +20,6 @@ namespace {
 
 constexpr std::string_view LIBRARY_NAME = "test_singleton_index_task";
 
-}  // namespace
-
 struct Checker : public legate::LegateTask<Checker> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
@@ -32,6 +30,8 @@ struct Checker : public legate::LegateTask<Checker> {
     EXPECT_TRUE(context.communicators().empty());
   }
 };
+
+}  // namespace
 
 TEST_F(SingletonIndexTask, Bug1)
 {

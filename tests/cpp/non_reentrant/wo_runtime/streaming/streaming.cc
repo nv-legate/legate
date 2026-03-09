@@ -235,10 +235,8 @@ void check_task_flip_flops()
                                 << fmt::format("{}", task_ids);
 }
 
-}  // namespace
-
 class StreamingUnit : public RegisterOnceFixture<Config> {
- public:
+ protected:
   void SetUp() override
   {
     ASSERT_NO_THROW(legate::start());
@@ -260,6 +258,8 @@ class StreamingUnit : public RegisterOnceFixture<Config> {
     "--sysmem 1",
     /* overwrite */ true};
 };
+
+}  // namespace
 
 TEST_F(StreamingUnit, Basic)
 {

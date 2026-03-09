@@ -19,7 +19,11 @@ namespace test_configure_numamem {
 
 constexpr auto MB = 1 << 20;
 
+namespace {
+
 class ConfigureNUMAMemUnit : public DefaultFixture, public ::testing::WithParamInterface<bool> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ConfigureNUMAMemUnit,

@@ -20,12 +20,16 @@ using AlignedUnpack = DefaultFixture;
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 class TestDeserializer : public legate::detail::BaseDeserializer<TestDeserializer> {
  public:
   TestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer{args, arglen} {}
 
   using BaseDeserializer::unpack_impl;
 };
+
+}  // namespace
 
 TEST_F(AlignedUnpack, Bug1)
 {

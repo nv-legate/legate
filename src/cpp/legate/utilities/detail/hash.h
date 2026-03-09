@@ -37,10 +37,10 @@ struct hasher<std::tuple<T, U...>> {
 
 }  // namespace legate
 
-namespace std {
+// NOLINTBEGIN(cert-dcl58-cpp, bugprone-std-namespace-modification)
 
 template <>
-struct hash<legate::Domain> {
+struct std::hash<legate::Domain> {
   [[nodiscard]] std::size_t operator()(const legate::Domain& domain) const noexcept
   {
     std::size_t result = 0;
@@ -54,7 +54,7 @@ struct hash<legate::Domain> {
 // Legion currently does not provide a hash function for DomainPoint class.
 // We'll remove this once Legion starts providing that,
 template <>
-struct hash<Legion::DomainPoint> {
+struct std::hash<Legion::DomainPoint> {
   [[nodiscard]] std::size_t operator()(const Legion::DomainPoint& domain_point) const noexcept
   {
     std::size_t result = 0;
@@ -66,12 +66,11 @@ struct hash<Legion::DomainPoint> {
 };
 
 template <typename T>
-struct hash<std::reference_wrapper<T>> {  // NOLINT(cert-dcl58-cpp)
-
+struct std::hash<std::reference_wrapper<T>> {
   [[nodiscard]] std::size_t operator()(const std::reference_wrapper<T>& v) const noexcept
   {
     return std::hash<std::decay_t<T>>{}(v.get());
   }
 };
 
-}  // namespace std
+// NOLINTEND(cert-dcl58-cpp, bugprone-std-namespace-modification)

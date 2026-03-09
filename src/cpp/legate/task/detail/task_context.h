@@ -26,7 +26,7 @@ class PhysicalStore;
 class TaskContext {
  public:
   struct CtorArgs {
-    VariantCode variant_kind{};
+    VariantCode variant_kind;
     bool can_raise_exception{};
     bool can_elide_device_ctx_sync{};
     SmallVector<InternalSharedPtr<PhysicalArray>> inputs{};
@@ -71,7 +71,7 @@ class TaskContext {
   [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> get_scalar_stores_() const noexcept;
 
  private:
-  VariantCode variant_kind_{};
+  VariantCode variant_kind_;
   SmallVector<InternalSharedPtr<PhysicalArray>> inputs_{};
   SmallVector<InternalSharedPtr<PhysicalArray>> outputs_{};
   SmallVector<InternalSharedPtr<PhysicalArray>> reductions_{};

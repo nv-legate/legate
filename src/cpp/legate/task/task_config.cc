@@ -21,26 +21,31 @@
 
 namespace legate {
 
-TaskConfig::TaskConfig(InternalSharedPtr<detail::TaskConfig> impl) : pimpl_{std::move(impl)} {}
+TaskConfig::TaskConfig(InternalSharedPtr<detail::TaskConfig> impl) noexcept
+  : pimpl_{std::move(impl)}
+{
+}
 
-TaskConfig::TaskConfig(LocalTaskID task_id)
+TaskConfig::TaskConfig(LocalTaskID task_id) noexcept
   : pimpl_{legate::make_shared<detail::TaskConfig>(task_id)}
 {
 }
 
-TaskConfig& TaskConfig::with_signature(const TaskSignature& signature)
+TaskConfig& TaskConfig::with_signature(const TaskSignature& signature) noexcept
 {
   impl()->signature(signature.impl());
   return *this;
 }
 
-TaskConfig& TaskConfig::with_variant_options(const VariantOptions& options)
+TaskConfig& TaskConfig::with_variant_options(const VariantOptions& options) noexcept
 {
   impl()->variant_options(options);
   return *this;
 }
 
-TaskConfig& TaskConfig::with_store_mappings(Span<const mapping::ProxyStoreMapping> store_mappings)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+TaskConfig& TaskConfig::with_store_mappings(
+  Span<const mapping::ProxyStoreMapping> store_mappings) noexcept
 {
   detail::SmallVector<InternalSharedPtr<mapping::detail::ProxyStoreMapping>> mappings;
 

@@ -184,7 +184,7 @@ class Config {
 
 class IOHDF5WriteUnit : public RegisterOnceFixture<Config>,
                         public ::testing::WithParamInterface<legate::Type> {
- public:
+ protected:
   void TearDown() override { RegisterOnceFixture::TearDown(); }
 
   ~IOHDF5WriteUnit() override { static_cast<void>(std::filesystem::remove_all(base_path)); }
@@ -218,7 +218,7 @@ class IOHDF5WriteUnit : public RegisterOnceFixture<Config>,
   // If the test is run using multiple processes simultaneously, then each process should dump
   // its stuff to a separate directory, otherwise TearDown() will delete the directory out from
   // underneath a running process.
-  // NOLINTNEXTLINE(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
   static inline auto base_path = std::filesystem::temp_directory_path() / random_dir_name_();
 };
 

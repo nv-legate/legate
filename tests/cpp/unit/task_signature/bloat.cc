@@ -105,8 +105,6 @@ class Config {
   }
 };
 
-}  // namespace
-
 using BloatTesterTypeList = ::testing::Types<BloatSingleInputSingleOutput,
                                              BloatSingleInputAllOutputs,
                                              BloatAllInputsSingleOutput,
@@ -115,6 +113,8 @@ using BloatTesterTypeList = ::testing::Types<BloatSingleInputSingleOutput,
 
 template <typename T>
 class TaskSignatureBloatUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(TaskSignatureBloatUnit, BloatTesterTypeList, );
 

@@ -403,7 +403,7 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
 {
   const auto alloc = store.get_inline_allocation();
   const auto ty    = store.type();
-  auto ret         = DLTensor{};
+  auto ret         = DLTensor{};  // NOLINT(bugprone-invalid-enum-default-initialization)
 
   ret.device      = make_device(alloc.target, device);
   ret.ndim        = store.dim();
@@ -474,6 +474,8 @@ std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)> t
   const auto version   = compute_version(max_version);
   const auto must_copy = copy.value_or(false);
   auto data_deleter    = std::optional<std::function<void(void*)>>{};
+
+  // NOLINTNEXTLINE(bugprone-invalid-enum-default-initialization)
   auto ret = ret_type{new DLManagedTensorVersioned{}, ManagerContext::delete_dlpack_ctx};
 
   ret->version = version;

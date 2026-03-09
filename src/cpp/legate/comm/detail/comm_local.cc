@@ -27,9 +27,12 @@ extern void show_progress(const Legion::Task* task, Legion::Context ctx, Legion:
 
 namespace legate::detail::comm::local {
 
+namespace {
+
 class InitMapping : public detail::LegionTask<InitMapping> {
  public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  static inline const auto
+    TASK_CONFIG =  // NOLINT(cert-err58-cpp, bugprone-throwing-static-initialization)
     legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING}}.with_variant_options(
       legate::VariantOptions{}.with_elide_device_ctx_sync(true));
 
@@ -66,7 +69,8 @@ class InitMapping : public detail::LegionTask<InitMapping> {
 
 class Init : public detail::LegionTask<Init> {
  public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  static inline const auto
+    TASK_CONFIG =  // NOLINT(cert-err58-cpp, bugprone-throwing-static-initialization)
     legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL}}.with_variant_options(
       legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
 
@@ -118,7 +122,8 @@ class Init : public detail::LegionTask<Init> {
 
 class Finalize : public detail::LegionTask<Finalize> {
  public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  static inline const auto
+    TASK_CONFIG =  // NOLINT(cert-err58-cpp, bugprone-throwing-static-initialization)
     legate::TaskConfig{LocalTaskID{CoreTask::FINALIZE_CPUCOLL}}.with_variant_options(
       legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
 
@@ -157,6 +162,8 @@ class Finalize : public detail::LegionTask<Finalize> {
   }
 #endif
 };
+
+}  // namespace
 
 void register_tasks(const legate::Library& core_library)
 {

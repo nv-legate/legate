@@ -35,8 +35,8 @@ enum TaskIDs : std::uint8_t {
 
 class BroadcastSingleInput : public legate::LegateTask<BroadcastSingleInput> {
  public:
-  // NOLINTNEXTLINE(cert-err58-cpp)
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
+  static inline const auto TASK_CONFIG =
     legate::TaskConfig{legate::LocalTaskID{BROADCAST_SINGLE_INPUT}}.with_signature(
       legate::TaskSignature{}.inputs(1).outputs(1).constraints(
         {{legate::broadcast(legate::proxy::inputs[0])}}));
@@ -46,8 +46,8 @@ class BroadcastSingleInput : public legate::LegateTask<BroadcastSingleInput> {
 
 class BroadcastAllInputs : public legate::LegateTask<BroadcastAllInputs> {
  public:
-  // NOLINTNEXTLINE(cert-err58-cpp)
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
+  static inline const auto TASK_CONFIG =
     legate::TaskConfig{legate::LocalTaskID{BROADCAST_ALL_INPUTS}}.with_signature(
       legate::TaskSignature{}.inputs(1).outputs(1).constraints(
         {{legate::broadcast(legate::proxy::inputs, legate::tuple<std::uint32_t>{0})}}));
@@ -66,12 +66,12 @@ class Config {
   }
 };
 
-}  // namespace
-
 using BroadcastTesterTypeList = ::testing::Types<BroadcastSingleInput, BroadcastAllInputs>;
 
 template <typename T>
 class TaskSignatureBroadcastUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(TaskSignatureBroadcastUnit, BroadcastTesterTypeList, );
 

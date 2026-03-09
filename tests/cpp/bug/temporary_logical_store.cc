@@ -12,7 +12,11 @@
 
 namespace temporary_logical_store_test {
 
+namespace {
+
 class TemporaryLogicalStoreUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(TemporaryLogicalStoreUnit, Store)
 {

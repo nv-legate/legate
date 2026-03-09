@@ -16,7 +16,11 @@
 
 namespace test_configure_cuda_driver_path {
 
+namespace {
+
 class ConfigureCUDADriverPathUnit : public DefaultFixture {};
+
+}  // namespace
 
 using DriverPathType = legate::detail::Argument<std::string>;
 

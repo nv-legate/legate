@@ -12,6 +12,8 @@
 
 namespace aligned_unbound_stores_test {
 
+namespace {
+
 struct Producer : public legate::LegateTask<Producer> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
@@ -39,6 +41,8 @@ class Config {
 };
 
 class AlignedUnboundStores : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(AlignedUnboundStores, Standalone)
 {

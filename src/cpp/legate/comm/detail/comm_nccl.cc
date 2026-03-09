@@ -63,8 +63,6 @@ class Payload {
   std::uint64_t field1;
 };
 
-}  // namespace
-
 class InitId : public detail::LegionTask<InitId> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -207,7 +205,7 @@ class Factory final : public detail::CommunicatorFactory {
   [[nodiscard]] bool needs_barrier() const override;
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
- private:
+ protected:
   [[nodiscard]] Legion::FutureMap initialize_(const mapping::detail::Machine& machine,
                                               std::uint32_t num_tasks) override;
   void finalize_(const mapping::detail::Machine& machine,
@@ -291,6 +289,8 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
 }
+
+}  // namespace
 
 void register_tasks(detail::Library& core_library)
 {

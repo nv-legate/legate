@@ -11,6 +11,7 @@
 // (sure there are other ways to avoid this, but they are harder).
 // kvikio uses kvikio:: extensively, so patching seemed not great either.
 // See https://github.com/nv-legate/legate.internal/pull/2431
+// NOLINTNEXTLINE(readability-identifier-naming)
 #define kvikio legate_kvikio
 #include <kvikio/file_handle.hpp>
 #undef kvikio

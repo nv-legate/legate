@@ -387,8 +387,6 @@ void manual_task_scalar_reduction(const legate::LogicalStore& store,
     static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
 
-}  // namespace
-
 // Test class definitions
 class ManualTaskNormal
   : public TaskStoreTests,
@@ -437,6 +435,8 @@ class ManualTaskPromoteInput : public ManualTaskPromote {};
 class ManualTaskPromoteOutput : public ManualTaskPromote {};
 
 class ManualTaskPromoteReduction : public ManualTaskPromote {};
+
+}  // namespace
 
 // Test instantiations
 INSTANTIATE_TEST_SUITE_P(

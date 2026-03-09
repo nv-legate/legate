@@ -16,6 +16,8 @@
 
 namespace task_local_buffer_test {
 
+namespace {
+
 class BasicBufferTask : public legate::LegateTask<BasicBufferTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -218,6 +220,8 @@ class TaskLocalBufferUnit : public RegisterOnceFixture<Config>,
                             public ::testing::WithParamInterface<
                               std::tuple<legate::Type::Code, std::vector<std::uint64_t>>> {};
 
+}  // namespace
+
 INSTANTIATE_TEST_SUITE_P(,
                          TaskLocalBufferUnit,
                          // Tests a selection of types, mostly just to check sizes.
@@ -244,7 +248,11 @@ TEST_P(TaskLocalBufferUnit, Basic)
   runtime->submit(std::move(task));
 }
 
+namespace {
+
 class CheckTypeUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(CheckTypeUnit, SizeMismatch)
 {
@@ -273,7 +281,11 @@ TEST_F(CheckTypeUnit, Success)
   runtime->submit(std::move(task));
 }
 
+namespace {
+
 class ConstructorUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(ConstructorUnit, CopyConstructor)
 {

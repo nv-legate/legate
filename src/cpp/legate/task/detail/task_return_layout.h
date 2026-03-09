@@ -29,7 +29,7 @@ class TaskReturnLayoutForUnpack {
 
 class TaskReturnLayoutForPack : private TaskReturnLayoutForUnpack {
  public:
-  using const_iterator = typename std::vector<std::size_t>::const_iterator;
+  using const_iterator = std::vector<std::size_t>::const_iterator;
 
   TaskReturnLayoutForPack() = default;
   explicit TaskReturnLayoutForPack(const std::vector<ReturnValue>& return_values);

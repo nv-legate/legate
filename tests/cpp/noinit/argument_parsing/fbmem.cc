@@ -29,7 +29,11 @@ constexpr auto MB = 1 << 20;
 
 namespace test_configure_fbmem {
 
+namespace {
+
 class ConfigureFBMemUnit : public DefaultFixture, public ::testing::WithParamInterface<bool> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ConfigureFBMemUnit,

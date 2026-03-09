@@ -20,7 +20,11 @@
 
 namespace test_configure_gpus {
 
+namespace {
+
 class ConfigureGPUsUnit : public DefaultFixture, public ::testing::WithParamInterface<bool> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ConfigureGPUsUnit,

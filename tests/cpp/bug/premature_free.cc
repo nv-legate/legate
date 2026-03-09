@@ -13,6 +13,8 @@
 
 namespace premature_free_test {
 
+namespace {
+
 // This task is meant to do nothing
 class DummyTask : public legate::LegateTask<DummyTask> {
  public:
@@ -33,8 +35,6 @@ class Config {
 };
 
 class PrematureFree : public RegisterOnceFixture<Config> {};
-
-namespace {
 
 constexpr std::uint64_t EXT = 17;
 

@@ -16,8 +16,6 @@ namespace {
 
 constexpr std::size_t TILE_SIZE = 10;
 
-}  // namespace
-
 enum TaskIDs : std::uint8_t {
   TASK_PRODUCE_NORMAL = 1,
   TASK_PRODUCE_UNBOUND,
@@ -97,6 +95,8 @@ class Config {
 };
 
 class TreeReduce : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(TreeReduce, AutoProducer)
 {

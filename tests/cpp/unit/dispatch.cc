@@ -14,6 +14,8 @@ namespace dispatch_test {
 
 using DispatchTest = DefaultFixture;
 
+namespace {
+
 class DoubleDispatchTest
   : public DefaultFixture,
     public ::testing::WithParamInterface<std::tuple<int, legate::Type::Code>> {};
@@ -30,6 +32,8 @@ class DispatchNegativeDimTest : public DefaultFixture, public ::testing::WithPar
 
 class DispatchNegativeTypeTest : public DefaultFixture,
                                  public ::testing::WithParamInterface<legate::Type::Code> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(DispatchTest,
                          DoubleDispatchTest,
@@ -86,6 +90,8 @@ INSTANTIATE_TEST_SUITE_P(DispatchTest,
                                            legate::Type::Code::NIL,
                                            legate::Type::Code::BINARY));
 
+namespace {
+
 class DoubleDispatchFn {
  public:
   template <legate::Type::Code CODE, std::int32_t DIM>
@@ -123,6 +129,8 @@ class TypeDispatchFn {
     ASSERT_EQ(CODE, static_cast<legate::Type::Code>(scalar.value<std::uint32_t>()));
   }
 };
+
+}  // namespace
 
 TEST_P(DoubleDispatchTest, DoubleDispatch)
 {

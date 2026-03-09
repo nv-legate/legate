@@ -12,6 +12,8 @@
 
 namespace unbound_nullable_array_test {
 
+namespace {
+
 struct Initialize : public legate::LegateTask<Initialize> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
@@ -46,6 +48,8 @@ class Config {
 };
 
 class UnboundNullableArray : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(UnboundNullableArray, Bug1)
 {

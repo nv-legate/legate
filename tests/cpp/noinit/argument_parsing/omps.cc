@@ -17,7 +17,11 @@
 
 namespace test_configure_omps {
 
+namespace {
+
 class ConfigureOpenMPUnit : public DefaultFixture, public ::testing::WithParamInterface<bool> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ConfigureOpenMPUnit,

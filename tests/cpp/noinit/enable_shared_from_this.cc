@@ -15,6 +15,8 @@
 
 namespace enable_shared_from_this_tests {
 
+namespace {
+
 class EnsureDeleted : public legate::EnableSharedFromThis<EnsureDeleted> {
  public:
   static constexpr auto SIZE = 100;
@@ -104,6 +106,8 @@ class EnsureDeletedVirtual : public EnsureDeleted {
   std::unordered_set<int> set_{};
 };
 
+}  // namespace
+
 using TypeList = ::testing::
   Types<EnsureDeleted, const EnsureDeleted, EnsureDeletedVirtual, const EnsureDeletedVirtual>;
 
@@ -172,6 +176,8 @@ TYPED_TEST(EnableSharedFromThisUnit, SharedFromThisFromNew)
   EXPECT_TRUE(del);
 }
 
+namespace {
+
 class EnsureDeletedRecursive : public EnsureDeletedVirtual {
  public:
   explicit EnsureDeletedRecursive(bool* deleted,
@@ -212,6 +218,8 @@ class EnsureDeletedRecursive : public EnsureDeletedVirtual {
  private:
   legate::InternalSharedPtr<EnsureDeleted> parent_{};
 };
+
+}  // namespace
 
 TEST(EnableSharedFromThisUnit, SharedFromThisRecursive)
 {

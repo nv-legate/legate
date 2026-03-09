@@ -178,6 +178,7 @@ template <typename T>
 using type_identity_t = typename type_identity<T>::type;
 
 template <typename... T>
+// NOLINTNEXTLINE(misc-multiple-inheritance)
 class Overload : public T... {
  public:
   using T::operator()...;

@@ -17,8 +17,6 @@ namespace {
 
 constexpr std::size_t TILE_SIZE = 10;
 
-}  // namespace
-
 enum TaskIDs : std::uint8_t { TASK_FILL = 1, TASK_UNIQUE, TASK_UNIQUE_REDUCE, TASK_CHECK };
 
 struct FillTask : public legate::LegateTask<FillTask> {
@@ -125,6 +123,8 @@ class Config {
 };
 
 class TreeReduceUnique : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(TreeReduceUnique, All)
 {

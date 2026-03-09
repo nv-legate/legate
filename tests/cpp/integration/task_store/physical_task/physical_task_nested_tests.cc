@@ -18,8 +18,6 @@ namespace {
 constexpr std::int32_t NESTED_TEST_BASE_TASK_ID     = 0;
 constexpr std::string_view NESTED_TEST_LIBRARY_NAME = "test_physical_task_nested";
 
-}  // namespace
-
 // Task that verifies machine and variant coherence between parent and PhysicalTask
 struct MachineCoherenceVerifier : public legate::LegateTask<MachineCoherenceVerifier> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -248,6 +246,8 @@ class NestedTestConfig {
 
 // Test fixture for nested tests using RegisterOnceFixture pattern
 class PhysicalTaskNestedTests : public RegisterOnceFixture<NestedTestConfig> {};
+
+}  // namespace
 
 // Test PhysicalTask creation from within AutoTask
 TEST_F(PhysicalTaskNestedTests, PhysicalTaskFromAutoTask)

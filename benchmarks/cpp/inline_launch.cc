@@ -117,12 +117,14 @@ BENCHMARK_DEFINE_F(TaskLaunchFixture, InlineTaskLaunch)(benchmark::State& state)
   benchmark_body(*this, state);
 }
 
-// NOLINTBEGIN(cert-err58-cpp, legate-use-aggregate-constructor)
+// NOLINTBEGIN(legate-use-aggregate-constructor, clang-diagnostic-c2y-extensions)
+// NOLINTBEGIN(cert-err58-cpp, bugprone-throwing-static-initialization)
 BENCHMARK_REGISTER_F(TaskLaunchFixture, InlineTaskLaunch)
   ->Unit(benchmark::kMicrosecond)
   // Determines the number of reused inputs and outputs
   ->DenseRange(/* begin */ 0, /* end */ TaskLaunchFixture::NUM_INPUTS_OUTPUTS, /* step */ 2);
-// NOLINTEND(cert-err58-cpp, legate-use-aggregate-constructor)
+// NOLINTEND(cert-err58-cpp, bugprone-throwing-static-initialization)
+// NOLINTEND(legate-use-aggregate-constructor, clang-diagnostic-c2y-extensions)
 
 }  // namespace
 

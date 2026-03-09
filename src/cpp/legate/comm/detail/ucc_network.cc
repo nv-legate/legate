@@ -56,7 +56,7 @@ namespace legate::detail::comm::coll {
  * responsibility of the UCCNetwork::Impl to do so. This is done to avoid deadlock when destroying
  * the UCC context and team.
  */
-class UCCCommunicator {
+class UCCCommunicator {  // NOLINT(misc-use-internal-linkage)
  public:
   /**
    * @brief Creates a UCCCommunicator
@@ -349,7 +349,7 @@ UCCNetwork::Impl::Impl(UCCNetwork::OOBAllgatherFactory oob_factory, std::uint32_
 {
 }
 
-UCCNetwork::Impl::~Impl() { shutdown(); }
+UCCNetwork::Impl::~Impl() { shutdown(); }  // NOLINT(bugprone-exception-escape)
 
 void UCCNetwork::Impl::shutdown()
 {
@@ -497,7 +497,7 @@ void UCCNetwork::Impl::all_to_all_v(const void* sendbuf,
   std::vector<ucc_count_t> recvcounts_count(recvcounts, recvcounts + comm_size);
   std::vector<ucc_count_t> rdispls_count(rdispls, rdispls + comm_size);
 
-  ucc_coll_args_t coll_args{};
+  ucc_coll_args_t coll_args{};  // NOLINT(bugprone-invalid-enum-default-initialization)
 
   coll_args.mask      = UCC_COLL_ARGS_FIELD_FLAGS;
   coll_args.flags     = UCC_COLL_ARGS_FLAG_COUNT_64BIT | UCC_COLL_ARGS_FLAG_DISPLACEMENTS_64BIT;
@@ -522,7 +522,7 @@ ucc_coll_args_t UCCNetwork::Impl::make_ucc_coll_args_(const void* sendbuf,
                                                       ucc_coll_type_t coll_type,
                                                       legate::comm::coll::CollDataType type)
 {
-  ucc_coll_args_t coll_args{};
+  ucc_coll_args_t coll_args{};  // NOLINT(bugprone-invalid-enum-default-initialization)
   const auto ucc_dtype = dtype_to_ucc_dtype_(type);
 
   coll_args.mask              = UCC_COLL_ARGS_FIELD_FLAGS;
@@ -796,7 +796,7 @@ ucc_context_h UCCCommunicator::create_ucc_ctx_(int rank,
 ucc_team_h UCCCommunicator::create_ucc_team_(
   int rank, std::size_t size, ucc_context_h ctx, OOBAllgather* oob_allgather, std::uint32_t timeout)
 {
-  ucc_team_params_t team_params{};
+  ucc_team_params_t team_params{};  // NOLINT(bugprone-invalid-enum-default-initialization)
 
   team_params.mask          = UCC_TEAM_PARAM_FIELD_OOB;
   team_params.ordering      = UCC_COLLECTIVE_INIT_AND_POST_UNORDERED;

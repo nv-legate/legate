@@ -12,6 +12,8 @@
 
 namespace mixed_dim {
 
+namespace {
+
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct Tester : public legate::LegateTask<Tester> {
@@ -33,6 +35,8 @@ class Config {
 };
 
 class Partitioner : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(Partitioner, MixedDim)
 {

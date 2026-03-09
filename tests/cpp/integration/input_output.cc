@@ -19,6 +19,7 @@ namespace {
 constexpr std::string_view LIBRARY_NAME = "test_inout";
 
 class TesterMapper : public legate::mapping::Mapper {
+ public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override
@@ -74,7 +75,7 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
 };
 
 class InOutUnit : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();

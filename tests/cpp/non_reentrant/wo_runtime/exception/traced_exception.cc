@@ -35,19 +35,23 @@ void throw_exn()
   throw legate::detail::TracedException<E>{"oh no"};
 }
 
-}  // namespace
-
 using ExceptionConstructTypeList =
   ::testing::Types<std::runtime_error, std::logic_error, UserException>;
 
 template <typename T>
 class TracedExceptionConstruct : public TracedExceptionFixture {};
 
+}  // namespace
+
 TYPED_TEST_SUITE(TracedExceptionConstruct, ExceptionConstructTypeList, );
 
 TYPED_TEST(TracedExceptionConstruct, Basic) { ASSERT_THROW(throw_exn<TypeParam>(), TypeParam); }
 
+namespace {
+
 class TracedExceptionUnit : public TracedExceptionFixture {};
+
+}  // namespace
 
 TEST_F(TracedExceptionUnit, Stacktrace)
 {
@@ -87,6 +91,8 @@ TEST_F(TracedExceptionUnit, Nested)
 
 using TracedExceptionDeathTest = TracedExceptionUnit;
 
+namespace {
+
 class TracedNonStdException : public legate::detail::TracedExceptionBase {
  public:
   TracedNonStdException()
@@ -102,6 +108,8 @@ class TracedNestedNonStdException : public legate::detail::TracedExceptionBase {
   {
   }
 };
+
+}  // namespace
 
 TEST_F(TracedExceptionDeathTest, TracedWhat)
 {

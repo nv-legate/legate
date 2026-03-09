@@ -20,10 +20,14 @@
 
 namespace argument_parsing_logging_test {
 
+namespace {
+
 class ArgumentParsingLoggingUnit
   : public DefaultFixture,
     public ::testing::WithParamInterface<
       std::tuple<std::string_view, Realm::Logger::LoggingLevel, bool>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(
   ,

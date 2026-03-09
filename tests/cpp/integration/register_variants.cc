@@ -60,8 +60,6 @@ void hello_cpu_variant(legate::TaskContext& context)
   }
 }
 
-}  // namespace
-
 // Do not put these in the anon namespace, we have a test which checks their name, and anon
 // namespaces have implementation-defined names.
 template <std::int32_t TID>
@@ -79,8 +77,6 @@ struct BaseTask2 : public legate::LegateTask<BaseTask2> {
 
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
-
-namespace {
 
 void test_auto_task(const legate::Library& context,
                     const legate::LogicalStore& store,
@@ -142,7 +138,7 @@ TEST_F(RegisterVariants, Test1)
 
   // Sanity test that tasks are registered successfully
   const std::string task_name =
-    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO1));
+    fmt::format("register_variants::(anonymous namespace)::BaseTask<{}>", fmt::underlying(HELLO1));
   EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO1}), task_name);
 
   verify_test(context, HELLO1);
@@ -166,7 +162,7 @@ TEST_F(RegisterVariants, Test2)
 
   // Sanity test that tasks are registered successfully
   const std::string task_name =
-    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO2));
+    fmt::format("register_variants::(anonymous namespace)::BaseTask<{}>", fmt::underlying(HELLO2));
   EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO2}), task_name);
 
   verify_test(context, HELLO2);
@@ -187,7 +183,7 @@ TEST_F(RegisterVariants, Test3)
   EXPECT_THROW(HelloTask::register_variants(context), std::invalid_argument);
   // Sanity test that tasks are registered successfully
   const std::string task_name =
-    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO3));
+    fmt::format("register_variants::(anonymous namespace)::BaseTask<{}>", fmt::underlying(HELLO3));
   EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO3}), task_name);
 
   verify_test(context, HELLO3);
@@ -212,7 +208,7 @@ TEST_F(RegisterVariants, Test4)
   EXPECT_THROW(HelloTask::register_variants(context), std::invalid_argument);
   // Sanity test that tasks are registered successfully
   const std::string task_name =
-    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO4));
+    fmt::format("register_variants::(anonymous namespace)::BaseTask<{}>", fmt::underlying(HELLO4));
   EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO4}), task_name);
 
   verify_test(context, HELLO4);
@@ -232,7 +228,8 @@ TEST_F(RegisterVariants, Test5)
   EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO5}),
                std::invalid_argument);
   // Sanity test that tasks are registered successfully
-  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO5}), "register_variants::BaseTask2");
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO5}),
+            "register_variants::(anonymous namespace)::BaseTask2");
 
   verify_test(context, HELLO5);
 }
@@ -255,10 +252,13 @@ TEST_F(RegisterVariants, Test6)
   EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO6}, all_options),
                std::invalid_argument);
   // Sanity test that tasks are registered successfully
-  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO6}), "register_variants::BaseTask2");
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO6}),
+            "register_variants::(anonymous namespace)::BaseTask2");
 
   verify_test(context, HELLO6);
 }
+
+namespace {
 
 class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
  public:
@@ -276,6 +276,8 @@ class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
 
   static void gpu_variant(legate::TaskContext) {}
 };
+
+}  // namespace
 
 TEST_F(RegisterVariants, DefaultVariantOptions)
 {

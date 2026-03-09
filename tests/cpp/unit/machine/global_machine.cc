@@ -18,8 +18,12 @@ namespace global_machine_test {
 
 using GlobalMachineTest = DefaultFixture;
 
+namespace {
+
 class GlobalMachineProcTest : public GlobalMachineTest,
                               public ::testing::WithParamInterface<legate::mapping::TaskTarget> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(GlobalMachineTest,
                          GlobalMachineProcTest,

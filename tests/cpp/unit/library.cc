@@ -17,7 +17,10 @@
 
 namespace test_library {
 
+namespace {
+
 class LibraryMapper : public legate::mapping::Mapper {
+ public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::StoreTarget>& /*options*/) override
@@ -37,6 +40,8 @@ class LibraryMapper : public legate::mapping::Mapper {
     return std::nullopt;
   }
 };
+
+}  // namespace
 
 using Library = DefaultFixture;
 
@@ -265,6 +270,8 @@ namespace example {
 
 using Library = DefaultFixture;
 
+namespace {
+
 /// [Foo declaration]
 class Foo : public legate::LegateTask<Foo> {
  public:
@@ -277,6 +284,8 @@ class Foo : public legate::LegateTask<Foo> {
     // some very useful work...
   }
 };
+
+}  // namespace
 
 /// [Foo declaration]
 
@@ -307,7 +316,7 @@ TEST_F(Library, TaskIDExample)
 
   Legion::Runtime::get_runtime()->retrieve_name(static_cast<Legion::TaskID>(gid_bar),
                                                 legion_task_name);
-  ASSERT_STREQ(legion_task_name, "example::Foo");
+  ASSERT_STREQ(legion_task_name, "example::(anonymous namespace)::Foo");
 
   // We can get the same information using the local ID from the Library
   auto task_name = bar_lib.get_task_name(Foo::TASK_CONFIG.task_id());

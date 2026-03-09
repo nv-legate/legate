@@ -13,6 +13,8 @@
 
 namespace test_projection_c_order {
 
+namespace {
+
 class Init : public legate::LegateTask<Init> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -56,8 +58,6 @@ class Tester2 : public legate::LegateTask<Tester2> {
   }
 };
 
-namespace {
-
 constexpr std::string_view LIBRARY_NAME = "test_projection_c_order";
 
 class LibraryMapper : public legate::mapping::Mapper {
@@ -93,10 +93,8 @@ class LibraryMapper : public legate::mapping::Mapper {
   }
 };
 
-}  // namespace
-
 class ProjectionCOrder : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
@@ -113,6 +111,8 @@ class ProjectionCOrder : public DefaultFixture {
     }
   }
 };
+
+}  // namespace
 
 TEST_F(ProjectionCOrder, AliasSharingInstance)
 {

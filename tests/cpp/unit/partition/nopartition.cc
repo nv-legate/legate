@@ -15,16 +15,21 @@
 
 namespace unit {
 
+namespace {
+
 class NoPartitionTest : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
     nopartition = legate::detail::create_no_partition();
   }
 
+ public:
   legate::InternalSharedPtr<legate::detail::NoPartition> nopartition;
 };
+
+}  // namespace
 
 TEST_F(NoPartitionTest, IsCompleteFor)
 {

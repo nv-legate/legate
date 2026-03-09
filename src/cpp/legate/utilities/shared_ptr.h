@@ -219,7 +219,8 @@ constexpr bool operator>=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
 namespace std {
 
 template <typename T>
-struct hash<legate::SharedPtr<T>> {  // NOLINT(cert-dcl58-cpp) extending std::hash is OK
+struct hash<legate::SharedPtr<T>> {  // NOLINT(cert-dcl58-cpp, bugprone-std-namespace-modification)
+                                     // extending std::hash is OK
   [[nodiscard]] std::size_t operator()(const legate::SharedPtr<T>& ptr) const noexcept;
 };
 

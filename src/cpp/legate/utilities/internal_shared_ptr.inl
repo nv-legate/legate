@@ -151,6 +151,7 @@ InternalWeakPtr<T>::~InternalWeakPtr() noexcept
 // ==========================================================================================
 
 template <typename T>
+// NOLINTNEXTLINE(readability-redundant-typename)
 typename InternalWeakPtr<T>::ref_count_type InternalWeakPtr<T>::use_count() const noexcept
 {
   return ctrl_ ? ctrl_->strong_ref_cnt() : 0;
@@ -328,6 +329,7 @@ void InternalSharedPtr<T>::init_shared_from_this_(const EnableSharedFromThis<U>*
 }
 
 template <typename T>
+// NOLINTNEXTLINE(modernize-avoid-variadic-functions)
 void InternalSharedPtr<T>::init_shared_from_this_(...)
 {
 }
@@ -640,6 +642,8 @@ constexpr typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::ope
   return get();
 }
 
+// NOLINTBEGIN(readability-redundant-typename)
+
 template <typename T>
 typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::use_count() const noexcept
 {
@@ -666,6 +670,8 @@ typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::weak_ref_cou
 {
   return ctrl_ ? ctrl_->weak_ref_cnt() : 0;
 }
+
+// NOLINTEND(readability-redundant-typename)
 
 template <typename T>
 constexpr InternalSharedPtr<T>::operator bool() const noexcept
@@ -910,6 +916,7 @@ typename EnableSharedFromThis<T>::const_shared_type EnableSharedFromThis<T>::sha
 namespace std {
 
 template <typename T>
+// NOLINTNEXTLINE(cert-dcl58-cpp, bugprone-std-namespace-modification)
 std::size_t hash<legate::InternalSharedPtr<T>>::operator()(
   const legate::InternalSharedPtr<T>& ptr) const noexcept
 {

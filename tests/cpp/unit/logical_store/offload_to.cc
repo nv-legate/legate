@@ -47,9 +47,9 @@ class Config {
   }
 };
 
-}  // namespace
-
 class OffloadAPI : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(OffloadAPI, GPUToHostOffload)
 {

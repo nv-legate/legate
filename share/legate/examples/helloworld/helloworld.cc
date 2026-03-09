@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string_view>
 
+namespace {
+
 class HelloTask : public legate::LegateTask<HelloTask> {
  public:
   static constexpr std::string_view LIBRARY_NAME = "helloworld";
@@ -17,6 +19,8 @@ class HelloTask : public legate::LegateTask<HelloTask> {
 
   static void cpu_variant(legate::TaskContext) { std::cout << "Hello, world!\n"; }
 };
+
+}  // namespace
 
 int main()
 {

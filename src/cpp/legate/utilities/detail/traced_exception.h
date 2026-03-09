@@ -98,6 +98,7 @@ class LEGATE_EXPORT TracedExceptionBase {
  * @tparam T The type of the exception to wrap, for example `std::runtime_error`.
  */
 template <typename T>
+// NOLINTNEXTLINE(misc-multiple-inheritance)
 class LEGATE_EXPORT TracedException : public T, public TracedExceptionBase {
  public:
   /**

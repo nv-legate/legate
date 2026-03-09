@@ -19,7 +19,11 @@
 
 namespace traced_exception_test {
 
+namespace {
+
 class TerminateHandlerUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(TerminateHandlerUnit, Install)
 {
@@ -31,13 +35,18 @@ TEST_F(TerminateHandlerUnit, Install)
   ASSERT_FALSE(legate::detail::install_terminate_handler());
 }
 
+namespace {
+
 class TerminateHandlerDeathTest : public TracedExceptionFixture {
+ protected:
   void SetUp() override
   {
     static_cast<void>(legate::detail::install_terminate_handler());
     TracedExceptionFixture::SetUp();
   }
 };
+
+}  // namespace
 
 namespace {
 

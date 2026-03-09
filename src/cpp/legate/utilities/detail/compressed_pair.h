@@ -122,6 +122,7 @@ class compressed_pair_impl<T, U, 2> : U {
 
 // selector = 3, T and U are both empty
 template <typename T, typename U>
+// NOLINTNEXTLINE(misc-multiple-inheritance)
 class compressed_pair_impl<T, U, 3> : T, U {
   using first_base_type  = T;
   using second_base_type = U;

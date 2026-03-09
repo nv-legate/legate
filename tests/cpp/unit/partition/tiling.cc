@@ -21,14 +21,17 @@
 
 namespace unit {
 
+namespace {
+
 class TilingTest : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
     tiling = create_tiling();
   }
 
+ public:
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_tiling()
   {
     auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
@@ -48,6 +51,8 @@ class TilingTest : public DefaultFixture {
 
   legate::InternalSharedPtr<legate::detail::Tiling> tiling;
 };
+
+}  // namespace
 
 TEST_F(TilingTest, Shape)
 {

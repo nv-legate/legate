@@ -23,8 +23,12 @@ namespace oob_allgather_test {
 using legate::detail::comm::coll::MPIOOBAllgather;
 using legate::detail::comm::mpi::detail::MPIInterface;
 
+namespace {
+
 // Test fixture for OOB allgather tests
 class OOBAllgatherTest : public DefaultFixture {};
+
+}  // namespace
 
 // Test construction - MPIOOBAllgather can be created and used
 TEST_F(OOBAllgatherTest, DefaultConstruction)

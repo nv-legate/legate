@@ -61,7 +61,7 @@ class LEGATE_EXPORT TaskSignature {
   /**
    * @brief Default-construct an empty TaskSignature.
    */
-  TaskSignature();
+  TaskSignature() noexcept;
   TaskSignature(const TaskSignature&)                = default;
   TaskSignature& operator=(const TaskSignature&)     = default;
   TaskSignature(TaskSignature&&) noexcept            = default;
@@ -113,7 +113,7 @@ class LEGATE_EXPORT TaskSignature {
    *
    * @see `inputs(std::uint32_t)`.
    */
-  TaskSignature& inputs(std::uint32_t lower_bound, std::uint32_t upper_bound);
+  TaskSignature& inputs(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept;
 
   /**
    * @brief Set the number of output arguments taken by the task.
@@ -148,7 +148,7 @@ class LEGATE_EXPORT TaskSignature {
    *
    * @see `outputs(std::uint32_t)`.
    */
-  TaskSignature& outputs(std::uint32_t lower_bound, std::uint32_t upper_bound);
+  TaskSignature& outputs(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept;
 
   /**
    * @brief Set the number of scalar arguments taken by the task.
@@ -183,7 +183,7 @@ class LEGATE_EXPORT TaskSignature {
    *
    * @see `scalars(std::uint32_t)`.
    */
-  TaskSignature& scalars(std::uint32_t lower_bound, std::uint32_t upper_bound);
+  TaskSignature& scalars(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept;
 
   /**
    * @brief Set the number of redop arguments taken by the task.
@@ -218,7 +218,7 @@ class LEGATE_EXPORT TaskSignature {
    *
    * @see `redops(std::uint32_t)`.
    */
-  TaskSignature& redops(std::uint32_t lower_bound, std::uint32_t upper_bound);
+  TaskSignature& redops(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept;
 
   /**
    * @brief Set the constraints imposed on task arguments.
@@ -238,7 +238,7 @@ class LEGATE_EXPORT TaskSignature {
    *
    * @return A reference to this.
    */
-  TaskSignature& constraints(std::optional<Span<const ProxyConstraint>> constraints);
+  TaskSignature& constraints(std::optional<Span<const ProxyConstraint>> constraints) noexcept;
 
   [[nodiscard]] const SharedPtr<detail::TaskSignature>& impl() const;
 

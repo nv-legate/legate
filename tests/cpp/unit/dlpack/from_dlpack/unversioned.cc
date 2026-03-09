@@ -18,12 +18,16 @@
 
 namespace test_from_dlpack_unversioned {
 
+namespace {
+
 class FromDLPackUnVersionedUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(FromDLPackUnVersionedUnit, BadDim)
 {
   constexpr auto BAD_DIM = LEGATE_MAX_DIM + 1;
-  DLManagedTensor dlm_tensor{};
+  DLManagedTensor dlm_tensor{};  // NOLINT(bugprone-invalid-enum-default-initialization)
 
   dlm_tensor.dl_tensor.ndim = BAD_DIM;
 
@@ -73,6 +77,7 @@ template <typename T, std::size_t DIM = 3>
   constexpr auto PER_DIM_SHAPE = 2;
   constexpr auto SIZE          = 1 << DIM;  // 2^DIM
 
+  // NOLINTNEXTLINE(bugprone-invalid-enum-default-initialization)
   auto uniq        = std::make_unique<DLManagedTensor>(DLManagedTensor{});
   auto& dlm_tensor = *uniq;
 
@@ -164,8 +169,12 @@ TEST_F(FromDLPackUnVersionedUnit, BadLanes)
                 BAD_LANES))));
 }
 
+namespace {
+
 template <typename T>
 class FromDLPackUnVersionedUnitBadTypeSize : public FromDLPackUnVersionedUnit {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(FromDLPackUnVersionedUnitBadTypeSize,
                  dlpack_common::AllTypes,
@@ -183,10 +192,14 @@ TYPED_TEST(FromDLPackUnVersionedUnitBadTypeSize, Basic)
                 fmt::format("Number of bits {} for .*type is not supported", BAD_BITS))));
 }
 
+namespace {
+
 class FromDLPackUnVersionedUnitUnsupportedTyped : public FromDLPackUnVersionedUnit {};
 
 class UnVersionedUnsupportedInput : public FromDLPackUnVersionedUnit,
                                     public ::testing::WithParamInterface<DLDataTypeCode> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitUnsupportedTyped,
                          UnVersionedUnsupportedInput,
@@ -244,8 +257,12 @@ TEST_F(FromDLPackUnVersionedUnit, NonMonotonousStrides)
                 fmt::join(strides_span, ", ")))));
 }
 
+namespace {
+
 template <typename T>
 class FromDLPackUnVersionedUnitTyped : public FromDLPackUnVersionedUnit {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(FromDLPackUnVersionedUnitTyped,
                  dlpack_common::AllTypes,
@@ -291,6 +308,8 @@ TEST_F(FromDLPackUnVersionedUnit, OpaqueDataType)
   ASSERT_THAT(extents.data(), ::testing::ElementsAreArray(tensor.shape, tensor.ndim));
 }
 
+namespace {
+
 class FromDLPackUnVersionedUnitDeviceType : public FromDLPackUnVersionedUnit {};
 
 class FromDLPackUnVersionedCPUInput : public FromDLPackUnVersionedUnit,
@@ -302,6 +321,8 @@ class FromDLPackUnVersionedGPUInput : public FromDLPackUnVersionedUnit,
 class FromDLPackUnVersionedUnsupportedDeviceInput
   : public FromDLPackUnVersionedUnit,
     public ::testing::WithParamInterface<DLDeviceType> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(FromDLPackUnVersionedUnitDeviceType,
                          FromDLPackUnVersionedCPUInput,

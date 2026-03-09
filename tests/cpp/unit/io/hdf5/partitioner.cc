@@ -275,7 +275,7 @@ auto get_tile_shape_for_file(const std::filesystem::path& file_path,
 }
 
 class IOHDF5TilingUnit : public ::testing::Test {
- public:
+ protected:
   void SetUp() override
   {
     Test::SetUp();
@@ -288,14 +288,14 @@ class IOHDF5TilingUnit : public ::testing::Test {
     ASSERT_NO_THROW(static_cast<void>(std::filesystem::remove_all(base_path)));
   }
 
-  // NOLINTNEXTLINE(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
   static inline auto base_path = std::filesystem::temp_directory_path() / "legate";
 };
 
-}  // namespace
-
 class IOHDF5TilingThreeDContiguousParam : public IOHDF5TilingUnit,
                                           public ::testing::WithParamInterface<int> {};
+
+}  // namespace
 
 TEST_P(IOHDF5TilingThreeDContiguousParam, ThreeDimensionalContiguous)
 {
@@ -326,8 +326,12 @@ INSTANTIATE_TEST_SUITE_P(NumTiles,
                          IOHDF5TilingThreeDContiguousParam,
                          ::testing::Values(10, 20, 50));
 
+namespace {
+
 class IOHDF5TilingTwoDContiguousParam : public IOHDF5TilingUnit,
                                         public ::testing::WithParamInterface<int> {};
+
+}  // namespace
 
 TEST_P(IOHDF5TilingTwoDContiguousParam, TwoDimensionalContiguous)
 {
@@ -371,8 +375,12 @@ TEST_F(IOHDF5TilingUnit, TwoDimensionalContiguousCannotPartition)
   ASSERT_FALSE(get_tile_shape_for_file(file_path, DATASET, dims, num_tiles).has_value());
 }
 
+namespace {
+
 class IOHDF5TilingThreeDChunkedParam : public IOHDF5TilingUnit,
                                        public ::testing::WithParamInterface<int> {};
+
+}  // namespace
 
 TEST_P(IOHDF5TilingThreeDChunkedParam, ThreeDimensionalChunked)
 {
@@ -442,8 +450,12 @@ TEST_F(IOHDF5TilingUnit, ThreeDimensionalChunkedCannotPartition)
   ASSERT_FALSE(get_tile_shape_for_file(file_path, DATASET, dims, X + 1).has_value());
 }
 
+namespace {
+
 class IOHDF5TilingTwoDVDSContiguousParam : public IOHDF5TilingUnit,
                                            public ::testing::WithParamInterface<int> {};
+
+}  // namespace
 
 TEST_P(IOHDF5TilingTwoDVDSContiguousParam, TwoDimensionalVDSContiguous)
 {
@@ -486,8 +498,12 @@ INSTANTIATE_TEST_SUITE_P(NumTiles,
                          IOHDF5TilingTwoDVDSContiguousParam,
                          ::testing::Values(4, 10, 20, 50));
 
+namespace {
+
 class IOHDF5TilingTwoDVDSChunkedParam : public IOHDF5TilingUnit,
                                         public ::testing::WithParamInterface<int> {};
+
+}  // namespace
 
 TEST_P(IOHDF5TilingTwoDVDSChunkedParam, TwoDimensionalVDSChunked)
 {

@@ -180,9 +180,6 @@ class AutoTask final : public LogicalTask {
                      std::int32_t redop_kind,
                      const Variable* partition_symbol);
 
-  // Override to delegate to PhysicalTask in nested mode
-  void add_scalar_arg(InternalSharedPtr<Scalar> scalar);
-
   [[nodiscard]] const Variable* find_or_declare_partition(
     const InternalSharedPtr<LogicalArray>& array);
 

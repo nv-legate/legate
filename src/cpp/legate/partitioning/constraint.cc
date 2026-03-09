@@ -57,15 +57,15 @@ ProxyConstraint align(
       left,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
-      right)
+      right) noexcept
 {
   return ProxyConstraint{
     legate::make_shared<detail::ProxyAlign>(std::move(left), std::move(right))};
 }
 
-ProxyConstraint align(ProxyInputArguments proxies) { return align(proxies[0], proxies); }
+ProxyConstraint align(ProxyInputArguments proxies) noexcept { return align(proxies[0], proxies); }
 
-ProxyConstraint align(ProxyOutputArguments proxies) { return align(proxies[0], proxies); }
+ProxyConstraint align(ProxyOutputArguments proxies) noexcept { return align(proxies[0], proxies); }
 
 // ------------------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ ProxyConstraint broadcast(std::variant<ProxyArrayArgument,
                                        ProxyInputArguments,
                                        ProxyOutputArguments,
                                        ProxyReductionArguments> value,
-                          const std::optional<tuple<std::uint32_t>>& axes)
+                          const std::optional<tuple<std::uint32_t>>& axes) noexcept
 {
   return ProxyConstraint{legate::make_shared<detail::ProxyBroadcast>(
     std::move(value),
@@ -135,7 +135,7 @@ ProxyConstraint image(
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_range,
-  std::optional<ImageComputationHint> hint)
+  std::optional<ImageComputationHint> hint) noexcept
 {
   return ProxyConstraint{legate::make_shared<detail::ProxyImage>(
     std::move(var_function), std::move(var_range), std::move(hint))};
@@ -152,6 +152,7 @@ Constraint scale(Span<const std::uint64_t> factors, Variable var_smaller, Variab
 
 // ------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 ProxyConstraint scale(
   Span<const std::uint64_t> factors,
   std::
@@ -159,7 +160,7 @@ ProxyConstraint scale(
       var_smaller,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
-      var_bigger)
+      var_bigger) noexcept
 {
   return ProxyConstraint{legate::make_shared<detail::ProxyScale>(
     detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{factors},
@@ -183,6 +184,7 @@ Constraint bloat(Variable var_source,
 
 // ------------------------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 ProxyConstraint bloat(
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
@@ -191,7 +193,7 @@ ProxyConstraint bloat(
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_bloat,
   Span<const std::uint64_t> low_offsets,
-  Span<const std::uint64_t> high_offsets)
+  Span<const std::uint64_t> high_offsets) noexcept
 {
   return ProxyConstraint{legate::make_shared<detail::ProxyBloat>(
     std::move(var_source),

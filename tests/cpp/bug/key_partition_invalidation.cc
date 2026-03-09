@@ -21,8 +21,6 @@ constexpr legate::coord_t EXT           = 20;
 constexpr legate::coord_t NUM_TILES     = 4;
 constexpr legate::coord_t TILE_SIZE     = EXT / NUM_TILES;
 
-}  // namespace
-
 struct InitRanges : public legate::LegateTask<InitRanges> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
@@ -45,6 +43,8 @@ struct Checker : public legate::LegateTask<Checker> {
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
+
+}  // namespace
 
 // This test case exercises a scenario where an image partition cached as a key outlives its
 // function store.

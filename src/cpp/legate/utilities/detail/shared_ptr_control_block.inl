@@ -17,7 +17,7 @@
 
 namespace legate::detail {
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::load_refcount_(
+inline ControlBlockBase::ref_count_type ControlBlockBase::load_refcount_(
   const std::atomic<ref_count_type>& refcount) noexcept
 {
   return refcount.load(std::memory_order_relaxed);
@@ -54,7 +54,7 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::load_refcount
 LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_GCC_IGNORE("-Wstringop-overflow");
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::increment_refcount_(
+inline ControlBlockBase::ref_count_type ControlBlockBase::increment_refcount_(
   std::atomic<ref_count_type>* refcount) noexcept
 {
   return refcount->fetch_add(1, std::memory_order_relaxed) + 1;
@@ -62,7 +62,7 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::increment_ref
 
 LEGATE_PRAGMA_POP();
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(
+inline ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(
   std::atomic<ref_count_type>* refcount) noexcept
 {
   const auto v = refcount->fetch_sub(1, std::memory_order_release);
@@ -88,47 +88,47 @@ inline void ControlBlockBase::maybe_destroy_control_block() noexcept
   }
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_ref_cnt() const noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::strong_ref_cnt() const noexcept
 {
   return load_refcount_(strong_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::weak_ref_cnt() const noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::weak_ref_cnt() const noexcept
 {
   return load_refcount_(weak_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_ref_cnt() const noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::user_ref_cnt() const noexcept
 {
   return load_refcount_(user_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_ref() noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::strong_ref() noexcept
 {
   return increment_refcount_(&strong_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::weak_ref() noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::weak_ref() noexcept
 {
   return increment_refcount_(&weak_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_ref() noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::user_ref() noexcept
 {
   return increment_refcount_(&user_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_deref() noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::strong_deref() noexcept
 {
   return decrement_refcount_(&strong_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::weak_deref() noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::weak_deref() noexcept
 {
   return decrement_refcount_(&weak_refs_);
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_deref() noexcept
+inline ControlBlockBase::ref_count_type ControlBlockBase::user_deref() noexcept
 {
   return decrement_refcount_(&user_refs_);
 }

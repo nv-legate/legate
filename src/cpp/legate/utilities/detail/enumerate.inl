@@ -81,6 +81,8 @@ constexpr CountingIterator<T> CountingIterator<T>::operator-(difference_type n) 
   return CountingIterator{base() - static_cast<T>(n)};
 }
 
+// NOLINTBEGIN(readability-redundant-typename)
+
 template <typename T>
 constexpr typename CountingIterator<T>::difference_type CountingIterator<T>::operator-(
   const CountingIterator& other) const noexcept
@@ -94,6 +96,8 @@ constexpr typename CountingIterator<T>::value_type CountingIterator<T>::operator
 {
   return base() + static_cast<T>(n);
 }
+
+// NOLINTEND(readability-redundant-typename)
 
 template <typename T>
 constexpr bool CountingIterator<T>::operator==(const CountingIterator& o) const noexcept
@@ -143,29 +147,23 @@ constexpr T CountingIterator<T>::base() const noexcept
 inline constexpr Enumerator::Enumerator(value_type start) noexcept : start_{start} {}
 
 // NOLINTNEXTLINE(readability-redundant-inline-specifier)
-inline constexpr typename Enumerator::value_type Enumerator::start() const noexcept
-{
-  return start_;
-}
+inline constexpr Enumerator::value_type Enumerator::start() const noexcept { return start_; }
 
-inline typename Enumerator::iterator Enumerator::begin() const noexcept
-{
-  return iterator{start()};
-}
+inline Enumerator::iterator Enumerator::begin() const noexcept { return iterator{start()}; }
 
-inline typename Enumerator::const_iterator Enumerator::cbegin() const noexcept
+inline Enumerator::const_iterator Enumerator::cbegin() const noexcept
 {
   return const_iterator{start()};
 }
 
-inline typename Enumerator::iterator Enumerator::end() const noexcept
+inline Enumerator::iterator Enumerator::end() const noexcept
 {
   // An enumerator can never really be at the "end", so we just use the largest possible value
   // and hope that nobody ever gets that far.
   return iterator{std::numeric_limits<value_type>::max()};
 }
 
-inline typename Enumerator::const_iterator Enumerator::cend() const noexcept
+inline Enumerator::const_iterator Enumerator::cend() const noexcept
 {
   // An enumerator can never really be at the "end", so we just use the largest possible value
   // and hope that nobody ever gets that far.
@@ -176,7 +174,7 @@ inline typename Enumerator::const_iterator Enumerator::cend() const noexcept
 
 template <typename T>
 zip_detail::Zipper<zip_detail::ZiperatorShortest, Enumerator, T> enumerate(
-  T&& iterable, typename Enumerator::value_type start)
+  T&& iterable, Enumerator::value_type start)
 {
   return zip_shortest(Enumerator{start}, std::forward<T>(iterable));
 }

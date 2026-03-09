@@ -40,6 +40,7 @@ struct Tester : public legate::LegateTask<Tester> {
 };
 
 class LibraryMapper : public legate::mapping::Mapper {
+ public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override
@@ -67,6 +68,7 @@ class LibraryMapper : public legate::mapping::Mapper {
 };
 
 class Redundant : public DefaultFixture {
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();

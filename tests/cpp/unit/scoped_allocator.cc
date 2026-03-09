@@ -359,9 +359,13 @@ TEST_F(ScopedAllocatorUnit, DeallocateNull)
   ASSERT_NO_THROW(alloc.deallocate(nullptr));
 }
 
+namespace {
+
 class AllocateType : public RegisterOnceFixture<Config>,
                      public ::testing::WithParamInterface<
                        std::tuple<std::size_t, legate::Type::Code, legate::Memory::Kind>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(ScopedAllocatorUnit,
                          AllocateType,
@@ -420,9 +424,13 @@ TEST_P(AllocateType, NotScoped)
     AllocateTypeTask::TASK_CONFIG.task_id(), /*scoped=*/false, code, kind, num_items);
 }
 
+namespace {
+
 class AllocateAligned
   : public RegisterOnceFixture<Config>,
     public ::testing::WithParamInterface<std::tuple<std::size_t, legate::Memory::Kind>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(
   ScopedAllocatorUnit,
@@ -452,9 +460,13 @@ TEST_P(AllocateAligned, ZeroBytesNullptr)
                   alignment);
 }
 
+namespace {
+
 class AllocateAlignedExceptions
   : public RegisterOnceFixture<Config>,
     public ::testing::WithParamInterface<std::tuple<std::size_t, legate::Memory::Kind>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(ScopedAllocatorUnit,
                          AllocateAlignedExceptions,

@@ -105,8 +105,6 @@ class Config {
   }
 };
 
-}  // namespace
-
 using ScaleTesterTypeList = ::testing::Types<ScaleSingleInputSingleOutput,
                                              ScaleSingleInputAllOutputs,
                                              ScaleAllInputsSingleOutput,
@@ -115,6 +113,8 @@ using ScaleTesterTypeList = ::testing::Types<ScaleSingleInputSingleOutput,
 
 template <typename T>
 class TaskSignatureScaleUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(TaskSignatureScaleUnit, ScaleTesterTypeList, );
 

@@ -489,7 +489,7 @@ class Config {
 };
 
 class IOHDF5ReadUnit : public RegisterOnceFixture<Config> {
- public:
+ protected:
   void SetUp() override
   {
     RegisterOnceFixture::SetUp();
@@ -502,13 +502,13 @@ class IOHDF5ReadUnit : public RegisterOnceFixture<Config> {
     ASSERT_NO_THROW(static_cast<void>(std::filesystem::remove_all(base_path)));
   }
 
-  // NOLINTNEXTLINE(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
   static inline auto base_path = std::filesystem::temp_directory_path() / "legate";
 };
 
 class IOHDF5ReadTypeDeduction : public RegisterOnceFixture<Config>,
                                 public ::testing::WithParamInterface<TypeTestParam> {
- public:
+ protected:
   void SetUp() override
   {
     RegisterOnceFixture::SetUp();
@@ -521,7 +521,7 @@ class IOHDF5ReadTypeDeduction : public RegisterOnceFixture<Config>,
     ASSERT_NO_THROW(static_cast<void>(std::filesystem::remove_all(base_path)));
   }
 
-  // NOLINTNEXTLINE(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
   static inline auto base_path = std::filesystem::temp_directory_path() / "legate_type_tests";
 };
 

@@ -20,7 +20,11 @@
 
 namespace test_task_signature_basic {
 
+namespace {
+
 class TaskSignatureUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(TaskSignatureUnit, Empty)
 {
@@ -219,11 +223,11 @@ MATCHER(PtrNotEq, "Pointer not equals") { return *std::get<0>(arg) != *std::get<
 
 // NOLINTEND
 
-}  // namespace
-
 class SameConstraint : public DefaultFixture,
                        public ::testing::WithParamInterface<
                          std::tuple<legate::ProxyConstraint, legate::ProxyConstraint>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(
   TaskSignatureUnit,
@@ -242,9 +246,13 @@ INSTANTIATE_TEST_SUITE_P(
     std::make_tuple(legate::scale({2}, legate::proxy::inputs, legate::proxy::outputs),
                     legate::scale({2}, legate::proxy::inputs, legate::proxy::outputs))));
 
+namespace {
+
 class DifferentConstraint : public DefaultFixture,
                             public ::testing::WithParamInterface<
                               std::tuple<legate::ProxyConstraint, legate::ProxyConstraint>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(
   TaskSignatureUnit,

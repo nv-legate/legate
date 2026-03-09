@@ -17,7 +17,11 @@
 
 namespace test_task_signature_nargs {
 
+namespace {
+
 class TaskSignatureNargsUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(TaskSignatureNargsUnit, Basic)
 {
@@ -52,8 +56,12 @@ TEST_F(TaskSignatureNargsUnit, UnboundedRange)
   nargs_util::test_unbounded_range(nargs, LOW_BOUND);
 }
 
+namespace {
+
 class Invalid : public TaskSignatureNargsUnit,
                 public ::testing::WithParamInterface<std::pair<std::uint32_t, std::uint32_t>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(TaskSignatureNargsUnit,
                          Invalid,

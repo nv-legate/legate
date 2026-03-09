@@ -33,6 +33,7 @@ constexpr std::string_view LIBRARY_NAME = "test_tunable";
 }
 
 class LibraryMapper : public legate::mapping::Mapper {
+ public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::StoreTarget>& /*options*/) override

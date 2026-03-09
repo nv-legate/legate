@@ -17,7 +17,8 @@ class Library;
 
 class LEGATE_EXPORT FixupRanges : public LegateTask<FixupRanges> {
  public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
+  static inline const auto TASK_CONFIG =
     legate::TaskConfig{LocalTaskID{CoreTask::FIXUP_RANGES}}.with_signature(
       legate::TaskSignature{}
         .inputs(0)

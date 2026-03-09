@@ -28,7 +28,7 @@ namespace legate::mapping::detail {
 // This is a custom mapper implementation that only has to map
 // start-up tasks associated with Legate, no one else
 // should be overriding this mapper so we burry it in here
-class CoreMapper final : public Mapper {
+class CoreMapper final : public Mapper {  // NOLINT(misc-use-internal-linkage)
  public:
   [[nodiscard]] std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,

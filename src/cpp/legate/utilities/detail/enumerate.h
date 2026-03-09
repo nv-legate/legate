@@ -73,11 +73,11 @@ class Enumerator {
  public:
   using iterator          = CountingIterator<std::ptrdiff_t>;
   using const_iterator    = CountingIterator<std::ptrdiff_t>;
-  using value_type        = typename iterator::value_type;
-  using iterator_category = typename iterator::iterator_category;
-  using difference_type   = typename iterator::difference_type;
-  using pointer           = typename iterator::pointer;
-  using reference         = typename iterator::reference;
+  using value_type        = iterator::value_type;
+  using iterator_category = iterator::iterator_category;
+  using difference_type   = iterator::difference_type;
+  using pointer           = iterator::pointer;
+  using reference         = iterator::reference;
 
   constexpr Enumerator() noexcept = default;
   constexpr explicit Enumerator(value_type start) noexcept;
@@ -112,7 +112,7 @@ class Enumerator {
  */
 template <typename T>
 [[nodiscard]] zip_detail::Zipper<zip_detail::ZiperatorShortest, Enumerator, T> enumerate(
-  T&& iterable, typename Enumerator::value_type start = {});
+  T&& iterable, Enumerator::value_type start = {});
 
 }  // namespace legate::detail
 

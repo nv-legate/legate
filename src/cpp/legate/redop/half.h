@@ -25,6 +25,8 @@ class CUDAModuleManager;
 
 namespace legate {
 
+// NOLINTBEGIN(cert-err58-cpp, bugprone-throwing-static-initialization)
+
 /**
  * @brief Sum reduction specialization for `Half`.
  */
@@ -34,7 +36,8 @@ class LEGATE_EXPORT SumReduction<Half> : public detail::BaseReduction<Half, Redu
   /**
    * @brief Identity value for the sum reduction (zero-initialized).
    */
-  static constexpr auto identity = value_type{};  // NOLINT(readability-identifier-naming)
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static constexpr auto identity = value_type{};
 
   /**
    * @brief Fills a CUDA reduction operator descriptor for this reduction.
@@ -57,8 +60,8 @@ class LEGATE_EXPORT ProdReduction<Half> : public detail::BaseReduction<Half, Red
   /**
    * @brief Identity value for the reduction.
    */
-  static inline const auto identity =  // NOLINT(readability-identifier-naming, cert-err58-cpp)
-    value_type{1.F};
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static inline const auto identity = value_type{1.F};
 
   /**
    * @brief Fills a CUDA reduction operator descriptor for this reduction.
@@ -81,8 +84,8 @@ class LEGATE_EXPORT MaxReduction<Half> : public detail::BaseReduction<Half, Redu
   /**
    * @brief Identity value for the reduction.
    */
-  static inline const auto identity =  // NOLINT(readability-identifier-naming, cert-err58-cpp)
-    value_type{LEGATE_MIN_HALF};
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static inline const auto identity = value_type{LEGATE_MIN_HALF};
 
   /**
    * @brief Fills a CUDA reduction operator descriptor for this reduction.
@@ -105,8 +108,8 @@ class LEGATE_EXPORT MinReduction<Half> : public detail::BaseReduction<Half, Redu
   /**
    * @brief Identity value for the reduction.
    */
-  static inline const auto identity =  // NOLINT(readability-identifier-naming, cert-err58-cpp)
-    value_type{LEGATE_MAX_HALF};
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static inline const auto identity = value_type{LEGATE_MAX_HALF};
 
   /**
    * @brief Fills a CUDA reduction operator descriptor for this reduction.
@@ -119,6 +122,8 @@ class LEGATE_EXPORT MinReduction<Half> : public detail::BaseReduction<Half, Redu
   static void fill_redop_desc(cuda::detail::CUDAModuleManager* manager,
                               Realm::Cuda::CudaRedOpDesc* desc);
 };
+
+// NOLINTEND(cert-err58-cpp, bugprone-throwing-static-initialization)
 
 #define LEGATE_FOREACH_FLOAT16_REDOP(__op__, ...)             \
   do {                                                        \

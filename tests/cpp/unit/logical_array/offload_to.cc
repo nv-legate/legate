@@ -12,7 +12,11 @@
 
 namespace test_offload_to {
 
+namespace {
+
 class OffloadToUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(OffloadToUnit, NullableArray)
 {

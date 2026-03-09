@@ -14,6 +14,8 @@
 
 namespace region_manager {
 
+namespace {
+
 class TesterTask : public legate::LegateTask<TesterTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -42,6 +44,8 @@ class Config {
 };
 
 class RegionManager : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(RegionManager, Normal)
 {

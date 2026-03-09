@@ -53,9 +53,9 @@ class Config {
 constexpr std::uint64_t DUMMY_OP_ID     = 999999999;
 constexpr std::uint64_t DUMMY_UNIQUE_ID = 999999999;
 
-}  // namespace
-
 class PropagatePruneDiscardsUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(PropagatePruneDiscardsUnit, Empty)
 {

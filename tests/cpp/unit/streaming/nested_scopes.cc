@@ -53,10 +53,10 @@ void make_diff_od_scopes(legate::StreamingMode outer_mode,
   }
 }
 
-}  // namespace
-
 class NestedScopes : public DefaultFixture,
                      public ::testing::WithParamInterface<legate::StreamingMode> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(NestedScopesSuite,
                          NestedScopes,

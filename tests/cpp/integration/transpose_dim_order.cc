@@ -108,8 +108,6 @@ class LibraryMapper : public legate::mapping::Mapper {
   }
 };
 
-}  // namespace
-
 class TaskTranspose2D : public TestTaskBase<TaskTranspose2D, TestCase::TRANSPOSE_2D> {
  public:
   static void check(const legate::PhysicalStore& store, const bool fortran_order)
@@ -206,7 +204,7 @@ class TaskEmptyPromoteTranspose
 };
 
 class TransposeDimOrder : public DefaultFixture, public ::testing::WithParamInterface<bool> {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
@@ -226,6 +224,8 @@ class TransposeDimOrder : public DefaultFixture, public ::testing::WithParamInte
     }
   }
 };
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(TransposeDimOrder, TransposeDimOrder, ::testing::Values(false, true));
 

@@ -23,7 +23,8 @@ namespace legate::detail {
 
 class ExtractScalar : public LegionTask<ExtractScalar> {
  public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
+  static inline const auto TASK_CONFIG =
     legate::TaskConfig{LocalTaskID{CoreTask::EXTRACT_SCALAR}}
       .with_variant_options(
         legate::VariantOptions{}.with_has_allocations(true).with_elide_device_ctx_sync(true))

@@ -15,8 +15,6 @@ namespace {
 
 constexpr std::int32_t ERROR_TEST_BASE_TASK_ID = 0;
 
-}  // namespace
-
 // Task that throws an exception for testing error propagation
 struct ExceptionThrowingTask : public legate::LegateTask<ExceptionThrowingTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -49,6 +47,8 @@ class ErrorTestConfig {
 
 // Test fixture for error tests using RegisterOnceFixture pattern
 class PhysicalTaskErrorTests : public RegisterOnceFixture<ErrorTestConfig> {};
+
+}  // namespace
 
 // Test invalid task ID handling
 TEST_F(TaskStoreTests, PhysicalTaskInvalidTaskID)

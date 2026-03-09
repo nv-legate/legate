@@ -75,12 +75,10 @@ class Config {
   }
 };
 
-}  // namespace
-
 class TaskSignatureRegisterUnit : public RegisterOnceFixture<Config> {};
 
 class TaskSignatureRegisterUnitBasicTask : public TaskSignatureRegisterUnit {
- public:
+ protected:
   void SetUp() override
   {
     TaskSignatureRegisterUnit::SetUp();
@@ -90,8 +88,11 @@ class TaskSignatureRegisterUnitBasicTask : public TaskSignatureRegisterUnit {
       runtime->find_library(Config::LIBRARY_NAME), BasicTask::TASK_CONFIG.task_id()));
   }
 
+ public:
   std::unique_ptr<legate::AutoTask> task;
 };
+
+}  // namespace
 
 TEST_F(TaskSignatureRegisterUnitBasicTask, Basic)
 {
@@ -177,8 +178,10 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, TooManyScalars)
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
 
+namespace {
+
 class TaskSignatureRegisterUnitRangeTask : public TaskSignatureRegisterUnit {
- public:
+ protected:
   void SetUp() override
   {
     TaskSignatureRegisterUnit::SetUp();
@@ -188,8 +191,11 @@ class TaskSignatureRegisterUnitRangeTask : public TaskSignatureRegisterUnit {
       runtime->find_library(Config::LIBRARY_NAME), RangeTask::TASK_CONFIG.task_id()));
   }
 
+ public:
   std::unique_ptr<legate::AutoTask> task;
 };
+
+}  // namespace
 
 TEST_F(TaskSignatureRegisterUnitRangeTask, Basic)
 {
@@ -299,8 +305,10 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooManyScalars)
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
 
+namespace {
+
 class TaskSignatureRegisterUnitConstrainedTask : public TaskSignatureRegisterUnit {
- public:
+ protected:
   void SetUp() override
   {
     TaskSignatureRegisterUnit::SetUp();
@@ -311,8 +319,11 @@ class TaskSignatureRegisterUnitConstrainedTask : public TaskSignatureRegisterUni
       runtime->find_library(Config::LIBRARY_NAME), ConstrainedTask::TASK_CONFIG.task_id()));
   }
 
+ public:
   std::unique_ptr<legate::AutoTask> task;
 };
+
+}  // namespace
 
 TEST_F(TaskSignatureRegisterUnitConstrainedTask, Basic)
 {

@@ -76,6 +76,7 @@ struct test_evaluable_with_base {  // NOLINT(readability-identifier-naming)
 template <template <typename...> typename C, typename... Args>
 struct test_evaluable_with : test_evaluable_with_base {};
 
+// NOLINTNEXTLINE(modernize-avoid-variadic-functions)
 constexpr bool test_evaluable(...) { return false; }
 
 template <template <typename...> typename Fun, typename... Args>

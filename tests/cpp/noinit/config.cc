@@ -15,7 +15,11 @@
 
 namespace config_test {
 
+namespace {
+
 class ConfigTest : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(ConfigTest, DefaultValues)
 {

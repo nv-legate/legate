@@ -32,6 +32,8 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 
 namespace legate::detail::comm::mpi {
 
+namespace {
+
 class InitMapping : public legate::detail::LegionTask<InitMapping> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -187,6 +189,8 @@ class Finalize : public legate::detail::LegionTask<Finalize> {
   }
 #endif
 };
+
+}  // namespace
 
 void register_tasks(const legate::Library& core_library)
 {

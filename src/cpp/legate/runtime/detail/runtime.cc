@@ -95,7 +95,8 @@ LEGATE_PRAGMA_POP();
 namespace legate::detail {
 
 thread_local std::stack<VariantCode, SmallVector<VariantCode>>
-  Runtime::inline_task_variant_code_{};  // NOLINT(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
+  Runtime::inline_task_variant_code_{};
 
 Logger& log_legate()
 {
@@ -2247,6 +2248,8 @@ std::int32_t Runtime::finish()
 
 namespace prefetch_task {
 
+namespace {
+
 // This task is launched for the side effect of having bloated instances created for the task and
 // intended to do nothing otherwise.
 class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
@@ -2259,7 +2262,7 @@ class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
                           Legion::Context /*context*/,
                           Legion::Runtime* /*runtime*/)
   {
-  }
+  }  // namespace prefetch_task
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(const Legion::Task* /*task*/,
                           const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -2277,6 +2280,8 @@ class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
   }
 #endif
 };
+
+}  // namespace
 
 }  // namespace prefetch_task
 

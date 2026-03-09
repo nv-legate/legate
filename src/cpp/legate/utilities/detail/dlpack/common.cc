@@ -150,7 +150,7 @@ std::size_t dl_tensor_size(const DLTensor& tensor)
   std::size_t size =
     array_volume(Span<const std::int64_t>{tensor.shape, tensor.shape + tensor.ndim});
 
-  size *= (tensor.dtype.bits * tensor.dtype.lanes + (CHAR_BIT - 1)) / CHAR_BIT;
+  size *= ((tensor.dtype.bits * tensor.dtype.lanes) + (CHAR_BIT - 1)) / CHAR_BIT;
   return size;
 }
 

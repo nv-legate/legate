@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 
 class DefaultFixture : public ::testing::Test {
- public:
+ protected:
   void TearDown() override
   {
     // This fixture is used for unit tests and others that don't use the runtime, so we should check
@@ -28,7 +28,7 @@ class DefaultFixture : public ::testing::Test {
 
 template <typename Config>
 class RegisterOnceFixture : public DefaultFixture {
- public:
+ protected:
   // clang-tidy thinks this won't get instantiated if it isn't called, but it is called. Not
   // really sure what should be done to "fix" this.
   void SetUp() override  // NOLINT(portability-template-virtual-member-function)

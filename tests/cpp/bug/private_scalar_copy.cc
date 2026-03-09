@@ -10,7 +10,11 @@
 
 namespace private_scalar_copy {
 
+namespace {
+
 class PrivateScalarCopyBug : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(PrivateScalarCopyBug, CopyOwn)
 {

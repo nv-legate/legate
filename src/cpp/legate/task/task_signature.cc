@@ -14,7 +14,7 @@
 
 namespace legate {
 
-TaskSignature::TaskSignature() : pimpl_{legate::make_shared<detail::TaskSignature>()} {}
+TaskSignature::TaskSignature() noexcept : pimpl_{legate::make_shared<detail::TaskSignature>()} {}
 
 TaskSignature::TaskSignature(InternalSharedPtr<detail::TaskSignature> impl)
   : pimpl_{std::move(impl)}
@@ -39,7 +39,7 @@ TaskSignature& TaskSignature::inputs(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::inputs(std::uint32_t lower_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::inputs(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept
 {
   impl_()->inputs({{lower_bound, upper_bound}});
   return *this;
@@ -51,7 +51,7 @@ TaskSignature& TaskSignature::outputs(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::outputs(std::uint32_t lower_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::outputs(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept
 {
   impl_()->outputs({{lower_bound, upper_bound}});
   return *this;
@@ -63,7 +63,7 @@ TaskSignature& TaskSignature::scalars(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::scalars(std::uint32_t lower_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::scalars(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept
 {
   impl_()->scalars({{lower_bound, upper_bound}});
   return *this;
@@ -75,13 +75,15 @@ TaskSignature& TaskSignature::redops(std::uint32_t n) noexcept
   return *this;
 }
 
-TaskSignature& TaskSignature::redops(std::uint32_t lower_bound, std::uint32_t upper_bound)
+TaskSignature& TaskSignature::redops(std::uint32_t lower_bound, std::uint32_t upper_bound) noexcept
 {
   impl_()->redops({{lower_bound, upper_bound}});
   return *this;
 }
 
-TaskSignature& TaskSignature::constraints(std::optional<Span<const ProxyConstraint>> constraints)
+// NOLINTNEXTLINE(bugprone-exception-escape)
+TaskSignature& TaskSignature::constraints(
+  std::optional<Span<const ProxyConstraint>> constraints) noexcept
 {
   std::optional<detail::SmallVector<InternalSharedPtr<detail::ProxyConstraint>>> ret = std::nullopt;
 

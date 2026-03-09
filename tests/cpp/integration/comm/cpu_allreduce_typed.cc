@@ -25,7 +25,7 @@ class CPUAllreduceTypedTester : public legate::LegateTask<CPUAllreduceTypedTeste
  public:
   // Each type gets a unique task ID: 0 for int8, 1 for char, etc.
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{[]() {
+    legate::TaskConfig{legate::LocalTaskID{[]() noexcept {
       if constexpr (std::is_same_v<T, std::int8_t>) {
         return 0;
       } else if constexpr (std::is_same_v<T, char>) {
@@ -189,10 +189,10 @@ void trigger_reduction_typed_task()
   runtime->issue_execution_fence(/* block */ true);
 }
 
-}  // namespace
-
 template <typename T>
 class CPUAllreduceTypedTest : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(CPUAllreduceTypedTest, AllSupportedTypes, );
 

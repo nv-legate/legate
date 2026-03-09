@@ -337,6 +337,8 @@ TEST_F(MachineTest, ToString)
   ASSERT_EQ(machine.to_string(), machine_str);
 }
 
+namespace {
+
 class MachineUnitTestDeserializer
   : public legate::detail::BaseDeserializer<MachineUnitTestDeserializer> {
  public:
@@ -346,6 +348,8 @@ class MachineUnitTestDeserializer
 
   using BaseDeserializer::unpack_impl;
 };
+
+}  // namespace
 
 TEST_F(MachineTest, Pack)
 {

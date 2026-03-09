@@ -32,13 +32,14 @@ class Factory final : public detail::CommunicatorFactory {
   [[nodiscard]] bool needs_barrier() const override;
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
- private:
+ protected:
   [[nodiscard]] Legion::FutureMap initialize_(const mapping::detail::Machine& machine,
                                               std::uint32_t num_tasks) override;
   void finalize_(const mapping::detail::Machine& machine,
                  std::uint32_t num_tasks,
                  const Legion::FutureMap& communicator) override;
 
+ private:
   const detail::Library* core_library_{};
 };
 

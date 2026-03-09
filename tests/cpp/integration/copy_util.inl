@@ -9,7 +9,7 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/utilities/detail/tuple.h>
 
-namespace {  // NOLINT(cert-dcl59-cpp, google-build-namespaces)
+namespace {  // NOLINT(cert-dcl59-cpp, google-build-namespaces, misc-anonymous-namespace-in-header)
 
 constexpr std::int32_t TEST_MAX_DIM = 3;
 

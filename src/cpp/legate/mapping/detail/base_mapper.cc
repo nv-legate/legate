@@ -107,7 +107,7 @@ BaseMapper::BaseMapper()
 {
 }
 
-BaseMapper::~BaseMapper()
+BaseMapper::~BaseMapper()  // NOLINT(bugprone-exception-escape)
 {
   if (legate::detail::Runtime::get_runtime().config().show_mapper_usage()) {
     constexpr std::string_view memory_kinds[] = {

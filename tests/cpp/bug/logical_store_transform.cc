@@ -17,8 +17,6 @@ namespace {
 constexpr std::uint64_t EXT = 17;
 constexpr std::int64_t VAL  = 42;
 
-}  // namespace
-
 class InitTask : public legate::LegateTask<InitTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -73,6 +71,8 @@ class Config {
     CopyTask::register_variants(library);
   }
 };
+
+}  // namespace
 
 using LogicalStoreTransform = RegisterOnceFixture<Config>;
 

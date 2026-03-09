@@ -126,7 +126,7 @@ Span<const VAL> Scalar::values() const
       return Span<const VAL>(static_cast<const VAL*>(ptr), size);
     }
     case Type::Code::STRING: {
-      using char_type = typename type_of_t<Type::Code::STRING>::value_type;
+      using char_type = type_of_t<Type::Code::STRING>::value_type;
 
       if constexpr (std::is_same_v<VAL, bool>) {
         throw_invalid_type_conversion_exception_("string", "Span<bool>");

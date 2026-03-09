@@ -14,7 +14,11 @@
 
 namespace runtime_init_test {
 
+namespace {
+
 class RuntimeInitUnit : public ::testing::Test {};
+
+}  // namespace
 
 TEST_F(RuntimeInitUnit, GetRuntime)
 {

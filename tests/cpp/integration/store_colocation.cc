@@ -39,8 +39,6 @@ namespace {
   return mappings;
 }
 
-}  // namespace
-
 class ColocationTestTask : public legate::LegateTask<ColocationTestTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -325,6 +323,8 @@ class ReductionColocationFixture : public DefaultFixture {
     return legate::Runtime::get_runtime()->find_library(ReductionColocationConfig::LIBRARY_NAME);
   }
 };
+
+}  // namespace
 
 TEST_F(UnboundColocationFixture, UnboundWithUnbound)
 {

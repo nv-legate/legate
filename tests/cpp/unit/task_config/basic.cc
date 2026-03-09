@@ -14,7 +14,11 @@
 
 namespace test_task_config_basic {
 
+namespace {
+
 class TaskConfigUnit : public DefaultFixture {};
+
+}  // namespace
 
 static_assert(!std::is_default_constructible_v<legate::TaskConfig>);
 

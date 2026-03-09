@@ -13,9 +13,13 @@
 
 namespace test_physical_task {
 
+namespace {
+
 constexpr std::int64_t TEST_DIMENSION_SIZE = 10;
 
 class PhysicalTaskUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(PhysicalTaskUnit, CreatePhysicalTask)
 {

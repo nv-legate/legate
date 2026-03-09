@@ -24,6 +24,8 @@
 
 namespace formatter_test {
 
+namespace {
+
 constexpr std::int32_t SCALAR_VALUE = 42;
 
 // Dummy task to make the runtime think the store is initialized
@@ -89,6 +91,8 @@ class FormatLegionPrivilegeMode
 class FormatStreamingMode
   : public DefaultFixture,
     public ::testing::WithParamInterface<std::tuple<legate::StreamingMode, std::string_view>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
@@ -363,16 +367,18 @@ TEST_F(FormatterUnit, Alignment)
   auto part2 = task.declare_partition();
 
   ASSERT_THAT(fmt::format("{}", *(part1.impl())),
-              ::testing::MatchesRegex(R"(X0\{formatter_test::FormatterBaseTask:[0-9]+\})"));
+              ::testing::MatchesRegex(
+                R"(X0\{formatter_test::\(anonymous namespace\)::FormatterBaseTask:[0-9]+\})"));
   ASSERT_THAT(fmt::format("{}", *(part2.impl())),
-              ::testing::MatchesRegex(R"(X1\{formatter_test::FormatterBaseTask:[0-9]+\})"));
+              ::testing::MatchesRegex(
+                R"(X1\{formatter_test::\(anonymous namespace\)::FormatterBaseTask:[0-9]+\})"));
 
   auto alignment = legate::detail::align(part1.impl(), part2.impl());
 
   ASSERT_THAT(
     fmt::format("{}", *alignment),
     ::testing::MatchesRegex(
-      R"(Align\(X0\{formatter_test::FormatterBaseTask:[0-9]+\}, X1\{formatter_test::FormatterBaseTask:[0-9]+\}\))"));
+      R"(Align\(X0\{formatter_test::\(anonymous namespace\)::FormatterBaseTask:[0-9]+\}, X1\{formatter_test::\(anonymous namespace\)::FormatterBaseTask:[0-9]+\}\))"));
 }
 
 TEST_F(FormatterUnit, TaskInfo)

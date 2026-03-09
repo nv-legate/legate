@@ -247,8 +247,6 @@ void auto_task_unbound_reduction(const legate::LogicalArray& array, std::uint32_
   }
 }
 
-}  // namespace
-
 // Test class definitions
 class AutoTaskNormal
   : public TaskStoreTests,
@@ -269,6 +267,8 @@ class AutoTaskUnboundInput : public AutoTaskUnbound {};
 class AutoTaskUnboundOutput : public AutoTaskUnbound {};
 
 class AutoTaskUnboundReduction : public AutoTaskUnbound {};
+
+}  // namespace
 
 // Test instantiations
 INSTANTIATE_TEST_SUITE_P(

@@ -69,7 +69,7 @@ void register_sharding_functors(std::string_view library_name, std::int64_t max_
 }
 
 class ToplevelTaskShardingTest : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
@@ -79,7 +79,7 @@ class ToplevelTaskShardingTest : public DefaultFixture {
 };
 
 class LinearizingShardingTest : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
@@ -89,14 +89,14 @@ class LinearizingShardingTest : public DefaultFixture {
 };
 
 class LegateShardingTest : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
-    register_legate_sharding_functors();
+    register_legate_sharding_functors_();
   }
 
-  void register_legate_sharding_functors()
+  void register_legate_sharding_functors_()
   {
     auto* const legate_sharding_functor = get_sharding_functor_from_runtime(LEGATE_SHARDING_ID);
 

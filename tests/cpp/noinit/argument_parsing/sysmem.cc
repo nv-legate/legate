@@ -24,7 +24,11 @@ namespace test_configure_symem {
 
 constexpr auto MB = 1 << 20;
 
+namespace {
+
 class ConfigureSysMemUnit : public DefaultFixture, public ::testing::WithParamInterface<bool> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ConfigureSysMemUnit,

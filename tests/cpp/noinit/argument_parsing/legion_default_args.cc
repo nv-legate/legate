@@ -19,7 +19,11 @@
 
 namespace test_compose_legion_default_args {
 
+namespace {
+
 class ComposeLegionDefaultArgsUnit : public DefaultFixture {};
+
+}  // namespace
 
 #define UNSET_ENV_VAR(__var_name__) \
   const auto __var_name__ = legate::test::Environment::TemporaryEnvVar { #__var_name__, nullptr }
@@ -116,7 +120,11 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlagsAndDefaultArgs)
   ASSERT_EQ(legion_default_args, expected);
 }
 
+namespace {
+
 class ConfigureLegionUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(ConfigureLegionUnit, Basic)
 {

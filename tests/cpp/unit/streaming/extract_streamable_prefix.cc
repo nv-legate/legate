@@ -18,7 +18,11 @@
 
 namespace test_extract_streamable_prefix {
 
+namespace {
+
 class ExtractStreamablePrefixUnit : public DefaultFixture {};
+
+}  // namespace
 
 TEST_F(ExtractStreamablePrefixUnit, EmptyInput)
 {

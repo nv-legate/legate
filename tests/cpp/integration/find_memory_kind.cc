@@ -12,6 +12,8 @@
 
 namespace test_find_memory_kind {
 
+namespace {
+
 struct Checker : public legate::LegateTask<Checker> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
@@ -46,6 +48,8 @@ class Config {
 };
 
 class FindMemoryKind : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(FindMemoryKind, Toplevel)
 {

@@ -50,6 +50,8 @@ bool is_identity(std::uint32_t src_ndim, const SymbolicPoint& point)
 
 namespace legate::detail {
 
+namespace {
+
 // ==========================================================================================
 
 template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
@@ -217,8 +219,6 @@ Legion::LogicalRegion LegateProjectionFunctor::project(Legion::LogicalPartition 
 
 // ==========================================================================================
 
-namespace {
-
 ProjectionFunction* identity_projection()
 {
   static auto identity_projection = std::make_unique<IdentityProjection>();
@@ -311,6 +311,8 @@ void register_compound_projection_functor(
                           proj_id);
 }
 
+namespace {
+
 class LinearizingPointTransformFunctor final : public Legion::PointTransformFunctor {
  public:
   // This is actually an invertible functor, but we will not use this for inversion
@@ -334,5 +336,7 @@ class LinearizingPointTransformFunctor final : public Legion::PointTransformFunc
     return result;
   }
 };
+
+}  // namespace
 
 }  // namespace legate::detail

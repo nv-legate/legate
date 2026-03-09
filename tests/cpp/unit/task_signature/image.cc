@@ -110,8 +110,6 @@ class Config {
   }
 };
 
-}  // namespace
-
 using ImageTesterTypeList = ::testing::Types<ImageSingleInputSingleOutput,
                                              ImageSingleInputAllOutputs,
                                              ImageAllInputsSingleOutput,
@@ -120,6 +118,8 @@ using ImageTesterTypeList = ::testing::Types<ImageSingleInputSingleOutput,
 
 template <typename T>
 class TaskSignatureImageUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(TaskSignatureImageUnit, ImageTesterTypeList, );
 

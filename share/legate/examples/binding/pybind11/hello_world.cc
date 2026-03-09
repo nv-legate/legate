@@ -13,7 +13,7 @@
 
 namespace hello_world {
 
-class HelloWorld : public legate::LegateTask<HelloWorld> {
+class HelloWorld : public legate::LegateTask<HelloWorld> {  // NOLINT(misc-use-internal-linkage)
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};

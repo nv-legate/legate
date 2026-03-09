@@ -61,14 +61,14 @@ class LEGATE_EXPORT TaskConfig {
   TaskConfig& operator=(TaskConfig&&) noexcept = default;
   ~TaskConfig();
 
-  explicit TaskConfig(InternalSharedPtr<detail::TaskConfig> impl);
+  explicit TaskConfig(InternalSharedPtr<detail::TaskConfig> impl) noexcept;
 
   /**
    * @brief Construct a TaskConfig.
    *
    * @param task_id The local ID of the task.
    */
-  explicit TaskConfig(LocalTaskID task_id);
+  explicit TaskConfig(LocalTaskID task_id) noexcept;
 
   /**
    * @brief Set the task signature for this task.
@@ -76,7 +76,7 @@ class LEGATE_EXPORT TaskConfig {
    * @param signature The task signature to associate with the task.
    * @return A reference to `this`.
    */
-  TaskConfig& with_signature(const TaskSignature& signature);
+  TaskConfig& with_signature(const TaskSignature& signature) noexcept;
 
   /**
    * @brief Set the variant options for this task.
@@ -84,7 +84,7 @@ class LEGATE_EXPORT TaskConfig {
    * @param options The variant options to associate with the task.
    * @return A reference to `this`.
    */
-  TaskConfig& with_variant_options(const VariantOptions& options);
+  TaskConfig& with_variant_options(const VariantOptions& options) noexcept;
 
   /**
    * @brief Pre-declare the mapping decisions for each argument to the task.
@@ -100,7 +100,7 @@ class LEGATE_EXPORT TaskConfig {
    * @param store_mappings The proxy mapping decisions.
    * @return A reference to `this`.
    */
-  TaskConfig& with_store_mappings(Span<const mapping::ProxyStoreMapping> store_mappings);
+  TaskConfig& with_store_mappings(Span<const mapping::ProxyStoreMapping> store_mappings) noexcept;
 
   /**
    * @return The local task ID for this task.

@@ -106,8 +106,6 @@ class Config {
   }
 };
 
-}  // namespace
-
 using AlignmentTesterTypeList = ::testing::Types<AlignmentSingleInputSingleOutput,
                                                  AlignmentSingleInputAllOutputs,
                                                  AlignmentAllInputsSingleOutput,
@@ -116,6 +114,8 @@ using AlignmentTesterTypeList = ::testing::Types<AlignmentSingleInputSingleOutpu
 
 template <typename T>
 class TaskSignatureAlignmentUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(TaskSignatureAlignmentUnit, AlignmentTesterTypeList, );
 

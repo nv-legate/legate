@@ -14,6 +14,8 @@
 
 namespace partitioner_test {
 
+namespace {
+
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct Initializer : public legate::LegateTask<Initializer> {
@@ -49,6 +51,8 @@ class Config {
 };
 
 class PartitionerTest : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(PartitionerTest, FavorPartitionedStore)
 {

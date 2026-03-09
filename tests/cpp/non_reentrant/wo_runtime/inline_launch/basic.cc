@@ -54,7 +54,7 @@ class Config {
 };
 
 class InlineLaunchUnit : public RegisterOnceFixture<Config> {
- public:
+ protected:
   void SetUp() override
   {
     ASSERT_NO_THROW(legate::start());

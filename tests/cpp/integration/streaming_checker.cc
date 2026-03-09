@@ -204,10 +204,10 @@ void launch_reduction(const legate::LogicalStore& store_a)
   rt->submit(std::move(red_task));
 }
 
-}  // namespace
-
 class StreamingChecker : public RegisterOnceFixture<Config>,
                          public ::testing::WithParamInterface<legate::StreamingMode> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(StreamingCheckerSuite,
                          StreamingChecker,

@@ -22,14 +22,17 @@
 
 namespace unit {
 
+namespace {
+
 class OpaqueTest : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
     opaque = create_opaque();
   }
 
+ public:
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Opaque> create_opaque()
   {
     auto runtime      = legate::Runtime::get_runtime();
@@ -53,6 +56,8 @@ class OpaqueTest : public DefaultFixture {
   Legion::Domain launch_domain;
   Legion::IndexPartition partition;
 };
+
+}  // namespace
 
 TEST_F(OpaqueTest, Compare)
 {

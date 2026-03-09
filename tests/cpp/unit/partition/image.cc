@@ -21,14 +21,17 @@
 
 namespace unit {
 
+namespace {
+
 class ImageTest : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
     image = create_image();
   }
 
+ public:
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Image> create_image()
   {
     auto runtime = legate::Runtime::get_runtime();
@@ -44,6 +47,8 @@ class ImageTest : public DefaultFixture {
 
   legate::InternalSharedPtr<legate::detail::Image> image;
 };
+
+}  // namespace
 
 TEST_F(ImageTest, Compare)
 {

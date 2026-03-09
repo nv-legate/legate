@@ -153,7 +153,7 @@ class LEGATE_EXPORT Constraint {
       left,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
-      right);
+      right) noexcept;
 
 /**
  * @brief Construct an alignment constraint descriptor for all input arguments.
@@ -164,7 +164,7 @@ class LEGATE_EXPORT Constraint {
  *
  * @return The alignment descriptor.
  */
-[[nodiscard]] LEGATE_EXPORT ProxyConstraint align(ProxyInputArguments proxies);
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint align(ProxyInputArguments proxies) noexcept;
 
 /**
  * @brief Construct an alignment constraint descriptor for all output arguments.
@@ -175,7 +175,7 @@ class LEGATE_EXPORT Constraint {
  *
  * @return The alignment descriptor.
  */
-[[nodiscard]] LEGATE_EXPORT ProxyConstraint align(ProxyOutputArguments proxies);
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint align(ProxyOutputArguments proxies) noexcept;
 
 /**
  * @brief Creates a broadcast constraint on a variable.
@@ -294,7 +294,7 @@ class LEGATE_EXPORT Constraint {
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       value,
-  const std::optional<tuple<std::uint32_t>>& axes = std::nullopt);
+  const std::optional<tuple<std::uint32_t>>& axes = std::nullopt) noexcept;
 
 /**
  * @brief Hints to the runtime for the image computation
@@ -362,7 +362,7 @@ image(Variable var_function,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_range,
-  std::optional<ImageComputationHint> hint = std::nullopt);
+  std::optional<ImageComputationHint> hint = std::nullopt) noexcept;
 
 /**
  * @brief Creates a scaling constraint between partitions
@@ -419,7 +419,7 @@ image(Variable var_function,
       var_smaller,
   std::
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
-      var_bigger);
+      var_bigger) noexcept;
 
 /**
  * @brief Creates a bloating constraint between partitions
@@ -479,7 +479,7 @@ image(Variable var_function,
     variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
       var_bloat,
   Span<const std::uint64_t> low_offsets,
-  Span<const std::uint64_t> high_offsets);
+  Span<const std::uint64_t> high_offsets) noexcept;
 
 /** @} */
 

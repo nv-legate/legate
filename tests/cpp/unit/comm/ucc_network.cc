@@ -26,6 +26,8 @@
 
 namespace ucc_network_test {
 
+namespace {
+
 class UCCNetworkTest : public DefaultFixture {};
 
 using legate::detail::comm::coll::OOBAllgather;
@@ -121,6 +123,8 @@ class MockOOBForUCC final : public OOBAllgather {
 
   ucc_status_t free(void* /*request*/) override { return UCC_OK; }
 };
+
+}  // namespace
 
 // Test UCCNetwork construction and basic properties
 TEST_F(UCCNetworkTest, ConstructionAndBasicProperties)

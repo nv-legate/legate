@@ -28,12 +28,12 @@ constexpr std::uint32_t UINT32_VALUE = 999;
 constexpr std::uint64_t UINT64_VALUE = 100;
 constexpr float FLOAT_VALUE          = 1.23F;
 constexpr double DOUBLE_VALUE        = -4.567;
-// NOLINTBEGIN(cert-err58-cpp)
+// NOLINTBEGIN(cert-err58-cpp, bugprone-throwing-static-initialization)
 const std::string STRING_VALUE = "123";
 const legate::Half FLOAT16_VALUE{0.1F};
 constexpr legate::Complex<float> COMPLEX_FLOAT_VALUE{0, 1};
 constexpr legate::Complex<double> COMPLEX_DOUBLE_VALUE{0, 1};
-// NOLINTEND(cert-err58-cpp)
+// NOLINTEND(cert-err58-cpp, bugprone-throwing-static-initialization)
 constexpr std::uint32_t DATA_SIZE = 10;
 
 enum class SmallEnumType : std::uint8_t { FOO };

@@ -212,7 +212,7 @@ class MDSpanAccessor {
     return accessor_[p + origin_];
   }
 
-  LEGATE_HOST_DEVICE [[nodiscard]] typename offset_policy::data_handle_type offset(
+  LEGATE_HOST_DEVICE [[nodiscard]] offset_policy::data_handle_type offset(
     data_handle_type handle, std::size_t i) const noexcept
   {
     return handle + i;

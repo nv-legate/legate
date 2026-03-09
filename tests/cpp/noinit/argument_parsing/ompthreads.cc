@@ -23,8 +23,12 @@
 
 namespace test_configure_ompthreads {
 
+namespace {
+
 class ConfigureOpenMPThreadsUnit : public DefaultFixture,
                                    public ::testing::WithParamInterface<bool> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ConfigureOpenMPThreadsUnit,

@@ -11,31 +11,31 @@
 
 namespace legate {
 
-constexpr VariantOptions& VariantOptions::with_concurrent(bool _concurrent)
+constexpr VariantOptions& VariantOptions::with_concurrent(bool _concurrent) noexcept
 {
   concurrent = _concurrent;
   return *this;
 }
 
-constexpr VariantOptions& VariantOptions::with_has_allocations(bool _has_allocations)
+constexpr VariantOptions& VariantOptions::with_has_allocations(bool _has_allocations) noexcept
 {
   has_allocations = _has_allocations;
   return *this;
 }
 
-constexpr VariantOptions& VariantOptions::with_elide_device_ctx_sync(bool elide_sync)
+constexpr VariantOptions& VariantOptions::with_elide_device_ctx_sync(bool elide_sync) noexcept
 {
   elide_device_ctx_sync = elide_sync;
   return *this;
 }
 
-constexpr VariantOptions& VariantOptions::with_has_side_effect(bool side_effect)
+constexpr VariantOptions& VariantOptions::with_has_side_effect(bool side_effect) noexcept
 {
   has_side_effect = side_effect;
   return *this;
 }
 
-constexpr VariantOptions& VariantOptions::with_may_throw_exception(bool may_throw)
+constexpr VariantOptions& VariantOptions::with_may_throw_exception(bool may_throw) noexcept
 {
   may_throw_exception = may_throw;
   return *this;

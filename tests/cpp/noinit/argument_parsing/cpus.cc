@@ -22,7 +22,11 @@
 
 namespace test_configure_cpus {
 
+namespace {
+
 class ConfigureCPUsUnit : public DefaultFixture, public ::testing::WithParamInterface<bool> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ConfigureCPUsUnit,

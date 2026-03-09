@@ -14,7 +14,11 @@
 
 namespace traced_exception_test {
 
+namespace {
+
 class TracedExceptionBaseUnit : public TracedExceptionFixture {};
+
+}  // namespace
 
 TEST_F(TracedExceptionBaseUnit, Base)
 {

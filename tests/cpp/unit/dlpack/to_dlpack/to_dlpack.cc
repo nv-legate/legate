@@ -20,9 +20,9 @@
 
 namespace test_to_dlpack {
 
-class ToDLPackUnit : public DefaultFixture {};
-
 namespace {
+
+class ToDLPackUnit : public DefaultFixture {};
 
 template <typename T>
 [[nodiscard]] std::pair<legate::LogicalStore, legate::Type> make_store(const legate::Shape& shape,
@@ -87,10 +87,10 @@ void check_tensor_basic(const DLTensor& tensor, const legate::LogicalStore& stor
   ASSERT_EQ(size, store.extents().volume());
 }
 
-}  // namespace
-
 template <typename T>
 class ToDLPackUnitTyped : public ToDLPackUnit {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(ToDLPackUnitTyped, dlpack_common::AllTypes, dlpack_common::NameGenerator);
 
@@ -303,9 +303,13 @@ TYPED_TEST(ToDLPackUnitTyped, NeverCopy)
   }
 }
 
+namespace {
+
 class ToDLPackUnitVersion
   : public ToDLPackUnit,
     public ::testing::WithParamInterface<std::pair<DLPackVersion, DLPackVersion>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(,
                          ToDLPackUnitVersion,
@@ -331,9 +335,13 @@ TEST_P(ToDLPackUnitVersion, Supported)
   ASSERT_EQ(dlpack->version.minor, expected.minor);
 }
 
+namespace {
+
 class ToDLPackUnitUnsupportedLegateTypeInput
   : public ToDLPackUnit,
     public ::testing::WithParamInterface<legate::Type::Code> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(ToDLPackUnitLegateType,
                          ToDLPackUnitUnsupportedLegateTypeInput,

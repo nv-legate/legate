@@ -36,6 +36,8 @@ using legate::detail::comm::coll::BackendNetwork;
 using legate::detail::comm::coll::OOBAllgather;
 using legate::detail::comm::coll::UCCNetwork;
 
+namespace {
+
 /**
  * @brief This class will be shared by all ranks and will be used to allgather data.
  * This is used in a non-mpi environment.
@@ -549,6 +551,8 @@ class UCCIntegrationTypedTest : public UCCIntegrationTest {
     }
   }
 };
+
+}  // namespace
 
 TYPED_TEST_SUITE(UCCIntegrationTypedTest, TestTypes, ::testing::internal::DefaultNameGenerator);
 

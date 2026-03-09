@@ -20,6 +20,8 @@ namespace zip_shortest_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 class ZipShortestFn {
  public:
   template <typename... T>
@@ -28,6 +30,8 @@ class ZipShortestFn {
     return legate::detail::zip_shortest(std::forward<T>(args)...);
   }
 };
+
+}  // namespace
 
 using ZipTester = zip_iterator_common::ZipTester<ZipShortestFn>;
 

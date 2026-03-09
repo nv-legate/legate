@@ -83,7 +83,7 @@ class Config {
 };
 
 class IOHDF5NegativeTest : public RegisterOnceFixture<Config> {
- public:
+ protected:
   void SetUp() override
   {
     RegisterOnceFixture::SetUp();
@@ -96,7 +96,7 @@ class IOHDF5NegativeTest : public RegisterOnceFixture<Config> {
     ASSERT_NO_THROW(static_cast<void>(std::filesystem::remove_all(base_path)));
   }
 
-  // NOLINTNEXTLINE(cert-err58-cpp)
+  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
   static inline auto base_path = std::filesystem::temp_directory_path() /
                                  (std::string{"legate_"} + std::string{Config::LIBRARY_NAME});
 };

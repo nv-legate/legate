@@ -13,6 +13,8 @@
 
 namespace test_is_running_in_task {
 
+namespace {
+
 struct Checker : public legate::LegateTask<Checker> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
@@ -34,6 +36,8 @@ class Config {
 };
 
 class IsRunningInTask : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(IsRunningInTask, Toplevel) { EXPECT_FALSE(legate::is_running_in_task()); }
 

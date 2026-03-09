@@ -22,9 +22,13 @@ using LogicalRegionFieldUnit = DefaultFixture;
 
 using LogicalRegionFieldDeathTest = LogicalRegionFieldUnit;
 
+namespace {
+
 class CreateLogicalRegionFieldTest
   : public LogicalRegionFieldUnit,
     public ::testing::WithParamInterface<std::tuple<legate::Shape, legate::Type, std::uint32_t>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(LogicalRegionFieldUnit,
                          CreateLogicalRegionFieldTest,

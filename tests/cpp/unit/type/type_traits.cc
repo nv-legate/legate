@@ -198,6 +198,8 @@ static_assert(!legate::is_complex_type<std::string>::value);
 
 namespace is_instance_of_test {
 
+namespace {
+
 template <typename T>
 class TemplateClass {};
 
@@ -205,6 +207,8 @@ template <typename T = void>
 class TemplateClassWithDefault {};
 
 class NotTemplate {};
+
+}  // namespace
 
 static_assert(legate::detail::is_instance_of_v<TemplateClass<int>, TemplateClass>);
 static_assert(!legate::detail::is_instance_of_v<int, TemplateClass>);

@@ -8,8 +8,12 @@
 
 #include <noinit/shared_ptr_util.h>
 
+namespace {
+
 template <typename T>
 struct SharedPtrUnit : BasicSharedPtrUnit<T> {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(SharedPtrUnit, BasicSharedPtrTypeList, );
 

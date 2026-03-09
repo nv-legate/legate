@@ -18,8 +18,6 @@ namespace {
 constexpr std::int32_t CONTEXT_TEST_BASE_TASK_ID     = 0;
 constexpr std::string_view CONTEXT_TEST_LIBRARY_NAME = "test_physical_task_context";
 
-}  // namespace
-
 // Custom task for testing mixed I/O: reads from input, modifies, writes to output
 struct MixedIOTask : public legate::LegateTask<MixedIOTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -116,6 +114,8 @@ class ContextTestConfig {
 
 // Test fixture for context tests using RegisterOnceFixture pattern
 class PhysicalTaskContextTests : public RegisterOnceFixture<ContextTestConfig> {};
+
+}  // namespace
 
 // Test mixed input/output: same PhysicalArray as both input and output
 TEST_F(PhysicalTaskContextTests, PhysicalTaskMixedInputOutput)

@@ -56,7 +56,7 @@ class InternalWeakPtr {
 
  public:
   using element_type   = typename shared_type::element_type;
-  using ref_count_type = typename control_block_type::ref_count_type;
+  using ref_count_type = control_block_type::ref_count_type;
 
   // Constructors
   constexpr InternalWeakPtr() noexcept = default;
@@ -140,7 +140,7 @@ class InternalSharedPtr {
   static_assert(!std::is_reference_v<T>);
   using element_type   = std::remove_extent_t<T>;
   using weak_type      = InternalWeakPtr<T>;
-  using ref_count_type = typename control_block_type::ref_count_type;
+  using ref_count_type = control_block_type::ref_count_type;
 
   // constructors
   constexpr InternalSharedPtr() noexcept = default;
@@ -283,7 +283,9 @@ class InternalSharedPtr {
 
   template <typename U, typename V>
   void init_shared_from_this_(const EnableSharedFromThis<U>*, V*);
-  void init_shared_from_this_(...);
+  // intentional: ellipsis has lowest conversion rank so the EnableSharedFromThis overload wins when
+  // viable; a parameter-pack overload (Args&&) would exact-match and wrongly take precedence
+  void init_shared_from_this_(...);  // NOLINT(modernize-avoid-variadic-functions)
 
   void maybe_destroy_() noexcept;
   void strong_reference_() noexcept;
@@ -503,13 +505,10 @@ class LEGATE_EXPORT BadInternalWeakPtr : public std::bad_weak_ptr {
 
 }  // namespace legate
 
-namespace std {
-
 template <typename T>
-struct hash<legate::InternalSharedPtr<T>> {  // NOLINT(cert-dcl58-cpp) extending std::hash is OK
+// NOLINTNEXTLINE(cert-dcl58-cpp, bugprone-std-namespace-modification)
+struct std::hash<legate::InternalSharedPtr<T>> {
   [[nodiscard]] std::size_t operator()(const legate::InternalSharedPtr<T>& ptr) const noexcept;
 };
-
-}  // namespace std
 
 #include <legate/utilities/internal_shared_ptr.inl>

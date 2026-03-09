@@ -20,7 +20,7 @@ namespace test_inline_storage_unit {
 namespace {
 
 class InlineStorageUnit : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     ASSERT_NO_THROW(legate::start());

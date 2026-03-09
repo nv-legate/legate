@@ -24,8 +24,6 @@ namespace {
 std::unordered_map<Legion::ProjectionID, Legion::ShardID> functor_id_table{};
 std::mutex functor_table_lock{};
 
-}  // namespace
-
 class ToplevelTaskShardingFunctor final : public Legion::ShardingFunctor {
  public:
   [[nodiscard]] Legion::ShardID shard(const DomainPoint& p,
@@ -86,6 +84,8 @@ class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
   }
 };
 
+}  // namespace
+
 void register_legate_core_sharding_functors(const detail::Library& core_library)
 {
   auto runtime = Legion::Runtime::get_runtime();
@@ -101,6 +101,8 @@ void register_legate_core_sharding_functors(const detail::Library& core_library)
   // Use linearizing functor for identity projections
   functor_id_table[0] = sharding_id;
 }
+
+namespace {
 
 class LegateShardingFunctor final : public Legion::ShardingFunctor {
  public:
@@ -128,6 +130,8 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
   mapping::ProcessorRange range_{};
 };
 
+}  // namespace
+
 Legion::ShardingID find_sharding_functor_by_projection_functor(Legion::ProjectionID proj_id)
 {
   const std::scoped_lock<std::mutex> lock{functor_table_lock};
@@ -137,14 +141,14 @@ Legion::ShardingID find_sharding_functor_by_projection_functor(Legion::Projectio
   return it->second;
 }
 
+namespace {
+
 class ShardingCallbackArgs {
  public:
   Legion::ShardID shard_id{};
   Legion::ProjectionID proj_id{};
   mapping::ProcessorRange range{};
 };
-
-namespace {
 
 void sharding_functor_registration_callback(const Legion::RegistrationCallbackArgs& args)
 {

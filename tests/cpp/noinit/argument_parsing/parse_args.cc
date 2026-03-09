@@ -21,6 +21,8 @@
 
 namespace test_parse_args {
 
+namespace {
+
 class ParseArgsUnitNoEnv : public DefaultFixture {};
 
 class ParseArgsUnit : public DefaultFixture {
@@ -66,6 +68,8 @@ class ParseArgsUnit : public DefaultFixture {
   TemporaryEnvVar legate_cuda_driver_ =
     Environment::temporary_cleared_env_var("LEGATE_CUDA_DRIVER");
 };
+
+}  // namespace
 
 MATCHER_P(
   ScaledArgumentMatches,  // NOLINT
@@ -265,10 +269,10 @@ auto BoolCLArgs::values()
   return ::testing::ValuesIn(values);
 }
 
-}  // namespace
-
 class BoolArgs : public ParseArgsUnit,
                  public ::testing::WithParamInterface<std::pair<std::string_view, bool>> {};
+
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(ParseArgsUnit, BoolArgs, BoolCLArgs::values(), BoolCLArgs{});
 

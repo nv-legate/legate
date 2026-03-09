@@ -177,13 +177,13 @@ class LEGATE_EXPORT VariantOptions {
    *
    * @param `concurrent` A new value for the `concurrent` flag
    */
-  constexpr VariantOptions& with_concurrent(bool concurrent);
+  constexpr VariantOptions& with_concurrent(bool concurrent) noexcept;
   /**
    * @brief Changes the value of the `has_allocations` flag
    *
    * @param `has_allocations` A new value for the `has_allocations` flag
    */
-  constexpr VariantOptions& with_has_allocations(bool has_allocations);
+  constexpr VariantOptions& with_has_allocations(bool has_allocations) noexcept;
 
   /**
    * @brief Sets whether the variant can elide device context synchronization after task
@@ -196,7 +196,7 @@ class LEGATE_EXPORT VariantOptions {
    *
    * @see elide_device_ctx_sync
    */
-  constexpr VariantOptions& with_elide_device_ctx_sync(bool elide_sync);
+  constexpr VariantOptions& with_elide_device_ctx_sync(bool elide_sync) noexcept;
 
   /**
    * @brief Sets whether the variant has side effects.
@@ -207,7 +207,7 @@ class LEGATE_EXPORT VariantOptions {
    *
    * @see has_side_effect.
    */
-  constexpr VariantOptions& with_has_side_effect(bool side_effect);
+  constexpr VariantOptions& with_has_side_effect(bool side_effect) noexcept;
 
   /**
    * @brief Sets whether the variant may throw exceptions.
@@ -218,7 +218,7 @@ class LEGATE_EXPORT VariantOptions {
    *
    * @see may_throw_exception.
    */
-  constexpr VariantOptions& with_may_throw_exception(bool may_throw);
+  constexpr VariantOptions& with_may_throw_exception(bool may_throw) noexcept;
 
   /**
    * @brief Sets the communicator(s) for the variant.

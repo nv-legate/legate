@@ -15,8 +15,12 @@ namespace test_scaled {
 
 using ArgumentTypes = ::testing::Types<std::uint32_t, std::int64_t>;
 
+namespace {
+
 template <typename T>
 class ScaledUnit : public DefaultFixture {};
+
+}  // namespace
 
 TYPED_TEST_SUITE(ScaledUnit, ArgumentTypes, );
 

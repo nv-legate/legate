@@ -197,8 +197,6 @@ void physical_task_api_reduction_test(const legate::PhysicalArray& array)
   // Don't submit the task - just test the API calls work
 }
 
-}  // namespace
-
 // Test class definitions
 class PhysicalTaskNormal : public TaskStoreTests,
                            public ::testing::WithParamInterface<std::tuple<bool, legate::Shape>> {};
@@ -218,6 +216,8 @@ class PhysicalTaskAPIInput : public PhysicalTaskAPI {};
 class PhysicalTaskAPIOutput : public PhysicalTaskAPI {};
 
 class PhysicalTaskAPIReduction : public PhysicalTaskAPI {};
+
+}  // namespace
 
 // Test instantiations
 INSTANTIATE_TEST_SUITE_P(TaskStoreTests,
@@ -304,6 +304,8 @@ TEST_P(PhysicalTaskAPIReduction, Basic)
   physical_task_api_reduction_test(array);
 }
 
+namespace {
+
 // Config class for basic tests with independent task registration
 class BasicTestConfig {
  public:
@@ -319,6 +321,8 @@ class BasicTestConfig {
 
 // Test fixture for basic tests using RegisterOnceFixture pattern
 class PhysicalTaskBasicTests : public RegisterOnceFixture<BasicTestConfig> {};
+
+}  // namespace
 
 // Test for TaskContext overload
 TEST_F(PhysicalTaskBasicTests, PhysicalTaskWithTaskContext)

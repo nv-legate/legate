@@ -101,7 +101,7 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
 
     index_partition = construct_image_partition();
     part_mgr.record_image_partition(target, func_partition, field_id, hint_, index_partition);
-    func_rf->add_invalidation_callback([target, func_partition, field_id, hint = hint_]() noexcept {
+    func_rf->add_invalidation_callback([target, func_partition, field_id, hint = hint_]() {
       detail::Runtime::get_runtime().partition_manager().invalidate_image_partition(
         target, func_partition, field_id, hint);
     });

@@ -17,8 +17,12 @@
 #include <stdexcept>
 #include <thread>
 
+namespace {
+
 template <typename T>
 struct InternalSharedPtrUnit : BasicSharedPtrUnit<T> {};
+
+}  // namespace
 
 // NOLINTBEGIN(readability-magic-numbers)
 
@@ -400,9 +404,9 @@ TYPED_TEST(InternalSharedPtrUnit, Array)
 
 namespace legate {
 
-class InternalSharedPtrUnitFriend : public BasicSharedPtrUnit<> {};
-
 namespace {
+
+class InternalSharedPtrUnitFriend : public BasicSharedPtrUnit<> {};
 
 constexpr const char EXCEPTION_TEXT[] = "There is no peace but the Pax Romana";
 

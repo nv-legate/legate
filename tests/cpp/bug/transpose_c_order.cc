@@ -12,6 +12,8 @@
 
 namespace test_transpose_c_order {
 
+namespace {
+
 class Tester : public legate::LegateTask<Tester> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -25,11 +27,10 @@ class Tester : public legate::LegateTask<Tester> {
   }
 };
 
-namespace {
-
 constexpr std::string_view LIBRARY_NAME = "test_transpose_c_order";
 
 class LibraryMapper : public legate::mapping::Mapper {
+ public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override
@@ -57,10 +58,8 @@ class LibraryMapper : public legate::mapping::Mapper {
   }
 };
 
-}  // namespace
-
 class TransposeCOrder : public DefaultFixture {
- public:
+ protected:
   void SetUp() override
   {
     DefaultFixture::SetUp();
@@ -75,6 +74,8 @@ class TransposeCOrder : public DefaultFixture {
     }
   }
 };
+
+}  // namespace
 
 TEST_F(TransposeCOrder, Test)
 {
