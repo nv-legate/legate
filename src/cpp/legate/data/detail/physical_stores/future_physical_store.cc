@@ -8,12 +8,20 @@
 
 #include <legate/mapping/mapping.h>
 #include <legate/utilities/assert.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <utility>
 
 namespace legate::detail {
 
 mapping::StoreTarget FuturePhysicalStore::target() const { return future_.target(); }
+
+InternalSharedPtr<LogicalStore> FuturePhysicalStore::to_logical_store(
+  const InternalSharedPtr<PhysicalStore>& /*self*/) const
+{
+  throw TracedException<std::runtime_error>{
+    "FuturePhysicalStore does not support to_logical_store()"};
+}
 
 ReturnValue FuturePhysicalStore::pack() const { return future_.pack(type()); }
 

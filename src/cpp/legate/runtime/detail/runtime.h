@@ -328,20 +328,6 @@ class Runtime {
     Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
     InternalSharedPtr<mapping::detail::DimOrdering> ordering);
 
-  /**
-   * @brief Creates a LogicalStore wrapping an existing PhysicalStore.
-   *
-   * Used in nested task execution to convert a PhysicalStore into a LogicalStore
-   * that can be passed to library operations. The resulting store shares the same
-   * Legion region and is marked as already-mapped and non-transformable.
-   *
-   * @param physical_store The PhysicalStore to wrap. Must be region-backed.
-   * @return LogicalStore wrapping the same Legion region.
-   * @throws std::runtime_error if the PhysicalStore is not region-backed.
-   */
-  [[nodiscard]] InternalSharedPtr<LogicalStore> create_logical_store_from_physical(
-    InternalSharedPtr<PhysicalStore> physical_store);
-
   void prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
                                   SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
                                   SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets,

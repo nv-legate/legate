@@ -181,10 +181,8 @@ struct ParentTaskWithNestedAutoTask : public legate::LegateTask<ParentTaskWithNe
     auto input_physical_array  = context.input(0);
     auto output_physical_array = context.output(0);
 
-    auto input_logical_store =
-      runtime->create_logical_store_from_physical(input_physical_array.data());
-    auto output_logical_store =
-      runtime->create_logical_store_from_physical(output_physical_array.data());
+    auto input_logical_store  = input_physical_array.data().to_logical_store();
+    auto output_logical_store = output_physical_array.data().to_logical_store();
 
     auto input_logical_array  = legate::LogicalArray{input_logical_store};
     auto output_logical_array = legate::LogicalArray{output_logical_store};
@@ -355,7 +353,7 @@ TEST_F(PhysicalTaskNestedTests, CreateLogicalStoreFromPhysical)
   auto store    = runtime->create_store(legate::Shape{5}, legate::int32());
   auto physical = store.get_physical_store();
 
-  auto logical = runtime->create_logical_store_from_physical(physical);
+  auto logical = physical.to_logical_store();
 
   ASSERT_EQ(logical.dim(), 1);
   ASSERT_EQ(logical.extents()[0], 5);
@@ -368,7 +366,7 @@ TEST_F(PhysicalTaskNestedTests, CreateLogicalStoreFromPhysicalMultiDim)
 
   auto store_2d    = runtime->create_store(legate::Shape{3, 4}, legate::float32());
   auto physical_2d = store_2d.get_physical_store();
-  auto logical_2d  = runtime->create_logical_store_from_physical(physical_2d);
+  auto logical_2d  = physical_2d.to_logical_store();
 
   ASSERT_EQ(logical_2d.dim(), 2);
   ASSERT_EQ(logical_2d.extents()[0], 3);
@@ -376,7 +374,7 @@ TEST_F(PhysicalTaskNestedTests, CreateLogicalStoreFromPhysicalMultiDim)
 
   auto store_3d    = runtime->create_store(legate::Shape{2, 3, 4}, legate::int64());
   auto physical_3d = store_3d.get_physical_store();
-  auto logical_3d  = runtime->create_logical_store_from_physical(physical_3d);
+  auto logical_3d  = physical_3d.to_logical_store();
 
   ASSERT_EQ(logical_3d.dim(), 3);
   ASSERT_EQ(logical_3d.extents()[0], 2);
@@ -392,7 +390,7 @@ TEST_F(PhysicalTaskNestedTests, CreateLogicalStoreFromPhysicalRejectsFuture)
     runtime->create_store(legate::Shape{1}, legate::int32(), /*optimize_scalar=*/true);
   auto physical = scalar_store.get_physical_store();
 
-  EXPECT_THROW((void)runtime->create_logical_store_from_physical(physical), std::runtime_error);
+  EXPECT_THROW((void)physical.to_logical_store(), std::runtime_error);
 }
 
 TEST_F(PhysicalTaskNestedTests, LogicalStoreFromPhysicalRejectsTransform)
@@ -402,7 +400,7 @@ TEST_F(PhysicalTaskNestedTests, LogicalStoreFromPhysicalRejectsTransform)
   constexpr std::int64_t test_dim = 10;
   auto store    = runtime->create_store(legate::Shape{test_dim, test_dim}, legate::int32());
   auto physical = store.get_physical_store();
-  auto logical  = runtime->create_logical_store_from_physical(physical);
+  auto logical  = physical.to_logical_store();
 
   EXPECT_THROW((void)logical.slice(0, legate::Slice{2, 5}), std::runtime_error);
   EXPECT_THROW((void)logical.transpose({1, 0}), std::runtime_error);
@@ -417,7 +415,7 @@ TEST_F(PhysicalTaskNestedTests, LogicalStorePointsToSamePhysical)
 
   auto store           = runtime->create_store(legate::Shape{5, 5}, legate::int32());
   auto input_physical  = store.get_physical_store();
-  auto logical         = runtime->create_logical_store_from_physical(input_physical);
+  auto logical         = input_physical.to_logical_store();
   auto output_physical = logical.get_physical_store();
 
   EXPECT_EQ(input_physical.impl().get(), output_physical.impl().get());

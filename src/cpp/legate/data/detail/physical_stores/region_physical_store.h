@@ -15,6 +15,7 @@
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
+#include <optional>
 #include <utility>
 
 namespace legate::mapping {
@@ -39,10 +40,28 @@ class RegionPhysicalStore final : public PhysicalStore {
   [[nodiscard]] mapping::StoreTarget target() const override;
   [[nodiscard]] bool is_partitioned() const override;
 
+  /**
+   * @brief Returns the backing logical region.
+   * @return The logical region.
+   */
+  [[nodiscard]] std::optional<Legion::LogicalRegion> get_logical_region() const override;
+
+  /**
+   * @brief Returns the backing field ID.
+   * @return The field ID.
+   */
+  [[nodiscard]] std::optional<Legion::FieldID> get_field_id() const override;
+
+  /**
+   * @brief Creates a LogicalStore wrapping this region-backed store.
+   * @param self Shared pointer to this store.
+   * @return LogicalStore wrapping the same backing storage.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalStore> to_logical_store(
+    const InternalSharedPtr<PhysicalStore>& self) const override;
+
   // region field specific interface
   [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field() const;
-  [[nodiscard]] Legion::LogicalRegion get_logical_region() const;
-  [[nodiscard]] Legion::FieldID get_field_id() const;
 
  private:
   RegionField region_field_{};

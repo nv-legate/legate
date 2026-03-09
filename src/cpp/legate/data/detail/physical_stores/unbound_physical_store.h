@@ -40,6 +40,14 @@ class UnboundPhysicalStore final : public PhysicalStore {
   [[nodiscard]] InlineAllocation get_inline_allocation() const override;
   [[nodiscard]] mapping::StoreTarget target() const override;
   [[nodiscard]] bool is_partitioned() const override;
+  /**
+   * @brief Creates a LogicalStore wrapping this unbound PhysicalStore.
+   * @param self Shared pointer to this store.
+   * @return LogicalStore wrapping the same backing storage.
+   * @throws std::runtime_error Unbound PhysicalStores do not support this operation.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalStore> to_logical_store(
+    const InternalSharedPtr<PhysicalStore>& self) const override;
 
   // Unbound specific API
   void bind_empty_data();

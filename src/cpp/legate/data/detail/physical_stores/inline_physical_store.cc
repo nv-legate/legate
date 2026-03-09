@@ -7,6 +7,7 @@
 #include <legate/data/detail/physical_stores/inline_physical_store.h>
 
 #include <legate/type/type_traits.h>
+#include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/dispatch.h>
 
 #include <legion/api/config.h>
@@ -66,6 +67,13 @@ class GetInlineAllocationPtr {
 };
 
 }  // namespace
+
+InternalSharedPtr<LogicalStore> InlinePhysicalStore::to_logical_store(
+  const InternalSharedPtr<PhysicalStore>& /*self*/) const
+{
+  throw TracedException<std::runtime_error>{
+    "InlinePhysicalStore does not support to_logical_store()"};
+}
 
 InlineAllocation InlinePhysicalStore::get_inline_allocation() const
 {

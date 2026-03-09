@@ -14,6 +14,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 namespace legate::mapping {
 
@@ -23,6 +24,7 @@ enum class StoreTarget : std::uint8_t;
 
 namespace legate::detail {
 
+class LogicalStore;
 class RegionPhysicalStore;
 class UnboundPhysicalStore;
 class FuturePhysicalStore;
@@ -100,6 +102,27 @@ class PhysicalStore {
   void check_reduction_access() const;
   void check_scalar_store() const;
   void check_unbound_store() const;
+
+  /**
+   * @brief Get the logical region if this is a region-backed store.
+   * @return The logical region, or std::nullopt for non-region stores.
+   */
+  [[nodiscard]] virtual std::optional<Legion::LogicalRegion> get_logical_region() const;
+
+  /**
+   * @brief Get the field ID if this is a region-backed store.
+   * @return The field ID, or std::nullopt for non-region stores.
+   */
+  [[nodiscard]] virtual std::optional<Legion::FieldID> get_field_id() const;
+
+  /**
+   * @brief Creates a LogicalStore wrapping this PhysicalStore.
+   * @param self Shared pointer to this store.
+   * @return LogicalStore wrapping the same backing storage.
+   * @throws std::runtime_error if not supported for this store type.
+   */
+  [[nodiscard]] virtual InternalSharedPtr<LogicalStore> to_logical_store(
+    const InternalSharedPtr<PhysicalStore>& self) const = 0;
 
  protected:
   InternalSharedPtr<detail::TransformStack> transform_{};

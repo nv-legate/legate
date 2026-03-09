@@ -6,7 +6,12 @@
 
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/shape.h>
+#include <legate/data/detail/storage.h>
 #include <legate/utilities/assert.h>
+#include <legate/utilities/detail/tuple.h>
 
 namespace legate::detail {
 
@@ -32,11 +37,44 @@ InlineAllocation RegionPhysicalStore::get_inline_allocation() const
   return region_field_.get_inline_allocation();
 }
 
-Legion::LogicalRegion RegionPhysicalStore::get_logical_region() const
+std::optional<Legion::LogicalRegion> RegionPhysicalStore::get_logical_region() const
 {
   return get_region_field().first.get_logical_region();
 }
 
-Legion::FieldID RegionPhysicalStore::get_field_id() const { return get_region_field().second; }
+std::optional<Legion::FieldID> RegionPhysicalStore::get_field_id() const
+{
+  return get_region_field().second;
+}
+
+InternalSharedPtr<LogicalStore> RegionPhysicalStore::to_logical_store(
+  const InternalSharedPtr<PhysicalStore>& self) const
+{
+  auto [pr, fid]      = get_region_field();
+  auto logical_region = pr.get_logical_region();
+
+  auto store_domain = domain();
+
+  auto extents = from_domain(store_domain);
+
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents_copy = extents;
+  auto shape_for_region_field = make_internal_shared<Shape>(std::move(extents_copy));
+  auto shape_for_storage      = make_internal_shared<Shape>(std::move(extents));
+
+  auto field_size   = type()->size();
+  auto region_field = make_internal_shared<LogicalRegionField>(std::move(shape_for_region_field),
+                                                               field_size,
+                                                               logical_region,
+                                                               fid,
+                                                               /*parent=*/std::nullopt,
+                                                               /*non_owning=*/true);
+
+  region_field->mark_already_mapped();
+
+  auto storage = make_internal_shared<Storage>(
+    std::move(shape_for_storage), std::move(region_field), /*provenance=*/"from_physical_store");
+
+  return make_internal_shared<LogicalStore>(std::move(storage), type(), self);
+}
 
 }  // namespace legate::detail

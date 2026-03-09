@@ -13,6 +13,13 @@
 
 namespace legate::detail {
 
+InternalSharedPtr<LogicalStore> UnboundPhysicalStore::to_logical_store(
+  const InternalSharedPtr<PhysicalStore>& /*self*/) const
+{
+  throw TracedException<std::runtime_error>{
+    "UnboundPhysicalStore does not support to_logical_store()"};
+}
+
 Domain UnboundPhysicalStore::domain() const
 {
   throw TracedException<std::invalid_argument>{

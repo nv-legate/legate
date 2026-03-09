@@ -9,6 +9,7 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/scalar.h>
+#include <legate/mapping/mapping.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/operation/detail/task_array_arg.h>
 #include <legate/partitioning/constraint.h>
@@ -84,6 +85,87 @@ class TaskBase : public Operation {
   [[nodiscard]] const Library& library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
+  /**
+   * @brief Add an input array to the task, auto-assigning a partition symbol.
+   *
+   * @param array The array to add as input.
+   * @return The auto-assigned partition symbol for the array.
+   */
+  [[nodiscard]] virtual const Variable* add_input(InternalSharedPtr<LogicalArray> array) = 0;
+
+  /**
+   * @brief Add an output array to the task, auto-assigning a partition symbol.
+   *
+   * @param array The array to add as output.
+   * @return The auto-assigned partition symbol for the array.
+   */
+  [[nodiscard]] virtual const Variable* add_output(InternalSharedPtr<LogicalArray> array) = 0;
+
+  /**
+   * @brief Add a reduction array to the task, auto-assigning a partition symbol.
+   *
+   * @param array The array to add for reductions.
+   * @param redop_kind The reduction operator kind.
+   * @return The auto-assigned partition symbol for the array.
+   */
+  [[nodiscard]] virtual const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+                                                      std::int32_t redop_kind) = 0;
+
+  /**
+   * @brief Add an input array with a caller-provided partition symbol.
+   *
+   * @param array The array to add as input.
+   * @param partition_symbol The partition symbol to bind to the array.
+   */
+  virtual void add_input(InternalSharedPtr<LogicalArray> array,
+                         const Variable* partition_symbol) = 0;
+
+  /**
+   * @brief Add an output array with a caller-provided partition symbol.
+   *
+   * @param array The array to add as output.
+   * @param partition_symbol The partition symbol to bind to the array.
+   */
+  virtual void add_output(InternalSharedPtr<LogicalArray> array,
+                          const Variable* partition_symbol) = 0;
+
+  /**
+   * @brief Add a reduction array with a caller-provided partition symbol.
+   *
+   * @param array The array to add for reductions.
+   * @param redop_kind The reduction operator kind.
+   * @param partition_symbol The partition symbol to bind to the array.
+   */
+  virtual void add_reduction(InternalSharedPtr<LogicalArray> array,
+                             std::int32_t redop_kind,
+                             const Variable* partition_symbol) = 0;
+
+  /**
+   * @brief Add a partitioning constraint to the task.
+   *
+   * @param constraint The constraint to add.
+   * @param bypass_signature_check If true, skip signature validation.
+   */
+  virtual void add_constraint(InternalSharedPtr<Constraint> constraint,
+                              bool bypass_signature_check);
+
+  /**
+   * @brief Add a communicator to the task.
+   *
+   * @param name Name of the communicator.
+   * @param bypass_signature_check If true, skip signature validation.
+   */
+  virtual void add_communicator(std::string_view name, bool bypass_signature_check);
+
+  /**
+   * @brief Finds an existing partition symbol for the array, or declares a new one.
+   *
+   * @param array The logical array to find or declare a partition for.
+   * @return Pointer to the partition symbol.
+   */
+  [[nodiscard]] virtual const Variable* find_or_declare_partition(
+    const InternalSharedPtr<LogicalArray>& array);
+
  protected:
   [[nodiscard]] const VariantInfo& variant_info_() const;
 
@@ -130,7 +212,7 @@ class LogicalTask : public TaskBase {
    * @param streaming_gen The streaming generation.
    */
   void set_streaming_generation(std::optional<StreamingGeneration> streaming_gen);
-  void add_communicator(std::string_view name, bool bypass_signature_check = false);
+  void add_communicator(std::string_view name, bool bypass_signature_check) override;
 
   /**
    * @return The streaming generation if the task is a streaming task, `std::nullopt` otherwise.
@@ -169,22 +251,22 @@ class AutoTask final : public LogicalTask {
            std::int32_t priority,
            mapping::detail::Machine machine);
 
-  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array);
-  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array);
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array) override;
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array) override;
   [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
-                                              std::int32_t redop_kind);
+                                              std::int32_t redop_kind) override;
 
-  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
-  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
+  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
+  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
   void add_reduction(InternalSharedPtr<LogicalArray> array,
                      std::int32_t redop_kind,
-                     const Variable* partition_symbol);
+                     const Variable* partition_symbol) override;
 
   [[nodiscard]] const Variable* find_or_declare_partition(
-    const InternalSharedPtr<LogicalArray>& array);
+    const InternalSharedPtr<LogicalArray>& array) override;
 
   void add_constraint(InternalSharedPtr<Constraint> constraint,
-                      bool bypass_signature_check = false);
+                      bool bypass_signature_check) override;
   void add_to_solver(ConstraintSolver& solver) override;
 
   void validate() override;
@@ -201,9 +283,6 @@ class AutoTask final : public LogicalTask {
  private:
   void fixup_ranges_(Strategy& strategy);
 
-  // For nested task execution: if set, AutoTask delegates to PhysicalTask
-  InternalSharedPtr<PhysicalTask> nested_physical_task_{};
-
   SmallVector<InternalSharedPtr<Constraint>> constraints_{};
   SmallVector<LogicalArray*> arrays_to_fixup_{};
 };
@@ -217,6 +296,16 @@ class ManualTask final : public LogicalTask {
              std::uint64_t unique_id,
              std::int32_t priority,
              mapping::detail::Machine machine);
+
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array) override;
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array) override;
+  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+                                              std::int32_t redop_kind) override;
+  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
+  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
+  void add_reduction(InternalSharedPtr<LogicalArray> array,
+                     std::int32_t redop_kind,
+                     const Variable* partition_symbol) override;
 
   void add_input(const InternalSharedPtr<LogicalStore>& store);
   void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -341,6 +430,17 @@ class PhysicalTask final : public TaskBase {
    * @param redop_kind Reduction operator kind (e.g., sum, max, min, product)
    */
   void add_reduction(InternalSharedPtr<PhysicalArray> array, std::int32_t redop_kind);
+
+  // Polymorphic array operations (override from TaskBase); convert LogicalArray to PhysicalArray
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array) override;
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array) override;
+  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+                                              std::int32_t redop_kind) override;
+  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
+  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
+  void add_reduction(InternalSharedPtr<LogicalArray> array,
+                     std::int32_t redop_kind,
+                     const Variable* partition_symbol) override;
 
   // Note: PhysicalTask uses physical_scalar_outputs() and physical_scalar_reductions()
   // instead of the LogicalStore-based methods in LogicalTask

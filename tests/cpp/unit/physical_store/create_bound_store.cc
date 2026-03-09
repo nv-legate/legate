@@ -160,6 +160,12 @@ class DummyPhysicalStore final : public legate::detail::PhysicalStore {
   }
 
   [[nodiscard]] bool is_partitioned() const override { return false; }
+
+  [[nodiscard]] legate::InternalSharedPtr<legate::detail::LogicalStore> to_logical_store(
+    const legate::InternalSharedPtr<legate::detail::PhysicalStore>& /*self*/) const override
+  {
+    throw std::runtime_error{"DummyPhysicalStore does not support to_logical_store()"};
+  }
 };
 
 struct UnregisteredType {

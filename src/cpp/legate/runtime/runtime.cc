@@ -208,10 +208,11 @@ LogicalStore Runtime::tree_reduce(Library library,
 
 void Runtime::submit(AutoTask&& task)
 {
-  if (task.is_inline_execution_()) {
+  if (task.needs_inline_execution_()) {
     // PhysicalTask variant = inline execution
     // Execute immediately, skip queue entirely
-    auto impl = task.release_physical_();
+    const auto impl = task.release_physical_();
+
     impl->validate();
     impl->launch();
     task.clear_user_refs_();
@@ -363,11 +364,6 @@ LogicalStore Runtime::create_store(const Shape& shape,
 {
   return LogicalStore{
     impl_->create_store(shape.impl(), type.impl(), allocation.impl(), ordering.impl())};
-}
-
-LogicalStore Runtime::create_logical_store_from_physical(const PhysicalStore& physical_store)
-{
-  return LogicalStore{impl_->create_logical_store_from_physical(physical_store.impl())};
 }
 
 std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(

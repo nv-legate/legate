@@ -41,6 +41,7 @@
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/detail/zip.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/machine.h>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -127,6 +128,23 @@ bool TaskBase::needs_flush() const
          std::any_of(reductions_.begin(), reductions_.end(), needs_flush);
 }
 
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+void TaskBase::add_constraint(InternalSharedPtr<Constraint>, bool)
+{
+  throw TracedException<std::runtime_error>{"add_constraint not supported for this task type"};
+}
+
+void TaskBase::add_communicator(std::string_view, bool)
+{
+  throw TracedException<std::runtime_error>{"add_communicator not supported for this task type"};
+}
+
+const Variable* TaskBase::find_or_declare_partition(const InternalSharedPtr<LogicalArray>&)
+{
+  throw TracedException<std::runtime_error>{
+    "find_or_declare_partition not supported for this task type"};
+}
+
 ////////////////////////////////////////////////////
 // legate::LogicalTask
 ////////////////////////////////////////////////////
@@ -145,6 +163,7 @@ LogicalTask::LogicalTask(const Library& library,
         LEGATE_CPP_VERSION_TODO(20, "No need to use empty comm as sentinel value anymore");
         break;
       }
+      // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.VirtualCall)
       add_communicator(comm, /* bypass_signature_check */ true);
     }
   }
@@ -447,14 +466,14 @@ AutoTask::AutoTask(const Library& library,
 
 const Variable* AutoTask::add_input(InternalSharedPtr<LogicalArray> array)
 {
-  auto symb = find_or_declare_partition(array);
+  const auto* symb = find_or_declare_partition(array);
   add_input(std::move(array), symb);
   return symb;
 }
 
 const Variable* AutoTask::add_output(InternalSharedPtr<LogicalArray> array)
 {
-  auto symb = find_or_declare_partition(array);
+  const auto* symb = find_or_declare_partition(array);
   add_output(std::move(array), symb);
   return symb;
 }
@@ -462,7 +481,7 @@ const Variable* AutoTask::add_output(InternalSharedPtr<LogicalArray> array)
 const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
                                         std::int32_t redop_kind)
 {
-  auto symb = find_or_declare_partition(array);
+  const auto* symb = find_or_declare_partition(array);
   add_reduction(std::move(array), redop_kind, symb);
   return symb;
 }
@@ -473,7 +492,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
     throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used as input"};
   }
 
-  auto& arg = inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(array));
+  auto& arg = inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, array);
 
   std::visit(
     Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
@@ -534,7 +553,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
   array->record_scalar_reductions(this, legion_redop_id);
   reduction_ops_.push_back(legion_redop_id);
 
-  auto& arg = reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, std::move(array));
+  auto& arg = reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, array);
 
   std::visit(
     Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
@@ -674,6 +693,36 @@ ManualTask::ManualTask(const Library& library,
 }
 
 const Domain& ManualTask::launch_domain() const { return strategy_->launch_domain(*this); }
+
+const Variable* ManualTask::add_input(InternalSharedPtr<LogicalArray>)
+{
+  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
+}
+
+const Variable* ManualTask::add_output(InternalSharedPtr<LogicalArray>)
+{
+  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
+}
+
+const Variable* ManualTask::add_reduction(InternalSharedPtr<LogicalArray>, std::int32_t)
+{
+  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
+}
+
+void ManualTask::add_input(InternalSharedPtr<LogicalArray>, const Variable*)
+{
+  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
+}
+
+void ManualTask::add_output(InternalSharedPtr<LogicalArray>, const Variable*)
+{
+  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
+}
+
+void ManualTask::add_reduction(InternalSharedPtr<LogicalArray>, std::int32_t, const Variable*)
+{
+  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
+}
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
 {
@@ -853,6 +902,64 @@ void PhysicalTask::add_scalar_reduction(InternalSharedPtr<PhysicalStore> store,
                                         GlobalRedopID redop_id)
 {
   scalar_reductions_.emplace_back(std::move(store), redop_id);
+}
+
+namespace {
+
+[[nodiscard]] mapping::StoreTarget inline_store_target()
+{
+  const auto mem_kind = find_memory_kind_for_executing_processor(/*host_accessible=*/false);
+  return mapping::detail::to_target(mem_kind);
+}
+
+}  // namespace
+
+const Variable* PhysicalTask::add_input(InternalSharedPtr<LogicalArray> array)
+{
+  auto physical =
+    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+  add_input(std::move(physical));
+  return nullptr;
+}
+
+const Variable* PhysicalTask::add_output(InternalSharedPtr<LogicalArray> array)
+{
+  auto physical =
+    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+  add_output(std::move(physical));
+  return nullptr;
+}
+
+const Variable* PhysicalTask::add_reduction(InternalSharedPtr<LogicalArray> array,
+                                            std::int32_t redop_kind)
+{
+  auto physical =
+    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+  add_reduction(std::move(physical), redop_kind);
+  return nullptr;
+}
+
+void PhysicalTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable*)
+{
+  auto physical =
+    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+  add_input(std::move(physical));
+}
+
+void PhysicalTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*)
+{
+  auto physical =
+    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+  add_output(std::move(physical));
+}
+
+void PhysicalTask::add_reduction(InternalSharedPtr<LogicalArray> array,
+                                 std::int32_t redop_kind,
+                                 const Variable*)
+{
+  auto physical =
+    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+  add_reduction(std::move(physical), redop_kind);
 }
 
 void PhysicalTask::launch()

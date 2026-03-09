@@ -9,7 +9,6 @@ from typing import Any
 from ...utils import AnyCallable, ShutdownCallback
 from ..data.logical_array import LogicalArray, StructLogicalArray
 from ..data.logical_store import LogicalStore
-from ..data.physical_store import PhysicalStore
 from ..data.scalar import Scalar
 from ..data.shape import Shape
 from ..mapping.machine import Machine
@@ -126,9 +125,6 @@ class Runtime(Unconstructable):
         data: object,
         read_only: bool,
         ordering: DimOrdering | None = None,
-    ) -> LogicalStore: ...
-    def create_logical_store_from_physical(
-        self, physical_store: PhysicalStore
     ) -> LogicalStore: ...
     def prefetch_bloated_instances(
         self,

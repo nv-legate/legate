@@ -75,6 +75,14 @@ class InlinePhysicalStore final : public PhysicalStore {
    * @brief Returns whether the inline physical store is partitioned.
    */
   [[nodiscard]] bool is_partitioned() const override;
+  /**
+   * @brief Creates a LogicalStore wrapping this inline-storage-backed PhysicalStore.
+   * @param self Shared pointer to this store.
+   * @return LogicalStore wrapping the same backing storage.
+   * @throws std::runtime_error Inline-storage-backed PhysicalStores do not support this operation.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalStore> to_logical_store(
+    const InternalSharedPtr<PhysicalStore>& self) const override;
 
   /**
    * @brief Returns the region instance and field ID wrapping the underlying memory allocation.

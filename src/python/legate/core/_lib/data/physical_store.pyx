@@ -18,6 +18,7 @@ from ..utilities.detail.dlpack.dlpack cimport DLDeviceType
 from ..runtime.runtime cimport get_legate_runtime
 from .inline_allocation cimport _InlineAllocation, InlineAllocation
 from .buffer cimport _TaskLocalBuffer, TaskLocalBuffer
+from .logical_store cimport LogicalStore
 
 from typing import Any
 
@@ -179,6 +180,22 @@ cdef class PhysicalStore(Unconstructable):
             strides=strides,
             owner=self,
         )
+
+    cpdef LogicalStore to_logical_store(self):
+        r"""
+        Create a LogicalStore from this PhysicalStore.
+
+        Returns
+        -------
+        LogicalStore
+            Logical store wrapping the same region as this physical store.
+
+        Raises
+        ------
+        RuntimeError
+            If the physical store is not region-backed.
+        """
+        return LogicalStore.from_handle(self._handle.to_logical_store())
 
     @property
     def __array_interface__(self) -> dict[str, Any]:

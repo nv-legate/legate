@@ -15,9 +15,7 @@ from .utils.utils import is_multi_node
 
 @task
 def verify_api_task(inp: InputStore, result_out: OutputStore) -> None:
-    runtime = get_legate_runtime()
-
-    logical = runtime.create_logical_store_from_physical(inp)
+    logical = inp.to_logical_store()
 
     result = np.asarray(result_out)
     result[0] = logical.ndim
@@ -27,9 +25,7 @@ def verify_api_task(inp: InputStore, result_out: OutputStore) -> None:
 
 @task
 def verify_api_2d_task(inp: InputStore, result_out: OutputStore) -> None:
-    runtime = get_legate_runtime()
-
-    logical = runtime.create_logical_store_from_physical(inp)
+    logical = inp.to_logical_store()
 
     result = np.asarray(result_out)
     result[0] = logical.ndim

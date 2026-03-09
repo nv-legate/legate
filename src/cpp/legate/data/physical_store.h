@@ -665,6 +665,15 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] std::optional<Legion::FieldID> get_field_id() const;
 
   /**
+   * @brief Creates a LogicalStore wrapping this PhysicalStore.
+   *
+   * @return LogicalStore wrapping the same backing storage.
+   *
+   * @throws std::runtime_error if the conversion is not supported.
+   */
+  [[nodiscard]] LogicalStore to_logical_store() const;
+
+  /**
    * @brief Returns a raw pointer and strides to the allocation
    *
    * @return An `InlineAllocation` object holding a raw pointer and strides

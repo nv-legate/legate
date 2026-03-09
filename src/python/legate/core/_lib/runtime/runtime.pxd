@@ -99,9 +99,6 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
             const _ExternalAllocation&,
             const _DimOrdering&
         ) except+
-        _LogicalStore create_logical_store_from_physical(
-            const _PhysicalStore&
-        ) except+
         void prefetch_bloated_instances(
             const _LogicalStore, _tuple[uint64_t], _tuple[uint64_t], bool
         ) except+
@@ -234,9 +231,6 @@ cdef class Runtime(Unconstructable):
         object data,
         bool read_only,
         object ordering = *
-    )
-    cpdef LogicalStore create_logical_store_from_physical(
-        self, PhysicalStore physical_store
     )
     cpdef void prefetch_bloated_instances(
         self,

@@ -67,6 +67,20 @@ class LogicalStore {
                InternalSharedPtr<Type> type,
                InternalSharedPtr<TransformStack> transform,
                std::optional<Domain> domain = std::nullopt);
+  /**
+   * @brief Construct a non-owning LogicalStore from an existing PhysicalStore.
+   *
+   * This constructor creates a LogicalStore that wraps an already-mapped PhysicalStore,
+   * typically used in nested task contexts. The resulting store is non-transformable
+   * since transforms would invalidate the existing physical mapping.
+   *
+   * @param storage The backing storage
+   * @param type The element type
+   * @param physical_store The pre-existing PhysicalStore to wrap
+   */
+  LogicalStore(InternalSharedPtr<Storage> storage,
+               InternalSharedPtr<Type> type,
+               InternalSharedPtr<PhysicalStore> physical_store);
 
   LogicalStore(LogicalStore&& other) noexcept            = default;
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
@@ -146,15 +160,6 @@ class LogicalStore {
   [[nodiscard]] const std::optional<InternalSharedPtr<PhysicalStore>>& get_cached_physical_store()
     const;
   [[nodiscard]] bool is_mapped() const;
-
-  // Set the mapped PhysicalStore.
-  // This is used when creating a LogicalStore from an already-mapped PhysicalStore in nested tasks.
-  void set_mapped_physical_store(InternalSharedPtr<PhysicalStore> physical_store);
-
-  // Prevents transform operations (promote, project, slice, transpose, delinearize) on this store.
-  // Used for stores created from PhysicalStores in nested tasks, where transforms would
-  // invalidate the existing physical mapping.
-  void mark_non_transformable();
 
   [[nodiscard]] bool needs_flush() const;
   void detach();

@@ -121,6 +121,23 @@ LogicalStore::LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
   }
 }
 
+LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage,
+                           InternalSharedPtr<Type> type,
+                           InternalSharedPtr<PhysicalStore> physical_store)
+  : store_id_{Runtime::get_runtime().get_unique_store_id()},
+    type_{std::move(type)},
+    shape_{storage->shape()},
+    storage_{std::move(storage)},
+    transform_{make_internal_shared<TransformStack>()},
+    mapped_{std::move(physical_store)},
+    non_transformable_{true}
+{
+  assert_fixed_storage_size(this->type());
+  if (log_legate().want_debug()) {
+    log_legate().debug() << "Create non-owning " << to_string();
+  }
+}
+
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField> region_field)
 {

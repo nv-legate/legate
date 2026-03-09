@@ -99,18 +99,17 @@ Domain PhysicalStore::domain() const { return impl()->domain(); }
 
 std::optional<Legion::LogicalRegion> PhysicalStore::get_logical_region() const
 {
-  if (!dynamic_cast<const detail::RegionPhysicalStore*>(impl().get())) {
-    return std::nullopt;
-  }
-  return impl()->as_region_store().get_logical_region();
+  return impl()->get_logical_region();
 }
 
 std::optional<Legion::FieldID> PhysicalStore::get_field_id() const
 {
-  if (!dynamic_cast<const detail::RegionPhysicalStore*>(impl().get())) {
-    return std::nullopt;
-  }
-  return impl()->as_region_store().get_field_id();
+  return impl()->get_field_id();
+}
+
+LogicalStore PhysicalStore::to_logical_store() const
+{
+  return LogicalStore{impl_->to_logical_store(impl_)};
 }
 
 InlineAllocation PhysicalStore::get_inline_allocation() const

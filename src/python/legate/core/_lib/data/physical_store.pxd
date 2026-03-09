@@ -11,6 +11,7 @@ from ..utilities.typedefs cimport _Domain, _DomainPoint
 from ..utilities.unconstructable cimport Unconstructable
 from .inline_allocation cimport InlineAllocation, _InlineAllocation
 from .buffer cimport _TaskLocalBuffer, TaskLocalBuffer
+from .logical_store cimport _LogicalStore, LogicalStore
 
 cdef extern from "legate/data/physical_store.h" namespace "legate" nogil:
     cdef cppclass _PhysicalStore "legate::PhysicalStore":
@@ -25,6 +26,7 @@ cdef extern from "legate/data/physical_store.h" namespace "legate" nogil:
         void bind_data(
             const _TaskLocalBuffer& buffer, const _DomainPoint& extents
         ) except+
+        _LogicalStore to_logical_store() except+
 
 
 cdef class PhysicalStore(Unconstructable):
@@ -38,5 +40,6 @@ cdef class PhysicalStore(Unconstructable):
     )
     cpdef void bind_data(self, TaskLocalBuffer buffer, object extent = *)
     cpdef InlineAllocation get_inline_allocation(self)
+    cpdef LogicalStore to_logical_store(self)
 
     cpdef tuple[int32_t, int32_t] __dlpack_device__(self)

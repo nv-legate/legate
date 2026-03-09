@@ -141,4 +141,11 @@ Legion::DomainAffineTransform PhysicalStore::get_inverse_transform() const
   return transform_->inverse_transform(dim());
 }
 
+std::optional<Legion::LogicalRegion> PhysicalStore::get_logical_region() const
+{
+  return std::nullopt;
+}
+
+std::optional<Legion::FieldID> PhysicalStore::get_field_id() const { return std::nullopt; }
+
 }  // namespace legate::detail

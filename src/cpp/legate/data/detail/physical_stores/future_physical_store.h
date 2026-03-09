@@ -39,6 +39,14 @@ class FuturePhysicalStore final : public PhysicalStore {
   [[nodiscard]] InlineAllocation get_inline_allocation() const override;
   [[nodiscard]] mapping::StoreTarget target() const override;
   [[nodiscard]] bool is_partitioned() const override;
+  /**
+   * @brief Creates a LogicalStore wrapping this future-backed PhysicalStore.
+   * @param self Shared pointer to this store.
+   * @return LogicalStore wrapping the same backing storage.
+   * @throws std::runtime_error Future-backed PhysicalStores do not support this operation.
+   */
+  [[nodiscard]] InternalSharedPtr<LogicalStore> to_logical_store(
+    const InternalSharedPtr<PhysicalStore>& self) const override;
 
   // Future specific API
   [[nodiscard]] const Legion::Future& get_future() const;

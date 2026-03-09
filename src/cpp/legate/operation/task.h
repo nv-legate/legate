@@ -30,6 +30,7 @@ namespace legate::detail {
 class AutoTask;
 class ManualTask;
 class PhysicalTask;
+class TaskBase;
 
 }  // namespace legate::detail
 
@@ -269,7 +270,7 @@ class LEGATE_EXPORT AutoTask {
    *
    * This occurs when the task was created in a nested task context.
    */
-  [[nodiscard]] bool is_inline_execution_() const;  // NOLINT(readability-identifier-naming)
+  [[nodiscard]] bool needs_inline_execution_() const;  // NOLINT(readability-identifier-naming)
 
  private:
   friend class Runtime;
