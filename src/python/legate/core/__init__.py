@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as _np  # noqa: ICN001
 
-# This needs to be loaded before anything from ._lib
-from .._libucx_loader import _libucx
 from ._lib.data.buffer import TaskLocalBuffer
 from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray, StructLogicalArray

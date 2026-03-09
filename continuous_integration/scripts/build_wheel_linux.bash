@@ -15,7 +15,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${PARALLEL_LEVEL:=8}
 
 if [[ "${CI:-false}" == "true" ]]; then
   rapids-logger "Installing extra system packages"
-  rapids-retry dnf install -y gcc-toolset-14-libatomic-devel openmpi-devel mpich-devel
+  rapids-retry dnf install -y gcc-toolset-14-libatomic-devel
   # Enable gcc-toolset-11 environment
   source /opt/rh/gcc-toolset-14/enable
   # Verify compiler version
@@ -42,38 +42,10 @@ package_name="legate"
 rapids-logger "Installing build requirements"
 rapids-pip-retry install -v --prefer-binary -r continuous_integration/requirements-build.txt
 
-# Recreate the missing symlink and add in the cmake config for UCC.
-sitepkgs=$(python -c 'import site; print(site.getsitepackages()[0], end="")')
-ln -fs "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so.1 "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so
-ln -fs "${sitepkgs}"/nvidia/nccl/lib/libnccl.so.2 "${sitepkgs}"/nvidia/nccl/lib/libnccl.so
-if [[ ! -d "${sitepkgs}/nvidia/libcal/cu12/lib/cmake" ]]; then
-  mkdir -p "${sitepkgs}/nvidia/libcal/cu12/lib/cmake"
-  cp -r "${LEGATE_DIR}/continuous_integration/scripts/ucc-cmake-config" "${sitepkgs}/nvidia/libcal/cu12/lib/cmake/ucc"
-fi
-
 cd "${package_dir}"
 
 rapids-logger "Building HDF5 and installing into prefix"
 "${LEGATE_DIR}/continuous_integration/scripts/build_hdf5.sh"
-
-# Build the wrappers and install into their prefix
-MPI_WRAPPERS_DIR="${LEGATE_DIR}"/scripts/build/mpi_wrappers
-cmake \
-  -B "${LEGATE_DIR}/buildompi" \
-  -S "${MPI_WRAPPERS_DIR}" \
-  -DMPI_HOME=/usr/lib64/openmpi \
-  -DLEGATE_WRAPPER_MPI_SUFFIX=ompi \
-  -DCMAKE_INSTALL_PREFIX="${LEGATE_DIR}/wrapper-prefix"
-cmake --build "${LEGATE_DIR}/buildompi"
-cmake --install "${LEGATE_DIR}/buildompi"
-cmake \
-  -B "${LEGATE_DIR}/buildmpich" \
-  -S "${MPI_WRAPPERS_DIR}" \
-  -DMPI_HOME=/usr/lib64/mpich \
-  -DLEGATE_WRAPPER_MPI_SUFFIX=mpich \
-  -DCMAKE_INSTALL_PREFIX="${LEGATE_DIR}/wrapper-prefix"
-cmake --build "${LEGATE_DIR}/buildmpich"
-cmake --install "${LEGATE_DIR}/buildmpich"
 
 # build with '--no-build-isolation', for better sccache hit rate
 # 0 really means "add --no-build-isolation" (ref: https://github.com/pypa/pip/issues/5735)
@@ -88,11 +60,9 @@ fi
 # TODO(cryos): https://github.com/nv-legate/legate.internal/issues/1894
 # Improve the use of CMAKE_PREFIX_PATH to find legate and cutensor once
 # scikit-build supports it.
-CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;${sitepkgs}/libucx;${sitepkgs}/nvidia/libcal/cu12;${sitepkgs}/nvidia/nccl"
+CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix"
 export CMAKE_ARGS
-SKBUILD_CMAKE_ARGS="-DLEGATE_WRAPPER_DIR=${LEGATE_DIR}/wrapper-prefix"
-export SKBUILD_CMAKE_ARGS
-rapids-logger "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
+rapids-logger "CMAKE_ARGS='${CMAKE_ARGS}'"
 
 sccache --zero-stats
 
