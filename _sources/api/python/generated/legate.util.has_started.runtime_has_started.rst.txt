@@ -1,6 +1,0 @@
-﻿legate.util.has\_started.runtime\_has\_started
-==============================================
-
-.. currentmodule:: legate.util.has_started
-
-.. autofunction:: runtime_has_started

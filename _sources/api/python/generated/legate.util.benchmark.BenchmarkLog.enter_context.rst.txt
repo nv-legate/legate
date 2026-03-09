@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.enter\_context
-=================================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. automethod:: BenchmarkLog.enter_context

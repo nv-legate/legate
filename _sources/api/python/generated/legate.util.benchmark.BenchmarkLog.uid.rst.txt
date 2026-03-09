@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.uid
-======================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. autoattribute:: BenchmarkLog.uid

@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.file
-=======================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. autoattribute:: BenchmarkLog.file

@@ -1,4 +1,0 @@
-legate::mapping::ProxyStoreMapping
-==================================
-
-.. doxygenclass:: legate::mapping::ProxyStoreMapping

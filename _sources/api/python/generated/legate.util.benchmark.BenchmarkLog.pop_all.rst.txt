@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.pop\_all
-===========================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. automethod:: BenchmarkLog.pop_all
