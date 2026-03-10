@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::PhysicalStore &#8212; NVIDIA legate (26.05.00.dev8+g1d1a63985)</title>
+    <title>legate::PhysicalStore &#8212; NVIDIA legate (26.05.00.dev10+gdb8008148)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=22812168"></script>
+    <script src="../../../../_static/documentation_options.js?v=9d44900b"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -141,11 +141,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev8+g1d1a63985) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev8+g1d1a63985) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev10+gdb8008148) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev10+gdb8008148) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev8+g1d1a63985)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev10+gdb8008148)</p>
   
 </a></div>
     
@@ -252,11 +252,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev8+g1d1a63985) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev8+g1d1a63985) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev10+gdb8008148) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev10+gdb8008148) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev8+g1d1a63985)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev10+gdb8008148)</p>
   
 </a>
 
@@ -1488,6 +1488,20 @@ The user may read from a write-only accessor, but must write to the read-from lo
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore16to_logical_storeEv">
+<span id="_CPPv3NK6legate13PhysicalStore16to_logical_storeEv"></span><span id="_CPPv2NK6legate13PhysicalStore16to_logical_storeEv"></span><span id="legate::PhysicalStore::to_logical_storeC"></span><span class="target" id="classlegate_1_1PhysicalStore_1a026cb3cdab8dd501e9b7a6d25b0955fb"></span><a class="reference internal" href="classlegate_1_1LogicalStore.html#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_logical_store</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore16to_logical_storeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a <a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> wrapping this <a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref">PhysicalStore</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – if the conversion is not supported. </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> wrapping the same backing storage.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore21get_inline_allocationEv">
 <span id="_CPPv3NK6legate13PhysicalStore21get_inline_allocationEv"></span><span id="_CPPv2NK6legate13PhysicalStore21get_inline_allocationEv"></span><span id="legate::PhysicalStore::get_inline_allocationC"></span><span class="target" id="classlegate_1_1PhysicalStore_1afbbd9a3199bfc9db012552fc9fb2b159"></span><a class="reference internal" href="classlegate_1_1InlineAllocation.html#_CPPv4N6legate16InlineAllocationE" title="legate::InlineAllocation"><span class="n"><span class="pre">InlineAllocation</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_inline_allocation</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore21get_inline_allocationEv" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a raw pointer and strides to the allocation. </p>
@@ -1732,6 +1746,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore6domainEv"><code class="docutils literal notranslate"><span class="pre">domain()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore18get_logical_regionEv"><code class="docutils literal notranslate"><span class="pre">get_logical_region()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore12get_field_idEv"><code class="docutils literal notranslate"><span class="pre">get_field_id()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore16to_logical_storeEv"><code class="docutils literal notranslate"><span class="pre">to_logical_store()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore21get_inline_allocationEv"><code class="docutils literal notranslate"><span class="pre">get_inline_allocation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore6targetEv"><code class="docutils literal notranslate"><span class="pre">target()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore11is_readableEv"><code class="docutils literal notranslate"><span class="pre">is_readable()</span></code></a></li>
