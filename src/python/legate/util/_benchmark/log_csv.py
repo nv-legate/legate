@@ -45,6 +45,9 @@ class BenchmarkLogCSV(BenchmarkLog):
 
     def _log_row(self, row: list[str]) -> None:
         self.csv.writerow(row)
+        # we prioritize getting partial information in the event the program
+        # crashes over I/O efficiency
+        self.file.flush()
 
     def _log_columns(self, columns: list[str]) -> None:
         self._log_row(columns)
