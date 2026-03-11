@@ -136,9 +136,13 @@ class Config:
         # test selection
         self.examples = not args.cov_bin
         self.integration = True
-        self.files = args.files
         self.last_failed = args.last_failed
         self.test_root = args.test_root
+        self.files = (
+            tuple(self._normalize_test_file(path) for path in args.files)
+            if args.files is not None
+            else None
+        )
         # NOTE: This reads the rest of the configuration, so do it last
         self.gtest_tests = self._compute_gtest_tests(args)
 
@@ -184,6 +188,20 @@ class Config:
         # if not explicitly given, just use cwd assuming we are at a repo top
         return Path.cwd()
 
+    def _normalize_test_file(self, path: str | Path) -> Path:
+        """Normalize a test path to the form used for matching."""
+        test_file = Path(path)
+
+        if test_file.is_absolute():
+            # Tests are matched by their root_dir-relative paths.
+            try:
+                return test_file.relative_to(self.root_dir)
+            except ValueError:
+                # Leave paths outside root_dir unchanged.
+                return test_file
+
+        return test_file
+
     @property
     def test_files(self) -> tuple[Path, ...]:
         """List of all test files to use for each stage.
@@ -203,7 +221,7 @@ class Config:
         if self.last_failed and (last_failed := self._read_last_failed()):
             return last_failed
 
-        files = []
+        files: list[Path] = []
 
         if self.examples:
             examples = (
@@ -222,6 +240,13 @@ class Config:
                 )
             )
             files.extend(sorted(integration_tests))
+
+        known = set(files)
+        for custom_test in self.project.custom_files():
+            test_file = self._normalize_test_file(custom_test.file)
+            if test_file not in known:
+                files.append(test_file)
+                known.add(test_file)
 
         return tuple(files)
 

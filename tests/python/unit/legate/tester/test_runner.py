@@ -26,7 +26,7 @@ class Runner:
 class TestLegateRunner:
     def test_test_specs(self) -> None:
         c = Config(["test.py"], project=PROJECT)
-        c.files = [Path("foo"), Path("bar")]
+        c.files = (Path("foo"), Path("bar"))
         r = m.LegateRunner()
         assert r.test_specs(c) == (
             m.TestSpec(Path("foo"), "foo"),
@@ -58,7 +58,7 @@ class TestLegateRunner:
 
         def test_zero_tests_bad(self) -> None:
             c = Config(["test.py"], project=PROJECT)
-            c.files = []
+            c.files = ()
             r = m.LegateRunner()
             with pytest.raises(
                 ValueError,
@@ -71,7 +71,7 @@ class TestLegateRunner:
 
         def test_multi_tests_bad(self) -> None:
             c = Config(["test.py"], project=PROJECT)
-            c.files = ["foo", "bar"]
+            c.files = (Path("foo"), Path("bar"))
             r = m.LegateRunner()
             with pytest.raises(
                 ValueError, match="--gdb can only be used with a single test"
@@ -80,7 +80,7 @@ class TestLegateRunner:
 
         def test_good(self) -> None:
             c = Config(["test.py"], project=PROJECT)
-            c.files = ["foo"]
+            c.files = (Path("foo"),)
             r = m.LegateRunner()
             assert r.cmd_gdb(c) == r.cmd(m.TestSpec(Path("foo"), "foo"), c, [])
 

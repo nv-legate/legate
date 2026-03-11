@@ -7,12 +7,13 @@
 from __future__ import annotations
 
 import shutil
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
-from legate.tester import config as m, defaults
+from legate.tester import CustomTest, config as m, defaults
 from legate.tester.args import PIN_OPTIONS, PinOptionsType
 from legate.tester.project import Project
 
@@ -21,6 +22,15 @@ if TYPE_CHECKING:
 
 REPO_TOP = Path(__file__).parents[4]
 PROJECT = Project()
+
+
+class CustomProject(Project):
+    def custom_files(self) -> list[CustomTest]:
+        return [
+            CustomTest("examples/a.py"),
+            CustomTest("examples/microbenchmarks/main.py"),
+            CustomTest("tests/integration/test_alpha.py"),
+        ]
 
 
 class TestConfig:
@@ -77,7 +87,22 @@ class TestConfig:
 
     def test_files(self) -> None:
         c = m.Config(["test.py", "--files", "a", "b", "c"], project=PROJECT)
-        assert c.files == ["a", "b", "c"]
+        assert c.files == (Path("a"), Path("b"), Path("c"))
+
+    def test_files_absolute_are_normalized(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            test_file = tmp_path / "examples" / "nested.py"
+            test_file.parent.mkdir(parents=True)
+            test_file.touch()
+
+            c = m.Config(
+                ["test.py", "-C", str(tmp_path), "--files", str(test_file)],
+                project=PROJECT,
+            )
+
+            assert c.files == (Path("examples/nested.py"),)
+            assert c.test_files == (Path("examples/nested.py"),)
 
     def test_last_failed(self) -> None:
         c = m.Config(["test.py", "--last-failed"], project=PROJECT)
@@ -271,3 +296,25 @@ class Test_test_files:
             project=PROJECT,
         )
         assert c.test_files == (Path("foo"), Path("bar"), Path("baz"))
+
+    def test_adds_missing_custom_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            examples = tmp_path / "examples"
+            integration = tmp_path / "tests" / "integration"
+
+            examples.mkdir()
+            integration.mkdir(parents=True)
+
+            (examples / "a.py").touch()
+            (integration / "test_alpha.py").touch()
+
+            c = m.Config(
+                ["test.py", "-C", str(tmp_path)], project=CustomProject()
+            )
+
+            assert c.test_files == (
+                Path("examples/a.py"),
+                Path("tests/integration/test_alpha.py"),
+                Path("examples/microbenchmarks/main.py"),
+            )
