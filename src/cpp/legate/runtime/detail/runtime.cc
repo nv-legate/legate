@@ -2331,7 +2331,9 @@ extern void register_exception_reduction_op(const Library& context);
 
   // These must occur here in case the task registration routines below need to access the CUDA
   // driver API
-  runtime.cu_mod_manager_.emplace(cuda::detail::get_cuda_driver_api());
+  if (runtime.config().need_cuda()) {
+    runtime.cu_mod_manager_.emplace(cuda::detail::get_cuda_driver_api());
+  }
   comm::coll::init();
   runtime.field_manager_ = runtime.consensus_match_required()
                              ? std::make_unique<ConsensusMatchingFieldManager>()
@@ -2410,7 +2412,11 @@ cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
   // This needs to be initialized in a thread-safe manner, so we do it in
   // Runtime::initialize(). Hence, we want this to throw if it is accessed before then, because
   // we can't guarantee it's threadsafe (and don't want to wrap this in some kind of mutex...).
-  return cu_mod_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
+  if (!cu_mod_manager_.has_value()) {
+    throw TracedException<std::runtime_error>{
+      "CUDA module manager is unavailable because Legate was started without GPUs"};
+  }
+  return cu_mod_manager_.value();
 }
 
 const MapperManager& Runtime::get_mapper_manager_() const

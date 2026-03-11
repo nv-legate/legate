@@ -112,11 +112,18 @@ void autoconfigure(ParsedArgs* args, Config* config)
   const auto auto_config = config->auto_config();
   const auto* cuda_mod   = rt.get_module_config("cuda");
 
-  // This must happen before --fbmem is called, as we need to have initialized the CUDA driver
-  // API before then.
-  configure_cuda_driver_path(args->cuda_driver_path);
-  // auto-configure --gpus
+  // auto-configure --gpus (must happen before CUDA driver init, since it only uses Realm's
+  // ModuleConfig and determines whether we actually need CUDA)
   configure_gpus(auto_config, cuda_mod, &args->gpus, config);
+  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && config->need_cuda()) {
+    throw TracedException<std::runtime_error>{
+      "Legate was run with GPUs but was not built with GPU support. Please "
+      "install Legate again with the \"--with-cuda\" flag"};
+  }
+  // This must happen before --fbmem, but only if GPUs are actually requested.
+  if (config->need_cuda()) {
+    configure_cuda_driver_path(args->cuda_driver_path);
+  }
   // auto-configure --fbmem
   configure_fbmem(auto_config, cuda_mod, args->gpus, &args->fbmem);
 
@@ -162,14 +169,6 @@ Config handle_legate_args()
     fmt::println(parsed.config_summary());
   }
 
-  // These config flags are set by the autoconfigure call above, but allow the user to be able
-  // to see the configuration before doing these checks. That way, if they are confused, they
-  // can pass `--show-config` to see what Legate determined.
-  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && cfg.need_cuda()) {
-    throw TracedException<std::runtime_error>{
-      "Legate was run with GPUs but was not built with GPU support. Please "
-      "install Legate again with the \"--with-cuda\" flag"};
-  }
   if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && cfg.need_openmp()) {
     throw TracedException<std::runtime_error>{
       "Legate was run with OpenMP enabled, but was not built with OpenMP "
