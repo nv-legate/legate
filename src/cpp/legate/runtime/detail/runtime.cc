@@ -2435,7 +2435,7 @@ Processor Runtime::get_executing_processor() const
 {
   // Inline task-launching never sets the Legion context, so we need to use runtime
   // information from Legate to determine the currently executing processor.
-  if (executing_inline_task()) {
+  if (config().enable_inline_task_launch() && executing_inline_task()) {
     const auto task_target = mapping::detail::to_target(inline_task_variant_code_.top());
 
     if (auto&& range = local_machine().procs(task_target); !range.empty()) {
