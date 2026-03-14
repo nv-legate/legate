@@ -148,8 +148,8 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     offsets_{legate::full(dim(), std::int64_t{0})},
     storage_data_{std::optional<InternalSharedPtr<LogicalRegionField>>{std::move(region_field)}}
 {
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Create " << to_string();
+  if (log_legate().want_debug()) {
+    log_legate().debug() << "Create Storage from LogicalRegionField: " << to_string();
   }
 }
 
