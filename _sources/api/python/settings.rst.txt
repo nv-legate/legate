@@ -9,5 +9,12 @@ Settings
 Legate has a number of runtime settings that can be configured through
 environment variables.
 
+.. _core-settings:
+
 .. settings:: settings
     :module: legate.settings
+
+.. _benchmark-settings:
+
+.. settings:: settings
+    :module: legate.util._benchmark.settings

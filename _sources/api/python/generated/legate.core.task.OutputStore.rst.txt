@@ -19,6 +19,7 @@
       ~OutputStore.bind_data
       ~OutputStore.create_output_buffer
       ~OutputStore.get_inline_allocation
+      ~OutputStore.to_logical_store
    
    
 

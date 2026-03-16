@@ -39,5 +39,7 @@ legate.core.ParallelPolicy
       ~ParallelPolicy.__le__
       ~ParallelPolicy.__lt__
       ~ParallelPolicy.__ne__
+      ~ParallelPolicy.partitioning_threshold
+      ~ParallelPolicy.set_partitioning_threshold
    
    
