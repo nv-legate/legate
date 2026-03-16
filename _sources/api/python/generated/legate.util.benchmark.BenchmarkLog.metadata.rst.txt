@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.metadata
-===========================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. autoattribute:: BenchmarkLog.metadata
