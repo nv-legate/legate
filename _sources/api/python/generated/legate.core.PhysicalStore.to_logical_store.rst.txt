@@ -1,0 +1,6 @@
+legate.core.PhysicalStore.to\_logical\_store
+============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: PhysicalStore.to_logical_store

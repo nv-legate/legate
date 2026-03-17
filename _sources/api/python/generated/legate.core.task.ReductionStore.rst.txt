@@ -19,6 +19,7 @@
       ~ReductionStore.bind_data
       ~ReductionStore.create_output_buffer
       ~ReductionStore.get_inline_allocation
+      ~ReductionStore.to_logical_store
    
    
 

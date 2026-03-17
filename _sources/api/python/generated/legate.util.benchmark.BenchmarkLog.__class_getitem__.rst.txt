@@ -1,0 +1,6 @@
+legate.util.benchmark.BenchmarkLog.\_\_class\_getitem\_\_
+=========================================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. automethod:: BenchmarkLog.__class_getitem__

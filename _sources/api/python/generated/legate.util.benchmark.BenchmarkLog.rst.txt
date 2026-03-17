@@ -1,0 +1,58 @@
+﻿..
+  SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+legate.util.benchmark.BenchmarkLog
+==================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. autoclass:: BenchmarkLog
+
+   
+   .. automethod:: BenchmarkLog.__init__
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~BenchmarkLog.name
+      ~BenchmarkLog.uid
+      ~BenchmarkLog.file
+      ~BenchmarkLog.columns
+      ~BenchmarkLog.metadata
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~BenchmarkLog.__class_getitem__
+      ~BenchmarkLog.__enter__
+      ~BenchmarkLog.__exit__
+      ~BenchmarkLog.__subclasshook__
+      ~BenchmarkLog._create_cb_wrapper
+      ~BenchmarkLog._create_exit_wrapper
+      ~BenchmarkLog._generate_and_log_metadata
+      ~BenchmarkLog._get_row
+      ~BenchmarkLog._log_columns
+      ~BenchmarkLog._log_metadata
+      ~BenchmarkLog._log_row
+      ~BenchmarkLog._push_cm_exit
+      ~BenchmarkLog._push_exit_callback
+      ~BenchmarkLog.callback
+      ~BenchmarkLog.close
+      ~BenchmarkLog.enter_context
+      ~BenchmarkLog.log
+      ~BenchmarkLog.pop_all
+      ~BenchmarkLog.push
+   
+   

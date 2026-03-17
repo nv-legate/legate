@@ -1,0 +1,6 @@
+legate.util.benchmark.BenchmarkLogFromFilename.constructor
+==========================================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. autoattribute:: BenchmarkLogFromFilename.constructor

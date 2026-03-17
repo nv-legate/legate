@@ -1,0 +1,38 @@
+﻿..
+  SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+legate.util.benchmark.BenchmarkLogFromFilename
+==============================================
+
+.. currentmodule:: legate.util.benchmark
+
+.. autoclass:: BenchmarkLogFromFilename
+
+   
+   .. automethod:: BenchmarkLogFromFilename.__init__
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~BenchmarkLogFromFilename.file_name
+      ~BenchmarkLogFromFilename.constructor
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~BenchmarkLogFromFilename.__enter__
+      ~BenchmarkLogFromFilename.__exit__
+   
+   
