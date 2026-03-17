@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.\_get\_row
-=============================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. automethod:: BenchmarkLog._get_row

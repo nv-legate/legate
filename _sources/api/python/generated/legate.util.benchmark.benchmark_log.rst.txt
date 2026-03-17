@@ -1,6 +1,0 @@
-﻿legate.util.benchmark.benchmark\_log
-====================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. autofunction:: benchmark_log

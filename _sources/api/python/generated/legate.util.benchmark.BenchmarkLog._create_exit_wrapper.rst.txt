@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.\_create\_exit\_wrapper
-==========================================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. automethod:: BenchmarkLog._create_exit_wrapper

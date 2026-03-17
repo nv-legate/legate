@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.\_push\_cm\_exit
-===================================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. automethod:: BenchmarkLog._push_cm_exit

@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLog.\_generate\_and\_log\_metadata
-=================================================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. automethod:: BenchmarkLog._generate_and_log_metadata

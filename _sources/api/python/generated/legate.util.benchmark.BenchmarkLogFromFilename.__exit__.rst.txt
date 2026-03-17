@@ -1,6 +1,0 @@
-legate.util.benchmark.BenchmarkLogFromFilename.\_\_exit\_\_
-===========================================================
-
-.. currentmodule:: legate.util.benchmark
-
-.. automethod:: BenchmarkLogFromFilename.__exit__
