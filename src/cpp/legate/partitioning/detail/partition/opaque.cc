@@ -71,8 +71,14 @@ Legion::LogicalPartition Opaque::construct(Legion::LogicalRegion region, bool) c
     return runtime.create_logical_partition(region, ipartition_);
   }
 
-  return runtime.create_logical_partition(
-    region, runtime.create_intersection_partition(target, ipartition_));
+  auto&& part_mgr   = runtime.partition_manager();
+  auto intersection = part_mgr.find_intersection_partition(target, ipartition_);
+
+  if (intersection == Legion::IndexPartition::NO_PART) {
+    intersection = runtime.create_intersection_partition(target, ipartition_);
+    part_mgr.record_intersection_partition(target, ipartition_, intersection);
+  }
+  return runtime.create_logical_partition(region, intersection);
 }
 
 std::string Opaque::to_string() const

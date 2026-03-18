@@ -97,7 +97,6 @@ class Task : public Mappable {
   [[nodiscard]] TaskTarget target() const;
   [[nodiscard]] Legion::VariantID legion_task_variant() const;
 
-  // This size doesn't include the upper bound for the returned exception
   [[nodiscard]] std::size_t future_size() const;
   [[nodiscard]] bool can_raise_exception() const;
 

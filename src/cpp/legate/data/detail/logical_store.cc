@@ -884,7 +884,7 @@ std::string LogicalStore::to_string() const
 {
   auto result = fmt::format("Store({}) {{shape: ", store_id_);
 
-  if (unbound()) {
+  if (unbound() || deferred_bound()) {
     fmt::format_to(std::back_inserter(result), "(unbound)");
   } else {
     fmt::format_to(std::back_inserter(result), "{}", extents());

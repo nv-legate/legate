@@ -136,6 +136,7 @@ set(
   bug/aligned_unpack.cc
   bug/dangling_store_partition.cc
   bug/key_partition_invalidation.cc
+  bug/interfering_requirements.cc
   bug/logical_store_transform.cc
   bug/nullable_arrays.cc
   bug/premature_free.cc

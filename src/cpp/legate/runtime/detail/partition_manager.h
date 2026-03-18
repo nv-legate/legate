@@ -57,6 +57,16 @@ class PartitionManager {
 
   [[nodiscard]] Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
                                                             const Tiling& tiling) const;
+  /**
+   * @brief Find an intersection partition in the cache.
+   *
+   * @param target The target index space to intersect
+   * @param to_intersect An existing partition to intersect the target with
+   *
+   * @return A cached intersection partition that matches the spec. NO_PART when no match is found.
+   */
+  [[nodiscard]] Legion::IndexPartition find_intersection_partition(
+    const Legion::IndexSpace& target, const Legion::IndexPartition& to_intersect) const;
   [[nodiscard]] Legion::IndexPartition find_image_partition(
     const Legion::IndexSpace& index_space,
     const Legion::LogicalPartition& func_partition,
@@ -66,6 +76,16 @@ class PartitionManager {
   void record_index_partition(const Legion::IndexSpace& index_space,
                               const Tiling& tiling,
                               const Legion::IndexPartition& index_partition);
+  /**
+   * @brief Record an intersection partition to the partition cache
+   *
+   * @param target The target index space to intersect
+   * @param to_intersect An input partition to intersect the target with
+   * @param result The intersection result
+   */
+  void record_intersection_partition(const Legion::IndexSpace& target,
+                                     const Legion::IndexPartition& to_intersect,
+                                     const Legion::IndexPartition& result);
   void record_image_partition(const Legion::IndexSpace& index_space,
                               const Legion::LogicalPartition& func_partition,
                               Legion::FieldID field_id,
@@ -83,6 +103,9 @@ class PartitionManager {
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
   std::unordered_map<TilingCacheKey, Legion::IndexPartition, hasher<TilingCacheKey>>
     tiling_cache_{};
+  using IntersectionCacheKey = std::pair<Legion::IndexSpace, Legion::IndexPartition>;
+  std::unordered_map<IntersectionCacheKey, Legion::IndexPartition, hasher<IntersectionCacheKey>>
+    intersection_cache_{};
   using ImageCacheKey =
     std::tuple<Legion::IndexSpace, Legion::LogicalPartition, Legion::FieldID, ImageComputationHint>;
   std::map<ImageCacheKey, Legion::IndexPartition> image_cache_{};

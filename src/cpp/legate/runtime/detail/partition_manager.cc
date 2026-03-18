@@ -288,6 +288,12 @@ Legion::IndexPartition PartitionManager::find_index_partition(const Legion::Inde
   return find_index_partition_impl(tiling_cache_, index_space, tiling);
 }
 
+Legion::IndexPartition PartitionManager::find_intersection_partition(
+  const Legion::IndexSpace& target, const Legion::IndexPartition& to_intersect) const
+{
+  return find_index_partition_impl(intersection_cache_, target, to_intersect);
+}
+
 Legion::IndexPartition PartitionManager::find_image_partition(
   const Legion::IndexSpace& index_space,
   const Legion::LogicalPartition& func_partition,
@@ -302,6 +308,13 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
                                               const Legion::IndexPartition& index_partition)
 {
   tiling_cache_[{index_space, tiling}] = index_partition;
+}
+
+void PartitionManager::record_intersection_partition(const Legion::IndexSpace& target,
+                                                     const Legion::IndexPartition& to_intersect,
+                                                     const Legion::IndexPartition& result)
+{
+  intersection_cache_[{target, to_intersect}] = result;
 }
 
 void PartitionManager::record_image_partition(const Legion::IndexSpace& index_space,
