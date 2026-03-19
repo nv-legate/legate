@@ -37,7 +37,7 @@ repos:
         name: validate and format JSON5 files
         files: '\.json5$'
         args: ['--parser=json5', '--tab-width=4']
-        additional_dependencies: ['prettier@3.1.0']
+        additional_dependencies: ['prettier@3.8.1']
   # These hooks perform formatting or other related changes, and therefore should run
   # before clang-format and clang-tidy do. This way, if they do make changes, we can do
   # them and the formatting changes in 1 pass instead of multiple.
@@ -82,12 +82,12 @@ repos:
         stages: [pre-commit]
         exclude: '^tests/cpp/.*$'
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes", "-L", "cancelled"] # don't spell check cancelled
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v21.1.8'
+    rev: 'v22.1.1'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
@@ -98,7 +98,7 @@ repos:
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.1
+    rev: v0.15.7
     hooks:
       - id: ruff-format
       - id: ruff
@@ -153,7 +153,7 @@ repos:
         args: [-config-file=scripts/pre-commit/actionlint.yml]
         entry: env SHELLCHECK_OPTS="--enable=all --severity=style" actionlint
   - repo: https://github.com/BlankSpruce/gersemi
-    rev: 0.26.0
+    rev: 0.26.1
     hooks:
       - id: gersemi
         args: [
