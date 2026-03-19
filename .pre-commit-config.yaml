@@ -200,8 +200,5 @@ repos:
         args: ['-c', './scripts/pre-commit/yamllint.yml']
         additional_dependencies: ['yamllint']
 
-ci:
-  autoupdate_schedule: quarterly
-
 default_language_version:
   python: python3
