@@ -56,17 +56,18 @@ def init_test_zarr_task(
     This task creates a Zarr array and populates it with data from the
     input store. It must run as a single instance to avoid race conditions.
     """
-    chunks_arg = tuple(chunks) if chunks[0] > 0 else None
+    chunks_arg = tuple(int(c) for c in chunks) if chunks[0] > 0 else None
     data = np.asarray(input_store.get_inline_allocation())
     kwargs: dict[str, object] = {
         "mode": "w",
-        "shape": array_shape,
+        "shape": tuple(int(s) for s in array_shape),
         "dtype": np.dtype(array_dtype),
         "chunks": chunks_arg,
     }
     if zarr_format == 3:
         kwargs["zarr_format"] = 3
-    if not use_compressor:
+    # zarr v3 does not accept compressor
+    if not use_compressor and int(zarr.__version__.split(".")[0]) < 3:
         kwargs["compressor"] = None
 
     zarr.open_array(dirpath, **kwargs)[...] = data
@@ -167,6 +168,50 @@ class TestZarrV2:
         b = zarr.open_array(tmp_path, mode="r")
         assert_array_equal(a, b)
 
+    def test_write_scalar_array(self, tmp_path: Path) -> None:
+        """Test write of a 0-dimensional Zarr array."""
+        array = get_legate_runtime().create_array(ty.float64, ())
+
+        with pytest.raises(
+            ValueError,
+            match="Cannot write a 0-dimensional \\(scalar\\) array to Zarr",
+        ):
+            write_array(ary=array, dirpath=tmp_path)
+
+    @pytest.mark.parametrize("shape", [(10,), (4, 4)])
+    def test_write_array_default_chunks(
+        self, tmp_path: Path, shape: tuple[int, ...]
+    ) -> None:
+        """Test write of a Zarr array with chunks=None."""
+        a = np.arange(math.prod(shape), dtype="f8").reshape(shape)
+        store = get_legate_runtime().create_store_from_buffer(
+            Type.from_numpy_dtype(a.dtype), a.shape, a, False
+        )
+        array = LogicalArray.from_store(store)
+
+        write_array(ary=array, dirpath=tmp_path, chunks=None)
+        get_legate_runtime().issue_execution_fence(block=True)
+
+        b = zarr.open_array(tmp_path, mode="r")
+        assert_array_equal(a, b)
+
+    @pytest.mark.parametrize("shape", [(10,), (4, 4)])
+    def test_write_array_int_chunks(
+        self, tmp_path: Path, shape: tuple[int, ...]
+    ) -> None:
+        """Test write of a Zarr array with integer chunks."""
+        a = np.arange(math.prod(shape), dtype="f8").reshape(shape)
+        store = get_legate_runtime().create_store_from_buffer(
+            Type.from_numpy_dtype(a.dtype), a.shape, a, False
+        )
+        array = LogicalArray.from_store(store)
+
+        write_array(ary=array, dirpath=tmp_path, chunks=2)
+        get_legate_runtime().issue_execution_fence(block=True)
+
+        b = zarr.open_array(tmp_path, mode="r")
+        assert_array_equal(a, b)
+
     @pytest.mark.parametrize(*shape_chunks)
     @pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
     @pytest.mark.skipif(
@@ -232,6 +277,18 @@ class TestZarrV2:
     int(zarr.__version__.split(".")[0]) < 3, reason="zarr v3 only tests"
 )
 class TestZarrV3:
+    def test_write_array_v3(self, tmp_path: Path) -> None:
+        """Test that write_array raises NotImplementedError with zarr v3."""
+        a = np.arange(6, dtype="f8").reshape((2, 3))
+        store = get_legate_runtime().create_store_from_buffer(
+            Type.from_numpy_dtype(a.dtype), a.shape, a, False
+        )
+        array = LogicalArray.from_store(store)
+
+        msg = "Zarr v3 support is not implemented yet"
+        with pytest.raises(NotImplementedError, match=msg):
+            write_array(ary=array, dirpath=tmp_path, chunks=(2, 3))
+
     def test_read_array_v3(self, tmp_path: Path) -> None:
         """Test read of a v3 format Zarr array."""
         a = np.array((1, 2, 3))

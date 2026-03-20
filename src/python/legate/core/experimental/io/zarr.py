@@ -100,6 +100,10 @@ def write_array(
     """
     ary = as_logical_array(ary)
 
+    if int(zarr.__version__.split(".")[0]) >= 3:  # noqa: PLR2004
+        msg = "Zarr v3 support is not implemented yet"
+        raise NotImplementedError(msg)
+
     if not ary.shape:
         msg = "Cannot write a 0-dimensional (scalar) array to Zarr"
         raise ValueError(msg)

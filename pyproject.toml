@@ -340,6 +340,7 @@ plugins = ["Cython.Coverage"]
 branch = true
 parallel = true
 source_pkgs = ["legate"]
+core = "ctrace"
 
 [tool.coverage.report]
 precision = 2
