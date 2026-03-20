@@ -27,7 +27,7 @@ jobs:
   source-build-cpu:
     secrets: inherit
     uses: ./.github/workflows/source-build-cpu.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
   source-test-cpu:
@@ -40,11 +40,11 @@ jobs:
   source-build-gpu:
     secrets: inherit
     uses: ./.github/workflows/source-build-gpu.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
   source-test-gpu:
-    needs: [source-build-gpu, telemetry-setup]
+    needs: source-build-gpu
     secrets: inherit
     uses: ./.github/workflows/source-test-gpu.yml
     with:
@@ -53,11 +53,11 @@ jobs:
   wheels-build:
     secrets: inherit
     uses: ./.github/workflows/wheels-build.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
   wheels-test:
-    needs: [wheels-build, telemetry-setup]
+    needs: wheels-build
     secrets: inherit
     uses: ./.github/workflows/wheels-test.yml
     with:
@@ -66,7 +66,7 @@ jobs:
     name: wheels-mac (optional)
     secrets: inherit
     uses: ./.github/workflows/wheels-mac.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
 

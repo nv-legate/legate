@@ -18,9 +18,6 @@ on:
       node_type:
         type: string
         default: "cpu16"
-      cuda_ver:
-        type: string
-        default: "12.9.1"
       linux_ver:
         type: string
         default: "rockylinux8"
@@ -59,22 +56,31 @@ jobs:
     steps:
       - name: Compute Build Matrix
         id: compute-matrix
+        env:
+          CUDA12_VER: "12.9.1"
+          CUDA13_VER: "13.0.0"
         run: |
           set -eo pipefail
 
           # please keep the matrices sorted in ascending order by the following:
           #
-          #     [ARCH, PY_VER, CUDA_VER, LINUX_VER]
+          #     [ARCH, CUDA_VER, PY_VER, LINUX_VER]
           #
           export MATRIX="
           # amd64
-          - { ARCH: 'amd64', PY_VER: '3.11', TARGET_DEV: 'gpu', BUILD_MODE: 'release' }
-          - { ARCH: 'amd64', PY_VER: '3.12', TARGET_DEV: 'gpu', BUILD_MODE: 'release' }
-          - { ARCH: 'amd64', PY_VER: '3.13', TARGET_DEV: 'gpu', BUILD_MODE: 'release' }
+          - { ARCH: 'amd64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.11' }
+          - { ARCH: 'amd64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.12' }
+          - { ARCH: 'amd64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.13' }
+          - { ARCH: 'amd64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.11' }
+          - { ARCH: 'amd64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.12' }
+          - { ARCH: 'amd64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.13' }
           # arm64
-          - { ARCH: 'arm64', PY_VER: '3.11', TARGET_DEV: 'gpu', BUILD_MODE: 'release' }
-          - { ARCH: 'arm64', PY_VER: '3.12', TARGET_DEV: 'gpu', BUILD_MODE: 'release' }
-          - { ARCH: 'arm64', PY_VER: '3.13', TARGET_DEV: 'gpu', BUILD_MODE: 'release' }
+          - { ARCH: 'arm64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.11' }
+          - { ARCH: 'arm64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.12' }
+          - { ARCH: 'arm64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.13' }
+          - { ARCH: 'arm64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.11' }
+          - { ARCH: 'arm64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.12' }
+          - { ARCH: 'arm64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.13' }
           "
 
           MATRIX="$(
@@ -84,7 +90,7 @@ jobs:
 
           echo "MATRIX=${MATRIX}" | tee --append "${GITHUB_OUTPUT}"
   build:
-    name: ${{ matrix.ARCH }}, py${{ matrix.PY_VER }}, ${{ matrix.TARGET_DEV }}, ${{ matrix.BUILD_MODE }}
+    name: ${{ matrix.ARCH }}, ${{ matrix.CUDA_VER }}, py${{ matrix.PY_VER }}
     needs: compute-matrix
     timeout-minutes: 30
     strategy:
@@ -92,14 +98,14 @@ jobs:
       matrix: ${{ fromJSON(needs.compute-matrix.outputs.MATRIX) }}
     runs-on: "linux-${{ matrix.ARCH }}-${{ inputs.node_type }}"
     container:
-      image: rapidsai/ci-wheel:cuda${{ inputs.cuda_ver }}-${{ inputs.linux_ver }}-py${{ matrix.PY_VER }}
+      image: rapidsai/ci-wheel:cuda${{ matrix.CUDA_VER }}-${{ inputs.linux_ver }}-py${{ matrix.PY_VER }}
     steps:
       - name: Telemetry setup
         uses: rapidsai/shared-actions/telemetry-dispatch-setup@main
         continue-on-error: true
         if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
         with:
-          extra_attributes: "legate.PACKAGER=conda,legate.CUDA_VER=${{ inputs.cuda_ver }},legate.PY_VER=${{ matrix.PY_VER }},legate.ARCH=${{ matrix.ARCH }}"
+          extra_attributes: "legate.PACKAGER=conda,legate.CUDA_VER=${{ matrix.CUDA_VER }},legate.PY_VER=${{ matrix.PY_VER }},legate.ARCH=${{ matrix.ARCH }}"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -140,15 +146,29 @@ jobs:
         run: |
           echo "${GITHUB_WORKSPACE}/gha-tools/tools" >> "${GITHUB_PATH}"
 
-      - name: C++ wheel build
+      - name: Wheel build
         run: ${{ inputs.script }}
         env:
           STEP_NAME: "C++ build"
           GH_TOKEN: ${{ github.token }}
 
-      - name: C++ wheel upload
+      - name: Extract CUDA major version
         env:
-          BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12-py${{ matrix.PY_VER }}
+          CUDA_VER: ${{ matrix.CUDA_VER }}
+        run: |
+          cuda_major_ver="${CUDA_VER%%.*}"
+          case "${cuda_major_ver}" in
+            12|13) ;;
+            *)
+              echo "Unsupported CUDA major version: ${cuda_major_ver}" >&2
+              exit 1
+              ;;
+          esac
+          echo "CUDA_MAJOR_VER=${cuda_major_ver}" >> "${GITHUB_ENV}"
+
+      - name: Wheel upload
+        env:
+          BUILD_NAME: ${{ matrix.ARCH }}-cuda${{ env.CUDA_MAJOR_VER }}-py${{ matrix.PY_VER }}
         uses: actions/upload-artifact@v7
         with:
           name: legate-wheel-${{ env.BUILD_NAME }}

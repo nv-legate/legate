@@ -35,11 +35,11 @@ jobs:
   source-build-cpu:
     secrets: inherit
     uses: ./.github/workflows/source-build-cpu.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
   source-test-cpu:
-    needs: [source-build-cpu, telemetry-setup]
+    needs: source-build-cpu
     secrets: inherit
     uses: ./.github/workflows/source-test-cpu.yml
     with:
@@ -48,11 +48,11 @@ jobs:
   source-build-gpu:
     secrets: inherit
     uses: ./.github/workflows/source-build-gpu.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
   source-test-gpu:
-    needs: [source-build-gpu, telemetry-setup]
+    needs: source-build-gpu
     secrets: inherit
     uses: ./.github/workflows/source-test-gpu.yml
     with:
@@ -61,22 +61,22 @@ jobs:
   wheels-build:
     secrets: inherit
     uses: ./.github/workflows/wheels-build.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
-      matrix_filter: group_by(.ARCH) | map(max_by(.PY_VER|split(".")|map(tonumber)))
+      matrix_filter: group_by([.ARCH, .CUDA_VER]) | map(max_by(.PY_VER|split(".")|map(tonumber)))
   wheels-test:
-    needs: [wheels-build, telemetry-setup]
+    needs: wheels-build
     secrets: inherit
     uses: ./.github/workflows/wheels-test.yml
     with:
       build-type: pull-request
-      matrix_filter: group_by(.ARCH) | map(max_by(.PY_VER|split(".")|map(tonumber)))
+      matrix_filter: group_by([.ARCH, (.CUDA_VER | split(".")[0])]) | map(max_by([(.CUDA_VER | split(".") | map(tonumber)), (.PY_VER | split(".") | map(tonumber))]))
   wheels-mac:
     name: wheels-mac (optional)
     secrets: inherit
     uses: ./.github/workflows/wheels-mac.yml
-    needs: [telemetry-setup]
+    needs: telemetry-setup
     with:
       build-type: pull-request
       matrix_filter: '[max_by(.PY_VER|split(".")|map(tonumber))]'
