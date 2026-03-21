@@ -1,4 +1,0 @@
-legate::PhysicalTask
-====================
-
-.. doxygenclass:: legate::PhysicalTask
