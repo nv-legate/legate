@@ -180,8 +180,8 @@ set(
   integration/mapping.cc
   integration/mixed_dim.cc
   integration/multi_scalar_out.cc
+  integration/parallel_policy.cc
   integration/partitioner.cc
-  integration/physical_task.cc
   integration/projection.cc
   integration/proc_local_storage.cc
   integration/provenance.cc
@@ -201,10 +201,7 @@ set(
   integration/tasks/task_simple.cc
   integration/task_store/auto_task_tests.cc
   integration/task_store/manual_task_tests.cc
-  integration/task_store/physical_task/physical_task_basic_tests.cc
-  integration/task_store/physical_task/physical_task_context_tests.cc
-  integration/task_store/physical_task/physical_task_nested_tests.cc
-  integration/task_store/physical_task/physical_task_error_tests.cc
+  integration/task_store/physical_task_nested_tests.cc
   integration/transpose_dim_order.cc
   integration/tree_reduce.cc
   integration/tree_reduce_unique.cc
@@ -221,6 +218,7 @@ set(
   unit/future_wrapper.cc
   unit/library.cc
   unit/logical_region_field.cc
+  unit/parallel_policy.cc
   unit/registration.cc
   unit/runtime.cc
   unit/scope.cc
@@ -333,7 +331,7 @@ set(
   unit/streaming/extract_streamable_prefix.cc
   unit/streaming/nested_scopes.cc
   unit/streaming/process_streaming_run.cc
-  unit/task/physical_task.cc
+  unit/proxy_store_mapping.cc
   # experimental
   experimental/stl/elementwise.cc
   experimental/stl/fill.cc
@@ -428,7 +426,6 @@ set(
   non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/comm/backend_network.cc
   non_reentrant/wo_runtime/comm/coll_abort.cc
-  non_reentrant/wo_runtime/inline_storage/basic.cc
 )
 
 legate_configure_test(

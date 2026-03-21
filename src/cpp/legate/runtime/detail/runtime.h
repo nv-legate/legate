@@ -146,22 +146,6 @@ class Runtime {
                                                                      LocalTaskID task_id);
 
   /**
-   * @brief Creates a PhysicalTask using TaskContext machine for correct allocation in nested tasks.
-   *
-   * This method creates a PhysicalTask that will execute on the machine associated with the
-   * provided TaskContext. This is the correct method to use when creating PhysicalTasks from
-   * within other tasks (nested execution), as it ensures the new task uses the appropriate
-   * machine context from the parent task.
-   *
-   * @param context The TaskContext from the parent task, providing machine and execution context
-   * @param library The library containing the task implementation
-   * @param task_id Local task identifier within the library
-   * @return A shared pointer to the created PhysicalTask
-   */
-  [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task(
-    const legate::TaskContext& context, const Library& library, LocalTaskID task_id);
-
-  /**
    * @brief Creates a PhysicalTask for inline execution in nested task context.
    *
    * This method creates a PhysicalTask using the current executing processor's context.

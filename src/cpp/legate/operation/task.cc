@@ -451,48 +451,4 @@ ManualTask::ManualTask(InternalSharedPtr<detail::ManualTask> impl)
 
 ManualTask::~ManualTask() noexcept = default;
 
-////////////////////////////////////////////////////
-// legate::PhysicalTask
-////////////////////////////////////////////////////
-
-PhysicalTask::PhysicalTask(const Key&, InternalSharedPtr<detail::PhysicalTask> impl)
-  : pimpl_{std::move(impl)}
-{
-}
-
-PhysicalTask::~PhysicalTask() noexcept = default;
-
-const SharedPtr<detail::PhysicalTask>& PhysicalTask::impl_() const { return pimpl_; }
-
-SharedPtr<detail::PhysicalTask> PhysicalTask::release_(const Key&) { return std::move(pimpl_); }
-
-void PhysicalTask::add_input(const PhysicalArray& array) const { impl_()->add_input(array.impl()); }
-
-void PhysicalTask::add_output(const PhysicalArray& array) const
-{
-  impl_()->add_output(array.impl());
-}
-
-void PhysicalTask::add_reduction(const PhysicalArray& array, std::int32_t redop_kind) const
-{
-  impl_()->add_reduction(array.impl(), redop_kind);
-}
-
-void PhysicalTask::add_scalar_arg(const Scalar& scalar) const
-{
-  impl_()->add_scalar_arg(scalar.impl());
-}
-
-void PhysicalTask::set_concurrent(bool concurrent) const { impl_()->set_concurrent(concurrent); }
-
-void PhysicalTask::set_side_effect(bool has_side_effect) const
-{
-  impl_()->set_side_effect(has_side_effect);
-}
-
-void PhysicalTask::throws_exception(bool can_throw_exception) const
-{
-  impl_()->throws_exception(can_throw_exception);
-}
-
 }  // namespace legate

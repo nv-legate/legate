@@ -20,9 +20,12 @@
 
 namespace proxy_store_mapping_test {
 
+namespace {
+
 class CheckTaskTargetTask : public legate::LegateTask<CheckTaskTargetTask> {
  public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+  static inline const auto
+    TASK_CONFIG =  // NOLINT(cert-err58-cpp,bugprone-throwing-static-initialization)
     legate::TaskConfig{legate::LocalTaskID{0}}.with_store_mappings(
       {{{legate::proxy::inputs, legate::mapping::StoreTarget::SYSMEM},
         {legate::proxy::outputs[0], legate::mapping::StoreTarget::SYSMEM}}});
@@ -64,6 +67,8 @@ class Config {
 };
 
 class ProxyStoreMappingUnit : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(ProxyStoreMappingUnit, Basic)
 {
