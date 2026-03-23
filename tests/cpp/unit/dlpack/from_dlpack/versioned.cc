@@ -342,6 +342,36 @@ TEST_F(FromDLPackVersionedUnit, EmptyDim)
   check_store<data_type, DIM>(store, tensor);
 }
 
+TEST_F(FromDLPackVersionedUnit, ZeroDim)
+{
+  constexpr auto DIM  = 0;
+  using data_type     = float;
+  auto* const runtime = legate::Runtime::get_runtime();
+
+  auto* dlm_tensor = make_tensor<data_type>();
+
+  // Free the allocated arrays before overwriting with nullptr
+  delete[] dlm_tensor->dl_tensor.shape;
+  delete[] dlm_tensor->dl_tensor.strides;
+
+  dlm_tensor->dl_tensor.ndim    = DIM;
+  dlm_tensor->dl_tensor.shape   = nullptr;
+  dlm_tensor->dl_tensor.strides = nullptr;
+
+  auto store = legate::detail::from_dlpack(&dlm_tensor);
+  runtime->issue_execution_fence(/* block */ true);
+
+  ASSERT_EQ(store.dim(), DIM);
+  ASSERT_EQ(store.type(), legate::primitive_type(legate::type_code_of_v<data_type>));
+  ASSERT_EQ(store.type().size(), sizeof(data_type));
+
+  const auto shape = store.shape();
+  ASSERT_EQ(shape.volume(), 1);
+
+  auto&& extents = shape.extents();
+  ASSERT_EQ(extents.size(), 0);
+}
+
 namespace {
 
 class FromDLPackVersionedUnitDeviceType : public FromDLPackVersionedUnit {};
@@ -477,34 +507,6 @@ TEST_F(FromDLPackVersionedDeathTest, InvalidDeviceType)
                  ::testing::HasSubstr("Unhandled device type"),
                  // Error from UBSAN, if we are running with it
                  ::testing::HasSubstr("runtime error: load of value 99")));
-}
-
-TEST_F(FromDLPackVersionedDeathTest, ZeroDim)
-{
-  constexpr auto DIM  = 3;
-  auto* const runtime = legate::Runtime::get_runtime();
-  auto* dlm_tensor    = make_tensor<std::int8_t, DIM>();
-  const auto uniq_dlm_tensor =
-    std::unique_ptr<DLManagedTensorVersioned, std::function<void(void*)>>{
-      dlm_tensor, [tptr = dlm_tensor](void*) {
-        if (tptr->deleter) {
-          tptr->deleter(tptr);
-        }
-      }};
-  auto* raw_ptr = uniq_dlm_tensor.get();
-
-  dlm_tensor->dl_tensor.ndim = 0;
-
-  ASSERT_DEATH(
-    [&] {
-      std::ignore = legate::detail::from_dlpack(&raw_ptr);
-      // The assertion in question is triggered by launching the Attach operation (to attach to
-      // the external allocation). If the execution window is large enough (really, >1) the
-      // attachment doesn't trigger until a manual flush.
-      runtime->issue_execution_fence(/* block */ true);
-    }(),
-    // The LEGATE_CHECK() in generate_legion_dims() failed
-    ::testing::HasSubstr("assertion failed: ndim > 0"));
 }
 
 }  // namespace test_from_dlpack_versioned

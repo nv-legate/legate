@@ -35,8 +35,9 @@ void Attach::launch()
   launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
-  launcher.provenance                               = provenance().to_string();
-  launcher.constraints.ordering_constraint.ordering = ordering_->generate_legion_dims(dim_);
+  launcher.provenance = provenance().to_string();
+  launcher.constraints.ordering_constraint.ordering =
+    ordering_->generate_legion_dims(std::max<std::uint32_t>(1, dim_));
   launcher.constraints.field_constraint.field_set =
     std::vector<Legion::FieldID>{region_field_->field_id()};
   launcher.constraints.field_constraint.contiguous = false;

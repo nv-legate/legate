@@ -537,8 +537,6 @@ void map_unbound_stores(Span<const std::unique_ptr<StoreMapping>> mappings,
     output->output_targets[req_idx] =
       local_machine.get_memory(target_proc, mapping->policy().target);
 
-    const auto ndim = mapping->store()->dim();
-
     auto& output_constraint   = output->output_constraints[req_idx];
     auto& ordering_constraint = output_constraint.ordering_constraint;
 
@@ -546,7 +544,7 @@ void map_unbound_stores(Span<const std::unique_ptr<StoreMapping>> mappings,
       if (auto&& ord = mapping->policy().ordering; ord.has_value()) {
         return ord->impl()->generate_legion_dims(*store);
       }
-      return DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(ndim);
+      return DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(*store);
     }();
     ordering_constraint.contiguous = false;
 
@@ -962,7 +960,8 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
     if (!policy.ordering.has_value()) {
       // When we're creating a fresh instance, we use C ordering unless specified otherwise
       layout_constraints->ordering_constraint.ordering =
-        DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(regions.front().get_dim());
+        DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(
+          std::max<std::uint32_t>(1, regions.front().get_dim()));
       layout_constraints->ordering_constraint.contiguous = false;
     }
 
@@ -1136,7 +1135,8 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
     // When we're creating a fresh instance, we use C ordering unless specified otherwise
     if (!policy.ordering.has_value()) {
       layout_constraints->ordering_constraint.ordering =
-        DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(regions.front().get_dim());
+        DimOrdering{DimOrdering::Kind::C}.generate_legion_dims(
+          std::max<std::uint32_t>(1, regions.front().get_dim()));
       layout_constraints->ordering_constraint.contiguous = false;
     }
 
