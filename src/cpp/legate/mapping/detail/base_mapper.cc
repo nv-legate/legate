@@ -151,6 +151,8 @@ const std::vector<Processor>& BaseMapper::omps() const
 namespace {
 
 void populate_input_collective_regions(
+  Legion::Mapping::MapperRuntime* runtime,
+  Legion::Mapping::MapperContext ctx,
   const Legion::Task& legion_task,
   const Task& legate_task,
   const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
@@ -179,11 +181,27 @@ void populate_input_collective_regions(
       }
 
       const auto idx = store->requirement_index();
+      auto&& req     = legion_task.regions[idx];
 
-      if ((task_volume > 1) &&
-          legion_task.regions[idx].partition == Legion::LogicalPartition::NO_PART) {
+      if ((task_volume > 1) && req.partition == Legion::LogicalPartition::NO_PART) {
         check_collective_regions->insert(idx);
         continue;
+      }
+
+      // Manual tasks pass broadcast stores as single-tile partitions with constant
+      // projections rather than as singular (NO_PART) regions.  In that case the
+      // store has no DimBroadcast transform, so find_imaginary_dims() returns empty
+      // and the check below never fires.  Detect this pattern explicitly: if the
+      // partition's color space has volume 1, every task point maps to the same tile
+      // and the region should be treated as collective.
+      if ((task_volume > 1) && req.handle_type == LEGION_PARTITION_PROJECTION &&
+          req.partition != Legion::LogicalPartition::NO_PART) {
+        const auto color_space =
+          runtime->get_index_partition_color_space(ctx, req.partition.get_index_partition());
+        if (color_space.get_volume() == 1) {
+          check_collective_regions->insert(idx);
+          continue;
+        }
       }
 
       for (auto&& d : store->find_imaginary_dims()) {
@@ -251,7 +269,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
     auto get_stores = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
 
     populate_input_collective_regions(
-      task, legate_task, get_stores, &output.check_collective_regions);
+      runtime, ctx, task, legate_task, get_stores, &output.check_collective_regions);
     populate_reduction_collective_regions(
       task, legate_task, get_stores, &output.check_collective_regions);
   }
