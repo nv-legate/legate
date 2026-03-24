@@ -172,34 +172,38 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
 {
   const auto curr_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
   LEGATE_ASSERT(curr_num_pieces > 0);
+
   // Easy case if we only have one piece: no parallel launch space
   if (1 == curr_num_pieces) {
     return {};
   }
 
-  // If we only have one point then we never do parallel launches
-  if (std::all_of(shape.begin(), shape.end(), [](auto extent) { return 1 == extent; })) {
+  // Calculate the total volume of the shape and don't partition it if it's smaller than the
+  // threshold
+  const auto total_volume =
+    std::reduce(shape.begin(), shape.end(), std::uint64_t{1}, std::multiplies<>{});
+  const auto min_shard_volume = parallel_policy.partitioning_threshold(machine.preferred_target());
+
+  if (total_volume < min_shard_volume) {
     return {};
   }
 
-  // Prune out any dimensions that are 1
+  // Always partition stores bigger than the threshold across all processors in the scope
+  // TODO(wonchanl): We may need better heuristics here or at least document the behavior
+  // accurately (e.g., we name the environment variables "minimum chunk sizes", but the current
+  // heuristic don't guarantee a per-processor minimum allocation size.)
+  const auto max_pieces = curr_num_pieces;
+
+  // Prune out any dimensions that are 1 or must not be partitioned
   auto [temp_shape, temp_dims, volume] = restrictions.prune_dimensions(shape);
+  const auto ndim                      = temp_shape.size();
 
-  auto min_shard_volume = parallel_policy.partitioning_threshold(machine.preferred_target());
-  // Figure out how many shards we can make with this array
-  std::uint64_t max_pieces = (volume + min_shard_volume - 1) / min_shard_volume;
-  LEGATE_CHECK(volume == 0 || max_pieces > 0);
-  // If we can only make one piece return that now
-  if (max_pieces <= 1) {
+  // If none of the dimensions are allowed to be partitioned, there's nothing the partitioner can
+  // do.
+  if (ndim == 0) {
     return {};
   }
 
-  // TODO(wonchanl): We need a better heuristic
-  max_pieces = curr_num_pieces;
-
-  // First compute the N-th root of the number of pieces
-  const auto ndim = temp_shape.size();
-  LEGATE_CHECK(ndim > 0);
   // Apparently captured structured bindings are only since C++20. Why on earth did the
   // committee not allow this in C++17????
   LEGATE_CPP_VERSION_TODO(20, "Use captured structured bindings instead");
