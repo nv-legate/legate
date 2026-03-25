@@ -179,12 +179,12 @@ ArrayAnalyzable BaseLogicalArray::to_launcher_arg(
                         ? bool_()->find_reduction_operator(ReductionOpKind::MUL)
                         : GlobalRedopID{-1};
     null_mask_arg   = store_to_launcher_arg(null_mask(),
-                                          mapping.at(null_mask()),
-                                          strategy,
-                                          launch_domain,
-                                          projection,
-                                          privilege,
-                                          null_redop);
+                                            mapping.at(null_mask()),
+                                            strategy,
+                                            launch_domain,
+                                            projection,
+                                            privilege,
+                                            null_redop);
   }
 
   return BaseArrayArg{std::move(data_arg), std::move(null_mask_arg)};

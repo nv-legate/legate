@@ -174,8 +174,8 @@ LogicalArray from_file(const std::filesystem::path& file_path,
 
   auto partition = ret.data().partition_by_tiling(tile_shape);
   auto task      = rt->create_task(io::detail::core_io_library(),
-                              detail::TileRead::TASK_CONFIG.task_id(),
-                              partition.color_shape());
+                                   detail::TileRead::TASK_CONFIG.task_id(),
+                                   partition.color_shape());
 
   task.add_output(partition);
   task.add_scalar_arg(Scalar{file_path.native()});
@@ -198,8 +198,8 @@ void to_file(const std::filesystem::path& file_path,
   auto* rt       = Runtime::get_runtime();
   auto partition = array.data().partition_by_tiling(tile_shape);
   auto task      = rt->create_task(io::detail::core_io_library(),
-                              detail::TileWrite::TASK_CONFIG.task_id(),
-                              partition.color_shape());
+                                   detail::TileWrite::TASK_CONFIG.task_id(),
+                                   partition.color_shape());
 
   task.add_input(partition);
   task.add_scalar_arg(Scalar{file_path.native()});

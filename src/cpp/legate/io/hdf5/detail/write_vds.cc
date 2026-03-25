@@ -115,11 +115,11 @@ class HDF5WriteFn {
     // If not using binary type, type.size() and sizeof(*tmp_ptr) should be equivalent, but
     // we use sizeof() as it's faster.
     const auto type_size = BINARY_TYPE ? type.size() : sizeof(T);
-    const auto acc       = store.span_read_accessor<T,
-                                                    DIM,
-                                                    // TODO(jfaibussowit)
-                                                    // Remove this once binary type access is merged
-                                                    /* VALIDATE_TYPE */ !BINARY_TYPE>(type_size);
+    // TODO(jfaibussowit): Once binary-type accessors are merged, remove the
+    // `VALIDATE_TYPE` override below.
+    const auto acc = store.span_read_accessor<T,
+                                              DIM,
+                                              /* VALIDATE_TYPE */ !BINARY_TYPE>(type_size);
 
     const auto* const ptr = acc.data_handle();
     const auto gds_on     = legate::detail::Runtime::get_runtime().config().io_use_vfd_gds();

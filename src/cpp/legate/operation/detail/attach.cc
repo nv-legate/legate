@@ -28,10 +28,10 @@ void Attach::launch()
   auto&& runtime = Runtime::get_runtime();
 
   auto launcher       = Legion::AttachLauncher{LEGION_EXTERNAL_INSTANCE,
-                                         region_field_->region(),
-                                         region_field_->region(),
-                                         false /*restricted*/,
-                                         !allocation_->read_only() /*mapped*/};
+                                               region_field_->region(),
+                                               region_field_->region(),
+                                               false /*restricted*/,
+                                               !allocation_->read_only() /*mapped*/};
   launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");

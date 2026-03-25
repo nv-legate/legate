@@ -155,12 +155,12 @@ TEST_F(ProxyStoreMappingUnit, ApplyInline)
     task.impl_()->reductions().size(),
     legate::mapping::InstanceMappingPolicy{}};
 
-  const auto policy = legate::mapping::ProxyInstanceMappingPolicy{}
-                        .with_target(legate::mapping::StoreTarget::SYSMEM)
-                        .with_exact(true)
-                        .with_allocation_policy(legate::mapping::AllocPolicy::MUST_ALLOC)
-                        .with_redundant(false)
-                        .with_ordering(legate::mapping::DimOrdering::fortran_order());
+  const auto policy  = legate::mapping::ProxyInstanceMappingPolicy{}
+                         .with_target(legate::mapping::StoreTarget::SYSMEM)
+                         .with_exact(true)
+                         .with_allocation_policy(legate::mapping::AllocPolicy::MUST_ALLOC)
+                         .with_redundant(false)
+                         .with_ordering(legate::mapping::DimOrdering::fortran_order());
   const auto options = std::array{
     legate::mapping::StoreTarget::FBMEM,
     policy.target.value()  // NOLINT(bugprone-unchecked-optional-access)

@@ -83,9 +83,9 @@ void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_s
   // boundary and set the alignment so there'd be no room for misinterpretation.
   const auto aligned_size = round_up_to_multiple(buffer_size(), ALIGNMENT);
   auto return_buffer      = Legion::UntypedDeferredValue{aligned_size,
-                                                    find_memory_kind_for_executing_processor(),
-                                                    nullptr /*initial_value*/,
-                                                    ALIGNMENT /*alignment*/};
+                                                         find_memory_kind_for_executing_processor(),
+                                                         nullptr /*initial_value*/,
+                                                         ALIGNMENT /*alignment*/};
   const AccessorWO<std::int8_t, 1> acc{return_buffer, buffer_size(), false};
 
   pack(acc.ptr(0));

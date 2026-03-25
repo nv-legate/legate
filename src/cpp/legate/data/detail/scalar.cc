@@ -60,7 +60,7 @@ Scalar::Scalar(std::string_view value) : own_{true}, type_{string_type()}
   void* buffer         = orig_buffer.get();
 
   std::tie(buffer, capacity) = pack_buffer(buffer, capacity, vsize);
-  std::ignore                = pack_buffer(buffer,
+  std::ignore = pack_buffer(buffer,
                             capacity,
                             value.size(),
                             value.data()  // NOLINT(bugprone-suspicious-stringview-data-usage)

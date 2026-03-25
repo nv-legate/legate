@@ -118,8 +118,8 @@ template <typename T, std::size_t DIM = 3>
   tensor.device = DLDevice{DLDeviceType::kDLCPU, 0};
   tensor.ndim   = DIM;
   tensor.dtype  = DLDataType{static_cast<std::uint8_t>(dlpack_common::to_dlpack_code<T>()),
-                            /* bits */ sizeof(T) * CHAR_BIT,
-                            /* lanes */ 1};
+                             /* bits */ sizeof(T) * CHAR_BIT,
+                             /* lanes */ 1};
 
   tensor.shape = [&] {
     auto shape = std::make_unique<std::int64_t[]>(DIM);

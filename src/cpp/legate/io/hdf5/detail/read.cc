@@ -106,13 +106,13 @@ class HDF5ReadFn {
     //
     // ERROR: Illegal request for pointer of non-dense rectangle
     // Assertion failed: (false), function ptr, file legion.inl, line 4125.
-    const auto type_size          = BINARY_TYPE ? store->type().size() : sizeof(DTYPE);
-    const auto acc                = store->span_write_accessor<DTYPE,
-                                                               DIM,
-                                                               // TODO(jfaibussowit)
-                                                               // Remove this once binary type access is merged
-                                                               /* VALIDATE_TYPE */ !BINARY_TYPE>(type_size);
-    auto* const dst               = acc.data_handle();
+    const auto type_size = BINARY_TYPE ? store->type().size() : sizeof(DTYPE);
+    // TODO(jfaibussowit): Once binary-type accessors are merged, remove the
+    // `VALIDATE_TYPE` override below.
+    const auto acc  = store->span_write_accessor<DTYPE,
+                                                 DIM,
+                                                 /* VALIDATE_TYPE */ !BINARY_TYPE>(type_size);
+    auto* const dst = acc.data_handle();
     const auto file_space_extents = [&] {
       auto ret = std::array<hsize_t, DIM>{};
 

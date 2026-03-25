@@ -309,10 +309,10 @@ make_inline_task_context(const TaskBase& task, VariantCode variant_code)
   }
 
   auto outputs    = fill_vector(task.outputs(),
-                             mapping_policies.output_policies,
-                             /* ignore_future_mutability */ true,
-                             get_stores_cache,
-                             &deferred_buffers);
+                                mapping_policies.output_policies,
+                                /* ignore_future_mutability */ true,
+                                get_stores_cache,
+                                &deferred_buffers);
   auto reductions = fill_vector(task.reductions(),
                                 mapping_policies.reduction_policies,
                                 /* ignore_future_mutability */ true,

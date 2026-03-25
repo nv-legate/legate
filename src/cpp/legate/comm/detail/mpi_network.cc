@@ -210,12 +210,12 @@ void MPINetwork::all_to_all_v(const void* sendbuf,
     const auto recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     // How else are we supposed to make a char* out of const void*?????????????????????????
     // NOLINTNEXTLINE(bugprone-casting-through-void)
-    const auto src = static_cast<char*>(const_cast<void*>(sendbuf)) +
-                     (static_cast<std::ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent);
-    const auto dst = static_cast<char*>(recvbuf) +
-                     (static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent);
-    const int scount             = sendcounts[sendto_global_rank];
-    const int rcount             = recvcounts[recvfrom_global_rank];
+    const auto src   = static_cast<char*>(const_cast<void*>(sendbuf)) +
+                       (static_cast<std::ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent);
+    const auto dst   = static_cast<char*>(recvbuf) +
+                       (static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent);
+    const int scount = sendcounts[sendto_global_rank];
+    const int rcount = recvcounts[recvfrom_global_rank];
     const auto sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
     const auto recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[recvfrom_global_rank];
 

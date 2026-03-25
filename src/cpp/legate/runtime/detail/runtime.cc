@@ -643,9 +643,9 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
                         : dynamic_cast<const detail::ListType&>(*type).element_type();
     auto descriptor = create_base_array_(shape, rect_type(1), nullable, optimize_scalar);
     auto vardata    = create_array(make_internal_shared<Shape>(1),
-                                std::move(elem_type),
-                                /*nullable=*/false,
-                                /*optimize_scalar=*/false);
+                                   std::move(elem_type),
+                                   /*nullable=*/false,
+                                   /*optimize_scalar=*/false);
 
     return make_internal_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
@@ -1579,7 +1579,7 @@ Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
   }
 
   const auto& machine = get_machine();
-  auto launcher       = TaskLauncher{core_library(),
+  auto launcher = TaskLauncher{core_library(),
                                machine,
                                parallel_policy,
                                get_provenance(),
@@ -1610,7 +1610,7 @@ Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
   }
 
   const auto& machine = get_machine();
-  auto launcher       = TaskLauncher{core_library(),
+  auto launcher = TaskLauncher{core_library(),
                                machine,
                                parallel_policy,
                                get_provenance(),

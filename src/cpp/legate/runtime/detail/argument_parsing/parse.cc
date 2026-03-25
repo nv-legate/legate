@@ -762,8 +762,8 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "profiles, progress output, nvtx ranges, and some error messages. Enabling --profile "
     "will automatically enable --provenance.",
     /*init=*/false);
-  auto log_levels  = parser.add_argument("--logging", logging_help_str(), std::string{});
-  auto log_dir     = parser.add_argument("--logdir",
+  auto log_levels = parser.add_argument("--logging", logging_help_str(), std::string{});
+  auto log_dir = parser.add_argument("--logdir",
                                      "Directory to emit logfiles to, defaults to current directory",
                                      std::filesystem::current_path());
   auto log_to_file = parser.add_argument(

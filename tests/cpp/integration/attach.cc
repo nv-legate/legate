@@ -178,7 +178,7 @@ void test_body(
   auto context         = runtime->find_library(Config::LIBRARY_NAME);
   std::int64_t counter = 0;
   auto buffer          = make_buffer(dim, fortran);
-  auto l_store         = runtime->create_store(dim == 1 ? SHAPE_1D() : SHAPE_2D(),
+  auto l_store = runtime->create_store(dim == 1 ? SHAPE_1D() : SHAPE_2D(),
                                        legate::int64(),
                                        buffer,
                                        read_only,
