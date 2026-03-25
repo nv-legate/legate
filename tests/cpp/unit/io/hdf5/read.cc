@@ -880,4 +880,60 @@ TEST_F(IOHDF5ReadUnit, TwoDimensionalVDSChunked)
   submit_verify_2d_task(read_array, Y);
 }
 
+TEST_F(IOHDF5ReadUnit, ScalarDataspace)
+{
+  constexpr auto DATASET = "/scalar";
+  const auto file_path   = base_path / "scalar.h5";
+  const auto file        = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(file, 0);
+
+  const auto space = H5Screate(H5S_SCALAR);
+
+  ASSERT_GE(space, 0);
+
+  const auto dset =
+    H5Dcreate(file, DATASET, H5T_IEEE_F32LE, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(dset, 0);
+
+  constexpr auto val = 1.0F;
+
+  ASSERT_GE(H5Dwrite(dset, H5T_IEEE_F32LE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &val), 0);
+  ASSERT_GE(H5Sclose(space), 0);
+  ASSERT_GE(H5Dclose(dset), 0);
+  ASSERT_GE(H5Fclose(file), 0);
+
+  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+
+  ASSERT_EQ(read_array.shape(), legate::Shape{1});
+  ASSERT_EQ(read_array.type(), legate::float32());
+}
+
+TEST_F(IOHDF5ReadUnit, NullDataspace)
+{
+  constexpr auto DATASET = "/null_ds";
+  const auto file_path   = base_path / "null_ds.h5";
+  const auto file        = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(file, 0);
+
+  const auto space = H5Screate(H5S_NULL);
+
+  ASSERT_GE(space, 0);
+
+  const auto dset =
+    H5Dcreate(file, DATASET, H5T_IEEE_F32LE, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(dset, 0);
+  ASSERT_GE(H5Sclose(space), 0);
+  ASSERT_GE(H5Dclose(dset), 0);
+  ASSERT_GE(H5Fclose(file), 0);
+
+  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+
+  ASSERT_EQ(read_array.shape(), legate::Shape{1});
+  ASSERT_EQ(read_array.type(), legate::float32());
+}
+
 }  // namespace test_io_hdf5_read

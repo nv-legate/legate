@@ -556,7 +556,7 @@ void UCCNetwork::Impl::all_to_all(const void* sendbuf,
 
     if (it == ucc_comms_.end()) {
       LEGATE_ABORT(
-        fmt::format("Invalid communicator for all_to_all_v, rank: {}", global_comm->global_rank));
+        fmt::format("Invalid communicator for all_to_all, rank: {}", global_comm->global_rank));
     }
 
     return it->second.get();

@@ -686,4 +686,556 @@ TEST_F(IOHDF5TilingUnit, ChunkedPartitionerFactorLessThanOne)
   ASSERT_EQ(ts[2], Z_CHUNK);
 }
 
+TEST_F(IOHDF5TilingUnit, CompactLayout)
+{
+  constexpr auto X       = 4;
+  constexpr auto Y       = 4;
+  constexpr auto DATASET = "/compact_dataset";
+  constexpr auto DIM     = 2;
+  const auto file_path   = base_path / "compact_layout.h5";
+  constexpr auto dims    = std::array<hsize_t, DIM>{X, Y};
+  const auto file        = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(file, 0);
+
+  const auto space = H5Screate_simple(DIM, dims.data(), nullptr);
+
+  ASSERT_GE(space, 0);
+
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+  ASSERT_GE(dcpl, 0);
+  ASSERT_GE(H5Pset_layout(dcpl, H5D_COMPACT), 0);
+
+  const auto dset = H5Dcreate(file, DATASET, H5T_IEEE_F32LE, space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
+  ASSERT_GE(dset, 0);
+  std::array<float, X * Y> data{};
+  ASSERT_GE(H5Dwrite(dset, H5T_IEEE_F32LE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data()), 0);
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(space), 0);
+  ASSERT_GE(H5Dclose(dset), 0);
+  ASSERT_GE(H5Fclose(file), 0);
+  ASSERT_FALSE(get_tile_shape_for_file(file_path, DATASET, dims, 2).has_value());
+}
+
+TEST_F(IOHDF5TilingUnit, OneDimensionalChunkedReturnsNullopt)
+{
+  constexpr auto X       = 100;
+  constexpr auto DATASET = "/one_dimensional_chunked";
+  constexpr auto DIM     = 1;
+  const auto file_path   = base_path / "one_d_chunked.h5";
+
+  constexpr auto dims       = std::array<hsize_t, DIM>{X};
+  constexpr auto chunk_dims = std::array<hsize_t, DIM>{10};
+
+  create_hdf5_file_with_sequential_data(file_path, DATASET, dims, &chunk_dims);
+
+  ASSERT_FALSE(get_tile_shape_for_file(file_path, DATASET, dims, 5).has_value());
+}
+
+TEST_F(IOHDF5TilingUnit, VDSWithNoVirtualMappingsReturnsNullopt)
+{
+  constexpr auto DATASET = "/empty_vds";
+  constexpr auto DIM     = 2;
+  const auto file_path   = base_path / "empty_vds.h5";
+
+  constexpr auto dims = std::array<hsize_t, DIM>{10, 10};
+
+  const auto file = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  ASSERT_GE(file, 0);
+
+  const auto space = H5Screate_simple(DIM, dims.data(), nullptr);
+  ASSERT_GE(space, 0);
+
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+  ASSERT_GE(dcpl, 0);
+  ASSERT_GE(H5Pset_layout(dcpl, H5D_VIRTUAL), 0);
+
+  const auto dset = H5Dcreate(file, DATASET, H5T_IEEE_F32LE, space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+  ASSERT_GE(dset, 0);
+
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(space), 0);
+  ASSERT_GE(H5Dclose(dset), 0);
+  ASSERT_GE(H5Fclose(file), 0);
+
+  ASSERT_FALSE(get_tile_shape_for_file(file_path, DATASET, dims, 2).has_value());
+}
+
+TEST_F(IOHDF5TilingUnit, OneDimensionalVDSReturnsNullopt)
+{
+  constexpr auto X         = 100;
+  constexpr auto DIM       = 1;
+  constexpr auto NUM_FILES = 10;
+  constexpr auto DATASET   = "/one_dimensional_vds";
+  const auto vds_file_path = base_path / "one_d_vds.h5";
+  const auto source_dir    = base_path / "one_d_vds_source";
+  constexpr auto dims      = std::array<hsize_t, DIM>{X};
+
+  create_vds_with_sequential_data(vds_file_path, source_dir, DATASET, dims, NUM_FILES);
+  ASSERT_FALSE(get_tile_shape_for_file(vds_file_path, DATASET, dims, 5).has_value());
+}
+
+TEST_F(IOHDF5TilingUnit, VDSChunkedNonUniformChunkShapesReturnsNullopt)
+{
+  constexpr auto DIM       = 2;
+  constexpr auto X         = 20;
+  constexpr auto Y         = 10;
+  constexpr auto DATASET   = "/non_uniform_chunks";
+  const auto vds_file_path = base_path / "non_uniform_chunks_vds.h5";
+  const auto source_dir    = base_path / "non_uniform_chunks_source";
+
+  ASSERT_TRUE(std::filesystem::create_directories(source_dir));
+
+  // Source 1: chunked with chunk dims [5, 5]
+  const auto src1_path = source_dir / "src1.h5";
+  {
+    constexpr auto src_dims   = std::array<hsize_t, DIM>{X / 2, Y};
+    constexpr auto chunk_dims = std::array<hsize_t, DIM>{5, 5};
+
+    create_hdf5_file_with_sequential_data(src1_path, DATASET, src_dims, &chunk_dims);
+  }
+
+  // Source 2: chunked with DIFFERENT chunk dims [2, 2]
+  const auto src2_path = source_dir / "src2.h5";
+  {
+    constexpr auto src_dims   = std::array<hsize_t, DIM>{X / 2, Y};
+    constexpr auto chunk_dims = std::array<hsize_t, DIM>{2, 2};
+
+    create_hdf5_file_with_sequential_data(src2_path, DATASET, src_dims, &chunk_dims);
+  }
+
+  // Build VDS mapping half to each source
+  constexpr auto vds_dims = std::array<hsize_t, DIM>{X, Y};
+  const auto vds_file = H5Fcreate(vds_file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(vds_file, 0);
+
+  const auto vds_space = H5Screate_simple(DIM, vds_dims.data(), nullptr);
+
+  ASSERT_GE(vds_space, 0);
+
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+  ASSERT_GE(dcpl, 0);
+
+  // Map first half -> src1
+  {
+    constexpr auto src_dims = std::array<hsize_t, DIM>{X / 2, Y};
+
+    std::array<hsize_t, DIM> start{0, 0};
+    std::array<hsize_t, DIM> count{1, 1};
+    std::array<hsize_t, DIM> block{X / 2, Y};
+    ASSERT_GE(H5Sselect_hyperslab(
+                vds_space, H5S_SELECT_SET, start.data(), nullptr, count.data(), block.data()),
+              0);
+
+    const auto src_space = H5Screate_simple(DIM, src_dims.data(), nullptr);
+
+    ASSERT_GE(src_space, 0);
+    ASSERT_GE(H5Sselect_all(src_space), 0);
+    ASSERT_GE(H5Pset_virtual(dcpl, vds_space, src1_path.c_str(), DATASET, src_space), 0);
+    ASSERT_GE(H5Sclose(src_space), 0);
+  }
+
+  // Map second half -> src2
+  {
+    constexpr auto src_dims = std::array<hsize_t, DIM>{X / 2, Y};
+
+    std::array<hsize_t, DIM> start{X / 2, 0};
+    std::array<hsize_t, DIM> count{1, 1};
+    std::array<hsize_t, DIM> block{X / 2, Y};
+    ASSERT_GE(H5Sselect_hyperslab(
+                vds_space, H5S_SELECT_SET, start.data(), nullptr, count.data(), block.data()),
+              0);
+
+    const auto src_space = H5Screate_simple(DIM, src_dims.data(), nullptr);
+
+    ASSERT_GE(src_space, 0);
+    ASSERT_GE(H5Sselect_all(src_space), 0);
+    ASSERT_GE(H5Pset_virtual(dcpl, vds_space, src2_path.c_str(), DATASET, src_space), 0);
+    ASSERT_GE(H5Sclose(src_space), 0);
+  }
+
+  const auto vds_dset =
+    H5Dcreate(vds_file, DATASET, H5T_IEEE_F32LE, vds_space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
+  ASSERT_GE(vds_dset, 0);
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(vds_space), 0);
+  ASSERT_GE(H5Dclose(vds_dset), 0);
+  ASSERT_GE(H5Fclose(vds_file), 0);
+  ASSERT_FALSE(get_tile_shape_for_file(vds_file_path, DATASET, vds_dims, 2).has_value());
+}
+
+TEST_F(IOHDF5TilingUnit, VDSContiguousGridWithInteriorBlocks)
+{
+  constexpr auto DIM       = 2;
+  constexpr auto X         = 30;
+  constexpr auto Y         = 30;
+  constexpr auto DATASET   = "/grid_vds";
+  const auto vds_file_path = base_path / "grid_vds_contiguous.h5";
+  const auto source_dir    = base_path / "grid_vds_contiguous_source";
+
+  ASSERT_NO_THROW(std::filesystem::create_directories(source_dir));
+
+  constexpr auto TILES_PER_DIM = 3;
+  constexpr auto BLOCK_X       = X / TILES_PER_DIM;
+  constexpr auto BLOCK_Y       = Y / TILES_PER_DIM;
+
+  std::vector<std::filesystem::path> source_paths;
+
+  for (int tx = 0; tx < TILES_PER_DIM; ++tx) {
+    for (int ty = 0; ty < TILES_PER_DIM; ++ty) {
+      auto src_path =
+        source_dir / ("tile_" + std::to_string(tx) + "_" + std::to_string(ty) + ".h5");
+      source_paths.push_back(src_path);
+      constexpr auto src_dims = std::array<hsize_t, DIM>{BLOCK_X, BLOCK_Y};
+
+      create_hdf5_file_with_sequential_data(src_path, DATASET, src_dims);
+    }
+  }
+
+  constexpr auto vds_dims = std::array<hsize_t, DIM>{X, Y};
+
+  const auto vds_file = H5Fcreate(vds_file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(vds_file, 0);
+
+  const auto vds_space = H5Screate_simple(DIM, vds_dims.data(), nullptr);
+
+  ASSERT_GE(vds_space, 0);
+
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+  ASSERT_GE(dcpl, 0);
+
+  // Reverse iteration order so edge blocks are visited before interior blocks.
+  // This ensures has_zero_offset is called for edge blocks (e.g. block (0,2) at
+  // offset [0,20] exercises offset[dim>0] != 0) before the loop breaks on an
+  // interior block (e.g. block (1,1) at offset [10,10] exercises is_block_at_edge
+  // returning false).
+  for (int tx = TILES_PER_DIM - 1; tx >= 0; --tx) {
+    for (int ty = TILES_PER_DIM - 1; ty >= 0; --ty) {
+      const int file_idx = (tx * TILES_PER_DIM) + ty;
+      std::array<hsize_t, DIM> start{static_cast<hsize_t>(tx * BLOCK_X),
+                                     static_cast<hsize_t>(ty * BLOCK_Y)};
+      std::array<hsize_t, DIM> count{1, 1};
+      std::array<hsize_t, DIM> block{BLOCK_X, BLOCK_Y};
+
+      ASSERT_GE(H5Sselect_hyperslab(
+                  vds_space, H5S_SELECT_SET, start.data(), nullptr, count.data(), block.data()),
+                0);
+
+      constexpr auto src_dims = std::array<hsize_t, DIM>{BLOCK_X, BLOCK_Y};
+      const auto src_space    = H5Screate_simple(DIM, src_dims.data(), nullptr);
+
+      ASSERT_GE(src_space, 0);
+      ASSERT_GE(H5Sselect_all(src_space), 0);
+      ASSERT_GE(H5Pset_virtual(dcpl, vds_space, source_paths[file_idx].c_str(), DATASET, src_space),
+                0);
+      ASSERT_GE(H5Sclose(src_space), 0);
+    }
+  }
+
+  const auto vds_dset =
+    H5Dcreate(vds_file, DATASET, H5T_IEEE_F32LE, vds_space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
+  ASSERT_GE(vds_dset, 0);
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(vds_space), 0);
+  ASSERT_GE(H5Dclose(vds_dset), 0);
+  ASSERT_GE(H5Fclose(vds_file), 0);
+
+  const auto num_tiles  = 3;
+  const auto tile_shape = get_tile_shape_for_file(vds_file_path, DATASET, vds_dims, num_tiles);
+
+  ASSERT_TRUE(tile_shape.has_value());
+
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  const auto& ts = *tile_shape;
+
+  ASSERT_EQ(ts.size(), DIM);
+
+  // 9 blocks in 3x3 grid, each [10, 10], total [30, 30].
+  // Reversed VDS mapping order ensures edge blocks are visited first:
+  //   - Block (0,2) at offset [0,20]: at edge, has_zero_offset sees dim=0: 0==0,
+  //     dim=1: 20!=0 -> false (exercises has_zero_offset dim>0 branch)
+  //   - Block (1,1) at offset [10,10]: NOT at edge -> is_block_at_edge returns false,
+  //     sets reference_shape and breaks (exercises is_block_at_edge false branch)
+  // reference_shape = [10, 10]
+  // tiles_needed = ceil(30/10) * ceil(30/10) = 3 * 3 = 9
+  // adjustment_factor = 9 / 3 = 3.0
+  // adjusted_tile_size = 10 * 3 = 30
+  // tile_shape = [clamp(30, 1, 30), 10] = [30, 10]
+  ASSERT_EQ(ts[0], X);
+  ASSERT_EQ(ts[1], BLOCK_Y);
+}
+
+TEST_F(IOHDF5TilingUnit, VDSContiguousNoReferenceBlockReturnsNullopt)
+{
+  constexpr auto DIM       = 2;
+  constexpr auto X         = 20;
+  constexpr auto Y         = 20;
+  constexpr auto DATASET   = "/no_ref_block";
+  const auto vds_file_path = base_path / "no_ref_block_vds.h5";
+  const auto source_dir    = base_path / "no_ref_block_source";
+
+  ASSERT_NO_THROW(std::filesystem::create_directories(source_dir));
+
+  // Single source: [10, 20] mapped at offset [10, 0].
+  // This block is at edge (dim=0: 10+10=20 >= 20) and has non-zero offset,
+  // so both is_block_at_edge -> true and has_zero_offset -> false,
+  // leaving found_reference_block = false.
+  const auto src_path = source_dir / "partial.h5";
+  {
+    constexpr auto src_dims = std::array<hsize_t, DIM>{X / 2, Y};
+
+    create_hdf5_file_with_sequential_data(src_path, DATASET, src_dims);
+  }
+
+  constexpr auto vds_dims = std::array<hsize_t, DIM>{X, Y};
+  const auto vds_file = H5Fcreate(vds_file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(vds_file, 0);
+
+  const auto vds_space = H5Screate_simple(DIM, vds_dims.data(), nullptr);
+
+  ASSERT_GE(vds_space, 0);
+
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+  ASSERT_GE(dcpl, 0);
+
+  {
+    std::array<hsize_t, DIM> start{X / 2, 0};
+    std::array<hsize_t, DIM> count{1, 1};
+    std::array<hsize_t, DIM> block{X / 2, Y};
+
+    ASSERT_GE(H5Sselect_hyperslab(
+                vds_space, H5S_SELECT_SET, start.data(), nullptr, count.data(), block.data()),
+              0);
+
+    constexpr auto src_dims = std::array<hsize_t, DIM>{X / 2, Y};
+    const auto src_space    = H5Screate_simple(DIM, src_dims.data(), nullptr);
+
+    ASSERT_GE(src_space, 0);
+    ASSERT_GE(H5Sselect_all(src_space), 0);
+    ASSERT_GE(H5Pset_virtual(dcpl, vds_space, src_path.c_str(), DATASET, src_space), 0);
+    ASSERT_GE(H5Sclose(src_space), 0);
+  }
+
+  const auto vds_dset =
+    H5Dcreate(vds_file, DATASET, H5T_IEEE_F32LE, vds_space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
+  ASSERT_GE(vds_dset, 0);
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(vds_space), 0);
+  ASSERT_GE(H5Dclose(vds_dset), 0);
+  ASSERT_GE(H5Fclose(vds_file), 0);
+  ASSERT_FALSE(get_tile_shape_for_file(vds_file_path, DATASET, vds_dims, 2).has_value());
+}
+
+TEST_F(IOHDF5TilingUnit, VDSContiguousNonUniformInteriorBlocksReturnsNullopt)
+{
+  constexpr auto DIM       = 2;
+  constexpr auto X         = 9;
+  constexpr auto Y         = 9;
+  constexpr auto BLOCK1X   = 2;
+  constexpr auto BLOCK1Y   = 2;
+  constexpr auto BLOCK2X   = 3;
+  constexpr auto BLOCK2Y   = 2;
+  constexpr auto DATASET   = "/non_uniform_interior";
+  const auto vds_file_path = base_path / "non_uniform_interior_vds.h5";
+  const auto source_dir    = base_path / "non_uniform_interior_source";
+
+  ASSERT_NO_THROW(std::filesystem::create_directories(source_dir));
+
+  // Source 1: [2, 2] at offset [0, 0] -> interior (2 < 9 for both dims)
+  const auto src1_path = source_dir / "small.h5";
+  {
+    constexpr auto src_dims = std::array<hsize_t, DIM>{BLOCK1X, BLOCK1Y};
+
+    create_hdf5_file_with_sequential_data(src1_path, DATASET, src_dims);
+  }
+
+  // Source 2: [3, 2] at offset [2, 0] -> interior (5 < 9, 2 < 9)
+  // Different shape from Source 1 in dim=0: 3 != 2
+  const auto src2_path = source_dir / "larger.h5";
+  {
+    constexpr auto src_dims = std::array<hsize_t, DIM>{BLOCK2X, BLOCK2Y};
+
+    create_hdf5_file_with_sequential_data(src2_path, DATASET, src_dims);
+  }
+
+  constexpr auto vds_dims = std::array<hsize_t, DIM>{X, Y};
+  const auto vds_file = H5Fcreate(vds_file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(vds_file, 0);
+
+  const auto vds_space = H5Screate_simple(DIM, vds_dims.data(), nullptr);
+
+  ASSERT_GE(vds_space, 0);
+
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+  ASSERT_GE(dcpl, 0);
+
+  // Map source 1 at [0, 0]
+  {
+    std::array<hsize_t, DIM> start{0, 0};
+    std::array<hsize_t, DIM> count{1, 1};
+    std::array<hsize_t, DIM> block{BLOCK1X, BLOCK1Y};
+
+    ASSERT_GE(H5Sselect_hyperslab(
+                vds_space, H5S_SELECT_SET, start.data(), nullptr, count.data(), block.data()),
+              0);
+
+    constexpr auto src_dims = std::array<hsize_t, DIM>{BLOCK1X, BLOCK1Y};
+    const auto src_space    = H5Screate_simple(DIM, src_dims.data(), nullptr);
+
+    ASSERT_GE(src_space, 0);
+    ASSERT_GE(H5Sselect_all(src_space), 0);
+    ASSERT_GE(H5Pset_virtual(dcpl, vds_space, src1_path.c_str(), DATASET, src_space), 0);
+    ASSERT_GE(H5Sclose(src_space), 0);
+  }
+
+  // Map source 2 at [BLOCK1X, 0]
+  {
+    std::array<hsize_t, DIM> start{BLOCK1X, 0};
+    std::array<hsize_t, DIM> count{1, 1};
+    std::array<hsize_t, DIM> block{BLOCK2X, BLOCK2Y};
+
+    ASSERT_GE(H5Sselect_hyperslab(
+                vds_space, H5S_SELECT_SET, start.data(), nullptr, count.data(), block.data()),
+              0);
+
+    constexpr auto src_dims = std::array<hsize_t, DIM>{BLOCK2X, BLOCK2Y};
+    const auto src_space    = H5Screate_simple(DIM, src_dims.data(), nullptr);
+
+    ASSERT_GE(src_space, 0);
+    ASSERT_GE(H5Sselect_all(src_space), 0);
+    ASSERT_GE(H5Pset_virtual(dcpl, vds_space, src2_path.c_str(), DATASET, src_space), 0);
+    ASSERT_GE(H5Sclose(src_space), 0);
+  }
+
+  const auto vds_dset =
+    H5Dcreate(vds_file, DATASET, H5T_IEEE_F32LE, vds_space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
+  ASSERT_GE(vds_dset, 0);
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(vds_space), 0);
+  ASSERT_GE(H5Dclose(vds_dset), 0);
+  ASSERT_GE(H5Fclose(vds_file), 0);
+  ASSERT_FALSE(get_tile_shape_for_file(vds_file_path, DATASET, vds_dims, 2).has_value());
+}
+
+TEST_F(IOHDF5TilingUnit, VDSChunkedWithRelativeSourcePaths)
+{
+  constexpr auto DIM       = 2;
+  constexpr auto X         = 100;
+  constexpr auto Y         = 500;
+  constexpr auto X_CHUNK   = 10;
+  constexpr auto Y_CHUNK   = 20;
+  constexpr auto NUM_FILES = 10;
+  constexpr auto DATASET   = "/two_dimensional";
+  const auto vds_file_path = base_path / "rel_path_vds.h5";
+  const auto source_dir    = base_path / "rel_path_source";
+
+  ASSERT_NO_THROW(std::filesystem::create_directories(source_dir));
+
+  constexpr auto vds_dims = std::array<hsize_t, DIM>{X, Y};
+  const hsize_t tile_size = (X + NUM_FILES - 1) / NUM_FILES;
+  std::vector<std::string> relative_paths;
+
+  for (std::size_t tile_idx = 0; tile_idx < NUM_FILES; ++tile_idx) {
+    const hsize_t start_idx     = tile_idx * tile_size;
+    const hsize_t end_idx       = std::min(start_idx + tile_size, static_cast<hsize_t>(X));
+    const hsize_t this_tile_dim = end_idx - start_idx;
+
+    if (this_tile_dim == 0) {
+      break;
+    }
+
+    const auto filename = "tile_" + std::to_string(tile_idx) + ".h5";
+    const auto abs_path = source_dir / filename;
+    const auto rel_path = std::filesystem::relative(abs_path, base_path).string();
+
+    relative_paths.push_back(rel_path);
+
+    const std::array<hsize_t, DIM> src_dims{this_tile_dim, Y};
+    const std::array<hsize_t, DIM> chunk_dims{
+      std::min(static_cast<hsize_t>(X_CHUNK), this_tile_dim), Y_CHUNK};
+
+    create_hdf5_file_with_sequential_data(abs_path, DATASET, src_dims, &chunk_dims);
+  }
+
+  const auto vds_file = H5Fcreate(vds_file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+  ASSERT_GE(vds_file, 0);
+
+  const auto vds_space = H5Screate_simple(DIM, vds_dims.data(), nullptr);
+
+  ASSERT_GE(vds_space, 0);
+
+  const auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+  ASSERT_GE(dcpl, 0);
+
+  for (std::size_t tile_idx = 0; tile_idx < relative_paths.size(); ++tile_idx) {
+    const hsize_t start_idx     = tile_idx * tile_size;
+    const hsize_t end_idx       = std::min(start_idx + tile_size, static_cast<hsize_t>(X));
+    const hsize_t this_tile_dim = end_idx - start_idx;
+    std::array<hsize_t, DIM> src_dims{this_tile_dim, Y};
+    std::array<hsize_t, DIM> vds_start{start_idx, 0};
+    std::array<hsize_t, DIM> vds_count{1, 1};
+    std::array<hsize_t, DIM> vds_block = src_dims;
+
+    ASSERT_GE(
+      H5Sselect_hyperslab(
+        vds_space, H5S_SELECT_SET, vds_start.data(), nullptr, vds_count.data(), vds_block.data()),
+      0);
+
+    const auto src_space = H5Screate_simple(DIM, src_dims.data(), nullptr);
+
+    ASSERT_GE(src_space, 0);
+    ASSERT_GE(H5Sselect_all(src_space), 0);
+    ASSERT_GE(H5Pset_virtual(dcpl, vds_space, relative_paths[tile_idx].c_str(), DATASET, src_space),
+              0);
+    ASSERT_GE(H5Sclose(src_space), 0);
+  }
+
+  const auto vds_dset =
+    H5Dcreate(vds_file, DATASET, H5T_IEEE_F32LE, vds_space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
+
+  ASSERT_GE(vds_dset, 0);
+  ASSERT_GE(H5Pclose(dcpl), 0);
+  ASSERT_GE(H5Sclose(vds_space), 0);
+  ASSERT_GE(H5Dclose(vds_dset), 0);
+  ASSERT_GE(H5Fclose(vds_file), 0);
+
+  const auto num_tiles  = 10;
+  const auto tile_shape = get_tile_shape_for_file(vds_file_path, DATASET, vds_dims, num_tiles);
+
+  ASSERT_TRUE(tile_shape.has_value());
+
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  const auto& ts = *tile_shape;
+
+  ASSERT_EQ(ts.size(), DIM);
+
+  // Chunked sources with chunk_dims [10, 20], uniform across all files.
+  // tiles_needed = ceil(100/10) * ceil(500/20) = 10 * 25 = 250
+  // adjustment_factor = 250 / 10 = 25.0
+  // adjusted_tile_size = 10 * 25 = 250 -> clamped to X = 100
+  const auto tiles_needed = ((X + X_CHUNK - 1) / X_CHUNK) * ((Y + Y_CHUNK - 1) / Y_CHUNK);
+  const double factor     = static_cast<double>(tiles_needed) / static_cast<double>(num_tiles);
+  const auto expected_slowest_tile =
+    std::clamp(static_cast<int>(static_cast<double>(X_CHUNK) * factor), 1, X);
+
+  ASSERT_EQ(ts[0], expected_slowest_tile);
+  ASSERT_EQ(ts[1], Y_CHUNK);
+}
+
 }  // namespace test_io_hdf5_tiling
