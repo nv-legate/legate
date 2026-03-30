@@ -92,6 +92,7 @@ class FutureStoreFn {
 
     // Specific API for future store
     ASSERT_EQ(store.scalar<T>(), scalar.value<T>());
+    ASSERT_FALSE(store.is_partitioned());
 
     // Cover const version of as_future_store()
     const auto& future_store = std::as_const(*store.impl()).as_future_store();

@@ -138,6 +138,10 @@ class UnboundStoreCreateFn {
                 ::testing::ThrowsMessage<std::invalid_argument>(
                   ::testing::HasSubstr("Invalid to create an accessor on an unbound store")));
 
+    ASSERT_THAT([&] { static_cast<void>(store.to_logical_store()); },
+                ::testing::ThrowsMessage<std::runtime_error>(
+                  ::testing::HasSubstr("does not support to_logical_store()")));
+
     // Cover const version of as_unbound_store()
     const auto& unbound_store = std::as_const(*store.impl()).as_unbound_store();
 

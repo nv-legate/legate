@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <unit/logical_array/utils.h>
 #include <utilities/utilities.h>
 
@@ -107,6 +108,19 @@ TEST_P(NegativePromoteDimTest, Basic)
   const auto [extra_dim, dim_size]    = params;
 
   test_negative_promote(type, /*bound=*/true, nullable, extra_dim, dim_size);
+}
+
+// Verify that a heap-allocated LogicalArray can be safely destroyed through delete
+// without crashing or throwing. This exercises the "deleting destructor" code path,
+// which is distinct from the stack-based destructor path used in all other tests.
+TEST_F(LogicalArrayPromoteUnit, DeletingDestructor)
+{
+  auto store = legate::Runtime::get_runtime()->create_store(legate::Shape{2, 3}, legate::int32());
+  auto ptr   = std::make_unique<legate::LogicalArray>(store);
+
+  ASSERT_NE(ptr->impl(), nullptr);
+  ASSERT_NO_THROW(ptr.reset());
+  ASSERT_EQ(ptr, nullptr);
 }
 
 }  // namespace logical_array_promote_test

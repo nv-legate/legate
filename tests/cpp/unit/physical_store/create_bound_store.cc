@@ -268,6 +268,12 @@ TEST_F(CreateBoundPhysicalStoreUnit, StoreCreationLike)
   const auto& region_store = std::as_const(*store.impl()).as_region_store();
 
   ASSERT_TRUE(region_store.valid());
+
+  auto logical_region = store.get_logical_region();
+  auto field_id       = store.get_field_id();
+
+  ASSERT_TRUE(logical_region.has_value());
+  ASSERT_TRUE(field_id.has_value());
 }
 
 TEST_F(CreateBoundPhysicalStoreUnit, DetailPhysicalStoreDestructor)

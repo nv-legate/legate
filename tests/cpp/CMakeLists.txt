@@ -286,6 +286,7 @@ set(
   unit/physical_store/create_future_store.cc
   unit/physical_store/create_unbound_store.cc
   unit/physical_store/inline_allocation.cc
+  unit/physical_store/inline_storage_gpu.cc
   unit/physical_store/read_accessor.cc
   unit/physical_store/read_write_accessor.cc
   unit/physical_store/reduce_accessor.cc

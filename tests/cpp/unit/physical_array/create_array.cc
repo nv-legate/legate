@@ -9,6 +9,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <utilities/utilities.h>
 
 namespace physical_array_create_test {
@@ -223,6 +224,20 @@ TEST_P(NullableCreateArrayTest, UnboundArray)
   task.add_scalar_arg(legate::Scalar{nullable});
   runtime->submit(std::move(task));
   ASSERT_FALSE(logical_array.unbound());
+}
+
+// Verify that a heap-allocated PhysicalArray can be safely destroyed through delete
+// without crashing or throwing. This exercises the "deleting destructor" code path,
+// which is distinct from the stack-based destructor path used in all other tests.
+TEST_F(CreatePhysicalArrayUnit, DeletingDestructor)
+{
+  auto runtime       = legate::Runtime::get_runtime();
+  auto logical_array = runtime->create_array(legate::Shape{2, 3}, legate::int32());
+  auto ptr           = std::make_unique<legate::PhysicalArray>(logical_array.get_physical_array());
+
+  ASSERT_NE(ptr->impl(), nullptr);
+  ASSERT_NO_THROW(ptr.reset());
+  ASSERT_EQ(ptr, nullptr);
 }
 
 }  // namespace physical_array_create_test

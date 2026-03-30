@@ -189,6 +189,38 @@ TEST_F(ShapeUnit, OperatorEqualBound)
   ASSERT_FALSE(other_shape == bound_shape2);
 }
 
+TEST_F(ShapeUnit, OperatorEqualReadyVsUnbound)
+{
+  auto runtime       = legate::Runtime::get_runtime();
+  auto ready_shape   = legate::Shape{1, 2, 3};
+  auto store         = runtime->create_store(legate::int32(), /*dim=*/1);
+  auto unbound_shape = store.shape();
+
+  ASSERT_THAT([&] { static_cast<void>(ready_shape == unbound_shape); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Illegal to access an uninitialized unbound store")));
+}
+
+TEST_F(ShapeUnit, OperatorEqualUnboundResolvesAfterFlush)
+{
+  auto runtime        = legate::Runtime::get_runtime();
+  auto context        = runtime->find_library(Config::LIBRARY_NAME);
+  auto logical_store1 = runtime->create_store(legate::int64(), LEGATE_MAX_DIM);
+  auto logical_store2 = runtime->create_store(legate::int64(), LEGATE_MAX_DIM);
+  auto logical_store3 = runtime->create_store(legate::uint64(), LEGATE_MAX_DIM);
+  auto task           = runtime->create_task(context, UnboundStoreTask::TASK_CONFIG.task_id());
+
+  task.add_output(logical_store1);
+  task.add_output(logical_store2);
+  task.add_output(logical_store3);
+  runtime->submit(std::move(task));
+
+  auto shape1 = logical_store1.shape();
+  auto shape2 = logical_store2.shape();
+
+  ASSERT_TRUE(shape1 == shape2);
+}
+
 TEST_F(ShapeUnit, CopyExtentsFromBound)
 {
   auto runtime      = legate::Runtime::get_runtime();

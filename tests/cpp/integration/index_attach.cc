@@ -416,6 +416,27 @@ TEST_F(IndexAttach, InvalidCreation)
   ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
                std::runtime_error);
 #endif
+
+  const void* cptr = nullptr;
+
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_sysmem(cptr, 10)),
+               std::invalid_argument);
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(cptr, 10)),
+               std::invalid_argument);
+  if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) > 0) {
+    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, cptr, 10)),
+                 std::invalid_argument);
+  } else {
+    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, cptr, 10)),
+                 std::out_of_range);
+  }
+#else
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(cptr, 10)),
+               std::runtime_error);
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, cptr, 10)),
+               std::runtime_error);
+#endif
 }
 
 }  // namespace index_attach

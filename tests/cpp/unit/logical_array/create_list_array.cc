@@ -5,6 +5,7 @@
  */
 
 #include <legate/data/detail/logical_arrays/list_logical_array.h>
+#include <legate/data/detail/physical_array.h>
 
 #include <unit/logical_array/utils.h>
 
@@ -206,6 +207,7 @@ TEST_P(ListNullableTest, PhysicalArray)
 
   ASSERT_NO_THROW(static_cast<void>(list_physical_array.descriptor()));
   ASSERT_NO_THROW(static_cast<void>(list_physical_array.vardata()));
+  ASSERT_FALSE(physical_array.impl()->unbound());
   ASSERT_EQ(list_physical_array.nullable(), nullable);
   ASSERT_EQ(list_physical_array.type(), type);
   ASSERT_EQ(list_physical_array.dim(), VARILABLE_TYPE_BOUND_DIM);
@@ -277,6 +279,36 @@ TEST_F(ListArrayCreateUnit, InvalidType)
     [&] { static_cast<void>(legate::detail::ListLogicalArray{invalid_type, nullptr, nullptr}); },
     ::testing::ThrowsMessage<std::invalid_argument>(
       ::testing::HasSubstr("expected list or string type")));
+}
+
+TEST_F(ListArrayCreateUnit, MappedDescriptor)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto descriptor =
+    runtime->create_array(bound_shape_single_dim(), legate::rect_type(VARILABLE_TYPE_BOUND_DIM));
+  auto vardata = runtime->create_array(bound_shape_single_dim(), legate::int64());
+  auto array = runtime->create_list_array(descriptor, vardata, legate::list_type(legate::int64()));
+
+  ASSERT_FALSE(array.impl()->is_mapped());
+
+  static_cast<void>(descriptor.data().get_physical_store());
+
+  ASSERT_TRUE(array.impl()->is_mapped());
+}
+
+TEST_F(ListArrayCreateUnit, MappedVardata)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto descriptor =
+    runtime->create_array(bound_shape_single_dim(), legate::rect_type(VARILABLE_TYPE_BOUND_DIM));
+  auto vardata = runtime->create_array(bound_shape_single_dim(), legate::int64());
+  auto array = runtime->create_list_array(descriptor, vardata, legate::list_type(legate::int64()));
+
+  ASSERT_FALSE(array.impl()->is_mapped());
+
+  static_cast<void>(vardata.data().get_physical_store());
+
+  ASSERT_TRUE(array.impl()->is_mapped());
 }
 
 TEST_F(ListArrayCreateUnit, Broadcast)

@@ -172,6 +172,19 @@ TEST_F(StructArrayCreateUnit, InvalidType)
     ::testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("expected struct type")));
 }
 
+TEST_F(StructArrayCreateUnit, DeferredBound)
+{
+  auto runtime          = legate::Runtime::get_runtime();
+  const auto int_type   = legate::int64();
+  const auto float_type = legate::float32();
+  const auto& shape     = bound_shape_multi_dim();
+  auto int_array        = runtime->create_array(shape, int_type);
+  auto float_array      = runtime->create_array(shape, float_type);
+  auto array            = runtime->create_struct_array({int_array, float_array}, std::nullopt);
+
+  ASSERT_FALSE(array.impl()->deferred_bound());
+}
+
 TEST_F(StructArrayCreateUnit, IsMapped)
 {
   auto runtime          = legate::Runtime::get_runtime();

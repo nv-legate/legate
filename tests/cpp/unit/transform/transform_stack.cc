@@ -133,6 +133,29 @@ TEST_F(TransformStackUnit, Pop)
   ASSERT_TRUE(transform->is_convertible());
 }
 
+TEST_F(TransformStackUnit, PopNested)
+{
+  auto grandparent  = legate::make_internal_shared<legate::detail::TransformStack>();
+  auto parent_xform = std::make_unique<legate::detail::Promote>(1, 2);
+  auto parent       = legate::make_internal_shared<legate::detail::TransformStack>(
+    std::move(parent_xform), grandparent);
+  auto child = std::make_unique<legate::detail::Promote>(2, 3);
+  auto transform =
+    legate::make_internal_shared<legate::detail::TransformStack>(std::move(child), parent);
+
+  ASSERT_FALSE(transform->identity());
+
+  auto first = transform->pop();
+
+  ASSERT_NE(first, nullptr);
+  ASSERT_FALSE(transform->identity());
+
+  auto second = transform->pop();
+
+  ASSERT_NE(second, nullptr);
+  ASSERT_TRUE(transform->identity());
+}
+
 TEST_F(TransformStackUnitDeathTest, DoublePop)
 {
   auto parent = legate::make_internal_shared<legate::detail::TransformStack>();

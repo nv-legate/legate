@@ -54,7 +54,11 @@ TEST_F(InlineStorageUnit, Basic)
 
   ASSERT_EQ(impl->get_storage()->kind(), legate::detail::Storage::Kind::INLINE_STORAGE);
 
-  const auto phys   = store.get_physical_store();
+  const auto phys = store.get_physical_store();
+
+  ASSERT_TRUE(phys.valid());
+  ASSERT_FALSE(phys.is_partitioned());
+
   const auto mdspan = phys.span_read_accessor<std::int32_t, DIM>();
 
   for (auto i = 0; i < mdspan.extent(0); ++i) {
@@ -300,6 +304,68 @@ TEST_F(InlineStorageUnit, ExternalAllocation)
   for (std::size_t i = 0; i < SIZE; ++i) {
     ASSERT_EQ(span(i), VAL + i) << "span(" << i << ") = " << span(i) << " != " << (VAL + i);
   }
+}
+
+TEST_F(InlineStorageUnit, RemapSysmemToSocketmem)
+{
+  constexpr auto DIM   = 2;
+  constexpr auto VALUE = std::int32_t{9};
+  auto* const runtime  = legate::Runtime::get_runtime();
+  const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+
+  const auto phys_sys = store.get_physical_store(legate::mapping::StoreTarget::SYSMEM);
+
+  ASSERT_NE(phys_sys.get_inline_allocation().ptr, nullptr);
+
+  const auto phys_sock = store.get_physical_store(legate::mapping::StoreTarget::SOCKETMEM);
+
+  ASSERT_NE(phys_sock.get_inline_allocation().ptr, nullptr);
+
+  const auto mdspan = phys_sock.span_read_accessor<std::int32_t, DIM>();
+
+  for (auto i = 0; i < mdspan.extent(0); ++i) {
+    for (auto j = 0; j < mdspan.extent(1); ++j) {
+      ASSERT_EQ(mdspan(i, j), VALUE);
+    }
+  }
+}
+
+TEST_F(InlineStorageUnit, GetInlineAllocationTransformed)
+{
+  constexpr auto DIM   = 2;
+  constexpr auto VALUE = std::int32_t{55};
+  auto* const runtime  = legate::Runtime::get_runtime();
+  const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+
+  auto promoted   = store.promote(/*extra_dim=*/0, /*dim_size=*/1);
+  const auto phys = promoted.get_physical_store();
+
+  ASSERT_TRUE(phys.transformed());
+
+  const auto alloc = phys.get_inline_allocation();
+
+  ASSERT_NE(alloc.ptr, nullptr);
+  ASSERT_EQ(alloc.strides.size(), static_cast<std::size_t>(promoted.dim()));
+}
+
+TEST_F(InlineStorageUnit, ToLogicalStoreThrows)
+{
+  constexpr auto DIM   = 2;
+  constexpr auto VALUE = std::int32_t{11};
+  auto* const runtime  = legate::Runtime::get_runtime();
+  const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+
+  const auto phys = store.get_physical_store();
+
+  ASSERT_THAT([&] { static_cast<void>(phys.to_logical_store()); },
+              ::testing::ThrowsMessage<std::runtime_error>(
+                ::testing::HasSubstr("does not support to_logical_store()")));
 }
 
 }  // namespace test_inline_storage_unit
