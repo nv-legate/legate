@@ -84,6 +84,13 @@ TEST_F(ListTypeUnit, NotEqual)
   ASSERT_FALSE(type1 == type2);
 }
 
+TEST_F(ListTypeUnit, NotEqualDifferentCode)
+{
+  auto list = legate::list_type(legate::int16());
+
+  ASSERT_FALSE(list == legate::int32());
+}
+
 TEST_F(ListTypeUnit, ListTypeBadType)
 {
   ASSERT_THAT([&]() { static_cast<void>(legate::list_type(legate::string_type())); },

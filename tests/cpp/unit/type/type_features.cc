@@ -221,4 +221,13 @@ TEST_P(ReductionOperatorTest, Record)
     testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("already exists for type")));
 }
 
+TEST_F(TypeFeaturesUnit, RecordReductionOperatorWithEnumKind)
+{
+  constexpr auto GLOBAL_OP_ID = legate::GlobalRedopID{0x2F};
+  auto type                   = legate::binary_type(3);
+
+  type.record_reduction_operator(legate::ReductionOpKind::ADD, GLOBAL_OP_ID);
+  ASSERT_EQ(type.find_reduction_operator(legate::ReductionOpKind::ADD), GLOBAL_OP_ID);
+}
+
 }  // namespace type_features_test

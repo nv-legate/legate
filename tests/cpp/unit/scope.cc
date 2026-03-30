@@ -286,7 +286,7 @@ TEST_F(ScopeTest, NestedSet)
   EXPECT_EQ(legate::Scope::machine(), old_machine);
 }
 
-TEST_F(ScopeTest, DuplicatePriority1)
+TEST_F(ScopeTest, SetPriorityTwiceOnDefaultScopeError)
 {
   legate::Scope test_priority{};
 
@@ -294,20 +294,41 @@ TEST_F(ScopeTest, DuplicatePriority1)
   EXPECT_THROW(test_priority.set_priority(MAGIC_PRIORITY2), std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicatePriority2)
+TEST_F(ScopeTest, SetPriorityOnInitializedScopeError)
 {
   legate::Scope test_priority{MAGIC_PRIORITY1};
 
   EXPECT_THROW(test_priority.set_priority(MAGIC_PRIORITY2), std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicatePriority3)
+TEST_F(ScopeTest, ChainPriorityTwiceError)
 {
   EXPECT_THROW(static_cast<void>(legate::Scope{MAGIC_PRIORITY1}.with_priority(MAGIC_PRIORITY2)),
                std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicateProvenance1)
+TEST_F(ScopeTest, SetExceptionModeTwiceOnDefaultScopeError)
+{
+  legate::Scope test_exception_mode{};
+
+  test_exception_mode.set_exception_mode(MODE1);
+  EXPECT_THROW(test_exception_mode.set_exception_mode(MODE2), std::invalid_argument);
+}
+
+TEST_F(ScopeTest, SetExceptionModeOnInitializedScopeError)
+{
+  legate::Scope test_exception_mode{MODE1};
+
+  EXPECT_THROW(test_exception_mode.set_exception_mode(MODE2), std::invalid_argument);
+}
+
+TEST_F(ScopeTest, ChainExceptionModeTwiceError)
+{
+  EXPECT_THROW(static_cast<void>(legate::Scope{MODE1}.with_exception_mode(MODE2)),
+               std::invalid_argument);
+}
+
+TEST_F(ScopeTest, SetProvenanceTwiceOnDefaultScopeError)
 {
   legate::Scope test_provenance{};
 
@@ -316,7 +337,7 @@ TEST_F(ScopeTest, DuplicateProvenance1)
                std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicateProvenance2)
+TEST_F(ScopeTest, SetProvenanceOnInitializedScopeError)
 {
   legate::Scope test_provenance{std::string{MAGIC_PROVENANCE1}};
 
@@ -324,14 +345,14 @@ TEST_F(ScopeTest, DuplicateProvenance2)
                std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicateProvenance3)
+TEST_F(ScopeTest, ChainProvenanceTwiceError)
 {
   EXPECT_THROW(static_cast<void>(legate::Scope{std::string{MAGIC_PROVENANCE1}}.with_provenance(
                  std::string{MAGIC_PROVENANCE2})),
                std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicateMachine1)
+TEST_F(ScopeTest, SetMachineTwiceOnDefaultScopeError)
 {
   legate::Scope test_machine{};
 
@@ -339,16 +360,38 @@ TEST_F(ScopeTest, DuplicateMachine1)
   EXPECT_THROW(test_machine.set_machine(legate::Scope::machine()), std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicateMachine2)
+TEST_F(ScopeTest, SetMachineOnInitializedScopeError)
 {
   legate::Scope test_machine{legate::Scope::machine()};
   EXPECT_THROW(test_machine.set_machine(legate::Scope::machine()), std::invalid_argument);
 }
 
-TEST_F(ScopeTest, DuplicateMachine3)
+TEST_F(ScopeTest, ChainMachineTwiceError)
 {
   EXPECT_THROW(static_cast<void>(
                  legate::Scope{legate::Scope::machine()}.with_machine(legate::Scope::machine())),
+               std::invalid_argument);
+}
+
+TEST_F(ScopeTest, SetParallelPolicyTwiceOnDefaultScopeError)
+{
+  legate::Scope test_policy{};
+
+  test_policy.set_parallel_policy(legate::ParallelPolicy{});
+  EXPECT_THROW(test_policy.set_parallel_policy(legate::ParallelPolicy{}), std::invalid_argument);
+}
+
+TEST_F(ScopeTest, SetParallelPolicyOnInitializedScopeError)
+{
+  legate::Scope test_policy{legate::ParallelPolicy{}};
+
+  EXPECT_THROW(test_policy.set_parallel_policy(legate::ParallelPolicy{}), std::invalid_argument);
+}
+
+TEST_F(ScopeTest, ChainParallelPolicyTwiceError)
+{
+  EXPECT_THROW(static_cast<void>(legate::Scope{legate::ParallelPolicy{}}.with_parallel_policy(
+                 legate::ParallelPolicy{})),
                std::invalid_argument);
 }
 
