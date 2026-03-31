@@ -21,6 +21,7 @@ from .util cimport validate_variant, _get_callable_name
 
 from .type import UserFunction
 
+import threading
 
 cdef TaskConfig _sanitize_config(
     options: TaskConfig | VariantOptions | None, Library library
@@ -85,6 +86,7 @@ cdef class PyTask:
         self._variants = self._init_variants(func, variants)
         self._config = config
         self._library = library
+        self._lock = threading.Lock()
 
     @property
     def registered(self) -> bool:
@@ -213,6 +215,11 @@ cdef class PyTask:
         It is safe to call this method on an already registered task (it does
         nothing).
         """
+        cdef dict proc_kind_to_variant
+        cdef VariantCode v
+        cdef list variants
+        cdef TaskInfo task_info
+
         # complete_registration() is called every time the task is launched,
         # which would be on the hot-path. So access the cdef-ed members directly
         # (which Cython emits as direct struct member accesses) instead of
@@ -220,30 +227,33 @@ cdef class PyTask:
         if self._registered:
             return self._config.task_id
 
-        cdef dict proc_kind_to_variant = {
-            VariantCode.CPU: self._cpu_variant,
-            VariantCode.GPU: self._gpu_variant,
-            VariantCode.OMP: self._omp_variant,
-        }
+        with self._lock:
+            # Double-checked locking
+            if self._registered:
+                return self._config.task_id
 
-        cdef VariantCode v
+            proc_kind_to_variant = {
+                VariantCode.CPU: self._cpu_variant,
+                VariantCode.GPU: self._gpu_variant,
+                VariantCode.OMP: self._omp_variant,
+            }
 
-        cdef list variants = [
-            (v, proc_kind_to_variant[v])
-            for v, fn in self._variants.items()
-            if fn is not None
-        ]
-        if not variants:
-            raise ValueError("Task has no registered variants")
+            variants = [
+                (v, proc_kind_to_variant[v])
+                for v, fn in self._variants.items()
+                if fn is not None
+            ]
+            if not variants:
+                raise ValueError("Task has no registered variants")
 
-        cdef TaskInfo task_info = TaskInfo.from_variants_config(
-            config=self._config,
-            library=self.library,
-            name=self._name,
-            variants=variants,
-        )
-        self.library.register_task(task_info)
-        self._registered = True
+            task_info = TaskInfo.from_variants_config(
+                config=self._config,
+                library=self.library,
+                name=self._name,
+                variants=variants,
+            )
+            self.library.register_task(task_info)
+            self._registered = True
         return self.task_id
 
     cdef void _update_variant(self, func: UserFunction, VariantCode variant):

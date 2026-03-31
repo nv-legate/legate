@@ -5,32 +5,30 @@ from __future__ import annotations
 
 import numpy as np
 
-import pytest
-
 from legate.core import get_legate_runtime, types as ty
 from legate.core.task import InputStore, OutputStore, task
 
-from .utils.utils import is_multi_node
+
+@task
+def verify_api_task(inp: InputStore) -> None:
+    logical = inp.to_logical_store()
+
+    assert logical.ndim == inp.ndim
+    assert logical.type == inp.type
+    local_extent = inp.domain.hi[0] - inp.domain.lo[0] + 1
+    assert logical.extents[0] == local_extent
 
 
 @task
-def verify_api_task(inp: InputStore, result_out: OutputStore) -> None:
+def verify_api_2d_task(inp: InputStore) -> None:
     logical = inp.to_logical_store()
 
-    result = np.asarray(result_out)
-    result[0] = logical.ndim
-    result[1] = logical.extents[0]
-    result[2] = 1 if logical.type == ty.int32 else 0
-
-
-@task
-def verify_api_2d_task(inp: InputStore, result_out: OutputStore) -> None:
-    logical = inp.to_logical_store()
-
-    result = np.asarray(result_out)
-    result[0] = logical.ndim
-    result[1] = logical.extents[0]
-    result[2] = logical.extents[1]
+    assert logical.ndim == inp.ndim
+    assert logical.type == inp.type
+    local_extent_0 = inp.domain.hi[0] - inp.domain.lo[0] + 1
+    local_extent_1 = inp.domain.hi[1] - inp.domain.lo[1] + 1
+    assert logical.extents[0] == local_extent_0
+    assert logical.extents[1] == local_extent_1
 
 
 @task
@@ -67,7 +65,6 @@ def outer_chained_task(
     inner_add_task(logical_intermediate, logical_out, 10)
 
 
-@pytest.mark.skipif(is_multi_node(), reason="Store partitioned across ranks")
 class TestNestedExecution:
     def test_create_logical_from_physical(self) -> None:
         runtime = get_legate_runtime()
@@ -76,14 +73,8 @@ class TestNestedExecution:
         arr = np.asarray(store)
         arr[:] = range(10)
 
-        result_store = runtime.create_store(ty.int32, shape=(3,))
-
-        verify_api_task(store, result_store)
-
-        result = np.asarray(result_store)
-        assert result[0] == 1
-        assert result[1] == 10
-        assert result[2] == 1
+        verify_api_task(store)
+        runtime.issue_execution_fence(block=True)
 
     def test_create_logical_from_physical_2d(self) -> None:
         runtime = get_legate_runtime()
@@ -92,14 +83,8 @@ class TestNestedExecution:
         arr = np.asarray(store)
         arr[:] = np.arange(12, dtype=np.float32).reshape(3, 4)
 
-        result_store = runtime.create_store(ty.int32, shape=(3,))
-
-        verify_api_2d_task(store, result_store)
-
-        result = np.asarray(result_store)
-        assert result[0] == 2
-        assert result[1] == 3
-        assert result[2] == 4
+        verify_api_2d_task(store)
+        runtime.issue_execution_fence(block=True)
 
     def test_nested_task_simple(self) -> None:
         """Test that one @task can call another @task as a nested task."""

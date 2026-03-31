@@ -29,6 +29,7 @@ cdef class PyTask:
         VariantMapping _variants
         TaskConfig _config
         Library _library
+        object _lock
 
     cpdef _LocalTaskID complete_registration(self)
     cdef void _update_variant(self, func: UserFunction, VariantCode variant)
