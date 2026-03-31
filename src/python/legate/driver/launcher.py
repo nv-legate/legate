@@ -23,6 +23,7 @@ RANK_ENV_VARS = (
 
 LAUNCHER_VAR_PREFIXES = (
     "CONDA_",
+    "CUFILE_",
     "CUTENSOR_",
     "LEGATE_",
     "LEGION_",

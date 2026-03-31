@@ -35,6 +35,7 @@ def test_RANK_ENV_VARS() -> None:
 def test_LAUNCHER_VAR_PREFIXES() -> None:
     assert m.LAUNCHER_VAR_PREFIXES == (
         "CONDA_",
+        "CUFILE_",
         "CUTENSOR_",
         "LEGATE_",
         "LEGION_",
