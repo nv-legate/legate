@@ -10,7 +10,7 @@ requires = [
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "legate"
+name = "legate-cu12"
 authors = [{name = "NVIDIA Corporation"}]
 license = { text = "Apache-2.0" }
 description = "legate - The Foundation for All Legate Libraries"

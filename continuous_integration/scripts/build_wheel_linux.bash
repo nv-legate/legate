@@ -12,6 +12,7 @@ source legate-configure-sccache
 unset CMAKE_CUDA_COMPILER_LAUNCHER
 
 export CMAKE_BUILD_PARALLEL_LEVEL=${PARALLEL_LEVEL:=8}
+export CUDA_MAJOR_VER=${CUDA_MAJOR_VER:=13}
 
 if [[ "${CI:-false}" == "true" ]]; then
   rapids-logger "Installing extra system packages"
@@ -36,8 +37,12 @@ if [[ "${LEGATE_DIR:-}" == "" ]]; then
   fi
   export LEGATE_DIR
 fi
-package_dir="${LEGATE_DIR}/scripts/build/python/legate"
-package_name="legate"
+package_suffix=""
+if [[ "${CUDA_MAJOR_VER}" == "12" ]]; then
+  package_suffix="-cu12"
+fi
+package_dir="${LEGATE_DIR}/scripts/build/python/legate${package_suffix}"
+package_name="legate${package_suffix}"
 
 rapids-logger "Installing build requirements"
 rapids-pip-retry install -v --prefer-binary -r continuous_integration/requirements-build.txt
@@ -81,7 +86,8 @@ ls -lh "${LEGATE_DIR}/dist"
 
 rapids-logger "Repairing the wheel"
 mkdir -p "${LEGATE_DIR}/final-dist"
-export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/legate/prefix/lib"
+# Needed to help auditwheel find the HDF5 library we built.
+export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/${package_name}/prefix/lib"
 python -m auditwheel repair \
   --exclude libcrypto.so.* \
   --exclude libcuda.so.* \

@@ -146,12 +146,6 @@ jobs:
         run: |
           echo "${GITHUB_WORKSPACE}/gha-tools/tools" >> "${GITHUB_PATH}"
 
-      - name: Wheel build
-        run: ${{ inputs.script }}
-        env:
-          STEP_NAME: "C++ build"
-          GH_TOKEN: ${{ github.token }}
-
       - name: Extract CUDA major version
         env:
           CUDA_VER: ${{ matrix.CUDA_VER }}
@@ -165,6 +159,12 @@ jobs:
               ;;
           esac
           echo "CUDA_MAJOR_VER=${cuda_major_ver}" >> "${GITHUB_ENV}"
+
+      - name: Wheel build
+        run: ${{ inputs.script }}
+        env:
+          STEP_NAME: "C++ build"
+          GH_TOKEN: ${{ github.token }}
 
       - name: Wheel upload
         env:

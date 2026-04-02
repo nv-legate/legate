@@ -11,7 +11,7 @@ if desired is to replicate that environment using Docker.
 You would want to clone the source directory, change into that directory and
 then run something like the following to mount the source within the container:
 ```
-docker run --rm --runtime=nvidia --gpus all -it --mount type=bind,src=.,dst=/src -w src rapidsai/ci-wheel:cuda13.0.0-rockylinux8-py3.13 bash
+docker run --rm --runtime=nvidia --gpus all -it --mount type=bind,src=.,dst=/src -w src rapidsai/ci-wheel:cuda12.9.1-rockylinux8-py3.13 bash
 export PATH=/src/continuous_integration/scripts/tools/:$PATH
 dnf install -y gcc-toolset-14-libatomic-devel
 ```
