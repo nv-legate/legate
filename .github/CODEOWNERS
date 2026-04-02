@@ -40,4 +40,4 @@ docs/ @nv-legate/docs-reviewers
 *.rst @nv-legate/docs-reviewers
 
 # Override for CODEOWNERS - last rule wins.
-CODEOWNERS @magnatelee @manopapad @Jacobfaib
+CODEOWNERS @magnatelee @manopapad
