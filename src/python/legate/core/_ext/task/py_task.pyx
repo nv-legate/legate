@@ -230,7 +230,7 @@ cdef class PyTask:
         with self._lock:
             # Double-checked locking
             if self._registered:
-                return self._config.task_id
+                return self._config.task_id  # pragma: no cover
 
             proc_kind_to_variant = {
                 VariantCode.CPU: self._cpu_variant,

@@ -271,7 +271,7 @@ cdef object get_realm_config_property(
         v = _get_realm_config_property[int64_t](mod, prop)
     if v.has_value():
         return int(v.value())
-    return None
+    return None  # pragma: no cover
 
 
 cdef class RealmConfig:

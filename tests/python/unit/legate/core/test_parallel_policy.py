@@ -93,6 +93,20 @@ class TestParallelPolicy:
         assert c.partitioning_threshold(TaskTarget.GPU) == GPU_THRESHOLD
         assert c.partitioning_threshold(TaskTarget.OMP) == OMP_THRESHOLD
 
+    def test_streaming_mode_setter(self) -> None:
+        a = ParallelPolicy()
+        a.streaming_mode = StreamingMode.RELAXED
+        assert a.streaming
+        assert a.streaming_mode == StreamingMode.RELAXED
+        a.streaming_mode = StreamingMode.OFF
+        assert not a.streaming
+
+    def test_overdecompose_factor_setter(self) -> None:
+        a = ParallelPolicy()
+        assert a.overdecompose_factor == 1
+        a.overdecompose_factor = OVERDECOMPOSE_FACTOR
+        assert a.overdecompose_factor == OVERDECOMPOSE_FACTOR
+
     def test_set_partitioning_threshold(self) -> None:
         a = ParallelPolicy()
         a.set_partitioning_threshold(TaskTarget.CPU, CPU_THRESHOLD)
@@ -127,6 +141,16 @@ class TestParallelPolicyErrors:
         with pytest.raises(ValueError, match=re.escape(msg)):
             ParallelPolicy(
                 partitioning_threshold=()  # type: ignore[arg-type]
+            )
+
+    def test_invalid_partitioning_threshold_not_dict_or_tuple(self) -> None:
+        msg = (
+            "partitioning_threshold must be either a tuple or a dict of"
+            "[TaskTarget, int]"
+        )
+        with pytest.raises(ValueError, match=re.escape(msg)):
+            ParallelPolicy(
+                partitioning_threshold=[TaskTarget.CPU, 10]  # type: ignore[arg-type]
             )
 
 
