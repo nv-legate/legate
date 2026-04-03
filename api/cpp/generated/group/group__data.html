@@ -32,8 +32,8 @@ SPDX-License-Identifier: Apache-2.0
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="../../../../_static/styles/theme.css?digest=7f76b32a3354e82990f2" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=7f76b32a3354e82990f2" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/nvidia-sphinx-theme.css?v=933278ad" />
@@ -41,10 +41,10 @@ SPDX-License-Identifier: Apache-2.0
     <link rel="stylesheet" type="text/css" href="../../../../_static/params.css" />
   
   <!-- So that users can add custom icons -->
-  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=7f76b32a3354e82990f2"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=7f76b32a3354e82990f2" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=7f76b32a3354e82990f2" />
 
 
 
@@ -56,12 +56,13 @@ SPDX-License-Identifier: Apache-2.0
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/generated/group/group__data';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = '26.05';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
 
     <link rel="icon" href="../../../../_static/favicon.png"/>
 
@@ -76,14 +77,12 @@ SPDX-License-Identifier: Apache-2.0
 
   </head>
 
-  
-  
-  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+  <body data-default-mode="">
+
 
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
-
 
   
   <div id="pst-scroll-pixel-helper"></div>
@@ -116,7 +115,7 @@ SPDX-License-Identifier: Apache-2.0
 </div>
 
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
   <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
@@ -2915,7 +2914,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
@@ -2957,7 +2956,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
@@ -2990,7 +2989,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
@@ -3023,7 +3022,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
@@ -3058,7 +3057,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -3108,7 +3107,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -3149,7 +3148,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -3190,7 +3189,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="github reference external" href="https://github.com/nv-legate/legate/issues">nv-legate/legate#issues</a>.</p>
+<p>This API is experimental. It will eventually replace the Legion accessor interface, but we are seeking user feedback on it before such time. If you encounter issues, and/or have suggestions for improvements, please file a bug at <a class="reference external" href="https://github.com/nv-legate/legate/issues">https://github.com/nv-legate/legate/issues</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -4348,8 +4347,8 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
     class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> On this page
   </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#c.LEGATE_TRUE_WHEN_DEBUG"><code class="docutils literal notranslate"><span class="pre">LEGATE_TRUE_WHEN_DEBUG</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE6Buffer"><code class="docutils literal notranslate"><span class="pre">Buffer</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt6size_tEE4Span"><code class="docutils literal notranslate"><span class="pre">Span</span></code></a></li>
@@ -4604,8 +4603,8 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
   
 
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=7f76b32a3354e82990f2"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=7f76b32a3354e82990f2"></script>
 
 
   <footer class="bd-footer">
