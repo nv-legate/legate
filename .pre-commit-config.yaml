@@ -87,7 +87,7 @@ repos:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes", "-L", "cancelled"] # don't spell check cancelled
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v22.1.1'
+    rev: 'v22.1.2'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
@@ -98,13 +98,13 @@ repos:
     hooks:
       - id: reuse-lint-file
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.7
+    rev: v0.15.8
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.19.1'
+    rev: 'v1.20.0'
     hooks:
       - id: mypy
         pass_filenames: false
@@ -144,7 +144,7 @@ repos:
       - id: shellcheck
         args: ['--rcfile', './scripts/pre-commit/shellcheckrc']
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.11
+    rev: v1.7.12
     hooks:
       - id: actionlint
         types: [yaml]
