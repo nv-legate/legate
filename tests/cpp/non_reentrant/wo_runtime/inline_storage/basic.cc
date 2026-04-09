@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/storage.h>
+#include <legate/redop/redop.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -366,6 +367,158 @@ TEST_F(InlineStorageUnit, ToLogicalStoreThrows)
   ASSERT_THAT([&] { static_cast<void>(phys.to_logical_store()); },
               ::testing::ThrowsMessage<std::runtime_error>(
                 ::testing::HasSubstr("does not support to_logical_store()")));
+}
+
+TEST_F(InlineStorageUnit, TransformedReadAccessor)
+{
+  auto* const runtime  = legate::Runtime::get_runtime();
+  const auto store     = runtime->create_store(legate::Shape{3}, legate::int32());
+  constexpr auto VALUE = std::int32_t{42};
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+
+  const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
+  const auto phys     = promoted.get_physical_store();
+
+  ASSERT_TRUE(phys.transformed());
+
+  const auto acc   = phys.read_accessor<std::int32_t, 2>();
+  const auto shape = phys.shape<2>();
+
+  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+    ASSERT_EQ(acc[*it], VALUE);
+  }
+}
+
+TEST_F(InlineStorageUnit, TransformedWriteAccessor)
+{
+  auto* const runtime  = legate::Runtime::get_runtime();
+  const auto store     = runtime->create_store(legate::Shape{3}, legate::int32());
+  constexpr auto VALUE = std::int32_t{7};
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{std::int32_t{0}});
+
+  const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
+  const auto phys     = promoted.get_physical_store();
+
+  ASSERT_TRUE(phys.transformed());
+
+  {
+    const auto acc   = phys.write_accessor<std::int32_t, 2>();
+    const auto shape = phys.shape<2>();
+
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+      acc[*it] = VALUE;
+    }
+  }
+
+  {
+    const auto read_acc = phys.read_accessor<std::int32_t, 2>();
+    const auto shape    = phys.shape<2>();
+
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+      ASSERT_EQ(read_acc[*it], VALUE);
+    }
+  }
+}
+
+TEST_F(InlineStorageUnit, TransformedReadWriteAccessor)
+{
+  auto* const runtime       = legate::Runtime::get_runtime();
+  const auto store          = runtime->create_store(legate::Shape{3}, legate::int32());
+  constexpr auto INIT_VALUE = std::int32_t{10};
+  constexpr auto DELTA      = std::int32_t{5};
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{INIT_VALUE});
+
+  const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
+  const auto phys     = promoted.get_physical_store();
+
+  ASSERT_TRUE(phys.transformed());
+
+  const auto acc   = phys.read_write_accessor<std::int32_t, 2>();
+  const auto shape = phys.shape<2>();
+
+  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+    ASSERT_EQ(acc[*it], INIT_VALUE);
+  }
+
+  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+    acc[*it] = acc[*it] + DELTA;
+  }
+
+  // promote(extra_dim=0, dim_size=2) aliases (0,j) and (1,j) to the same underlying element,
+  // so each element receives DELTA twice when iterating the full 2D shape.
+  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+    ASSERT_EQ(acc[*it], INIT_VALUE + (2 * DELTA));
+  }
+}
+
+TEST_F(InlineStorageUnit, ReduceAccessor)
+{
+  auto* const runtime       = legate::Runtime::get_runtime();
+  const auto store          = runtime->create_store(legate::Shape{2, 3}, legate::int32());
+  constexpr auto INIT_VALUE = std::int32_t{10};
+  constexpr auto RED_VALUE  = std::int32_t{5};
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{INIT_VALUE});
+
+  const auto phys = store.get_physical_store();
+
+  ASSERT_FALSE(phys.transformed());
+
+  {
+    const auto acc   = phys.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();
+    const auto shape = phys.shape<2>();
+
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+      acc.reduce(*it, RED_VALUE);
+    }
+  }
+
+  {
+    const auto read_acc = phys.read_accessor<std::int32_t, 2>();
+    const auto shape    = phys.shape<2>();
+
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+      ASSERT_EQ(read_acc[*it], INIT_VALUE + RED_VALUE);
+    }
+  }
+}
+
+TEST_F(InlineStorageUnit, TransformedReduceAccessor)
+{
+  auto* const runtime       = legate::Runtime::get_runtime();
+  const auto store          = runtime->create_store(legate::Shape{3}, legate::int32());
+  constexpr auto INIT_VALUE = std::int32_t{10};
+  constexpr auto RED_VALUE  = std::int32_t{5};
+
+  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{INIT_VALUE});
+
+  const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
+  const auto phys     = promoted.get_physical_store();
+
+  ASSERT_TRUE(phys.transformed());
+
+  {
+    const auto acc   = phys.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();
+    const auto shape = phys.shape<2>();
+
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+      acc.reduce(*it, RED_VALUE);
+    }
+  }
+
+  {
+    const auto read_acc = phys.read_accessor<std::int32_t, 2>();
+    const auto shape    = phys.shape<2>();
+
+    // promote(extra_dim=0, dim_size=2) aliases (0,j) and (1,j) to the same underlying element,
+    // so each element receives RED_VALUE twice when iterating the full 2D shape.
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
+      ASSERT_EQ(read_acc[*it], INIT_VALUE + (2 * RED_VALUE));
+    }
+  }
 }
 
 }  // namespace test_inline_storage_unit

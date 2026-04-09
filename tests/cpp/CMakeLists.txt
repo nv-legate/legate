@@ -419,14 +419,15 @@ set(
 
 set(
   non_reentrant_wo_runtime_SRC
-  non_reentrant/wo_runtime/exception/base.cc
-  non_reentrant/wo_runtime/exception/traced_exception.cc
-  non_reentrant/wo_runtime/exception/terminate_handler.cc
-  non_reentrant/wo_runtime/init/init.cc
-  non_reentrant/wo_runtime/streaming/streaming.cc
-  non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/comm/backend_network.cc
   non_reentrant/wo_runtime/comm/coll_abort.cc
+  non_reentrant/wo_runtime/exception/base.cc
+  non_reentrant/wo_runtime/exception/terminate_handler.cc
+  non_reentrant/wo_runtime/exception/traced_exception.cc
+  non_reentrant/wo_runtime/init/init.cc
+  non_reentrant/wo_runtime/inline_launch/basic.cc
+  non_reentrant/wo_runtime/inline_storage/basic.cc
+  non_reentrant/wo_runtime/streaming/streaming.cc
 )
 
 legate_configure_test(
