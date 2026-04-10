@@ -358,6 +358,8 @@ endif()
 
 set(
   wo_runtime_SRC
+  noinit/align.cc
+  noinit/buffer_builder.cc
   noinit/config.cc
   noinit/cuda_driver_api.cc
   noinit/enable_shared_from_this.cc
