@@ -158,6 +158,7 @@ def test_custom_metadata() -> None:
         "  Time *:",
         "  Global rank *:",
         "  Local rank *:",
+        "  Global size *:",
         "  Node *:",
         "Custom Field *:",
         "  Custom Subfield 1 *:",
