@@ -1,43 +1,52 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-# Global
-* @magnatelee @Jacobfaib
 
-# Python/Cython
-*.py @nv-legate/python-reviewers
-*.pyi @nv-legate/python-reviewers
-*.pyx @nv-legate/python-reviewers
-*.pxd @nv-legate/python-reviewers
-src/python @nv-legate/python-reviewers
-src/python/legate/jupyter @eddy16112
-pyproject.toml @nv-legate/build-reviewers
-setup.cfg @nv-legate/build-reviewers
+# fallback
+* @manopapad
 
-# cpp
-src/cpp @nv-legate/cpp-reviewers
-**/io/** @supunkamburugamuve
-
-# cmake
-src/cmake @nv-legate/build-reviewers
-*.cmake @nv-legate/build-reviewers
-CMakeLists.txt @nv-legate/build-reviewers
-
-# configure
-config/ @nv-legate/python-reviewers @nv-legate/build-reviewers
-configure @nv-legate/python-reviewers @nv-legate/build-reviewers
-makefile @nv-legate/build-reviewers
+# code, tests, examples, tools, style configs
+/.clang-format @nv-legate/legate-reviewers
+/.clang-tidy @nv-legate/legate-reviewers
+/.gdbinit @nv-legate/legate-reviewers
+/.gersemirc @nv-legate/legate-reviewers
+/.lldbinit @nv-legate/legate-reviewers
+/.pre-commit-config.yaml @nv-legate/legate-reviewers
+/benchmarks @nv-legate/legate-reviewers
+/scripts @nv-legate/legate-reviewers
+/share @nv-legate/legate-reviewers
+/src @nv-legate/legate-reviewers
+/test.py @nv-legate/legate-reviewers
+/tests @nv-legate/legate-reviewers
+# specific areas of ownership (must come after general rules above)
+**/io @supunkamburugamuve
+**/jupyter @eddy16112
 
 # CI
-.github/ @nv-legate/devops-reviewers
-continuous_integration @nv-legate/devops-reviewers
-conda @nv-legate/devops-reviewers
-scripts/ @nv-legate/devops-reviewers
+/.dockerignore @nv-legate/devops-reviewers
+/.github @nv-legate/devops-reviewers
+/continuous_integration @nv-legate/devops-reviewers
+/REUSE.toml @nv-legate/devops-reviewers
+/scripts/maint @nv-legate/devops-reviewers
+/scripts/release @nv-legate/devops-reviewers
+
+# build
+*.cmake @nv-legate/build-reviewers
+**/cmake @nv-legate/build-reviewers
+/conda @nv-legate/build-reviewers
+/config @nv-legate/build-reviewers
+/configure @nv-legate/build-reviewers
+/makefile @nv-legate/build-reviewers
+/pyproject.toml @nv-legate/build-reviewers
+/scripts/build @nv-legate/build-reviewers
+/scripts/generate-conda-envs.py @nv-legate/build-reviewers
+/setup.cfg @nv-legate/build-reviewers
+CMakeLists.txt @nv-legate/build-reviewers
 
 # docs
-docs/ @nv-legate/docs-reviewers
 *.md @nv-legate/docs-reviewers
 *.rst @nv-legate/docs-reviewers
+/docs @nv-legate/docs-reviewers
 
-# Override for CODEOWNERS - last rule wins.
-CODEOWNERS @magnatelee @manopapad
+# specific override for this file
+/.github/CODEOWNERS @manopapad
