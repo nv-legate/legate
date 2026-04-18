@@ -18,9 +18,6 @@
 /src @nv-legate/legate-reviewers
 /test.py @nv-legate/legate-reviewers
 /tests @nv-legate/legate-reviewers
-# specific areas of ownership (must come after general rules above)
-**/io @supunkamburugamuve
-**/jupyter @eddy16112
 
 # CI
 /.dockerignore @nv-legate/devops-reviewers
@@ -42,6 +39,10 @@
 /scripts/generate-conda-envs.py @nv-legate/build-reviewers
 /setup.cfg @nv-legate/build-reviewers
 CMakeLists.txt @nv-legate/build-reviewers
+
+# QA
+/src/cmake/versions/legion_version.json @nv-legate/qa-reviewers
+/src/cmake/versions/realm_version.json @nv-legate/qa-reviewers
 
 # docs
 *.md @nv-legate/docs-reviewers
