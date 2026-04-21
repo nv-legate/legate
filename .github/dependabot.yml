@@ -10,6 +10,8 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every week
       interval: "weekly"
+    reviewers:
+      - "nv-legate/devops-reviewers"
     labels:
       - CI
     groups:
@@ -22,6 +24,8 @@ updates:
     schedule:
       # Check for updates to pre-commit hooks every month
       interval: "monthly"
+    reviewers:
+      - "nv-legate/devops-reviewers"
     labels:
       - CI
     groups:
