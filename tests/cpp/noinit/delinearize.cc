@@ -34,7 +34,7 @@ class DimTypes {
   }
 
  public:
-  using type = decltype(detect_(std::make_index_sequence<LEGATE_MAX_DIM>{}));
+  using type = decltype(detect_(std::make_index_sequence<LEGATE_MAX_DIM + 1>{}));
 
   template <typename T>
   static std::string GetName(int)  // NOLINT(readability-identifier-naming)
