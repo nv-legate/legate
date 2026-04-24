@@ -1377,7 +1377,9 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
     LocalTaskID{sorted ? CoreTask::FIND_BOUNDING_BOX_SORTED : CoreTask::FIND_BOUNDING_BOX},
     launch_domain);
 
-  task->add_input(create_store_partition(store, partition, std::nullopt), std::nullopt);
+  task->add_input(create_store_partition(store, partition, std::nullopt),
+                  std::nullopt,
+                  /*is_key_partition=*/true);
   task->add_output(output);
   // Directly launch the partitioning task, instead of going through the scheduling pipeline,
   // because this function is invoked only when the partition is immediately needed.

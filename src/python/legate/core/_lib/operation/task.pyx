@@ -529,6 +529,7 @@ cdef class ManualTask(Unconstructable):
         self,
         arg: LogicalStore | LogicalStorePartition,
         object projection = None,
+        bool is_key_partition = False,
     ):
         r"""
         Adds an input to the task.
@@ -541,6 +542,9 @@ cdef class ManualTask(Unconstructable):
             The projection for the partition (if `arg` is a
             `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
             argument is ignored.
+        is_key_partition: bool
+            If `True`, the `arg` is used as the key partition for mapping this
+            `ManualTask`. Ignored when the `arg` is a `LogicalStore`.
 
         Raises
         ------
@@ -558,6 +562,7 @@ cdef class ManualTask(Unconstructable):
                 self._handle.add_input(
                     (<LogicalStorePartition> arg)._handle,
                     std_move(proj),
+                    is_key_partition,
                 )
         else:
             raise TypeError(
@@ -569,6 +574,7 @@ cdef class ManualTask(Unconstructable):
         self,
         arg: LogicalStore | LogicalStorePartition,
         object projection = None,
+        bool is_key_partition = False,
     ):
         r"""
         Adds an output to the task.
@@ -581,6 +587,9 @@ cdef class ManualTask(Unconstructable):
             The projection for the partition (if `arg` is a
             `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
             argument is ignored.
+        is_key_partition: bool
+            If `True`, the `arg` is used as the key partition for mapping this
+            `ManualTask`. Ignored when the `arg` is a `LogicalStore`.
 
         Raises
         ------
@@ -598,6 +607,7 @@ cdef class ManualTask(Unconstructable):
                 self._handle.add_output(
                     (<LogicalStorePartition> arg)._handle,
                     std_move(proj),
+                    is_key_partition,
                 )
         else:
             raise TypeError(
@@ -610,7 +620,30 @@ cdef class ManualTask(Unconstructable):
         arg: LogicalStore | LogicalStorePartition,
         int32_t redop,
         object projection = None,
+        bool is_key_partition = False,
     ):
+        r"""
+        Adds a reduction store to the task.
+
+        Parameters
+        ----------
+        arg : LogicalStore | LogicalStorePartition
+            `LogicalStore` or `LogicalStorePartition` to pass as output.
+        redop : int
+            A reduction operator ID
+        projection : tuple[SymbolicExpr, ...] | None
+            The projection for the partition (if `arg` is a
+            `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
+            argument is ignored.
+        is_key_partition: bool
+            If `True`, the `arg` is used as the key partition for mapping this
+            `ManualTask`. Ignored when the `arg` is a `LogicalStore`.
+
+        Raises
+        ------
+        TypeError
+            If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
+        """
         cdef std_optional[_SymbolicPoint] proj
 
         if isinstance(arg, LogicalStore):
@@ -622,7 +655,8 @@ cdef class ManualTask(Unconstructable):
                 self._handle.add_reduction(
                     (<LogicalStorePartition> arg)._handle,
                     redop,
-                    std_move(proj)
+                    std_move(proj),
+                    is_key_partition,
                 )
         else:
             raise ValueError(

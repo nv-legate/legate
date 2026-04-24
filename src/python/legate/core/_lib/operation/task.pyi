@@ -66,17 +66,20 @@ class ManualTask(Unconstructable):
         self,
         arg: LogicalStore | LogicalStorePartition,
         projection: SymbolicPoint | None = None,
+        is_key_partition: bool = False,
     ) -> None: ...
     def add_output(
         self,
         arg: LogicalStore | LogicalStorePartition,
         projection: SymbolicPoint | None = None,
+        is_key_partition: bool = False,
     ) -> None: ...
     def add_reduction(
         self,
         arg: LogicalStore | LogicalStorePartition,
         redop: int,
         projection: SymbolicPoint | None = None,
+        is_key_partition: bool = False,
     ) -> None: ...
     def add_scalar_arg(
         self, value: Any, dtype: Type | tuple[Type, ...] | None = None

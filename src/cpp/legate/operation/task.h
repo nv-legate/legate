@@ -312,9 +312,12 @@ class LEGATE_EXPORT ManualTask {
    * @param store_partition A store partition to add to the task as input
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
+   * @param is_key_partition If `true`, the `store_partition` is used as the key partition for
+   * mapping this ManualTask.
    */
   void add_input(LogicalStorePartition store_partition,
-                 std::optional<SymbolicPoint> projection = std::nullopt);
+                 std::optional<SymbolicPoint> projection = std::nullopt,
+                 bool is_key_partition                   = false);
   /**
    * @brief Adds a store to the task as output
    *
@@ -329,9 +332,12 @@ class LEGATE_EXPORT ManualTask {
    * @param store_partition A store partition to add to the task as output
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
+   * @param is_key_partition If `true`, the `store_partition` is used as the key partition for
+   * mapping this ManualTask.
    */
   void add_output(LogicalStorePartition store_partition,
-                  std::optional<SymbolicPoint> projection = std::nullopt);
+                  std::optional<SymbolicPoint> projection = std::nullopt,
+                  bool is_key_partition                   = false);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -360,10 +366,13 @@ class LEGATE_EXPORT ManualTask {
    * operator.
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
+   * @param is_key_partition If `true`, the `store_partition` is used as the key partition for
+   * mapping this ManualTask.
    */
   void add_reduction(LogicalStorePartition store_partition,
                      ReductionOpKind redop_kind,
-                     std::optional<SymbolicPoint> projection = std::nullopt);
+                     std::optional<SymbolicPoint> projection = std::nullopt,
+                     bool is_key_partition                   = false);
   /**
    * @brief Adds a store partition to the task for reductions
    *
@@ -372,10 +381,13 @@ class LEGATE_EXPORT ManualTask {
    * operator.
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
+   * @param is_key_partition If `true`, the `store_partition` is used as the key partition for
+   * mapping this ManualTask.
    */
   void add_reduction(LogicalStorePartition store_partition,
                      std::int32_t redop_kind,
-                     std::optional<SymbolicPoint> projection = std::nullopt);
+                     std::optional<SymbolicPoint> projection = std::nullopt,
+                     bool is_key_partition                   = false);
   /**
    * @brief Adds a by-value scalar argument to the task
    *

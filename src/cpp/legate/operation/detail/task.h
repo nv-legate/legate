@@ -309,14 +309,17 @@ class ManualTask final : public LogicalTask {
 
   void add_input(const InternalSharedPtr<LogicalStore>& store);
   void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                 std::optional<SymbolicPoint> projection);
+                 std::optional<SymbolicPoint> projection,
+                 bool is_key_partition);
   void add_output(const InternalSharedPtr<LogicalStore>& store);
   void add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                  std::optional<SymbolicPoint> projection);
+                  std::optional<SymbolicPoint> projection,
+                  bool is_key_partition);
   void add_reduction(const InternalSharedPtr<LogicalStore>& store, std::int32_t redop_kind);
   void add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                      std::int32_t redop_kind,
-                     std::optional<SymbolicPoint> projection);
+                     std::optional<SymbolicPoint> projection,
+                     bool is_key_partition);
 
   /**
    * @brief Get the launch domain for this ManualTask.
@@ -365,7 +368,8 @@ class ManualTask final : public LogicalTask {
                   SmallVector<TaskArrayArg>& store_args,
                   const InternalSharedPtr<LogicalStore>& store,
                   InternalSharedPtr<Partition> partition,
-                  std::optional<SymbolicPoint> projection = {});
+                  std::optional<SymbolicPoint> projection = {},
+                  bool is_key_partition                   = false);
 
   InternalSharedPtr<Strategy> strategy_{};
 };

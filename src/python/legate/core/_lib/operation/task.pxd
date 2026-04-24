@@ -47,15 +47,15 @@ cdef extern from "legate/operation/task.h" namespace "legate" nogil:
         _ManualTask(const _ManualTask&) except+
         void add_input(_LogicalStore) except+
         void add_input(
-            _LogicalStorePartition, std_optional[_SymbolicPoint]
+            _LogicalStorePartition, std_optional[_SymbolicPoint], bool
         ) except+
         void add_output(_LogicalStore) except+
         void add_output(
-            _LogicalStorePartition, std_optional[_SymbolicPoint]
+            _LogicalStorePartition, std_optional[_SymbolicPoint], bool
         ) except+
         void add_reduction(_LogicalStore, int32_t) except+
         void add_reduction(
-            _LogicalStorePartition, int32_t, std_optional[_SymbolicPoint]
+            _LogicalStorePartition, int32_t, std_optional[_SymbolicPoint], bool
         ) except+
         void add_scalar_arg(const _Scalar& scalar) except+
         std_string_view provenance() except+
@@ -117,10 +117,18 @@ cdef class ManualTask(Unconstructable):
     @staticmethod
     cdef ManualTask from_handle(_ManualTask)
 
-    cpdef void add_input(self, object arg, object projection = *)
-    cpdef void add_output(self, object arg, object projection = *)
+    cpdef void add_input(
+        self, object arg, object projection = *, bool is_key_partition = *
+    )
+    cpdef void add_output(
+        self, object arg, object projection = *, bool is_key_partition = *
+    )
     cpdef void add_reduction(
-        self, object arg, int32_t redop, object projection = *
+        self,
+        object arg,
+        int32_t redop
+        , object projection = *,
+        bool is_key_partition = *,
     )
     cpdef void add_scalar_arg(self, object value, object dtype = *)
     cpdef str provenance(self)

@@ -51,6 +51,7 @@ class Strategy {
   void dump() const;
 
   class PrivateKey {
+    friend class ManualTask;
     friend class Strategy;
     friend class Partitioner;
   };

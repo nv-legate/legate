@@ -381,9 +381,11 @@ void ManualTask::add_input(LogicalStore store)
 }
 
 void ManualTask::add_input(LogicalStorePartition store_partition,
-                           std::optional<SymbolicPoint> projection)
+                           std::optional<SymbolicPoint> projection,
+                           bool is_key_partition)
 {
-  impl_()->add_input(record_user_ref_(std::move(store_partition)), std::move(projection));
+  impl_()->add_input(
+    record_user_ref_(std::move(store_partition)), std::move(projection), is_key_partition);
 }
 
 void ManualTask::add_output(LogicalStore store)
@@ -392,9 +394,11 @@ void ManualTask::add_output(LogicalStore store)
 }
 
 void ManualTask::add_output(LogicalStorePartition store_partition,
-                            std::optional<SymbolicPoint> projection)
+                            std::optional<SymbolicPoint> projection,
+                            bool is_key_partition)
 {
-  impl_()->add_output(record_user_ref_(std::move(store_partition)), std::move(projection));
+  impl_()->add_output(
+    record_user_ref_(std::move(store_partition)), std::move(projection), is_key_partition);
 }
 
 void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
@@ -409,18 +413,24 @@ void ManualTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
 
 void ManualTask::add_reduction(LogicalStorePartition store_partition,
                                ReductionOpKind redop_kind,
-                               std::optional<SymbolicPoint> projection)
+                               std::optional<SymbolicPoint> projection,
+                               bool is_key_partition)
 {
-  add_reduction(
-    std::move(store_partition), static_cast<std::int32_t>(redop_kind), std::move(projection));
+  add_reduction(std::move(store_partition),
+                static_cast<std::int32_t>(redop_kind),
+                std::move(projection),
+                is_key_partition);
 }
 
 void ManualTask::add_reduction(LogicalStorePartition store_partition,
                                std::int32_t redop_kind,
-                               std::optional<SymbolicPoint> projection)
+                               std::optional<SymbolicPoint> projection,
+                               bool is_key_partition)
 {
-  impl_()->add_reduction(
-    record_user_ref_(std::move(store_partition)), redop_kind, std::move(projection));
+  impl_()->add_reduction(record_user_ref_(std::move(store_partition)),
+                         redop_kind,
+                         std::move(projection),
+                         is_key_partition);
 }
 
 void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_()->add_scalar_arg(scalar.impl()); }

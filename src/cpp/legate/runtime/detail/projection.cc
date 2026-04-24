@@ -7,6 +7,7 @@
 #include <legate/runtime/detail/projection.h>
 
 #include <legate/runtime/detail/library.h>
+#include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/dispatch.h>
@@ -61,17 +62,24 @@ class AffineProjection final : public ProjectionFunction {
 
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point) const override;
 
+  [[nodiscard]] bool is_invertible() const override { return true; }
+
+  void invert_point(const DomainPoint& target,
+                    const Domain& launch_domain,
+                    std::vector<DomainPoint>* outputs) const override;
+
   [[nodiscard]] static Legion::Transform<TGT_NDIM, SRC_NDIM> create_transform(
     const proj::SymbolicPoint& point);
 
  private:
+  proj::SymbolicPoint point_{};
   Legion::Transform<TGT_NDIM, SRC_NDIM> transform_{};
   Point<TGT_NDIM> offsets_{};
 };
 
 template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
 AffineProjection<SRC_NDIM, TGT_NDIM>::AffineProjection(const proj::SymbolicPoint& point)
-  : transform_{create_transform(point)}
+  : point_{point}, transform_{create_transform(point)}
 {
   for (std::int32_t dim = 0; dim < TGT_NDIM; ++dim) {
     offsets_[dim] = point[dim].offset();
@@ -82,6 +90,30 @@ template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
 DomainPoint AffineProjection<SRC_NDIM, TGT_NDIM>::project_point(const DomainPoint& point) const
 {
   return DomainPoint{transform_ * Point<SRC_NDIM>{point} + offsets_};
+}
+
+template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
+void AffineProjection<SRC_NDIM, TGT_NDIM>::invert_point(const DomainPoint& target,
+                                                        const Domain& launch_domain,
+                                                        std::vector<DomainPoint>* outputs) const
+{
+  auto output_lo = launch_domain.lo();
+  auto output_hi = launch_domain.hi();
+
+  for (auto&& [target_dim, expr] : enumerate(point_)) {
+    if (expr.is_constant()) {
+      continue;
+    }
+    output_lo[expr.dim()] = (target[target_dim] - expr.offset()) / expr.weight();
+    output_hi[expr.dim()] = output_lo[expr.dim()];
+  }
+
+  const auto output_domain = Domain{output_lo, output_hi};
+
+  outputs->reserve(output_domain.get_volume());
+  for (Domain::DomainPointIterator it{output_domain}; it; ++it) {
+    outputs->push_back(*it);
+  }
 }
 
 template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
@@ -113,6 +145,15 @@ class DelinearizingProjection final : public ProjectionFunction {
   explicit DelinearizingProjection(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& color_shape);
 
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point) const override;
+
+  [[nodiscard]] bool is_invertible() const override { return false; }
+
+  void invert_point(const DomainPoint& /*target*/,
+                    const Domain& /*launch_domain*/,
+                    std::vector<DomainPoint>* /*outputs*/) const override
+  {
+    throw detail::TracedException<std::runtime_error>{"Delinearization is not invertible"};
+  }
 
  private:
   std::vector<std::int64_t> strides_{};
@@ -153,6 +194,15 @@ class CompoundProjection final : public ProjectionFunction {
 
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point) const override;
 
+  [[nodiscard]] bool is_invertible() const override { return false; }
+
+  void invert_point(const DomainPoint& /*target*/,
+                    const Domain& /*launch_domain*/,
+                    std::vector<DomainPoint>* /*outputs*/) const override
+  {
+    throw detail::TracedException<std::runtime_error>{"A compound projection is not invertible"};
+  }
+
  private:
   DelinearizingProjection delinearizing_projection_;
   AffineProjection<SRC_NDIM, TGT_NDIM> affine_projection_;
@@ -176,6 +226,15 @@ DomainPoint CompoundProjection<SRC_NDIM, TGT_NDIM>::project_point(const DomainPo
 class IdentityProjection final : public ProjectionFunction {
  public:
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point) const override { return point; }
+
+  [[nodiscard]] bool is_invertible() const override { return true; }
+
+  void invert_point(const DomainPoint& target,
+                    const Domain& /*launch_domain*/,
+                    std::vector<DomainPoint>* outputs) const override
+  {
+    outputs->push_back(target);
+  }
 };
 
 // ==========================================================================================
@@ -188,11 +247,22 @@ class LegateProjectionFunctor : public Legion::ProjectionFunctor {
   [[nodiscard]] Legion::LogicalRegion project(Legion::LogicalPartition upper_bound,
                                               const DomainPoint& point,
                                               const Domain& launch_domain) override;
+  void invert(Legion::LogicalRegion region,
+              Legion::LogicalRegion upper_bound,
+              const Domain& launch_domain,
+              std::vector<DomainPoint>& ordered_points) override;
+
+  void invert(Legion::LogicalRegion region,
+              Legion::LogicalPartition upper_bound,
+              const Domain& launch_domain,
+              std::vector<DomainPoint>& ordered_points) override;
 
   // legate projection functors are almost always functional and don't traverse the region tree
   [[nodiscard]] bool is_functional() const override { return true; }
 
   [[nodiscard]] bool is_exclusive() const override { return true; }
+
+  [[nodiscard]] bool is_invertible() const override { return functor_->is_invertible(); }
 
   [[nodiscard]] unsigned get_depth() const override { return 0; }
 
@@ -215,6 +285,24 @@ Legion::LogicalRegion LegateProjectionFunctor::project(Legion::LogicalPartition 
     return runtime->get_logical_subregion_by_color(upper_bound, dp);
   }
   return Legion::LogicalRegion::NO_REGION;
+}
+
+void LegateProjectionFunctor::invert(Legion::LogicalRegion /*region*/,
+                                     Legion::LogicalRegion /*upper_bound*/,
+                                     const Domain& /*launch_domain*/,
+                                     std::vector<DomainPoint>& /*ordered_points*/)
+{
+  throw detail::TracedException<std::runtime_error>{
+    "Inversion for a region projection is not implemented"};
+}
+
+void LegateProjectionFunctor::invert(Legion::LogicalRegion region,
+                                     Legion::LogicalPartition /*upper_bound*/,
+                                     const Domain& launch_domain,
+                                     std::vector<DomainPoint>& ordered_points)
+{
+  functor_->invert_point(
+    runtime->get_logical_region_color_point(region), launch_domain, &ordered_points);
 }
 
 // ==========================================================================================

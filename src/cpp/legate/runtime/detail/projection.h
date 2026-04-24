@@ -26,6 +26,10 @@ namespace legate::detail {
 class ProjectionFunction {  // NOLINT(bugprone-forward-declaration-namespace)
  public:
   [[nodiscard]] virtual DomainPoint project_point(const DomainPoint& point) const = 0;
+  [[nodiscard]] virtual bool is_invertible() const                                = 0;
+  virtual void invert_point(const DomainPoint& target,
+                            const Domain& launch_domain,
+                            std::vector<DomainPoint>* ordered_points) const       = 0;
 
   virtual ~ProjectionFunction()                            = default;
   ProjectionFunction()                                     = default;

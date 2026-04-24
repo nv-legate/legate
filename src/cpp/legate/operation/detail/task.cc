@@ -734,13 +734,15 @@ void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                           std::optional<SymbolicPoint> projection)
+                           std::optional<SymbolicPoint> projection,
+                           bool is_key_partition)
 {
   add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY,
              inputs_,
              store_partition->store(),
              store_partition->partition(),
-             std::move(projection));
+             std::move(projection),
+             is_key_partition);
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
@@ -755,7 +757,8 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                            std::optional<SymbolicPoint> projection)
+                            std::optional<SymbolicPoint> projection,
+                            bool is_key_partition)
 {
   // TODO(wonchanl): We need to raise an exception for the user error in this case
   LEGATE_ASSERT(!store_partition->store()->unbound());
@@ -766,7 +769,8 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
              outputs_,
              store_partition->store(),
              store_partition->partition(),
-             std::move(projection));
+             std::move(projection),
+             is_key_partition);
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
@@ -786,7 +790,8 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                                std::int32_t redop_kind,
-                               std::optional<SymbolicPoint> projection)
+                               std::optional<SymbolicPoint> projection,
+                               bool is_key_partition)
 {
   auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop_kind);
 
@@ -797,7 +802,8 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
              reductions_,
              store_partition->store(),
              store_partition->partition(),
-             std::move(projection));
+             std::move(projection),
+             is_key_partition);
   reduction_ops_.push_back(legion_redop_id);
 }
 
@@ -805,12 +811,12 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
                             SmallVector<TaskArrayArg>& store_args,
                             const InternalSharedPtr<LogicalStore>& store,
                             InternalSharedPtr<Partition> partition,
-                            std::optional<SymbolicPoint> projection)
+                            std::optional<SymbolicPoint> projection,
+                            bool is_key_partition)
 {
   const auto* partition_symbol = declare_partition();
   auto& arg                    = store_args.emplace_back(
     priv, make_internal_shared<BaseLogicalArray>(store), std::move(projection));
-  const auto unbound = store->deferred_bound();
 
   const auto privelege_to_access_mode = [](Legion::PrivilegeMode p) {
     switch (p) {
@@ -834,21 +840,26 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
   record_partition_(partition_symbol, store, privelege_to_access_mode(priv));
 
   arg.mapping.insert({store, partition_symbol});
-  if (unbound) {
-    auto&& runtime   = detail::Runtime::get_runtime();
-    auto field_space = runtime.create_field_space();
-    const auto field_id =
-      runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
-
-    // Create placeholder Opaque partition
-    const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
-
-    strategy_->insert(*partition_symbol, opaque_partition, std::move(field_space), field_id);
-
-    store->set_key_partition(this->machine(), this->parallel_policy(), opaque_partition);
-  } else {
-    strategy_->insert(*partition_symbol, std::move(partition));
+  if (is_key_partition) {
+    strategy_->record_key_partition({}, *partition_symbol);
   }
+
+  if (!store->deferred_bound()) {
+    strategy_->insert(*partition_symbol, std::move(partition));
+    return;
+  }
+
+  auto&& runtime   = detail::Runtime::get_runtime();
+  auto field_space = runtime.create_field_space();
+  const auto field_id =
+    runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
+
+  // Create placeholder Opaque partition
+  const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
+
+  strategy_->insert(*partition_symbol, opaque_partition, std::move(field_space), field_id);
+
+  store->set_key_partition(this->machine(), this->parallel_policy(), opaque_partition);
 }
 
 void ManualTask::launch()
