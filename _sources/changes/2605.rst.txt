@@ -31,6 +31,10 @@ C++
 
 .. rubric:: Tasks
 
+- Add an ``is_key_partition`` parameter to ``legate::ManualTask::add_input``,
+  ``legate::ManualTask::add_output``, and ``legate::ManualTask::add_reduction``. With the new
+  parameter, manual tasks can now specify key partitions.
+
 .. rubric:: Types
 
 .. rubric:: Runtime
@@ -50,6 +54,10 @@ Python
 .. rubric:: Mapping
 
 .. rubric:: Partitioning
+
+- Add an ``is_key_partition`` parameter to ``legate.core.ManualTask.add_input``,
+  ``legate.core.ManualTask.add_output``, and ``legate.core.ManualTask.add_reduction``. With the new
+  parameter, manual tasks can now specify key partitions.
 
 .. rubric:: Tasks
 

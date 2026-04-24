@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.ManualTask.add_input &#8212; NVIDIA legate (26.05.00.dev49+gc46c205e1)</title>
+    <title>legate.core.ManualTask.add_input &#8212; NVIDIA legate (26.05.00.dev51+g1b923b7b9)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=a1579221"></script>
+    <script src="../../../_static/documentation_options.js?v=fe292713"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev49+gc46c205e1) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev49+gc46c205e1) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev51+g1b923b7b9) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev51+g1b923b7b9) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev49+gc46c205e1)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev51+g1b923b7b9)</p>
   
 </a></div>
     
@@ -253,11 +253,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev49+gc46c205e1) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev49+gc46c205e1) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev51+g1b923b7b9) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev51+g1b923b7b9) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev49+gc46c205e1)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev51+g1b923b7b9)</p>
   
 </a>
 
@@ -724,6 +724,7 @@ SPDX-License-Identifier: Apache-2.0
 <dd><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LogicalStore</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">LogicalStorePartition</span></span></em>,</dd>
 <dd><em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">is_key_partition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>,</dd>
 </dl>
 
 <span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#legate.core.ManualTask.add_input" title="Link to this definition">#</a></dt>
@@ -735,6 +736,8 @@ SPDX-License-Identifier: Apache-2.0
 <li><p><strong>projection</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference internal" href="legate.core.SymbolicExpr.html#legate.core.SymbolicExpr" title="legate.core.SymbolicExpr"><em>SymbolicExpr</em></a><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – The projection for the partition (if <cite>arg</cite> is a
 <cite>LogicalStorePartition</cite>). If <cite>arg</cite> is a <cite>LogicalStore</cite>, then
 argument is ignored.</p></li>
+<li><p><strong>is_key_partition</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – If <cite>True</cite>, the <cite>arg</cite> is used as the key partition for mapping this
+<cite>ManualTask</cite>. Ignored when the <cite>arg</cite> is a <cite>LogicalStore</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
