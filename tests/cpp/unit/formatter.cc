@@ -320,15 +320,86 @@ TEST_P(FormatStreamingMode, Basic)
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
+TEST_F(FormatterUnit, InvalidVariantCode)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of VariantCode";
+  }
+
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto variant_code = static_cast<legate::VariantCode>(99);  // Invalid variant code
+
+  ASSERT_EQ(fmt::format("{}", variant_code), "(unknown)");
+}
+
+TEST_F(FormatterUnit, InvalidStreamingMode)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of StreamingMode";
+  }
+
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto mode = static_cast<legate::StreamingMode>(99);  // Invalid streaming mode
+
+  ASSERT_EQ(fmt::format("{}", mode), "(unknown)");
+}
+
+TEST_F(FormatterUnit, InvalidLegionPrivilegeMode)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of legion_privilege_mode_t";
+  }
+
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto mode = static_cast<legion_privilege_mode_t>(9999);  // Invalid privilege mode
+
+  ASSERT_EQ(fmt::format("{}", mode), "(unknown)");
+}
+
+TEST_F(FormatterUnit, InvalidStoreTarget)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of StoreTarget";
+  }
+
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto target = static_cast<legate::mapping::StoreTarget>(99);  // Invalid store target
+
+  ASSERT_EQ(fmt::format("{}", target), "(unknown)");
+}
+
+TEST_F(FormatterUnit, InvalidTaskTarget)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of TaskTarget";
+  }
+
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto target = static_cast<legate::mapping::TaskTarget>(99);  // Invalid task target
+
+  ASSERT_EQ(fmt::format("{}", target), "(unknown)");
+}
+
+TEST_F(FormatterUnit, InvalidImageComputationHint)
+{
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    GTEST_SKIP() << "Skipping test due to exceed enum range of ImageComputationHint";
+  }
+
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  auto hint = static_cast<legate::ImageComputationHint>(99);  // Invalid hint
+
+  ASSERT_EQ(fmt::format("{}", hint), "(unknown)");
+}
+
 TEST_F(FormatterUnit, InvalidDLPackTypeCode)
 {
   if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
     GTEST_SKIP() << "Skipping test due to exceed enum range of DLDataTypeCode";
   }
 
-  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
   auto type_code = static_cast<DLDataTypeCode>(99);  // Invalid data type code
-  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
 
   ASSERT_EQ(fmt::format("{}", type_code), "Unknown DLPack data type");
 }
@@ -339,9 +410,8 @@ TEST_F(FormatterUnit, InvalidDLPackDeviceType)
     GTEST_SKIP() << "Skipping test due to exceed enum range of DLDeviceType";
   }
 
-  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
   auto device_type = static_cast<DLDeviceType>(99);  // Invalid device type
-  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
 
   ASSERT_EQ(fmt::format("{}", device_type), "Unknown DLPack device type");
 }

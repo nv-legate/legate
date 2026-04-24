@@ -360,6 +360,7 @@ set(
   wo_runtime_SRC
   noinit/align.cc
   noinit/buffer_builder.cc
+  noinit/error_description.cc
   noinit/config.cc
   noinit/cuda_driver_api.cc
   noinit/enable_shared_from_this.cc
@@ -397,7 +398,7 @@ set(
   noinit/argument_parsing/cuda_driver_path.cc
 )
 
-set(wo_runtime_EXTRA_TARGETS argparse::argparse)
+set(wo_runtime_EXTRA_TARGETS argparse::argparse cpptrace::cpptrace)
 
 if(legate_USE_UCX)
   list(

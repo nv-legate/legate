@@ -9,6 +9,7 @@
 
 #include <fmt/format.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cctype>
@@ -319,7 +320,9 @@ TEST_F(Environ2, BadValueInvalidArgument)
   const auto tmp     = legate::test::Environment::temporary_env_var(
     "FOO_BAR_BAZ", /*value=*/"true", /*overwrite=*/true);
 
-  ASSERT_THROW(static_cast<void>(var.get()), std::invalid_argument);
+  ASSERT_THAT([&] { static_cast<void>(var.get()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Expected an integral or floating point value")));
 }
 
 TEST_F(Environ2, BadValueOutOfRange)
@@ -332,7 +335,77 @@ TEST_F(Environ2, BadValueOutOfRange)
   const auto tmp =
     legate::test::Environment::temporary_env_var("FOO_BAR_BAZ", val.c_str(), /*overwrite=*/true);
 
-  ASSERT_THROW(static_cast<void>(var.get()), std::out_of_range);
+  ASSERT_THAT([&] { static_cast<void>(var.get()); },
+              ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("must be in [")));
+}
+
+TEST_F(Environ2, EmptyVariableName)
+{
+  constexpr auto var = legate::detail::EnvironmentVariable<std::uint32_t>{""};
+
+  ASSERT_THAT([&] { static_cast<void>(var.get()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Environment variable name is empty")));
+}
+
+TEST_F(Environ2, SetenvFailsForInvalidName)
+{
+  // setenv() returns -1 (EINVAL) when the name contains '='
+  constexpr auto var = legate::detail::EnvironmentVariable<bool>{"FOO=BAR"};
+
+  ASSERT_THAT([&] { var.set(true); },
+              ::testing::ThrowsMessage<std::runtime_error>(::testing::HasSubstr("setenv(FOO=BAR")));
+}
+
+TEST_F(Environ2, Int32GetWhenSet)
+{
+  constexpr auto var = legate::detail::EnvironmentVariable<std::int32_t>{"FOO_BAR_BAZ_INT32"};
+  const auto tmp     = legate::test::Environment::temporary_env_var(
+    "FOO_BAR_BAZ_INT32", /*value=*/"42", /*overwrite=*/true);
+
+  const auto result = var.get();
+
+  ASSERT_THAT(result, ::testing::Optional(42));
+}
+
+TEST_F(Environ2, Int32Set)
+{
+  constexpr auto var = legate::detail::EnvironmentVariable<std::int32_t>{"FOO_BAR_BAZ_INT32"};
+
+  var.set(/*value=*/7);
+
+  const auto* const raw = legate::test::Environment::get_env_var("FOO_BAR_BAZ_INT32");
+  ASSERT_NE(raw, nullptr);
+  ASSERT_STREQ(raw, "7");
+
+  legate::test::Environment::unset_env_var("FOO_BAR_BAZ_INT32");
+}
+
+TEST_F(Environ2, NegativeInt64Value)
+{
+  constexpr auto var = legate::detail::EnvironmentVariable<std::int64_t>{"FOO_BAR_BAZ"};
+  const auto tmp =
+    legate::test::Environment::temporary_env_var("FOO_BAR_BAZ", /*value=*/"-1", /*overwrite=*/true);
+
+  ASSERT_THAT([&] { static_cast<void>(var.get()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Value must not be negative")));
+}
+
+TEST_F(Environ2, ForceColorDetection)
+{
+  // detect_use_color() is called once via static const in make_error_message().
+  // Set FORCE_COLOR=1 so that when make_error_message() is first called in this
+  // process, detect_use_color() sees it and returns true.
+  const auto tmp =
+    legate::test::Environment::temporary_env_var("FORCE_COLOR", /*value=*/"1", /*overwrite=*/true);
+  // Trigger make_error_message() by calling .what() on a TracedException.
+  // TracedException::what() lazily calls make_error_message() on the first invocation.
+  constexpr auto var = legate::detail::EnvironmentVariable<std::uint32_t>{""};
+
+  ASSERT_THAT([&] { static_cast<void>(var.get()); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Environment variable name is empty")));
 }
 
 }  // namespace environment_variable_test

@@ -497,4 +497,21 @@ TEST_F(ToDLPackUnit, Release)
   ASSERT_NO_THROW(ptr->deleter(ptr));
 }
 
+TEST_F(ToDLPackUnit, ZeroDim)
+{
+  const auto [store, ty] = make_store<std::int32_t>(legate::Shape{});
+  const auto phys        = store.get_physical_store();
+  const auto dlpack      = phys.to_dlpack();
+
+  check_basic(dlpack);
+
+  const auto& tensor = dlpack->dl_tensor;
+
+  ASSERT_EQ(tensor.ndim, 0);
+  ASSERT_THAT(tensor.shape, ::testing::NotNull());
+  ASSERT_THAT(tensor.data, ::testing::NotNull());
+  check_device(tensor.device, DLDeviceType::kDLCPU);
+  check_dtype<std::int32_t>(tensor.dtype, ty);
+}
+
 }  // namespace test_to_dlpack
