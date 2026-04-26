@@ -373,6 +373,7 @@ set(
   noinit/macros.cc
   noinit/scope_fail.cc
   noinit/scope_guard.cc
+  noinit/shared_library.cc
   noinit/shared_ptr.cc
   noinit/task_exception.cc
   noinit/to_domain.cc
@@ -381,6 +382,7 @@ set(
   noinit/zip_equal.cc
   noinit/zip_shortest.cc
   noinit/delinearize.cc
+  noinit/small_vector.cc
   noinit/pack.cc
   noinit/unravel.cc
   noinit/argument_parsing/parse_args.cc
