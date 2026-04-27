@@ -1,3 +1,4 @@
+---
 # SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
@@ -80,6 +81,15 @@ jobs:
     with:
       build-type: pull-request
       matrix_filter: '[max_by(.PY_VER|split(".")|map(tonumber))]'
+  wheels-mac-profiler:
+    name: wheels-mac-profiler (optional)
+    secrets: inherit
+    uses: ./.github/workflows/wheels-mac-profiler.yml
+    needs:
+      - telemetry-setup
+    with:
+      build-type: pull-request
+
   source-tests-pass:
     if: always()
     needs:

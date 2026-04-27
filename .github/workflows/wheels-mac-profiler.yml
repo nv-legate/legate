@@ -1,0 +1,95 @@
+---
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+      sha:
+        type: string
+      repo:
+        type: string
+
+defaults:
+  run:
+    shell: bash -eou pipefail {0}
+
+permissions:
+  actions: read
+  checks: none
+  contents: read
+  deployments: none
+  discussions: none
+  id-token: write
+  issues: none
+  packages: read
+  pages: none
+  pull-requests: read
+  repository-projects: none
+  security-events: none
+  statuses: none
+
+jobs:
+  build-profiler:
+    name: Profiler Build (optional)
+    env:
+      PY_VER: "3.13"
+      WHEEL_DIR: /tmp/profiler_out
+    runs-on: mac-arm64-llr
+    steps:
+      - name: Telemetry setup
+        uses: rapidsai/shared-actions/telemetry-dispatch-setup@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        with:
+          extra_attributes: "legate.PACKAGER=wheel,legate.CUDA_VER=none,legate.PY_VER=${{ env.PY_VER }},legate.ARCH=mac"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.sha }}
+          fetch-depth: 0
+
+      - if: github.repository_owner == 'nv-legate'
+        name: Get AWS credentials for sccache bucket
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-region: us-east-2
+          role-duration-seconds: 28800
+          role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
+
+      - name: Install legate profiler dependencies
+        run: |
+          brew install rust jq
+          python3 -m venv venv
+          source venv/bin/activate
+
+      - name: Build the legate profiler wheel
+        run: |
+          source venv/bin/activate
+          bash continuous_integration/scripts/build_profiler_wheel_mac.bash build
+
+      - name: Verify profiler binary
+        run: |
+          source venv/bin/activate
+          bash continuous_integration/scripts/build_profiler_wheel_mac.bash verify
+
+      - name: Profiler Wheel upload
+        env:
+          BUILD_NAME: mac-arm64
+        uses: actions/upload-artifact@v7
+        with:
+          name: wheel-profiler-${{ env.BUILD_NAME }}
+          path: ${{ env.WHEEL_DIR }}/*.whl
+
+      - name: Telemetry upload attributes
+        uses: rapidsai/shared-actions/telemetry-dispatch-stash-job-artifacts@main
+        continue-on-error: true
+        if: ${{ vars.TELEMETRY_ENABLED == 'true' && github.run_attempt == '1' }}
+        env:
+          GH_TOKEN: ${{ github.token }}

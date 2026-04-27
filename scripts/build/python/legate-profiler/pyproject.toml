@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "legate-profiler"
+version = "0.1.0"
+description = "Profile legate runs"
+requires-python = ">=3.8"
+
+[tool.maturin]
+bindings = "bin"
+strip = true

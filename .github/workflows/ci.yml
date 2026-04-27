@@ -69,6 +69,14 @@ jobs:
     needs: telemetry-setup
     with:
       build-type: pull-request
+  wheels-mac-profiler:
+    name: wheels-mac-profiler (optional)
+    secrets: inherit
+    uses: ./.github/workflows/wheels-mac-profiler.yml
+    needs:
+      - telemetry-setup
+    with:
+      build-type: pull-request
 
   telemetry-summarize:
     # This job must use a self-hosted runner to record telemetry traces as the telemetry service is not available on GitHub-hosted runners.
