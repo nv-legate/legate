@@ -52,7 +52,7 @@ setuptools_scm_version:
   - ">=3.5.0,<9.3"
 
 hdf5_version:
-  - ">=1.14.4,<1.15"
+  - ">=1.14.4,<2.2"
 
 zarr_version:
   # FIXME: Legate code needs to be updated for zarr v3 compatibility
