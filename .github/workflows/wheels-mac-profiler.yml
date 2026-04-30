@@ -63,10 +63,16 @@ jobs:
           role-duration-seconds: 28800
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PY_VER }}
+
       - name: Install legate profiler dependencies
         run: |
           brew install rust jq
-          python3 -m venv venv
+          python --version
+          python -m venv venv
           source venv/bin/activate
 
       - name: Build the legate profiler wheel
