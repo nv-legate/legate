@@ -156,6 +156,14 @@ requirements:
     - ninja
     - cmake {{ cmake_version }}
     - pkg-config
+    # configure runs in conda-build's build env and bootstraps
+    # aedifix, whose pyproject backend is setuptools.build_meta.
+    - python {{ python }}
+    - pip
+    - setuptools >80
+    - setuptools_scm {{ setuptools_scm_version }}
+    - rich
+    - cython {{ cython_version }}
     - {{ stdlib("c") }}
     - {{ compiler('c') }} ={{ compiler_version }}    # [linux]
     - {{ compiler('cxx') }} ={{ compiler_version }}  # [linux]
