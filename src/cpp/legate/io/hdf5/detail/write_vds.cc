@@ -232,10 +232,21 @@ class TypeDispatcher : public legate::detail::InnerTypeDispatchFn<DIM> {
  */
 void task_body(const legate::TaskContext& context, bool is_device)
 {
-  auto&& index_point        = context.get_task_index();
-  const auto store          = context.input(0).data();
-  const auto base_dir       = std::filesystem::path{context.scalar(0).value<std::string_view>()};
-  const auto dataset_name   = context.scalar(1).value<std::string>();
+  const auto store        = context.input(0).data();
+  const auto base_dir     = std::filesystem::path{context.scalar(0).value<std::string_view>()};
+  const auto dataset_name = context.scalar(1).value<std::string>();
+  const auto&& [domain, index_point] = [&context, &store]() -> std::pair<Domain, DomainPoint> {
+    if (!context.is_single_task()) {
+      return {context.get_launch_domain(), context.get_task_index()};
+    }
+
+    // If this was a single task, the launch domain and task index would not be valid, so here we
+    // create fake ones with the expected number of dimensions.
+    DomainPoint dummy_task_index{};
+
+    dummy_task_index.dim = store.dim();
+    return {Domain{dummy_task_index, dummy_task_index}, dummy_task_index};
+  }();
   const auto index_filepath = make_filepath(base_dir, index_point, store.domain());
 
   // The below is just an unrolled
@@ -260,7 +271,7 @@ void task_body(const legate::TaskContext& context, bool is_device)
 
 #undef TYPE_DISPATCH
 
-  if (auto&& domain = context.get_launch_domain(); index_point == domain.lo()) {
+  if (index_point == domain.lo()) {
     std::ofstream bounds_file{base_dir / "bounds.txt", std::ios::out | std::ios::trunc};
 
     bounds_file << fmt::format(
