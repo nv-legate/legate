@@ -55,20 +55,31 @@ function(validate_nccl_version)
   endif()
 
   set(nccl_version "${nccl_major}.${nccl_minor}")
-  # If you bump this, also bump it on all dependency lists.
-  set(required_nccl_version 2.29)
+  # NCCL >=2.28 is required for ncclAlltoAll. If you bump these, also bump
+  # the dependency lists.
+  set(minimum_nccl_version 2.28)
+  set(maximum_nccl_version 2.29)
 
-  if("${required_nccl_version}" VERSION_LESS "${nccl_version}")
+  if("${nccl_version}" VERSION_LESS "${minimum_nccl_version}")
     message(
       FATAL_ERROR
       "Detected NCCL version ${nccl_version}, but "
-      "version ${required_nccl_version} or lower is required."
+      "version ${minimum_nccl_version} or newer is required."
+    )
+  endif()
+
+  if("${maximum_nccl_version}" VERSION_LESS "${nccl_version}")
+    message(
+      FATAL_ERROR
+      "Detected NCCL version ${nccl_version}, but "
+      "version ${maximum_nccl_version} or lower is required."
     )
   endif()
 
   message(
     STATUS
-    "NCCL version ${nccl_version} meets requirement <= ${required_nccl_version}"
+    "NCCL version ${nccl_version} meets requirement "
+    ">= ${minimum_nccl_version}, <= ${maximum_nccl_version}"
   )
 endfunction()
 

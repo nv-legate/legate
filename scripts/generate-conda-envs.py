@@ -75,8 +75,9 @@ class CUDAConfig(SectionConfig):
 
         deps = (
             f"cuda-version={drop_patch(self.ctk_version)}",  # runtime
-            # If you bump this, also update get_nccl.cmake
-            "nccl<2.30",  # runtime
+            # NCCL >=2.28 is required for ncclAlltoAll.
+            # If you bump this, also update get_nccl.cmake.
+            "nccl>=2.28,<2.30",  # runtime
             "nvidia-ml-py",  # tests
         )
 
