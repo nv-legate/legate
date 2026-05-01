@@ -341,7 +341,11 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   const auto start_proc_id     = machine_desc.processor_range().low;
   const auto total_tasks_count = legate::detail::linearize(lo, hi, hi) + 1;
 
-  for (Domain::DomainPointIterator itr{input.domain}; itr; ++itr) {
+  // Enumerate points in the launch domain in C order so that downstream map_task calls would likely
+  // distribute evenly across all local processors in the scope. This is particularly useful in the
+  // over-subscription case, where Fortran-order enumeration would put all point tasks assigned to a
+  // processor before any of th tasks for the next processor.
+  for (Domain::DomainPointIterator itr{input.domain, /*fortran_order=*/false}; itr; ++itr) {
     const auto p = key_functor->project_point(itr.p);
     const auto idx =
       (legate::detail::linearize(lo, hi, p) * proc_range.total_proc_count() / total_tasks_count) +
