@@ -360,44 +360,45 @@ set(
   wo_runtime_SRC
   noinit/align.cc
   noinit/buffer_builder.cc
-  noinit/error_description.cc
   noinit/config.cc
   noinit/cuda_driver_api.cc
+  noinit/delinearize.cc
   noinit/enable_shared_from_this.cc
   noinit/enumerate.cc
   noinit/environment_variable.cc
+  noinit/error_description.cc
   noinit/find_memory_kind.cc
   noinit/internal_shared_ptr.cc
   noinit/internal_weak_ptr.cc
   noinit/is_running_in_task.cc
   noinit/macros.cc
+  noinit/pack.cc
   noinit/scope_fail.cc
   noinit/scope_guard.cc
   noinit/shared_library.cc
   noinit/shared_ptr.cc
+  noinit/small_vector.cc
+  noinit/string_utils.cc
   noinit/task_exception.cc
   noinit/to_domain.cc
   noinit/tuple.cc
+  noinit/unravel.cc
   noinit/variant_options.cc
   noinit/zip_equal.cc
   noinit/zip_shortest.cc
-  noinit/delinearize.cc
-  noinit/small_vector.cc
-  noinit/pack.cc
-  noinit/unravel.cc
-  noinit/argument_parsing/parse_args.cc
-  noinit/argument_parsing/gpus.cc
-  noinit/argument_parsing/fbmem.cc
-  noinit/argument_parsing/omps.cc
-  noinit/argument_parsing/numamem.cc
-  noinit/argument_parsing/sysmem.cc
-  noinit/argument_parsing/cpus.cc
-  noinit/argument_parsing/ompthreads.cc
-  noinit/argument_parsing/logging.cc
-  noinit/argument_parsing/legion_default_args.cc
   noinit/argument_parsing/argument.cc
-  noinit/argument_parsing/scaled.cc
+  noinit/argument_parsing/cpus.cc
   noinit/argument_parsing/cuda_driver_path.cc
+  noinit/argument_parsing/fbmem.cc
+  noinit/argument_parsing/gpus.cc
+  noinit/argument_parsing/legion_default_args.cc
+  noinit/argument_parsing/logging.cc
+  noinit/argument_parsing/numamem.cc
+  noinit/argument_parsing/ompthreads.cc
+  noinit/argument_parsing/omps.cc
+  noinit/argument_parsing/parse_args.cc
+  noinit/argument_parsing/scaled.cc
+  noinit/argument_parsing/sysmem.cc
 )
 
 set(wo_runtime_EXTRA_TARGETS argparse::argparse cpptrace::cpptrace)

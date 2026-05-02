@@ -6,6 +6,8 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 
+#include <legate/utilities/detail/traced_exception.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -103,6 +105,17 @@ TEST_F(CUDADriverAPITest, TestLoad)
   ASSERT_THAT(driver.handle_path().as_string_view(), ::testing::EndsWith(fpath));
   ASSERT_TRUE(driver.is_loaded());
   ASSERT_NO_THROW(driver.init());
+}
+
+TEST_F(CUDADriverAPITest, TracedCUDADriverErrorWhat)
+{
+  constexpr legate::CUresult result = 1;
+  const std::string msg             = "fake CUDA driver error for coverage";
+  const auto exn =
+    legate::detail::TracedException<legate::cuda::detail::CUDADriverError>{msg, result};
+
+  ASSERT_EQ(exn.error_code(), result);
+  ASSERT_THAT(exn.what(), ::testing::HasSubstr(msg));
 }
 
 }  // namespace test_cuda_loader

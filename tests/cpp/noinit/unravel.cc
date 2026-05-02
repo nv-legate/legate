@@ -119,4 +119,32 @@ TEST_F(Unravel, Empty3D)
   ASSERT_TRUE(unravel.empty());
 }
 
+TEST_F(Unravel, Unravel5D)
+{
+  constexpr std::uint64_t volume = 32;  // 2^5
+  const auto rect =
+    legate::Rect<5>{legate::Point<5>{0, 0, 0, 0, 0}, legate::Point<5>{1, 1, 1, 1, 1}};
+  const auto unravel = legate::detail::Unravel<5>{rect};
+
+  ASSERT_EQ(unravel.volume(), volume);
+  ASSERT_FALSE(unravel.empty());
+
+  ASSERT_EQ(unravel(0), (legate::Point<5>{0, 0, 0, 0, 0}));
+  ASSERT_EQ(unravel(volume - 1), (legate::Point<5>{1, 1, 1, 1, 1}));
+}
+
+TEST_F(Unravel, Unravel6D)
+{
+  constexpr std::uint64_t volume = 64;  // 2^6
+  const auto rect =
+    legate::Rect<6>{legate::Point<6>{0, 0, 0, 0, 0, 0}, legate::Point<6>{1, 1, 1, 1, 1, 1}};
+  const auto unravel = legate::detail::Unravel<6>{rect};
+
+  ASSERT_EQ(unravel.volume(), volume);
+  ASSERT_FALSE(unravel.empty());
+
+  ASSERT_EQ(unravel(0), (legate::Point<6>{0, 0, 0, 0, 0, 0}));
+  ASSERT_EQ(unravel(volume - 1), (legate::Point<6>{1, 1, 1, 1, 1, 1}));
+}
+
 }  // namespace unravel_test
