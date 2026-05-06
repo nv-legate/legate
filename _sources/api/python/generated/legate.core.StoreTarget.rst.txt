@@ -43,7 +43,6 @@ legate.core.StoreTarget
       ~StoreTarget.__repr__
       ~StoreTarget.__new__
       ~StoreTarget.__hash__
-      ~StoreTarget.__getattribute__
       ~StoreTarget.__lt__
       ~StoreTarget.__le__
       ~StoreTarget.__eq__

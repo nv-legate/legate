@@ -36,7 +36,6 @@ legate.core.Domain
       ~Domain.__contains__
       ~Domain.__eq__
       ~Domain.__ge__
-      ~Domain.__getattribute__
       ~Domain.__getitem__
       ~Domain.__getnewargs__
       ~Domain.__gt__
