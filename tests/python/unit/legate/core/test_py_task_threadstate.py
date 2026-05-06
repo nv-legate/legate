@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 import pytest
 
 from legate.core import get_legate_runtime
@@ -11,8 +13,50 @@ from legate.core._ext.task import (  # type: ignore[attr-defined]
 )
 from legate.core.task import task
 
+from ...util import is_multi_node
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from subprocess import CompletedProcess
+
 
 class TestPyTaskThreadState:
+    @pytest.mark.skipif(
+        is_multi_node(),
+        reason="Test spawns a sub-process and only works on single node",
+    )
+    def test_explicit_finish_after_python_task_shutdown_callback(
+        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
+    ) -> None:
+        if run_subprocess:
+            run_subprocess(
+                __file__,
+                "TestPyTaskThreadState::"
+                "test_explicit_finish_after_python_task_shutdown_callback",
+                {},
+                check=True,
+            )
+            return
+
+        @task
+        def task_a() -> None:
+            pass
+
+        runtime = get_legate_runtime()
+        task_a()
+        runtime.issue_execution_fence(block=True)
+
+        def shutdown_callback() -> None:
+            # Regression coverage for PR #3592's linux-aarch64 Python 3.14
+            # teardown crash. Running a Python task caches worker thread state;
+            # explicit finish must still allow Python shutdown callbacks to run
+            # task work and then exit cleanly in this subprocess.
+            task_a()
+            runtime.issue_execution_fence(block=True)
+
+        runtime.add_shutdown_callback(shutdown_callback)
+        runtime.finish()
+
     def test_maybe_cache_hit(self) -> None:
         @task
         def task_a() -> None:

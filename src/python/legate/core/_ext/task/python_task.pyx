@@ -253,6 +253,11 @@ cdef PyInterpreterState * MAIN_THREAD_INTERP_STATE "MAIN_THREAD_INTERP_STATE" (
 # ~AutoPyThreadState(), but there is no guarantee it actually ever fires.
 cdef extern from "Python.h":
     r"""
+    // Forward declaration for the inline C++ destructor below.
+    namespace legate::detail {
+      bool py_task_threadstate_cleanup_allowed() noexcept;
+    }
+
     namespace {
 
     // Py_IsFinalizing(), only since 3.13. Cython does not support it yet, so
@@ -281,7 +286,8 @@ cdef extern from "Python.h":
 
       ~AutoPyThreadState()
       {
-        if (state && !LEGATE_PY_IS_FINALIZING()) {
+        if (state && legate::detail::py_task_threadstate_cleanup_allowed() &&
+            !LEGATE_PY_IS_FINALIZING()) {
           PyEval_AcquireThread(state);
           PyThreadState_Clear(state);
           PyThreadState_DeleteCurrent();

@@ -54,7 +54,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
           cache: 'pip'
 
       - name: Install dependencies
@@ -125,11 +125,15 @@ jobs:
             clang \
             clangxx \
             clang-tools \
+            'binutils_linux-64>=2.39' \
             elfutils \
             hdf5 \
             rich \
             ninja \
             packaging \
+            pip \
+            'setuptools>80' \
+            setuptools_scm \
             openmpi \
             ucx \
             libcal-dev \

@@ -114,12 +114,28 @@ Logger& log_legate_partitioner()
 
 namespace {
 
+std::atomic<bool>& threadstate_cleanup_gate() noexcept
+{
+  static std::atomic<bool> allowed{true};
+  return allowed;
+}
+
+void disable_py_task_threadstate_cleanup() noexcept
+{
+  threadstate_cleanup_gate().store(false, std::memory_order_release);
+}
+
 // This is the unique string name for our library which can be used from both C++ and Python to
 // generate IDs
 constexpr std::string_view CORE_LIBRARY_NAME = "legate.core";
 constexpr const char* const TOPLEVEL_NAME    = "Toplevel Task";
 
 }  // namespace
+
+bool py_task_threadstate_cleanup_allowed() noexcept
+{
+  return threadstate_cleanup_gate().load(std::memory_order_acquire);
+}
 
 Runtime::Runtime(Config config)
   : legion_runtime_{Legion::Runtime::get_runtime()},
@@ -2202,6 +2218,13 @@ std::int32_t Runtime::finish()
   // raised, but just in case, clear them. There is no hope of properly handling them now.
   pending_exceptions_.clear();
   initialized_ = false;
+
+  // Past this point all Legate-side cleanup work has drained. Realm worker
+  // threads may now exit during Legion shutdown; their Python task
+  // PyThreadState caches can hold Legate-backed objects, so let those
+  // threadstates leak until process exit instead of clearing them during
+  // runtime teardown.
+  disable_py_task_threadstate_cleanup();
 
   // Mark that we are done executing the top-level task
   // After this call the context is no longer valid

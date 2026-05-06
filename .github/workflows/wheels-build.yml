@@ -71,6 +71,7 @@ jobs:
           - { ARCH: 'amd64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.11' }
           - { ARCH: 'amd64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.12' }
           - { ARCH: 'amd64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.13' }
+          - { ARCH: 'amd64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.14' }
           - { ARCH: 'amd64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.11' }
           - { ARCH: 'amd64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.12' }
           - { ARCH: 'amd64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.13' }
@@ -78,6 +79,7 @@ jobs:
           - { ARCH: 'arm64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.11' }
           - { ARCH: 'arm64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.12' }
           - { ARCH: 'arm64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.13' }
+          - { ARCH: 'arm64', CUDA_VER: '${CUDA12_VER}', PY_VER: '3.14' }
           - { ARCH: 'arm64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.11' }
           - { ARCH: 'arm64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.12' }
           - { ARCH: 'arm64', CUDA_VER: '${CUDA13_VER}', PY_VER: '3.13' }

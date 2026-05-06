@@ -46,7 +46,7 @@ jobs:
       legate-gh-ci-tag: "v1.48"
       build-mode: ${{ inputs.build-mode }}
       network: "ucx"
-      python-version: "3.13"
+      python-version: "3.14"
       setup-python-proxy-cache: true
       timeout: 60
       cuda-version: ${{ inputs.cuda-version }}

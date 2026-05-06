@@ -28,6 +28,8 @@ python:
   - 3.11
   - 3.12
   - 3.13
+  # Pin 3.14 to non-free-threaded CPython until cp314t dependency coverage lands.
+  - "3.14.* *_cp314"
 
 numpy_version:
   # Not 2.1.0 which segfaults on asarray() sometimes, see

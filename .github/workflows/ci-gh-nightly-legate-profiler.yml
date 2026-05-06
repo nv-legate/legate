@@ -28,7 +28,7 @@ jobs:
         target-device:
           - cpu
         python-version:
-          - "3.13"
+          - "3.14"
     uses:
       ./.github/workflows/gh-build-and-test-legate-profiler.yml
     with:

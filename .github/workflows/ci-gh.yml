@@ -52,7 +52,7 @@ jobs:
       build-type: ci
       network: ucx
       platform: ${{ matrix.platform }}
-      python-version: "3.13"
+      python-version: "3.14"
       target-device: ${{ matrix.target-device }}
       build-has-tests: true
       refname: ${{ github.ref_name }}

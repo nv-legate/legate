@@ -69,6 +69,17 @@ setup_profiler() {
   export GPU_ENABLED=${GPU_ENABLED}
 }
 
+python_variant_string() {
+  local python_variant="${PYTHON_VERSION:-3.11}"
+
+  # Free-threaded cp314t dependency coverage is still incomplete in our stack.
+  if [[ "${python_variant}" == 3.14* ]] && [[ "${python_variant}" != *"_cp314"* ]]; then
+    python_variant="3.14.* *_cp314"
+  fi
+
+  printf '%s' "${python_variant}"
+}
+
 build_legate_profiler() {
   set -eo pipefail;
 
@@ -80,7 +91,12 @@ build_legate_profiler() {
   conda_build_args+=(-c conda-forge);
   conda_build_args+=(--croot "${CONDA_ROOT}");
   conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
-  conda_build_args+=(--variants "{gpu_enabled: ${GPU_ENABLED}}")
+  local python_variant
+  python_variant="$(python_variant_string)"
+  local variant_opts
+  variant_opts="$(printf '{"gpu_enabled": [%s], "python": ["%s"]}' \
+                "${GPU_ENABLED}" "${python_variant}")"
+  conda_build_args+=(--variants "${variant_opts}")
 
   run_command 'Install base dependencies' rapids-conda-retry install -y boa conda-verify python
   run_command 'Install build dependencies' rapids-conda-retry install -y -c conda-forge gcc gxx make pkg-config
@@ -113,10 +129,12 @@ build_legate_release() {
   [[ "${USE_CUDA:-}" = "OFF" ]] && GPU_ENABLED=false
 
   local variant_opts
+  local python_variant
+  python_variant="$(python_variant_string)"
   # shellcheck disable=SC2154
   variant_opts="$(\
-    printf '{"build_mode_str": [%s], "gpu_enabled": [%s], "build_tests": [%s], "network": [%s], "python": [%s]}' \
-           "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${BUILD_TESTS}" "${LEGATE_NETWORK}" "${PYTHON_VERSION}")"
+    printf '{"build_mode_str": [%s], "gpu_enabled": [%s], "build_tests": [%s], "network": [%s], "python": ["%s"]}' \
+           "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${BUILD_TESTS}" "${LEGATE_NETWORK}" "${python_variant}")"
   conda_build_args+=(--variants "${variant_opts}")
 
   # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to

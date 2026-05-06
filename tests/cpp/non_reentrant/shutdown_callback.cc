@@ -6,6 +6,8 @@
 
 #include <legate.h>
 
+#include <legate/runtime/detail/runtime.h>
+
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -16,11 +18,19 @@ using ShutdownCallback = DefaultFixture;
 
 TEST_F(ShutdownCallback, Basic)
 {
+  ASSERT_TRUE(legate::detail::py_task_threadstate_cleanup_allowed());
+
   bool callback_called_1 = false;
-  auto callback_1        = [&callback_called_1]() noexcept { callback_called_1 = true; };
+  auto callback_1        = [&callback_called_1]() noexcept {
+    EXPECT_TRUE(legate::detail::py_task_threadstate_cleanup_allowed());
+    callback_called_1 = true;
+  };
 
   bool callback_called_2 = false;
-  auto callback_2        = [&callback_called_2]() noexcept { callback_called_2 = true; };
+  auto callback_2        = [&callback_called_2]() noexcept {
+    EXPECT_TRUE(legate::detail::py_task_threadstate_cleanup_allowed());
+    callback_called_2 = true;
+  };
 
   legate::register_shutdown_callback(std::move(callback_1));
   legate::register_shutdown_callback(std::move(callback_2));
@@ -30,6 +40,7 @@ TEST_F(ShutdownCallback, Basic)
 
   ASSERT_TRUE(callback_called_1);
   ASSERT_TRUE(callback_called_2);
+  ASSERT_FALSE(legate::detail::py_task_threadstate_cleanup_allowed());
 }
 
 TEST_F(ShutdownCallback, Nested)

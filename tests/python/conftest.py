@@ -36,7 +36,11 @@ def subprocess_helper(
         pytest_args += ["-p", "no:faulthandler"]
 
     pruned_env = os.environ.copy()
-    del pruned_env["REALM_BACKTRACE"]
+    pruned_env.pop("REALM_BACKTRACE", None)
+    if not faulthandler:
+        # CI sets PYTHONFAULTHANDLER=1 globally; clear it so this subprocess
+        # actually runs with faulthandler disabled.
+        pruned_env.pop("PYTHONFAULTHANDLER", None)
     # Always force single CPU to avoid insufficient resource in subproc
     pruned_env["LEGATE_AUTO_CONFIG"] = "0"
     pruned_env["LEGATE_CONFIG"] = "--cpus 1 " + legate_config
