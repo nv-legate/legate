@@ -53,25 +53,31 @@ void Reduce::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
   // Copy is deliberate, launch_domain is updated in the loop
-  auto launch_domain = strategy.launch_domain(*this);
-  auto n_tasks       = launch_domain.is_valid() ? launch_domain.get_volume() : 1;
+  auto launch_domain = strategy.launch_domain();
 
-  LEGATE_ASSERT(!launch_domain.is_valid() || launch_domain.dim == 1);
+  if (!launch_domain.is_valid()) {
+    launch_single_();
+    return;
+  }
+
+  LEGATE_ASSERT(launch_domain.dim == 1);
+
+  auto&& runtime = detail::Runtime::get_runtime();
+  auto n_tasks   = launch_domain.get_volume();
+
+  LEGATE_ASSERT(n_tasks > 1);
 
   auto input_part      = strategy[*input_part_];
   auto input_partition = create_store_partition(input_, input_part);
 
   // generating projection functions to use in tree_reduction task
-  std::vector<proj::SymbolicPoint> projections;
-  if (n_tasks > 1) {
-    projections.reserve(static_cast<std::size_t>(radix_));
-    for (std::int32_t i = 0; i < radix_; i++) {
-      projections.emplace_back(
-        std::initializer_list<SymbolicExpr>{SymbolicExpr{/*dim=*/0, radix_, i}});
-    }
-  }
+  std::vector<Legion::ProjectionID> projection_ids;
 
-  auto&& runtime = detail::Runtime::get_runtime();
+  projection_ids.reserve(static_cast<std::size_t>(radix_));
+  for (std::int32_t i = 0; i < radix_; i++) {
+    projection_ids.push_back(
+      runtime.get_affine_projection(/*src_ndim=*/1, {SymbolicExpr{/*dim=*/0, radix_, i}}));
+  }
 
   InternalSharedPtr<LogicalStore> new_output;
   bool done = false;
@@ -87,19 +93,12 @@ void Reduce::launch(Strategy* p_strategy)
 
     launcher.set_priority(priority());
 
-    if (n_tasks > 1) {
-      // if there are more than 1 sub-task, we add several slices of the input
-      // for each sub-task
-      launcher.reserve_inputs(projections.size());
-      for (auto&& projection : projections) {
-        auto store_proj = input_partition->create_store_projection(launch_domain, projection);
-
-        launcher.add_input(
-          BaseArrayArg{RegionFieldArg{input_.get(), LEGION_READ_ONLY, std::move(store_proj)}});
-      }
-    } else {
-      // otherwise we just add an entire input region to the task
-      auto store_proj = input_partition->create_store_projection(launch_domain);
+    // if there are more than 1 sub-task, we add several slices of the input
+    // for each sub-task
+    launcher.reserve_inputs(projection_ids.size());
+    for (auto&& projection_id : projection_ids) {
+      auto store_proj = StoreProjection{
+        input_partition->storage_partition()->get_legion_partition(), projection_id};
 
       launcher.add_input(
         BaseArrayArg{RegionFieldArg{input_.get(), LEGION_READ_ONLY, std::move(store_proj)}});
@@ -128,9 +127,6 @@ void Reduce::launch(Strategy* p_strategy)
       launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(), field_space, field_id}});
     }
 
-    // Every reduction task returns exactly one unbound store
-    launcher.set_future_size(sizeof(std::size_t));
-
     launcher.execute(Domain{DomainPoint{0}, DomainPoint{static_cast<coord_t>(n_tasks - 1)}});
 
     if (n_tasks != 1) {
@@ -142,6 +138,37 @@ void Reduce::launch(Strategy* p_strategy)
       input_partition = output_partition;
     }
   } while (!done);
+
+  // The partitioner is not smart enough to recognize that the tree reduce op produces a single,
+  // unpartitioned unbound store at the end, and thus blindly assigns a placeholder partition to
+  // every unbound store as its key partition when the launch domain is valid. Therefore, we need to
+  // reset the key partition so that there'd be no invalid partition dangling in the output store.
+  output_->reset_key_partition(/*flush=*/false);
+}
+
+void Reduce::launch_single_()
+{
+  auto&& runtime = detail::Runtime::get_runtime();
+  auto launcher =
+    detail::TaskLauncher{library_,
+                         machine_,
+                         parallel_policy(),
+                         provenance_,
+                         task_id_,
+                         static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)};
+
+  launcher.set_priority(priority());
+  launcher.add_input(
+    BaseArrayArg{RegionFieldArg{input_.get(), LEGION_READ_ONLY, StoreProjection{}}});
+
+  // adding output region
+  auto field_space = runtime.create_field_space();
+  auto field_id =
+    runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, input_->type()->size());
+
+  launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(), field_space, field_id}});
+
+  launcher.execute_single();
 }
 
 void Reduce::add_to_solver(detail::ConstraintSolver& solver)

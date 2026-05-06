@@ -13,8 +13,6 @@
 #include <legate/data/detail/transform/shift.h>
 #include <legate/data/detail/transform/transform_stack.h>
 #include <legate/operation/detail/launcher_arg.h>
-#include <legate/operation/detail/store_projection.h>
-#include <legate/operation/projection.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/runtime/detail/projection.h>
@@ -72,25 +70,6 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
     std::move(child_extents), std::move(child_storage), store_->type(), std::move(transform));
 }
 
-StoreProjection LogicalStorePartition::create_store_projection(
-  const Domain& launch_domain, const std::optional<SymbolicPoint>& projection)
-{
-  if (store_->has_scalar_storage()) {
-    return StoreProjection{};
-  }
-
-  if (!partition_->has_launch_domain()) {
-    return StoreProjection{};
-  }
-
-  // We're about to create a legion partition for this store, so the store should have its region
-  // created.
-  auto legion_partition = storage_partition_->get_legion_partition();
-  auto proj_id = store_->compute_projection(launch_domain, partition_->color_shape(), projection);
-
-  return {std::move(legion_partition), proj_id};
-}
-
 bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const
 {
   return storage_partition_->is_disjoint_for(launch_domain);
@@ -114,9 +93,11 @@ detail::PartitionPlacementInfo LogicalStorePartition::get_placement_info() const
   //    d. Determine the memory type where this partition is stored (cached or default SYSMEM)
   //    e. Record the mapping of (partition_color, node_id, memory_type)
 
-  const auto&& color_shape   = partition_->color_shape();
   const auto&& launch_domain = partition_->launch_domain();
-  const auto&& projection_id = store_->compute_projection(launch_domain, color_shape);
+  // FIXME(wonchanl): the old `compute_projection()` method always returns an identity projection
+  // when the color shape and the launch domain are identical, which is the case here, hence always
+  // setting 0. I suspect this method needs some refactoring to be more useful.
+  const auto&& projection_id = 0;
   const auto&& sharding_id   = find_sharding_functor_by_projection_functor(projection_id);
   Legion::ShardingFunctor* sharding_functor = Legion::Runtime::get_sharding_functor(sharding_id);
 

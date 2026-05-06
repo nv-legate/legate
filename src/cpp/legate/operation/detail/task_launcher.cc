@@ -354,8 +354,11 @@ void TaskLauncher::post_process_unbound_store_(const Legion::Domain& launch_doma
 
   auto opaque_partition = dynamic_cast<Opaque*>(
     key_partition.value().get());  // NOLINT(bugprone-unchecked-optional-access)
-  opaque_partition->update_partition(
-    req.parent.get_index_space(), req.partition.get_index_partition(), launch_domain);
+  LEGATE_ASSERT(opaque_partition != nullptr);
+  if (!opaque_partition->has_color_shape()) {
+    opaque_partition->update_partition(
+      req.parent.get_index_space(), req.partition.get_index_partition(), launch_domain);
+  }
 }
 
 void TaskLauncher::post_process_unbound_stores_(

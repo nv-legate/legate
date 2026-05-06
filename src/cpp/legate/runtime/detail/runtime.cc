@@ -599,7 +599,7 @@ void Runtime::schedule_(std::deque<InternalSharedPtr<Operation>>* window)
 
     // TODO(wonchanl): We need the side effect from the launch calls to get key partitions set
     // correctly. In the future, the partitioner should manage key partitions.
-    auto strategy = Partitioner{{&op, &op + 1}}.partition_stores();
+    auto strategy = Partitioner::partition_stores(op.get());
 
     op->launch(&strategy);
   }

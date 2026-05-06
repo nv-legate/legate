@@ -593,7 +593,10 @@ TEST_P(ManualTaskUnboundReduction, Basic)
   manual_task_unbound_reduction(store, index, launch_shape.extents());
 }
 
-TEST_P(ManualTaskScalarInput, Basic)
+// FIXME(wonchanl): All ManualTaskScalarXXX tests have been exercising illegal cases that happen to
+// have worked. As they are properly tagged as illegal now, these cases need to be fixed before
+// being enabled again.
+TEST_P(ManualTaskScalarInput, DISABLED_Basic)
 {
   auto [index, shapes]            = GetParam();
   auto [launch_shape, tile_shape] = shapes;
@@ -601,7 +604,7 @@ TEST_P(ManualTaskScalarInput, Basic)
   manual_task_scalar_input(store, index, launch_shape.extents(), tile_shape);
 }
 
-TEST_P(ManualTaskScalarOutput, Basic)
+TEST_P(ManualTaskScalarOutput, DISABLED_Basic)
 {
   auto [index, shapes]            = GetParam();
   auto [launch_shape, tile_shape] = shapes;
@@ -609,7 +612,7 @@ TEST_P(ManualTaskScalarOutput, Basic)
   manual_task_scalar_output(store, index, launch_shape.extents(), tile_shape);
 }
 
-TEST_P(ManualTaskScalarReduction, Basic)
+TEST_P(ManualTaskScalarReduction, DISABLED_Basic)
 {
   const auto& [index, shapes]            = GetParam();
   const auto& [launch_shape, tile_shape] = shapes;

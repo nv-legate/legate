@@ -175,7 +175,7 @@ bool DependencyChecker::analyze_inputs_(const InternalSharedPtr<Operation>& op,
           break;
         case AccessMode::REDUCE:  // Read after Reduce
           if (store->volume() == 1) {
-            if (const auto& ld = strategy.launch_domain(*op); ld.get_volume() == 1) {
+            if (const auto& ld = strategy.launch_domain(); ld.get_volume() == 1) {
               // This is a hack to allow a singleton task (specifically HDF5Write)
               // to pass this check, where we encode a control dependency using a
               // dummy data dependency with a store that is reduced by the prior

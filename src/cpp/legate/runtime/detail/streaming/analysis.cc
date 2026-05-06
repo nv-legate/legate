@@ -69,7 +69,7 @@ std::optional<InternalSharedPtr<Strategy>> get_strategy(const InternalSharedPtr<
   LEGATE_ASSERT(op->parallel_policy().streaming());
 
   if (op->needs_partitioning()) {
-    return make_internal_shared<Strategy>(Partitioner{{op}}.partition_stores());
+    return make_internal_shared<Strategy>(Partitioner::partition_stores(op.get()));
   }
 
   const auto* mt = dynamic_cast<const ManualTask*>(op.get());

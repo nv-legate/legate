@@ -38,6 +38,8 @@ class Reduce final : public Operation {
   [[nodiscard]] bool needs_partitioning() const override;
 
  private:
+  void launch_single_();
+
   std::int32_t radix_{};
   std::reference_wrapper<const Library> library_;
   LocalTaskID task_id_{};

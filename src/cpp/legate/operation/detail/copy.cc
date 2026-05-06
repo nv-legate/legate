@@ -107,15 +107,14 @@ void Copy::launch(Strategy* p_strategy)
 
   auto& strategy       = *p_strategy;
   auto launcher        = CopyLauncher{machine_, priority()};
-  auto&& launch_domain = strategy.launch_domain(*this);
+  auto&& launch_domain = strategy.launch_domain();
 
   launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
 
   if (!redop_kind_.has_value()) {
     launcher.add_output(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
-    auto store_partition = create_store_partition(target_.store, strategy[*target_.variable]);
-    auto proj            = store_partition->create_store_projection(launch_domain);
+    auto proj = create_store_projection_(strategy, launch_domain, target_);
 
     proj.set_reduction_op(target_.store->type()->find_reduction_operator(*redop_kind_));
     launcher.add_reduction(target_.store, std::move(proj));

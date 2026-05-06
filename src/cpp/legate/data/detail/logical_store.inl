@@ -87,19 +87,16 @@ inline StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStor
                                              const Variable* variable,
                                              const Strategy& strategy,
                                              const Domain& launch_domain,
-                                             const std::optional<SymbolicPoint>& projection,
                                              Legion::PrivilegeMode privilege,
                                              GlobalRedopID redop)
 {
-  return self->to_launcher_arg_(
-    self, variable, strategy, launch_domain, projection, privilege, redop);
+  return self->to_launcher_arg_(self, variable, strategy, launch_domain, privilege, redop);
 }
 
 inline RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<LogicalStore>& self,
-                                                      const Domain& launch_domain,
                                                       Legion::PrivilegeMode privilege)
 {
-  return self->to_launcher_arg_for_fixup_(self, launch_domain, privilege);
+  return self->to_launcher_arg_for_fixup_(self, privilege);
 }
 
 inline const std::optional<InternalSharedPtr<PhysicalStore>>&

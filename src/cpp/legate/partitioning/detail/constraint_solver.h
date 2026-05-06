@@ -22,9 +22,21 @@
 namespace legate::detail {
 
 class Strategy;
+class Variable;
 
 class ConstraintSolver {
+  class UnionFindEntry;
+
  public:
+  class EquivClass {
+   public:
+    explicit EquivClass(UnionFindEntry&& entry);
+
+    const bool IS_UNBOUND{};
+    std::vector<const Variable*> partition_symbols{};
+    Restrictions restrictions{};
+  };
+
   ~ConstraintSolver();
 
   void add_partition_symbol(const Variable* partition_symbol, AccessMode access_mode);
@@ -33,9 +45,10 @@ class ConstraintSolver {
   void dump();
 
   [[nodiscard]] Span<const Variable* const> partition_symbols() const;
+  [[nodiscard]] Span<const EquivClass> equivalence_classes() const;
 
   void solve_constraints();
-  void solve_dependent_constraints(Strategy* strategy);
+  void solve_dependent_constraints(Strategy* strategy) const;
   [[nodiscard]] Span<const Variable* const> find_equivalence_class(
     const Variable& partition_symbol) const;
   [[nodiscard]] const Restrictions& find_restrictions(const Variable& partition_symbol) const;
@@ -47,16 +60,6 @@ class ConstraintSolver {
   ordered_set<const Variable*> partition_symbols_{};
   std::unordered_map<Variable, AccessMode> access_modes_{};
   SmallVector<InternalSharedPtr<Constraint>> constraints_{};
-
-  class UnionFindEntry;
-
-  class EquivClass {
-   public:
-    explicit EquivClass(const UnionFindEntry* entry);
-
-    std::vector<const Variable*> partition_symbols{};
-    Restrictions restrictions{};
-  };
 
   std::unordered_map<Variable, EquivClass*> equiv_class_map_{};
   // Once reserved, this class must never be resized. equiv_class_map_ holds pointers to

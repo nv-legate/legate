@@ -157,8 +157,13 @@ StoreProjection Operation::create_store_projection_(const Strategy& strategy,
                                                     const Domain& launch_domain,
                                                     const StoreArg& arg)
 {
-  auto store_partition = create_store_partition(arg.store, strategy[*arg.variable]);
-  auto store_proj      = store_partition->create_store_projection(launch_domain);
+  auto legion_partition = launch_domain.is_valid()
+                            ? create_store_partition(arg.store, strategy[*arg.variable])
+                                ->storage_partition()
+                                ->get_legion_partition()
+                            : Legion::LogicalPartition::NO_PART;
+  auto store_proj =
+    StoreProjection{legion_partition, strategy.find_store_projection(*arg.variable)};
 
   store_proj.is_key = strategy.is_key_partition(*arg.variable);
   return store_proj;

@@ -9,7 +9,6 @@
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/user_storage_tracker.h>
 #include <legate/operation/detail/launcher_arg.h>
-#include <legate/operation/projection.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -78,11 +77,10 @@ class StructLogicalArray final : public LogicalArray {
     const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
-    const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     GlobalRedopID redop) const override;
   [[nodiscard]] ArrayAnalyzable to_launcher_arg_for_fixup(
-    const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
+    Legion::PrivilegeMode privilege) const override;
 
   void collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const override;
   void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const override;

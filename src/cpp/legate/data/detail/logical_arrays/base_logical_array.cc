@@ -166,34 +166,27 @@ ArrayAnalyzable BaseLogicalArray::to_launcher_arg(
   const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
-  const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
   GlobalRedopID redop) const
 {
-  auto data_arg = store_to_launcher_arg(
-    data(), mapping.at(data()), strategy, launch_domain, projection, privilege, redop);
+  auto data_arg =
+    store_to_launcher_arg(data(), mapping.at(data()), strategy, launch_domain, privilege, redop);
   std::optional<StoreAnalyzable> null_mask_arg{};
 
   if (nullable()) {
     auto null_redop = privilege == LEGION_REDUCE
                         ? bool_()->find_reduction_operator(ReductionOpKind::MUL)
                         : GlobalRedopID{-1};
-    null_mask_arg   = store_to_launcher_arg(null_mask(),
-                                            mapping.at(null_mask()),
-                                            strategy,
-                                            launch_domain,
-                                            projection,
-                                            privilege,
-                                            null_redop);
+    null_mask_arg   = store_to_launcher_arg(
+      null_mask(), mapping.at(null_mask()), strategy, launch_domain, privilege, null_redop);
   }
 
   return BaseArrayArg{std::move(data_arg), std::move(null_mask_arg)};
 }
 
-ArrayAnalyzable BaseLogicalArray::to_launcher_arg_for_fixup(const Domain& launch_domain,
-                                                            Legion::PrivilegeMode privilege) const
+ArrayAnalyzable BaseLogicalArray::to_launcher_arg_for_fixup(Legion::PrivilegeMode privilege) const
 {
-  return BaseArrayArg{store_to_launcher_arg_for_fixup(data(), launch_domain, privilege)};
+  return BaseArrayArg{store_to_launcher_arg_for_fixup(data(), privilege)};
 }
 
 void BaseLogicalArray::collect_storage_trackers(SmallVector<UserStorageTracker>& trackers) const

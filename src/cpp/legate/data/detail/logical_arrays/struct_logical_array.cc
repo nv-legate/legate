@@ -255,7 +255,6 @@ ArrayAnalyzable StructLogicalArray::to_launcher_arg(
   const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
-  const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
   GlobalRedopID redop) const
 {
@@ -265,28 +264,22 @@ ArrayAnalyzable StructLogicalArray::to_launcher_arg(
     auto null_redop = privilege == LEGION_REDUCE
                         ? bool_()->find_reduction_operator(ReductionOpKind::MUL)
                         : GlobalRedopID{-1};
-    null_mask_arg   = store_to_launcher_arg(null_mask(),
-                                            mapping.at(null_mask()),
-                                            strategy,
-                                            launch_domain,
-                                            projection,
-                                            privilege,
-                                            null_redop);
+    null_mask_arg   = store_to_launcher_arg(
+      null_mask(), mapping.at(null_mask()), strategy, launch_domain, privilege, null_redop);
   }
 
   auto field_args = make_vector_from_op<ArrayAnalyzable>(fields(), [&](auto& field) {
-    return field->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop);
+    return field->to_launcher_arg(mapping, strategy, launch_domain, privilege, redop);
   });
 
   return StructArrayArg{type(), std::move(null_mask_arg), std::move(field_args)};
 }
 
-ArrayAnalyzable StructLogicalArray::to_launcher_arg_for_fixup(const Domain& launch_domain,
-                                                              Legion::PrivilegeMode privilege) const
+ArrayAnalyzable StructLogicalArray::to_launcher_arg_for_fixup(Legion::PrivilegeMode privilege) const
 {
   return StructArrayArg{
     type(), std::nullopt, make_vector_from_op<ArrayAnalyzable>(fields(), [&](auto& field) {
-      return field->to_launcher_arg_for_fixup(launch_domain, privilege);
+      return field->to_launcher_arg_for_fixup(privilege);
     })};
 }
 

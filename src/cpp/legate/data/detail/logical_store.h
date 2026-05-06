@@ -12,7 +12,6 @@
 #include <legate/data/slice.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/store_projection.h>
-#include <legate/operation/projection.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -200,7 +199,7 @@ class LogicalStore {
   void set_key_partition(const mapping::detail::Machine& machine,
                          const ParallelPolicy& parallel_policy,
                          InternalSharedPtr<Partition> partition);
-  void reset_key_partition();
+  void reset_key_partition(bool flush = true);
 
  private:
   /**
@@ -222,11 +221,6 @@ class LogicalStore {
     std::optional<bool> complete = std::nullopt);
 
  public:
-  [[nodiscard]] Legion::ProjectionID compute_projection(
-    const Domain& launch_domain,
-    Span<const std::uint64_t> color_shape,
-    const std::optional<SymbolicPoint>& projection = {}) const;
-
   void pack(BufferBuilder& buffer) const;
   void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const;
 
@@ -235,24 +229,19 @@ class LogicalStore {
                                                const Variable* variable,
                                                const Strategy& strategy,
                                                const Domain& launch_domain,
-                                               const std::optional<SymbolicPoint>& projection,
                                                Legion::PrivilegeMode privilege,
                                                GlobalRedopID redop);
   friend RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<LogicalStore>& self,
-                                                        const Domain& launch_domain,
                                                         Legion::PrivilegeMode privilege);
 
   [[nodiscard]] StoreAnalyzable to_launcher_arg_(const InternalSharedPtr<LogicalStore>& self,
                                                  const Variable* variable,
                                                  const Strategy& strategy,
                                                  const Domain& launch_domain,
-                                                 const std::optional<SymbolicPoint>& projection,
                                                  Legion::PrivilegeMode privilege,
                                                  GlobalRedopID redop);
   [[nodiscard]] RegionFieldArg to_launcher_arg_for_fixup_(
-    const InternalSharedPtr<LogicalStore>& self,
-    const Domain& launch_domain,
-    Legion::PrivilegeMode privilege);
+    const InternalSharedPtr<LogicalStore>& self, Legion::PrivilegeMode privilege);
 
   [[nodiscard]] StoreAnalyzable future_to_launcher_arg_(Legion::Future future,
                                                         const Domain& launch_domain,
@@ -266,7 +255,6 @@ class LogicalStore {
     const Variable* variable,
     const Strategy& strategy,
     const Domain& launch_domain,
-    const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     GlobalRedopID redop);
 
@@ -302,14 +290,11 @@ class LogicalStore {
                                                     const Variable* variable,
                                                     const Strategy& strategy,
                                                     const Domain& launch_domain,
-                                                    const std::optional<SymbolicPoint>& projection,
                                                     Legion::PrivilegeMode privilege,
                                                     GlobalRedopID redop = GlobalRedopID{-1});
 
 [[nodiscard]] RegionFieldArg store_to_launcher_arg_for_fixup(
-  const InternalSharedPtr<LogicalStore>& self,
-  const Domain& launch_domain,
-  Legion::PrivilegeMode privilege);
+  const InternalSharedPtr<LogicalStore>& self, Legion::PrivilegeMode privilege);
 
 [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
   const InternalSharedPtr<LogicalStore>& self,

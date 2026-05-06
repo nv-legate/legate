@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include <legate/operation/projection.h>
 #include <legate/utilities/internal_shared_ptr.h>
+
+#include <legion.h>
 
 #include <optional>
 #include <unordered_map>
@@ -38,11 +39,8 @@ class TaskArrayArg {
    *
    * @param priv The access privilege for this task argument.
    * @param _array The LogicalArray for this argument.
-   * @param _projection An optional projection for the argument.
    */
-  TaskArrayArg(Legion::PrivilegeMode priv,
-               InternalSharedPtr<LogicalArray> _array,
-               std::optional<SymbolicPoint> _projection = std::nullopt);
+  TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<LogicalArray> _array);
 
   /**
    * @brief Construct a TaskArrayArg for PhysicalArray.
@@ -57,7 +55,6 @@ class TaskArrayArg {
   std::variant<InternalSharedPtr<LogicalArray>, InternalSharedPtr<PhysicalArray>> array{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>
     mapping{};  // Only used for LogicalArray
-  std::optional<SymbolicPoint> projection{};
 };
 
 }  // namespace legate::detail

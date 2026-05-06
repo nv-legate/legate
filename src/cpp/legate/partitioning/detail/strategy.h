@@ -23,7 +23,7 @@ class ConstraintSolver;
 
 class Strategy {
  public:
-  Strategy() = default;
+  explicit Strategy(const Operation* operation);
 
   // NOTE(amberhassaan): disabled only because copy is expensive.
   Strategy(const Strategy&)            = delete;
@@ -32,13 +32,12 @@ class Strategy {
   Strategy(Strategy&&) noexcept            = default;
   Strategy& operator=(Strategy&&) noexcept = default;
 
-  [[nodiscard]] bool parallel(const Operation& op) const;
-  [[nodiscard]] const Domain& launch_domain(const Operation& op) const;
-  void set_launch_domain(const Operation& op, const Domain& domain);
+  [[nodiscard]] bool parallel() const;
+  [[nodiscard]] const Domain& launch_domain() const;
+  void set_launch_domain(const Domain& launch_domain);
 
   void insert(const Variable& partition_symbol, InternalSharedPtr<Partition> partition);
   void insert(const Variable& partition_symbol,
-              InternalSharedPtr<Partition> partition,
               Legion::FieldSpace field_space,
               Legion::FieldID field_id);
   [[nodiscard]] bool has_assignment(const Variable& partition_symbol) const;
@@ -51,20 +50,28 @@ class Strategy {
   void dump() const;
 
   class PrivateKey {
+    friend class Fill;
     friend class ManualTask;
     friend class Strategy;
     friend class Partitioner;
   };
 
-  void compute_launch_domains(PrivateKey, const ConstraintSolver& solver);
   void record_key_partition(PrivateKey, const Variable& partition_symbol);
+  void insert_store_projection(PrivateKey,
+                               const Variable& partition_symbol,
+                               Legion::ProjectionID projection_id);
+  [[nodiscard]] Legion::ProjectionID find_store_projection(const Variable& partition_symbol) const;
 
  private:
+  const Operation* operation_{};
+  Domain launch_domain_{};
   std::unordered_map<Variable, InternalSharedPtr<Partition>> assignments_{};
   std::unordered_map<Variable, std::pair<Legion::FieldSpace, Legion::FieldID>>
     fields_for_unbound_stores_{};
-  std::unordered_map<const Operation*, Domain> launch_domains_{};
+  std::unordered_map<Variable, Legion::ProjectionID> projection_ids_{};
   std::optional<const Variable*> key_partition_{};
 };
 
 }  // namespace legate::detail
+
+#include <legate/partitioning/detail/strategy.inl>

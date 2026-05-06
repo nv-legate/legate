@@ -22,8 +22,8 @@ namespace legate::detail {
 
 class ConstraintSolver::UnionFindEntry {
  public:
-  UnionFindEntry(const Variable* symb, Restrictions rs)
-    : partition_symbol{symb}, restrictions{std::move(rs)}
+  UnionFindEntry(bool is_ub, const Variable* symb, Restrictions rs)
+    : IS_UNBOUND{is_ub}, partition_symbol{symb}, restrictions{std::move(rs)}
   {
   }
 
@@ -32,6 +32,8 @@ class ConstraintSolver::UnionFindEntry {
     if (this == other) {
       return this;
     }
+
+    LEGATE_ASSERT(IS_UNBOUND == other->IS_UNBOUND);
 
     UnionFindEntry* self = this;
     if (self->size < other->size) {
@@ -48,19 +50,20 @@ class ConstraintSolver::UnionFindEntry {
     return self;
   }
 
+  const bool IS_UNBOUND{};
   const Variable* partition_symbol{};
   Restrictions restrictions{};
   UnionFindEntry* next{};
   std::size_t size{1};
 };
 
-ConstraintSolver::EquivClass::EquivClass(const UnionFindEntry* entry)
+ConstraintSolver::EquivClass::EquivClass(UnionFindEntry&& entry)
+  : IS_UNBOUND{entry.IS_UNBOUND}, restrictions{std::move(entry.restrictions)}
 {
-  partition_symbols.reserve(entry->size);
-  partition_symbols.emplace_back(entry->partition_symbol);
-  restrictions = entry->restrictions;
+  partition_symbols.reserve(entry.size);
+  partition_symbols.emplace_back(entry.partition_symbol);
 
-  auto* next = entry->next;
+  auto* next = entry.next;
 
   while (next) {
     partition_symbols.emplace_back(next->partition_symbol);
@@ -96,7 +99,8 @@ void ConstraintSolver::solve_constraints()
     // TODO(wonchanl): partition symbols can be independent of any stores of the operation
     // (e.g., when a symbol subsumes a union of two other symbols)
     auto store  = symb->operation()->find_store(symb);
-    auto& entry = entries.emplace_back(symb, store->compute_restrictions(is_output(*symb)));
+    auto& entry = entries.emplace_back(
+      store->deferred_bound(), symb, store->compute_restrictions(is_output(*symb)));
     table.insert({*symb, &entry});
     is_dependent_.insert({*symb, false});
   }
@@ -199,8 +203,8 @@ void ConstraintSolver::solve_constraints()
   }
 
   equiv_classes_.reserve(distinct_entries.size());
-  for (const auto* entry : distinct_entries) {
-    auto& equiv_class = equiv_classes_.emplace_back(entry);
+  for (auto* entry : distinct_entries) {
+    auto& equiv_class = equiv_classes_.emplace_back(std::move(*entry));
 
     for (const auto* symb : equiv_class.partition_symbols) {
       equiv_class_map_.insert({*symb, &equiv_class});
@@ -208,7 +212,7 @@ void ConstraintSolver::solve_constraints()
   }
 }
 
-void ConstraintSolver::solve_dependent_constraints(Strategy* strategy)
+void ConstraintSolver::solve_dependent_constraints(Strategy* strategy) const
 {
   const auto solve_image_constraint = [&strategy](const ImageConstraint& image_constraint) {
     auto image = image_constraint.resolve(*strategy);

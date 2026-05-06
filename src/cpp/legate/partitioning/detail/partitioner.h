@@ -7,33 +7,23 @@
 #pragma once
 
 #include <legate/partitioning/detail/strategy.h>
-#include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
 
 #include <vector>
 
 namespace legate::detail {
 
-class ConstraintSolver;
-class Variable;
+class Operation;
+class TransformStack;
 
 class Partitioner {
  public:
-  explicit Partitioner(Span<const InternalSharedPtr<Operation>> operations);
+  [[nodiscard]] static Strategy partition_stores(Operation* op);
 
-  [[nodiscard]] Strategy partition_stores();
-
- private:
-  // Populates solutions for unbound stores in the `strategy` and returns remaining partition
-  // symbols
-  [[nodiscard]] static std::vector<const Variable*> handle_unbound_stores_(
-    Span<const Variable* const> partition_symbols,
-    const ConstraintSolver& solver,
-    Strategy* strategy);
-
-  Span<const InternalSharedPtr<Operation>> operations_{};
+  [[nodiscard]] static Legion::ProjectionID infer_store_projection(
+    const Domain& launch_domain,
+    Span<const std::uint64_t> color_shape,
+    const InternalSharedPtr<TransformStack>& transform);
 };
 
 }  // namespace legate::detail
-
-#include <legate/partitioning/detail/partitioner.inl>

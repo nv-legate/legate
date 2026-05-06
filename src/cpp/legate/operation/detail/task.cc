@@ -20,6 +20,7 @@
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partition/opaque.h>
+#include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/communicator_manager.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/region_manager.h>
@@ -221,7 +222,7 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
   auto& strategy = *strategy_ptr;
   auto launcher =
     detail::TaskLauncher{library(), machine(), parallel_policy(), provenance(), local_task_id()};
-  auto&& launch_domain     = strategy.launch_domain(*this);
+  auto&& launch_domain     = strategy.launch_domain();
   const auto valid_launch  = launch_domain.is_valid();
   const auto launch_volume = launch_domain.get_volume();
 
@@ -229,40 +230,35 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
 
   launcher.reserve_inputs(inputs_.size());
   for (auto&& task_arg : inputs_) {
-    std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
-                          launcher.add_input(variant_cast(arr->to_launcher_arg(task_arg.mapping,
-                                                                               strategy,
-                                                                               launch_domain,
-                                                                               task_arg.projection,
-                                                                               task_arg.privilege,
-                                                                               GlobalRedopID{-1})));
-                        },
-                        [&](const InternalSharedPtr<PhysicalArray>&) {
-                          LEGATE_ABORT(
-                            "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
-                            "PhysicalArrays should never go through Legion launch mechanisms, use "
-                            "PhysicalTask instead");
-                        }},
-               task_arg.array);
+    std::visit(
+      Overload{
+        [&](const InternalSharedPtr<LogicalArray>& arr) {
+          launcher.add_input(variant_cast(arr->to_launcher_arg(
+            task_arg.mapping, strategy, launch_domain, task_arg.privilege, GlobalRedopID{-1})));
+        },
+        [&](const InternalSharedPtr<PhysicalArray>&) {
+          LEGATE_ABORT(
+            "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
+            "PhysicalArrays should never go through Legion launch mechanisms, use "
+            "PhysicalTask instead");
+        }},
+      task_arg.array);
   }
 
   launcher.reserve_outputs(outputs_.size());
   for (auto&& task_arg : outputs_) {
     std::visit(
-      Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
-                 launcher.add_output(variant_cast(arr->to_launcher_arg(task_arg.mapping,
-                                                                       strategy,
-                                                                       launch_domain,
-                                                                       task_arg.projection,
-                                                                       task_arg.privilege,
-                                                                       GlobalRedopID{-1})));
-               },
-               [&](const InternalSharedPtr<PhysicalArray>&) {
-                 LEGATE_ABORT(
-                   "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
-                   "PhysicalArrays should never go through Legion launch mechanisms, use "
-                   "PhysicalTask instead");
-               }},
+      Overload{
+        [&](const InternalSharedPtr<LogicalArray>& arr) {
+          launcher.add_output(variant_cast(arr->to_launcher_arg(
+            task_arg.mapping, strategy, launch_domain, task_arg.privilege, GlobalRedopID{-1})));
+        },
+        [&](const InternalSharedPtr<PhysicalArray>&) {
+          LEGATE_ABORT(
+            "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
+            "PhysicalArrays should never go through Legion launch mechanisms, use "
+            "PhysicalTask instead");
+        }},
       task_arg.array);
   }
 
@@ -272,20 +268,17 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
     const auto& task_arg_ref = task_arg;
     const auto redop_copy    = redop;
     std::visit(
-      Overload{[&, redop_copy](const InternalSharedPtr<LogicalArray>& arr) {
-                 launcher.add_reduction(variant_cast(arr->to_launcher_arg(task_arg_ref.mapping,
-                                                                          strategy,
-                                                                          launch_domain,
-                                                                          task_arg_ref.projection,
-                                                                          task_arg_ref.privilege,
-                                                                          redop_copy)));
-               },
-               [&](const InternalSharedPtr<PhysicalArray>&) {
-                 LEGATE_ABORT(
-                   "PhysicalArray passed to LogicalTask::legion_launch_() for reductions - "
-                   "PhysicalArrays should never go through Legion launch mechanisms, use "
-                   "PhysicalTask instead");
-               }},
+      Overload{
+        [&, redop_copy](const InternalSharedPtr<LogicalArray>& arr) {
+          launcher.add_reduction(variant_cast(arr->to_launcher_arg(
+            task_arg_ref.mapping, strategy, launch_domain, task_arg_ref.privilege, redop_copy)));
+        },
+        [&](const InternalSharedPtr<PhysicalArray>&) {
+          LEGATE_ABORT(
+            "PhysicalArray passed to LogicalTask::legion_launch_() for reductions - "
+            "PhysicalArrays should never go through Legion launch mechanisms, use "
+            "PhysicalTask instead");
+        }},
       task_arg_ref.array);
   }
 
@@ -321,13 +314,8 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
 
   // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
   // removed
-  constexpr auto has_projection = [](const auto& args) {
-    return std::any_of(
-      args.begin(), args.end(), [](const auto& arg) { return arg.projection.has_value(); });
-  };
-  launcher.relax_interference_checks(
-    valid_launch &&
-    (has_projection(inputs_) || has_projection(outputs_) || has_projection(reductions_)));
+  launcher.relax_interference_checks(valid_launch &&
+                                     (dynamic_cast<const ManualTask*>(this) != nullptr));
 
   // No need to execute an index launch if launch domain is 1. Note that under streaming scopes
   // this is not just an optimization, this is a requirement. Singleton tasks do not
@@ -427,7 +415,7 @@ std::size_t LogicalTask::calculate_future_size_() const
   auto layout = TaskReturnLayoutForUnpack{};
 
   for (auto&& array_args : {inputs(), outputs(), reductions()}) {
-    for (auto&& [priv, arr, mapping, projection] : array_args) {
+    for (auto&& [priv, arr, mapping] : array_args) {
       std::visit(
         Overload{
           [&](const InternalSharedPtr<LogicalArray>& logical_arr) {
@@ -645,7 +633,7 @@ void AutoTask::launch(Strategy* p_strategy)
 
 void AutoTask::fixup_ranges_(Strategy& strategy)
 {
-  auto&& launch_domain = strategy.launch_domain(*this);
+  auto&& launch_domain = strategy.launch_domain();
   if (!launch_domain.is_valid()) {
     return;
   }
@@ -660,8 +648,7 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
   for (auto* array : arrays_to_fixup_) {
     // TODO(wonchanl): We should pass projection functors here once we start supporting
     // string/list legate arrays in ManualTasks
-    launcher.add_output(
-      variant_cast(array->to_launcher_arg_for_fixup(launch_domain, LEGION_NO_ACCESS)));
+    launcher.add_output(variant_cast(array->to_launcher_arg_for_fixup(LEGION_NO_ACCESS)));
   }
 
   launcher.execute(launch_domain);
@@ -679,7 +666,7 @@ ManualTask::ManualTask(const Library& library,
                        std::int32_t priority,
                        mapping::detail::Machine machine)
   : LogicalTask{library, variant_info, task_id, unique_id, priority, std::move(machine)},
-    strategy_{make_internal_shared<Strategy>()}
+    strategy_{make_internal_shared<Strategy>(this)}
 {
   if (Runtime::get_runtime().config().enable_inline_task_launch() &&
       launch_domain.get_volume() > 1) {
@@ -689,10 +676,10 @@ ManualTask::ManualTask(const Library& library,
                   launch_domain.get_volume()));
   }
 
-  strategy_->set_launch_domain(*this, launch_domain);
+  strategy_->set_launch_domain(launch_domain);
 }
 
-const Domain& ManualTask::launch_domain() const { return strategy_->launch_domain(*this); }
+const Domain& ManualTask::launch_domain() const { return strategy_->launch_domain(); }
 
 const Variable* ManualTask::add_input(InternalSharedPtr<LogicalArray>)
 {
@@ -747,30 +734,34 @@ void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
 {
+  add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
+
   if (store->has_scalar_storage()) {
     record_scalar_output(store);
   }
+  // It's important that we toggle the store's state to deferred bound only after we finish adding
+  // it to the task. Otherwise, it's ambiguous whether the store was made deferred bound by this
+  // task or an earlier task in the scheduling window.
   if (store->unbound()) {
     record_unbound_output(store);
   }
-  add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                             std::optional<SymbolicPoint> projection,
                             bool is_key_partition)
 {
-  // TODO(wonchanl): We need to raise an exception for the user error in this case
+  // Unbound stores can never be partitioned immediately
   LEGATE_ASSERT(!store_partition->store()->unbound());
-  if (store_partition->store()->has_scalar_storage()) {
-    record_scalar_output(store_partition->store());
-  }
   add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY,
              outputs_,
              store_partition->store(),
              store_partition->partition(),
              std::move(projection),
              is_key_partition);
+  if (store_partition->store()->has_scalar_storage()) {
+    record_scalar_output(store_partition->store());
+  }
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
@@ -780,12 +771,14 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reduction"};
   }
 
+  add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
+
   auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
+
+  reduction_ops_.push_back(legion_redop_id);
   if (store->has_scalar_storage()) {
     record_scalar_reduction(store, legion_redop_id);
   }
-  add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
-  reduction_ops_.push_back(legion_redop_id);
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -793,17 +786,18 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
                                std::optional<SymbolicPoint> projection,
                                bool is_key_partition)
 {
-  auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop_kind);
-
-  if (store_partition->store()->has_scalar_storage()) {
-    record_scalar_reduction(store_partition->store(), legion_redop_id);
-  }
   add_store_(Legion::PrivilegeMode::LEGION_REDUCE,
              reductions_,
              store_partition->store(),
              store_partition->partition(),
              std::move(projection),
              is_key_partition);
+
+  auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop_kind);
+
+  if (store_partition->store()->has_scalar_storage()) {
+    record_scalar_reduction(store_partition->store(), legion_redop_id);
+  }
   reduction_ops_.push_back(legion_redop_id);
 }
 
@@ -815,8 +809,7 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
                             bool is_key_partition)
 {
   const auto* partition_symbol = declare_partition();
-  auto& arg                    = store_args.emplace_back(
-    priv, make_internal_shared<BaseLogicalArray>(store), std::move(projection));
+  auto& arg = store_args.emplace_back(priv, make_internal_shared<BaseLogicalArray>(store));
 
   const auto privelege_to_access_mode = [](Legion::PrivilegeMode p) {
     switch (p) {
@@ -844,7 +837,28 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
     strategy_->record_key_partition({}, *partition_symbol);
   }
 
-  if (!store->deferred_bound()) {
+  const auto launch_ndim = static_cast<std::uint32_t>(strategy_->launch_domain().dim);
+  if (strategy_->parallel()) {
+    const auto& transform = store->transform();
+
+    if (projection.has_value()) {
+      const auto proj_id =
+        transform->identity()
+          ? Runtime::get_runtime().get_affine_projection(launch_ndim, projection.value())
+          : Runtime::get_runtime().get_affine_projection(launch_ndim,
+                                                         transform->invert(projection.value()));
+
+      strategy_->insert_store_projection(Strategy::PrivateKey{}, *partition_symbol, proj_id);
+    } else if (partition->has_color_shape()) {
+      strategy_->insert_store_projection(
+        Strategy::PrivateKey{},
+        *partition_symbol,
+        Partitioner::infer_store_projection(
+          strategy_->launch_domain(), partition->color_shape(), transform));
+    }
+  }
+
+  if (!store->unbound()) {
     strategy_->insert(*partition_symbol, std::move(partition));
     return;
   }
@@ -857,7 +871,7 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
   // Create placeholder Opaque partition
   const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
 
-  strategy_->insert(*partition_symbol, opaque_partition, std::move(field_space), field_id);
+  strategy_->insert(*partition_symbol, std::move(field_space), field_id);
 
   store->set_key_partition(this->machine(), this->parallel_policy(), opaque_partition);
 }

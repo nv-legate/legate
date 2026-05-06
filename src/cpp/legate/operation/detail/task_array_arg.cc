@@ -7,7 +7,6 @@
 #include <legate/operation/detail/task_array_arg.h>
 
 #include <legate/data/detail/logical_array.h>
-#include <legate/operation/projection.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -18,10 +17,8 @@
 
 namespace legate::detail {
 
-TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv,
-                           InternalSharedPtr<LogicalArray> _array,
-                           std::optional<SymbolicPoint> _projection)
-  : privilege{priv}, array{std::move(_array)}, projection{std::move(_projection)}
+TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<LogicalArray> _array)
+  : privilege{priv}, array{std::move(_array)}
 {
   // These objects should only be constructed from add_input(), add_output(), or
   // add_reduction(), so the incoming privilege should only ever be these base privileges. The

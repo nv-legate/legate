@@ -35,4 +35,9 @@ inline Span<const Variable* const> ConstraintSolver::partition_symbols() const
   return partition_symbols_.elements();
 }
 
+inline Span<const ConstraintSolver::EquivClass> ConstraintSolver::equivalence_classes() const
+{
+  return {equiv_classes_.begin(), equiv_classes_.end()};
+}
+
 }  // namespace legate::detail

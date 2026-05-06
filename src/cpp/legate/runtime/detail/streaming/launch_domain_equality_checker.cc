@@ -23,7 +23,7 @@ bool LaunchDomainEquality::is_streamable(const InternalSharedPtr<Operation>& op,
                                          StreamingErrorContext* ctx)
 {
   if (strategy.has_value()) {
-    const auto& op_ld = strategy.value()->launch_domain(*op);
+    const auto& op_ld = strategy.value()->launch_domain();
 
     if (op_ld.get_dim() == 1 && op_ld.get_volume() == 1) {
       // If we have a single task that only has scalar inputs and outputs and no reductions,

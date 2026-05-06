@@ -384,6 +384,7 @@ target_sources(
     legate/partitioning/proxy.cc
     legate/partitioning/detail/constraint.cc
     legate/partitioning/detail/constraint_solver.cc
+    legate/partitioning/detail/launch_domain_resolver.cc
     legate/partitioning/detail/partition.cc
     legate/partitioning/detail/partition/image.cc
     legate/partitioning/detail/partition/no_partition.cc

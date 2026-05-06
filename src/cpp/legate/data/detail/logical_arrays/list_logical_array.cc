@@ -147,25 +147,22 @@ ArrayAnalyzable ListLogicalArray::to_launcher_arg(
   const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
-  const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
   GlobalRedopID redop) const
 {
   const auto desc_priv =
     (LEGION_READ_ONLY == privilege || vardata_->unbound()) ? privilege : LEGION_READ_WRITE;
   auto descriptor_arg =
-    descriptor_->to_launcher_arg(mapping, strategy, launch_domain, projection, desc_priv, redop);
-  auto vardata_arg =
-    vardata_->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop);
+    descriptor_->to_launcher_arg(mapping, strategy, launch_domain, desc_priv, redop);
+  auto vardata_arg = vardata_->to_launcher_arg(mapping, strategy, launch_domain, privilege, redop);
 
   return ListArrayArg{type(), std::move(descriptor_arg), std::move(vardata_arg)};
 }
 
-ArrayAnalyzable ListLogicalArray::to_launcher_arg_for_fixup(const Domain& launch_domain,
-                                                            Legion::PrivilegeMode privilege) const
+ArrayAnalyzable ListLogicalArray::to_launcher_arg_for_fixup(Legion::PrivilegeMode privilege) const
 {
-  auto descriptor_arg = descriptor_->to_launcher_arg_for_fixup(launch_domain, LEGION_READ_WRITE);
-  auto vardata_arg    = vardata_->to_launcher_arg_for_fixup(launch_domain, privilege);
+  auto descriptor_arg = descriptor_->to_launcher_arg_for_fixup(LEGION_READ_WRITE);
+  auto vardata_arg    = vardata_->to_launcher_arg_for_fixup(privilege);
 
   return ListArrayArg{type(), std::move(descriptor_arg), std::move(vardata_arg)};
 }

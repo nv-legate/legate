@@ -119,9 +119,10 @@ void Fill::launch(Strategy* strategy)
   }
 
   auto launcher        = FillLauncher{machine_, priority(), provenance().as_string_view()};
-  auto&& launch_domain = strategy->launch_domain(*this);
+  auto&& launch_domain = strategy->launch_domain();
   auto&& part          = (*strategy)[*lhs_var_];
-  const auto lhs_proj  = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
+  const auto lhs_proj =
+    create_store_projection_(*strategy, launch_domain, StoreArg{lhs_, lhs_var_});
 
   if (launch_domain.is_valid()) {
     launcher.launch(launch_domain, lhs_.get(), lhs_proj, std::move(fill_value));

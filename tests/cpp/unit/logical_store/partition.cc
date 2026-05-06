@@ -171,24 +171,6 @@ TEST_F(LogicalStorePartitionUnit, ScalarStore)
   ASSERT_EQ(partition.color_shape().data(), std::vector<std::uint64_t>{1});
 }
 
-TEST_F(LogicalStorePartitionUnit, ScalarStoreCreateProjection)
-{
-  auto runtime                         = legate::Runtime::get_runtime();
-  constexpr std::uint64_t SCALAR_VALUE = 10;
-  auto store                           = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  const auto& internal_store           = store.impl();
-  auto no_partition                    = legate::detail::create_no_partition();
-
-  // Create partition for scalar store
-  auto store_partition = legate::detail::create_store_partition(internal_store, no_partition);
-
-  // create_store_projection for scalar store should return empty projection
-  auto projection = store_partition->create_store_projection(Legion::Domain{});
-
-  // Empty StoreProjection has no partition
-  ASSERT_FALSE(projection.partition.exists());
-}
-
 TEST_F(LogicalStorePartitionUnit, GetPlacementInfo)
 {
   auto runtime   = legate::Runtime::get_runtime();

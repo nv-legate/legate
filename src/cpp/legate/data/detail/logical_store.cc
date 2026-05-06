@@ -24,7 +24,6 @@
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/operation/detail/store_projection.h>
-#include <legate/operation/projection.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/image.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
@@ -537,61 +536,6 @@ Restrictions LogicalStore::compute_restrictions(bool is_output) const
   return result;
 }
 
-Legion::ProjectionID LogicalStore::compute_projection(
-  const Domain& launch_domain,
-  Span<const std::uint64_t> color_shape,
-  const std::optional<SymbolicPoint>& projection) const
-{
-  // If this is a sequential launch, the projection functor id is always 0
-  if (!launch_domain.is_valid()) {
-    return 0;
-  }
-
-  const auto launch_ndim = static_cast<std::uint32_t>(launch_domain.dim);
-  auto&& runtime         = Runtime::get_runtime();
-
-  // If there's a custom projection, we just query its functor id
-  if (projection) {
-    // TODO(wonchanl): we should check if the projection is valid for the launch domain
-    // (i.e., projection->size() == launch_ndim)
-    return runtime.get_affine_projection(launch_ndim, transform_->invert(*projection));
-  }
-
-  // We are about to generate a projection functor
-  const auto ndim = dim();
-
-  // Easy case where the store and launch domain have the same number of dimensions
-  if (ndim == launch_ndim) {
-    return transform_->identity() ? 0
-                                  : runtime.get_affine_projection(
-                                      ndim, transform_->invert(proj::create_symbolic_point(ndim)));
-  }
-
-  // If we're here, it means the launch domain has to be 1D due to mixed store dimensionalities
-  LEGATE_ASSERT(launch_ndim == 1);
-
-  // Check if the color shape has only one dimension of a non-unit extent, in which case
-  // delinearization would simply be projections
-  if (std::count_if(
-        color_shape.begin(), color_shape.end(), [](const auto& ext) { return ext != 1; }) == 1) {
-    SymbolicPoint embed_1d_to_nd;
-
-    embed_1d_to_nd.reserve(color_shape.size());
-    for (auto&& ext : color_shape) {
-      embed_1d_to_nd.append_inplace(ext != 1 ? dimension(0) : constant(0));
-    }
-
-    return runtime.get_affine_projection(launch_ndim,
-                                         transform_->invert(std::move(embed_1d_to_nd)));
-  }
-
-  // When the store wasn't transformed, we could simply return the top-level delinearizing functor
-  return transform_->identity()
-           ? runtime.get_delinearizing_projection(color_shape)
-           : runtime.get_compound_projection(color_shape,
-                                             transform_->invert(proj::create_symbolic_point(ndim)));
-}
-
 InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
   const mapping::detail::Machine& machine,
   const ParallelPolicy& parallel_policy,
@@ -656,10 +600,12 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
   key_partition_ = std::move(partition);
 }
 
-void LogicalStore::reset_key_partition()
+void LogicalStore::reset_key_partition(bool flush)
 {
-  // Need to flush scheduling window to make this effective
-  Runtime::get_runtime().flush_scheduling_window();
+  // Flush the scheduling window only if this was a request from the user code
+  if (flush) {
+    Runtime::get_runtime().flush_scheduling_window();
+  }
   key_partition_.reset();
   get_storage()->reset_key_partition();
 }
@@ -708,7 +654,6 @@ StoreAnalyzable LogicalStore::to_launcher_arg_(const InternalSharedPtr<LogicalSt
                                                const Variable* variable,
                                                const Strategy& strategy,
                                                const Domain& launch_domain,
-                                               const std::optional<SymbolicPoint>& projection,
                                                Legion::PrivilegeMode privilege,
                                                GlobalRedopID redop)
 {
@@ -723,7 +668,7 @@ StoreAnalyzable LogicalStore::to_launcher_arg_(const InternalSharedPtr<LogicalSt
     }
     case Storage::Kind::REGION_FIELD: {
       return region_field_to_launcher_arg_(
-        self, variable, strategy, launch_domain, projection, privilege, redop);
+        self, variable, strategy, launch_domain, privilege, redop);
     }
     case Storage::Kind::INLINE_STORAGE: {
       LEGATE_ABORT("TODO");
@@ -815,7 +760,6 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
   const Variable* variable,
   const Strategy& strategy,
   const Domain& launch_domain,
-  const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
   GlobalRedopID redop)
 {
@@ -824,9 +768,12 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
     return OutputRegionArg{this, field_space, field_id};
   }
 
-  auto&& partition     = strategy[*variable];
-  auto store_partition = create_partition_(self, partition);
-  auto store_proj      = store_partition->create_store_projection(launch_domain, projection);
+  auto&& partition      = strategy[*variable];
+  auto store_partition  = create_partition_(self, partition);
+  auto legion_partition = launch_domain.is_valid()
+                            ? store_partition->storage_partition()->get_legion_partition()
+                            : Legion::LogicalPartition::NO_PART;
+  auto store_proj = StoreProjection{legion_partition, strategy.find_store_projection(*variable)};
 
   store_proj.is_key = strategy.is_key_partition(*variable);
   store_proj.redop  = redop;
@@ -866,7 +813,6 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
 }
 
 RegionFieldArg LogicalStore::to_launcher_arg_for_fixup_(const InternalSharedPtr<LogicalStore>& self,
-                                                        const Domain& launch_domain,
                                                         Legion::PrivilegeMode privilege)
 {
   LEGATE_ASSERT(self.get() == this);
@@ -876,7 +822,8 @@ RegionFieldArg LogicalStore::to_launcher_arg_for_fixup_(const InternalSharedPtr<
     create_partition_(self,
                       *self->key_partition_  // NOLINT(bugprone-unchecked-optional-access)
     );
-  auto store_proj = store_partition->create_store_projection(launch_domain);
+  auto store_proj =
+    StoreProjection{store_partition->storage_partition()->get_legion_partition(), 0};
   return RegionFieldArg{this, privilege, std::move(store_proj)};
 }
 
