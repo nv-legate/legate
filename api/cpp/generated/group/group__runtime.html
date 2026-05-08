@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (26.05.00.dev64+g4bcfd997f)</title>
+    <title>runtime &#8212; NVIDIA legate (26.05.00.dev67+g3b9083114)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=c7c9f5d2"></script>
+    <script src="../../../../_static/documentation_options.js?v=bf59aa0a"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev64+g4bcfd997f)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev67+g3b9083114)</p>
   
 </a></div>
     
@@ -253,11 +253,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev64+g4bcfd997f)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev67+g3b9083114)</p>
   
 </a>
 
@@ -3859,6 +3859,63 @@ SPDX-License-Identifier: Apache-2.0
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail31make_external_alloc_from_dlpackEPP24DLManagedTensorVersionedNSt8optionalIbEE">
+<span id="_CPPv3N6legate6detail31make_external_alloc_from_dlpackEPP24DLManagedTensorVersionedNSt8optionalIbEE"></span><span id="_CPPv2N6legate6detail31make_external_alloc_from_dlpackEPP24DLManagedTensorVersionedNSt8optionalIbEE"></span><span id="legate::detail::make_external_alloc_from_dlpack__DLManagedTensorVersionedPP.std::optional:b:"></span><span class="target" id="from__dlpack_8cc_1af7c13553f91b4f89f0edeebc532cf34a"></span><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../class/classlegate_1_1ExternalAllocation.html#_CPPv4N6legate18ExternalAllocationE" title="legate::ExternalAllocation"><span class="n"><span class="pre">ExternalAllocation</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">make_external_alloc_from_dlpack</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html#_CPPv424DLManagedTensorVersioned" title="DLManagedTensorVersioned"><span class="n"><span class="pre">DLManagedTensorVersioned</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dlm_tensor</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">bool</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">read_only</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><br /></dt>
+<dd><p>Construct an <code class="docutils literal notranslate"><a class="reference internal" href="group__data.html#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> from a DLPack versioned tensor. </p>
+<p>This routine takes ownership of <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code>, and is responsible for disposing of <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> via the deleter member thereof.</p>
+<p>If any exception is thrown, the <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> pointer is deleted using the deleter.</p>
+<p>On success, <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> is set to <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> to indicate that it has been consumed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dlm_tensor</strong> – A pointer (to pointer) of the DLPack tensor. </p></li>
+<li><p><strong>read_only</strong> – Overrides the capsule’s read-only flag when provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The external allocation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail31make_external_alloc_from_dlpackEPP15DLManagedTensorNSt8optionalIbEE">
+<span id="_CPPv3N6legate6detail31make_external_alloc_from_dlpackEPP15DLManagedTensorNSt8optionalIbEE"></span><span id="_CPPv2N6legate6detail31make_external_alloc_from_dlpackEPP15DLManagedTensorNSt8optionalIbEE"></span><span id="legate::detail::make_external_alloc_from_dlpack__DLManagedTensorPP.std::optional:b:"></span><span class="target" id="from__dlpack_8cc_1a4862da356ad48ec34c4c8eff06fe0114"></span><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../class/classlegate_1_1ExternalAllocation.html#_CPPv4N6legate18ExternalAllocationE" title="legate::ExternalAllocation"><span class="n"><span class="pre">ExternalAllocation</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">make_external_alloc_from_dlpack</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="../struct/structDLManagedTensor.html#_CPPv415DLManagedTensor" title="DLManagedTensor"><span class="n"><span class="pre">DLManagedTensor</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dlm_tensor</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">bool</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">read_only</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><br /></dt>
+<dd><p>Construct an <code class="docutils literal notranslate"><a class="reference internal" href="group__data.html#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> from a DLPack un-versioned tensor. </p>
+<p>This routine has identical ownership semantics as <code class="docutils literal notranslate"><span class="pre">make_external_alloc_from_dlpack(DLManagedTensorVersioned**)</span></code>. See that routine for further discussion on lifetimes.</p>
+<p>As with the other overload, <code class="docutils literal notranslate"><span class="pre">dlm_tensor</span></code> is set to <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> on success.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The user should prefer using the versioned DLPack interface instead. There are no protections for backwards incompatibilities with this routine.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dlm_tensor</strong> – A pointer (to pointer) of the DLPack tensor. </p></li>
+<li><p><strong>read_only</strong> – Overrides the read-only flag, which defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code> for the unversioned protocol.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The external allocation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE">
 <span id="_CPPv3N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE"></span><span id="_CPPv2N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE"></span><span id="legate::detail::to_dlpack__legate::PhysicalStoreCR.std::optional:b:.std::optional:CUstream:.std::optional:DLPackVersion:.std::optional:DLDevice:"></span><span class="target" id="to__dlpack_8cc_1a711d8150f5138ead994e921d51ddac83"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html#_CPPv424DLManagedTensorVersioned" title="DLManagedTensorVersioned"><span class="n"><span class="pre">DLManagedTensorVersioned</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="../struct/structDLManagedTensorVersioned.html#_CPPv424DLManagedTensorVersioned" title="DLManagedTensorVersioned"><span class="n"><span class="pre">DLManagedTensorVersioned</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_dlpack</span></span></span><span class="sig-paren">(</span>
 
@@ -5283,6 +5340,8 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail14dl_tensor_sizeERK8DLTensor"><code class="docutils literal notranslate"><span class="pre">dl_tensor_size()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11from_dlpackEPP24DLManagedTensorVersioned"><code class="docutils literal notranslate"><span class="pre">from_dlpack()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11from_dlpackEPP15DLManagedTensor"><code class="docutils literal notranslate"><span class="pre">from_dlpack()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail31make_external_alloc_from_dlpackEPP24DLManagedTensorVersionedNSt8optionalIbEE"><code class="docutils literal notranslate"><span class="pre">make_external_alloc_from_dlpack()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail31make_external_alloc_from_dlpackEPP15DLManagedTensorNSt8optionalIbEE"><code class="docutils literal notranslate"><span class="pre">make_external_alloc_from_dlpack()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail9to_dlpackERKN6legate13PhysicalStoreENSt8optionalIbEENSt8optionalI8CUstreamEENSt8optionalI13DLPackVersionEENSt8optionalI8DLDeviceEE"><code class="docutils literal notranslate"><span class="pre">to_dlpack()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail9enumerateEN10zip_detail6ZipperIN10zip_detail17ZiperatorShortestE10Enumerator1TEERR1TN10Enumerator10value_typeE"><code class="docutils literal notranslate"><span class="pre">enumerate()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail21LEGATE_DEFINE_ENV_VAREb11LEGATE_TEST"><code class="docutils literal notranslate"><span class="pre">LEGATE_DEFINE_ENV_VAR()</span></code></a></li>

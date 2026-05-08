@@ -51,6 +51,12 @@ Python
 
 .. rubric:: Data
 
+- Add ``legate.core.ExternalAllocation`` for wrapping externally-owned memory
+  buffers, with ``legate.core.ExternalAllocation.from_sysmem()``,
+  ``legate.core.ExternalAllocation.from_fbmem()``,
+  ``legate.core.ExternalAllocation.from_zcmem()``, and
+  ``legate.core.ExternalAllocation.from_dlpack()`` factories.
+
 .. rubric:: Mapping
 
 .. rubric:: Partitioning
@@ -64,6 +70,11 @@ Python
 .. rubric:: Types
 
 .. rubric:: Runtime
+
+- Add ``legate.core.Runtime.create_store_from_tiles()`` to attach multiple
+  ``legate.core.ExternalAllocation`` objects as the tiles of a single
+  ``legate.core.LogicalStore``, returning the store along with its tile
+  partition.
 
 .. rubric:: Utilities
 

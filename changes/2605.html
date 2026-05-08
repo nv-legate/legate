@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 26.05 &#8212; NVIDIA legate (26.05.00.dev64+g4bcfd997f)</title>
+    <title>Changes: 26.05 &#8212; NVIDIA legate (26.05.00.dev67+g3b9083114)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../_static/documentation_options.js?v=c7c9f5d2"></script>
+    <script src="../_static/documentation_options.js?v=bf59aa0a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev64+g4bcfd997f)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev67+g3b9083114)</p>
   
 </a></div>
     
@@ -253,11 +253,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev64+g4bcfd997f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev67+g3b9083114) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev64+g4bcfd997f)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev67+g3b9083114)</p>
   
 </a>
 
@@ -729,6 +729,13 @@ parameter, manual tasks can now specify key partitions.</p></li>
 <h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
 <p class="rubric">Data</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.ExternalAllocation</span></code> for wrapping externally-owned memory
+buffers, with <code class="docutils literal notranslate"><span class="pre">legate.core.ExternalAllocation.from_sysmem()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">legate.core.ExternalAllocation.from_fbmem()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">legate.core.ExternalAllocation.from_zcmem()</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">legate.core.ExternalAllocation.from_dlpack()</span></code> factories.</p></li>
+</ul>
 <p class="rubric">Mapping</p>
 <p class="rubric">Partitioning</p>
 <ul class="simple">
@@ -739,6 +746,12 @@ parameter, manual tasks can now specify key partitions.</p></li>
 <p class="rubric">Tasks</p>
 <p class="rubric">Types</p>
 <p class="rubric">Runtime</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate.core.Runtime.create_store_from_tiles()</span></code> to attach multiple
+<code class="docutils literal notranslate"><span class="pre">legate.core.ExternalAllocation</span></code> objects as the tiles of a single
+<code class="docutils literal notranslate"><span class="pre">legate.core.LogicalStore</span></code>, returning the store along with its tile
+partition.</p></li>
+</ul>
 <p class="rubric">Utilities</p>
 <p class="rubric">I/O</p>
 </section>
