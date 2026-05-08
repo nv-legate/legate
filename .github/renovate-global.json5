@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 {
     $schema: "https://docs.renovatebot.com/renovate-schema.json",
+    gitIgnoredAuthors: ["noreply@github.com"],
     configFileNames: ["scripts/maint/renovate.json5"],
     onboarding: false,
 }
