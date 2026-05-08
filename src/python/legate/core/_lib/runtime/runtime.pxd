@@ -8,6 +8,7 @@ from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp.map cimport map as std_map
 from libcpp.optional cimport optional as std_optional
 from libcpp.memory cimport unique_ptr as std_unique_ptr
+from libcpp.pair cimport pair as std_pair
 from libcpp.vector cimport vector as std_vector
 from libcpp cimport bool
 
@@ -16,7 +17,12 @@ from ..data.external_allocation cimport _ExternalAllocation
 from ..data.logical_array cimport (
     LogicalArray, _LogicalArray, StructLogicalArray, _StructLogicalArray
 )
-from ..data.logical_store cimport LogicalStore, _LogicalStore
+from ..data.logical_store cimport (
+    LogicalStore,
+    LogicalStorePartition,
+    _LogicalStore,
+    _LogicalStorePartition,
+)
 from ..data.physical_store cimport PhysicalStore, _PhysicalStore
 from ..data.scalar cimport Scalar, _Scalar
 from ..data.shape cimport _Shape
@@ -97,6 +103,13 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
             const _Shape&,
             const _Type&,
             const _ExternalAllocation&,
+            const _DimOrdering&
+        ) except+
+        std_pair[_LogicalStore, _LogicalStorePartition] create_store(
+            const _Shape&,
+            const _tuple[uint64_t]&,
+            const _Type&,
+            const std_vector[std_pair[_ExternalAllocation, _tuple[uint64_t]]]&,
             const _DimOrdering&
         ) except+
         void prefetch_bloated_instances(
@@ -231,6 +244,14 @@ cdef class Runtime(Unconstructable):
         object data,
         bool read_only,
         object ordering = *
+    )
+    cpdef tuple create_store_from_tiles(
+        self,
+        Type dtype,
+        object shape,
+        object tile_shape,
+        list allocations,
+        object ordering = *,
     )
     cpdef void prefetch_bloated_instances(
         self,

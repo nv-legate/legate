@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as _np  # noqa: ICN001
 
 from ._lib.data.buffer import TaskLocalBuffer
+from ._lib.data.external_allocation import ExternalAllocation
 from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray, StructLogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
@@ -133,6 +134,7 @@ __all__ = (
     "DomainPoint",
     "EmptyMachineError",
     "ExceptionMode",
+    "ExternalAllocation",
     "Field",
     "FixedArrayType",
     "GlobalRedopID",

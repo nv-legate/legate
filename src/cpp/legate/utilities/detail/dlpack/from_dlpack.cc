@@ -198,6 +198,11 @@ namespace {
                                                              bool read_only,
                                                              std::function<void(void*)> deleter)
 {
+  if (tensor.strides && !is_tensor_contiguous(tensor)) {
+    throw TracedException<std::invalid_argument>{
+      "Conversion of non-contiguous strided tensors is not yet supported"};
+  }
+
   const auto size    = dl_tensor_size(tensor);
   auto* const ptr    = static_cast<std::byte*>(tensor.data) + tensor.byte_offset;
   const auto& device = tensor.device;
@@ -208,6 +213,11 @@ namespace {
     case mapping::StoreTarget::SOCKETMEM:
       return legate::ExternalAllocation::create_sysmem(ptr, size, read_only, std::move(deleter));
     case mapping::StoreTarget::FBMEM:
+      if (device.device_id < 0) {
+        throw TracedException<std::out_of_range>{fmt::format(
+          "DLPack tensor device_id {} is negative; expected a non-negative CUDA device index",
+          device.device_id)};
+      }
       return legate::ExternalAllocation::create_fbmem(
         static_cast<std::uint32_t>(device.device_id), ptr, size, read_only, std::move(deleter));
     case mapping::StoreTarget::ZCMEM:
@@ -298,6 +308,74 @@ legate::LogicalStore from_dlpack(DLManagedTensor** dlm_tensor)
   auto ret = from_dlpack(uniq->dl_tensor, /* read_only */ false, uniq.get_deleter());
   // Only now, after creating the store, can be we sure that Legate has fully taken control of
   // the tensor
+  std::ignore = uniq.release();
+  *dlm_tensor = nullptr;
+  return ret;
+}
+
+legate::ExternalAllocation make_external_alloc_from_dlpack(DLManagedTensorVersioned** dlm_tensor,
+                                                           std::optional<bool> read_only)
+{
+  if (!dlm_tensor) {
+    throw TracedException<std::invalid_argument>{
+      "DLManagedTensorVersioned** argument must not be NULL"};
+  }
+  if (!*dlm_tensor) {
+    throw TracedException<std::invalid_argument>{"DLManagedTensorVersioned* must not be NULL"};
+  }
+  // Hold in a unique_ptr to make sure the tensor is properly deleted even if any of the below
+  // throw exceptions.
+  auto uniq = std::unique_ptr<DLManagedTensorVersioned, std::function<void(void*)>>{
+    *dlm_tensor, [tptr = *dlm_tensor](void*) {
+      // We ignore the input argument here because this deleter function is also used as the
+      // ExternalAllocation deleter. So for this unique_ptr the argument would be the original
+      // DLManagedTensorVersioned, but for ExternalAllocation it would be
+      // dlm_tensor->dl_tensor.data.
+      if (tptr->deleter) {
+        tptr->deleter(tptr);
+      }
+    }};
+
+  if (const auto major = uniq->version.major; major != DLPACK_MAJOR_VERSION) {
+    throw TracedException<std::runtime_error>{
+      fmt::format("Unsupported major version for DLPack tensor {} (Legate only supports {}.x)",
+                  major,
+                  DLPACK_MAJOR_VERSION)};
+  }
+
+  auto ret = make_external_alloc(uniq->dl_tensor,
+                                 read_only.value_or(uniq->flags & DLPACK_FLAG_BITMASK_READ_ONLY),
+                                 uniq.get_deleter());
+  // Only now, after creating the allocation, can we be sure that Legate has fully taken control
+  // of the tensor
+  std::ignore = uniq.release();
+  *dlm_tensor = nullptr;
+  return ret;
+}
+
+legate::ExternalAllocation make_external_alloc_from_dlpack(DLManagedTensor** dlm_tensor,
+                                                           std::optional<bool> read_only)
+{
+  if (!dlm_tensor) {
+    throw TracedException<std::invalid_argument>{"DLManagedTensor** argument must not be NULL"};
+  }
+  if (!*dlm_tensor) {
+    throw TracedException<std::invalid_argument>{"DLManagedTensor* must not be NULL"};
+  }
+  // Hold in a unique_ptr to make sure the tensor is properly deleted even if any of the below
+  // throw exceptions.
+  auto uniq = std::unique_ptr<DLManagedTensor, std::function<void(void*)>>{
+    *dlm_tensor, [tptr = *dlm_tensor](void*) {
+      // We ignore the input argument here because this deleter function is also used as the
+      // ExternalAllocation deleter. So for this unique_ptr the argument would be the original
+      // DLManagedTensor, but for ExternalAllocation it would be dlm_tensor->dl_tensor.data.
+      if (tptr->deleter) {
+        tptr->deleter(tptr);
+      }
+    }};
+  auto ret = make_external_alloc(uniq->dl_tensor, read_only.value_or(false), uniq.get_deleter());
+  // Only now, after creating the allocation, can we be sure that Legate has fully taken control
+  // of the tensor
   std::ignore = uniq.release();
   *dlm_tensor = nullptr;
   return ret;

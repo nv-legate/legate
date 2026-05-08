@@ -7,8 +7,9 @@ from contextlib import contextmanager
 from typing import Any
 
 from ...utils import AnyCallable, ShutdownCallback
+from ..data.external_allocation import ExternalAllocation
 from ..data.logical_array import LogicalArray, StructLogicalArray
-from ..data.logical_store import LogicalStore
+from ..data.logical_store import LogicalStore, LogicalStorePartition
 from ..data.scalar import Scalar
 from ..data.shape import Shape
 from ..mapping.machine import Machine
@@ -126,6 +127,14 @@ class Runtime(Unconstructable):
         read_only: bool,
         ordering: DimOrdering | None = None,
     ) -> LogicalStore: ...
+    def create_store_from_tiles(
+        self,
+        dtype: Type,
+        shape: Shape | Collection[int],
+        tile_shape: tuple[int, ...] | Collection[int],
+        allocations: list[tuple[ExternalAllocation, tuple[int, ...]]],
+        ordering: DimOrdering | None = None,
+    ) -> tuple[LogicalStore, LogicalStorePartition]: ...
     def prefetch_bloated_instances(
         self,
         store: LogicalStore,

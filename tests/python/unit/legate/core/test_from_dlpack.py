@@ -192,3 +192,24 @@ class TestFromDLPackErrors:
         )
         with pytest.raises(ValueError, match=msg):
             from_dlpack(NotDLPack())
+
+    def test_rejects_non_contiguous_slice(self) -> None:
+        arr = np.arange(10, dtype=np.float64)
+        strided = arr[::2]
+        assert not strided.flags["C_CONTIGUOUS"]
+        msg = (
+            "Conversion of non-contiguous strided tensors is not yet supported"
+        )
+        with pytest.raises(ValueError, match=msg):
+            from_dlpack(strided)
+
+    def test_rejects_non_monotonic_strides(self) -> None:
+        arr = np.arange(2 * 3 * 4, dtype=np.float64).reshape(
+            2, 3, 4
+        )  # strides in bytes : (96, 32, 8)
+        permuted = arr.transpose(0, 2, 1)  # strides in bytes : (96, 8, 32)
+        assert not permuted.flags["C_CONTIGUOUS"]
+        assert not permuted.flags["F_CONTIGUOUS"]
+        msg = "Cannot represent non monotonous"
+        with pytest.raises(ValueError, match=msg):
+            from_dlpack(permuted)

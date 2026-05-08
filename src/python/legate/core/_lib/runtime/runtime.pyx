@@ -4,6 +4,7 @@
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
+from libcpp.pair cimport pair as std_pair
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
@@ -24,13 +25,22 @@ from contextlib import contextmanager
 from functools import wraps
 from typing import Any, Iterator
 
-from ..data.external_allocation cimport _ExternalAllocation, create_from_buffer
+from ..data.external_allocation cimport (
+    ExternalAllocation,
+    _ExternalAllocation,
+    create_from_buffer,
+)
 from ..data.logical_array cimport (
     LogicalArray,
     _LogicalArray,
     to_cpp_logical_array,
 )
-from ..data.logical_store cimport LogicalStore, _LogicalStore
+from ..data.logical_store cimport (
+    LogicalStore,
+    LogicalStorePartition,
+    _LogicalStore,
+    _LogicalStorePartition,
+)
 from ..data.scalar cimport Scalar
 from ..data.shape cimport Shape, _Shape
 from ..mapping.machine cimport Machine
@@ -1177,6 +1187,98 @@ cdef class Runtime(Unconstructable):
                 std_move(cpp_shape), dtype._handle, std_move(alloc), cpp_ordering
             )
         return LogicalStore.from_handle(_handle)
+
+    cpdef tuple create_store_from_tiles(
+        self,
+        Type dtype,
+        object shape,
+        object tile_shape,
+        list allocations,
+        object ordering = None,
+    ):
+        r"""
+        Attach multiple external allocations as tiles of a single store.
+
+        All allocations must be read-only.
+
+        Parameters
+        ----------
+        dtype : Type
+            Element type of the store.
+
+        shape : Shape | Collection[int]
+            Global shape of the store.
+
+        tile_shape : tuple[int, ...] | Collection[int]
+            Shape of each tile.
+
+        allocations : list[tuple[ExternalAllocation, tuple[int, ...]]]
+            ``(allocation, color)`` pairs for tiles owned by this node.
+            The runtime assembles them across nodes into the global store.
+
+        ordering : DimOrdering, optional
+            Dimension ordering. Defaults to C order.
+
+        Returns
+        -------
+        tuple[LogicalStore, LogicalStorePartition]
+            The store and its tile partition.
+
+        Raises
+        ------
+        TypeError
+            If ``ordering`` is not a ``DimOrdering`` or any item in
+            ``allocations`` is not an ``ExternalAllocation``
+        ValueError
+            If any of the external allocations is not read-only, or if
+            ``shape``, ``tile_shape``, or a color is not a sequence of
+            non-negative integers
+        """
+        cdef _Shape cpp_shape = Shape.from_shape_like(shape)
+        cdef _tuple[uint64_t] cpp_tile_shape = uint64_tuple_from_iterable(
+            tile_shape
+        )
+        cdef _DimOrdering cpp_ordering
+        if ordering is None:
+            cpp_ordering = _DimOrdering.c_order()
+        elif not isinstance(ordering, DimOrdering):
+            raise TypeError("ordering must be a DimOrdering instance")
+        else:
+            cpp_ordering = (<DimOrdering>ordering)._handle
+
+        cdef std_vector[std_pair[_ExternalAllocation, _tuple[uint64_t]]] c_allocs
+        cdef _tuple[uint64_t] cpp_color
+        cdef ExternalAllocation ea
+
+        c_allocs.reserve(len(allocations))
+        for item in allocations:
+            alloc_obj, color = item
+            if not isinstance(alloc_obj, ExternalAllocation):
+                raise TypeError(
+                    "Each allocation must be an ExternalAllocation instance"
+                )
+            ea = <ExternalAllocation>alloc_obj
+            cpp_color = uint64_tuple_from_iterable(color)
+            c_allocs.push_back(
+                std_pair[_ExternalAllocation, _tuple[uint64_t]](
+                    ea._handle, std_move(cpp_color)
+                )
+            )
+
+        cdef std_pair[_LogicalStore, _LogicalStorePartition] result
+        with nogil:
+            result = self._handle.create_store(
+                cpp_shape,
+                cpp_tile_shape,
+                dtype._handle,
+                c_allocs,
+                cpp_ordering,
+            )
+
+        return (
+            LogicalStore.from_handle(std_move(result.first)),
+            LogicalStorePartition.from_handle(std_move(result.second)),
+        )
 
     cpdef void prefetch_bloated_instances(
         self,

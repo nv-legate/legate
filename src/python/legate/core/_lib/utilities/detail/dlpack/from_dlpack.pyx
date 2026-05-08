@@ -20,13 +20,9 @@ from .dlpack cimport (
     DLPACK_MINOR_VERSION
 )
 
-cdef struct DLPackTensor:
-    void* tensor
-    bool is_versioned
 
-
-cdef DLPackTensor get_dlpack_tensor(object capsule):
-    cdef DLPackTensor ret
+cdef _DLPackTensor _get_dlpack_tensor(object capsule):
+    cdef _DLPackTensor ret
 
     if PyCapsule_IsValid(capsule, VERSIONED_CAPSULE_NAME):
         ret.tensor = PyCapsule_GetPointer(capsule, VERSIONED_CAPSULE_NAME)
@@ -47,7 +43,7 @@ cdef DLPackTensor get_dlpack_tensor(object capsule):
     raise ValueError(m)
 
 
-cdef bool check_device_type(object device):
+cdef bool _is_gpu_device(object device):
     """
     Check if the device is one of supported device types and returns ``True``
     if the device is GPU.
@@ -75,22 +71,18 @@ cdef bool check_device_type(object device):
     raise BufferError(m)
 
 
-def from_dlpack(
-    object x,
-    /,
-    *,
-    object device = None,
-    object copy = None
-) -> LogicalStore:
-    if (device is None) and hasattr(x, "__dlpack_device__"):
-        device = x.__dlpack_device__()
+cdef _DLPackTensor _get_dlpack_tensor_from_object(
+    object obj, object device, object copy
+):
+    if (device is None) and hasattr(obj, "__dlpack_device__"):
+        device = obj.__dlpack_device__()
 
-    is_device_gpu = check_device_type(device)
+    is_device_gpu = _is_gpu_device(device)
     # We don't check for attribute presence. The AttributeError that may be
     # raised below is part of the DLPack Python API standard:
     # https://data-apis.org/array-api/latest/API_specification/generated/array_api.from_dlpack.html#array_api.from_dlpack
     try:
-        capsule = x.__dlpack__(
+        capsule = obj.__dlpack__(
             # Passing a null stream as a consuming stream, as we don't know
             # which task will consume this store later and where it will run
             # (which is even less obvious if the store gets partitioned across
@@ -109,7 +101,7 @@ def from_dlpack(
         #
         # So we try again, only this time we pass in exactly what the user gave
         # us so that they can correct the error on their end.
-        capsule = x.__dlpack__(dl_device=device, copy=copy)
+        capsule = obj.__dlpack__(dl_device=device, copy=copy)
 
     if is_device_gpu:
         # Since we pass a null stream above to extract the capsule, we should
@@ -117,10 +109,19 @@ def from_dlpack(
         # downstream GPU tasks are not properly synchronized.
         get_legate_runtime().synchronize_cuda_stream(NULL)
 
-    cdef DLPackTensor dl_tensor
+    return _get_dlpack_tensor(capsule)
 
-    dl_tensor = get_dlpack_tensor(capsule)
 
+def from_dlpack(
+    object x,
+    /,
+    *,
+    object device = None,
+    object copy = None
+) -> LogicalStore:
+    cdef _DLPackTensor dl_tensor = _get_dlpack_tensor_from_object(
+        x, device, copy
+    )
     cdef _LogicalStore store
 
     with nogil:
