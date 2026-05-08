@@ -8,3 +8,13 @@ self-hosted-runner:
     - linux-amd64-cpu16
     - linux-amd64-gpu-l4-latest-1
     - mac-arm64-llr
+paths:
+  .github/workflows/renovate.yml:
+    ignore:
+      # actionlint v1.7.12 has stale metadata for this action.
+      - >-
+        missing input "app-id" which is required by action
+        "actions/create-github-app-token@v3"
+      - >-
+        input "client-id" is not defined in action
+        "actions/create-github-app-token@v3"
