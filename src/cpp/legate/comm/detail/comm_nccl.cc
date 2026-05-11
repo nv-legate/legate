@@ -89,7 +89,10 @@ class Init : public detail::LegionTask<Init> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_NCCL}}.with_variant_options(
-      legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
+      legate::VariantOptions{}
+        .with_concurrent(true)
+        .with_elide_device_ctx_sync(true)
+        .with_has_allocations(true));
 
   static ncclComm_t* gpu_variant(const Legion::Task* task,
                                  const std::vector<Legion::PhysicalRegion>& /*regions*/,

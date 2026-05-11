@@ -69,10 +69,9 @@ Scalar CoreMapper::tunable_value(TunableID /*tunable_id*/)
 
 namespace {
 
-// The INIT_NCCL task creates two buffers of type Payload that has two uint64_t-typed members, hence
-// the following math for the pool size (the data type was crafted such that it will be 16-byte
-// aligned).
-constexpr std::size_t NCCL_WARMUP_BUFFER_SIZE = sizeof(std::uint64_t) * 2 * 2;
+// The INIT_NCCL task creates two buffers of type Payload (which has two uint64_t-typed members,
+// i.e. 16 bytes) with num_ranks elements each. Hence the per-rank size is 16 * 2 = 32 bytes.
+constexpr std::size_t NCCL_WARMUP_BUFFER_SIZE_PER_RANK = sizeof(std::uint64_t) * 2 * 2;
 
 constexpr std::size_t EXTRA_SCALAR_ALIGNMENT = 16;
 
@@ -109,8 +108,12 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
       return legate::detail::round_up_to_multiple(future_size + value_size, EXTRA_SCALAR_ALIGNMENT);
     }
     case legate::detail::CoreTask::INIT_NCCL: {
-      return legate::detail::Runtime::get_runtime().config().warmup_nccl() ? NCCL_WARMUP_BUFFER_SIZE
-                                                                           : 0;
+      if (!legate::detail::Runtime::get_runtime().config().warmup_nccl()) {
+        return 0;
+      }
+      const auto num_ranks = task.get_launch_domain().get_volume();
+
+      return NCCL_WARMUP_BUFFER_SIZE_PER_RANK * num_ranks;
     }
     case legate::detail::CoreTask::FIND_BOUNDING_BOX: [[fallthrough]];
     case legate::detail::CoreTask::FIND_BOUNDING_BOX_SORTED: {
