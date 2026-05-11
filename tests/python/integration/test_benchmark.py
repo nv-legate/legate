@@ -116,6 +116,7 @@ def test_metadata() -> None:
         "  GPU driver *:",
         "  GPU devices *:",
         "Package versions *:",
+        "  realm *:",
         "  legion *:",
         "  legate *:",
         "  cupynumeric *:",

@@ -94,4 +94,7 @@ function(find_or_configure_realm)
   endif()
 
   legate_export_variables(Realm)
+  set_parent_scope(Realm_VERSION)
+  set(Realm_GIT_REPO "${git_repo}" PARENT_SCOPE)
+  set(Realm_GIT_BRANCH "${git_tag}" PARENT_SCOPE)
 endfunction()

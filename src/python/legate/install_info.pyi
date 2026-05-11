@@ -32,6 +32,12 @@ legion_git_branch: str
 
 legion_git_repo: str
 
+realm_version: str
+
+realm_git_branch: str
+
+realm_git_repo: str
+
 wheel_build: bool
 
 configure_options: str

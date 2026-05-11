@@ -84,6 +84,16 @@ def _legion_version() -> str:
     return result
 
 
+def _realm_version() -> str:
+    result = install_info.realm_version
+    if result == "":
+        return FAILED_TO_DETECT
+
+    if install_info.realm_git_branch:
+        result += f" (commit: {install_info.realm_git_branch})"
+    return result
+
+
 def _try_conda(package: str) -> str:
     try:
         if out := check_output(["conda", "list", package, "--json"]):
@@ -162,6 +172,7 @@ PackageVersions = dict[str, str]
 def package_versions() -> PackageVersions:
     """Get versions for packages in the legate and numpy ecosystems."""
     return {
+        "realm": f"{_realm_version()}",
         "legion": f"{_legion_version()}",
         "legate": f"{_try_version('legate', '__version__')}",
         "cupynumeric": f"{_try_version('cupynumeric', '__version__')}",
