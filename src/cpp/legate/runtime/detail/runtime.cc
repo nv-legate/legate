@@ -80,6 +80,7 @@
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
 
+#include <atomic>
 #include <cstdlib>
 #include <mappers/logging_wrapper.h>
 // GCC 14 alloc-zero warning when using Conda installed compiler
@@ -114,28 +115,12 @@ Logger& log_legate_partitioner()
 
 namespace {
 
-std::atomic<bool>& threadstate_cleanup_gate() noexcept
-{
-  static std::atomic<bool> allowed{true};
-  return allowed;
-}
-
-void disable_py_task_threadstate_cleanup() noexcept
-{
-  threadstate_cleanup_gate().store(false, std::memory_order_release);
-}
-
 // This is the unique string name for our library which can be used from both C++ and Python to
 // generate IDs
 constexpr std::string_view CORE_LIBRARY_NAME = "legate.core";
 constexpr const char* const TOPLEVEL_NAME    = "Toplevel Task";
 
 }  // namespace
-
-bool py_task_threadstate_cleanup_allowed() noexcept
-{
-  return threadstate_cleanup_gate().load(std::memory_order_acquire);
-}
 
 Runtime::Runtime(Config config)
   : legion_runtime_{Legion::Runtime::get_runtime()},
@@ -2070,7 +2055,7 @@ namespace {
 
 class RuntimeManager {
  public:
-  enum class State : std::uint8_t { UNINITIALIZED, INITIALIZED, FINALIZED };
+  enum class State : std::uint8_t { UNINITIALIZED, INITIALIZED, FINALIZING, FINALIZED };
 
   /**
    * @brief Construct the singleton runtime object.
@@ -2083,10 +2068,11 @@ class RuntimeManager {
 
   [[nodiscard]] Runtime& get();
   [[nodiscard]] State state() const noexcept;
+  void mark_finalizing() noexcept;
   void reset() noexcept;
 
  private:
-  State state_{State::UNINITIALIZED};
+  std::atomic<State> state_{State::UNINITIALIZED};
   std::optional<Runtime> rt_{};
 };
 
@@ -2100,15 +2086,20 @@ Runtime& RuntimeManager::construct_runtime(Config config)
 
   LEGATE_CHECK(!rt_.has_value());
   rt_.emplace(std::move(config));
-  state_ = State::INITIALIZED;
+  state_.store(State::INITIALIZED, std::memory_order_release);
   return *rt_;
 }
 
 Runtime& RuntimeManager::get()
 {
   if (LEGATE_LIKELY(rt_.has_value())) {
-    LEGATE_CHECK(state() == State::INITIALIZED);
-    return *rt_;
+    if (LEGATE_LIKELY(state() == State::INITIALIZED)) {
+      return *rt_;
+    }
+    // The Runtime object still exists while FINALIZING, but Legion may already
+    // be shutting down. Do not let late destructors call back into Legate here.
+    throw TracedException<std::runtime_error>{
+      "Legate runtime is finalizing, and cannot be retrieved safely."};
   }
 
   switch (state()) {
@@ -2122,6 +2113,7 @@ Runtime& RuntimeManager::get()
         "the runtime does not exist. Please report this bug to the Legate developers by opening "
         "an issue at https://github.com/nv-legate/legate/issues. This error is very likely "
         "unrecoverable; the user is advised to restart their program."};
+    case State::FINALIZING:
     case State::FINALIZED:
       // Legion currently does not allow re-initialization after shutdown, so we need to track
       // this ourselves...
@@ -2129,15 +2121,24 @@ Runtime& RuntimeManager::get()
         "Legate runtime has been finalized, and cannot be re-initialized without restarting the "
         "program."};
   }
+
   LEGATE_ABORT("Unhandled runtime state: ", to_underlying(state()));
 }
 
-RuntimeManager::State RuntimeManager::state() const noexcept { return state_; }
+RuntimeManager::State RuntimeManager::state() const noexcept
+{
+  return state_.load(std::memory_order_acquire);
+}
+
+void RuntimeManager::mark_finalizing() noexcept
+{
+  state_.store(State::FINALIZING, std::memory_order_release);
+}
 
 void RuntimeManager::reset() noexcept
 {
   rt_.reset();
-  state_ = State::FINALIZED;
+  state_.store(State::FINALIZED, std::memory_order_release);
 }
 
 RuntimeManager the_runtime{};
@@ -2219,16 +2220,14 @@ std::int32_t Runtime::finish()
   pending_exceptions_.clear();
   initialized_ = false;
 
-  // Past this point all Legate-side cleanup work has drained. Realm worker
-  // threads may now exit during Legion shutdown; their Python task
-  // PyThreadState caches can hold Legate-backed objects, so let those
-  // threadstates leak until process exit instead of clearing them during
-  // runtime teardown.
-  disable_py_task_threadstate_cleanup();
-
   // Mark that we are done executing the top-level task
   // After this call the context is no longer valid
   get_legion_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
+  // Legion may shut down as soon as wait_for_shutdown() observes that all
+  // processes are done. Make the shutdown state visible to Realm worker
+  // threads before that point so late Legate object destruction can avoid
+  // calling back into Legion.
+  the_runtime.mark_finalizing();
   // The previous call is asynchronous so we still need to
   // wait for the shutdown of the runtime to complete
   const auto ret = Legion::Runtime::wait_for_shutdown();
@@ -2468,6 +2467,11 @@ Legion::MapperID Runtime::mapper_id() const { return get_mapper_manager_().mappe
 
 bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }
 
-bool has_finished() { return the_runtime.state() == RuntimeManager::State::FINALIZED; }
+bool has_finished()
+{
+  const auto state = the_runtime.state();
+
+  return state == RuntimeManager::State::FINALIZING || state == RuntimeManager::State::FINALIZED;
+}
 
 }  // namespace legate::detail

@@ -396,6 +396,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   LocalMachineSelector local_machine_selector_{};
 
   std::string mapper_name_{};
+  bool show_mapper_usage_{};
 
   // Streaming transformation related objects
   class ColumnStreamingInfo {

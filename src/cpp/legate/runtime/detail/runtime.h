@@ -705,7 +705,6 @@ class Runtime {
 
 [[nodiscard]] bool has_started();
 [[nodiscard]] bool has_finished();
-[[nodiscard]] LEGATE_PYTHON_EXPORT bool py_task_threadstate_cleanup_allowed() noexcept;
 
 }  // namespace legate::detail
 

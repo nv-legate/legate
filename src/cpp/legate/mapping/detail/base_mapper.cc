@@ -103,13 +103,14 @@ BaseMapper::BaseMapper()
     mapper_name_{
       fmt::format("{} on Node {}",
                   legate::detail::Runtime::get_runtime().core_library().get_library_name(),
-                  local_machine_selector_.get_local().node_id)}
+                  local_machine_selector_.get_local().node_id)},
+    show_mapper_usage_{legate::detail::Runtime::get_runtime().config().show_mapper_usage()}
 {
 }
 
 BaseMapper::~BaseMapper()  // NOLINT(bugprone-exception-escape)
 {
-  if (legate::detail::Runtime::get_runtime().config().show_mapper_usage()) {
+  if (show_mapper_usage_) {
     constexpr std::string_view memory_kinds[] = {
 #define MEM_NAMES(name, desc) LEGATE_STRINGIZE(name),
       REALM_MEMORY_KINDS(MEM_NAMES)
