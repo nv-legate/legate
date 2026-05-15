@@ -17,20 +17,23 @@ namespace legate::detail {
 
 Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget& target,
                                                       const mapping::ProcessorRange& range,
-                                                      const Domain& launch_domain)
+                                                      const Domain& launch_domain,
+                                                      Legion::ProjectionID proj_id)
 {
   if (launch_domain.dim == 1) {
+    // 1-D consumer launches read futures by raw point coordinate, no reshape
+    // and so no key-store projection is involved.
     return find_or_create_(target, range, launch_domain.get_volume());
   }
 
-  AliasKey key{launch_domain, target, range};
+  AliasKey key{std::tuple{launch_domain, proj_id}, target, range};
   auto finder = nd_aliases_.find(key);
   if (finder != nd_aliases_.end()) {
     return finder->second;
   }
 
   auto communicator = find_or_create_(target, range, launch_domain.get_volume());
-  communicator      = transform_(communicator, launch_domain);
+  communicator      = transform_(communicator, launch_domain, proj_id);
   nd_aliases_.insert({std::move(key), communicator});
   return communicator;
 }
@@ -76,9 +79,10 @@ Legion::FutureMap CommunicatorFactory::find_or_create_(const mapping::TaskTarget
 }
 
 Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap& communicator,
-                                                  const Domain& launch_domain)
+                                                  const Domain& launch_domain,
+                                                  Legion::ProjectionID proj_id)
 {
-  return Runtime::get_runtime().delinearize_future_map(communicator, launch_domain);
+  return Runtime::get_runtime().delinearize_future_map(communicator, launch_domain, proj_id);
 }
 
 // ==========================================================================================

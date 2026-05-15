@@ -51,6 +51,7 @@
 #include <legate/runtime/detail/field_manager.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/mpi_detection.h>
+#include <legate/runtime/detail/projection.h>
 #include <legate/runtime/detail/shard.h>
 #include <legate/runtime/detail/streaming/analysis.h>
 #include <legate/runtime/resource.h>
@@ -1459,17 +1460,6 @@ Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space)
 
 namespace {
 
-[[nodiscard]] Legion::DomainPoint delinearize_future_map_impl(const DomainPoint& point,
-                                                              const Domain& domain,
-                                                              const Domain& range)
-{
-  LEGATE_CHECK(range.dim == 1);
-  DomainPoint result;
-  result.dim = 1;
-  result[0]  = static_cast<coord_t>(linearize(domain.lo(), domain.hi(), point));
-  return result;
-}
-
 [[nodiscard]] Legion::DomainPoint reshape_future_map_impl(const DomainPoint& point,
                                                           const Domain& domain,
                                                           const Domain& range)
@@ -1484,12 +1474,28 @@ namespace {
 }  // namespace
 
 Legion::FutureMap Runtime::delinearize_future_map(const Legion::FutureMap& future_map,
-                                                  const Domain& new_domain)
+                                                  const Domain& new_domain,
+                                                  Legion::ProjectionID proj_id)
 {
-  return get_legion_runtime()->transform_future_map(get_legion_context(),
-                                                    future_map,
-                                                    find_or_create_index_space(new_domain),
-                                                    delinearize_future_map_impl);
+  auto* const proj_fn = find_projection_function(proj_id);
+
+  return get_legion_runtime()->transform_future_map(
+    get_legion_context(),
+    future_map,
+    find_or_create_index_space(new_domain),
+    [proj_fn](const DomainPoint& point, const Domain& domain, const Domain& range) {
+      LEGATE_CHECK(range.dim == 1);
+      DomainPoint result;
+      // Communicator slots must follow the same projected point order that the
+      // mapper uses for placement, but only when that projection preserves a
+      // 1:1 mapping between launch points and slots.
+      result.dim         = 1;
+      const auto proj_lo = proj_fn->project_point(domain.lo());
+      const auto proj_hi = proj_fn->project_point(domain.hi());
+      const auto proj_p  = proj_fn->project_point(point);
+      result[0]          = static_cast<coord_t>(linearize(proj_lo, proj_hi, proj_p));
+      return result;
+    });
 }
 
 Legion::FutureMap Runtime::reshape_future_map(const Legion::FutureMap& future_map,

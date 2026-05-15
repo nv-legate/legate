@@ -255,32 +255,52 @@ BufferBuilder TaskLauncher::pack_task_arg_(bool parallel, StoreAnalyzer* analyze
   return task_arg;
 }
 
-void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
+Legion::ProjectionID TaskLauncher::get_key_proj_id()
 {
-  buffer.pack(streaming_generation());
-  machine_.pack(buffer);
+  if (key_proj_id_.has_value()) {
+    return *key_proj_id_;
+  }
 
-  std::optional<Legion::ProjectionID> key_proj_id;
-  auto find_key_proj_id = [&key_proj_id](Span<const Analyzable> args) {
+  // Scan the launcher's arguments in the same order the mapper picks the
+  // KEY_STORE: inputs, then outputs, then reductions. The mapper's
+  // `slice_task` uses the first region requirement with the KEY_STORE tag,
+  // and `is_key` propagates to that tag in launcher_arg.cc.
+  auto&& find_in = [&](Span<const Analyzable> args) {
     for (auto&& arg : args) {
-      key_proj_id = std::visit([](auto&& a) { return a.get_key_proj_id(); }, arg);
-      if (key_proj_id) {
+      std::visit(
+        [&](auto&& a) {
+          if (!key_proj_id_.has_value()) {
+            key_proj_id_ = a.get_key_proj_id();
+          }
+        },
+        arg);
+      if (key_proj_id_.has_value()) {
         break;
       }
     }
   };
 
-  find_key_proj_id(inputs_);
-  if (!key_proj_id) {
-    find_key_proj_id(outputs_);
+  find_in(inputs_);
+  if (!key_proj_id_.has_value()) {
+    find_in(outputs_);
   }
-  if (!key_proj_id) {
-    find_key_proj_id(reductions_);
+  if (!key_proj_id_.has_value()) {
+    find_in(reductions_);
   }
-  if (!key_proj_id) {
-    key_proj_id.emplace(0);
+  if (!key_proj_id_.has_value()) {
+    key_proj_id_ = 0;
   }
-  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, *key_proj_id));
+
+  return *key_proj_id_;
+}
+
+void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
+{
+  buffer.pack(streaming_generation());
+  machine_.pack(buffer);
+
+  const auto key_proj_id = get_key_proj_id();
+  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, key_proj_id));
   buffer.pack(priority_);
 }
 

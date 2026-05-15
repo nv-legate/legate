@@ -25,9 +25,11 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <nccl.h>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 namespace legate::detail {

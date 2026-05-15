@@ -436,7 +436,8 @@ class Runtime {
                                                std::size_t field_size);
   [[nodiscard]] Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space);
   [[nodiscard]] Legion::FutureMap delinearize_future_map(const Legion::FutureMap& future_map,
-                                                         const Domain& new_domain);
+                                                         const Domain& new_domain,
+                                                         Legion::ProjectionID proj_id = 0);
   [[nodiscard]] Legion::FutureMap reshape_future_map(const Legion::FutureMap& future_map,
                                                      const Domain& new_domain);
 

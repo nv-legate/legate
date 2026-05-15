@@ -292,11 +292,13 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
   if (valid_launch && (launch_volume > 1)) {
     const auto target           = machine().preferred_target();
     const auto& processor_range = machine().processor_range();
+    const auto key_proj_id      = launcher.get_key_proj_id();
 
     // Use explicit type here in order to get the reference_wrapper to coerce
     launcher.reserve_communicators(communicator_factories_.size());
     for (CommunicatorFactory& factory : communicator_factories_) {
-      launcher.add_communicator(factory.find_or_create(target, processor_range, launch_domain));
+      launcher.add_communicator(
+        factory.find_or_create(target, processor_range, launch_domain, key_proj_id));
       if (factory.needs_barrier()) {
         launcher.set_insert_barrier(true);
       }

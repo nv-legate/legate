@@ -12,9 +12,9 @@
 #include <legate/utilities/typedefs.h>
 
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -33,7 +33,8 @@ class CommunicatorFactory {
 
   [[nodiscard]] Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
                                                  const mapping::ProcessorRange& range,
-                                                 const Domain& launch_domain);
+                                                 const Domain& launch_domain,
+                                                 Legion::ProjectionID proj_id = 0);
   void destroy();
 
  protected:
@@ -41,7 +42,8 @@ class CommunicatorFactory {
                                                   const mapping::ProcessorRange& range,
                                                   std::uint32_t num_tasks);
   [[nodiscard]] Legion::FutureMap transform_(const Legion::FutureMap& communicator,
-                                             const Domain& launch_domain);
+                                             const Domain& launch_domain,
+                                             Legion::ProjectionID proj_id);
 
  public:
   [[nodiscard]] virtual bool needs_barrier() const                                 = 0;
@@ -67,8 +69,11 @@ class CommunicatorFactory {
     [[nodiscard]] std::size_t hash() const noexcept;
   };
 
-  using CommKey  = CacheKey<std::uint32_t>;
-  using AliasKey = CacheKey<Domain>;
+  using CommKey = CacheKey<std::uint32_t>;
+  // Distinct invertible KEY_STORE projections can produce different N-D
+  // communicator reshapes for the same launch domain, so the alias cache
+  // must distinguish them.
+  using AliasKey = CacheKey<std::tuple<Domain, Legion::ProjectionID>>;
 
   std::unordered_map<CommKey, Legion::FutureMap, hasher<CommKey>> communicators_{};
   std::unordered_map<AliasKey, Legion::FutureMap, hasher<AliasKey>> nd_aliases_{};

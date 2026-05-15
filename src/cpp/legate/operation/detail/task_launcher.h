@@ -84,6 +84,13 @@ class TaskLauncher {
   void reserve_communicators(std::size_t num);
   void add_communicator(Legion::FutureMap communicator);
 
+  // Returns the projection ID of the task's KEY_STORE region requirement
+  // (the first input/output/reduction marked `is_key`). Returns 0 (the
+  // identity projection) when no key store has been added. Must be called
+  // only after the relevant `add_input/add_output/add_reduction` calls have
+  // populated this launcher.
+  [[nodiscard]] Legion::ProjectionID get_key_proj_id();
+
   void set_priority(std::int32_t priority);
   void set_side_effect(bool has_side_effect);
   void set_concurrent(bool is_concurrent);
@@ -159,6 +166,7 @@ class TaskLauncher {
   bool relax_interference_checks_{};
   std::optional<StreamingGeneration> streaming_gen_{};
   std::size_t future_size_{};
+  std::optional<Legion::ProjectionID> key_proj_id_{};
 
   std::vector<Analyzable> inputs_{};
   std::vector<Analyzable> outputs_{};
