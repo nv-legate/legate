@@ -9,7 +9,7 @@ import numpy as np
 
 import pytest
 
-from legate.core import ExternalAllocation
+from legate.core import ExternalAllocation, TaskTarget, get_legate_runtime
 
 try:
     import cupy  # type: ignore[import-not-found]
@@ -62,7 +62,11 @@ class TestFromDLPack:
         with pytest.raises(AttributeError, match="__dlpack__"):
             ExternalAllocation.from_dlpack(FakeDLPackDevice())
 
-    @pytest.mark.skipif(cupy is None, reason="cupy not available")
+    @pytest.mark.skipif(
+        cupy is None
+        or get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
+        reason="test requires cupy and GPUs",
+    )
     def test_cupy_gpu(self) -> None:
         buf = cupy.zeros(10, dtype=cupy.float64)
         alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
@@ -128,7 +132,11 @@ class TestFromSysmem:
         del alloc
 
 
-@pytest.mark.skipif(cupy is None, reason="cupy not available")
+@pytest.mark.skipif(
+    cupy is None
+    or get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
+    reason="test requires cupy and GPUs",
+)
 class TestFromFbmem:
     def test_basic(self) -> None:
         buf = cupy.zeros(10, dtype=cupy.float64)
