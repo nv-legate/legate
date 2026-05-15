@@ -27,6 +27,7 @@ SPDX-License-Identifier = "Apache-2.0"
 # Patches for other projects we build.
 [[annotations]]
 path = [
+    "conda/gasnet_wrapper/patches/**",
     "src/cmake/patches/**"
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."

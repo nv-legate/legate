@@ -1,0 +1,16 @@
+diff --git a/realm/src/realm/gasnetex/gasnetex_wrapper/CMakeLists.txt b/realm/src/realm/gasnetex/gasnetex_wrapper/CMakeLists.txt
+index 7831a69d20..c11f9f9e6e 100644
+--- a/realm/src/realm/gasnetex/gasnetex_wrapper/CMakeLists.txt
++++ b/realm/src/realm/gasnetex/gasnetex_wrapper/CMakeLists.txt
+@@ -53,6 +53,11 @@ else()
+   target_compile_definitions(realm_gex_wrapper_objs PUBLIC GEX_STATIC_DEFINE)
+ endif()
+ add_dependencies(realm_gex_wrapper realm_gex_wrapper_objs)
++# Temporary Legate packaging patch. Drop once
++# https://github.com/nv-legate/legate.internal/issues/3753 is resolved by a
++# pinned upstream Realm fix for
++# https://github.com/StanfordLegion/realm/issues/338.
++target_link_libraries(realm_gex_wrapper PRIVATE GASNet::GASNet)
+ target_compile_definitions(realm_gex_wrapper PRIVATE <IF:$<BOOL:GEX_DEBUG>,DEBUG_REALM_GEX,>)
+
+ generate_export_header(

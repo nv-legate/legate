@@ -16,10 +16,12 @@ package:
 source:
   git_url: {{ git_url }}
   git_rev: {{ legion_sha }}
+  patches:
+    - patches/realm-gex-wrapper-link-gasnet.patch
 
 build:
   include_recipe: false
-  number: 22
+  number: 23
   skip: true  # [not linux]
   noarch: generic
   script_env:
