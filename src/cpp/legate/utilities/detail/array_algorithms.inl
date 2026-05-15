@@ -72,4 +72,14 @@ bool array_all_of(F&& func, const T& arr, const Tn&... rest)
   });
 }
 
+template <typename F, typename T, typename... Tn>
+bool array_any_of(F&& func, const T& arr, const Tn&... rest)
+{
+  const auto zipper = detail::zip_equal(arr, rest...);
+
+  return std::any_of(zipper.begin(), zipper.end(), [&](const auto& tup) {
+    return std::apply(std::forward<F>(func), tup);
+  });
+}
+
 }  // namespace legate::detail

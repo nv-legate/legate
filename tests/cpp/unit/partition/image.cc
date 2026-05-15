@@ -98,15 +98,15 @@ TEST_F(ImageTest, SatisfiesRestrictions)
 {
   auto restrictions1 =
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW}};
-  ASSERT_TRUE(restrictions1.are_satisfied_by(*image));
+  ASSERT_TRUE(restrictions1.are_satisfied_by(*image, nullptr));
 
   auto restrictions2 =
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::AVOID}};
-  ASSERT_TRUE(restrictions2.are_satisfied_by(*image));
+  ASSERT_TRUE(restrictions2.are_satisfied_by(*image, nullptr));
 
   auto restrictions3 =
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::FORBID}};
-  ASSERT_TRUE(restrictions3.are_satisfied_by(*image));
+  ASSERT_TRUE(restrictions3.are_satisfied_by(*image, nullptr));
 }
 
 TEST_F(ImageTest, SatisfiesRestrictionsNegative)
@@ -117,10 +117,12 @@ TEST_F(ImageTest, SatisfiesRestrictionsNegative)
 
   auto restrictions1 = legate::detail::Restrictions{legate::detail::SmallVector{
     legate::detail::Restriction::ALLOW, legate::detail::Restriction::AVOID}};
-  ASSERT_THROW(static_cast<void>(restrictions1.are_satisfied_by(*image)), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(restrictions1.are_satisfied_by(*image, nullptr)),
+               std::invalid_argument);
 
   auto restrictions2 = legate::detail::Restrictions{};
-  ASSERT_THROW(static_cast<void>(restrictions2.are_satisfied_by(*image)), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(restrictions2.are_satisfied_by(*image, nullptr)),
+               std::invalid_argument);
 }
 
 TEST_F(ImageTest, Scale)

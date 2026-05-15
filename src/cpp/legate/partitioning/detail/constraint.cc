@@ -96,6 +96,28 @@ std::string Broadcast::to_string() const
   return fmt::format("Broadcast({}, {})", *variable(), axes());
 }
 
+void MinExtents::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
+{
+  partition_symbols.push_back(variable());
+}
+
+void MinExtents::validate() const
+{
+  auto&& store = variable_->operation()->find_store(variable());
+
+  if (minimum_extents().size() != store->dim()) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Invalid minimum-extents constraint with {} extents for a {}-D store",
+                  minimum_extents().size(),
+                  store->dim())};
+  }
+}
+
+std::string MinExtents::to_string() const
+{
+  return fmt::format("MinExtents({}, {})", *variable(), minimum_extents());
+}
+
 void ImageConstraint::find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(var_function_);
@@ -223,6 +245,12 @@ InternalSharedPtr<Broadcast> broadcast(const Variable* variable,
     throw TracedException<std::invalid_argument>{"List of axes to broadcast must not be empty"};
   }
   return make_internal_shared<Broadcast>(variable, std::move(axes));
+}
+
+InternalSharedPtr<MinExtents> min_extents(
+  const Variable* variable, SmallVector<std::uint64_t, LEGATE_MAX_DIM> minimum_extents)
+{
+  return make_internal_shared<MinExtents>(variable, std::move(minimum_extents));
 }
 
 InternalSharedPtr<ImageConstraint> image(const Variable* var_function,

@@ -51,6 +51,7 @@ class Constraint {
   enum class Kind : std::uint8_t {
     ALIGNMENT,
     BROADCAST,
+    MIN_EXTENTS,
     IMAGE,
     SCALE,
     BLOAT,
@@ -106,6 +107,26 @@ class Broadcast final : public Constraint {
   const Variable* variable_{};
   // Broadcast all dimensions when empty
   SmallVector<std::uint32_t, LEGATE_MAX_DIM> axes_{};
+};
+
+class MinExtents final : public Constraint {
+ public:
+  MinExtents(const Variable* variable, SmallVector<std::uint64_t, LEGATE_MAX_DIM> minimum_extents);
+
+  [[nodiscard]] Kind kind() const override;
+
+  void find_partition_symbols(SmallVector<const Variable*>& partition_symbols) const override;
+
+  void validate() const override;
+
+  [[nodiscard]] std::string to_string() const override;
+
+  [[nodiscard]] const Variable* variable() const;
+  [[nodiscard]] Span<const std::uint64_t> minimum_extents() const;
+
+ private:
+  const Variable* variable_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> minimum_extents_{};
 };
 
 class ImageConstraint final : public Constraint {
@@ -194,6 +215,9 @@ class BloatConstraint final : public Constraint {
 
 [[nodiscard]] InternalSharedPtr<Broadcast> broadcast(
   const Variable* variable, SmallVector<std::uint32_t, LEGATE_MAX_DIM> axes);
+
+[[nodiscard]] InternalSharedPtr<MinExtents> min_extents(
+  const Variable* variable, SmallVector<std::uint64_t, LEGATE_MAX_DIM> minimum_extents);
 
 [[nodiscard]] InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
                                                        const Variable* var_range,

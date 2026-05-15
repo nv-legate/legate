@@ -11,6 +11,7 @@
 #include <legate/partitioning/detail/proxy/bloat.h>
 #include <legate/partitioning/detail/proxy/broadcast.h>
 #include <legate/partitioning/detail/proxy/image.h>
+#include <legate/partitioning/detail/proxy/min_extents.h>
 #include <legate/partitioning/detail/proxy/scale.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/shared_ptr.h>
@@ -117,6 +118,26 @@ ProxyConstraint broadcast(std::variant<ProxyArrayArgument,
     axes.has_value()
       ? std::make_optional<detail::SmallVector<std::uint32_t, LEGATE_MAX_DIM>>(axes->data())
       : std::nullopt)};
+}
+
+// ------------------------------------------------------------------------------------------
+
+Constraint min_extents(Variable variable, Span<const std::uint64_t> minimum_extents)
+{
+  return Constraint{detail::min_extents(
+    variable.impl(), detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{minimum_extents})};
+}
+
+// ------------------------------------------------------------------------------------------
+
+ProxyConstraint min_extents(std::variant<ProxyArrayArgument,
+                                         ProxyInputArguments,
+                                         ProxyOutputArguments,
+                                         ProxyReductionArguments> variable,
+                            Span<const std::uint64_t> minimum_extents)
+{
+  return ProxyConstraint{legate::make_shared<detail::ProxyMinExtents>(
+    std::move(variable), detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{minimum_extents})};
 }
 
 // ------------------------------------------------------------------------------------------

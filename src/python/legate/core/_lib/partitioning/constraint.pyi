@@ -42,6 +42,14 @@ def broadcast(
     variable: str, *rest: str | tuple[str, Collection[int]]
 ) -> list[DeferredConstraint]: ...
 @overload
+def min_extents(
+    variable: Variable, minimum_extents: Collection[int]
+) -> Constraint: ...
+@overload
+def min_extents(
+    variable: str, minimum_extents: Collection[int]
+) -> DeferredConstraint: ...
+@overload
 def image(
     var_function: Variable,
     var_range: Variable,

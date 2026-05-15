@@ -151,6 +151,12 @@ void ConstraintSolver::solve_constraints()
     }
   };
 
+  // Set minimum extents according to minimum-extent constraints
+  const auto handle_min_extents_constraint = [&table](const MinExtents& min_extents_constraint) {
+    auto* const equiv_class = table.at(*min_extents_constraint.variable());
+    equiv_class->restrictions.apply_minimum_extents(min_extents_constraint.minimum_extents());
+  };
+
   // Here we only mark dependent partition symbols
   const auto handle_image_constraint = [&](const ImageConstraint& image_constraint) {
     is_dependent_[*image_constraint.var_range()] = true;
@@ -174,6 +180,10 @@ void ConstraintSolver::solve_constraints()
       }
       case Constraint::Kind::BROADCAST: {
         handle_broadcast(static_cast<const Broadcast&>(*constraint));
+        break;
+      }
+      case Constraint::Kind::MIN_EXTENTS: {
+        handle_min_extents_constraint(static_cast<const MinExtents&>(*constraint));
         break;
       }
       case Constraint::Kind::IMAGE: {
@@ -247,7 +257,8 @@ void ConstraintSolver::solve_dependent_constraints(Strategy* strategy) const
         break;
       }
       case Constraint::Kind::ALIGNMENT: [[fallthrough]];
-      case Constraint::Kind::BROADCAST: break;
+      case Constraint::Kind::BROADCAST: [[fallthrough]];
+      case Constraint::Kind::MIN_EXTENTS: break;
     }
   }
 }

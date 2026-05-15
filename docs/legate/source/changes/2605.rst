@@ -29,6 +29,9 @@ C++
 
 .. rubric:: Partitioning
 
+- Add ``legate::min_extents()`` that creates minimum-extent partitioning constraints. With the
+  constraints, tasks can inform the partitioner of desirable minimum extents of sub-stores.
+
 .. rubric:: Tasks
 
 - Add an ``is_key_partition`` parameter to ``legate::ManualTask::add_input``,
@@ -61,11 +64,15 @@ Python
 
 .. rubric:: Partitioning
 
+- Add ``legate.core.min_extents()`` that creates minimum-extent partitioning constraints. With the
+  constraints, tasks can inform the partitioner of desirable minimum extents of sub-stores. The
+  constraints can also be used with Python tasks.
+
+.. rubric:: Tasks
+
 - Add an ``is_key_partition`` parameter to ``legate.core.ManualTask.add_input``,
   ``legate.core.ManualTask.add_output``, and ``legate.core.ManualTask.add_reduction``. With the new
   parameter, manual tasks can now specify key partitions.
-
-.. rubric:: Tasks
 
 .. rubric:: Types
 

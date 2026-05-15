@@ -34,6 +34,13 @@ cdef extern from "legate/partitioning/constraint.h" namespace "legate" nogil:
         _Variable, _tuple[uint32_t]
     ) except+
 
+    cdef _Constraint _min_extents "min_extents" (
+        _Variable, _tuple[uint64_t]
+    ) except+
+
+    # Using ... as argument list since Cython does not understand std::variant.
+    cdef _ProxyConstraint _proxy_min_extents "legate::min_extents" (...) except+
+
     # Using ... as argument list since Cython does not understand std::variant.
     cdef _ProxyConstraint _proxy_broadcast "broadcast" (...) except+
 

@@ -199,6 +199,15 @@ def profile_range_task() -> None:
         pass
 
 
+def basic_min_extents_task(
+    store: OutputStore, minimum_extents: tuple[int, ...]
+) -> None:
+    domain = store.domain
+
+    for dim in range(store.ndim):
+        assert (domain.hi[dim] - domain.lo[dim] + 1) >= minimum_extents[dim]
+
+
 def basic_image_task(func_store: InputStore, range_store: InputStore) -> None:
     lib = numpy_or_cupy(func_store.get_inline_allocation())
 

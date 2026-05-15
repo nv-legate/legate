@@ -111,15 +111,15 @@ TEST_F(OpaqueTest, SatisfiesRestrictions)
 {
   auto restrictions1 =
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW}};
-  ASSERT_TRUE(restrictions1.are_satisfied_by(*opaque));
+  ASSERT_TRUE(restrictions1.are_satisfied_by(*opaque, nullptr));
 
   auto restrictions2 =
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::AVOID}};
-  ASSERT_TRUE(restrictions2.are_satisfied_by(*opaque));
+  ASSERT_TRUE(restrictions2.are_satisfied_by(*opaque, nullptr));
 
   auto restrictions3 =
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::FORBID}};
-  ASSERT_FALSE(restrictions3.are_satisfied_by(*opaque));
+  ASSERT_FALSE(restrictions3.are_satisfied_by(*opaque, nullptr));
 }
 
 TEST_F(OpaqueTest, SatisfiesRestrictionsNegative)
@@ -130,12 +130,12 @@ TEST_F(OpaqueTest, SatisfiesRestrictionsNegative)
 
   auto restrictions1 = legate::detail::Restrictions{legate::detail::SmallVector{
     legate::detail::Restriction::ALLOW, legate::detail::Restriction::AVOID}};
-  ASSERT_THAT([&] { static_cast<void>(restrictions1.are_satisfied_by(*opaque)); },
+  ASSERT_THAT([&] { static_cast<void>(restrictions1.are_satisfied_by(*opaque, nullptr)); },
               ::testing::ThrowsMessage<std::invalid_argument>(
                 ::testing::HasSubstr("Arguments to zip_equal() are not all equal")));
 
   auto restrictions2 = legate::detail::Restrictions{};
-  ASSERT_THAT([&] { static_cast<void>(restrictions2.are_satisfied_by(*opaque)); },
+  ASSERT_THAT([&] { static_cast<void>(restrictions2.are_satisfied_by(*opaque, nullptr)); },
               ::testing::ThrowsMessage<std::invalid_argument>(
                 ::testing::HasSubstr("Arguments to zip_equal() are not all equal")));
 }

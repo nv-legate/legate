@@ -767,7 +767,7 @@ std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
   const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
-      restrictions.are_satisfied_by(**key_partition_)) {
+      restrictions.are_satisfied_by(**key_partition_, shape())) {
     return key_partition_;
   }
   if (parent_.has_value()) {

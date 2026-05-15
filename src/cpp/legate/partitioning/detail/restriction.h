@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 #include <initializer_list>
@@ -16,6 +17,7 @@
 namespace legate::detail {
 
 class Partition;
+class Shape;
 
 /**
  * @brief Enum to describe partitioning preference on dimensions of a store
@@ -42,6 +44,8 @@ class Restrictions {
    * @param ndim The number of dimensions.
    */
   explicit Restrictions(std::uint32_t ndim);
+
+  explicit Restrictions(const SmallVector<Restriction>& dimension_restrictions);
   /*
    * @brief Create the exact set of restriction as dimension_restrictions and set if inversion is
    * required.
@@ -50,7 +54,9 @@ class Restrictions {
    * @param require_invertible Indicate if inversion is required, false by default.
    */
   // NOLINTBEGIN(google-explicit-constructor)
-  Restrictions(SmallVector<Restriction> dimension_restrictions, bool require_invertible = false);
+  Restrictions(SmallVector<Restriction> dimension_restrictions,
+               SmallVector<std::uint64_t, LEGATE_MAX_DIM> minimum_extents,
+               bool require_invertible = false);
   // NOLINTEND(google-explicit-constructor)
 
   Restrictions(const Restrictions&)            = default;
@@ -79,12 +85,19 @@ class Restrictions {
    */
   void restrict_dimension(std::uint32_t dim);
 
+  void apply_minimum_extents(Span<const std::uint64_t> new_minimum_extents);
+
   /**
    * @brief Given a partition check if that satisfies this restriction.
    *
    * @param partition The partition to check.
+   * @param shape The shape to partition
    */
-  [[nodiscard]] bool are_satisfied_by(const Partition& partition) const;
+  [[nodiscard]] bool are_satisfied_by(const Partition& partition,
+                                      const InternalSharedPtr<Shape>& shape) const;
+
+  [[nodiscard]] bool minimum_extents_satisfied_by(Span<const std::uint64_t> shape,
+                                                  Span<const std::uint64_t> color_shape) const;
 
   /**
    * @brief Join another restrction object. This can be seen as an OR operation.
@@ -107,10 +120,14 @@ class Restrictions {
    * The function f has the following signature
    * SmallVector<Restriction> f (SmallVector<Restriction>)
    *
-   * @param f The mapping function.
+   * The function g has the following signature
+   * SmallVector<std::uint64_t, LEGATE_MAX_DIM> f (SmallVector<std::uint64_t, LEGATE_MAX_DIM>)
+   *
+   * @param f The mapping function for dimension restrictions.
+   * @param g The mapping function for minimum extents.
    */
-  template <typename FUNC>
-  [[nodiscard]] Restrictions map(FUNC&& f) &&;
+  template <typename RES_FUNC, typename EXT_FUNC>
+  [[nodiscard]] Restrictions map(RES_FUNC&& f, EXT_FUNC&& g) &&;
 
   /**
    * @brief Prune the dimensions that are of extent 1 or are not allowed
@@ -131,8 +148,15 @@ class Restrictions {
   [[nodiscard]] SmallVector<Restriction>& dimension_restrictions_();
   [[nodiscard]] const SmallVector<Restriction>& dimension_restrictions_() const;
 
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM>& minimum_extents_();
+  [[nodiscard]] const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& minimum_extents_() const;
+
+  void cache_needs_minimum_extent_check_();
+
+  bool needs_minimum_extent_check_{};
   bool req_invertible_{};
   SmallVector<Restriction> dim_restrictions_{};
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> min_extents_{};
 };
 
 }  // namespace legate::detail

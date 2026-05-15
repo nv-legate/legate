@@ -297,6 +297,38 @@ class LEGATE_EXPORT Constraint {
   const std::optional<tuple<std::uint32_t>>& axes = std::nullopt) noexcept;
 
 /**
+ * @brief Creates a minimum-extent constraint on a variable.
+ *
+ * A minimum-extent constraint informs the runtime that the dimensions should not be split among
+ * ranges smaller than given minimum extents.
+ *
+ * @param variable The partition symbol to constrain
+ * @param minimum_extents A list of minimum extents. The size must match with the number of
+ * dimensions of the store
+ *
+ * @return Minimum-extent constraint
+ */
+[[nodiscard]] LEGATE_EXPORT Constraint min_extents(Variable variable,
+                                                   Span<const std::uint64_t> minimum_extents);
+
+/**
+ * @brief Creates a minimum-extent constraint descriptor
+ *
+ * @param variable The proxy value to apply the minimum-extent constraint to.
+ * @param minimum_extents A list of minimum extents. The size must match with the number of
+ * dimensions of the store
+ *
+ * @return The minimum-extent constraint descriptor
+ *
+ * @see min_extents(Variable, Span<const std::uint64_t>)
+ */
+[[nodiscard]] LEGATE_EXPORT ProxyConstraint min_extents(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      variable,
+  Span<const std::uint64_t> minimum_extents);
+
+/**
  * @brief Hints to the runtime for the image computation
  */
 enum class ImageComputationHint : std::uint8_t {

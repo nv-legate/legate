@@ -366,6 +366,60 @@ def broadcast(
     return ret
 
 
+cdef _ProxyConstraint _handle_min_contexts(
+    tuple[str, tuple[int, ...]] args,
+    tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
+):
+    if len(args) != 2:
+        m = f"min_extents got unexpected arguments '{args}'"  # pragma: no cover
+        raise ValueError(m)  # pragma: no cover
+
+    cdef _ProxyArrayArgument var_ret
+    cdef _tuple[uint64_t] cpp_minimum_extents
+
+    var_ret = _deduce_arg(args[0], task_args)
+    cpp_minimum_extents = tuple_from_iterable[uint64_t](args[1])
+    return _proxy_min_extents(var_ret, std_move(cpp_minimum_extents))
+
+
+def min_extents(
+    VariableOrStr variable,
+    minimum_extents: Collection[int],
+) -> Constraint | DeferredConstraint:
+    r"""
+    Create a minimum-extent constraint on a variable.
+
+    A minimum-extent constraint informs the runtime that the dimensions should
+    not be split among ranges smaller than given minimum extents.
+
+    Parameters
+    ----------
+    variable : Variable
+        The variable to constrain.
+    minimum_extents : Collection[int]
+        A list of minimum extents. The length must match with the number of
+        dimensions of the store.
+
+    Returns
+    -------
+    Constraint
+        The minimum-extent constraint
+    """
+    cdef _Constraint handle
+    cdef _tuple[uint64_t] cpp_minimum_extents
+
+    if VariableOrStr is str:
+        return DeferredConstraint.construct(
+            func=_handle_min_contexts, args=(variable, minimum_extents)
+        )
+
+    cpp_minimum_extents = tuple_from_iterable[uint64_t](minimum_extents)
+    with nogil:
+        handle = _min_extents(variable._handle, std_move(cpp_minimum_extents))
+
+    return Constraint.from_handle(std_move(handle))
+
+
 cdef _ProxyConstraint _handle_image(
     tuple[str, str, ImageComputationHint] args,
     tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args

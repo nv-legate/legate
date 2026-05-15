@@ -166,7 +166,8 @@ TEST_P(DelinearizeInvertRestrictions, Basic)
   // Create the Delinearize transform
   auto transform = legate::make_internal_shared<legate::detail::Delinearize>(dim, std::move(sizes));
 
-  ASSERT_THAT(transform->invert(input_restrictions), expected_restrictions);
+  ASSERT_THAT(transform->invert(legate::detail::Restrictions{input_restrictions}),
+              legate::detail::Restrictions{expected_restrictions});
 }
 
 TEST_F(TransformDelinearizeUnit, DelinearizeInvertColor)

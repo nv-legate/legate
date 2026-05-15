@@ -107,15 +107,15 @@ TEST_F(TilingTest, SatisfiesRestrictions)
 {
   auto restrictions1 = legate::detail::Restrictions{legate::detail::SmallVector{
     legate::detail::Restriction::ALLOW, legate::detail::Restriction::AVOID}};
-  ASSERT_TRUE(restrictions1.are_satisfied_by(*tiling));
+  ASSERT_TRUE(restrictions1.are_satisfied_by(*tiling, nullptr));
 
   auto restrictions2 = legate::detail::Restrictions{legate::detail::SmallVector{
     legate::detail::Restriction::AVOID, legate::detail::Restriction::FORBID}};
-  ASSERT_FALSE(restrictions2.are_satisfied_by(*tiling));
+  ASSERT_FALSE(restrictions2.are_satisfied_by(*tiling, nullptr));
 
   auto restrictions3 = legate::detail::Restrictions{legate::detail::SmallVector{
     legate::detail::Restriction::FORBID, legate::detail::Restriction::FORBID}};
-  ASSERT_FALSE(restrictions3.are_satisfied_by(*tiling));
+  ASSERT_FALSE(restrictions3.are_satisfied_by(*tiling, nullptr));
 }
 
 TEST_F(TilingTest, SatisfiesRestrictionsNegative)
@@ -128,11 +128,13 @@ TEST_F(TilingTest, SatisfiesRestrictionsNegative)
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW,
                                                              legate::detail::Restriction::AVOID,
                                                              legate::detail::Restriction::FORBID}};
-  ASSERT_THROW(static_cast<void>(restrictions1.are_satisfied_by(*tiling)), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(restrictions1.are_satisfied_by(*tiling, nullptr)),
+               std::invalid_argument);
 
   auto restrictions2 =
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW}};
-  ASSERT_THROW(static_cast<void>(restrictions2.are_satisfied_by(*tiling)), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(restrictions2.are_satisfied_by(*tiling, nullptr)),
+               std::invalid_argument);
 }
 
 TEST_F(TilingTest, IsDisjointFor)

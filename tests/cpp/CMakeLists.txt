@@ -178,6 +178,7 @@ set(
   integration/manual_task.cc
   integration/manual_task_proj.cc
   integration/mapping.cc
+  integration/min_extent_constraints.cc
   integration/mixed_dim.cc
   integration/multi_scalar_out.cc
   integration/parallel_policy.cc

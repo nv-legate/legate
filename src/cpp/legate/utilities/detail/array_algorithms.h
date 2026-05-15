@@ -79,6 +79,20 @@ template <typename F, typename T, typename... Tn>
 [[nodiscard]] bool array_all_of(F&& func, const T& arr, const Tn&... rest);
 
 /**
+ * @brief Determine whether a predicate `func` is true for any combination of elements in the
+ * arrays.
+ *
+ * @param func The predicate function.
+ * @param arr The first array.
+ * @param rest The remaining arrays.
+ *
+ * @return `true` if `func` is true for any `func(arr[i], rest[i]...)` entry, `false`
+ * otherwise.
+ */
+template <typename F, typename T, typename... Tn>
+[[nodiscard]] bool array_any_of(F&& func, const T& arr, const Tn&... rest);
+
+/**
  * @brief Assert that a position is within th bounds of an array.
  *
  * @param container_size The size of the array.

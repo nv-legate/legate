@@ -41,6 +41,7 @@ from legate.core import (
     from_dlpack,
     get_legate_runtime,
     image,
+    min_extents,
     scale,
     types as ty,
 )
@@ -567,6 +568,30 @@ class TestPyTask:
         _, source_store = utils.random_array_and_store(shape)
         _, bloat_store = utils.random_array_and_store(shape)
         bloat_task(source_store, bloat_store, low_offsets, high_offsets, shape)
+
+    @pytest.mark.parametrize(
+        "minimum_extents",
+        [
+            (3, 0, 0),
+            (0, 3, 0),
+            (0, 0, 3),
+            (3, 3, 0),
+            (3, 0, 3),
+            (0, 3, 3),
+            (3, 3, 3),
+        ],
+        ids=str,
+    )
+    def test_min_extents_constraints(
+        self, minimum_extents: tuple[int, ...]
+    ) -> None:
+        min_extents_task = task(
+            variants=tuple(VariantCode),
+            constraints=(min_extents("store", minimum_extents),),
+            options=VariantOptions(may_throw_exception=True),
+        )(tasks.basic_min_extents_task)
+        _, store = utils.random_array_and_store((3, 3, 3))
+        min_extents_task(store, minimum_extents)
 
     @pytest.mark.skipif(
         # TODO(yimoj) [PR-3069]

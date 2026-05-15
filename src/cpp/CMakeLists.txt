@@ -397,6 +397,7 @@ target_sources(
     legate/partitioning/detail/proxy/align.cc
     legate/partitioning/detail/proxy/broadcast.cc
     legate/partitioning/detail/proxy/image.cc
+    legate/partitioning/detail/proxy/min_extents.cc
     legate/partitioning/detail/proxy/scale.cc
     legate/partitioning/detail/proxy/bloat.cc
     legate/partitioning/detail/proxy/validate.cc

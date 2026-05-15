@@ -59,6 +59,20 @@ inline Span<const std::uint32_t> Broadcast::axes() const { return axes_; }
 
 // ==========================================================================================
 
+inline MinExtents::MinExtents(const Variable* variable,
+                              SmallVector<std::uint64_t, LEGATE_MAX_DIM> minimum_extents)
+  : variable_{variable}, minimum_extents_{std::move(minimum_extents)}
+{
+}
+
+inline MinExtents::Kind MinExtents::kind() const { return Kind::MIN_EXTENTS; }
+
+inline const Variable* MinExtents::variable() const { return variable_; }
+
+inline Span<const std::uint64_t> MinExtents::minimum_extents() const { return minimum_extents_; }
+
+// ==========================================================================================
+
 inline ImageConstraint::ImageConstraint(const Variable* var_function,
                                         const Variable* var_range,
                                         ImageComputationHint hint)

@@ -102,21 +102,39 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(std::int32_t in_dim
 
 Restrictions Delinearize::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
-  return std::move(restrictions).map([&](auto&& dim_res) {
-    SmallVector<Restriction> result{};
+  return std::move(restrictions)
+    .map(
+      [&](auto&& dim_res) {
+        SmallVector<Restriction> result{};
 
-    result.reserve(dim_res.size() + (sizes_.size() - 1));
-    for (auto dim = 0; dim <= dim_; ++dim) {
-      result.push_back(dim_res[dim]);
-    }
-    for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-      result.push_back(Restriction::FORBID);
-    }
-    for (std::uint32_t dim = dim_ + 1; dim < dim_res.size(); ++dim) {
-      result.push_back(dim_res[dim]);
-    }
-    return result;
-  });
+        result.reserve(dim_res.size() + (sizes_.size() - 1));
+        for (auto dim = 0; dim <= dim_; ++dim) {
+          result.push_back(dim_res[dim]);
+        }
+        for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+          result.push_back(Restriction::FORBID);
+        }
+        for (std::uint32_t dim = dim_ + 1; dim < dim_res.size(); ++dim) {
+          result.push_back(dim_res[dim]);
+        }
+        return result;
+      },
+      [&](auto&& min_exts) {
+        SmallVector<std::uint64_t, LEGATE_MAX_DIM> result{};
+
+        result.reserve(min_exts.size() + (sizes_.size() - 1));
+        for (auto dim = 0; dim < dim_; ++dim) {
+          result.push_back(min_exts[dim]);
+        }
+        result.push_back((min_exts[dim_] + strides_.front() - 1) / strides_.front());
+        for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+          result.push_back(sizes_[idx]);
+        }
+        for (std::uint32_t dim = dim_ + 1; dim < min_exts.size(); ++dim) {
+          result.push_back(min_exts[dim]);
+        }
+        return result;
+      });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::convert_color(
@@ -159,19 +177,35 @@ proj::SymbolicPoint Delinearize::invert(proj::SymbolicPoint point) const
 
 Restrictions Delinearize::invert(Restrictions restrictions) const
 {
-  return std::move(restrictions).map([&](auto&& dim_res) {
-    SmallVector<Restriction> result{};
+  return std::move(restrictions)
+    .map(
+      [&](auto&& dim_res) {
+        SmallVector<Restriction> result{};
 
-    result.reserve(dim_res.size() - (sizes_.size() - 1));
-    for (auto dim = 0; dim <= dim_; ++dim) {
-      result.push_back(dim_res[dim]);
-    }
+        result.reserve(dim_res.size() - (sizes_.size() - 1));
+        for (auto dim = 0; dim <= dim_; ++dim) {
+          result.push_back(dim_res[dim]);
+        }
 
-    for (auto dim = dim_ + sizes_.size(); dim < dim_res.size(); ++dim) {
-      result.push_back(dim_res[dim]);
-    }
-    return result;
-  });
+        for (auto dim = dim_ + sizes_.size(); dim < dim_res.size(); ++dim) {
+          result.push_back(dim_res[dim]);
+        }
+        return result;
+      },
+      [&](auto&& min_exts) {
+        SmallVector<std::uint64_t, LEGATE_MAX_DIM> result{};
+
+        result.reserve(min_exts.size() - (sizes_.size() - 1));
+        for (auto dim = 0; dim < dim_; ++dim) {
+          result.push_back(min_exts[dim]);
+        }
+        result.push_back(min_exts[dim_] * strides_.front());
+
+        for (auto dim = dim_ + sizes_.size(); dim < min_exts.size(); ++dim) {
+          result.push_back(min_exts[dim]);
+        }
+        return result;
+      });
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Delinearize::invert_color(

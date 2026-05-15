@@ -544,7 +544,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
   const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
-      restrictions.are_satisfied_by(**key_partition_)) {
+      restrictions.are_satisfied_by(**key_partition_, shape())) {
     return *key_partition_;
   }
 
@@ -582,7 +582,7 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
   const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((new_num_pieces == num_pieces_) && key_partition_.has_value() &&
-      restrictions.are_satisfied_by(**key_partition_)) {
+      restrictions.are_satisfied_by(**key_partition_, shape())) {
     return true;
   }
   return transform_->is_convertible() &&

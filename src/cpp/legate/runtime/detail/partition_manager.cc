@@ -231,6 +231,18 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   for (std::uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
   }
+
+  // TODO(wonchanl): The handling of minimum extent constraints here is rather simple as it goes
+  // through the same partitioning heuristic and later gives up if the shape isn't big enough to
+  // satisfy the constraints. This is to be in line with the current size-based heuristic. Plus, the
+  // current use case for minimum-extent constraints is handling corner cases correctly and not
+  // kernel efficiency. We may revisit this later if a true reduced degree of parallelism (i.e.,
+  // using fewer GPUs than what's available in the scope) turns out desirable for performance
+  // reasons.
+  if (!restrictions.minimum_extents_satisfied_by(shape, result)) {
+    return {};
+  }
+
   return result;
 }
 

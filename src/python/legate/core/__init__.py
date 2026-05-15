@@ -36,6 +36,7 @@ from ._lib.partitioning.constraint import (
     bloat,
     broadcast,
     image,
+    min_extents,
     scale,
 )
 from ._lib.runtime.exception_mode import ExceptionMode
@@ -195,6 +196,7 @@ __all__ = (
     "int32",
     "int64",
     "is_running_in_task",
+    "min_extents",
     "null_type",
     "scale",
     "string_type",
