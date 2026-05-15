@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>partitioning &#8212; NVIDIA legate (26.05.00.dev74+g95f8bf995)</title>
+    <title>partitioning &#8212; NVIDIA legate (26.05.00.dev76+g83ec1d316)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=80673c7a"></script>
+    <script src="../../../../_static/documentation_options.js?v=d247b028"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -143,11 +143,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev74+g95f8bf995) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev74+g95f8bf995) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev76+g83ec1d316) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev76+g83ec1d316) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev74+g95f8bf995)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev76+g83ec1d316)</p>
   
 </a></div>
     
@@ -254,11 +254,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev74+g95f8bf995) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev74+g95f8bf995) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev76+g83ec1d316) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev76+g83ec1d316) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev74+g95f8bf995)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev76+g83ec1d316)</p>
   
 </a>
 
@@ -1013,6 +1013,60 @@ SPDX-License-Identifier: Apache-2.0
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The broadcast descriptor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411min_extents8Variable4SpanIKNSt8uint64_tEE">
+<span id="_CPPv311min_extents8Variable4SpanIKNSt8uint64_tEE"></span><span id="_CPPv211min_extents8Variable4SpanIKNSt8uint64_tEE"></span><span id="min_extents__Variable.Span:std::uint64_tC:"></span><span class="target" id="group__partitioning_1gaabb02ddd84541cf9668e27f7c67da7ee"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">min_extents</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">variable</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="group__data.html#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">minimum_extents</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411min_extents8Variable4SpanIKNSt8uint64_tEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a minimum-extent constraint on a variable. </p>
+<p>A minimum-extent constraint informs the runtime that the dimensions should not be split among ranges smaller than given minimum extents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> – The partition symbol to constrain </p></li>
+<li><p><strong>minimum_extents</strong> – A list of minimum extents. The size must match with the number of dimensions of the store</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Minimum-extent constraint </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv411min_extentsNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE4SpanIKNSt8uint64_tEE">
+<span id="_CPPv311min_extentsNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE4SpanIKNSt8uint64_tEE"></span><span id="_CPPv211min_extentsNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE4SpanIKNSt8uint64_tEE"></span><span id="min_extents__std::variant:ProxyArrayArgument.ProxyInputArguments.ProxyOutputArguments.ProxyReductionArguments:.Span:std::uint64_tC:"></span><span class="target" id="group__partitioning_1ga5e0cacfd1285b45fd50c0007892c07bb"></span><span class="n"><span class="pre">ProxyConstraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">min_extents</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">variant</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">ProxyArrayArgument</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ProxyInputArguments</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ProxyOutputArguments</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ProxyReductionArguments</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">variable</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="group__data.html#_CPPv4I0_NSt6size_tEE4Span" title="Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">minimum_extents</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411min_extentsNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE4SpanIKNSt8uint64_tEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a minimum-extent constraint descriptor. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__partitioning_1gaabb02ddd84541cf9668e27f7c67da7ee"><span class="std std-ref">min_extents(Variable, Span&lt;const std::uint64_t&gt;)</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> – The proxy value to apply the minimum-extent constraint to. </p></li>
+<li><p><strong>minimum_extents</strong> – A list of minimum extents. The size must match with the number of dimensions of the store</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The minimum-extent constraint descriptor</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1805,6 +1859,18 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail9broadcastEPK8Variable11SmallVectorINSt8uint32_tE14LEGATE_MAX_DIME" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail11min_extentsEPK8Variable11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME">
+<span id="_CPPv3N6legate6detail11min_extentsEPK8Variable11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME"></span><span id="_CPPv2N6legate6detail11min_extentsEPK8Variable11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME"></span><span id="legate::detail::min_extents__VariableCP.SmallVector:std::uint64_t.LEGATE_MAX_DIM:"></span><span class="target" id="detail_2constraint_8cc_1a5e9bada7cbf4d2cc27700b74d6c02787"></span><a class="reference internal" href="../class/classlegate_1_1InternalSharedPtr.html#_CPPv4I0EN6legate17InternalSharedPtrE" title="legate::InternalSharedPtr"><span class="n"><span class="pre">InternalSharedPtr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">MinExtents</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">min_extents</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1Variable.html#_CPPv4N6legate8VariableE" title="legate::Variable"><span class="n"><span class="pre">Variable</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">variable</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0EN6legate6detail11SmallVectorE11SmallVectorI1TEN4tags10size_tag_tENSt6size_tERK1T" title="legate::detail::SmallVector"><span class="n"><span class="pre">SmallVector</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">LEGATE_MAX_DIM</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">minimum_extents</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail11min_extentsEPK8Variable11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME" title="Link to this definition">#</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp function">
@@ -3051,6 +3117,32 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">func</span></code> is true for all <code class="docutils literal notranslate"><span class="pre">func(arr[i],</span> <span class="pre">rest[i]...)</span></code> entries, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00DpEN6legate6detail12array_any_ofEbRR1FRK1TDpRK2Tn">
+<span id="_CPPv3I00DpEN6legate6detail12array_any_ofERR1FRK1TDpRK2Tn"></span><span id="_CPPv2I00DpEN6legate6detail12array_any_ofERR1FRK1TDpRK2Tn"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Tn</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="array__algorithms_8h_1a76fa1e819e487c0b7875230d9dab62c2"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">array_any_of</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00DpEN6legate6detail12array_any_ofEbRR1FRK1TDpRK2Tn" title="legate::detail::array_any_of::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">func</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00DpEN6legate6detail12array_any_ofEbRR1FRK1TDpRK2Tn" title="legate::detail::array_any_of::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">arr</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00DpEN6legate6detail12array_any_ofEbRR1FRK1TDpRK2Tn" title="legate::detail::array_any_of::Tn"><span class="n"><span class="pre">Tn</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rest</span></span></em></dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00DpEN6legate6detail12array_any_ofEbRR1FRK1TDpRK2Tn" title="Link to this definition">#</a><br /></dt>
+<dd><p>Determine whether a predicate <code class="docutils literal notranslate"><span class="pre">func</span></code> is true for any combination of elements in the arrays. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – The predicate function. </p></li>
+<li><p><strong>arr</strong> – The first array. </p></li>
+<li><p><strong>rest</strong> – The remaining arrays.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if <code class="docutils literal notranslate"><span class="pre">func</span></code> is true for any <code class="docutils literal notranslate"><span class="pre">func(arr[i],</span> <span class="pre">rest[i]...)</span></code> entry, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -4374,6 +4466,8 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast8Variable4SpanIKNSt8uint32_tEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast4SpanIKNSt4pairI8Variable4SpanIKNSt8uint32_tEEEEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcastNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEERKNSt8optionalI5tupleINSt8uint32_tEEEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv411min_extents8Variable4SpanIKNSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">min_extents()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv411min_extentsNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEE4SpanIKNSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">min_extents()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45image8Variable8Variable20ImageComputationHint"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45imageNSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt7variantI18ProxyArrayArgument19ProxyInputArguments20ProxyOutputArguments23ProxyReductionArgumentsEENSt8optionalI20ImageComputationHintEE"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45scale4SpanIKNSt8uint64_tEE8Variable8Variable"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
@@ -4481,6 +4575,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail5alignEPK8VariablePK8Variable"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail9broadcastEPK8Variable"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail9broadcastEPK8Variable11SmallVectorINSt8uint32_tE14LEGATE_MAX_DIME"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11min_extentsEPK8Variable11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME"><code class="docutils literal notranslate"><span class="pre">min_extents()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail5imageEPK8VariablePK8Variable20ImageComputationHint"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail5scaleE11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIMEPK8VariablePK8Variable"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail5bloatEPK8VariablePK8Variable11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME11SmallVectorINSt8uint64_tE14LEGATE_MAX_DIME"><code class="docutils literal notranslate"><span class="pre">bloat()</span></code></a></li>
@@ -4596,6 +4691,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6detail9array_mapE1TRK1T4SpanIKNSt7int32_tEE"><code class="docutils literal notranslate"><span class="pre">array_map()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00EN6legate6detail9array_mapE1U4SpanIK1TE4SpanIKNSt7int32_tEE"><code class="docutils literal notranslate"><span class="pre">array_map()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00DpEN6legate6detail12array_all_ofEbRR1FRK1TDpRK2Tn"><code class="docutils literal notranslate"><span class="pre">array_all_of()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00DpEN6legate6detail12array_any_ofEbRR1FRK1TDpRK2Tn"><code class="docutils literal notranslate"><span class="pre">array_any_of()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail15to_store_targetE12DLDeviceType"><code class="docutils literal notranslate"><span class="pre">to_store_target()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail14to_dlpack_typeEN6legate4Type4CodeE"><code class="docutils literal notranslate"><span class="pre">to_dlpack_type()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail14dl_tensor_sizeERK8DLTensor"><code class="docutils literal notranslate"><span class="pre">dl_tensor_size()</span></code></a></li>
