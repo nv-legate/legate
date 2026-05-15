@@ -89,6 +89,7 @@ void Reduce::launch(Strategy* p_strategy)
                            parallel_policy(),
                            provenance_,
                            task_id_,
+                           Legion::ProjectionID{0},
                            static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)};
 
     launcher.set_priority(priority());
@@ -155,6 +156,7 @@ void Reduce::launch_single_()
                          parallel_policy(),
                          provenance_,
                          task_id_,
+                         Legion::ProjectionID{0},
                          static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)};
 
   launcher.set_priority(priority());

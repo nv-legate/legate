@@ -255,52 +255,14 @@ BufferBuilder TaskLauncher::pack_task_arg_(bool parallel, StoreAnalyzer* analyze
   return task_arg;
 }
 
-Legion::ProjectionID TaskLauncher::get_key_proj_id()
-{
-  if (key_proj_id_.has_value()) {
-    return *key_proj_id_;
-  }
-
-  // Scan the launcher's arguments in the same order the mapper picks the
-  // KEY_STORE: inputs, then outputs, then reductions. The mapper's
-  // `slice_task` uses the first region requirement with the KEY_STORE tag,
-  // and `is_key` propagates to that tag in launcher_arg.cc.
-  auto&& find_in = [&](Span<const Analyzable> args) {
-    for (auto&& arg : args) {
-      std::visit(
-        [&](auto&& a) {
-          if (!key_proj_id_.has_value()) {
-            key_proj_id_ = a.get_key_proj_id();
-          }
-        },
-        arg);
-      if (key_proj_id_.has_value()) {
-        break;
-      }
-    }
-  };
-
-  find_in(inputs_);
-  if (!key_proj_id_.has_value()) {
-    find_in(outputs_);
-  }
-  if (!key_proj_id_.has_value()) {
-    find_in(reductions_);
-  }
-  if (!key_proj_id_.has_value()) {
-    key_proj_id_ = 0;
-  }
-
-  return *key_proj_id_;
-}
-
 void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
 {
   buffer.pack(streaming_generation());
   machine_.pack(buffer);
-
-  const auto key_proj_id = get_key_proj_id();
-  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, key_proj_id));
+  static_assert(sizeof(std::uint32_t) >= sizeof(Legion::ProjectionID));
+  buffer.pack<std::uint32_t>(key_projection_id_);
+  static_assert(sizeof(std::uint32_t) >= sizeof(Legion::ShardingID));
+  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, key_projection_id_));
   buffer.pack(priority_);
 }
 

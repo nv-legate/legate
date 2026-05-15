@@ -775,8 +775,7 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
                             : Legion::LogicalPartition::NO_PART;
   auto store_proj = StoreProjection{legion_partition, strategy.find_store_projection(*variable)};
 
-  store_proj.is_key = strategy.is_key_partition(*variable);
-  store_proj.redop  = redop;
+  store_proj.redop = redop;
 
   // We ignore LEGIION_DISCARD_OUTPUT_MASK below because it is "fake". This privilege is
   // artificially added during streaming sections to allow early discards of the
@@ -823,7 +822,7 @@ RegionFieldArg LogicalStore::to_launcher_arg_for_fixup_(const InternalSharedPtr<
                       *self->key_partition_  // NOLINT(bugprone-unchecked-optional-access)
     );
   auto store_proj =
-    StoreProjection{store_partition->storage_partition()->get_legion_partition(), 0};
+    StoreProjection{store_partition->storage_partition()->get_legion_partition(), /*proj_id=*/0};
   return RegionFieldArg{this, privilege, std::move(store_proj)};
 }
 

@@ -119,7 +119,6 @@ class AnalyzableBase {
   virtual void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const = 0;
   virtual void analyze(StoreAnalyzer& analyzer) const                           = 0;
 
-  [[nodiscard]] virtual std::optional<Legion::ProjectionID> get_key_proj_id() const;
   virtual void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const;
   virtual void perform_invalidations() const;
 };
@@ -132,7 +131,6 @@ class RegionFieldArg final : public AnalyzableBase {
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
-  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void perform_invalidations() const override;
 
  private:
@@ -221,7 +219,6 @@ class BaseArrayArg final : public AnalyzableBase {
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
-  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
@@ -238,7 +235,6 @@ class ListArrayArg final : public AnalyzableBase {
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
-  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
@@ -268,7 +264,6 @@ class StructArrayArg final : public AnalyzableBase {
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
-  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 

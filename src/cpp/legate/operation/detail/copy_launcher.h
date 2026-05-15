@@ -56,7 +56,8 @@ class CopyLauncher {
  public:
   CopyLauncher(const mapping::detail::Machine& machine,
                std::int32_t priority,
-               std::int64_t tag = 0);
+               std::int64_t tag                 = 0,
+               Legion::ProjectionID key_proj_id = 0);
 
   void add_input(const InternalSharedPtr<LogicalStore>& store, StoreProjection store_proj);
   void add_output(const InternalSharedPtr<LogicalStore>& store, StoreProjection store_proj);
@@ -80,7 +81,6 @@ class CopyLauncher {
   void execute_single();
 
   void pack_args(BufferBuilder& buffer);
-  void pack_sharding_functor_id(BufferBuilder& buffer);
 
  private:
   template <typename Launcher>

@@ -32,9 +32,12 @@ Mappable::Mappable(private_tag, MapperDataDeserializer dez)
   // need to do any offset fiddling.
   : streaming_gen_{dez.unpack<std::optional<legate::detail::StreamingGeneration>>()},
     machine_{dez.unpack<Machine>()},
+    key_projection_id_{dez.unpack<std::uint32_t>()},
     sharding_id_{dez.unpack<std::uint32_t>()},
     priority_{dez.unpack<std::int32_t>()}
 {
+  static_assert(sizeof(std::uint32_t) >= sizeof(Legion::ProjectionID));
+  static_assert(sizeof(std::uint32_t) >= sizeof(Legion::ShardingID));
 }
 
 /* static */ std::optional<legate::detail::StreamingGeneration>
@@ -96,10 +99,11 @@ Copy::Copy(const Legion::Copy& copy,
   // serdez buffer. So when Mappable() unpacks its stuff CopyDeserializer doesn't know that the
   // buffer should be advanced. And we cannot advance the pointer ourselves because the
   // incoming Legion::Copy is const.
-  streaming_gen_ = dez.unpack<std::optional<legate::detail::StreamingGeneration>>();
-  machine_       = dez.unpack<Machine>();
-  sharding_id_   = dez.unpack<std::uint32_t>();
-  priority_      = dez.unpack<std::int32_t>();
+  streaming_gen_     = dez.unpack<std::optional<legate::detail::StreamingGeneration>>();
+  machine_           = dez.unpack<Machine>();
+  key_projection_id_ = dez.unpack<std::uint32_t>();
+  sharding_id_       = dez.unpack<std::uint32_t>();
+  priority_          = dez.unpack<std::int32_t>();
 
   // Copy
   inputs_ = dez.unpack<legate::detail::SmallVector<Store>>();

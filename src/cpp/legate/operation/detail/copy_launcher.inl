@@ -19,8 +19,9 @@ Legion::RegionRequirement CopyArg::create_requirement()
 // ==========================================================================================
 inline CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine,
                                   std::int32_t priority,
-                                  std::int64_t tag)
-  : machine_{machine}, priority_{priority}, tag_{tag}
+                                  std::int64_t tag,
+                                  Legion::ProjectionID key_proj_id)
+  : machine_{machine}, priority_{priority}, tag_{tag}, key_proj_id_{key_proj_id}
 {
 }
 

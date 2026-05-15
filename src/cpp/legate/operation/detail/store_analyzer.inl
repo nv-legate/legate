@@ -12,12 +12,7 @@ namespace legate::detail {
 
 inline Legion::PrivilegeMode ProjectionSet::privilege() const { return privilege_; }
 
-inline const std::set<BaseStoreProjection>& ProjectionSet::store_projs() const
-{
-  return store_projs_;
-}
-
-inline bool ProjectionSet::is_key() const { return is_key_; }
+inline const std::set<StoreProjection>& ProjectionSet::store_projs() const { return store_projs_; }
 
 inline bool ProjectionSet::had_streaming_discard() const { return had_streaming_discard_; }
 

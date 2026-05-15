@@ -15,13 +15,15 @@ inline TaskLauncher::TaskLauncher(const Library& library,
                                   const ParallelPolicy& parallel_policy,
                                   ZStringView provenance,
                                   LocalTaskID task_id,
+                                  Legion::ProjectionID key_projection_id,
                                   Legion::MappingTagID tag)
   : library_{library},
     task_id_{task_id},
     tag_{tag},
     machine_{machine},
     parallel_policy_{parallel_policy},
-    provenance_{std::move(provenance)}
+    provenance_{std::move(provenance)},
+    key_projection_id_{key_projection_id}
 {
 }
 
@@ -29,8 +31,9 @@ inline TaskLauncher::TaskLauncher(const Library& library,
                                   const mapping::detail::Machine& machine,
                                   const ParallelPolicy& parallel_policy,
                                   LocalTaskID task_id,
+                                  Legion::ProjectionID key_projection_id,
                                   Legion::MappingTagID tag)
-  : TaskLauncher{library, machine, parallel_policy, {}, task_id, tag}
+  : TaskLauncher{library, machine, parallel_policy, {}, task_id, key_projection_id, tag}
 {
 }
 
@@ -47,6 +50,11 @@ inline void TaskLauncher::set_insert_barrier(bool insert_barrier)
 }
 
 inline void TaskLauncher::set_future_size(std::size_t future_size) { future_size_ = future_size; }
+
+inline Legion::ProjectionID TaskLauncher::get_key_projection_id() const
+{
+  return key_projection_id_;
+}
 
 inline void TaskLauncher::throws_exception(bool can_throw_exception)
 {

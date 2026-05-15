@@ -37,11 +37,6 @@ void RegionFieldArg::analyze(StoreAnalyzer& analyzer) const
   analyzer.insert(store_->get_region_field(), privilege_, store_proj_);
 }
 
-std::optional<Legion::ProjectionID> RegionFieldArg::get_key_proj_id() const
-{
-  return store_proj_.is_key ? std::make_optional(store_proj_.proj_id) : std::nullopt;
-}
-
 void RegionFieldArg::perform_invalidations() const
 {
   store_->get_region_field()->perform_invalidation_callbacks();
@@ -148,11 +143,6 @@ void BaseArrayArg::analyze(StoreAnalyzer& analyzer) const
   }
 }
 
-std::optional<Legion::ProjectionID> BaseArrayArg::get_key_proj_id() const
-{
-  return std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, data_);
-}
-
 void BaseArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
 {
   std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, data_);
@@ -187,11 +177,6 @@ void ListArrayArg::analyze(StoreAnalyzer& analyzer) const
 {
   std::visit([&](auto& arg) { arg.analyze(analyzer); }, pimpl_->descriptor);
   std::visit([&](auto& arg) { arg.analyze(analyzer); }, pimpl_->vardata);
-}
-
-std::optional<Legion::ProjectionID> ListArrayArg::get_key_proj_id() const
-{
-  return std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, pimpl_->vardata);
 }
 
 void ListArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
@@ -230,17 +215,6 @@ void StructArrayArg::analyze(StoreAnalyzer& analyzer) const
   for (auto&& field : fields_) {
     std::visit([&](auto& arg) { arg.analyze(analyzer); }, field);
   }
-}
-
-std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
-{
-  for (auto&& field : fields_) {
-    auto proj_id = std::visit([&](const auto& arg) { return arg.get_key_proj_id(); }, field);
-    if (proj_id.has_value()) {
-      return proj_id;
-    }
-  }
-  return std::nullopt;
 }
 
 void StructArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const

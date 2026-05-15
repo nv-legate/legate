@@ -47,8 +47,12 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
   // Use the default parallel policy here for two reasons: first, tasks using communicators are not
   // admissible to streaming; second, the over-decomposition factor is already factored in the
   // number of tasks.
-  detail::TaskLauncher init_cpucoll_mapping_launcher{
-    *core_library_, machine, ParallelPolicy{}, init_mapping_task_type::TASK_CONFIG.task_id(), tag};
+  detail::TaskLauncher init_cpucoll_mapping_launcher{*core_library_,
+                                                     machine,
+                                                     ParallelPolicy{},
+                                                     init_mapping_task_type::TASK_CONFIG.task_id(),
+                                                     Legion::ProjectionID{0},
+                                                     tag};
 
   init_cpucoll_mapping_launcher.add_future(comm_id);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -62,8 +66,12 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
   // Use the default parallel policy here for two reasons: first, tasks using communicators are not
   // admissible to streaming; second, the over-decomposition factor is already factored in the
   // number of tasks.
-  detail::TaskLauncher init_cpucoll_launcher{
-    *core_library_, machine, ParallelPolicy{}, init_task_type::TASK_CONFIG.task_id(), tag};
+  detail::TaskLauncher init_cpucoll_launcher{*core_library_,
+                                             machine,
+                                             ParallelPolicy{},
+                                             init_task_type::TASK_CONFIG.task_id(),
+                                             Legion::ProjectionID{0},
+                                             tag};
 
   init_cpucoll_launcher.add_future(comm_id);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -90,8 +98,12 @@ void Factory<IT, IMT, FT>::finalize_(const mapping::detail::Machine& machine,
   // Use the default parallel policy here for two reasons: first, tasks using communicators are not
   // admissible to streaming; second, the over-decomposition factor is already factored in the
   // number of tasks.
-  detail::TaskLauncher launcher{
-    *core_library_, machine, ParallelPolicy{}, finalize_task_type::TASK_CONFIG.task_id(), tag};
+  detail::TaskLauncher launcher{*core_library_,
+                                machine,
+                                ParallelPolicy{},
+                                finalize_task_type::TASK_CONFIG.task_id(),
+                                Legion::ProjectionID{0},
+                                tag};
 
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);

@@ -17,6 +17,8 @@ inline Mappable::Mappable(const Legion::Mappable& mappable)
 
 inline const mapping::detail::Machine& Mappable::machine() const { return machine_; }
 
+inline std::uint32_t Mappable::key_projection_id() const { return key_projection_id_; }
+
 inline std::uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
 inline std::int32_t Mappable::priority() const { return priority_; }

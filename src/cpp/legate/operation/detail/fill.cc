@@ -125,7 +125,11 @@ void Fill::launch(Strategy* strategy)
     create_store_projection_(*strategy, launch_domain, StoreArg{lhs_, lhs_var_});
 
   if (launch_domain.is_valid()) {
-    launcher.launch(launch_domain, lhs_.get(), lhs_proj, std::move(fill_value));
+    launcher.launch(launch_domain,
+                    lhs_.get(),
+                    lhs_proj,
+                    std::move(fill_value),
+                    strategy->find_key_store_projection());
     lhs_->set_key_partition(machine(), parallel_policy(), part);
   } else {
     launcher.launch_single(lhs_.get(), lhs_proj, std::move(fill_value));

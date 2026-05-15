@@ -32,7 +32,8 @@ class FillLauncher {
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,
               const StoreProjection& lhs_proj,
-              Legion::Future value);
+              Legion::Future value,
+              Legion::ProjectionID key_projection_id);
   void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, Legion::Future value);
 
  private:

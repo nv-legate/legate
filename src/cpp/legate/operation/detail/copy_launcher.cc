@@ -48,9 +48,6 @@ void CopyLauncher::add_store(SmallVector<CopyArg>& args,
   const auto req_idx  = static_cast<std::uint32_t>(args.size());
   const auto field_id = store->get_region_field()->field_id();
 
-  if (store_proj.is_key) {
-    key_proj_id_ = store_proj.proj_id;
-  }
   args.emplace_back(req_idx, store.get(), field_id, privilege, std::move(store_proj));
 }
 
@@ -123,16 +120,14 @@ void CopyLauncher::execute_single()
   runtime.dispatch(single_copy);
 }
 
-void CopyLauncher::pack_sharding_functor_id(BufferBuilder& buffer)
-{
-  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, key_proj_id_));
-}
-
 void CopyLauncher::pack_args(BufferBuilder& buffer)
 {
   buffer.pack<StreamingGeneration>(std::nullopt);
   machine_.pack(buffer);
-  pack_sharding_functor_id(buffer);
+  static_assert(sizeof(std::uint32_t) >= sizeof(Legion::ProjectionID));
+  buffer.pack<std::uint32_t>(key_proj_id_);
+  static_assert(sizeof(std::uint32_t) >= sizeof(Legion::ShardingID));
+  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, key_proj_id_));
   buffer.pack(priority_);
 
   auto pack_args = [&buffer](Span<const CopyArg> args) {

@@ -219,9 +219,13 @@ void LogicalTask::launch_task_(Strategy* strategy) { legion_launch_(strategy); }
 
 void LogicalTask::legion_launch_(Strategy* strategy_ptr)
 {
-  auto& strategy = *strategy_ptr;
-  auto launcher =
-    detail::TaskLauncher{library(), machine(), parallel_policy(), provenance(), local_task_id()};
+  auto& strategy           = *strategy_ptr;
+  auto launcher            = detail::TaskLauncher{library(),
+                                                  machine(),
+                                                  parallel_policy(),
+                                                  provenance(),
+                                                  local_task_id(),
+                                                  strategy.find_key_store_projection()};
   auto&& launch_domain     = strategy.launch_domain();
   const auto valid_launch  = launch_domain.is_valid();
   const auto launch_volume = launch_domain.get_volume();
@@ -292,7 +296,7 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
   if (valid_launch && (launch_volume > 1)) {
     const auto target           = machine().preferred_target();
     const auto& processor_range = machine().processor_range();
-    const auto key_proj_id      = launcher.get_key_proj_id();
+    const auto key_proj_id      = launcher.get_key_projection_id();
 
     // Use explicit type here in order to get the reference_wrapper to coerce
     launcher.reserve_communicators(communicator_factories_.size());
@@ -642,8 +646,12 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
 
   auto&& runtime  = Runtime::get_runtime();
   auto&& core_lib = runtime.core_library();
-  auto launcher   = detail::TaskLauncher{
-    core_lib, machine(), parallel_policy(), provenance(), FixupRanges::TASK_CONFIG.task_id()};
+  auto launcher   = detail::TaskLauncher{core_lib,
+                                         machine(),
+                                         parallel_policy(),
+                                         provenance(),
+                                         FixupRanges::TASK_CONFIG.task_id(),
+                                         strategy.find_key_store_projection()};
 
   launcher.set_priority(priority());
 

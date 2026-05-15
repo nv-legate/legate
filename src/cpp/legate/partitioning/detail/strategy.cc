@@ -60,11 +60,6 @@ const std::pair<Legion::FieldSpace, Legion::FieldID>& Strategy::find_field_for_u
   return finder->second;
 }
 
-bool Strategy::is_key_partition(const Variable& partition_symbol) const
-{
-  return key_partition_ == &partition_symbol;
-}
-
 void Strategy::dump() const
 {
   if (!log_legate_partitioner().want_debug()) {
@@ -93,7 +88,7 @@ void Strategy::dump() const
 void Strategy::record_key_partition(PrivateKey, const Variable& partition_symbol)
 {
   if (!key_partition_.has_value()) {
-    key_partition_ = &partition_symbol;
+    key_partition_ = partition_symbol;
   }
 }
 
@@ -106,6 +101,16 @@ Legion::ProjectionID Strategy::find_store_projection(const Variable& partition_s
   }
 
   return finder->second;
+}
+
+Legion::ProjectionID Strategy::find_key_store_projection() const
+{
+  if (!key_partition_.has_value()) {
+    // If no key partition exists, use the identity function (of ID 0)
+    return 0;
+  }
+
+  return find_store_projection(*key_partition_);
 }
 
 }  // namespace legate::detail

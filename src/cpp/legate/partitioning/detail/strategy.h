@@ -45,7 +45,6 @@ class Strategy {
     const Variable& partition_symbol) const;
   [[nodiscard]] const std::pair<Legion::FieldSpace, Legion::FieldID>& find_field_for_unbound_store(
     const Variable& partition_symbol) const;
-  [[nodiscard]] bool is_key_partition(const Variable& partition_symbol) const;
 
   void dump() const;
 
@@ -61,6 +60,7 @@ class Strategy {
                                const Variable& partition_symbol,
                                Legion::ProjectionID projection_id);
   [[nodiscard]] Legion::ProjectionID find_store_projection(const Variable& partition_symbol) const;
+  [[nodiscard]] Legion::ProjectionID find_key_store_projection() const;
 
  private:
   const Operation* operation_{};
@@ -69,7 +69,7 @@ class Strategy {
   std::unordered_map<Variable, std::pair<Legion::FieldSpace, Legion::FieldID>>
     fields_for_unbound_stores_{};
   std::unordered_map<Variable, Legion::ProjectionID> projection_ids_{};
-  std::optional<const Variable*> key_partition_{};
+  std::optional<Variable> key_partition_{};
 };
 
 }  // namespace legate::detail

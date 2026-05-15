@@ -250,6 +250,7 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                              machine,
                                              ParallelPolicy{},
                                              InitId::TASK_CONFIG.task_id(),
+                                             Legion::ProjectionID{0},
                                              static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_id_launcher.set_side_effect(true);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -266,6 +267,7 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                           machine,
                                           ParallelPolicy{},
                                           Init::TASK_CONFIG.task_id(),
+                                          Legion::ProjectionID{0},
                                           static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_launcher.add_future(nccl_id);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -289,6 +291,7 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
                                 machine,
                                 ParallelPolicy{},
                                 Finalize::TASK_CONFIG.task_id(),
+                                Legion::ProjectionID{0},
                                 static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);

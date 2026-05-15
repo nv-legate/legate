@@ -40,7 +40,6 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege,
     privilege_ = LEGION_READ_WRITE;
   }
   store_projs_.emplace(store_proj);
-  is_key_ = is_key_ || store_proj.is_key;
 
   if (privilege_ != LEGION_READ_ONLY && privilege_ != LEGION_NO_ACCESS && store_projs_.size() > 1 &&
       !relax_interference_checks) {
@@ -81,9 +80,8 @@ void FieldSet::coalesce()
   std::size_t num_fields = 0;
 
   for (const auto& [field_id, proj_set] : field_projs_) {
-    auto priv                  = proj_set.privilege();
-    const auto proj_set_is_key = proj_set.is_key();
-    const auto had_discard     = proj_set.had_streaming_discard();
+    auto priv              = proj_set.privilege();
+    const auto had_discard = proj_set.had_streaming_discard();
 
     // We need to coalesce fields with DISCARD flag as a separate Legion Region Requirement
     if (had_discard) {
@@ -91,12 +89,9 @@ void FieldSet::coalesce()
     }
 
     for (const auto& store_proj : proj_set.store_projs()) {
-      auto& [fields, is_key, has_streaming_discard] = coalesced_[{priv, store_proj}];
+      auto& [fields, has_streaming_discard] = coalesced_[{priv, store_proj}];
 
       fields.emplace_back(field_id);
-      if (proj_set_is_key) {
-        is_key = true;
-      }
       if (had_discard) {
         has_streaming_discard = true;
       }
@@ -131,13 +126,10 @@ void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& re
 {
   task->region_requirements.reserve(coalesced_.size());
   for (auto&& [key, entry] : coalesced_) {
-    auto&& [fields, is_key, has_streaming_discard] = entry;
-    auto&& [privilege, store_proj]                 = key;
+    auto&& [fields, has_streaming_discard] = entry;
+    auto&& [privilege, store_proj]         = key;
     auto req = store_proj.template create_requirement<is_single_v<Launcher>>(
-      region,
-      fields,
-      has_streaming_discard ? privilege | LEGION_DISCARD_OUTPUT_MASK : privilege,
-      is_key);
+      region, fields, has_streaming_discard ? privilege | LEGION_DISCARD_OUTPUT_MASK : privilege);
 
     if (has_privilege(privilege, LEGION_WRITE_ONLY) && has_streaming_discard) {
       req.add_flags(LEGION_SUPPRESS_WARNINGS_FLAG);

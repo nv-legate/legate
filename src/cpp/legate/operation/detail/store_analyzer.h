@@ -51,12 +51,7 @@ class ProjectionSet {
   /**
    * @return The store projections.
    */
-  [[nodiscard]] const std::set<BaseStoreProjection>& store_projs() const;
-
-  /**
-   * @return Whether this projection set corresponds to the key store.
-   */
-  [[nodiscard]] bool is_key() const;
+  [[nodiscard]] const std::set<StoreProjection>& store_projs() const;
 
   /**
    * @return Whether this projection set had the streaming discard privilege privilege stripped
@@ -67,8 +62,7 @@ class ProjectionSet {
  private:
   bool had_streaming_discard_{};
   Legion::PrivilegeMode privilege_{};
-  std::set<BaseStoreProjection> store_projs_{};
-  bool is_key_{};
+  std::set<StoreProjection> store_projs_{};
 };
 
 class FieldSet {
@@ -92,12 +86,11 @@ class FieldSet {
   // been stripped out during privilege promotion. The true promoted privilege will be `priv |
   // LEGION_DISCARD_OUTPUT_MASK`, if `Entry::has_streaming_discard_` is true, otherwise just
   // `priv`.
-  using Key = std::pair<Legion::PrivilegeMode, BaseStoreProjection>;
+  using Key = std::pair<Legion::PrivilegeMode, StoreProjection>;
 
   class Entry {
    public:
     std::vector<Legion::FieldID> fields{};
-    bool is_key{};
     bool has_streaming_discard_{};
   };
 

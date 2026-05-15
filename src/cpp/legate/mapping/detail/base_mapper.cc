@@ -316,14 +316,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
     return local_machine_selector_.get_local().slice(machine);
   }();
 
-  Legion::ProjectionID projection = 0;
-  for (auto&& req : task.regions) {
-    if (req.tag == legate::detail::to_underlying(legate::detail::CoreMappingTag::KEY_STORE)) {
-      projection = req.projection;
-      break;
-    }
-  }
-  auto* key_functor = legate::detail::find_projection_function(projection);
+  auto* key_functor = legate::detail::find_projection_function(legate_task.key_projection_id());
 
   // For multi-node cases we should already have been sharded so we
   // should just have one or a few points here on this node, so iterate

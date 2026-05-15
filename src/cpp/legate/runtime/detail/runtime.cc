@@ -1593,6 +1593,7 @@ Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                parallel_policy,
                                get_provenance(),
                                ExtractScalar::TASK_CONFIG.task_id(),
+                               Legion::ProjectionID{0},
                                static_cast<Legion::MappingTagID>(machine.preferred_variant())};
 
   launcher.add_future(result);
@@ -1624,6 +1625,7 @@ Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
                                parallel_policy,
                                get_provenance(),
                                ExtractScalar::TASK_CONFIG.task_id(),
+                               Legion::ProjectionID{0},
                                static_cast<Legion::MappingTagID>(machine.preferred_variant())};
 
   launcher.add_future_map(result);

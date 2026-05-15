@@ -31,12 +31,14 @@ class TaskLauncher {
                const ParallelPolicy& parallel_policy,
                ZStringView provenance,
                LocalTaskID task_id,
+               Legion::ProjectionID key_projection_id,
                Legion::MappingTagID tag = 0);
 
   TaskLauncher(const Library& library,
                const mapping::detail::Machine& machine,
                const ParallelPolicy& parallel_policy,
                LocalTaskID task_id,
+               Legion::ProjectionID key_projection_id,
                Legion::MappingTagID tag = 0);
 
   [[nodiscard]] GlobalTaskID legion_task_id() const;
@@ -89,7 +91,7 @@ class TaskLauncher {
   // identity projection) when no key store has been added. Must be called
   // only after the relevant `add_input/add_output/add_reduction` calls have
   // populated this launcher.
-  [[nodiscard]] Legion::ProjectionID get_key_proj_id();
+  [[nodiscard]] Legion::ProjectionID get_key_projection_id() const;
 
   void set_priority(std::int32_t priority);
   void set_side_effect(bool has_side_effect);
@@ -166,7 +168,7 @@ class TaskLauncher {
   bool relax_interference_checks_{};
   std::optional<StreamingGeneration> streaming_gen_{};
   std::size_t future_size_{};
-  std::optional<Legion::ProjectionID> key_proj_id_{};
+  Legion::ProjectionID key_projection_id_{};
 
   std::vector<Analyzable> inputs_{};
   std::vector<Analyzable> outputs_{};

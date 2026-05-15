@@ -47,6 +47,7 @@ class Mappable {
   deserialize_only_streaming_generation(const Legion::Mappable& mappable);
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
+  [[nodiscard]] std::uint32_t key_projection_id() const;
   [[nodiscard]] std::uint32_t sharding_id() const;
   [[nodiscard]] std::int32_t priority() const;
 
@@ -61,6 +62,7 @@ class Mappable {
 
   std::optional<legate::detail::StreamingGeneration> streaming_gen_{};
   mapping::detail::Machine machine_{};
+  std::uint32_t key_projection_id_{};
   std::uint32_t sharding_id_{};
   std::int32_t priority_{static_cast<std::int32_t>(legate::detail::TaskPriority::DEFAULT)};
 

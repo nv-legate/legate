@@ -37,22 +37,22 @@ std::tuple<Legion::LogicalRegion, Legion::LogicalRegion, Legion::FieldID> prepar
 void FillLauncher::launch(const Legion::Domain& launch_domain,
                           LogicalStore* lhs,
                           const StoreProjection& lhs_proj,
-                          Legion::Future value)
+                          Legion::Future value,
+                          Legion::ProjectionID key_projection_id)
 {
   auto mapper_arg = pack_mapper_arg_(lhs_proj.proj_id);
 
   auto&& runtime                 = Runtime::get_runtime();
   auto [_, lhs_parent, field_id] = prepare_lhs(lhs);
-  auto index_fill                = Legion::IndexFillLauncher{
-    launch_domain,
-    lhs_proj.partition,
-    std::move(lhs_parent),
-    std::move(value),
-    lhs_proj.proj_id,
-    Legion::Predicate::TRUE_PRED,
-    runtime.mapper_id(),
-    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
-    mapper_arg.to_legion_buffer()};
+  auto index_fill                = Legion::IndexFillLauncher{launch_domain,
+                                                             lhs_proj.partition,
+                                                             std::move(lhs_parent),
+                                                             std::move(value),
+                                                             lhs_proj.proj_id,
+                                                             Legion::Predicate::TRUE_PRED,
+                                                             runtime.mapper_id(),
+                                                             key_projection_id,
+                                                             mapper_arg.to_legion_buffer()};
 
   index_fill.provenance = provenance_;
   index_fill.add_field(field_id);
@@ -67,14 +67,13 @@ void FillLauncher::launch_single(LogicalStore* lhs,
 
   auto&& runtime                          = Runtime::get_runtime();
   auto [lhs_region, lhs_parent, field_id] = prepare_lhs(lhs);
-  auto single_fill                        = Legion::FillLauncher{
-    lhs_region,
-    std::move(lhs_parent),
-    std::move(value),
-    Legion::Predicate::TRUE_PRED,
-    runtime.mapper_id(),
-    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
-    mapper_arg.to_legion_buffer()};
+  auto single_fill                        = Legion::FillLauncher{lhs_region,
+                                                                 std::move(lhs_parent),
+                                                                 std::move(value),
+                                                                 Legion::Predicate::TRUE_PRED,
+                                                                 runtime.mapper_id(),
+                                                                 0,
+                                                                 mapper_arg.to_legion_buffer()};
 
   single_fill.provenance = provenance_;
   single_fill.add_field(field_id);
@@ -87,6 +86,7 @@ BufferBuilder FillLauncher::pack_mapper_arg_(Legion::ProjectionID proj_id) const
 
   buffer.pack<StreamingGeneration>(std::nullopt);
   machine_.pack(buffer);
+  buffer.pack<std::uint32_t>(proj_id);
   buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, proj_id));
   buffer.pack(priority_);
   return buffer;

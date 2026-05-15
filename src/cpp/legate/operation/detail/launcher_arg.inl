@@ -10,11 +10,6 @@
 
 namespace legate::detail {
 
-inline std::optional<Legion::ProjectionID> AnalyzableBase::get_key_proj_id() const
-{
-  return std::nullopt;
-}
-
 inline void AnalyzableBase::record_unbound_stores(
   SmallVector<const OutputRegionArg*>& /* args */) const
 {

@@ -10,39 +10,28 @@
 
 namespace legate::detail {
 
-inline BaseStoreProjection::BaseStoreProjection(Legion::LogicalPartition _partition,
-                                                Legion::ProjectionID _proj_id)
+inline StoreProjection::StoreProjection(Legion::LogicalPartition _partition,
+                                        Legion::ProjectionID _proj_id)
   : partition{std::move(_partition)}, proj_id{_proj_id}
 {
 }
 
-inline bool BaseStoreProjection::operator<(const BaseStoreProjection& other) const
+inline bool StoreProjection::operator<(const StoreProjection& other) const
 {
   return std::tie(partition, proj_id, redop) <
          std::tie(other.partition, other.proj_id, other.redop);
 }
 
-inline bool BaseStoreProjection::operator==(const BaseStoreProjection& other) const
+inline bool StoreProjection::operator==(const StoreProjection& other) const
 {
   return partition == other.partition && proj_id == other.proj_id && redop == other.redop;
 }
 
-inline void BaseStoreProjection::set_reduction_op(GlobalRedopID _redop) { redop = _redop; }
+inline void StoreProjection::set_reduction_op(GlobalRedopID _redop) { redop = _redop; }
 
-inline std::size_t BaseStoreProjection::hash() const noexcept
+inline std::size_t StoreProjection::hash() const noexcept
 {
   return hash_all(partition, proj_id, redop);
-}
-
-// ==========================================================================================
-
-template <bool SINGLE>
-Legion::RegionRequirement StoreProjection::create_requirement(
-  const Legion::LogicalRegion& region,
-  const std::vector<Legion::FieldID>& fields,
-  Legion::PrivilegeMode privilege) const
-{
-  return create_requirement<SINGLE>(region, fields, privilege, is_key);
 }
 
 }  // namespace legate::detail
