@@ -33,6 +33,7 @@ class ConstraintSolver {
     explicit EquivClass(UnionFindEntry&& entry);
 
     const bool IS_UNBOUND{};
+    bool has_restrictions{};
     std::vector<const Variable*> partition_symbols{};
     Restrictions restrictions{};
   };

@@ -765,7 +765,11 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
 {
   if (deferred_bound()) {
     auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(*variable);
-    return OutputRegionArg{this, field_space, field_id};
+    return OutputRegionArg{this,
+                           field_space,
+                           field_id,
+                           strategy.find_store_projection(*variable),
+                           strategy.find_color_space_for_unbound_store(*variable)};
   }
 
   auto&& partition      = strategy[*variable];

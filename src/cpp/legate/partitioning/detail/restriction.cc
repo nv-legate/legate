@@ -184,6 +184,70 @@ Restrictions::prune_dimensions(Span<const std::uint64_t> shape) const
   return {std::move(temp_shape), std::move(temp_dims), volume};
 }
 
+Legion::Domain Restrictions::prune_dimensions(const Legion::Domain& domain) const
+{
+  auto new_lo   = Legion::DomainPoint{};
+  auto new_hi   = Legion::DomainPoint{};
+  auto new_ndim = std::uint32_t{0};
+
+  for (auto&& [dim, restriction] : enumerate(dimension_restrictions_())) {
+    if (restriction == Restriction::FORBID) {
+      continue;
+    }
+    new_lo[new_ndim] = domain.rect_data[dim];
+    new_hi[new_ndim] = domain.rect_data[dim + domain.dim];
+    ++new_ndim;
+  }
+
+  new_lo.dim = static_cast<std::int32_t>(new_ndim);
+  new_hi.dim = static_cast<std::int32_t>(new_ndim);
+
+  return {new_lo, new_hi};
+}
+
+Legion::Domain Restrictions::embed(const Legion::Domain& domain) const
+{
+  auto new_lo = Legion::DomainPoint{};
+  auto new_hi = Legion::DomainPoint{};
+  auto idx    = std::uint32_t{0};
+
+  new_lo.dim = static_cast<std::int32_t>(dimension_restrictions_().size());
+  new_hi.dim = static_cast<std::int32_t>(dimension_restrictions_().size());
+  for (auto&& [dim, restriction] : enumerate(dimension_restrictions_())) {
+    if (restriction == Restriction::FORBID) {
+      new_lo[dim] = 0;
+      new_hi[dim] = 0;
+      continue;
+    }
+    new_lo[dim] = domain.rect_data[idx];
+    new_hi[dim] = domain.rect_data[idx + domain.dim];
+    ++idx;
+  }
+
+  return {new_lo, new_hi};
+}
+
+std::size_t Restrictions::count_restricted() const
+{
+  return std::count_if(
+    dimension_restrictions_().begin(),
+    dimension_restrictions_().end(),
+    [](auto&& restriction) noexcept { return restriction == Restriction::FORBID; });
+}
+
+SymbolicPoint Restrictions::to_projection() const
+{
+  auto dim   = std::uint32_t{0};
+  auto point = SymbolicPoint{};
+
+  point.reserve(dimension_restrictions_().size());
+  for (auto&& restriction : dimension_restrictions_()) {
+    point.append_inplace(restriction == Restriction::FORBID ? constant(0) : dimension(dim++));
+  }
+
+  return point;
+}
+
 void Restrictions::cache_needs_minimum_extent_check_()
 {
   needs_minimum_extent_check_ = std::any_of(minimum_extents_().begin(),

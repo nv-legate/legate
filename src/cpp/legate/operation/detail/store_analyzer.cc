@@ -197,10 +197,15 @@ void RequirementAnalyzer::populate_launcher_(Launcher* task) const
 
 void OutputRequirementAnalyzer::insert(std::uint32_t dim,
                                        const Legion::FieldSpace& field_space,
-                                       Legion::FieldID field_id)
+                                       Legion::FieldID field_id,
+                                       Legion::ProjectionID proj_id,
+                                       const Legion::IndexSpace& color_space)
 {
   auto& req_info = req_infos_[field_space];
-  // TODO(wonchanl): This should be checked when alignment constraints are set on unbound stores
+  LEGATE_ASSERT(ReqInfo::UNSET == req_info.dim || req_info.proj_id == proj_id);
+  req_info.proj_id = proj_id;
+  LEGATE_ASSERT(ReqInfo::UNSET == req_info.dim || req_info.color_space == color_space);
+  req_info.color_space = color_space;
   LEGATE_ASSERT(ReqInfo::UNSET == req_info.dim || req_info.dim == dim);
   req_info.dim = dim;
   field_groups_[field_space].insert(field_id);
@@ -228,9 +233,11 @@ void OutputRequirementAnalyzer::populate_output_requirements(
 {
   out_reqs.reserve(field_groups_.size());
   for (auto&& [field_space, fields] : field_groups_) {
-    auto&& [dim, _] = req_infos_.at(field_space);
+    auto&& [dim, proj_id, color_space, _] = req_infos_.at(field_space);
 
     out_reqs.emplace_back(field_space, fields, dim, true /*global_indexing*/);
+    out_reqs.back().projection  = proj_id;
+    out_reqs.back().color_space = color_space;
   }
 }
 
@@ -305,9 +312,11 @@ void StoreAnalyzer::insert(const InternalSharedPtr<LogicalRegionField>& region_f
 
 void StoreAnalyzer::insert(std::uint32_t dim,
                            const Legion::FieldSpace& field_space,
-                           Legion::FieldID field_id)
+                           Legion::FieldID field_id,
+                           Legion::ProjectionID proj_id,
+                           const Legion::IndexSpace& color_space)
 {
-  out_analyzer_.insert(dim, field_space, field_id);
+  out_analyzer_.insert(dim, field_space, field_id, proj_id, color_space);
 }
 
 void StoreAnalyzer::insert(Legion::Future future) { fut_analyzer_.insert(std::move(future)); }

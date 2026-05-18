@@ -119,9 +119,15 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
     const auto* part_symb = equiv_class.partition_symbols.front();
 
     if (auto&& store = operation->find_store(part_symb); store->deferred_bound()) {
-      domain_resolver.record_unbound_store(store->dim());
+      // We only consider "active" dimensions of a store when resolving the launch domain so that we
+      // can allow unbound stores to have different numbers of dimensions from bound stores.
+      domain_resolver.record_unbound_store(store->dim() -
+                                           equiv_class.restrictions.count_restricted());
     } else if (auto&& partition = (*strategy)[*part_symb]; partition->has_launch_domain()) {
-      domain_resolver.record_launch_domain(partition->launch_domain());
+      domain_resolver.record_launch_domain(
+        equiv_class.has_restrictions
+          ? equiv_class.restrictions.prune_dimensions(partition->launch_domain())
+          : partition->launch_domain());
     } else if (!operation->supports_replicated_write() && solver.is_output(*part_symb)) {
       domain_resolver.set_must_be_sequential(true);
     }
@@ -138,6 +144,17 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
 
   for (auto&& equiv_class : solver.equivalence_classes()) {
     if (equiv_class.IS_UNBOUND) {
+      if (equiv_class.has_restrictions) {
+        const auto color_space = Runtime::get_runtime().find_or_create_index_space(
+          equiv_class.restrictions.embed(launch_domain));
+        const auto proj_id = Runtime::get_runtime().get_affine_projection(
+          launch_domain.dim, equiv_class.restrictions.to_projection());
+
+        for (auto&& part_symb : equiv_class.partition_symbols) {
+          strategy->insert_color_space(*part_symb, color_space);
+          strategy->insert_store_projection(Strategy::PrivateKey{}, *part_symb, proj_id);
+        }
+      }
       continue;
     }
 
@@ -148,6 +165,7 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
     }
 
     const auto& color_shape = partition->color_shape();
+    auto projection         = equiv_class.restrictions.to_projection();
 
     for (auto&& part_symb : equiv_class.partition_symbols) {
       auto&& store = operation->find_store(part_symb);
@@ -155,6 +173,17 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
       if (store->has_scalar_storage()) {
         continue;
       }
+      if (equiv_class.has_restrictions && launch_domain.dim > 1) {
+        // When the launch domain has more than one dimension, store projections can never be
+        // delinearizing projections
+        strategy->insert_store_projection(
+          Strategy::PrivateKey{},
+          *part_symb,
+          Runtime::get_runtime().get_affine_projection(launch_domain.dim,
+                                                       store->transform()->invert(projection)));
+        continue;
+      }
+
       strategy->insert_store_projection(
         Strategy::PrivateKey{},
         *part_symb,

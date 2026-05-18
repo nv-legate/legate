@@ -38,6 +38,13 @@ void Strategy::insert(const Variable& partition_symbol,
   fields_for_unbound_stores_.insert({partition_symbol, {field_space, field_id}});
 }
 
+void Strategy::insert_color_space(const Variable& partition_symbol, Legion::IndexSpace color_space)
+{
+  LEGATE_ASSERT(color_spaces_for_unbound_stores_.find(partition_symbol) ==
+                color_spaces_for_unbound_stores_.end());
+  color_spaces_for_unbound_stores_.insert({partition_symbol, std::move(color_space)});
+}
+
 bool Strategy::has_assignment(const Variable& partition_symbol) const
 {
   return assignments_.find(partition_symbol) != assignments_.end();
@@ -82,6 +89,9 @@ void Strategy::dump() const
     log_legate_partitioner().debug()
       << symbol.to_string() << ": (" << field_space << "," << field_id << ")";
   }
+  for (const auto& [symbol, color_space] : color_spaces_for_unbound_stores_) {
+    log_legate_partitioner().debug() << symbol.to_string() << ": " << color_space;
+  }
   log_legate_partitioner().debug() << "====================";
 }
 
@@ -111,6 +121,18 @@ Legion::ProjectionID Strategy::find_key_store_projection() const
   }
 
   return find_store_projection(*key_partition_);
+}
+
+Legion::IndexSpace Strategy::find_color_space_for_unbound_store(
+  const Variable& partition_symbol) const
+{
+  auto finder = color_spaces_for_unbound_stores_.find(partition_symbol);
+
+  if (finder == color_spaces_for_unbound_stores_.end()) {
+    return Legion::IndexSpace::NO_SPACE;
+  }
+
+  return finder->second;
 }
 
 }  // namespace legate::detail

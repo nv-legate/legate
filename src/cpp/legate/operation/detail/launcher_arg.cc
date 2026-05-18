@@ -56,7 +56,7 @@ void OutputRegionArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer)
 
 void OutputRegionArg::analyze(StoreAnalyzer& analyzer) const
 {
-  analyzer.insert(store_->dim(), field_space_, field_id_);
+  analyzer.insert(store_->dim(), field_space_, field_id_, proj_id_, color_space_);
 }
 
 void OutputRegionArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const

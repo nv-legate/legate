@@ -37,6 +37,37 @@ struct TesterTask : public legate::LegateTask<TesterTask> {
   }
 };
 
+struct TesterForUnboundStoresTask : public legate::LegateTask<TesterForUnboundStoresTask> {
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}};
+
+  static void cpu_variant(legate::TaskContext context)
+  {
+    // If LEGATE_TEST=1 wasn't set, this test doesn't check what it's designed to do
+    if (context.is_single_task()) {
+      context.output(0).data().bind_empty_data();
+      context.output(1).data().bind_empty_data();
+      context.output(2).data().bind_empty_data();
+      return;
+    }
+
+    const auto num_procs = context.machine().count();
+    const auto& domain   = context.get_launch_domain();
+    const auto lo        = domain.lo();
+    const auto hi        = domain.hi();
+
+    ASSERT_EQ((hi[0] - lo[0] + 1) * (hi[1] - lo[1] + 1), num_procs);
+    for (std::int32_t dim = 2; dim < domain.dim; ++dim) {
+      ASSERT_EQ(lo[dim], 0);
+      ASSERT_EQ(hi[dim], 0);
+    }
+
+    context.output(0).data().bind_empty_data();
+    context.output(1).data().bind_empty_data();
+    context.output(2).data().bind_empty_data();
+  }
+};
+
 struct Initializer : public legate::LegateTask<Initializer> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{1}};
@@ -52,6 +83,7 @@ class Config {
   {
     TesterTask::register_variants(library);
     Initializer::register_variants(library);
+    TesterForUnboundStoresTask::register_variants(library);
   }
 };
 
@@ -123,6 +155,34 @@ void test_promoted_store()
   launch_tester(1);
 }
 
+void test_unbound_store()
+{
+  auto machine = legate::get_machine().only(legate::mapping::TaskTarget::CPU);
+  if (machine.count() <= 1) {
+    GTEST_SKIP() << "The test doesn't do anything with a single CPU ";
+  }
+
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto unbound1 = runtime->create_store(legate::int64(), /*dim=*/3);
+  auto unbound2 = runtime->create_store(legate::int64(), /*dim=*/3);
+  auto unbound3 = runtime->create_store(legate::int64(), /*dim=*/4);
+  auto extents  = std::vector<std::uint64_t>(4, EXT_SMALL);
+  auto bound    = runtime->create_store(legate::Shape{extents}, legate::int64());
+
+  auto task  = runtime->create_task(context, TesterForUnboundStoresTask::TASK_CONFIG.task_id());
+  auto part1 = task.add_output(unbound1);
+  auto part2 = task.add_output(unbound2);
+  auto part3 = task.add_output(unbound3);
+  auto part4 = task.add_output(bound);
+  task.add_constraint(legate::align(part1, part2));
+  task.add_constraint(legate::broadcast(part1, legate::tuple<std::uint32_t>{1}));
+  task.add_constraint(legate::broadcast(part3, legate::tuple<std::uint32_t>{0, 2}));
+  task.add_constraint(legate::broadcast(part4, legate::tuple<std::uint32_t>{2, 3}));
+  runtime->submit(std::move(task));
+}
+
 void test_invalid_broadcast()
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -141,6 +201,8 @@ void test_invalid_broadcast()
 TEST_F(Broadcast, Basic) { test_normal_store(); }
 
 TEST_F(Broadcast, WithPromotion) { test_promoted_store(); }
+
+TEST_F(Broadcast, Unbound) { test_unbound_store(); }
 
 TEST_F(Broadcast, Invalid) { test_invalid_broadcast(); }
 

@@ -852,13 +852,10 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
     const auto& transform = store->transform();
 
     if (projection.has_value()) {
-      const auto proj_id =
-        transform->identity()
-          ? Runtime::get_runtime().get_affine_projection(launch_ndim, projection.value())
-          : Runtime::get_runtime().get_affine_projection(launch_ndim,
-                                                         transform->invert(projection.value()));
-
-      strategy_->insert_store_projection(Strategy::PrivateKey{}, *partition_symbol, proj_id);
+      strategy_->insert_store_projection(Strategy::PrivateKey{},
+                                         *partition_symbol,
+                                         Runtime::get_runtime().get_affine_projection(
+                                           launch_ndim, transform->invert(projection.value())));
     } else if (partition->has_color_shape()) {
       strategy_->insert_store_projection(
         Strategy::PrivateKey{},

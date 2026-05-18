@@ -141,7 +141,11 @@ class RegionFieldArg final : public AnalyzableBase {
 
 class OutputRegionArg final : public AnalyzableBase {
  public:
-  OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space, Legion::FieldID field_id);
+  OutputRegionArg(LogicalStore* store,
+                  Legion::FieldSpace field_space,
+                  Legion::FieldID field_id,
+                  Legion::ProjectionID proj_id,
+                  Legion::IndexSpace color_space);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) const override;
@@ -156,6 +160,8 @@ class OutputRegionArg final : public AnalyzableBase {
   LogicalStore* store_{};
   Legion::FieldSpace field_space_{};
   Legion::FieldID field_id_{};
+  Legion::ProjectionID proj_id_{};
+  Legion::IndexSpace color_space_{};
   mutable std::uint32_t requirement_index_{-1U};
 };
 

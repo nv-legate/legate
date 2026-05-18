@@ -34,8 +34,14 @@ inline RegionFieldArg::RegionFieldArg(LogicalStore* store,
 
 inline OutputRegionArg::OutputRegionArg(LogicalStore* store,
                                         Legion::FieldSpace field_space,
-                                        Legion::FieldID field_id)
-  : store_{store}, field_space_{std::move(field_space)}, field_id_{field_id}
+                                        Legion::FieldID field_id,
+                                        Legion::ProjectionID proj_id,
+                                        Legion::IndexSpace color_space)
+  : store_{store},
+    field_space_{std::move(field_space)},
+    field_id_{field_id},
+    proj_id_{proj_id},
+    color_space_{std::move(color_space)}
 {
 }
 

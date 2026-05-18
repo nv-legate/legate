@@ -118,14 +118,22 @@ void Reduce::launch(Strategy* p_strategy)
     // a new output region
     if (n_tasks != 1) {
       new_output = runtime.create_store(input_->type(), /*dim=*/1);
-      launcher.add_output(BaseArrayArg{OutputRegionArg{new_output.get(), field_space, field_id}});
+      launcher.add_output(BaseArrayArg{OutputRegionArg{new_output.get(),
+                                                       field_space,
+                                                       field_id,
+                                                       Legion::ProjectionID{0},
+                                                       Legion::IndexSpace::NO_SPACE}});
 
       // Create placeholder Opaque partition
       const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
       new_output->set_key_partition(machine_, parallel_policy_, opaque_partition);
       new_output->get_storage()->set_bound(true /* bound */);
     } else {
-      launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(), field_space, field_id}});
+      launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(),
+                                                       field_space,
+                                                       field_id,
+                                                       Legion::ProjectionID{0},
+                                                       Legion::IndexSpace::NO_SPACE}});
     }
 
     launcher.execute(Domain{DomainPoint{0}, DomainPoint{static_cast<coord_t>(n_tasks - 1)}});
@@ -168,7 +176,8 @@ void Reduce::launch_single_()
   auto field_id =
     runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, input_->type()->size());
 
-  launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(), field_space, field_id}});
+  launcher.add_output(BaseArrayArg{OutputRegionArg{
+    output_.get(), field_space, field_id, Legion::ProjectionID{0}, Legion::IndexSpace::NO_SPACE}});
 
   launcher.execute_single();
 }

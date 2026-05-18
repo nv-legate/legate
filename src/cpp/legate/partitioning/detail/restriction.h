@@ -6,8 +6,11 @@
 
 #pragma once
 
+#include <legate/operation/projection.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
+
+#include <legion.h>
 
 #include <cstdint>
 #include <initializer_list>
@@ -141,6 +144,22 @@ class Restrictions {
                            SmallVector<std::uint32_t, LEGATE_MAX_DIM>,
                            std::uint64_t>
   prune_dimensions(Span<const std::uint64_t> shape) const;
+
+  /**
+   * @brief Prune the dimensions of a Domain that are restricted by this object.
+   *
+   * The i-th dimension of the input domain will not appear in the output if dim_restrictions_[i] is
+   * FORBID.
+   *
+   * @return The domain with FORBIDden dimensions pruned out.
+   */
+  [[nodiscard]] Legion::Domain prune_dimensions(const Legion::Domain& domain) const;
+
+  [[nodiscard]] Legion::Domain embed(const Legion::Domain& domain) const;
+
+  [[nodiscard]] std::size_t count_restricted() const;
+
+  [[nodiscard]] SymbolicPoint to_projection() const;
 
  private:
   [[nodiscard]] bool require_invertible_() const;

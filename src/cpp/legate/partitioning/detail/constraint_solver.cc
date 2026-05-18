@@ -70,6 +70,10 @@ ConstraintSolver::EquivClass::EquivClass(UnionFindEntry&& entry)
     restrictions.join_inplace(next->restrictions);
     next = next->next;
   }
+
+  // Cache the existence or absence of restrictions as knowing it helps us avoid expensive
+  // operations later
+  has_restrictions = restrictions.count_restricted() > 0;
 }
 
 ConstraintSolver::~ConstraintSolver() = default;

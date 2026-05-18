@@ -132,7 +132,11 @@ class RequirementAnalyzer {
 
 class OutputRequirementAnalyzer {
  public:
-  void insert(std::uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
+  void insert(std::uint32_t dim,
+              const Legion::FieldSpace& field_space,
+              Legion::FieldID field_id,
+              Legion::ProjectionID proj_id,
+              const Legion::IndexSpace& color_space);
   [[nodiscard]] std::uint32_t get_requirement_index(const Legion::FieldSpace& field_space,
                                                     Legion::FieldID field_id) const;
   [[nodiscard]] bool empty() const;
@@ -145,6 +149,8 @@ class OutputRequirementAnalyzer {
    public:
     static constexpr std::uint32_t UNSET = -1U;
     std::uint32_t dim{UNSET};
+    Legion::ProjectionID proj_id{};
+    Legion::IndexSpace color_space{};
     std::uint32_t req_idx{};
   };
 
@@ -179,7 +185,11 @@ class StoreAnalyzer {
   void insert(const InternalSharedPtr<LogicalRegionField>& region_field,
               Legion::PrivilegeMode privilege,
               const StoreProjection& store_proj);
-  void insert(std::uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
+  void insert(std::uint32_t dim,
+              const Legion::FieldSpace& field_space,
+              Legion::FieldID field_id,
+              Legion::ProjectionID proj_id,
+              const Legion::IndexSpace& color_space);
   void insert(Legion::Future future);
   void insert(Legion::FutureMap future_map);
 
