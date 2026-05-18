@@ -6,6 +6,14 @@
 include_guard(GLOBAL)
 
 function(get_nccl_version ver_var)
+  if(NOT NCCL_INCLUDE_DIRS)
+    if(NCCL_INCLUDE_DIR)
+      set(NCCL_INCLUDE_DIRS ${NCCL_INCLUDE_DIR})
+    else()
+      get_target_property(NCCL_INCLUDE_DIRS NCCL::NCCL INTERFACE_INCLUDE_DIRECTORIES)
+    endif()
+  endif()
+
   find_file(
     NCCL_INCLUDE_PATH
     NAMES nccl.h
@@ -24,19 +32,19 @@ function(get_nccl_version ver_var)
   endif()
   string(REGEX MATCH [=[[0-9]+]=] file_ver "${file_ver}")
 
+  # The following version number parsing is taken directly from nccl.h
   string(LENGTH "${file_ver}" ver_len)
-  if(ver_len LESS 4 OR ver_len GREATER 5)
-    message(
-      FATAL_ERROR
-      "Could not parse NCCL version ${file_ver} from ${NCCL_INCLUDE_PATH}"
-    )
-  endif()
   if(ver_len EQUAL 4)
     math(EXPR ver_major "${file_ver}/1000")
     math(EXPR ver_minor "(${file_ver}%1000)/100")
   elseif(ver_len EQUAL 5)
     math(EXPR ver_major "${file_ver}/10000")
     math(EXPR ver_minor "(${file_ver}%10000)/100")
+  else()
+    message(
+      FATAL_ERROR
+      "Could not parse NCCL version ${file_ver} from ${NCCL_INCLUDE_PATH}"
+    )
   endif()
   math(EXPR ver_patch "${file_ver}%100")
   set(${ver_var} "${ver_major}.${ver_minor}.${ver_patch}" PARENT_SCOPE)
@@ -63,15 +71,17 @@ function(find_or_configure_nccl)
 
   if(NOT TARGET NCCL::NCCL)
     # Workaround from #921 where find may fail when mixing conda and system deps
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT CMAKE_LIBRARY_ARCHITECTURE)
+    if(
+      CMAKE_SYSTEM_NAME STREQUAL "Linux"
+      AND NOT CMAKE_LIBRARY_ARCHITECTURE
+      AND EXISTS "/usr/lib/${CMAKE_SYSTEM_PROCESSOR}-linux-gnu"
+    )
       message(
         VERBOSE
         "linux system detected\n"
         "CMAKE_LIBRARY_ARCHITECTURE is unset, attempting to deduce it"
       )
-      if(EXISTS "/usr/lib/${CMAKE_SYSTEM_PROCESSOR}")
-        set(CMAKE_LIBRARY_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
-      endif()
+      set(CMAKE_LIBRARY_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}-linux-gnu")
     endif()
 
     rapids_find_generate_module(NCCL HEADER_NAMES nccl.h LIBRARY_NAMES nccl)
