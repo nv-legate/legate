@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>partitioning &#8212; NVIDIA legate (26.05.00.dev79+g44048531b)</title>
+    <title>partitioning &#8212; NVIDIA legate (26.05.00.dev81+g180c3d469)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=e8c64fac"></script>
+    <script src="../../../../_static/documentation_options.js?v=e2cd1ff0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -143,11 +143,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev79+g44048531b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev79+g44048531b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev81+g180c3d469) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev81+g180c3d469) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev79+g44048531b)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev81+g180c3d469)</p>
   
 </a></div>
     
@@ -254,11 +254,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev79+g44048531b) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev79+g44048531b) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.05.00.dev81+g180c3d469) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.05.00.dev81+g180c3d469) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.05.00.dev79+g44048531b)</p>
+    <p class="title logo__title">NVIDIA legate (26.05.00.dev81+g180c3d469)</p>
   
 </a>
 
@@ -2273,6 +2273,16 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The parsed command-line values. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail9num_ranksEv">
+<span id="_CPPv3N6legate6detail9num_ranksEv"></span><span id="_CPPv2N6legate6detail9num_ranksEv"></span><span id="legate::detail::num_ranks"></span><span class="target" id="argument__parsing_2util_8cc_1a00c6fd33893dfed5afccc47d238496ef"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">num_ranks</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail9num_ranksEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Number of ranks in the current MPI/SLURM job (defaults to 1 when undetectable). </p>
 </dd>
 </dl>
 </dd></dl>
@@ -4609,6 +4619,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail24get_parsed_LEGATE_CONFIGEv"><code class="docutils literal notranslate"><span class="pre">get_parsed_LEGATE_CONFIG()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail18handle_legate_argsEv"><code class="docutils literal notranslate"><span class="pre">handle_legate_args()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail10parse_argsENSt6vectorINSt6stringEEE"><code class="docutils literal notranslate"><span class="pre">parse_args()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail9num_ranksEv"><code class="docutils literal notranslate"><span class="pre">num_ranks()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail14multi_node_jobEv"><code class="docutils literal notranslate"><span class="pre">multi_node_job()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail30deduplicate_command_line_flagsE4SpanIKNSt6stringEE"><code class="docutils literal notranslate"><span class="pre">deduplicate_command_line_flags()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail22is_gds_maybe_availableEv"><code class="docutils literal notranslate"><span class="pre">is_gds_maybe_available()</span></code></a></li>
