@@ -400,6 +400,7 @@ set(
   noinit/argument_parsing/parse_args.cc
   noinit/argument_parsing/scaled.cc
   noinit/argument_parsing/sysmem.cc
+  noinit/argument_parsing/util.cc
 )
 
 set(wo_runtime_EXTRA_TARGETS argparse::argparse cpptrace::cpptrace)

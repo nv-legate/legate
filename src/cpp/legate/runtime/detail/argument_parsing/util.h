@@ -8,10 +8,16 @@
 
 #include <legate/utilities/span.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace legate::detail {
+
+/**
+ * @return Number of ranks in the current MPI/SLURM job (defaults to 1 when undetectable).
+ */
+[[nodiscard]] std::uint32_t num_ranks();
 
 /**
  * @return `true` when Legate is being invoked as a multi-node job, `false` otherwise.

@@ -75,7 +75,9 @@
 #include <legate/utilities/scope_guard.h>
 
 #include <realm/cuda/cuda_module.h>
+#include <realm/module_config.h>
 #include <realm/network.h>
+#include <realm/runtime.h>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -1867,10 +1869,47 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
 namespace {
 
+#ifdef REALM_USE_GASNETEX
+
+[[nodiscard]] std::uint64_t gpus_per_rank_for_gasnetex_obcount()
+{
+#if !LEGATE_DEFINED(LEGATE_USE_CUDA)
+  return 0;
+#else
+  auto&& realm = Realm::Runtime::get_runtime();
+
+  int argc    = 0;
+  char** argv = nullptr;
+  // Realm #399 allows this early config pass; REALM_DEFAULT_ARGS is consumed during
+  // Legion initialization, so GASNet-EX obcount must be sized before that point.
+  if (!realm.create_configs(argc, argv)) {
+    throw TracedException<std::runtime_error>{
+      "Realm failed to create configs while sizing GASNet obcount."};
+  }
+
+  const auto* cuda = realm.get_module_config("cuda");
+  if (cuda == nullptr) {
+    return 0;
+  }
+
+  std::int32_t gpus = 0;
+  if (const auto status = cuda->get_resource("gpu", gpus); status != REALM_SUCCESS) {
+    throw TracedException<std::runtime_error>{fmt::format(
+      "Realm CUDA module failed to report GPU resources (status {}).", static_cast<int>(status))};
+  }
+  return static_cast<std::uint64_t>(gpus);
+#endif
+}
+
+#endif  // REALM_USE_GASNETEX
+
 void handle_realm_default_args(bool need_network_init)
 {
   constexpr EnvironmentVariable<std::string> REALM_DEFAULT_ARGS{"REALM_DEFAULT_ARGS"};
   std::stringstream ss;
+#ifdef REALM_USE_GASNETEX
+  bool user_set_gasnetex_obcount = false;
+#endif
 
   if (const auto existing_default_args = REALM_DEFAULT_ARGS.get();
       existing_default_args.has_value()) {
@@ -1881,6 +1920,9 @@ void handle_realm_default_args(bool need_network_init)
     //
     // So we must strip away any existing -ll:networks arguments before we append our -ll:networks
     // argument.
+#ifdef REALM_USE_GASNETEX
+    user_set_gasnetex_obcount = existing_default_args->find("-gex:obcount") != std::string::npos;
+#endif
     ss << std::regex_replace(
       *existing_default_args, std::regex{R"(\-ll:networks\s+\w+)", std::regex::optimize}, "");
   }
@@ -1900,6 +1942,19 @@ void handle_realm_default_args(bool need_network_init)
 #endif
 #ifdef REALM_USE_GASNETEX
     ss << " -ll:networks gasnetex";
+
+    if (!user_set_gasnetex_obcount) {
+      // Need to set -gex:obcount appropriately, see
+      // https://github.com/StanfordLegion/realm/issues/239
+      const auto ranks         = static_cast<std::uint64_t>(num_ranks());
+      const auto gpus_per_rank = gpus_per_rank_for_gasnetex_obcount();
+      const auto obcount       = (4 + 2 * gpus_per_rank) * ranks;
+
+      log_legate().debug() << "GEX obcount sizing: ranks=" << ranks
+                           << " gpus_per_rank=" << gpus_per_rank << " obcount=" << obcount;
+
+      ss << " -gex:obcount " << obcount;
+    }
 #endif
 #ifdef REALM_USE_GASNET1
     ss << " -ll:networks gasnet1";
@@ -1911,7 +1966,10 @@ void handle_realm_default_args(bool need_network_init)
     ss << " -ll:networks none";
   }
 
-  REALM_DEFAULT_ARGS.set(ss.str());
+  const auto realm_default_args = ss.str();
+
+  REALM_DEFAULT_ARGS.set(realm_default_args);
+  log_legate().debug() << "REALM_DEFAULT_ARGS=" << realm_default_args;
 }
 
 void set_env_vars()
