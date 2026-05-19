@@ -129,7 +129,8 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage,
     storage_{std::move(storage)},
     transform_{make_internal_shared<TransformStack>()},
     mapped_{std::move(physical_store)},
-    non_transformable_{true}
+    non_transformable_{true},
+    non_owning_{true}
 {
   assert_fixed_storage_size(this->type());
   if (log_legate().want_debug()) {
@@ -471,25 +472,33 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
-  legate::mapping::StoreTarget target, bool ignore_future_mutability)
+  std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability)
 {
   auto&& storage = get_storage();
 
-  // If there's already a physical store for this logical store, just return the cached one.
-  // Any operations using this logical store will immediately flush the scheduling window.
   if (mapped_.has_value()) {
-    if ((*mapped_)->target() == target) {
+    if (!target.has_value() || (*mapped_)->target() == *target) {
       return *mapped_;
+    }
+    if (non_owning_) {
+      throw TracedException<std::invalid_argument>{fmt::format(
+        "Cannot remap a non-owning store from {} to {}", (*mapped_)->target(), *target)};
     }
     storage->unmap();
     mapped_.reset();
   }
 
-  // Otherwise, a physical allocation of this store is escaping to the user land for the first time,
+  const auto effective_target =
+    target.value_or(Runtime::get_runtime().local_machine().has_socket_memory()
+                      ? legate::mapping::StoreTarget::SOCKETMEM
+                      : legate::mapping::StoreTarget::SYSMEM);
+
+  // A physical allocation of this store is escaping to the user land for the first time,
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime().flush_scheduling_window();
 
-  auto ret = storage->map(target, type(), shape(), transform_, ignore_future_mutability, domain_);
+  auto ret =
+    storage->map(effective_target, type(), shape(), transform_, ignore_future_mutability, domain_);
 
   switch (storage->kind()) {
     case Storage::Kind::INLINE_STORAGE: [[fallthrough]];

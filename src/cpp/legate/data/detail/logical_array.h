@@ -64,9 +64,9 @@ class LogicalArray {
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& data() const;
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& null_mask() const = 0;
   [[nodiscard]] virtual InternalSharedPtr<PhysicalArray> get_physical_array(
-    legate::mapping::StoreTarget target, bool ignore_future_mutability) const            = 0;
-  [[nodiscard]] virtual InternalSharedPtr<LogicalArray> child(std::uint32_t index) const = 0;
-  [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& primary_store() const     = 0;
+    std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability) const = 0;
+  [[nodiscard]] virtual InternalSharedPtr<LogicalArray> child(std::uint32_t index) const     = 0;
+  [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& primary_store() const         = 0;
 
   virtual void record_scalar_or_unbound_outputs(AutoTask* task) const              = 0;
   virtual void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const = 0;

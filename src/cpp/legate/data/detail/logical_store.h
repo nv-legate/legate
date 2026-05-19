@@ -144,7 +144,7 @@ class LogicalStore {
 
  public:
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
-    legate::mapping::StoreTarget target, bool ignore_future_mutability);
+    std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 
   /**
    * @brief Gets the currently mapped `PhysicalStore` for this `LogicalStore`
@@ -281,6 +281,7 @@ class LogicalStore {
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
   std::optional<InternalSharedPtr<PhysicalStore>> mapped_{};
   bool non_transformable_{false};
+  bool non_owning_{false};
 };
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(

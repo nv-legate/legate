@@ -122,7 +122,7 @@ void test_inline_map_region_gpu()
     runtime->submit(std::move(task));
   }
   {
-    auto p_store = l_store.get_physical_store();
+    auto p_store = l_store.get_physical_store(legate::mapping::StoreTarget::SYSMEM);
     auto acc     = p_store.read_accessor<std::int64_t, 1>();
     EXPECT_EQ(acc[2], 43);
   }

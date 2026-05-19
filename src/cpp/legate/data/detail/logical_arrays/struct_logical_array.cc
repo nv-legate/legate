@@ -165,7 +165,7 @@ const InternalSharedPtr<LogicalStore>& StructLogicalArray::null_mask() const
 }
 
 InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array(
-  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
+  std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability) const
 {
   std::optional<InternalSharedPtr<PhysicalStore>> null_mask_store{};
 

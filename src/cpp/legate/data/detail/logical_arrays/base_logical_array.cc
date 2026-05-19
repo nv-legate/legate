@@ -87,13 +87,13 @@ const InternalSharedPtr<LogicalStore>& BaseLogicalArray::null_mask() const
 }
 
 InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array(
-  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
+  std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability) const
 {
   return get_base_physical_array(target, ignore_future_mutability);
 }
 
 InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array(
-  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
+  std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability) const
 {
   auto data_store = data()->get_physical_store(target, ignore_future_mutability);
   std::optional<InternalSharedPtr<PhysicalStore>> null_mask_store{};

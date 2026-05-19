@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from legate.core import get_legate_runtime, types as ty
+from legate.core import VariantCode, get_legate_runtime, types as ty
 from legate.core.task import InputStore, OutputStore, task
 
 
@@ -65,6 +65,20 @@ def outer_chained_task(
     inner_add_task(logical_intermediate, logical_out, 10)
 
 
+@task(variants=(VariantCode.CPU, VariantCode.GPU))
+def get_physical_store_on_non_owning_task(
+    inp: InputStore, out: OutputStore
+) -> None:
+    logical_in = inp.to_logical_store()
+    logical_out = out.to_logical_store()
+
+    phys_in = logical_in.get_physical_store()
+    phys_out = logical_out.get_physical_store()
+
+    assert phys_in.target == inp.target
+    assert phys_out.target == out.target
+
+
 class TestNestedExecution:
     def test_create_logical_from_physical(self) -> None:
         runtime = get_legate_runtime()
@@ -118,3 +132,14 @@ class TestNestedExecution:
         result = np.asarray(out_store)
         expected = np.array([1, 2, 3, 4, 5], dtype=np.int32) * 2 + 10
         np.testing.assert_array_equal(result, expected)
+
+    def test_get_physical_store_on_non_owning(self) -> None:
+        """get_physical_store() on non-owning LogicalStore."""
+        runtime = get_legate_runtime()
+
+        in_store = runtime.create_store(ty.float64, shape=(10,))
+        in_store.fill(0)
+        out_store = runtime.create_store(ty.float64, shape=(10,))
+
+        get_physical_store_on_non_owning_task(in_store, out_store)
+        runtime.issue_execution_fence(block=True)

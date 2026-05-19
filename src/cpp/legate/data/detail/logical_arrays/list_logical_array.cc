@@ -72,7 +72,7 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
 }
 
 InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array(
-  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
+  std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability) const
 {
   auto desc_arr    = descriptor_->get_base_physical_array(target, ignore_future_mutability);
   auto vardata_arr = vardata_->get_physical_array(target, ignore_future_mutability);

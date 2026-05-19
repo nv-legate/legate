@@ -95,12 +95,7 @@ LogicalArray LogicalArray::child(std::uint32_t index) const
 
 PhysicalArray LogicalArray::get_physical_array(std::optional<mapping::StoreTarget> target) const
 {
-  const auto sanitized =
-    target.value_or(detail::Runtime::get_runtime().local_machine().has_socket_memory()
-                      ? mapping::StoreTarget::SOCKETMEM
-                      : mapping::StoreTarget::SYSMEM);
-
-  return PhysicalArray{impl()->get_physical_array(sanitized, /*ignore_future_mutability=*/false),
+  return PhysicalArray{impl()->get_physical_array(target, /*ignore_future_mutability=*/false),
                        *this};
 }
 

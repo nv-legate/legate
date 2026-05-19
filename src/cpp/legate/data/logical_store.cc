@@ -139,12 +139,7 @@ std::optional<PhysicalStore> LogicalStore::get_cached_physical_store() const
 
 PhysicalStore LogicalStore::get_physical_store(std::optional<mapping::StoreTarget> target) const
 {
-  const auto sanitized =
-    target.value_or(detail::Runtime::get_runtime().local_machine().has_socket_memory()
-                      ? mapping::StoreTarget::SOCKETMEM
-                      : mapping::StoreTarget::SYSMEM);
-
-  return PhysicalStore{impl()->get_physical_store(sanitized, /* ignore_future_mutability */ false),
+  return PhysicalStore{impl()->get_physical_store(target, /* ignore_future_mutability */ false),
                        *this};
 }
 

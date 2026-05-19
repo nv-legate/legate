@@ -273,7 +273,8 @@ class LEGATE_EXPORT LogicalArray {
    *
    * @return A `PhysicalArray` of the `LogicalArray`
    *
-   * @throw std::invalid_argument If no memory of the chosen type is available
+   * @throw std::invalid_argument If `target` does not match the memory of the existing physical
+   * array and that array cannot be remapped, or if no memory of the chosen type is available.
    */
   [[nodiscard]] PhysicalArray get_physical_array(
     std::optional<mapping::StoreTarget> target = std::nullopt) const;

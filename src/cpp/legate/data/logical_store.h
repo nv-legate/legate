@@ -543,7 +543,8 @@ class LEGATE_EXPORT LogicalStore {
    *
    * @return A `PhysicalStore` of the `LogicalStore`
    *
-   * @throw std::invalid_argument If no memory of the chosen type is available
+   * @throw std::invalid_argument If `target` does not match the memory of the existing physical
+   * store and that store cannot be remapped, or if no memory of the chosen type is available.
    */
   [[nodiscard]] PhysicalStore get_physical_store(
     std::optional<mapping::StoreTarget> target = std::nullopt) const;

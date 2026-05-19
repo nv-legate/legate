@@ -59,9 +59,10 @@ class BaseLogicalArray final : public LogicalArray {
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& data() const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array(
-    legate::mapping::StoreTarget target, bool ignore_future_mutability) const override;
+    std::optional<legate::mapping::StoreTarget> target,
+    bool ignore_future_mutability) const override;
   [[nodiscard]] InternalSharedPtr<BasePhysicalArray> get_base_physical_array(
-    legate::mapping::StoreTarget target, bool ignore_future_mutability) const;
+    std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability) const;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
 
