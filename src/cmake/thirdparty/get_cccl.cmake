@@ -35,15 +35,5 @@ function(find_or_configure_cccl)
     TRUE
   )
 
-  # Workaround for https://github.com/NVIDIA/cccl/issues/5002
-  if(Legion_USE_OpenMP)
-    get_target_property(opts OpenMP::OpenMP_CXX INTERFACE_COMPILE_OPTIONS)
-    string(REPLACE [[-Xcompiler=SHELL:]] [[SHELL:-Xcompiler=]] opts "${opts}")
-    set_target_properties(
-      OpenMP::OpenMP_CXX
-      PROPERTIES INTERFACE_COMPILE_OPTIONS "${opts}"
-    )
-  endif()
-
   legate_export_variables(CCCL)
 endfunction()
