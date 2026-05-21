@@ -202,16 +202,29 @@ else()
   )
 endif()
 
-cmake_path(SET legate_DEP_INSTALL_LIBDIR NORMALIZE "${CMAKE_INSTALL_LIBDIR}/legate/deps")
+# Setup dependency install paths
 cmake_path(
-  SET legate_DEP_INSTALL_INCLUDEDIR
-  NORMALIZE
-  "${CMAKE_INSTALL_INCLUDEDIR}/legate/deps"
+  APPEND CMAKE_INSTALL_LIBDIR
+  "legate/deps"
+  OUTPUT_VARIABLE legate_DEP_INSTALL_LIBDIR
 )
 cmake_path(
-  SET legate_DEP_INSTALL_BINDIR
-  NORMALIZE
-  "${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_BINDIR}"
+  APPEND legate_PLATFORM_RPATH_ORIGIN
+  "legate/deps"
+  OUTPUT_VARIABLE legate_DEP_INSTALL_LIBRPATH
 )
+cmake_path(
+  APPEND CMAKE_INSTALL_INCLUDEDIR
+  "legate/deps"
+  OUTPUT_VARIABLE legate_DEP_INSTALL_INCLUDEDIR
+)
+cmake_path(
+  APPEND CMAKE_INSTALL_DATAROOTDIR
+  "legate/${CMAKE_INSTALL_BINDIR}"
+  OUTPUT_VARIABLE legate_DEP_INSTALL_BINDIR
+)
+foreach(_depdir IN ITEMS LIBDIR LIBRPATH INCLUDEDIR BINDIR)
+  cmake_path(NORMAL_PATH legate_DEP_INSTALL_${_depdir})
+endforeach()
 
 add_subdirectory(${legate_project_suffix})

@@ -658,25 +658,13 @@ set_target_properties(
     LIBRARY_OUTPUT_NAME legate
     LIBRARY_OUTPUT_DIRECTORY lib
     BUILD_RPATH_USE_ORIGIN TRUE
+    INSTALL_RPATH "${legate_PLATFORM_RPATH_ORIGIN};${legate_DEP_INSTALL_LIBRPATH}"
     SOVERSION ${PROJECT_VERSION}
     VISIBILITY_INLINES_HIDDEN TRUE
     CXX_VISIBILITY_PRESET "hidden"
     CUDA_VISIBILITY_PRESET "hidden"
 )
 
-set(
-  install_rpath
-  "${legate_PLATFORM_RPATH_ORIGIN}"
-  # The ../ is needed because
-  # ${legate_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
-  # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
-  # that case it would expand to lib/lib/legate/deps which does not exist. So we need to
-  # ../ once so that it expands to lib/../lib/legate/deps. A hack for sure, but it
-  # works.
-  "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}"
-)
-
-set_property(TARGET legate APPEND PROPERTY INSTALL_RPATH "${install_rpath}")
 # export this so that install_info.py can properly locate the versioned and unversioned
 # library names
 set_property(TARGET legate APPEND PROPERTY EXPORT_PROPERTIES LIBRARY_OUTPUT_NAME)

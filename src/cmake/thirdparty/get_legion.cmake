@@ -85,6 +85,14 @@ function(
         "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON"
   )
 
+  if(TARGET LegionRuntime)
+    set_target_properties(
+      LegionRuntime
+      PROPERTIES
+        INSTALL_RPATH "${legate_PLATFORM_RPATH_ORIGIN};${legate_DEP_INSTALL_LIBRPATH}"
+    )
+  endif()
+
   if(NOT CPM_Legion_SOURCE AND NOT Legion_ROOT AND NOT Legion_DIR)
     if(
       DEFINED CPM_PACKAGE_Legion_SOURCE_DIR

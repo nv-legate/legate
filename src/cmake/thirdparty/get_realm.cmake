@@ -71,7 +71,6 @@ function(find_or_configure_realm)
         "REALM_ENABLE_LIBDL ON"
         "REALM_ENABLE_PYTHON ${Legion_USE_Python}"
         "REALM_LOG_LEVEL DEBUG"
-        "INSTALL_SUFFIX -legate"
         "CMAKE_INSTALL_BINDIR ${legate_DEP_INSTALL_BINDIR}"
         "CMAKE_INSTALL_INCLUDEDIR ${legate_DEP_INSTALL_INCLUDEDIR}"
         "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON"
@@ -86,7 +85,10 @@ function(find_or_configure_realm)
   endif()
 
   if(TARGET Realm)
-    set_target_properties(Realm PROPERTIES OUTPUT_NAME realm-legate)
+    set_target_properties(
+      Realm
+      PROPERTIES OUTPUT_NAME realm-legate INSTALL_RPATH "${legate_DEP_INSTALL_LIBRPATH}"
+    )
   endif()
 
   if(exclude_from_all)
