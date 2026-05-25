@@ -27,7 +27,11 @@ get_legate_version() {
   if [[ "${git_num}" == "0" ]]; then
     version="${git_tag}"
   else
-    version="${git_tag}.${git_num}+${git_hash}"
+    if [[ "${git_tag}" =~ \.rc[0-9]+$ ]]; then
+      version="${git_tag}.dev${git_num}+${git_hash}"
+    else
+      version="${git_tag}.${git_num}+${git_hash}"
+    fi
   fi
   version="${version#v}"
 
