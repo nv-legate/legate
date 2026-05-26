@@ -27,9 +27,9 @@ TYPED_TEST(InternalWeakPtrUnit, Create)
 {
   const legate::InternalWeakPtr<TypeParam> ptr;
 
-  EXPECT_EQ(ptr.use_count(), 0);
-  EXPECT_TRUE(ptr.expired());
-  EXPECT_EQ(ptr.lock(), legate::InternalSharedPtr<TypeParam>{});
+  ASSERT_EQ(ptr.use_count(), 0);
+  ASSERT_TRUE(ptr.expired());
+  ASSERT_EQ(ptr.lock(), legate::InternalSharedPtr<TypeParam>{});
 }
 
 TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrCtor)
@@ -37,9 +37,9 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrCtor)
   auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{MAGIC_NUMBER});
   const legate::InternalWeakPtr<TypeParam> ptr{shared_ptr};
 
-  EXPECT_EQ(ptr.use_count(), 1);
-  EXPECT_FALSE(ptr.expired());
-  EXPECT_EQ(ptr.lock(), shared_ptr);
+  ASSERT_EQ(ptr.use_count(), 1);
+  ASSERT_FALSE(ptr.expired());
+  ASSERT_EQ(ptr.lock(), shared_ptr);
 }
 
 TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrEq)
@@ -49,9 +49,9 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrEq)
 
   ptr = shared_ptr;
 
-  EXPECT_EQ(ptr.use_count(), 1);
-  EXPECT_FALSE(ptr.expired());
-  EXPECT_EQ(ptr.lock(), shared_ptr);
+  ASSERT_EQ(ptr.use_count(), 1);
+  ASSERT_FALSE(ptr.expired());
+  ASSERT_EQ(ptr.lock(), shared_ptr);
 }
 
 TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrDrop)
@@ -63,13 +63,13 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrDrop)
 
     ptr = shared_ptr;
 
-    EXPECT_EQ(ptr.use_count(), 1);
-    EXPECT_FALSE(ptr.expired());
-    EXPECT_EQ(ptr.lock(), shared_ptr);
+    ASSERT_EQ(ptr.use_count(), 1);
+    ASSERT_FALSE(ptr.expired());
+    ASSERT_EQ(ptr.lock(), shared_ptr);
   }
-  EXPECT_TRUE(ptr.expired());
-  EXPECT_EQ(ptr.use_count(), 0);
-  EXPECT_EQ(ptr.lock(), legate::InternalSharedPtr<TypeParam>{});
+  ASSERT_TRUE(ptr.expired());
+  ASSERT_EQ(ptr.use_count(), 0);
+  ASSERT_EQ(ptr.lock(), legate::InternalSharedPtr<TypeParam>{});
 }
 
 TYPED_TEST(InternalWeakPtrUnit, CreateFromEmptySharedPtrDrop)
@@ -82,13 +82,13 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromEmptySharedPtrDrop)
 
     ptr = shared_ptr;
 
-    EXPECT_EQ(ptr.use_count(), 0);
-    EXPECT_TRUE(ptr.expired());
-    EXPECT_EQ(ptr.lock(), shared_ptr);
+    ASSERT_EQ(ptr.use_count(), 0);
+    ASSERT_TRUE(ptr.expired());
+    ASSERT_EQ(ptr.lock(), shared_ptr);
   }
-  EXPECT_TRUE(ptr.expired());
-  EXPECT_EQ(ptr.use_count(), 0);
-  EXPECT_EQ(ptr.lock(), legate::InternalSharedPtr<TypeParam>{});
+  ASSERT_TRUE(ptr.expired());
+  ASSERT_EQ(ptr.use_count(), 0);
+  ASSERT_EQ(ptr.lock(), legate::InternalSharedPtr<TypeParam>{});
 }
 
 TYPED_TEST(InternalWeakPtrUnit, Swap)
@@ -103,10 +103,10 @@ TYPED_TEST(InternalWeakPtrUnit, Swap)
 
   const auto equal_ptrs = [](const legate::InternalWeakPtr<TypeParam>& weak,
                              const legate::InternalSharedPtr<TypeParam>& shared) {
-    EXPECT_EQ(weak.use_count(), 1);
-    EXPECT_FALSE(weak.expired());
-    EXPECT_EQ(weak.lock(), shared);
-    EXPECT_EQ(*(weak.lock()), *shared);
+    ASSERT_EQ(weak.use_count(), 1);
+    ASSERT_FALSE(weak.expired());
+    ASSERT_EQ(weak.lock(), shared);
+    ASSERT_EQ(*(weak.lock()), *shared);
   };
 
   // weak_1 == shared_1, weak_2 == shared_2
@@ -182,4 +182,23 @@ TYPED_TEST(InternalWeakPtrUnit, Swap)
   // weak_1 == shared_1, weak_2 == shared_2
   equal_ptrs(weak_1, shared_1);
   equal_ptrs(weak_2, shared_2);
+}
+
+TYPED_TEST(InternalWeakPtrUnit, DropOneOfManyWeaks)
+{
+  // Destroying one weak ptr while another (and the parent shared ptr) still holds the
+  // control block exercises the path where weak_deref() returns a non-zero count.
+  auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{MAGIC_NUMBER});
+  const legate::InternalWeakPtr<TypeParam> weak_outer{shared_ptr};
+
+  {
+    const legate::InternalWeakPtr<TypeParam> weak_inner{shared_ptr};
+
+    ASSERT_EQ(weak_inner.use_count(), 1);
+    ASSERT_FALSE(weak_inner.expired());
+  }
+
+  ASSERT_EQ(weak_outer.use_count(), 1);
+  ASSERT_FALSE(weak_outer.expired());
+  ASSERT_EQ(weak_outer.lock(), shared_ptr);
 }

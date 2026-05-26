@@ -47,7 +47,7 @@ TYPED_TEST(InternalSharedPtrUnit, CreateWithPtr)
   auto sh_ptr = new TypeParam{1};
   legate::InternalSharedPtr<TypeParam> ptr{sh_ptr};
 
-  EXPECT_EQ(ptr.use_count(), 1);
+  ASSERT_EQ(ptr.use_count(), 1);
   test_basic_equal(ptr, sh_ptr);
 }
 
@@ -68,6 +68,28 @@ TYPED_TEST(InternalSharedPtrUnit, CreateWithCopyBraceCtor)
   legate::InternalSharedPtr<TypeParam> ptr2{ptr1};
 
   test_create_with_copy_n({ptr1, ptr2}, bare_ptr);
+}
+
+// Copy-constructing from an empty InternalSharedPtr exercises the ctrl_ == nullptr branches
+// in strong_reference_() and the ref-count observers.
+TYPED_TEST(InternalSharedPtrUnit, CreateWithCopyEmptySharedPtr)
+{
+  const legate::InternalSharedPtr<TypeParam> empty_src;
+  // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+  const legate::InternalSharedPtr<TypeParam> copy{empty_src};
+
+  ASSERT_EQ(empty_src.use_count(), 0);
+  ASSERT_EQ(copy.use_count(), 0);
+  ASSERT_EQ(empty_src.strong_ref_count(), 0);
+  ASSERT_EQ(copy.strong_ref_count(), 0);
+  ASSERT_EQ(empty_src.user_ref_count(), 0);
+  ASSERT_EQ(copy.user_ref_count(), 0);
+  ASSERT_EQ(empty_src.weak_ref_count(), 0);
+  ASSERT_EQ(copy.weak_ref_count(), 0);
+  ASSERT_EQ(empty_src.get(), nullptr);
+  ASSERT_EQ(copy.get(), nullptr);
+  ASSERT_FALSE(empty_src);
+  ASSERT_FALSE(copy);
 }
 
 TYPED_TEST(InternalSharedPtrUnit, CreateWithWeakPtrNegative)
@@ -148,7 +170,7 @@ TYPED_TEST(InternalSharedPtrUnit, MoveCtor)
 
   legate::InternalSharedPtr<TypeParam> ptr2 = std::move(ptr1);
 
-  EXPECT_EQ(ptr2.use_count(), 1);
+  ASSERT_EQ(ptr2.use_count(), 1);
   test_basic_equal(ptr2, bare_ptr);
   test_basic_equal(ptr1, static_cast<TypeParam*>(nullptr));
 }
@@ -162,7 +184,7 @@ TYPED_TEST(InternalSharedPtrUnit, MoveAssign)
 
   legate::InternalSharedPtr<TypeParam> ptr2{std::move(ptr1)};
 
-  EXPECT_EQ(ptr2.use_count(), 1);
+  ASSERT_EQ(ptr2.use_count(), 1);
   test_basic_equal(ptr2, bare_ptr);
   test_basic_equal(ptr1, static_cast<TypeParam*>(nullptr));
 }
@@ -176,7 +198,7 @@ TYPED_TEST(InternalSharedPtrUnit, SelfAssign)
   auto hide_self_assign = [](auto& lhs, auto& rhs) { lhs = rhs; };
 
   hide_self_assign(ptr1, ptr1);
-  EXPECT_EQ(ptr1.use_count(), 1);
+  ASSERT_EQ(ptr1.use_count(), 1);
   test_basic_equal(ptr1, bare_ptr);
 }
 
@@ -189,7 +211,7 @@ TYPED_TEST(InternalSharedPtrUnit, SelfMoveAssign)
   auto hide_self_assign = [](auto& lhs, auto& rhs) { lhs = std::move(rhs); };
 
   hide_self_assign(ptr1, ptr1);
-  EXPECT_EQ(ptr1.use_count(), 1);
+  ASSERT_EQ(ptr1.use_count(), 1);
   test_basic_equal(ptr1, bare_ptr);
 }
 

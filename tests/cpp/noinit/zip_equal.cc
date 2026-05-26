@@ -6,6 +6,7 @@
 
 #include <legate/utilities/detail/zip.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <noinit/zip_common.h>
@@ -48,10 +49,19 @@ TEST(ZipEqual, BadSize)
 
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Throwing check is only performed in debug mode
-    ASSERT_THROW(static_cast<void>(legate::detail::zip_equal(v1, v2)), std::invalid_argument);
+    ASSERT_THAT([&] { static_cast<void>(legate::detail::zip_equal(v1, v2)); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("Arguments to zip_equal() are not all equal")));
   } else {
     ASSERT_NO_THROW(static_cast<void>(legate::detail::zip_equal(v1, v2)));
   }
+}
+
+TEST(ZipEqual, UnequalContainerSizesError)
+{
+  ASSERT_THAT([] { legate::detail::zip_detail::throw_unequal_container_sizes(); },
+              ::testing::ThrowsMessage<std::invalid_argument>(
+                ::testing::HasSubstr("Arguments to zip_equal() are not all equal")));
 }
 
 TEST(ZipEqualUnit, Construct) { ZipTester::construct_test(); }

@@ -56,13 +56,13 @@ class EnsureDeleted : public legate::EnableSharedFromThis<EnsureDeleted> {
     SCOPED_TRACE("EnsureDeleted::validate()");
     int i = 0;
 
-    EXPECT_EQ(values_.size(), SIZE);
+    ASSERT_EQ(values_.size(), SIZE);
     for (const auto& v : values_) {
-      EXPECT_EQ(v, i);
+      ASSERT_EQ(v, i);
       ++i;
     }
-    EXPECT_NE(deleted_, nullptr);
-    EXPECT_FALSE(*deleted_);
+    ASSERT_NE(deleted_, nullptr);
+    ASSERT_FALSE(*deleted_);
   }
 
  protected:
@@ -92,13 +92,13 @@ class EnsureDeletedVirtual : public EnsureDeleted {
 
     std::vector<int> seen(SIZE, 0);
 
-    EXPECT_EQ(set_.size(), SIZE);
+    ASSERT_EQ(set_.size(), SIZE);
     for (auto&& v : set_) {
-      EXPECT_GE(v, 0);
+      ASSERT_GE(v, 0);
       ++seen.at(static_cast<std::size_t>(v));
     }
     for (auto&& s : seen) {
-      EXPECT_EQ(s, 1);
+      ASSERT_EQ(s, 1);
     }
   }
 
@@ -123,9 +123,23 @@ TYPED_TEST(EnableSharedFromThisUnit, Create)
     auto foo_shared = legate::make_internal_shared<TypeParam>(&del);
 
     foo_shared->validate();
-    EXPECT_FALSE(del);
+    ASSERT_FALSE(del);
   }
-  EXPECT_TRUE(del);
+  ASSERT_TRUE(del);
+}
+
+TYPED_TEST(EnableSharedFromThisUnit, CreateWithCopyEmptySharedPtr)
+{
+  const legate::InternalSharedPtr<TypeParam> empty_src;
+  // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+  const legate::InternalSharedPtr<TypeParam> copy{empty_src};
+
+  ASSERT_EQ(empty_src.use_count(), 0);
+  ASSERT_EQ(copy.use_count(), 0);
+  ASSERT_EQ(empty_src.get(), nullptr);
+  ASSERT_EQ(copy.get(), nullptr);
+  ASSERT_FALSE(empty_src);
+  ASSERT_FALSE(copy);
 }
 
 TYPED_TEST(EnableSharedFromThisUnit, SharedFromThisFromMakeShared)
@@ -135,21 +149,21 @@ TYPED_TEST(EnableSharedFromThisUnit, SharedFromThisFromMakeShared)
     auto foo_shared = legate::make_internal_shared<TypeParam>(&del);
 
     foo_shared->validate();
-    EXPECT_FALSE(del);
+    ASSERT_FALSE(del);
 
     auto foo2 = foo_shared->shared_from_this();
 
     foo_shared->validate();
     foo2->validate();
-    EXPECT_FALSE(del);
-    EXPECT_EQ(foo2, foo_shared);
-    EXPECT_EQ(foo2.use_count(), 2);
-    EXPECT_EQ(foo_shared.use_count(), 2);
-    EXPECT_TRUE(foo2.get());
-    EXPECT_TRUE(foo_shared.get());
-    EXPECT_EQ(*foo2, *foo_shared);
+    ASSERT_FALSE(del);
+    ASSERT_EQ(foo2, foo_shared);
+    ASSERT_EQ(foo2.use_count(), 2);
+    ASSERT_EQ(foo_shared.use_count(), 2);
+    ASSERT_TRUE(foo2.get());
+    ASSERT_TRUE(foo_shared.get());
+    ASSERT_EQ(*foo2, *foo_shared);
   }
-  EXPECT_TRUE(del);
+  ASSERT_TRUE(del);
 }
 
 TYPED_TEST(EnableSharedFromThisUnit, SharedFromThisFromNew)
@@ -159,21 +173,21 @@ TYPED_TEST(EnableSharedFromThisUnit, SharedFromThisFromNew)
     auto foo_shared = legate::InternalSharedPtr<TypeParam>{new std::remove_cv_t<TypeParam>{&del}};
 
     foo_shared->validate();
-    EXPECT_FALSE(del);
+    ASSERT_FALSE(del);
 
     auto foo2 = foo_shared->shared_from_this();
 
     foo_shared->validate();
     foo2->validate();
-    EXPECT_FALSE(del);
-    EXPECT_EQ(foo2, foo_shared);
-    EXPECT_EQ(foo2.use_count(), 2);
-    EXPECT_EQ(foo_shared.use_count(), 2);
-    EXPECT_TRUE(foo2.get());
-    EXPECT_TRUE(foo_shared.get());
-    EXPECT_EQ(*foo2, *foo_shared);
+    ASSERT_FALSE(del);
+    ASSERT_EQ(foo2, foo_shared);
+    ASSERT_EQ(foo2.use_count(), 2);
+    ASSERT_EQ(foo_shared.use_count(), 2);
+    ASSERT_TRUE(foo2.get());
+    ASSERT_TRUE(foo_shared.get());
+    ASSERT_EQ(*foo2, *foo_shared);
   }
-  EXPECT_TRUE(del);
+  ASSERT_TRUE(del);
 }
 
 namespace {
@@ -198,8 +212,8 @@ class EnsureDeletedRecursive : public EnsureDeletedVirtual {
     EnsureDeletedVirtual::validate();
 
     if (parent_) {
-      EXPECT_NE(parent_.get(), nullptr);
-      EXPECT_GE(parent_.use_count(), 1);
+      ASSERT_NE(parent_.get(), nullptr);
+      ASSERT_GE(parent_.use_count(), 1);
       parent_->validate();
     }
   }
@@ -208,9 +222,9 @@ class EnsureDeletedRecursive : public EnsureDeletedVirtual {
   {
     SCOPED_TRACE("EnsureDeletedRecursive::validate(should_have_parent)");
     if (should_have_parent) {
-      EXPECT_NE(parent_.get(), nullptr);
+      ASSERT_NE(parent_.get(), nullptr);
     } else {
-      EXPECT_EQ(parent_.get(), nullptr);
+      ASSERT_EQ(parent_.get(), nullptr);
     }
     this->validate();
   }
@@ -234,15 +248,15 @@ TEST(EnableSharedFromThisUnit, SharedFromThisRecursive)
       auto child = legate::make_internal_shared<EnsureDeletedRecursive>(&del_inner,
                                                                         parent->shared_from_this());
 
-      EXPECT_FALSE(del_inner);
-      EXPECT_FALSE(del_outer);
+      ASSERT_FALSE(del_inner);
+      ASSERT_FALSE(del_outer);
       child->validate(true);    // has a parent
       parent->validate(false);  // still doesn't have a parent:(
     }
-    EXPECT_TRUE(del_inner);
-    EXPECT_FALSE(del_outer);
+    ASSERT_TRUE(del_inner);
+    ASSERT_FALSE(del_outer);
   }
-  EXPECT_TRUE(del_outer);
+  ASSERT_TRUE(del_outer);
 }
 
 }  // namespace enable_shared_from_this_tests
