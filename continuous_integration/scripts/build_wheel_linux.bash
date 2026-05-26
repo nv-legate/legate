@@ -45,7 +45,9 @@ package_dir="${LEGATE_DIR}/scripts/build/python/legate${package_suffix}"
 package_name="legate${package_suffix}"
 
 rapids-logger "Installing build requirements"
-rapids-pip-retry install -v --prefer-binary -r continuous_integration/requirements-build.txt
+rapids-pip-retry install -v --prefer-binary \
+  -r "continuous_integration/requirements-build-common.txt" \
+  -r "continuous_integration/requirements-build${package_suffix}.txt"
 
 cd "${package_dir}"
 
@@ -62,12 +64,16 @@ if [[ ! -d "prefix" ]]; then
   exit 1
 fi
 
-# TODO(cryos): https://github.com/nv-legate/legate.internal/issues/1894
-# Improve the use of CMAKE_PREFIX_PATH to find legate and cutensor once
-# scikit-build supports it.
-CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix"
-export CMAKE_ARGS
-rapids-logger "CMAKE_ARGS='${CMAKE_ARGS}'"
+pip_nvidia_prefix="$(python -c 'from pathlib import Path; import os, site; print(next((Path(d) for d in site.getsitepackages() if Path(f"{d}/nvidia").is_dir()))/"nvidia")')"
+
+CMAKE_ARGS=(
+  -DHDF5_ROOT:PATH="${PWD}/prefix"
+  -DNCCL_ROOT:PATH="${pip_nvidia_prefix}/nccl"
+  -DNCCL_LIBRARY:FILEPATH="${pip_nvidia_prefix}/nccl/lib/libnccl.so.2"
+)
+SKBUILD_CMAKE_ARGS="$(IFS=';'; echo "${CMAKE_ARGS[*]}")"
+export SKBUILD_CMAKE_ARGS
+rapids-logger "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
 
 sccache --zero-stats
 

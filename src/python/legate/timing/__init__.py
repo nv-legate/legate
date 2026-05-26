@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from .._libnccl_loader import _libnccl
 from ._lib.timing import time
 
 __all__ = ("time",)

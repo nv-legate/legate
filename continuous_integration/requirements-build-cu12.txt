@@ -1,4 +1,4 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-nvidia-nccl-cu13>=2.28,<2.30; sys_platform == 'linux'
+nvidia-nccl-cu12>=2.28,<2.30; sys_platform == 'linux'

@@ -22,7 +22,7 @@ set(LEGATE_BUILD_PIP_WHEELS ON)
 if(UNIX AND NOT APPLE)
   set(legate_USE_CUDA ON)
   set(legate_USE_UCX OFF)
-  set(legate_USE_NCCL OFF)
+  set(legate_USE_NCCL ON)
 endif()
 
 add_subdirectory(../../../../src legate-all)
