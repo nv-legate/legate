@@ -1,4 +1,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-nvidia-nccl-cu13>=2.28,<2.30; sys_platform == 'linux'
+cmake>=3.26.4,!=3.30.0
+ninja
+scikit-build-core[pyproject]>=0.10.0
+setuptools_scm
+cython
+h5py
