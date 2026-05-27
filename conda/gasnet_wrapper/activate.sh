@@ -5,8 +5,17 @@
 
 echo -e "\n\n--------------------- CONDA/GASNET_WRAPPER/ACTIVATE.SH -----------------------\n"
 
+wrapper_file=""
 # shellcheck disable=SC2154
-wrapper_file=$(find "${CONDA_PREFIX}/gex-wrapper" \( -name "librealm_gex_wrapper.so" -o -name "librealm_gex_wrapper.dylib" \) -print -quit)
+wrapper_dir="${CONDA_PREFIX}/gex-wrapper"
+if [[ -d "${wrapper_dir}" ]]; then
+  wrapper_file=$(
+    find "${wrapper_dir}" \
+      \( -name "librealm_gex_wrapper.so" -o -name "librealm_gex_wrapper.dylib" \) \
+      -print \
+      -quit
+  )
+fi
 export REALM_GASNETEX_WRAPPER="${wrapper_file}"
 # WAR for:
 # https://gasnet-bugs.lbl.gov/bugzilla/show_bug.cgi?id=4638

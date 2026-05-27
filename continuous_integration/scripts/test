@@ -6,6 +6,59 @@ set -euo pipefail
 
 export RAPIDS_SCRIPT_NAME="test"
 
+reactivate_gex_wrapper_env() {
+    set +u
+    conda deactivate || true
+    activate_conda_env
+    set -u
+}
+
+prepare_gex_wrappers() {
+    if [[ "${LEGATE_NETWORK:-}" != "gex" ]]; then
+      return 0
+    fi
+
+    # shellcheck disable=SC2154  # CONDA_PREFIX is populated by the active conda env.
+    local mpi_wrapper_script="${CONDA_PREFIX}/mpi-wrapper/build-mpi-wrapper.sh"
+    local gex_wrapper_script="${CONDA_PREFIX}/gex-wrapper/build-gex-wrapper.sh"
+    local gex_cuda="${USE_CUDA:?USE_CUDA must be set by CI setup}"
+    local wrapper_build_deps=(cmake make pkg-config compilers openmpi)
+
+    if [[ "${gex_cuda}" == "ON" ]]; then
+      wrapper_build_deps+=(cuda-cudart-dev cuda-driver-dev)
+    fi
+
+    rapids-logger "Installing GEX wrapper build dependencies..."
+    set +u
+    rapids-conda-retry install \
+                       -y \
+                       -n "${CONDA_ENV:?CONDA_ENV must be set}" \
+                       -c conda-forge \
+                       "${wrapper_build_deps[@]}"
+    set -u
+
+    # Re-activate so compiler and MPI activation hooks apply before wrapper builds.
+    reactivate_gex_wrapper_env
+
+    rapids-logger "Building Legate MPI wrapper for GEX tests..."
+    "${mpi_wrapper_script}" -c mpicxx
+
+    rapids-logger \
+      "Building Realm GASNet-EX wrapper for GEX tests (conduit=smp, system=none, use-cuda=${gex_cuda})..."
+    # CI exercises the smp conduit; deployments build their site-specific
+    # conduit. Empty system_config disables the script's slingshot11 default.
+    "${gex_wrapper_script}" --conduit smp --system_config "" --use-cuda "${gex_cuda}"
+
+    # Re-activate so wrapper activation scripts export wrapper library paths.
+    reactivate_gex_wrapper_env
+
+    if [[ -z "${LEGATE_MPI_WRAPPER:-}" ]] || \
+       [[ -z "${REALM_GASNETEX_WRAPPER:-}" ]]; then
+      rapids-logger "Expected GEX wrapper activation variables were not set."
+      return 1
+    fi
+}
+
 run_test_or_analysis() {
     # rename
     # shellcheck disable=SC2154
@@ -28,6 +81,8 @@ run_test_or_analysis() {
     install_legate_with_war;
 
     activate_conda_env;
+
+    prepare_gex_wrappers;
 
     conda_info;
 
@@ -108,17 +163,23 @@ run_test_or_analysis() {
                 LEGATE_AUTO_CONFIG=0 pytest --color=yes --ignore tests/python/wo_runtime tests/python -s
                 LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python/wo_runtime -s
 
-                rapids-logger "Using CPUs (multi-rank: 2 ranks)..."
-                LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 legate \
-                          --launcher mpirun \
-                          --launcher-extra="--allow-run-as-root" \
-                          --ranks-per-node 2 \
-                          --cpus 2 \
-                          -m pytest \
-                          --color=yes \
-                          --ignore tests/python/wo_runtime \
-                          tests/python \
-                          -s
+                # The GEX wrapper built in CI uses the single-process smp
+                # conduit; multi-rank Python coverage remains in UCX lanes.
+                if [[ "${LEGATE_NETWORK:-}" != "gex" ]]; then
+                  rapids-logger "Using CPUs (multi-rank: 2 ranks)..."
+                  LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 legate \
+                            --launcher mpirun \
+                            --launcher-extra="--allow-run-as-root" \
+                            --ranks-per-node 2 \
+                            --cpus 2 \
+                            -m pytest \
+                            --color=yes \
+                            --ignore tests/python/wo_runtime \
+                            tests/python \
+                            -s
+                else
+                  rapids-logger "Skipping CPU multi-rank Python tests for GEX smp conduit..."
+                fi
                 ;;
               "1")
                 rapids-logger "Using 1 GPU ..."
@@ -149,18 +210,24 @@ run_test_or_analysis() {
                           tests/python/wo_runtime \
                           -s
 
-                rapids-logger "Using 2 GPUs (multi-rank: 2 ranks, 1 GPU each)..."
-                LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 legate \
-                          --launcher mpirun \
-                          --launcher-extra="--allow-run-as-root" \
-                          --ranks-per-node 2 \
-                          --gpus 1 \
-                          --fbmem 4000 \
-                          -m pytest \
-                          --color=yes \
-                          --ignore tests/python/wo_runtime \
-                          tests/python \
-                         -s
+                # The GEX wrapper built in CI uses the single-process smp
+                # conduit; multi-rank Python coverage remains in UCX lanes.
+                if [[ "${LEGATE_NETWORK:-}" != "gex" ]]; then
+                  rapids-logger "Using 2 GPUs (multi-rank: 2 ranks, 1 GPU each)..."
+                  LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 legate \
+                            --launcher mpirun \
+                            --launcher-extra="--allow-run-as-root" \
+                            --ranks-per-node 2 \
+                            --gpus 1 \
+                            --fbmem 4000 \
+                            -m pytest \
+                            --color=yes \
+                            --ignore tests/python/wo_runtime \
+                            tests/python \
+                           -s
+                else
+                  rapids-logger "Skipping GPU multi-rank Python tests for GEX smp conduit..."
+                fi
                 ;;
               *)
                 rapids-logger "Invalid case: $2"

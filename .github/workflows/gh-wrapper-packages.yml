@@ -1,0 +1,143 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+name: Build Wrapper Packages
+
+on:
+  workflow_call:
+    inputs:
+      ref-sha:
+        description: 'The Full-commit SHA to checkout. Default=HEAD'
+        required: false
+        default: ''
+        type: string
+      wrapper-set:
+        description: 'Wrapper recipes to build: mpi, gasnet, or gex'
+        required: true
+        type: string
+      publishable-nightly:
+        description: 'Use the nightly Legate version derivation for publishable packages'
+        required: false
+        default: false
+        type: boolean
+    outputs:
+      artifact-name:
+        value: ${{ jobs.build_wrapper_packages.outputs.artifact-name }}
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  build_wrapper_packages:
+    name: Build ${{ inputs.wrapper-set }} wrapper packages
+    outputs:
+      artifact-name: ${{ steps.set-vars.outputs.artifact-name }}
+    runs-on: linux-amd64-cpu4
+    timeout-minutes: 20
+    container:
+      options: -u root
+      image: condaforge/miniforge3:latest
+      env:
+        CONDA_ROOT: "/tmp/conda-croot/wrapper-packages"
+
+    steps:
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref-sha }}
+
+      - name: Trust checkout directory for Git metadata
+        run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Set environment variables
+        id: set-vars
+        env:
+          PUBLISHABLE_NIGHTLY: ${{ inputs.publishable-nightly }}
+          WRAPPER_SET: ${{ inputs.wrapper-set }}
+        run: |
+          ARTIFACT_PATH="/tmp/artifacts"
+          CONDA_OUTPUT="${ARTIFACT_PATH}/conda-build/legate"
+
+          case "${WRAPPER_SET}" in
+            mpi)
+              ARTIFACT_NAME="MPI-Wrapper-Artifact-${GITHUB_SHA}"
+              WRAPPER_RECIPES="conda/mpi_wrapper"
+              ;;
+            gasnet)
+              ARTIFACT_NAME="Gasnet-Wrapper-Artifact-${GITHUB_SHA}"
+              WRAPPER_RECIPES="conda/gasnet_wrapper"
+              ;;
+            gex)
+              ARTIFACT_NAME="gex-wrapper-packages-${GITHUB_SHA}"
+              WRAPPER_RECIPES="conda/mpi_wrapper conda/gasnet_wrapper"
+              ;;
+            *)
+              echo "Unexpected wrapper-set: ${WRAPPER_SET}" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ "${PUBLISHABLE_NIGHTLY}" == "true" ]]; then
+            LEGATE_VERSION="$(bash ./continuous_integration/scripts/tools/derive-nightly-legate-version)"
+          else
+            # PR wrapper checks only verify that recipes build.
+            # These artifacts are not published.
+            LEGATE_VERSION="0.0.0"
+          fi
+
+          {
+            echo "ARTIFACT_NAME=${ARTIFACT_NAME}"
+            echo "ARTIFACT_PATH=${ARTIFACT_PATH}"
+            echo "CONDA_OUTPUT=${CONDA_OUTPUT}"
+            echo "LEGATE_VERSION=${LEGATE_VERSION}"
+            echo "WRAPPER_RECIPES=${WRAPPER_RECIPES}"
+          } >> "${GITHUB_ENV}"
+          echo "artifact-name=${ARTIFACT_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install prerequisites
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends --quiet -y jq
+          conda install -q -y conda-build
+
+      - name: Set Legion metadata
+        if: ${{ inputs.wrapper-set != 'mpi' }}
+        run: |
+          LEGION_GIT_URL=$(jq -r '.packages.Legion.git_url' "src/cmake/versions/legion_version.json")
+          LEGION_GIT_REV=$(jq -r '.packages.Legion.git_tag' "src/cmake/versions/legion_version.json")
+          echo "LEGION_GIT_URL=${LEGION_GIT_URL}" >> "${GITHUB_ENV}"
+          echo "LEGION_GIT_REV=${LEGION_GIT_REV}" >> "${GITHUB_ENV}"
+
+      - name: Cleanup/Create related folders
+        run: |
+          rm -rf "${CONDA_ROOT}" "${ARTIFACT_PATH}"
+          mkdir -p "${CONDA_ROOT}" "${CONDA_OUTPUT}"
+
+      - name: Build wrapper packages
+        run: |
+          conda_build_args=()
+          conda_build_args+=(--croot "${CONDA_ROOT}")
+          conda_build_args+=(--output-folder "${CONDA_OUTPUT}")
+          conda_build_args+=(--no-test)
+
+          read -r -a wrapper_recipes <<< "${WRAPPER_RECIPES}"
+          for recipe in "${wrapper_recipes[@]}"; do
+            conda-build "${conda_build_args[@]}" "${recipe}"
+          done
+
+      - name: Keep noarch wrapper output only
+        run: |
+          find "${CONDA_OUTPUT}" -mindepth 1 -maxdepth 1 -type d ! -name noarch -exec rm -rf {} +
+
+      - name: Display output files
+        run: |
+          ls -lAhR "${CONDA_OUTPUT}"
+
+      - name: Upload wrapper packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACT_PATH }}

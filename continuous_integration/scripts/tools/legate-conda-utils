@@ -86,13 +86,18 @@ get_yaml_and_make_conda_env() {
 }
 
 install_legate_with_war() {
+  local runtime_pkgs=(legate)
+  if [[ "${LEGATE_NETWORK:-}" == "gex" ]]; then
+    runtime_pkgs+=(legate-mpi-wrapper realm-gex-wrapper)
+  fi
+
   # shellcheck disable=SC2154
   rapids-conda-retry create \
                      -y \
                      -n "${CONDA_ENV}" \
                      -c conda-forge \
                      -c "${ARTIFACTS_DIR}/conda-build/legate" \
-                     legate
+                     "${runtime_pkgs[@]}"
 }
 
 make_release_env() {

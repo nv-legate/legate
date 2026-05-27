@@ -15,7 +15,9 @@ source:
 
 build:
   include_recipe: false
-  number: 20
+  # Compatibility is tied to the exact Legate version below. Bump this only
+  # when rebuilding the same version with changed wrapper packaging.
+  number: 0
   skip: true  # [not linux]
   noarch: generic
   script_env:

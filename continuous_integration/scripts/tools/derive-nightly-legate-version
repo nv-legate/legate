@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+set -euo pipefail
+
+repo_dir="${1:-.}"
+
+cd "${repo_dir}"
+
+legate_tag="$(git describe --tags --abbrev=0)"
+commits_since_tag="$(git rev-list "${legate_tag}..HEAD" --count)"
+
+if [[ "${legate_tag}" == *".dev" ]]; then
+  echo "${legate_tag#v}${commits_since_tag}"
+elif [[ "${commits_since_tag}" -eq 0 ]]; then
+  echo "${legate_tag#v}"
+else
+  echo \
+    "Cannot derive a unique nightly version from non-dev tag ${legate_tag} with ${commits_since_tag} commits after it." \
+    >&2
+  exit 1
+fi

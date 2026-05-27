@@ -23,8 +23,20 @@ permissions:
   actions: read
 
 jobs:
+  gex-wrapper-packages:
+    name: GEX wrapper packages
+    uses:
+      ./.github/workflows/gh-wrapper-packages.yml
+    with:
+      ref-sha: ${{ github.event.inputs.ref-sha || github.sha }}
+      wrapper-set: gex
+      publishable-nightly: true
+    secrets: inherit
+
   cu129-tests:
     name: CUDA 12.9 tests
+    needs:
+      - gex-wrapper-packages
     strategy:
       fail-fast: false
       matrix: &cuda-build-matrix
@@ -52,6 +64,7 @@ jobs:
       build-has-tests: true
       upload-action: upload-package-None
       python-version: ${{ matrix.python-version }}
+      supplemental-channel-artifact: ${{ matrix.network == 'gex' && needs.gex-wrapper-packages.outputs.artifact-name || '' }}
       network: ${{ matrix.network }}
       refname: ${{ github.ref_name }}
       cuda-version: "12.9.0"
@@ -82,6 +95,8 @@ jobs:
 
   cu130-tests:
     name: CUDA 13.0 tests
+    needs:
+      - gex-wrapper-packages
     strategy:
       fail-fast: false
       matrix: *cuda-build-matrix
@@ -96,6 +111,7 @@ jobs:
       build-has-tests: true
       upload-action: upload-package-None
       python-version: ${{ matrix.python-version }}
+      supplemental-channel-artifact: ${{ matrix.network == 'gex' && needs.gex-wrapper-packages.outputs.artifact-name || '' }}
       network: ${{ matrix.network }}
       refname: ${{ github.ref_name }}
       cuda-version: "13.0.0"
@@ -126,6 +142,8 @@ jobs:
 
   cpu-tests:
     name: CPU nightly tests
+    needs:
+      - gex-wrapper-packages
     strategy:
       fail-fast: false
       matrix: &cpu-build-matrix
@@ -153,6 +171,7 @@ jobs:
       build-has-tests: true
       upload-action: upload-package-None
       python-version: ${{ matrix.python-version }}
+      supplemental-channel-artifact: ${{ matrix.network == 'gex' && needs.gex-wrapper-packages.outputs.artifact-name || '' }}
       network: ${{ matrix.network }}
       refname: ${{ github.ref_name }}
       default-branch: ${{ github.event.repository.default_branch }}
@@ -177,6 +196,36 @@ jobs:
       network: ${{ matrix.network }}
       refname: ${{ github.ref_name }}
       default-branch: ${{ github.event.repository.default_branch }}
+    secrets: inherit
+
+  upload-gex-wrapper-packages:
+    name: Upload GEX wrapper packages
+    needs:
+      - gex-wrapper-packages
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    # Wrapper packages are build-script artifacts, so publish after their package
+    # build succeeds. nightly-uploaded-main waits on uploads; nightly-main is the
+    # test/docs/source-release signal.
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.49
+    with:
+      client-repo: ${{ github.event.repository.name }}
+      client-ref: ${{ github.event.inputs.ref-sha }}
+      build-has-tests: false
+      build-type: nightly
+      name: Upload GEX wrapper packages to Anaconda
+      target-device: cpu
+      platform: linux
+      legate-gh-ci-tag: "v1.49"
+      build-mode: release
+      upload-action: upload-package-Anaconda
+      artifact-name: ${{ needs.gex-wrapper-packages.outputs.artifact-name }}
+      upload-all-packages: true
+      repos-Root: "legate"
+      network: gex
+      refname: ${{ github.ref_name }}
+      default-branch: ${{ github.event.repository.default_branch }}
+      timeout: 15
     secrets: inherit
 
   build-nightly-docs:
@@ -366,12 +415,14 @@ jobs:
         github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
         needs.cu129.result == 'success' &&
         needs.cu130.result == 'success' &&
-        needs.cpu-packages.result == 'success'
+        needs.cpu-packages.result == 'success' &&
+        needs.upload-gex-wrapper-packages.result == 'success'
       }}
     needs:
       - cu129
       - cu130
       - cpu-packages
+      - upload-gex-wrapper-packages
     runs-on: linux-amd64-cpu4
     concurrency:
       group: ${{ format('{0}-{1}', github.workflow, 'nightly-uploaded-main-ref') }}

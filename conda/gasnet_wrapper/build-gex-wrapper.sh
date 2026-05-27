@@ -122,6 +122,7 @@ cd src/build || { echo "Error: Failed to navigate to build directory"; exit 1; }
 
 CMAKE_ARGS=(
   -DLEGION_SOURCE_DIR="${SCRIPT_DIR}"
+  -DREALM_SOURCE_DIR="${SCRIPT_DIR}"
   -DCMAKE_INSTALL_PREFIX="${SCRIPT_DIR}"
   -DGASNet_CONDUIT="${conduit}"
   -DGASNet_SYSTEM="${system_config}"
@@ -130,6 +131,30 @@ CMAKE_ARGS=(
 )
 
 if [[ "${cuda}" == "ON" ]]; then
+  # CI installs the minimal CUDA runtime/driver dev packages, not cuda-nvcc or
+  # cuda-toolkit. Those packages provide headers/libs under targets/*-linux but
+  # no activation hook, so fill GASNet configure vars while preserving user
+  # overrides.
+  cuda_target=""
+  if [[ -d "${CONDA_PREFIX}/targets" ]]; then
+    for target in "${CONDA_PREFIX}"/targets/*-linux; do
+      if [[ -f "${target}/include/cuda.h" ]]; then
+        cuda_target="${target}"
+        break
+      fi
+    done
+  fi
+  if [[ -n "${cuda_target}" ]]; then
+    export CUDA_HOME="${CUDA_HOME:-${cuda_target}}"
+    export CUDA_CFLAGS="${CUDA_CFLAGS:--I${cuda_target}/include}"
+    if [[ -d "${cuda_target}/lib/stubs" ]]; then
+      export CUDA_LDFLAGS="${CUDA_LDFLAGS:--L${cuda_target}/lib/stubs}"
+    else
+      export CUDA_LDFLAGS="${CUDA_LDFLAGS:--L${cuda_target}/lib}"
+    fi
+    export CUDA_LIBS="${CUDA_LIBS:--lcuda}"
+  fi
+
   CMAKE_ARGS+=(-DGASNet_CONFIGURE_ARGS="--enable-kind-cuda-uva")
 fi
 
@@ -147,7 +172,14 @@ fi
 
 CMAKE_ARGS+=(-DCMAKE_SHARED_LINKER_FLAGS="${LINK_FLAGS[*]}")
 
-cmake "${CMAKE_ARGS[@]}" ..
+if ! cmake "${CMAKE_ARGS[@]}" ..; then
+  gasnet_build_log="${SCRIPT_DIR}/src/build/embed-gasnet/build.log"
+  if [[ -f "${gasnet_build_log}" ]]; then
+    echo "GASNet build log:" >&2
+    cat "${gasnet_build_log}" >&2
+  fi
+  exit 1
+fi
 cmake --build .
 cmake --install .
 
