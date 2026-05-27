@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import sys
+from typing import Any
 
 import numpy as np
 
 import pytest
 
+from legate import install_info
 from legate.core import ExternalAllocation, TaskTarget, get_legate_runtime
 
 try:
@@ -17,6 +19,21 @@ try:
     cupy.cuda.runtime.getDeviceCount()
 except Exception:
     cupy = None
+
+
+class _UnversionedDLPack:
+    def __init__(self, arr: np.ndarray[Any, Any]) -> None:
+        self.arr = arr
+
+    def __dlpack__(
+        self,
+        stream: int | object | None = None,
+        dl_device: tuple[int, int] | None = None,
+        copy: bool | None = None,
+    ) -> object:
+        return self.arr.__dlpack__(
+            stream=stream, dl_device=dl_device, copy=copy
+        )
 
 
 class TestFromDLPack:
@@ -107,6 +124,14 @@ class TestFromDLPack:
         alloc = ExternalAllocation.from_dlpack(arr)
         assert alloc.size == arr.nbytes
 
+    def test_accepts_unversioned_capsule(self) -> None:
+        buf = np.arange(10, dtype=np.float64)
+        alloc = ExternalAllocation.from_dlpack(
+            _UnversionedDLPack(buf), read_only=True
+        )
+        assert alloc.size == buf.nbytes
+        assert alloc.read_only is True
+
 
 class TestFromSysmem:
     def test_basic(self) -> None:
@@ -130,6 +155,19 @@ class TestFromSysmem:
         refcount_after = sys.getrefcount(buf)
         assert refcount_after > refcount_before
         del alloc
+
+
+@pytest.mark.skipif(
+    not install_info.use_cuda, reason="ZCMEM requires a CUDA-enabled build"
+)
+class TestFromZcmem:
+    def test_basic(self) -> None:
+        buf = np.arange(10, dtype=np.float64)
+        alloc = ExternalAllocation.from_zcmem(
+            buf.ctypes.data, buf.nbytes, read_only=True, source=buf
+        )
+        assert alloc.size == buf.nbytes
+        assert alloc.read_only is True
 
 
 @pytest.mark.skipif(

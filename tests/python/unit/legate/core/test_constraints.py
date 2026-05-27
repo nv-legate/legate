@@ -370,6 +370,13 @@ class TestScale:
             lg.scale((-1,), variable_x, variable_y)
 
 
+class TestMinExtents:
+    def test_create_from_variable(self, variable_x: Variable) -> None:
+        constraint = lg.min_extents(variable_x, (3,))
+        assert isinstance(constraint, Constraint)
+        assert repr(constraint) == str(constraint)
+
+
 OFFSETS: tuple[tuple[int, ...], ...] = ((), (1,), (2, 3, 4))
 
 

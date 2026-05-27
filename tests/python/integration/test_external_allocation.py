@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from legate.core import (
+    DimOrdering,
     ExternalAllocation,
     TaskTarget,
     get_legate_runtime,
@@ -117,6 +118,47 @@ def test_from_dlpack_multi_tile() -> None:
     expected = np.arange(20, dtype=np.float64)
     np.testing.assert_allclose(result, expected)
     store.detach()
+
+
+def test_create_store_from_tiles_with_explicit_ordering() -> None:
+    runtime = get_legate_runtime()
+
+    buf = np.arange(10, dtype=np.float64)
+    alloc = ExternalAllocation.from_sysmem(
+        buf.ctypes.data, buf.nbytes, read_only=True, source=buf
+    )
+
+    store, _ = runtime.create_store_from_tiles(
+        dtype=ty.float64,
+        shape=(10,),
+        tile_shape=(10,),
+        allocations=[(alloc, (0,))],
+        ordering=DimOrdering.c_order(),
+    )
+
+    result = np.from_dlpack(store.get_physical_store())
+    np.testing.assert_allclose(result, buf)
+    store.detach()
+
+
+def test_create_store_from_tiles_rejects_bad_ordering() -> None:
+    runtime = get_legate_runtime()
+
+    buf = np.arange(10, dtype=np.float64)
+    alloc = ExternalAllocation.from_sysmem(
+        buf.ctypes.data, buf.nbytes, read_only=True, source=buf
+    )
+
+    with pytest.raises(
+        TypeError, match="ordering must be a DimOrdering instance"
+    ):
+        runtime.create_store_from_tiles(
+            dtype=ty.float64,
+            shape=(10,),
+            tile_shape=(10,),
+            allocations=[(alloc, (0,))],
+            ordering=object(),  # type: ignore[arg-type]
+        )
 
 
 def test_sum_over_tiles() -> None:

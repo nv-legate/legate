@@ -185,7 +185,9 @@ cdef _ExternalAllocation create_from_pointer(
             c_ptr, size, read_only, deleter
         )
     else:
-        raise ValueError(f"Unsupported store target: {target}")
+        raise ValueError(  # pragma: no cover
+            f"Unsupported store target: {target}"
+        )
 
 
 cdef class ExternalAllocation:
