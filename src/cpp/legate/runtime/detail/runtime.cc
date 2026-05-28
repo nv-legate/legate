@@ -1281,13 +1281,6 @@ const Legion::IndexSpace& Runtime::find_or_create_index_space(const Domain& doma
   return it->second;
 }
 
-Legion::IndexPartition Runtime::create_equal_partition(const Legion::IndexSpace& index_space,
-                                                       const Legion::IndexSpace& color_space)
-{
-  return get_legion_runtime()->create_equal_partition(
-    get_legion_context(), index_space, color_space);
-}
-
 Legion::IndexPartition Runtime::create_restricted_partition(
   const Legion::IndexSpace& index_space,
   const Legion::IndexSpace& color_space,

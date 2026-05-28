@@ -46,7 +46,8 @@ class OpaqueTest : public DefaultFixture {
     launch_is        = runtime_impl->find_or_create_index_space(launch_domain);
     auto data_domain = Legion::Domain{Legion::Rect<1>{0, 3}};
     auto& data_is    = runtime_impl->find_or_create_index_space(data_domain);
-    partition        = runtime_impl->create_equal_partition(data_is, launch_is);
+    partition        = runtime_impl->get_legion_runtime()->create_equal_partition(
+      runtime_impl->get_legion_context(), data_is, launch_is);
 
     return legate::detail::create_opaque(data_is, partition, launch_domain);
   }
