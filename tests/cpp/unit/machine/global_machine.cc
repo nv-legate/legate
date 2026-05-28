@@ -62,6 +62,21 @@ TEST_F(GlobalMachineTest, SliceCPU)
   ASSERT_EQ(sliced.total_proc_count(), local_machine.total_cpu_count());
 }
 
+TEST_F(GlobalMachineTest, SliceCPUDisjointRange)
+{
+  const auto global_machine = legate::mapping::detail::GlobalMachine{};
+  const auto cpu_count =
+    static_cast<std::uint32_t>(global_machine.procs(legate::mapping::TaskTarget::CPU).size());
+  const legate::mapping::detail::Machine machine{
+    {{legate::mapping::TaskTarget::CPU,
+      legate::mapping::ProcessorRange{/*low_id=*/cpu_count,
+                                      /*high_id=*/cpu_count + 1,
+                                      /*per_node_proc_count=*/1}}}};
+  const auto sliced = global_machine.slice(machine);
+
+  ASSERT_TRUE(sliced.empty());
+}
+
 TEST_F(GlobalMachineTest, SliceEmpty)
 {
   const auto global_machine = legate::mapping::detail::GlobalMachine{};
@@ -114,6 +129,23 @@ TEST_F(GlobalMachineTest, SliceFallbackCPU)
   }
 
   ASSERT_EQ(sliced_global.total_proc_count(), local_machine.total_cpu_count());
+}
+
+TEST_F(GlobalMachineTest, SliceFallbackCPUDisjointRange)
+{
+  const auto global_machine = legate::mapping::detail::GlobalMachine{};
+  const auto cpu_count =
+    static_cast<std::uint32_t>(global_machine.procs(legate::mapping::TaskTarget::CPU).size());
+  const legate::mapping::detail::Machine machine{
+    {{legate::mapping::TaskTarget::CPU,
+      legate::mapping::ProcessorRange{/*low_id=*/cpu_count,
+                                      /*high_id=*/cpu_count + 1,
+                                      /*per_node_proc_count=*/1}}}};
+  const auto sliced_global = global_machine.slice_with_fallback(machine);
+
+  ASSERT_EQ(sliced_global.offset(), 0);
+  ASSERT_EQ(sliced_global.total_proc_count(), cpu_count);
+  ASSERT_EQ(sliced_global.local_proc_count(), cpu_count);
 }
 
 TEST_F(GlobalMachineTest, SliceFallbackEmpty)

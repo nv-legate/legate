@@ -11,12 +11,31 @@
 
 #include <gtest/gtest.h>
 
+#include <sstream>
 #include <utilities/utilities.h>
 
 namespace local_machine_test {
 
 using LocalMachineTest  = DefaultFixture;
 using ProcessorSpanTest = DefaultFixture;
+
+namespace {
+
+void assert_same_local_machine(const legate::mapping::detail::LocalMachine& result,
+                               const legate::mapping::detail::LocalMachine& expected)
+{
+  ASSERT_EQ(result.node_id, expected.node_id);
+  ASSERT_EQ(result.total_nodes, expected.total_nodes);
+  ASSERT_EQ(result.cpus(), expected.cpus());
+  ASSERT_EQ(result.gpus(), expected.gpus());
+  ASSERT_EQ(result.omps(), expected.omps());
+  ASSERT_EQ(result.system_memory(), expected.system_memory());
+  ASSERT_EQ(result.zerocopy_memory(), expected.zerocopy_memory());
+  ASSERT_EQ(result.frame_buffers(), expected.frame_buffers());
+  ASSERT_EQ(result.socket_memories(), expected.socket_memories());
+}
+
+}  // namespace
 
 TEST_F(LocalMachineTest, CPU)
 {
@@ -64,6 +83,41 @@ TEST_F(LocalMachineTest, OMP)
     ASSERT_TRUE(local_machine.omps().empty());
     ASSERT_EQ(local_machine.total_omp_count(), 0);
   }
+}
+
+TEST_F(LocalMachineTest, ProcessorAccessors)
+{
+  using LocalMachine = legate::mapping::detail::LocalMachine;
+  using Accessor     = const std::vector<legate::Processor>& (LocalMachine::*)() const;
+
+  const auto local_machine = LocalMachine{};
+  const Accessor cpus      = &LocalMachine::cpus;
+  const Accessor gpus      = &LocalMachine::gpus;
+  const Accessor omps      = &LocalMachine::omps;
+
+  ASSERT_EQ((local_machine.*cpus)(), local_machine.cpus());
+  ASSERT_EQ((local_machine.*gpus)(), local_machine.gpus());
+  ASSERT_EQ((local_machine.*omps)(), local_machine.omps());
+}
+
+TEST_F(LocalMachineTest, CreateFromProcessor)
+{
+  const auto local_machine = legate::mapping::detail::LocalMachine{};
+
+  if (!local_machine.has_cpus()) {
+    GTEST_SKIP() << "CPU processors are required to construct LocalMachine from a processor";
+  }
+
+  assert_same_local_machine(legate::mapping::detail::LocalMachine{local_machine.cpus().front()},
+                            local_machine);
+}
+
+TEST_F(LocalMachineTest, CreateFromMemory)
+{
+  const auto local_machine = legate::mapping::detail::LocalMachine{};
+
+  assert_same_local_machine(legate::mapping::detail::LocalMachine{local_machine.system_memory()},
+                            local_machine);
 }
 
 TEST_F(LocalMachineTest, SliceCPU)

@@ -79,10 +79,12 @@ TEST_F(MachineTest, EqualOperator)
   const legate::mapping::Machine machine2{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE}, {legate::mapping::TaskTarget::OMP, OMP_RANGE}}};
   ASSERT_EQ(machine1, machine2);
+  ASSERT_TRUE(*machine1.impl() == *machine2.impl());
 
   const legate::mapping::Machine machine3{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE}, {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
   ASSERT_NE(machine3, machine1);
+  ASSERT_FALSE(*machine3.impl() == *machine1.impl());
 }
 
 TEST_F(MachineTest, PreferedTarget)
@@ -271,6 +273,7 @@ TEST_F(MachineTest, Slice)
      {legate::mapping::TaskTarget::GPU, GPU_RANGE.slice(/*from=*/0, /*to=*/1)}}};
 
   ASSERT_EQ(machine3.slice(0, 1, true), expected1);
+  ASSERT_EQ(machine3.impl()->slice(0, 1, true), *expected1.impl());
 
   const legate::mapping::Machine expected2{
     {{legate::mapping::TaskTarget::CPU, CPU_RANGE.slice(/*from=*/1, /*to=*/2)},

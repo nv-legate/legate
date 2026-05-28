@@ -62,6 +62,33 @@ TEST_F(ProcessorRangeTest, CreateEmpty)
   check_empty(range2);
 }
 
+TEST_F(ProcessorRangeTest, CreateRuntimeNormalizesRanges)
+{
+  constexpr std::uint32_t low_id              = 1;
+  constexpr std::uint32_t high_id             = 3;
+  constexpr std::uint32_t per_node_proc_count = 0;
+  const legate::mapping::ProcessorRange range{low_id, high_id, per_node_proc_count};
+
+  ASSERT_FALSE(range.empty());
+  ASSERT_EQ(range.low, low_id);
+  ASSERT_EQ(range.high, high_id);
+  ASSERT_EQ(range.per_node_count, 1);
+
+  const legate::mapping::ProcessorRange reversed_range{
+    /*low_id=*/high_id, /*high_id=*/low_id, /*per_node_proc_count=*/2};
+  ASSERT_TRUE(reversed_range.empty());
+  ASSERT_EQ(reversed_range.low, 0);
+  ASSERT_EQ(reversed_range.high, 0);
+  ASSERT_EQ(reversed_range.per_node_count, 2);
+
+  const legate::mapping::ProcessorRange equal_bound_range{
+    /*low_id=*/high_id, high_id, per_node_proc_count};
+  ASSERT_TRUE(equal_bound_range.empty());
+  ASSERT_EQ(equal_bound_range.low, 0);
+  ASSERT_EQ(equal_bound_range.high, 0);
+  ASSERT_EQ(equal_bound_range.per_node_count, 1);
+}
+
 TEST_F(ProcessorRangeTest, ComparisonOperator)
 {
   constexpr legate::mapping::ProcessorRange range1{
@@ -92,6 +119,24 @@ TEST_F(ProcessorRangeTest, ComparisonOperator)
   static_assert(range1 != range5);
   static_assert(range5 < range1);
   static_assert(!(range1 < range5));
+}
+
+TEST_F(ProcessorRangeTest, EqualOperatorRuntimeShortCircuitBranches)
+{
+  constexpr std::uint32_t low_id              = 2;
+  constexpr std::uint32_t high_id             = 6;
+  constexpr std::uint32_t per_node_proc_count = 2;
+  const legate::mapping::ProcessorRange range{low_id, high_id, per_node_proc_count};
+  const legate::mapping::ProcessorRange same{low_id, high_id, per_node_proc_count};
+  const legate::mapping::ProcessorRange different_low{/*low_id=*/1, high_id, per_node_proc_count};
+  const legate::mapping::ProcessorRange different_high{low_id, /*high_id=*/5, per_node_proc_count};
+  const legate::mapping::ProcessorRange different_per_node{
+    low_id, high_id, /*per_node_proc_count=*/1};
+
+  ASSERT_TRUE(range == same);
+  ASSERT_FALSE(range == different_low);
+  ASSERT_FALSE(range == different_high);
+  ASSERT_FALSE(range == different_per_node);
 }
 
 TEST_F(ProcessorRangeTest, IntersectionOperator)
@@ -140,6 +185,19 @@ TEST_F(ProcessorRangeTest, NodeRange)
   static_assert(range.get_node_range() == legate::mapping::NodeRange{0, 4});
 }
 
+TEST_F(ProcessorRangeTest, NodeRangeRuntime)
+{
+  constexpr std::uint32_t low_id              = 0;
+  constexpr std::uint32_t high_id             = 7;
+  constexpr std::uint32_t per_node_proc_count = 2;
+  const legate::mapping::ProcessorRange range{low_id, high_id, per_node_proc_count};
+  const auto node_range = range.get_node_range();
+
+  ASSERT_EQ(node_range.low, 0);
+  ASSERT_EQ(node_range.high, 4);
+  ASSERT_EQ(node_range, (legate::mapping::NodeRange{0, 4}));
+}
+
 TEST_F(ProcessorRangeTest, Slice)
 {
   // Slice empty range with empty range
@@ -160,6 +218,19 @@ TEST_F(ProcessorRangeTest, Slice)
     /*low_id=*/1, /*high_id=*/3, /*per_node_proc_count=*/1};
   static_assert(range3.slice(/*from=*/1, /*to=*/3).count() == 1);
   static_assert(range3.slice(/*from=*/0, /*to=*/2).count() == 2);
+}
+
+TEST_F(ProcessorRangeTest, SliceRuntimeClampsToHigh)
+{
+  const legate::mapping::ProcessorRange range{
+    /*low_id=*/1, /*high_id=*/3, /*per_node_proc_count=*/1};
+  const auto sliced = range.slice(/*from=*/4, /*to=*/6);
+
+  ASSERT_TRUE(sliced.empty());
+  ASSERT_EQ(sliced.low, 0);
+  ASSERT_EQ(sliced.high, 0);
+  ASSERT_EQ(sliced.per_node_count, 1);
+  ASSERT_EQ(sliced.count(), 0);
 }
 
 TEST_F(ProcessorRangeTest, ToString)

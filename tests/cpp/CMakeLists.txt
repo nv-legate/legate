@@ -436,6 +436,7 @@ set(
   non_reentrant/wo_runtime/init/init.cc
   non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/inline_storage/basic.cc
+  non_reentrant/wo_runtime/machine/local_machine.cc
   non_reentrant/wo_runtime/streaming/streaming.cc
 )
 
