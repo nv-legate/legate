@@ -11,14 +11,13 @@ from libcpp.optional cimport (
     optional as std_optional,
 )
 
-from ...data_interface import Field, LegateDataInterfaceItem
+from ...data_interface import LegateDataInterfaceItem
 
 from ..mapping.mapping cimport StoreTarget
 from ..runtime.runtime cimport get_legate_runtime
 from ..type.types cimport Type
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
-from .logical_array cimport LogicalArray
 from .physical_store cimport PhysicalStore
 from .shape cimport Shape
 from .slice cimport from_python_slice
@@ -208,10 +207,9 @@ cdef class LogicalStore(Unconstructable):
         :returns: The array interface.
         :rtype: LegateDataInterfaceItem
         """
-        array = LogicalArray.from_store(self)
         result: LegateDataInterfaceItem = {
-            "version": 1,
-            "data": {Field("store", self.type): array},
+            "version": 2,
+            "data": {"store": self},
         }
         return result
 

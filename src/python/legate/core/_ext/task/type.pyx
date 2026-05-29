@@ -7,10 +7,8 @@ import sys
 from collections.abc import Callable
 from typing import Generic, TypeAlias, TypeVar
 
-from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
 
-from ..._lib.data.physical_array import PhysicalArray as PyPhysicalArray
 from ..._lib.data.physical_store import PhysicalStore as PyPhysicalStore
 
 from ..._lib.task.task_context cimport TaskContext
@@ -70,49 +68,5 @@ class ReductionStore(PyPhysicalStore, Generic[_T]):
     .. code-block:: python
 
         def task_function(in: InputStore, red: ReductionStore) -> None
-
-    """
-
-
-cdef class InputArray(PhysicalArray):
-    r"""Convenience class for specifying input arrays for Legate task variants.
-
-    This class can be used as a type annotation in order to mark parameters as
-    inputs that should be taken from ``TaskContext.inputs`` when the task code
-    is invoked:
-
-    .. code-block:: python
-
-        def task_function(in: InputArray, out: OutputArray) -> None
-
-    """
-
-
-cdef class OutputArray(PhysicalArray):
-    r"""Convenience class for specifying output arrays for Legate task
-    variants.
-
-    This class can be used as a type annotation in order to mark parameters as
-    outputs that should be taken from ``TaskContext.outputs`` when the task
-    code is invoked:
-
-    .. code-block:: python
-
-        def task_function(in: InputArray, out: OutputArray) -> None
-
-    """
-
-
-class ReductionArray(PyPhysicalArray, Generic[_T]):
-    r"""Convenience class for specifying reduction arrays for Legate task
-    variants.
-
-    This class can be used as a type annotation in order to mark parameters as
-    reductions that should be taken from ``TaskContext.reductions`` when the
-    task code is invoked:
-
-    .. code-block:: python
-
-        def task_function(in: InputArray, red: ReductionArray) -> None
 
     """

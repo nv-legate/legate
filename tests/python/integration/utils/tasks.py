@@ -26,15 +26,7 @@ from legate.core import (
     align,
     broadcast,
 )
-from legate.core.task import (
-    ADD,
-    InputArray,
-    InputStore,
-    OutputArray,
-    OutputStore,
-    ReductionStore,
-    task,
-)
+from legate.core.task import ADD, InputStore, OutputStore, ReductionStore, task
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -141,16 +133,16 @@ def copy_store_with_empty_task(
     variants=tuple(VariantCode), constraints=broadcast("arg1", "arg2", "out")
 )
 def mixed_sum_task(
-    arg1: InputArray, arg2: InputStore, out: OutputArray
+    arg1: InputStore, arg2: InputStore, out: OutputStore
 ) -> None:
-    arr1_np = asarray(arg1.data().get_inline_allocation())
+    arr1_np = asarray(arg1.get_inline_allocation())
     arr2_np = asarray(arg2.get_inline_allocation())
-    out_arr_np = asarray(out.data().get_inline_allocation())
+    out_arr_np = asarray(out.get_inline_allocation())
     out_arr_np[:] = arr1_np + arr2_np
 
 
 @task(variants=tuple(VariantCode))
-def fill_task(out: OutputArray, val: Scalar) -> None:
+def fill_task(out: OutputStore, val: Scalar) -> None:
     out_arr_np = asarray(out)
     v = val.value()
     if isinstance(v, memoryview):

@@ -7,7 +7,7 @@ from libcpp cimport bool
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
-from ..data.physical_array cimport PhysicalArray, _PhysicalArray
+from ..data.physical_store cimport PhysicalStore, _PhysicalStore
 from ..data.scalar cimport Scalar, _Scalar
 from ..utilities.typedefs cimport (
     VariantCode,
@@ -20,6 +20,11 @@ from ..mapping.machine cimport _Machine
 from ..mapping.mapping cimport TaskTarget
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
+
+cdef extern from "legate/data/physical_array.h" namespace "legate" nogil:
+    cdef cppclass _PhysicalArray "legate::PhysicalArray":
+        _PhysicalStore data() except+
+
 
 cdef extern from "legate/task/task_context.h" namespace "legate" nogil:
     cdef cppclass _TaskContext "legate::TaskContext":
@@ -49,9 +54,9 @@ cdef class TaskContext(Unconstructable):
     cdef:
         _TaskContext* _handle
     cdef readonly:
-        tuple[PhysicalArray, ...] _inputs
-        tuple[PhysicalArray, ...] _outputs
-        tuple[PhysicalArray, ...] _reductions
+        tuple[PhysicalStore, ...] _inputs
+        tuple[PhysicalStore, ...] _outputs
+        tuple[PhysicalStore, ...] _reductions
         tuple[Scalar, ...] _scalars
 
     # the defacto constructor

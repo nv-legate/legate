@@ -7,26 +7,26 @@ from os import PathLike as os_PathLike
 from pathlib import Path
 from typing import TypeAlias
 
-from .....data_interface import LogicalArrayLike
-from ....data.logical_array import LogicalArray
+from .....data_interface import LogicalStoreLike
+from ....data.logical_store import LogicalStore
 from ....data.shape import Shape
 from ....type.types import Type
 
 Pathlike: TypeAlias = str | os_PathLike[str] | Path
 Shapelike: TypeAlias = Shape | Sequence[int]
 
-def from_file(path: Pathlike, array_type: Type) -> LogicalArray: ...
-def to_file(path: Pathlike, array: LogicalArrayLike) -> None: ...
+def from_file(path: Pathlike, store_type: Type) -> LogicalStore: ...
+def to_file(path: Pathlike, store: LogicalStoreLike) -> None: ...
 def from_tiles(
     path: Pathlike,
     shape: Shapelike,
-    array_type: Type,
+    store_type: Type,
     tile_shape: tuple[int, ...],
     tile_start: tuple[int, ...] | None = None,
-) -> LogicalArray: ...
+) -> LogicalStore: ...
 def to_tiles(
     path: Pathlike,
-    array: LogicalArray,
+    store: LogicalStore,
     tile_shape: tuple[int, ...],
     tile_start: tuple[int, ...] | None = None,
 ) -> None: ...
@@ -36,4 +36,4 @@ def from_tiles_by_offsets(
     type: Type,  # noqa: A002
     offsets: tuple[int, ...],
     tile_shape: tuple[int, ...] | None = None,
-) -> LogicalArray: ...
+) -> LogicalStore: ...

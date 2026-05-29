@@ -8,8 +8,11 @@ from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
-from ..data.logical_array cimport LogicalArray, _LogicalArray
-from ..data.logical_store cimport _LogicalStore, _LogicalStorePartition
+from ..data.logical_store cimport (
+    _LogicalStore,
+    _LogicalStorePartition,
+    LogicalStore,
+)
 from ..data.scalar cimport _Scalar
 from ..partitioning.constraint cimport (
     Constraint,
@@ -26,15 +29,15 @@ cdef extern from "legate/operation/task.h" namespace "legate" nogil:
     cdef cppclass _AutoTask "legate::AutoTask":
         _AutoTask() except+
         _AutoTask(const _AutoTask&) except+
-        _Variable add_input(_LogicalArray) except+
-        _Variable add_input(_LogicalArray, _Variable) except+
-        _Variable add_output(_LogicalArray) except+
-        _Variable add_output(_LogicalArray, _Variable) except+
-        _Variable add_reduction(_LogicalArray, int32_t) except+
-        _Variable add_reduction(_LogicalArray, int32_t, _Variable) except+
+        _Variable add_input(_LogicalStore) except+
+        _Variable add_input(_LogicalStore, _Variable) except+
+        _Variable add_output(_LogicalStore) except+
+        _Variable add_output(_LogicalStore, _Variable) except+
+        _Variable add_reduction(_LogicalStore, int32_t) except+
+        _Variable add_reduction(_LogicalStore, int32_t, _Variable) except+
         void add_scalar_arg(const _Scalar& scalar) except+
         void add_constraint(_Constraint) except+
-        _Variable find_or_declare_partition(_LogicalArray) except+
+        _Variable find_or_declare_partition(_LogicalStore) except+
         _Variable declare_partition() except+
         std_string_view provenance() except+
         void set_concurrent(bool) except+
@@ -84,17 +87,17 @@ cdef class AutoTask(Unconstructable):
 
     cpdef void lock(self)
     cpdef Variable add_input(
-        self, object array_or_store, object partition = *
+        self, LogicalStore store, object partition = *
     )
     cpdef Variable add_output(
-        self, object array_or_store, object partition = *
+        self, LogicalStore store, object partition = *
     )
     cpdef Variable add_reduction(
-        self, object array_or_store, int32_t redop, object partition = *
+        self, LogicalStore store, int32_t redop, object partition = *
     )
     cpdef void add_scalar_arg(self, object value, object dtype = *)
     cpdef void add_constraint(self, object constraint)
-    cpdef Variable find_or_declare_partition(self, LogicalArray array)
+    cpdef Variable find_or_declare_partition(self, LogicalStore store)
     cpdef Variable declare_partition(self)
     cpdef str provenance(self)
     cpdef void set_concurrent(self, bool concurrent)
@@ -103,9 +106,9 @@ cdef class AutoTask(Unconstructable):
     cpdef void add_communicator(self, str name)
     cpdef void execute(self)
     cpdef void add_alignment(
-        self, object array_or_store1, object array_or_store2
+        self, LogicalStore store1, LogicalStore store2
     )
-    cpdef void add_broadcast(self, object array_or_store, object axes = *)
+    cpdef void add_broadcast(self, LogicalStore store, object axes = *)
     cpdef void add_nccl_communicator(self)
     cpdef void add_cpu_communicator(self)
 

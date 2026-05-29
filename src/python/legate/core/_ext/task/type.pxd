@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.utilities.typedefs cimport VariantCode
@@ -51,12 +50,4 @@ cdef class InputStore(PhysicalStore):
 
 
 cdef class OutputStore(PhysicalStore):
-    pass
-
-
-cdef class InputArray(PhysicalArray):
-    pass
-
-
-cdef class OutputArray(PhysicalArray):
     pass

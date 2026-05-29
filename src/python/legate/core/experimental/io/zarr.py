@@ -12,13 +12,13 @@ import numpy as np
 import zarr.core  # type: ignore # noqa: PGH003
 
 from ... import (
-    LogicalArray,
+    LogicalStore,
     Type,
     VariantCode,
     get_legate_runtime,
     types as ty,
 )
-from ...data_interface import LogicalArrayLike, as_logical_array
+from ...data_interface import LogicalStoreLike, as_logical_store
 from ...task import InputStore, task
 from . import tile
 
@@ -77,7 +77,7 @@ def _get_padded_shape(  # type: ignore # noqa: PGH003
 
 
 def write_array(
-    ary: LogicalArrayLike,
+    st: LogicalStoreLike,
     dirpath: Path | str,
     chunks: int | tuple[int, ...] | None = None,
 ) -> None:
@@ -91,33 +91,33 @@ def write_array(
 
     Parameters
     ----------
-    ary : LogicalArrayLike
+    st : LogicalStoreLike
        The Legate array-like object to write.
     dirpath : Path | str
         Root directory of the tile files.
     chunks : int | tuple[int, ...] | None
         The shape of each tile.
     """
-    ary = as_logical_array(ary)
+    store = as_logical_store(st)
 
     if int(zarr.__version__.split(".")[0]) >= 3:  # noqa: PLR2004
         msg = "Zarr v3 support is not implemented yet"
         raise NotImplementedError(msg)
 
-    if not ary.shape:
+    if not store.shape:
         msg = "Cannot write a 0-dimensional (scalar) array to Zarr"
         raise ValueError(msg)
 
     dirpath = Path(dirpath)
     runtime = get_legate_runtime()
 
-    array_shape = ary.shape
-    array_dtype = str(ary.type.to_numpy_dtype())
+    store_shape = store.shape
+    store_dtype = str(store.type.to_numpy_dtype())
 
     if chunks is None:
         chunks_arg: tuple[int, ...] = (-1,)
     elif isinstance(chunks, int):
-        chunks_arg = (chunks,) * len(array_shape)
+        chunks_arg = (chunks,) * len(store_shape)
     else:
         chunks_arg = tuple(chunks)
 
@@ -128,10 +128,10 @@ def write_array(
         init_zarr_dir_task.task_id,
         (1,),  # Single instance
     )
-    manual_task.add_input(ary.data)
+    manual_task.add_input(store)
     manual_task.add_scalar_arg(str(dirpath), ty.string_type)
-    manual_task.add_scalar_arg(array_shape, (ty.int64,))
-    manual_task.add_scalar_arg(array_dtype, ty.string_type)
+    manual_task.add_scalar_arg(store_shape, (ty.int64,))
+    manual_task.add_scalar_arg(store_dtype, ty.string_type)
     manual_task.add_scalar_arg(chunks_arg, (ty.int64,))
     manual_task.execute()
     runtime.issue_execution_fence(block=True)
@@ -142,17 +142,17 @@ def write_array(
     # TODO: minimize the copy needed when padding
     shape, padded = _get_padded_shape(zarr_ary)
     if padded:
-        padded_ary = runtime.create_array(
+        padded_st = runtime.create_store(
             Type.from_numpy_dtype(zarr_ary.dtype), shape
         )
-        padded_ary.fill(0)
-        sliced = padded_ary[tuple(map(slice, zarr_ary.shape))]
-        runtime.issue_copy(sliced.data, ary.data)
-        ary = padded_ary
-    tile.to_tiles(path=dirpath, array=ary, tile_shape=zarr_ary.chunks)
+        padded_st.fill(0)
+        sliced = padded_st[tuple(map(slice, zarr_ary.shape))]
+        runtime.issue_copy(sliced, store)
+        store = padded_st
+    tile.to_tiles(path=dirpath, store=store, tile_shape=zarr_ary.chunks)
 
 
-def read_array(dirpath: Path | str) -> LogicalArray:
+def read_array(dirpath: Path | str) -> LogicalStore:
     """Read a Zarr array from disk in to a Legate array.
 
     Notes
@@ -168,7 +168,7 @@ def read_array(dirpath: Path | str) -> LogicalArray:
 
     Return
     ------
-    LogicalArray
+    LogicalStore
         The Legate array read from disk.
     """
     dirpath = Path(dirpath)
@@ -193,7 +193,7 @@ def read_array(dirpath: Path | str) -> LogicalArray:
     ret = tile.from_tiles(
         path=dirpath,
         shape=shape,
-        array_type=Type.from_numpy_dtype(zarr_ary.dtype),
+        store_type=Type.from_numpy_dtype(zarr_ary.dtype),
         tile_shape=zarr_ary.chunks,
     )
     if padded:

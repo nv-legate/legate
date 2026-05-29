@@ -14,7 +14,7 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from legate.core import LogicalArray, Type, get_legate_runtime, types as ty
+from legate.core import Type, get_legate_runtime, types as ty
 from legate.core.experimental.io.file_handle import FileHandle, OpenFlag
 
 if TYPE_CHECKING:
@@ -26,13 +26,11 @@ def test_read_write(tmp_path: Path, size: int) -> None:
     """Test basic read/write."""
     filename = tmp_path / "test-file"
     a = np.arange(math.prod([size])).reshape([size])
-    array = LogicalArray.from_store(
-        get_legate_runtime().create_store_from_buffer(
-            Type.from_numpy_dtype(a.dtype), a.shape, a, False
-        )
+    store = get_legate_runtime().create_store_from_buffer(
+        Type.from_numpy_dtype(a.dtype), a.shape, a, False
     )
     f = FileHandle(filename, "w")
-    f.write(array)
+    f.write(store)
     assert not f.closed
     get_legate_runtime().issue_execution_fence(block=True)
 
@@ -50,8 +48,8 @@ def test_read_write(tmp_path: Path, size: int) -> None:
     # Read file into a new array and compare, not sure why mypy thinks this is
     # unreachable?
     with FileHandle(filename, "r") as f:  # type: ignore[unreachable]
-        array2 = f.read(Type.from_numpy_dtype(a.dtype))
-    b = np.asarray(array2.get_physical_array())
+        store2 = f.read(Type.from_numpy_dtype(a.dtype))
+    b = np.asarray(store2.get_physical_store())
     assert_array_equal(a, b)
 
 
@@ -59,17 +57,15 @@ def test_context(tmp_path: Path) -> None:
     """Open a FileHandle in a context."""
     filename = tmp_path / "test-file"
     a = np.arange(math.prod([200])).reshape([200])
-    data = LogicalArray.from_store(
-        get_legate_runtime().create_store_from_buffer(
-            Type.from_numpy_dtype(a.dtype), a.shape, a, False
-        )
+    data = get_legate_runtime().create_store_from_buffer(
+        Type.from_numpy_dtype(a.dtype), a.shape, a, False
     )
     with FileHandle(filename, "w+") as f:
         assert not f.closed
         f.write(data)
         get_legate_runtime().issue_execution_fence(block=True)
         out = f.read(data.type)
-    b = np.asarray(out.get_physical_array())
+    b = np.asarray(out.get_physical_store())
     assert_array_equal(a, b)
     assert f.closed
 
@@ -89,10 +85,8 @@ def test_read_write_slices(tmp_path: Path, start: int, end: int) -> None:
     filename = tmp_path / "test-file"
     a = np.arange(math.prod([10 * 4096])).reshape([10 * 4096])  # 10 page-sizes
     a[start:end] = 42
-    data = LogicalArray.from_store(
-        get_legate_runtime().create_store_from_buffer(
-            Type.from_numpy_dtype(a.dtype), a.shape, a, False
-        )
+    data = get_legate_runtime().create_store_from_buffer(
+        Type.from_numpy_dtype(a.dtype), a.shape, a, False
     )
 
     with FileHandle(filename, "w") as f:
@@ -101,7 +95,7 @@ def test_read_write_slices(tmp_path: Path, start: int, end: int) -> None:
     with FileHandle(filename, "r") as f:
         out = f.read(data.type)
 
-    b = np.asarray(out.get_physical_array())
+    b = np.asarray(out.get_physical_store())
     assert_array_equal(a, b)
 
 
@@ -130,10 +124,8 @@ def test_ignore_binary_specifier(tmp_path: Path, flag: OpenFlag) -> None:
 def test_bad_array_dims(tmp_path: Path) -> None:
     filename = tmp_path / "test-file"
     a = np.ones([10, 10], dtype="float32")
-    data = LogicalArray.from_store(
-        get_legate_runtime().create_store_from_buffer(
-            Type.from_numpy_dtype(a.dtype), a.shape, a, False
-        )
+    data = get_legate_runtime().create_store_from_buffer(
+        Type.from_numpy_dtype(a.dtype), a.shape, a, False
     )
     with (
         FileHandle(filename, "w+") as f,
@@ -154,7 +146,7 @@ def test_write_readonly(tmp_path: Path) -> None:
             ValueError, match="Cannot write to a file opened with flags=r"
         ),
     ):
-        f.write(get_legate_runtime().create_array(ty.int32))
+        f.write(get_legate_runtime().create_store(ty.int32))
 
 
 def test_closed_file(tmp_path: Path) -> None:
@@ -166,7 +158,7 @@ def test_closed_file(tmp_path: Path) -> None:
         f.read(ty.int32)
 
     with pytest.raises(RuntimeError, match="file is closed"):
-        f.write(get_legate_runtime().create_array(ty.int32))
+        f.write(get_legate_runtime().create_store(ty.int32))
 
 
 if __name__ == "__main__":

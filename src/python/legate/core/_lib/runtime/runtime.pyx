@@ -30,11 +30,6 @@ from ..data.external_allocation cimport (
     _ExternalAllocation,
     create_from_buffer,
 )
-from ..data.logical_array cimport (
-    LogicalArray,
-    _LogicalArray,
-    to_cpp_logical_array,
-)
 from ..data.logical_store cimport (
     LogicalStore,
     LogicalStorePartition,
@@ -703,45 +698,47 @@ cdef class Runtime(Unconstructable):
                     _redop,
                 )
 
-    cpdef void issue_fill(self, object array_or_store, object value):
+    cpdef void issue_fill(self, LogicalStore store, object value):
         r"""
-        Fills the array or store with a constant value.
+        Fills the store with a constant value.
 
         Parameters
         ----------
-        array_or_store : LogicalArray or LogicalStore
-            LogicalArray or LogicalStore to fill
+        store : LogicalStore
+            LogicalStore to fill
 
         value : LogicalStore or Scalar
-            The constant value to fill the ``array_or_store`` with
+            The constant value to fill the ``store`` with
 
         Raises
         ------
         ValueError
             Any of the following cases:
-            1) ``array_or_store`` is not a ``LogicalArray`` or
-               a ``LogicalStore``
-            2) ``array_or_store`` is unbound
+            1) ``store`` is not a ``LogicalStore``
+            2) ``store`` is unbound
             3) ``value`` is not a ``Scalar`` or a scalar ``LogicalStore``
-            or the ``array_or_store`` is unbound
+            or the ``store`` is unbound
         """
-        cdef _LogicalArray arr = to_cpp_logical_array(array_or_store)
         cdef Scalar fill_value
 
         if isinstance(value, LogicalStore):
             with nogil:
-                self._handle.issue_fill(arr, (<LogicalStore> value)._handle)
+                self._handle.issue_fill(
+                    store._handle, (<LogicalStore> value)._handle
+                )
         elif isinstance(value, Scalar):
             with nogil:
-                self._handle.issue_fill(arr, (<Scalar> value)._handle)
+                self._handle.issue_fill(
+                    store._handle, (<Scalar> value)._handle
+                )
         elif value is None:
             fill_value = Scalar.null()
             with nogil:
-                self._handle.issue_fill(arr, fill_value._handle)
+                self._handle.issue_fill(store._handle, fill_value._handle)
         else:
-            fill_value = Scalar(value, Type.from_handle(arr.type()))
+            fill_value = Scalar(value, store.type)
             with nogil:
-                self._handle.issue_fill(arr, fill_value._handle)
+                self._handle.issue_fill(store._handle, fill_value._handle)
 
     cpdef LogicalStore tree_reduce(
         self,
@@ -829,181 +826,6 @@ cdef class Runtime(Unconstructable):
                 _maybe_reraise_legate_exception(e, op.exception_types)
 
         raise TypeError(f"Unknown type of operation: {type(op)}")
-
-    cpdef LogicalArray create_array(
-        self,
-        Type dtype,
-        shape: Shape | Collection[int] | None = None,
-        bool nullable = False,
-        bool optimize_scalar = False,
-        object ndim = None,
-    ):
-        r"""
-        Create a `LogicalArray`.
-
-        If `shape` is `None`, the returned array is unbound, otherwise the
-        array is bound.
-
-        If not `None`, this call does not block on the value of `shape`.
-
-        Parameters
-        ----------
-        dtype : Type
-            The type of the array elements.
-        shape : Shape | Collection[int] | None (optional)
-            The shape of the array.
-        nullable : bool (`False`)
-            Whether the array is nullable.
-        optimize_scalar : bool (`False`)
-            Whether to optimize the array for scalar storage.
-        ndim : int | None (optional)
-            Number of dimensions.
-
-        Returns
-        -------
-        LogicalArray
-            The newly created array.
-
-        Raises
-        ------
-        ValueError
-            If both `ndim` and `shape` are simultaneously not `None`.
-        """
-        if ndim is not None and shape is not None:
-            raise ValueError("ndim cannot be used with shape")
-
-        if ndim is None and shape is None:
-            ndim = 1
-
-        cdef _LogicalArray _handle
-        cdef _Shape _shape
-        cdef uint32_t _ndim
-
-        if shape is None:
-            _ndim = ndim
-
-            with nogil:
-                _handle = self._handle.create_array(
-                    dtype._handle, _ndim, nullable
-                )
-        else:
-            _shape = Shape.from_shape_like(shape)
-            with nogil:
-                _handle = self._handle.create_array(
-                    _shape,
-                    dtype._handle,
-                    nullable,
-                    optimize_scalar,
-                )
-
-        return LogicalArray.from_handle(_handle)
-
-    cpdef LogicalArray create_array_like(
-        self, LogicalArray array, Type dtype = None
-    ):
-        r"""
-        Create an array isomorphic to a given array.
-
-        Parameters
-        ----------
-        array : LogicalArray
-            The array to model the new array from.
-        dtype : Type (optional)
-            The type of the resulting array. If given, must be compatible with
-            ``array``'s type. If not given, ``array``'s type is used.
-
-        Returns
-        -------
-        LogicalArray
-            The new array.
-        """
-        cdef _LogicalArray _handle
-
-        if dtype is None:
-            dtype = array.type
-
-        with nogil:
-            _handle = self._handle.create_array_like(
-                array._handle, dtype._handle
-            )
-        return LogicalArray.from_handle(_handle)
-
-    cpdef LogicalArray create_nullable_array(
-        self, LogicalStore store, LogicalStore null_mask,
-    ):
-        r"""
-        Create a nullable array from a store and a null mask.
-
-        Parameters
-        ----------
-        store : LogicalStore
-            The store to create the array from.
-        null_mask : LogicalStore
-            The store holding the null mask indicating null elements of store.
-
-        Returns
-        -------
-        LogicalArray
-            The new array.
-
-        Raises
-        ------
-        ValueError
-            If ``null_mask`` is not of boolean type.
-            Or if ``store`` and ``null_mask`` have different shapes.
-            Or if ``store`` and ``null_mask`` are not top-level stores.
-        """
-        cdef _LogicalArray _handle
-
-        with nogil:
-            _handle = self._handle.create_nullable_array(
-                store._handle, null_mask._handle
-            )
-        return LogicalArray.from_handle(_handle)
-
-    cpdef StructLogicalArray create_struct_array(
-        self, tuple[LogicalArray] fields, LogicalStore null_mask = None,
-    ):
-        r"""
-        Creates a `StructLogicalArray`.
-
-        This call can block if any array from `fields` or `null_mask` are unbound.
-
-        Parameters
-        ----------
-        fields : tuple[LogicalArray]
-            The tuple of arrays representing each field in the struct.
-        null_mask : LogicalStore
-            The store representing the null mask for the `StructLogicalArray`.
-
-        Returns
-        -------
-        StructLogicalArray
-            The newly created array.
-
-        Raises
-        ------
-        ValueError
-            If `null_mask` is not of boolean type, if given.
-            Or if any of `fields` or `null_mask` have differing shapes.
-            Or if any of `fields` or `null_mask` are not top-level stores.
-        """
-
-        cdef _StructLogicalArray res_handle
-        cdef std_vector[_LogicalArray] _fields
-        cdef std_optional[_LogicalStore] _null_mask = (
-            std_optional[_LogicalStore]() if null_mask is None
-            else std_optional[_LogicalStore](null_mask._handle)
-        )
-
-        _fields.reserve(len(fields))
-        for field in fields:
-            _fields.push_back(to_cpp_logical_array(field))
-
-        with nogil:
-            res_handle = self._handle.create_struct_array(_fields, _null_mask)
-
-        return StructLogicalArray.from_handle(res_handle)
 
     cpdef LogicalStore create_store(
         self,

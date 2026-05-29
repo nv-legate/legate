@@ -13,9 +13,7 @@ from .._libnccl_loader import _libnccl
 from ._lib.data.buffer import TaskLocalBuffer
 from ._lib.data.external_allocation import ExternalAllocation
 from ._lib.data.inline_allocation import InlineAllocation
-from ._lib.data.logical_array import LogicalArray, StructLogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
-from ._lib.data.physical_array import PhysicalArray
 from ._lib.data.physical_store import PhysicalStore
 from ._lib.data.scalar import Scalar
 from ._lib.data.shape import Shape
@@ -67,13 +65,7 @@ from ._lib.utilities.typedefs import (
     LocalTaskID,
     VariantCode,
 )
-from .data_interface import (
-    Field,
-    LegateDataInterface,
-    Table,
-    as_logical_array,
-    offload_to,
-)
+from .data_interface import LegateDataInterface, as_logical_store, offload_to
 from .types import (
     FixedArrayType,
     ReductionOpKind,
@@ -137,7 +129,6 @@ __all__ = (
     "EmptyMachineError",
     "ExceptionMode",
     "ExternalAllocation",
-    "Field",
     "FixedArrayType",
     "GlobalRedopID",
     "GlobalTaskID",
@@ -147,12 +138,10 @@ __all__ = (
     "Library",
     "LocalRedopID",
     "LocalTaskID",
-    "LogicalArray",
     "LogicalStore",
     "LogicalStorePartition",
     "Machine",
     "ManualTask",
-    "PhysicalArray",
     "PhysicalStore",
     "ProcessorRange",
     "ProcessorSlice",
@@ -166,7 +155,6 @@ __all__ = (
     "StoreTarget",
     "StructType",
     "SymbolicExpr",
-    "Table",
     "TaskConfig",
     "TaskContext",
     "TaskInfo",

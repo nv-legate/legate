@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import os
 import re
 import sys
 from typing import TYPE_CHECKING, Any
@@ -16,16 +15,13 @@ except ModuleNotFoundError:
     cupy = None
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-    from subprocess import CompletedProcess
-
     from numpy.typing import NDArray
 
 import pytest
 
 from legate.core import (
     ImageComputationHint,
-    LogicalArray,
+    LogicalStore,
     ParallelPolicy,
     Scalar,
     Scope,
@@ -47,7 +43,6 @@ from legate.core import (
 )
 from legate.core.task import (
     ADD,
-    InputArray,
     InputStore,
     OutputStore,
     PyTask,
@@ -162,9 +157,8 @@ class TestPyTask:
         out_arr, out_store = utils.zero_array_and_store(
             ty.float64, (5, 4, 3, 2)
         )
-        larr1 = LogicalArray.from_store(store1)
         exp = arr1 + arr2 + out_arr
-        tasks.mixed_sum_task(larr1, store2, out_store)
+        tasks.mixed_sum_task(store1, store2, out_store)
         np.testing.assert_allclose(exp, out_arr)
 
     @pytest.mark.xfail(reason="LogicalStorePartition not supported")
@@ -236,8 +230,8 @@ class TestPyTask:
 
     def test_scalar_arg(self) -> None:
         @task(variants=tuple(VariantCode))
-        def fill_int_task(out: tasks.OutputArray, val: int) -> None:
-            out_arr = tasks.asarray(out.data().get_inline_allocation())
+        def fill_int_task(out: tasks.OutputStore, val: int) -> None:
+            out_arr = tasks.asarray(out.get_inline_allocation())
             out_arr.fill(val)
 
         val = 12345
@@ -276,7 +270,7 @@ class TestPyTask:
         bind(out_store)
         runtime.issue_execution_fence(block=True)
         assert not out_store.unbound
-        np.testing.assert_allclose(
+        np.testing.assert_allclose(  #  type: ignore[unreachable]
             np.asarray(out_store.get_physical_store()), exp_arr
         )
 
@@ -454,10 +448,8 @@ class TestPyTask:
             in_store, out_store, repeats
         )
 
-        in_arr = LogicalArray.from_store(in_store)
-        in_part = auto_task.find_or_declare_partition(in_arr)
-        out_arr = LogicalArray.from_store(out_store)
-        out_part = auto_task.find_or_declare_partition(out_arr)
+        in_part = auto_task.find_or_declare_partition(in_store)
+        out_part = auto_task.find_or_declare_partition(out_store)
         auto_task.add_constraint(scale(tuple(repeats), in_part, out_part))
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
@@ -593,46 +585,8 @@ class TestPyTask:
         _, store = utils.random_array_and_store((3, 3, 3))
         min_extents_task(store, minimum_extents)
 
-    @pytest.mark.skipif(
-        # TODO(yimoj) [PR-3069]
-        # Test fails in CI for some reason and the output is truncated.
-        # Disable it in CI for now.
-        bool(os.environ.get("CI"))
-        or get_legate_runtime().machine.preferred_target != TaskTarget.CPU,
-        reason="CPU only test",
-    )
-    def test_throws_exception(
-        self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
-    ) -> None:
-        if run_subprocess:
-            run_subprocess(
-                __file__,
-                "TestPyTask::test_throws_exception",
-                {
-                    "LEGATE_MAX_EXCEPTION_SIZE": "15000",
-                    "LEGATE_AUTO_CONFIG": "0",
-                    "LEGATE_CONFIG": "--cpus 1",
-                },
-            )
-            return
-
-        @task(
-            variants=tuple(VariantCode),
-            options=VariantOptions(may_throw_exception=True),
-        )
-        def null_mask(x: InputArray) -> None:
-            x.null_mask()
-
-        msg = "Invalid to retrieve the null mask of a non-nullable array"
-        arr = get_legate_runtime().create_array(
-            ty.int32, (3, 2, 1), nullable=False
-        )
-        arr.fill(0)
-        with pytest.raises(ValueError, match=msg):
-            null_mask(arr)
-
     def test_register_invalid_param_variant(self) -> None:
-        arr = get_legate_runtime().create_array(ty.int32)
+        arr = get_legate_runtime().create_store(ty.int32)
         msg = re.escape(
             f"Type hint '{type(arr)}' is invalid, because it is "
             "impossible to deduce intent from it. Must use either "
@@ -641,7 +595,7 @@ class TestPyTask:
         with pytest.raises(TypeError, match=msg):
 
             @task
-            def _(_: LogicalArray) -> None:
+            def _(_: LogicalStore) -> None:
                 pass
 
     def test_register_non_type_param(self) -> None:
@@ -664,25 +618,6 @@ class TestPyTask:
 
             @task
             def _(*_: tuple[InputStore, ...]) -> None:
-                pass
-
-    def test_register_arbitrary_union_type(self) -> None:
-        msg = re.escape(
-            "Arbitrary union types not yet supported. Union types may "
-            "only be 'SomeType | None' (order doesn't matter), "
-            "'Union[SomeType, None]' (order doesn't matter), or "
-            "'Optional[SomeType]'."
-        )
-        with pytest.raises(NotImplementedError, match=msg):
-
-            @task
-            def _(_: InputStore | InputArray) -> None:
-                pass
-
-        with pytest.raises(NotImplementedError, match=msg):
-
-            @task
-            def _(_: InputStore | InputArray | None) -> None:
                 pass
 
     def test_constraint_invalid_var_name(self) -> None:

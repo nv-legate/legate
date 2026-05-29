@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 import h5py  # type: ignore[import-untyped]
 
-from ..core import LogicalArray, Type, get_legate_runtime
+from ..core import LogicalStore, Type, get_legate_runtime
 
 # This module is the "public" interface for this function, so import it purely
 # to re-export it.
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 def from_file_batched(
     path: Pathlike, dataset_name: str, chunk_size: Sequence[int]
-) -> Generator[tuple[LogicalArray, tuple[int, ...]], None, None]:
+) -> Generator[tuple[LogicalStore, tuple[int, ...]], None, None]:
     r"""Read a HDF5 file as a series of batches, yielding an array over each
     batch.
 
@@ -66,8 +66,8 @@ def from_file_batched(
 
     Yields
     ------
-    LogicalArray
-        The array over the chunk of data.
+    LogicalStore
+        The store over the chunk of data.
     tuple[int, ...]
         A tuple containing the offsets of the returned array into the global
         shape of the on-disk array.
@@ -114,4 +114,4 @@ def from_file_batched(
             store = runtime.create_store_from_buffer(
                 dtype=dtype, shape=batch.shape, data=batch, read_only=True
             )
-            yield LogicalArray.from_store(store), offs
+            yield store, offs

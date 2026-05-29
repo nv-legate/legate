@@ -14,9 +14,9 @@ from legate.core import (
     VariantCode,
     get_legate_runtime,
 )
-from legate.core.task import InputArray, InputStore, OutputArray, task
+from legate.core.task import InputStore, OutputStore, task
 
-from .util.task_util import make_input_array
+from .util.task_util import make_input_store
 
 
 def qual_name(obj: type) -> str:
@@ -83,7 +83,7 @@ class TestTaskContext:
         num_cpu = get_legate_runtime().get_machine().count(TaskTarget.CPU)
 
         @task(variants=(VariantCode.CPU,))
-        def foo(ctx: TaskContext, x: InputArray, y: OutputArray) -> None:
+        def foo(ctx: TaskContext, x: InputStore, y: OutputStore) -> None:
             assert isinstance(ctx, TaskContext)
             assert ctx.get_variant_kind() == VariantCode.CPU
             assert ctx.inputs == (x,)
@@ -100,7 +100,7 @@ class TestTaskContext:
             assert ctx.task_stream is None
             assert ctx.can_raise_exception() is False
 
-        x = make_input_array()
+        x = make_input_store()
         foo(x=x, y=x)
 
     def test_wrong_position(self) -> None:

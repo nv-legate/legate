@@ -14,9 +14,6 @@ from libcpp cimport bool
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..data.external_allocation cimport _ExternalAllocation
-from ..data.logical_array cimport (
-    LogicalArray, _LogicalArray, StructLogicalArray, _StructLogicalArray
-)
 from ..data.logical_store cimport (
     LogicalStore,
     LogicalStorePartition,
@@ -74,24 +71,13 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         void issue_scatter_gather(
             _LogicalStore, _LogicalStore, _LogicalStore, _LogicalStore, int32_t
         ) except+
-        void issue_fill(_LogicalArray&, _LogicalStore) except+
-        void issue_fill(_LogicalArray&, _Scalar) except+
+        void issue_fill(_LogicalStore&, _LogicalStore) except+
+        void issue_fill(_LogicalStore&, _Scalar) except+
         _LogicalStore tree_reduce(
             _Library, _LocalTaskID, _LogicalStore, int64_t
         ) except+
         void submit(_AutoTask) except +handle_legate_exception
         void submit(_ManualTask) except +handle_legate_exception
-        _LogicalArray create_array(const _Type&, uint32_t, bool) except+
-        _LogicalArray create_array(
-            const _Shape&, const _Type&, bool, bool
-        ) except+
-        _LogicalArray create_array_like(const _LogicalArray&, _Type) except+
-        _LogicalArray create_nullable_array(
-            const _LogicalStore&, const _LogicalStore&
-        ) except+
-        _StructLogicalArray create_struct_array(
-            std_vector[_LogicalArray], const std_optional[_LogicalStore]
-        ) except+
         _LogicalStore create_store(const _Type&, uint32_t) except+
         _LogicalStore create_store(const _Shape&, const _Type&, bool) except+
         _LogicalStore create_store(const _Scalar&) except+
@@ -201,7 +187,7 @@ cdef class Runtime(Unconstructable):
         LogicalStore source_indirect,
         object redop = *,
     )
-    cpdef void issue_fill(self, object array_or_store, object value)
+    cpdef void issue_fill(self, LogicalStore store, object value)
     cpdef LogicalStore tree_reduce(
         self,
         Library library,
@@ -210,23 +196,6 @@ cdef class Runtime(Unconstructable):
         int64_t radix = *,
     )
     cpdef void submit(self, object op)
-    cpdef LogicalArray create_array(
-        self,
-        Type dtype,
-        object shape = *,
-        bool nullable = *,
-        bool optimize_scalar = *,
-        object ndim = *,
-    )
-    cpdef LogicalArray create_array_like(
-        self, LogicalArray array, Type dtype = *
-    )
-    cpdef LogicalArray create_nullable_array(
-        self, LogicalStore store, LogicalStore null_mask
-    )
-    cpdef StructLogicalArray create_struct_array(
-        self, tuple[LogicalArray], LogicalStore null_mask = *
-    )
     cpdef LogicalStore create_store(
         self,
         Type dtype,

@@ -9,6 +9,7 @@
 #include <legate/data/shape.h>
 #include <legate/experimental/io/detail/library.h>
 #include <legate/experimental/io/kvikio/detail/basic.h>
+#include <legate/experimental/io/kvikio/detail/hidden.h>
 #include <legate/experimental/io/kvikio/detail/tile.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
 #include <legate/runtime/runtime.h>
@@ -72,6 +73,11 @@ LogicalArray from_file(const std::filesystem::path& file_path, const Type& type)
   task.add_output(ret);
   rt->submit(std::move(task));
   return ret;
+}
+
+LogicalStore from_file_(const std::filesystem::path& file_path, const Type& type)
+{
+  return from_file(file_path, type).data();
 }
 
 namespace {
@@ -184,6 +190,15 @@ LogicalArray from_file(const std::filesystem::path& file_path,
   return ret;
 }
 
+LogicalStore from_file_(const std::filesystem::path& file_path,
+                        const Shape& shape,
+                        const Type& type,
+                        const std::vector<std::uint64_t>& tile_shape,
+                        std::optional<std::vector<std::uint64_t>> tile_start)
+{
+  return from_file(file_path, shape, type, tile_shape, std::move(tile_start)).data();
+}
+
 void to_file(const std::filesystem::path& file_path,
              const LogicalArray& array,
              const std::vector<std::uint64_t>& tile_shape,
@@ -238,6 +253,15 @@ LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
   task.add_scalar_arg(Scalar{offsets});
   rt->submit(std::move(task));
   return ret;
+}
+
+LogicalStore from_file_by_offsets_(const std::filesystem::path& file_path,
+                                   const Shape& shape,
+                                   const Type& type,
+                                   const std::vector<std::uint64_t>& offsets,
+                                   const std::vector<std::uint64_t>& tile_shape)
+{
+  return from_file_by_offsets(file_path, shape, type, offsets, tile_shape).data();
 }
 
 }  // namespace legate::experimental::io::kvikio

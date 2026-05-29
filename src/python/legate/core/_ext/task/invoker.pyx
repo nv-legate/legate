@@ -26,9 +26,7 @@ from typing import (
     get_origin as typing_get_origin,
 )
 
-from ..._lib.data.logical_array cimport LogicalArray
 from ..._lib.data.logical_store cimport LogicalStore
-from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.data.scalar cimport Scalar
 from ..._lib.operation.task cimport AutoTask
@@ -43,40 +41,38 @@ from ..._lib.runtime.runtime import ProfileRange
 
 from ...data_interface import (
     LegateDataInterface,  # pragma: no cover
-    as_logical_array,
+    as_logical_store,
 )
 
 from .type cimport (
-    InputArray,
     InputStore,
-    OutputArray,
     OutputStore,
     ParamList,
 )
 
-from .type import ReductionArray, ReductionStore, UserFunction
+from .type import ReductionStore, UserFunction
 
 
 cdef object _T = TypeVar("_T")
 cdef object _U = TypeVar("_U")
 
-cdef tuple[type, ...] _BASE_PHYSICAL_TYPES = (PhysicalStore, PhysicalArray)
-cdef tuple[type, ...] _BASE_LOGICAL_TYPES = (LogicalStore, LogicalArray)
+cdef tuple[type, ...] _BASE_PHYSICAL_TYPES = (PhysicalStore,)
+cdef tuple[type, ...] _BASE_LOGICAL_TYPES = (LogicalStore,)
 cdef tuple[type, ...] _BASE_TYPES = _BASE_PHYSICAL_TYPES + _BASE_LOGICAL_TYPES
-cdef tuple[type, ...] _INPUT_TYPES = (InputStore, InputArray)
-cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore, OutputArray)
-cdef tuple[type, ...] _REDUCTION_TYPES = (ReductionStore, ReductionArray)
+cdef tuple[type, ...] _INPUT_TYPES = (InputStore,)
+cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore,)
+cdef tuple[type, ...] _REDUCTION_TYPES = (ReductionStore,)
 cdef set _UNION_TYPES = {Union, UnionType}
 
 
 cdef try_unpack_simple_store(arg: LegateDataInterface, name: str):
     try:
-        array = as_logical_array(arg)
+        store = as_logical_store(arg)
     except Exception as e:
         e.add_note(f"Task Argument: {name!r}")
         raise
 
-    return array.data
+    return store
 
 
 cdef inline type _unpack_generic_type(object annotation):
@@ -617,15 +613,13 @@ cdef class VariantInvoker:
 
         params = self.signature.parameters
 
-        def maybe_unpack_array(
-            default_val: Any, arg_ty: type, arg: PhysicalArray,
-        ) -> PhysicalArray | PhysicalStore | None:
+        def maybe_unpack_store(
+            default_val: Any, arg_ty: type, arg: PhysicalStore,
+        ) -> PhysicalStore | None:
             cdef object ret
 
-            if issubclass(arg_ty, PhysicalArray):
+            if issubclass(arg_ty, PhysicalStore):
                 ret = arg
-            elif issubclass(arg_ty, PhysicalStore):
-                ret = arg.data()
             else:
                 # this is a bug
                 raise TypeError(  # pragma: no cover
@@ -677,9 +671,9 @@ cdef class VariantInvoker:
                 arg_ty = _unpack_type(sig.annotation)
                 kw[name] = unpacker(sig.default, arg_ty, val)
 
-        unpack_args(self.inputs, ctx.inputs, maybe_unpack_array)
-        unpack_args(self.outputs, ctx.outputs, maybe_unpack_array)
-        unpack_args(self.reductions, ctx.reductions, maybe_unpack_array)
+        unpack_args(self.inputs, ctx.inputs, maybe_unpack_store)
+        unpack_args(self.outputs, ctx.outputs, maybe_unpack_store)
+        unpack_args(self.reductions, ctx.reductions, maybe_unpack_store)
         unpack_args(self.scalars, ctx.scalars, unpack_scalar)
 
         cdef str ctx_arg_name

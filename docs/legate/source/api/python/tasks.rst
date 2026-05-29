@@ -37,9 +37,8 @@ There are several key restrictions placed on the signature of the task function,
 which are checked by the decorator.
 
 #. All arguments must have type-hints, without exception.
-#. Store arguments must be given as either ``InputStore``, ``OutputStore``,
-   ``InputArray``, or ``OutputArray``. Bare ``PhysicalStore`` or ``PhysicalArray``
-   arguments are not allowed.
+#. Store arguments must be given as ``InputStore``, ``OutputStore``, or ``ReductionStore``. Bare
+   ``PhysicalStore`` arguments are not allowed.
 #. The return value of the function must be exactly ``None``. In the future, this
    restriction may be lifted.
 
@@ -51,14 +50,14 @@ type hints:
 
    import numpy as np
    from legate.core import get_legate_runtime, types as ty
-   from legate.core.task import task, InputArray, OutputArray
+   from legate.core.task import task, InputStore, OutputStore
 
    def make_store(init: list[int]):
        arr = np.array(init, dtype=np.int64)
        return get_legate_runtime().create_store_from_buffer(ty.int64, arr.shape, arr, False)
 
    @task
-   def foo_in_out(in_store: InputArray, out_store: OutputArray) -> None:
+   def foo_in_out(in_store: InputStore, out_store: OutputStore) -> None:
        # (2)
        in_store = np.asarray(in_store)
        out_store = np.asarray(out_store)
@@ -77,11 +76,11 @@ type hints:
    array([1, 2, 3])
 
 
-An important point to note: at point ``(1)``, the store objects are ``LogicalStore`` (or
-``LogicalArray``), but inside the task body (point ``(2)``), they will have automatically
-been partitioned across all instances of the task, and transformed to ``PhysicalStore``
-(or ``PhysicalArray``), just like in C++ tasks. It is illegal to pass a ``PhysicalStore``
-or array as an argument to the function. This is checked on task function call (before it
+An important point to note: at point ``(1)``, the store objects are ``LogicalStore``, but inside the
+task body (point ``(2)``), they will have automatically been partitioned across all instances of the
+task, and transformed to ``PhysicalStore``, just like in C++ tasks. It is illegal to pass a
+``PhysicalStore`` or array as an argument to the function. This is checked on task function call
+(before it
 is launched).
 
 Arbitrary Python Arguments
@@ -222,9 +221,6 @@ Special Types
    InputStore
    OutputStore
    ReductionStore
-   InputArray
-   OutputArray
-   ReductionArray
 
 PyTask
 ------

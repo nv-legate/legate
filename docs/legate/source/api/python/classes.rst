@@ -12,9 +12,7 @@ Classes
    runtime
    operation
    logical_store
-   logical_array
    physical_store
-   physical_array
    scalar
    machine
    shape

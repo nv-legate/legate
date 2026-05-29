@@ -16,9 +16,7 @@ from typing import (
 
 from legate.core import (
     AutoTask,
-    LogicalArray,
     LogicalStore,
-    PhysicalArray,
     PhysicalStore,
     Scalar,
     TaskContext,
@@ -27,12 +25,7 @@ from legate.core import (
 )
 
 # These need to always be imported so that runtime type-checking works
-from legate.core.task import (  # noqa: TC001
-    InputArray,
-    InputStore,
-    OutputArray,
-    OutputStore,
-)
+from legate.core.task import InputStore, OutputStore  # noqa: TC001
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -58,21 +51,11 @@ def make_output_store(shape: tuple[int, ...] | None = None) -> LogicalStore:
     return make_input_store(shape=shape)
 
 
-def make_input_array(
-    value: int = 123, shape: tuple[int, ...] | None = None
-) -> LogicalArray:
-    return LogicalArray.from_store(make_input_store(value=value, shape=shape))
-
-
-def make_output_array(shape: tuple[int, ...] | None = None) -> LogicalArray:
-    return make_input_array(shape=shape)
-
-
 class ArgDescr:
     def __init__(
         self,
-        inputs: tuple[LogicalStore | LogicalArray, ...] = (),
-        outputs: tuple[LogicalStore | LogicalArray, ...] = (),
+        inputs: tuple[LogicalStore, ...] = (),
+        outputs: tuple[LogicalStore, ...] = (),
         scalars: tuple[Any, ...] = (),
         arg_order: tuple[int, ...] | None = None,
     ) -> None:
@@ -108,57 +91,44 @@ class FakeStore(PhysicalStore):
         self._store = store
 
 
-class FakeArray(PhysicalArray):
-    def __init__(
-        self, handle: LogicalStore | LogicalArray, nullable: bool = False
-    ) -> None:
-        # purposefully don't init super here
-        self._handle = handle
-        self._nullable = nullable
-
-    def data(self) -> PhysicalStore:
-        assert isinstance(self._handle, LogicalStore)
-        return FakeStore(self._handle)
-
-
 class FakeTaskContext(TaskContext):
     def __init__(self) -> None:
-        self._fake_inputs: tuple[PhysicalArray, ...] = (
-            FakeArray(make_input_store()),
-            FakeArray(make_input_store()),
+        self._fake_inputs: tuple[PhysicalStore, ...] = (
+            FakeStore(make_input_store()),
+            FakeStore(make_input_store()),
         )
-        self._fake_outputs: tuple[PhysicalArray, ...] = (
-            FakeArray(make_output_store()),
-            FakeArray(make_output_store()),
+        self._fake_outputs: tuple[PhysicalStore, ...] = (
+            FakeStore(make_output_store()),
+            FakeStore(make_output_store()),
         )
-        self._fake_reductions: tuple[PhysicalArray, ...] = ()
+        self._fake_reductions: tuple[PhysicalStore, ...] = ()
         self._fake_scalars: tuple[Scalar, ...] = (
             FakeScalar(1),
             FakeScalar(2.0),
         )
 
     @property
-    def inputs(self) -> tuple[PhysicalArray, ...]:
+    def inputs(self) -> tuple[PhysicalStore, ...]:
         return self._fake_inputs
 
     @inputs.setter
-    def inputs(self, value: tuple[PhysicalArray, ...]) -> None:
+    def inputs(self, value: tuple[PhysicalStore, ...]) -> None:
         self._fake_inputs = value
 
     @property
-    def outputs(self) -> tuple[PhysicalArray, ...]:
+    def outputs(self) -> tuple[PhysicalStore, ...]:
         return self._fake_outputs
 
     @outputs.setter
-    def outputs(self, value: tuple[PhysicalArray, ...]) -> None:
+    def outputs(self, value: tuple[PhysicalStore, ...]) -> None:
         self._fake_outputs = value
 
     @property
-    def reductions(self) -> tuple[PhysicalArray, ...]:
+    def reductions(self) -> tuple[PhysicalStore, ...]:
         return self._fake_reductions
 
     @reductions.setter
-    def reductions(self, value: tuple[PhysicalArray, ...]) -> None:
+    def reductions(self, value: tuple[PhysicalStore, ...]) -> None:
         self._fake_reductions = value
 
     @property
@@ -291,27 +261,6 @@ def mixed_args(
     assert_isinstance(f, float)
 
 
-@test_function(inputs=("a",))
-def single_array(a: InputArray) -> None:
-    assert_isinstance(a, PhysicalArray)
-
-
-@test_function(inputs=("a", "b"))
-def multi_array(a: InputArray, b: InputArray) -> None:
-    assert_isinstance(a, PhysicalArray)
-    assert_isinstance(b, PhysicalArray)
-
-
-@test_function(inputs=("a", "b"), outputs=("c", "d"))
-def mixed_array_store(
-    a: InputArray, b: InputStore, c: OutputArray, d: OutputStore
-) -> None:
-    assert_isinstance(a, PhysicalArray)
-    assert_isinstance(b, PhysicalStore)
-    assert_isinstance(c, PhysicalArray)
-    assert_isinstance(d, PhysicalStore)
-
-
 _USER_FUNCS_WITH_ARGS = (
     (noargs, ArgDescr()),
     (single_input, ArgDescr(inputs=(make_input_store(),))),
@@ -332,15 +281,6 @@ _USER_FUNCS_WITH_ARGS = (
             inputs=(make_input_store(), make_input_store()),
             outputs=(make_output_store(), make_output_store()),
             scalars=(10, 12.0),
-        ),
-    ),
-    (single_array, ArgDescr(inputs=(make_input_array(),))),
-    (multi_array, ArgDescr(inputs=(make_input_array(), make_input_array()))),
-    (
-        mixed_array_store,
-        ArgDescr(
-            inputs=(make_input_array(), make_input_store()),
-            outputs=(make_output_array(), make_output_store()),
         ),
     ),
 )

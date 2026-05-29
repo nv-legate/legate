@@ -7,7 +7,7 @@ from libc.stddef cimport size_t
 from libc.stdint cimport uintptr_t
 from libcpp.string cimport string as std_string
 
-from ..data.physical_array cimport PhysicalArray
+from ..data.physical_store cimport PhysicalStore
 from ..data.scalar cimport Scalar
 from ..utilities.typedefs cimport (
     VariantCode,
@@ -93,52 +93,58 @@ cdef class TaskContext(Unconstructable):
         return self._handle.variant_kind()
 
     @property
-    def inputs(self) -> tuple[PhysicalArray, ...]:
+    def inputs(self) -> tuple[PhysicalStore, ...]:
         r"""
         Get the input arguments to the task.
 
         :returns: The input arguments to the task.
-        :rtype: tuple[PhysicalArray, ...]
+        :rtype: tuple[PhysicalStore, ...]
         """
         cdef int i
 
         if self._inputs is None:
             self._inputs = tuple(
-                PhysicalArray.from_handle(self._handle.input(i))
+                PhysicalStore.from_handle(
+                    self._handle.input(i).data()
+                )
                 for i in range(self._handle.num_inputs())
             )
         return self._inputs
 
     @property
-    def outputs(self) -> tuple[PhysicalArray, ...]:
+    def outputs(self) -> tuple[PhysicalStore, ...]:
         r"""
         Get the output arguments to the task.
 
         :returns: The output arguments to the task.
-        :rtype: tuple[PhysicalArray, ...]
+        :rtype: tuple[PhysicalStore, ...]
         """
         cdef int i
 
         if self._outputs is None:
             self._outputs = tuple(
-                PhysicalArray.from_handle(self._handle.output(i))
+                PhysicalStore.from_handle(
+                    self._handle.output(i).data()
+                )
                 for i in range(self._handle.num_outputs())
             )
         return self._outputs
 
     @property
-    def reductions(self) -> tuple[PhysicalArray, ...]:
+    def reductions(self) -> tuple[PhysicalStore, ...]:
         r"""
         Get the reduction arguments to the task.
 
         :returns: The reduction arguments to the task.
-        :rtype: tuple[PhysicalArray, ...]
+        :rtype: tuple[PhysicalStore, ...]
         """
         cdef int i
 
         if self._reductions is None:
             self._reductions = tuple(
-                PhysicalArray.from_handle(self._handle.reduction(i))
+                PhysicalStore.from_handle(
+                    self._handle.reduction(i).data()
+                )
                 for i in range(self._handle.num_reductions())
             )
         return self._reductions

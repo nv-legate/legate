@@ -8,7 +8,6 @@ from typing import Any
 
 from ...utils import AnyCallable, ShutdownCallback
 from ..data.external_allocation import ExternalAllocation
-from ..data.logical_array import LogicalArray, StructLogicalArray
 from ..data.logical_store import LogicalStore, LogicalStorePartition
 from ..data.scalar import Scalar
 from ..data.shape import Shape
@@ -77,9 +76,7 @@ class Runtime(Unconstructable):
         source_indirect: LogicalStore,
         redop: int | None = None,
     ) -> None: ...
-    def issue_fill(
-        self, lhs: LogicalStore | LogicalArray, value: Any
-    ) -> None: ...
+    def issue_fill(self, lhs: LogicalStore, value: Any) -> None: ...
     # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
     # but we allow int as a type-checking convenience to users
     def tree_reduce(
@@ -90,25 +87,6 @@ class Runtime(Unconstructable):
         radix: int = 4,
     ) -> LogicalStore: ...
     def submit(self, task: AutoTask | ManualTask) -> None: ...
-    def create_array(
-        self,
-        dtype: Type,
-        shape: Shape | Collection[int] | None = None,
-        nullable: bool = False,
-        optimize_scalar: bool = False,
-        ndim: int | None = None,
-    ) -> LogicalArray: ...
-    def create_array_like(
-        self, array: LogicalArray, dtype: Type | None = None
-    ) -> LogicalArray: ...
-    def create_nullable_array(
-        self, store: LogicalStore, null_mask: LogicalStore
-    ) -> LogicalArray: ...
-    def create_struct_array(
-        self,
-        fields: tuple[LogicalArray, ...],
-        null_mask: LogicalStore | None = None,
-    ) -> StructLogicalArray: ...
     def create_store(
         self,
         dtype: Type,

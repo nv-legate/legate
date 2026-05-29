@@ -15,11 +15,6 @@ from ..._ext.cython_libcpp.string_view cimport (
 from collections.abc import Iterable
 from typing import Any
 
-from ..data.logical_array cimport (
-    LogicalArray,
-    _LogicalArray,
-    to_cpp_logical_array,
-)
 from ..data.logical_store cimport LogicalStore, LogicalStorePartition
 from ..data.scalar cimport Scalar
 from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
@@ -73,15 +68,15 @@ cdef class AutoTask(Unconstructable):
         self._locked = True
 
     cpdef Variable add_input(
-        self, object array_or_store, partition: object = None
+        self, LogicalStore store, partition: object = None
     ):
         r"""
-        Adds a logical array/store as input to the task
+        Adds a logical store as input to the task
 
         Parameters
         ----------
-        array_or_store : LogicalArray or LogicalStore
-            LogicalArray or LogicalStore to pass as input
+        store : LogicalStore
+            LogicalStore to pass as input
         partition : Variable, optional
             Partition to associate with the array/store. The default
             partition is picked if none is given.
@@ -97,35 +92,36 @@ cdef class AutoTask(Unconstructable):
                 "is illegal!"
             )
 
-        cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         cdef _Variable handle
 
         if partition is None:
             with nogil:
-                handle = self._handle.add_input(array)
+                handle = self._handle.add_input(store._handle)
             return Variable.from_handle(std_move(handle))
 
         if isinstance(partition, Variable):
             part_handle = (<Variable> partition)._handle
 
             with nogil:
-                handle = self._handle.add_input(array, std_move(part_handle))
+                handle = self._handle.add_input(
+                    store._handle, std_move(part_handle)
+                )
             return Variable.from_handle(std_move(handle))
 
         raise ValueError("Invalid partition symbol")
 
     cpdef Variable add_output(
-        self, object array_or_store, object partition = None
+        self, LogicalStore store, object partition = None
     ):
         r"""
-        Adds a logical array/store as output to the task
+        Adds a logical store as output to the task
 
         Parameters
         ----------
-        array_or_store : LogicalArray or LogicalStore
-            LogicalArray or LogicalStore to pass as output
+        store : LogicalStore
+            LogicalStore to pass as output
         partition : Variable, optional
-            Partition to associate with the array/store. The default
+            Partition to associate with the store. The default
             partition is picked if none is given.
 
         Raises
@@ -139,17 +135,18 @@ cdef class AutoTask(Unconstructable):
                 "is illegal!"
             )
 
-        cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         cdef _Variable handle
 
         if partition is None:
             with nogil:
-                handle = self._handle.add_output(array)
+                handle = self._handle.add_output(store._handle)
         elif isinstance(partition, Variable):
             part_handle = (<Variable> partition)._handle
 
             with nogil:
-                handle = self._handle.add_output(array, std_move(part_handle))
+                handle = self._handle.add_output(
+                    store._handle, std_move(part_handle)
+                )
         else:
             raise ValueError("Invalid partition symbol")
 
@@ -157,21 +154,21 @@ cdef class AutoTask(Unconstructable):
 
     cpdef Variable add_reduction(
         self,
-        object array_or_store,
+        LogicalStore store,
         int32_t redop,
         partition: object = None
     ):
         r"""
-        Adds a logical array/store to the task for reduction
+        Adds a logical store to the task for reduction
 
         Parameters
         ----------
-        array_or_store : LogicalArray or LogicalStore
-            LogicalArray or LogicalStore to pass for reduction
+        store : LogicalStore
+            LogicalStore to pass for reduction
         redop : int
             Reduction operator ID
         partition : Variable, optional
-            Partition to associate with the array/store. The default
+            Partition to associate with the store. The default
             partition is picked if none is given.
 
         Raises
@@ -185,18 +182,17 @@ cdef class AutoTask(Unconstructable):
                 "is illegal!"
             )
 
-        cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         cdef _Variable handle
 
         if partition is None:
             with nogil:
-                handle = self._handle.add_reduction(array, redop)
+                handle = self._handle.add_reduction(store._handle, redop)
         elif isinstance(partition, Variable):
             part_handle = (<Variable> partition)._handle
 
             with nogil:
                 handle = self._handle.add_reduction(
-                    array, redop, std_move(part_handle)
+                    store._handle, redop, std_move(part_handle)
                 )
         else:
             raise ValueError("Invalid partition symbol")
@@ -266,14 +262,14 @@ cdef class AutoTask(Unconstructable):
             with nogil:
                 self._handle.add_constraint((<Constraint> sub)._handle)
 
-    cpdef Variable find_or_declare_partition(self, LogicalArray array):
+    cpdef Variable find_or_declare_partition(self, LogicalStore store):
         r"""
-        Finds or creates a partition symbol for the given array.
+        Finds or creates a partition symbol for the given store.
 
         Parameters
         ----------
-        array : LogicalArray
-            The array for which to look for.
+        store : LogicalStore
+            The store for which to look for.
 
         Returns
         -------
@@ -283,7 +279,7 @@ cdef class AutoTask(Unconstructable):
         cdef _Variable handle
 
         with nogil:
-            handle = self._handle.find_or_declare_partition(array._handle)
+            handle = self._handle.find_or_declare_partition(store._handle)
         return Variable.from_handle(std_move(handle))
 
     cpdef Variable declare_partition(self):
@@ -400,11 +396,7 @@ cdef class AutoTask(Unconstructable):
         """
         get_legate_runtime().submit(self)
 
-    cpdef void add_alignment(
-        self,
-        object array_or_store1,
-        object array_or_store2,
-    ):
+    cpdef void add_alignment(self, LogicalStore store1, LogicalStore store2):
         r"""
         Sets an alignment between stores. Equivalent to the following code:
 
@@ -416,8 +408,8 @@ cdef class AutoTask(Unconstructable):
 
         Parameters
         ----------
-        arr_or_store1, arr_or_store2 : LogicalArray or LogicalStore
-            LogicalArrays or LogicalStores to align
+        store1, store2 : LogicalStore
+            LogicalStores to align
 
         Raises
         ------
@@ -425,37 +417,36 @@ cdef class AutoTask(Unconstructable):
             If the stores don't have the same shape or only one of them is
             unbound
         """
-        array1 = to_cpp_logical_array(array_or_store1)
-        array2 = to_cpp_logical_array(array_or_store2)
         with nogil:
-            part1 = self._handle.find_or_declare_partition(array1)
-            part2 = self._handle.find_or_declare_partition(array2)
-            self._handle.add_constraint(_align(part1, part2))
+            part1 = self._handle.find_or_declare_partition(store1._handle)
+            part2 = self._handle.find_or_declare_partition(store2._handle)
+            self._handle.add_constraint(
+                _align(std_move(part1), std_move(part2))
+            )
 
     cpdef void add_broadcast(
         self,
-        object array_or_store,
+        LogicalStore store,
         axes: int | Iterable[int] | None = None,
     ):
         r"""
-        Sets a broadcasting constraint on the logical_array. Equivalent to the
+        Sets a broadcasting constraint on the store. Equivalent to the
         following code:
 
         ::
 
-            symb = op.declare_partition(logical_array)
-            op.add_constraint(symb.broadcast(axes))
+            symb = op.declare_partition(store)
+            op.add_constraint(broadcast(symb, axes))
 
         Parameters
         ----------
-        array_or_store : LogicalArray or LogicalStore
-            LogicalArray or LogicalStore to set a broadcasting constraint on
+        store : LogicalStore
+            LogicalStore to set a broadcasting constraint on
         axes : int or Iterable[int], optional
-            Axes to broadcast. The entire logical_array is
-            replicated if no axes are given.
+            Axes to broadcast. The entire store is replicated if no axes are
+            given.
         """
-        array = to_cpp_logical_array(array_or_store)
-        part = self._handle.find_or_declare_partition(array)
+        part = self._handle.find_or_declare_partition(store._handle)
 
         if axes is None:
             with nogil:

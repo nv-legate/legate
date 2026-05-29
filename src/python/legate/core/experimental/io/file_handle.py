@@ -14,7 +14,7 @@ from ..._lib.experimental.io.kvikio.kvikio_interface import from_file, to_file
 OpenFlag = Literal["r", "rb", "r+", "rb+", "w", "wb", "w+", "wb+"]
 
 if TYPE_CHECKING:
-    from ..._lib.data.logical_array import LogicalArray
+    from ..._lib.data.logical_store import LogicalStore
     from ..._lib.type.types import Type
 
 
@@ -88,18 +88,18 @@ class FileHandle:
     ) -> None:
         self.close()
 
-    def read(self, ty: Type) -> LogicalArray:
+    def read(self, ty: Type) -> LogicalStore:
         r"""Reads specified buffer from the file into device or host memory.
 
         Parameters
         ----------
         ty : Type
-            The type of the array to read.
+            The type of the store to read.
 
         Returns
         -------
-        LogicalArray
-            The array read from disk.
+        LogicalStore
+            The store read from disk.
         """
         if self._closed:
             msg = "file is closed"
@@ -110,7 +110,7 @@ class FileHandle:
 
         return from_file(str(self._filepath), ty)
 
-    def write(self, array: LogicalArray) -> None:
+    def write(self, store: LogicalStore) -> None:
         r"""Writes specified buffer from device or host memory to the file.
 
         Hint, if a subsequent operation reads this file, insert a fence in
@@ -119,8 +119,8 @@ class FileHandle:
 
         Parameters
         ----------
-        array : LogicalArray
-            The array to write.
+        store : LogicalStore
+            The store to write.
         """
         if self._closed:
             msg = "file is closed"
@@ -131,4 +131,4 @@ class FileHandle:
         with contextlib.suppress(AttributeError):
             del self.size  # clear the cached file size (if it exist)
 
-        to_file(str(self._filepath), array)
+        to_file(str(self._filepath), store)

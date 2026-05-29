@@ -6,12 +6,12 @@ from os import PathLike as os_PathLike
 from pathlib import Path
 from typing import TypeAlias
 
-from ....core import LogicalArray
-from ....core.data_interface import LogicalArrayLike
+from ....core import LogicalStore
+from ....core.data_interface import LogicalStoreLike
 
 Pathlike: TypeAlias = str | os_PathLike[str] | Path
 
-def from_file(path: Pathlike, dataset_name: str) -> LogicalArray: ...
+def from_file(path: Pathlike, dataset_name: str) -> LogicalStore: ...
 def to_file(
-    array: LogicalArrayLike, path: object, dataset_name: str
+    obj: LogicalStoreLike, path: object, dataset_name: str
 ) -> None: ...

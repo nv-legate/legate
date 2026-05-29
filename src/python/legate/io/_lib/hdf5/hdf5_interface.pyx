@@ -4,15 +4,15 @@
 
 from libcpp.utility cimport move as std_move
 
-from ....core.data_interface import as_logical_array
+from ....core.data_interface import as_logical_store
 from ....core._ext.cython_libcpp.string_view cimport (
     std_string_view,
     std_string_view_from_py,
 )
-from ....core._lib.data.logical_array cimport LogicalArray, _LogicalArray
+from ....core._lib.data.logical_store cimport LogicalStore, _LogicalStore
 
 
-cpdef LogicalArray from_file(object path, str dataset_name):
+cpdef LogicalStore from_file(object path, str dataset_name):
     r"""Read an HDF5 array from disk using the native hdf5 API.
 
     This doesn't use KvikIO or GDS, instead a bounce buffer is used when
@@ -28,8 +28,8 @@ cpdef LogicalArray from_file(object path, str dataset_name):
 
     Returns
     -------
-    LogicalArray
-        The Legate array read from disk.
+    LogicalStore
+        The Legate store read from disk.
     """
     cdef str str_path = str(path)
     cdef std_string_view cpp_path
@@ -38,16 +38,16 @@ cpdef LogicalArray from_file(object path, str dataset_name):
     cpp_path = std_string_view_from_py(str_path)
     cpp_dataset_name = std_string_view_from_py(dataset_name)
 
-    cdef _LogicalArray ret
+    cdef _LogicalStore ret
 
     with nogil:
         ret = _from_file(cpp_path, cpp_dataset_name)
 
-    return LogicalArray.from_handle(std_move(ret))
+    return LogicalStore.from_handle(std_move(ret))
 
 
-cpdef to_file(object array, object path, str dataset_name):
-    r"""Write a LogicalArray to disk using HDF5.
+cpdef to_file(object obj, object path, str dataset_name):
+    r"""Write a LogicalStore to disk using HDF5.
 
     If ``path`` already exists at the time of writing, the file will be
     overwritten.
@@ -61,16 +61,16 @@ cpdef to_file(object array, object path, str dataset_name):
     provided if those directories are later deleted before the task executes -
     the tasks assume these directories exist when they execute.
 
-    ``array`` must not be unbound.
+    ``obj`` must not be unbound.
 
     Parameters
     ----------
-    array : LogicalArrayLike
-        The array-like object to serialize.
+    obj : LogicalStoreLike
+        The store-like object to serialize.
     path : Pathlike
         Path to write to.
     dataset_name : str
-        The name of the data set to store the array under.
+        The name of the data set to store
 
     Raises
     ------
@@ -79,12 +79,12 @@ cpdef to_file(object array, object path, str dataset_name):
         directory name. Generally speaking, it should be in the form
         ``/path/to/file.h5``.
     """
-    ary = as_logical_array(array)
-    _logical_array_to_file(ary, path, dataset_name)
+    store = as_logical_store(obj)
+    _logical_store_to_file(store, path, dataset_name)
 
 
-cdef void _logical_array_to_file(
-    LogicalArray array,
+cdef void _logical_store_to_file(
+    LogicalStore store,
     object path, str
     dataset_name
 ):
@@ -96,4 +96,4 @@ cdef void _logical_array_to_file(
     cpp_dataset_name = std_string_view_from_py(dataset_name)
 
     with nogil:
-        _to_file(array._handle, cpp_path, cpp_dataset_name)
+        _to_file(store._handle, cpp_path, cpp_dataset_name)

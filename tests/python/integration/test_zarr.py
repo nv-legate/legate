@@ -15,12 +15,15 @@ from numpy.testing import assert_array_equal
 import pytest
 
 from legate.core import (
-    LogicalArray,
-    Table,
+    LogicalStore,
     Type,
     VariantCode,
     get_legate_runtime,
     types as ty,
+)
+from legate.core.data_interface import (
+    LegateDataInterface,
+    LegateDataInterfaceItem,
 )
 from legate.core.experimental.io.zarr import read_array, write_array
 from legate.core.task import InputStore, task
@@ -39,6 +42,16 @@ shape_chunks = (
         ((4, 3, 2, 1), (1, 2, 3, 4)),
     ],
 )
+
+
+class DataInterfaceWrapper(LegateDataInterface):
+    def __init__(self, field: str, store: LogicalStore) -> None:
+        self._field = field
+        self._store = store
+
+    @property
+    def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+        return {"version": 2, "data": {self._field: self._store}}
 
 
 @task(variants=(VariantCode.CPU,))
@@ -160,9 +173,7 @@ class TestZarrV2:
         store = get_legate_runtime().create_store_from_buffer(
             Type.from_numpy_dtype(a.dtype), a.shape, a, False
         )
-        array = LogicalArray.from_store(store)
-
-        write_array(ary=array, dirpath=tmp_path, chunks=chunks)
+        write_array(st=store, dirpath=tmp_path, chunks=chunks)
         get_legate_runtime().issue_execution_fence(block=True)
 
         b = zarr.open_array(tmp_path, mode="r")
@@ -170,13 +181,13 @@ class TestZarrV2:
 
     def test_write_scalar_array(self, tmp_path: Path) -> None:
         """Test write of a 0-dimensional Zarr array."""
-        array = get_legate_runtime().create_array(ty.float64, ())
+        array = get_legate_runtime().create_store(ty.float64, ())
 
         with pytest.raises(
             ValueError,
             match="Cannot write a 0-dimensional \\(scalar\\) array to Zarr",
         ):
-            write_array(ary=array, dirpath=tmp_path)
+            write_array(st=array, dirpath=tmp_path)
 
     @pytest.mark.parametrize("shape", [(10,), (4, 4)])
     def test_write_array_default_chunks(
@@ -187,9 +198,7 @@ class TestZarrV2:
         store = get_legate_runtime().create_store_from_buffer(
             Type.from_numpy_dtype(a.dtype), a.shape, a, False
         )
-        array = LogicalArray.from_store(store)
-
-        write_array(ary=array, dirpath=tmp_path, chunks=None)
+        write_array(st=store, dirpath=tmp_path, chunks=None)
         get_legate_runtime().issue_execution_fence(block=True)
 
         b = zarr.open_array(tmp_path, mode="r")
@@ -204,9 +213,7 @@ class TestZarrV2:
         store = get_legate_runtime().create_store_from_buffer(
             Type.from_numpy_dtype(a.dtype), a.shape, a, False
         )
-        array = LogicalArray.from_store(store)
-
-        write_array(ary=array, dirpath=tmp_path, chunks=2)
+        write_array(st=store, dirpath=tmp_path, chunks=2)
         get_legate_runtime().issue_execution_fence(block=True)
 
         b = zarr.open_array(tmp_path, mode="r")
@@ -232,10 +239,9 @@ class TestZarrV2:
         store = get_legate_runtime().create_store_from_buffer(
             Type.from_numpy_dtype(a.dtype), a.shape, a, False
         )
-        array = LogicalArray.from_store(store)
-        table = Table.from_arrays(["store"], [array])
+        table = DataInterfaceWrapper("store", store)
 
-        write_array(ary=table, dirpath=tmp_path, chunks=chunks)
+        write_array(st=table, dirpath=tmp_path, chunks=chunks)
         get_legate_runtime().issue_execution_fence(block=True)
 
         b = zarr.open_array(tmp_path, mode="r")
@@ -257,7 +263,7 @@ class TestZarrV2:
         create_test_zarr(tmp_path, a, chunks=chunks)
 
         array = read_array(dirpath=tmp_path)
-        b = np.asarray(array.get_physical_array())
+        b = np.asarray(array.get_physical_store())
         assert_array_equal(a, b)
 
     def test_read_compressor(self, tmp_path: Path) -> None:
@@ -283,11 +289,10 @@ class TestZarrV3:
         store = get_legate_runtime().create_store_from_buffer(
             Type.from_numpy_dtype(a.dtype), a.shape, a, False
         )
-        array = LogicalArray.from_store(store)
 
         msg = "Zarr v3 support is not implemented yet"
         with pytest.raises(NotImplementedError, match=msg):
-            write_array(ary=array, dirpath=tmp_path, chunks=(2, 3))
+            write_array(st=store, dirpath=tmp_path, chunks=(2, 3))
 
     def test_read_array_v3(self, tmp_path: Path) -> None:
         """Test read of a v3 format Zarr array."""

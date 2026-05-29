@@ -21,7 +21,7 @@ from legate.core import (
     get_legate_runtime,
     types as ty,
 )
-from legate.core.task import InputArray, OutputStore, PyTask
+from legate.core.task import InputStore, OutputStore, PyTask
 
 from .utils import tasks, utils
 from .utils.data import (
@@ -223,14 +223,6 @@ class TestStoreOps:
         assert (arr == scalar).all()
         assert (arr == val).all()
 
-    def test_issue_fill_none(self) -> None:
-        shape = range(1, LEGATE_MAX_DIM + 1)
-        runtime = get_legate_runtime()
-        lg_arr = runtime.create_array(ty.uint64, shape, nullable=True)
-        runtime.issue_fill(lg_arr, None)
-        arr = np.asarray(lg_arr.get_physical_array().data())
-        assert not arr.any()
-
     @pytest.mark.parametrize(
         ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
     )
@@ -264,16 +256,16 @@ class TestStoreOps:
         )
         assert created
 
-        def set_task_one(part1: InputArray, out: OutputStore) -> None:
-            lib = tasks.numpy_or_cupy(part1.data().get_inline_allocation())
+        def set_task_one(part1: InputStore, out: OutputStore) -> None:
+            lib = tasks.numpy_or_cupy(part1.get_inline_allocation())
             unique = lib.unique(lib.asarray(part1))
             buf = out.create_output_buffer((unique.shape[0],))
             lib.asarray(buf)[:] = unique
 
         def set_task_two(
-            part1: InputArray, part2: InputArray, out: OutputStore
+            part1: InputStore, part2: InputStore, out: OutputStore
         ) -> None:
-            lib = tasks.numpy_or_cupy(part1.data().get_inline_allocation())
+            lib = tasks.numpy_or_cupy(part1.get_inline_allocation())
             arr1 = lib.asarray(part1)
             arr2 = lib.asarray(part2)
             unique = lib.unique(
@@ -300,55 +292,6 @@ class TestStoreOps:
         out = runtime.tree_reduce(lib, reduce_task.task_id, store)
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(np.asarray(out), np.unique(arr))
-
-
-class TestArrayOps:
-    @pytest.mark.parametrize(
-        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
-    )
-    @pytest.mark.parametrize("create", [True, False])
-    def test_issue_fill_scalar(
-        self, dtype: ty.Type, val: Any, create: bool
-    ) -> None:
-        shape = range(1, LEGATE_MAX_DIM + 1)
-        runtime = get_legate_runtime()
-        lg_arr = runtime.create_array(dtype, shape)
-        scalar = Scalar(val, dtype) if create else val
-        runtime.issue_fill(lg_arr, scalar)
-        np_arr = np.asarray(lg_arr.get_physical_array())
-        assert (np_arr == scalar).all()
-        assert (np_arr == val).all()
-
-    @pytest.mark.parametrize(
-        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
-    )
-    def test_issue_fill_store(self, dtype: ty.Type, val: Any) -> None:
-        if val is None:
-            # LEGION ERROR: Fill operation 2378 in task Legate Core Toplevel
-            # Task (UID 1) was launched without a fill value. All fill
-            # operations must be given a non-empty argument or a future to use
-            # as a fill value.
-            pytest.skip()
-
-        runtime = get_legate_runtime()
-        lg_arr = runtime.create_array(
-            dtype, tuple(range(1, LEGATE_MAX_DIM + 1))
-        )
-        val_store = runtime.create_store_from_scalar(Scalar(val, dtype))
-        runtime.issue_fill(lg_arr, val_store)
-        np_arr = np.asarray(lg_arr.get_physical_array())
-        assert (np_arr == val).all()
-
-    def test_issue_fill_np_array(self) -> None:
-        runtime = get_legate_runtime()
-        lg_arr = runtime.create_array(
-            ty.array_type(ty.float64, LEGATE_MAX_DIM), (3, 1, 3)
-        )
-        val = np.random.rand(LEGATE_MAX_DIM)
-        runtime.issue_fill(lg_arr, val)
-        np_arr = np.asarray(lg_arr.get_physical_array())
-        np.testing.assert_allclose(np.frombuffer(np_arr[0, 0, 0]), val)
-        assert np.unique(np_arr).size == 1
 
 
 class TestStoreOpsErrors:
@@ -393,18 +336,6 @@ class TestStoreOpsErrors:
         msg = "Fill value should be a Future-backed scalar store"
         with pytest.raises(ValueError, match=msg):
             runtime.issue_fill(store, val)
-
-    @pytest.mark.parametrize(
-        ("dtype", "val"),
-        [(ty.struct_type([ty.int32]), (1,)), (ty.string_type, "foo")],
-        ids=str,
-    )
-    def test_issue_fill_unsupported(self, dtype: ty.Type, val: Any) -> None:
-        runtime = get_legate_runtime()
-        arr = runtime.create_array(dtype, shape=(1,))
-        msg = "Fills on list or struct arrays are not supported yet"
-        with pytest.raises(ValueError, match=msg):
-            runtime.issue_fill(arr, val)
 
     def test_issue_fill_mismatching_dtype(self) -> None:
         shape = range(1, LEGATE_MAX_DIM + 1)

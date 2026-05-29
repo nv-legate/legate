@@ -5,7 +5,6 @@
 from collections.abc import Iterable
 from typing import Any
 
-from ..data.logical_array import LogicalArray
 from ..data.logical_store import LogicalStore, LogicalStorePartition
 from ..partitioning.constraint import Constraint, Variable
 from ..type.types import Type
@@ -15,20 +14,13 @@ from .projection import SymbolicPoint
 class AutoTask(Unconstructable):
     def lock(self) -> None: ...
     def add_input(
-        self,
-        array_or_store: LogicalArray | LogicalStore,
-        variable: Variable | None = None,
+        self, store: LogicalStore, variable: Variable | None = None
     ) -> Variable: ...
     def add_output(
-        self,
-        array_or_store: LogicalArray | LogicalStore,
-        variable: Variable | None = None,
+        self, store: LogicalStore, variable: Variable | None = None
     ) -> Variable: ...
     def add_reduction(
-        self,
-        array_or_store: LogicalArray | LogicalStore,
-        redop: int,
-        variable: Variable | None = None,
+        self, store: LogicalStore, redop: int, variable: Variable | None = None
     ) -> Variable: ...
     def add_scalar_arg(
         self, value: Any, dtype: Type | tuple[Type, ...] | None = None
@@ -36,7 +28,7 @@ class AutoTask(Unconstructable):
     def add_constraint(
         self, constraint: Constraint | Iterable[Constraint]
     ) -> None: ...
-    def find_or_declare_partition(self, array: LogicalArray) -> Variable: ...
+    def find_or_declare_partition(self, store: LogicalStore) -> Variable: ...
     def declare_partition(self) -> Variable: ...
     def provenance(self) -> str: ...
     def set_concurrent(self, concurrent: bool) -> None: ...
@@ -47,14 +39,10 @@ class AutoTask(Unconstructable):
     def add_communicator(self, name: str) -> None: ...
     def execute(self) -> None: ...
     def add_alignment(
-        self,
-        array_or_store1: LogicalArray | LogicalStore,
-        array_or_store2: LogicalArray | LogicalStore,
+        self, store1: LogicalStore, store2: LogicalStore
     ) -> None: ...
     def add_broadcast(
-        self,
-        array_or_store: LogicalArray | LogicalStore,
-        axes: int | Iterable[int] | None = None,
+        self, store: LogicalStore, axes: int | Iterable[int] | None = None
     ) -> None: ...
     def add_nccl_communicator(self) -> None: ...
     def add_cpu_communicator(self) -> None: ...

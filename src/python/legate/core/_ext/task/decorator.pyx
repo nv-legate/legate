@@ -81,12 +81,12 @@ def task(
     ::
 
         from legate.core import broadcast, align, VariantCode, VariantOptions
-        from legate.core.task import task, InputArray, OutputArray
+        from legate.core.task import task, InputStore, OutputStore
 
         @task
         def my_basic_task(
-            x: InputArray,
-            y: OutputArray,
+            x: InputStore,
+            y: OutputStore,
             z: tuple[int, ...] = (1, 2, 3)
          ) -> None:
             ...
@@ -97,8 +97,8 @@ def task(
             options=VariantOptions(may_throw_exception=True)
         )
         def my_task_with_options(
-            x: InputArray,
-            y: OutputArray,
+            x: InputStore,
+            y: OutputStore,
             z: tuple[int, ...] = (1, 2, 3)
         ) -> None:
             raise RuntimeError("Exceptional!")

@@ -13,13 +13,11 @@ import pytest
 
 import legate.core as lg
 from legate.core import (
-    Field,
     Library,
-    LogicalArray,
+    LogicalStore,
     PhysicalStore,
     ResourceConfig,
     Scalar,
-    Table,
     TaskContext,
     VariantCode,
     VariantOptions,
@@ -34,12 +32,9 @@ from legate.core.data_interface import (
 )
 from legate.core.task import (
     ADD,
-    InputArray,
     InputStore,
-    OutputArray,
     OutputStore,
     PyTask,
-    ReductionArray,
     ReductionStore,
     VariantInvoker,
 )
@@ -49,13 +44,12 @@ from .util.task_util import (
     USER_FUNC_ARGS,
     USER_FUNCS,
     ArgDescr,
-    FakeArray,
     FakeAutoTask,
     FakeScalar,
+    FakeStore,
     FakeTaskContext,
     TestFunction,
     assert_isinstance,
-    make_input_array,
     make_input_store,
     make_output_store,
     multi_input,
@@ -538,20 +532,16 @@ class TestTask(BaseTest):
         foo(y=12.3)
 
     def test_default_arguments_bad(self) -> None:
-        # Have to do it like this because PhysicalStore() and PhysicalArray()
-        # are not default-constructable (which is what default arguments
-        # normally would be). But this test exist to make sure that some
-        # determined user cannot get around this by constructing those default
-        # objects elsewhere.
+        # Have to do it like this because PhysicalStore() is not
+        # default-constructable (which is what default arguments normally would
+        # be). But this test exist to make sure that some determined user
+        # cannot get around this by constructing those default objects
+        # elsewhere.
         phys_store = make_input_store().get_physical_store()
-        phys_arr = make_input_array().get_physical_array()
 
         def foo(
             x: InputStore = phys_store,  # type: ignore[assignment]
         ) -> None:
-            pass
-
-        def foo1(x: InputArray = phys_arr) -> None:  # type: ignore[assignment]
             pass
 
         def foo2(
@@ -559,13 +549,8 @@ class TestTask(BaseTest):
         ) -> None:
             pass
 
-        def foo3(
-            x: OutputArray = phys_arr,  # type: ignore[assignment]
-        ) -> None:
-            pass
-
-        functions = [foo, foo1, foo2, foo3]
-        types = [InputStore, InputArray, OutputStore, OutputArray]
+        functions = [foo, foo2]
+        types = [InputStore, OutputStore]
         assert len(functions) == len(types)
         for fn, store_ty in zip(functions, types, strict=True):
             msg = re.escape(f"Default values for {store_ty} not yet supported")
@@ -573,26 +558,20 @@ class TestTask(BaseTest):
                 lct.task(fn)  # type: ignore[call-overload]
 
     def test_default_reduction_arguments_bad(self) -> None:
-        # Have to do it like this because PhysicalStore() and PhysicalArray()
-        # are not default-constructable (which is what default arguments
-        # normally would be). But this test exist to make sure that some
-        # determined user cannot get around this by constructing those default
-        # objects elsewhere.
+        # Have to do it like this because PhysicalStore() is not
+        # default-constructable (which is what default arguments normally would
+        # be). But this test exist to make sure that some determined user
+        # cannot get around this by constructing those default objects
+        # elsewhere.
         phys_store = make_input_store().get_physical_store()
-        phys_arr = make_input_array().get_physical_array()
 
         def foo(
             x: ReductionStore[ADD] = phys_store,  # type: ignore[assignment]
         ) -> None:
             pass
 
-        def foo1(
-            x: ReductionArray[ADD] = phys_arr,  # type: ignore[assignment]
-        ) -> None:
-            pass
-
-        functions = [foo, foo1]
-        types = ["ReductionStore", "ReductionArray"]
+        functions = [foo]
+        types = ["ReductionStore"]
         assert len(functions) == len(types)
         for fn, name in zip(functions, types, strict=True):
             msg = re.escape(
@@ -601,7 +580,7 @@ class TestTask(BaseTest):
                 "not yet supported"
             )
             with pytest.raises(NotImplementedError, match=msg):
-                lct.task(fn)  # type: ignore[call-overload]
+                lct.task(fn)
 
     def test_store_default_args(self) -> None:
         @lct.task
@@ -632,79 +611,24 @@ class TestTask(BaseTest):
         foo_union()
         foo_union(None)
 
-    def test_array_default_args(self) -> None:
-        @lct.task
-        def foo_or_none(x: InputArray | None = None) -> None:
-            assert x is None
-
-        foo_or_none()
-        foo_or_none(None)
-
-        @lct.task
-        def foo_or_none_reversed(x: None | InputArray = None) -> None:
-            assert x is None
-
-        foo_or_none_reversed()
-        foo_or_none_reversed(None)
-
-        @lct.task
-        def foo_optional(x: InputArray | None = None) -> None:
-            assert x is None
-
-        foo_optional()
-        foo_optional(None)
-
-        @lct.task
-        def foo_union(x: InputArray | None = None) -> None:
-            assert x is None
-
-        foo_union()
-        foo_union(None)
-
 
 class TestLegateDataInterface:
     def test_good(self) -> None:
+        class GoodVersion:
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {
+                    "version": 2,
+                    "data": {"foo": make_input_store(value=22)},
+                }
+
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             arr = np.asarray(x)
             assert arr.dtype == np.int64
             assert (arr == 22).all()
 
-        field = Field("foo", dtype=ty.int64)
-        assert field.name == "foo"
-        assert field.type == ty.int64
-        assert not field.nullable
-        x = make_input_array(value=22)
-
-        foo(Table([field], [x]))
-
-    def test_from_arrays(self) -> None:
-        @lct.task
-        def foo(x: InputArray) -> None:
-            arr = np.asarray(x)
-            assert arr.dtype == np.int64
-            assert (arr == 22).all()
-
-        x = make_input_array(value=22)
-
-        foo(Table.from_arrays(["foo"], [x]))
-
-    def test_from_arrays_name_mismatch(self) -> None:
-        @lct.task
-        def foo(x: InputArray) -> None:
-            arr = np.asarray(x)
-            assert arr.dtype == np.int64
-            assert (arr == 22).all()
-
-        x = make_input_array(value=22)
-        names = ["foo", "bar"]
-        arrays = [x]
-        msg = re.escape(
-            f"Length of names ({names}) does not match "
-            f"length of arrays ({arrays})"
-        )
-        with pytest.raises(ValueError, match=msg):
-            foo(Table.from_arrays(names, arrays))
+        foo(GoodVersion())
 
     def test_missing_version(self) -> None:
         class MissingVersion:
@@ -713,7 +637,7 @@ class TestLegateDataInterface:
                 return {}
 
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             pytest.fail("Must never reach this point")
 
         missing = MissingVersion()
@@ -729,13 +653,10 @@ class TestLegateDataInterface:
         class BadVersion:
             @property
             def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {
-                    "version": v,
-                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
-                }
+                return {"version": v, "data": {"foo": make_input_store()}}
 
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             pytest.fail("Must never reach this point")
 
         bad = BadVersion()
@@ -751,13 +672,10 @@ class TestLegateDataInterface:
         class LowVersion:
             @property
             def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {
-                    "version": v,
-                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
-                }
+                return {"version": v, "data": {"foo": make_input_store()}}
 
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             pytest.fail("Must never reach this point")
 
         lo = LowVersion()
@@ -774,13 +692,10 @@ class TestLegateDataInterface:
         class HighVersion:
             @property
             def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {
-                    "version": v,
-                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
-                }
+                return {"version": v, "data": {"foo": make_input_store()}}
 
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             pytest.fail("Must never reach this point")
 
         hi = HighVersion()
@@ -795,10 +710,10 @@ class TestLegateDataInterface:
         class MissingFields:
             @property
             def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {"version": 1, "data": {}}
+                return {"version": 2, "data": {}}
 
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             pytest.fail("Must never reach this point")
 
         missing = MissingFields()
@@ -814,15 +729,15 @@ class TestLegateDataInterface:
             @property
             def __legate_data_interface__(self) -> LegateDataInterfaceItem:
                 return {
-                    "version": 1,
+                    "version": 2,
                     "data": {
-                        Field("foo", dtype=ty.int64): make_input_array(),
-                        Field("bar", dtype=ty.int64): make_input_array(),
+                        "foo": make_input_store(),
+                        "bar": make_input_store(),
                     },
                 }
 
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             pytest.fail("Must never reach this point")
 
         too_many = TooManyFields()
@@ -833,46 +748,16 @@ class TestLegateDataInterface:
         ):
             foo(too_many)
 
-    # Can't currently even create a nullable field to test with
-    @pytest.mark.xfail
-    def test_bad_nullable_fields(self) -> None:
-        class NullableField:
-            @property
-            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {
-                    "version": 1,
-                    "data": {
-                        Field(
-                            "foo", nullable=True, dtype=ty.int64
-                        ): make_input_array()
-                    },
-                }
-
-        @lct.task
-        def foo(x: InputArray) -> None:
-            pytest.fail("Must never reach this point")
-
-        nullable = NullableField()
-
-        with pytest.raises(
-            NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with nullable fields are unsupported",  # noqa: E501
-        ):
-            foo(nullable)
-
     # Trying to create a nullable array, even a fake one, explodes
     @pytest.mark.skip
     def test_bad_nullable_array(self) -> None:
         class NullableStore:
             @property
             def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-                return {
-                    "version": 1,
-                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
-                }
+                return {"version": 2, "data": {"foo": make_input_store()}}
 
         @lct.task
-        def foo(x: InputArray) -> None:
+        def foo(x: InputStore) -> None:
             pytest.fail("Must never reach this point")
 
         nullable = NullableStore()
@@ -964,7 +849,7 @@ class TestVariantInvoker(BaseTest):
         invoker = VariantInvoker(func)
         ctx = FakeTaskContext()
         ctx.inputs = tuple(
-            map(FakeArray, (make_input_store(), make_input_store()))
+            map(FakeStore, (make_input_store(), make_input_store()))
         )
         msg = re.escape("Wrong number of given arguments (2), expected 1")
         with pytest.raises(ValueError, match=msg):
@@ -981,10 +866,10 @@ class TestVariantInvoker(BaseTest):
         func = args_default_val
         invoker = VariantInvoker(func)
         ctx = FakeTaskContext()
-        arr1 = make_input_array()
-        arr2 = get_legate_runtime().create_array(ty.null_type, (1,))
-        ctx.inputs = (arr1.get_physical_array(),)
-        ctx.outputs = (arr2.get_physical_array(),)
+        arr1 = make_input_store()
+        arr2 = get_legate_runtime().create_store(ty.null_type, (1,))
+        ctx.inputs = (arr1.get_physical_store(),)
+        ctx.outputs = (arr2.get_physical_store(),)
         ctx.scalars = ()
         invoker(ctx, func)
 
@@ -1061,8 +946,8 @@ class TestVariantInvoker(BaseTest):
         self.check_valid_invoker(invoker, func)
 
         ctx = FakeTaskContext()
-        ctx.inputs = tuple(map(FakeArray, func_args.inputs))
-        ctx.outputs = tuple(map(FakeArray, func_args.outputs))
+        ctx.inputs = tuple(map(FakeStore, func_args.inputs))
+        ctx.outputs = tuple(map(FakeStore, func_args.outputs))
         ctx.scalars = tuple(map(FakeScalar, func_args.scalars))
 
         invoker(ctx, func)
@@ -1098,12 +983,12 @@ class TestUnbound:
         VALUE = 123
 
         @lct.task(options=VariantOptions(has_allocations=True))
-        def foo(x: OutputArray) -> None:
-            buf = x.data().create_output_buffer(shape)
+        def foo(x: OutputStore) -> None:
+            buf = x.create_output_buffer(shape)
             np.asarray(buf)[:] = VALUE
 
         runtime = get_legate_runtime()
-        x = runtime.create_array(ty.int64, ndim=len(shape))
+        x = runtime.create_store(ty.int64, ndim=len(shape))
 
         # Mypy considers boolean attributes to be immutable unless they are
         # directly assigned. I.e. given:
@@ -1122,8 +1007,8 @@ class TestUnbound:
         # considers this a feature, not a bug.
         #
         # So we need this extra function to obfuscate the attribute access...
-        def get_unbound(array: LogicalArray) -> bool:
-            return array.unbound
+        def get_unbound(store: LogicalStore) -> bool:
+            return store.unbound
 
         assert get_unbound(x)
         foo(x)
@@ -1132,7 +1017,7 @@ class TestUnbound:
         assert x.type == ty.int64
         assert x.shape == shape
 
-        x_phys = x.get_physical_array()
+        x_phys = x.get_physical_store()
         x_arr = np.asarray(x_phys)
         assert (x_arr == VALUE).all()
 

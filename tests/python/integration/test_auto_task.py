@@ -14,7 +14,6 @@ import pytest
 
 from legate.core import (
     ImageComputationHint,
-    LogicalArray,
     ReductionOpKind,
     Scalar,
     Scope,
@@ -227,9 +226,8 @@ class TestAutoTask:
         arg2_store = runtime.create_store_from_buffer(
             ty.float64, arg2_np.shape, arg2_np, False
         )
-        arg1_array = LogicalArray.from_store(arg1_store)
         out_store = runtime.create_store(ty.float64, (5, 4, 3, 2))
-        auto_task.add_input(arg1_array)
+        auto_task.add_input(arg1_store)
         auto_task.add_input(arg2_store)
         auto_task.add_output(out_store)
         auto_task.execute()
@@ -541,10 +539,10 @@ class TestAutoTaskErrors:
         auto_task = runtime.create_auto_task(
             tasks.basic_task.library, tasks.basic_task.task_id
         )
-        msg = "Expected .* but got .*"
-        with pytest.raises(ValueError, match=msg):
+        msg = "Argument .* has incorrect type .*"
+        with pytest.raises(TypeError, match=msg):
             auto_task.add_output("foo")  # type: ignore[arg-type]
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             auto_task.add_input(Scalar(1, ty.int8))  # type: ignore[arg-type]
 
     def test_invalid_partition(self) -> None:

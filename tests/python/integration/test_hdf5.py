@@ -16,19 +16,31 @@ from numpy.testing import assert_array_equal
 import pytest
 
 from legate.core import (
-    Field,
-    LogicalArray,
+    LogicalStore,
     ParallelPolicy,
     Scope,
     StreamingMode,
-    Table,
     Type,
     VariantCode,
     get_legate_runtime,
     types as ty,
 )
+from legate.core.data_interface import (
+    LegateDataInterface,
+    LegateDataInterfaceItem,
+)
 from legate.core.task import InputStore, task
 from legate.io.hdf5 import from_file, from_file_batched, to_file
+
+
+class DataInterfaceWrapper(LegateDataInterface):
+    def __init__(self, field: str, store: LogicalStore) -> None:
+        self._field = field
+        self._store = store
+
+    @property
+    def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+        return {"version": 2, "data": {self._field: self._store}}
 
 
 @task(variants=(VariantCode.CPU,))
@@ -192,7 +204,7 @@ def test_array_read(
 
     b = from_file(filename, dataset_name="dataset")
     get_legate_runtime().issue_execution_fence(block=True)
-    assert_array_equal(a, np.asarray(b.get_physical_array()))
+    assert_array_equal(a, np.asarray(b.get_physical_store()))
 
 
 def test_array_read_scalar(tmp_path: Path) -> None:
@@ -203,7 +215,7 @@ def test_array_read_scalar(tmp_path: Path) -> None:
 
     b = from_file(filename, dataset_name="dataset")
     get_legate_runtime().issue_execution_fence(block=True)
-    assert_array_equal(a, np.asarray(b.get_physical_array()))
+    assert_array_equal(a, np.asarray(b.get_physical_store()))
 
 
 def test_array_read_of_group(tmp_path: Path) -> None:
@@ -212,7 +224,7 @@ def test_array_read_of_group(tmp_path: Path) -> None:
     create_hdf5_with_group(str(tmp_path / fname), "root", "dataset", a)
 
     b = from_file(tmp_path / fname, dataset_name="root/dataset")
-    assert_array_equal(a, np.asarray(b.get_physical_array()))
+    assert_array_equal(a, np.asarray(b.get_physical_store()))
 
     with pytest.raises(
         ValueError,
@@ -231,7 +243,7 @@ def test_array_read_virtual_dataset(tmp_path: Path) -> None:
     b = from_file(
         tmp_path / "virtual-data.hdf5", dataset_name="root/virtual-dataset"
     )
-    assert_array_equal(a, np.asarray(b.get_physical_array()))
+    assert_array_equal(a, np.asarray(b.get_physical_store()))
 
 
 @pytest.mark.parametrize("dtype", ["complex64", "complex128"])
@@ -263,11 +275,11 @@ def test_from_file_batched(
     dataset_name = "foo"
     create_hdf5_file(filename, dataset_name, data)
 
-    for arr, offsets in from_file_batched(filename, dataset_name, chunks):
-        assert isinstance(arr, LogicalArray)
-        assert arr.type == dtype
+    for st, offsets in from_file_batched(filename, dataset_name, chunks):
+        assert isinstance(st, LogicalStore)
+        assert st.type == dtype
 
-        phys = arr.get_physical_array()
+        phys = st.get_physical_store()
         arr_np = np.asarray(phys)
 
         # Shape is not necessarily divisible, so some batches won't have
@@ -330,13 +342,13 @@ def test_array_write(
             streaming_mode=StreamingMode.RELAXED, overdecompose_factor=8
         )
     ):
-        array = runtime.create_array(dtype=dtype, shape=shape)
-        runtime.issue_fill(array, 1)
+        store = runtime.create_store(dtype=dtype, shape=shape)
+        runtime.issue_fill(store, 1)
 
-        to_file(array=array, path=filename, dataset_name=dataset_name)
-        # del is deliberate here, we need the array to be destroyed and emit
+        to_file(obj=store, path=filename, dataset_name=dataset_name)
+        # del is deliberate here, we need the store to be destroyed and emit
         # the discard inside the streaming scope.
-        del array
+        del store
 
     runtime.issue_execution_fence(block=True)
 
@@ -355,16 +367,16 @@ def test_array_write_from_data_interface(
             streaming_mode=StreamingMode.RELAXED, overdecompose_factor=8
         )
     ):
-        array = runtime.create_array(dtype=ty.int64, shape=shape)
-        runtime.issue_fill(array, 1)
+        store = runtime.create_store(dtype=ty.int64, shape=shape)
+        runtime.issue_fill(store, 1)
 
-        field = Field("foo", dtype=ty.int64)
-        table = Table([field], [array])
+        table = DataInterfaceWrapper("foo", store)
 
         to_file(table, path=filename, dataset_name=dataset_name)
-        # del is deliberate here, we need the array to be destroyed and emit
+        # del is deliberate here, we need the store to be destroyed and emit
         # the discard inside the streaming scope.
-        del array
+        del table
+        del store
 
     runtime.issue_execution_fence(block=True)
 

@@ -9,7 +9,6 @@ set(
   cython_sources
   external_allocation.pyx
   inline_allocation.pyx
-  logical_array.pyx
   logical_store.pyx
   physical_array.pyx
   physical_store.pyx

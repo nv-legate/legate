@@ -7,7 +7,7 @@ from __future__ import annotations
 import numpy as np
 
 from ...core import get_legate_runtime, types as ty
-from ...core.task import OutputArray, task
+from ...core.task import OutputStore, task
 
 
 def _num_nodes() -> int:
@@ -18,7 +18,7 @@ def _num_nodes() -> int:
 
 
 @task
-def _pick_one_uid(uid: np.uint64, out: OutputArray) -> None:
+def _pick_one_uid(uid: np.uint64, out: OutputStore) -> None:
     np.asarray(out)[:] = uid
 
 

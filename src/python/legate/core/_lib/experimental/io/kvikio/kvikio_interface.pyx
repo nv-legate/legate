@@ -7,60 +7,60 @@ from libc.stdint cimport uint64_t
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
-from .....data_interface import as_logical_array
+from .....data_interface import as_logical_store
 
 from ....._ext.cython_libcpp.string_view cimport (
     std_string_view,
     std_string_view_from_py,
 )
-from ....data.logical_array cimport LogicalArray, _LogicalArray
+from ....data.logical_store cimport LogicalStore, _LogicalStore
 from ....type.types cimport Type
 from ....utilities.utils cimport std_vector_from_iterable
 
 
-cpdef LogicalArray from_file(object path, Type array_type):
+cpdef LogicalStore from_file(object path, Type store_type):
     cdef std_string_view cpp_path
-    cdef _LogicalArray ret
+    cdef _LogicalStore ret
 
     cpp_path = std_string_view_from_py(str(path))
 
     with nogil:
-        ret = _from_file(cpp_path, array_type._handle)
+        ret = _from_file(cpp_path, store_type._handle)
 
-    return LogicalArray.from_handle(std_move(ret))
-
-
-cpdef void to_file(object path, object array):
-    ary = as_logical_array(array)
-    _logical_array_to_file(path, ary)
+    return LogicalStore.from_handle(std_move(ret))
 
 
-cdef void _logical_array_to_file(object path, LogicalArray array):
+cpdef void to_file(object path, object store):
+    st = as_logical_store(store)
+    _logical_store_to_file(path, st)
+
+
+cdef void _logical_store_to_file(object path, LogicalStore store):
     cdef std_string_view cpp_path = std_string_view_from_py(str(path))
 
     with nogil:
-        _to_file(cpp_path, array._handle)
+        _to_file(cpp_path, store._handle)
 
 
-cpdef LogicalArray from_tiles(
+cpdef LogicalStore from_tiles(
     object path,  # Pathlike
     object shape,  # Shapelike
-    Type array_type,
+    Type store_type,
     tile_shape: tuple[uint64_t, ...],
     tile_start: tuple[uint64_t, ...] = None
 ):
-    r"""Read multiple tiles from disk into an array using KvikIO.
+    r"""Read multiple tiles from disk into a store using KvikIO.
 
-    The array shape must be divisible by the tile shape.
+    The store shape must be divisible by the tile shape.
 
     Parameters
     ----------
     path : Pathlike
         Root directory of the tile files.
     shape : Shapelike
-        The shape of the array.
-    array_type : Type
-        The datatype of the array.
+        The shape of the store.
+    store_type : Type
+        The datatype of the store.
     tile_shape : tuple[int, ...]
         The shape of each tile.
     tile_start : tuple[int, ...] | None
@@ -68,8 +68,8 @@ cpdef LogicalArray from_tiles(
 
     Returns
     -------
-    LogicalArray
-        The array read from disk.
+    LogicalStore
+        The store read from disk.
     """
     cdef std_string_view cpp_path
     cdef _Shape cpp_shape
@@ -85,36 +85,36 @@ cpdef LogicalArray from_tiles(
     else:
         cpp_tile_start = std_vector_from_iterable[uint64_t](tile_start)
 
-    cdef _LogicalArray ret
+    cdef _LogicalStore ret
 
     with nogil:
         ret = _from_file(
             cpp_path,
             std_move(cpp_shape),
-            array_type._handle,
+            store_type._handle,
             std_move(cpp_tile_shape),
             std_move(cpp_tile_start)
         )
 
-    return LogicalArray.from_handle(std_move(ret))
+    return LogicalStore.from_handle(std_move(ret))
 
 
 cpdef void to_tiles(
     object path,
-    LogicalArray array,
+    LogicalStore store,
     tile_shape: tuple[uint64_t, ...],
     tile_start: tuple[uint64_t, ...] = None,
 ):
-    r"""Write an array as multiple tiles to disk using KvikIO.
+    r"""Write a store as multiple tiles to disk using KvikIO.
 
-    The array shape must be divisible by the tile shape.
+    The store shape must be divisible by the tile shape.
 
     Parameters
     ----------
     path : Pathlike
         The path to write to.
-    array : LogicalArray
-        The array to write.
+    store : LogicalStore
+        The store to write.
     tile_shape : tuple[int, ...]
         The shape of each tile.
     tile_start : tuple[int, ...] | None
@@ -134,32 +134,32 @@ cpdef void to_tiles(
     with nogil:
         _to_file(
             cpp_path,
-            array._handle,
+            store._handle,
             std_move(cpp_tile_shape),
             std_move(cpp_tile_start)
         )
 
-cpdef LogicalArray from_tiles_by_offsets(
+cpdef LogicalStore from_tiles_by_offsets(
     object path,
     object shape,
     Type type,
     offsets: tuple[uint64_t, ...],
     tile_shape: tuple[uint64_t, ...]
 ):
-    r"""Read multiple tiles from a single file into an array using KvikIO
+    r"""Read multiple tiles from a single file into a store using KvikIO
 
-    The array shape must be divisible by the tile shape.
+    The store shape must be divisible by the tile shape.
 
     Parameters
     ----------
     path : Pathlike
         The path to the file to read.
     shape : Shapelike
-        The shape of the array.
+        The shape of the store.
     type : Type
-        The type of the array.
+        The type of the store.
     offsets : tuple[int, ...]
-        The offset of each tile in the file (in bytes). If the array is
+        The offset of each tile in the file (in bytes). If the store is
         multi-dimensional, the offsets for its tiles must be listed in C-order.
     tile_shape : tuple[int, ...]
         The shape of the tiles (all tiles have the same shape).
@@ -174,7 +174,7 @@ cpdef LogicalArray from_tiles_by_offsets(
     cpp_tile_shape = std_vector_from_iterable[uint64_t](tile_shape)
     cpp_shape = Shape.from_shape_like(shape)
 
-    cdef _LogicalArray ret
+    cdef _LogicalStore ret
 
     with nogil:
         ret = _from_file_by_offsets(
@@ -185,4 +185,4 @@ cpdef LogicalArray from_tiles_by_offsets(
             std_move(cpp_tile_shape)
         )
 
-    return LogicalArray.from_handle(std_move(ret))
+    return LogicalStore.from_handle(std_move(ret))

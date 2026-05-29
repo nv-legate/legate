@@ -15,13 +15,7 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from legate.core import (
-    LogicalArray,
-    TaskTarget,
-    Type,
-    get_legate_runtime,
-    types as ty,
-)
+from legate.core import TaskTarget, Type, get_legate_runtime, types as ty
 from legate.core.experimental.io.tile import (
     from_tiles,
     from_tiles_by_offsets,
@@ -42,12 +36,10 @@ def test_read_write_tiles_error(
         f"The array shape ({list(shape)}) must be divisible by the "
         f"tile shape ({list(tile_shape)})"
     )
-    data = LogicalArray.from_store(
-        get_legate_runtime().create_store(ty.int32, shape=shape)
-    )
+    data = get_legate_runtime().create_store(ty.int32, shape=shape)
     data.fill(1)
     with pytest.raises(ValueError, match=match_re):
-        to_tiles(array=data, path=tmp_path, tile_shape=tile_shape)
+        to_tiles(store=data, path=tmp_path, tile_shape=tile_shape)
 
 
 @pytest.mark.parametrize(
@@ -70,7 +62,7 @@ def test_read_write_tiles(
         Type.from_numpy_dtype(a.dtype), a.shape, a, False
     )
     to_tiles(
-        array=LogicalArray.from_store(store),
+        store=store,
         path=tmp_path,
         tile_shape=tile_shape,
         tile_start=tile_start,
@@ -79,11 +71,11 @@ def test_read_write_tiles(
     b = from_tiles(
         path=tmp_path,
         shape=store.shape,
-        array_type=store.type,
+        store_type=store.type,
         tile_shape=tile_shape,
         tile_start=tile_start,
     )
-    assert_array_equal(a, np.asarray(b.get_physical_array()))
+    assert_array_equal(a, np.asarray(b.get_physical_store()))
 
 
 try:
@@ -121,7 +113,7 @@ def test_read_tiles_by_offset(
         Type.from_numpy_dtype(a.dtype), a.shape, a, False
     )
     to_tiles(
-        array=LogicalArray.from_store(store),
+        store=store,
         path=tmp_path,
         tile_shape=tile_shape,
         tile_start=(0,) * len(tile_shape),
@@ -142,7 +134,7 @@ def test_read_tiles_by_offset(
     arr_exp = np.array(expected)
     # legate may or may not get a clean array here, need to wipe everything
     # we don't expect to read with 0 before comparing
-    arr_b = np.asarray(b.get_physical_array())
+    arr_b = np.asarray(b.get_physical_store())
     arr_b[:][np.where(arr_exp == 0)] = 0
     np.testing.assert_allclose(arr_b, arr_exp)
 
