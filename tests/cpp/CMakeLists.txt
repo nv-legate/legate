@@ -260,6 +260,7 @@ set(
   unit/mapping/array/base_array.cc
   unit/mapping/array/list_array.cc
   unit/mapping/array/struct_array.cc
+  unit/mapping/base_mapper.cc
   unit/mapping/common_api.cc
   unit/mapping/dim_ordering.cc
   unit/mapping/instance_manager.cc
@@ -437,6 +438,8 @@ set(
   non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/inline_storage/basic.cc
   non_reentrant/wo_runtime/machine/local_machine.cc
+  non_reentrant/wo_runtime/mapping/map_partition.cc
+  non_reentrant/wo_runtime/single_controller_execution/slice_task.cc
   non_reentrant/wo_runtime/streaming/streaming.cc
 )
 

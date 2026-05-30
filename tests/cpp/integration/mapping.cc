@@ -8,6 +8,8 @@
 
 #include <legate.h>
 
+#include <legate/mapping/detail/store.h>
+
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -36,7 +38,10 @@ class ReduceTask : public legate::LegateTask<ReduceTask> {
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  static void gpu_variant(legate::TaskContext /*context*/) {}
+  static void gpu_variant(legate::TaskContext context)
+  {
+    LEGATE_CHECK(context.reduction(0).data().target() == legate::mapping::StoreTarget::FBMEM);
+  }
 #endif
 };
 
@@ -134,6 +139,29 @@ class GpuRedMapper final : public legate::mapping::Mapper {
   legate::Scalar tunable_value(legate::TunableID) override { return {}; }
 };
 
+class GpuRedMustAllocMapper final : public legate::mapping::Mapper {
+ public:
+  std::vector<legate::mapping::StoreMapping> store_mappings(
+    const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
+  {
+    std::vector<legate::mapping::StoreMapping> mappings;
+    auto store  = task.reduction(0).data();
+    auto policy = legate::mapping::InstanceMappingPolicy{}
+                    .with_target(legate::mapping::StoreTarget::FBMEM)
+                    .with_allocation_policy(legate::mapping::AllocPolicy::MUST_ALLOC);
+    mappings.emplace_back(legate::mapping::StoreMapping::create(store, std::move(policy)));
+    return mappings;
+  }
+
+  std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task&,
+                                                  legate::mapping::StoreTarget) override
+  {
+    return std::nullopt;
+  }
+
+  legate::Scalar tunable_value(legate::TunableID) override { return {}; }
+};
+
 // Custom mapper: first store uses small exact policy, second store uses very large non-exact policy
 class PartialFailMapper final : public legate::mapping::Mapper {
  public:
@@ -189,6 +217,34 @@ class ReadOnlyNonExactMapper final : public legate::mapping::Mapper {
       mappings.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
     }
 
+    return mappings;
+  }
+
+  std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task&,
+                                                  legate::mapping::StoreTarget) override
+  {
+    return std::nullopt;
+  }
+
+  legate::Scalar tunable_value(legate::TunableID) override { return {}; }
+};
+
+class PromotedInputMapper final : public legate::mapping::Mapper {
+ public:
+  std::vector<legate::mapping::StoreMapping> store_mappings(
+    const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
+  {
+    LEGATE_CHECK(task.inputs().size() == 1);
+    auto store                = task.input(0).data();
+    const auto imaginary_dims = store.impl()->find_imaginary_dims();
+    LEGATE_CHECK(imaginary_dims.size() == 1);
+    LEGATE_CHECK(imaginary_dims.front() == 0);
+
+    std::vector<legate::mapping::StoreMapping> mappings;
+    auto policy = legate::mapping::InstanceMappingPolicy{}
+                    .with_target(legate::mapping::StoreTarget::SYSMEM)
+                    .with_exact(false);
+    mappings.emplace_back(legate::mapping::StoreMapping::create(store, std::move(policy)));
     return mappings;
   }
 
@@ -279,6 +335,65 @@ TEST_F(MappingIntegrationTests, ReductionReuseGPU)
     rt->submit(std::move(t2));
     rt->issue_execution_fence(true);
   }
+}
+
+TEST_F(MappingIntegrationTests, ReductionGpuMustAllocBypassesCache)
+{
+  if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) == 0) {
+    GTEST_SKIP();
+  }
+
+  auto* rt = legate::Runtime::get_runtime();
+  auto lib = rt->create_library("legate.mapping.reduction.gpu_must_alloc",
+                                legate::ResourceConfig{},
+                                std::make_unique<GpuRedMustAllocMapper>());
+  ReduceTask::register_variants(lib);
+
+  constexpr auto shape_value = 32;
+  auto store                 = rt->create_store(legate::Shape{shape_value}, legate::int32());
+  rt->issue_fill(store, legate::Scalar{2});
+
+  // Submit the same reduction store twice so a cached instance would be available on the second
+  // launch if MUST_ALLOC did not bypass the reduction cache. The cache lookup path asserts if a
+  // MUST_ALLOC policy reaches ReductionInstanceManager::find_instance().
+  for (auto submit_idx = 0; submit_idx < 2; ++submit_idx) {
+    auto task =
+      rt->create_task(lib, ReduceTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{1});
+    task.add_reduction(store, legate::ReductionOpKind::ADD);
+    rt->submit(std::move(task));
+    rt->issue_execution_fence(true);
+  }
+}
+
+TEST_F(MappingIntegrationTests, PromotedInputPartitionedImaginaryDim)
+{
+  auto* rt = legate::Runtime::get_runtime();
+  auto lib = rt->create_library("legate.mapping.promoted_input_partitioned_imaginary_dim",
+                                legate::ResourceConfig{},
+                                std::make_unique<PromotedInputMapper>());
+  DummyTask::register_variants(lib);
+
+  constexpr std::uint64_t base_extent   = 2;
+  constexpr std::uint64_t launch_extent = 2;
+  auto store = rt->create_store(legate::Shape{base_extent}, legate::int32());
+  rt->issue_fill(store, legate::Scalar{0});
+
+  const legate::tuple<std::uint64_t> launch{launch_extent, base_extent};
+  const std::vector<std::uint64_t> tile_shape{base_extent, base_extent};
+  auto promoted             = store.promote(/*extra_dim=*/0, launch_extent);
+  auto partitioned_promoted = promoted.partition_by_tiling(tile_shape, launch);
+  const std::vector<std::uint64_t> promoted_extents{launch_extent, base_extent};
+  const std::vector<std::uint64_t> expected_color_shape{launch_extent, base_extent};
+
+  ASSERT_TRUE(promoted.transformed());
+  ASSERT_EQ(promoted.dim(), store.dim() + 1);
+  ASSERT_EQ(promoted.extents().data(), promoted_extents);
+  ASSERT_EQ(partitioned_promoted.color_shape().data(), expected_color_shape);
+
+  auto task = rt->create_task(lib, DummyTask::TASK_CONFIG.task_id(), launch);
+  task.add_input(partitioned_promoted);
+  rt->submit(std::move(task));
+  rt->issue_execution_fence(true);
 }
 
 TEST_F(MappingDeathTest, MapSingleStoreFail)
