@@ -1,6 +1,0 @@
-legate.core.StructLogicalArray.transpose
-========================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: StructLogicalArray.transpose

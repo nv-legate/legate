@@ -1,6 +1,0 @@
-legate.core.PhysicalArray.\_\_array\_interface\_\_
-==================================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: PhysicalArray.__array_interface__

@@ -1,6 +1,0 @@
-legate.core.LogicalArray.from\_raw\_handle
-==========================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalArray.from_raw_handle

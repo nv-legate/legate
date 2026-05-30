@@ -1,6 +1,0 @@
-legate.core.StructLogicalArray.nested
-=====================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructLogicalArray.nested

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Python Tasks &#8212; NVIDIA legate (26.07.00.dev7+gfaf63cb44)</title>
+    <title>Python Tasks &#8212; NVIDIA legate (26.07.00.dev8+ge404db84c)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../_static/documentation_options.js?v=da8b9022"></script>
+    <script src="../../_static/documentation_options.js?v=488f73a7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a>
 
@@ -384,9 +384,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="logical_store.html">Store</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="logical_array.html">Arrays</a></li>
 <li class="toctree-l4"><a class="reference internal" href="physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="physical_array.html">Physical Array</a></li>
 <li class="toctree-l4"><a class="reference internal" href="scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shape.html">Shape</a></li>
@@ -414,9 +412,6 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
 </ul>
@@ -748,9 +743,8 @@ example:</p>
 which are checked by the decorator.</p>
 <ol class="arabic simple">
 <li><p>All arguments must have type-hints, without exception.</p></li>
-<li><p>Store arguments must be given as either <code class="docutils literal notranslate"><span class="pre">InputStore</span></code>, <code class="docutils literal notranslate"><span class="pre">OutputStore</span></code>,
-<code class="docutils literal notranslate"><span class="pre">InputArray</span></code>, or <code class="docutils literal notranslate"><span class="pre">OutputArray</span></code>. Bare <code class="docutils literal notranslate"><span class="pre">PhysicalStore</span></code> or <code class="docutils literal notranslate"><span class="pre">PhysicalArray</span></code>
-arguments are not allowed.</p></li>
+<li><p>Store arguments must be given as <code class="docutils literal notranslate"><span class="pre">InputStore</span></code>, <code class="docutils literal notranslate"><span class="pre">OutputStore</span></code>, or <code class="docutils literal notranslate"><span class="pre">ReductionStore</span></code>. Bare
+<code class="docutils literal notranslate"><span class="pre">PhysicalStore</span></code> arguments are not allowed.</p></li>
 <li><p>The return value of the function must be exactly <code class="docutils literal notranslate"><span class="pre">None</span></code>. In the future, this
 restriction may be lifted.</p></li>
 </ol>
@@ -759,14 +753,14 @@ task. This is done by using the special <code class="docutils literal notranslat
 type hints:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">legate.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_legate_runtime</span><span class="p">,</span> <span class="n">types</span> <span class="k">as</span> <span class="n">ty</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">legate.core.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">task</span><span class="p">,</span> <span class="n">InputArray</span><span class="p">,</span> <span class="n">OutputArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">legate.core.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">task</span><span class="p">,</span> <span class="n">InputStore</span><span class="p">,</span> <span class="n">OutputStore</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">make_store</span><span class="p">(</span><span class="n">init</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">get_legate_runtime</span><span class="p">()</span><span class="o">.</span><span class="n">create_store_from_buffer</span><span class="p">(</span><span class="n">ty</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
 <span class="nd">@task</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">foo_in_out</span><span class="p">(</span><span class="n">in_store</span><span class="p">:</span> <span class="n">InputArray</span><span class="p">,</span> <span class="n">out_store</span><span class="p">:</span> <span class="n">OutputArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">foo_in_out</span><span class="p">(</span><span class="n">in_store</span><span class="p">:</span> <span class="n">InputStore</span><span class="p">,</span> <span class="n">out_store</span><span class="p">:</span> <span class="n">OutputStore</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="c1"># (2)</span>
     <span class="n">in_store</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">in_store</span><span class="p">)</span>
     <span class="n">out_store</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">out_store</span><span class="p">)</span>
@@ -784,11 +778,11 @@ type hints:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>array([1, 2, 3])
 </pre></div>
 </div>
-<p>An important point to note: at point <code class="docutils literal notranslate"><span class="pre">(1)</span></code>, the store objects are <code class="docutils literal notranslate"><span class="pre">LogicalStore</span></code> (or
-<code class="docutils literal notranslate"><span class="pre">LogicalArray</span></code>), but inside the task body (point <code class="docutils literal notranslate"><span class="pre">(2)</span></code>), they will have automatically
-been partitioned across all instances of the task, and transformed to <code class="docutils literal notranslate"><span class="pre">PhysicalStore</span></code>
-(or <code class="docutils literal notranslate"><span class="pre">PhysicalArray</span></code>), just like in C++ tasks. It is illegal to pass a <code class="docutils literal notranslate"><span class="pre">PhysicalStore</span></code>
-or array as an argument to the function. This is checked on task function call (before it
+<p>An important point to note: at point <code class="docutils literal notranslate"><span class="pre">(1)</span></code>, the store objects are <code class="docutils literal notranslate"><span class="pre">LogicalStore</span></code>, but inside the
+task body (point <code class="docutils literal notranslate"><span class="pre">(2)</span></code>), they will have automatically been partitioned across all instances of the
+task, and transformed to <code class="docutils literal notranslate"><span class="pre">PhysicalStore</span></code>, just like in C++ tasks. It is illegal to pass a
+<code class="docutils literal notranslate"><span class="pre">PhysicalStore</span></code> or array as an argument to the function. This is checked on task function call
+(before it
 is launched).</p>
 </section>
 <section id="arbitrary-python-arguments">
@@ -923,15 +917,6 @@ from <code class="docutils literal notranslate"><span class="pre">Exception</spa
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.task.ReductionStore.html#legate.core.task.ReductionStore" title="legate.core.task.ReductionStore"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReductionStore</span></code></a></p></td>
 <td><p>Convenience class for specifying reduction stores for Legate task variants.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.task.InputArray.html#legate.core.task.InputArray" title="legate.core.task.InputArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InputArray</span></code></a></p></td>
-<td><p>Convenience class for specifying input arrays for Legate task variants.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.task.OutputArray.html#legate.core.task.OutputArray" title="legate.core.task.OutputArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OutputArray</span></code></a></p></td>
-<td><p>Convenience class for specifying output arrays for Legate task variants.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.task.ReductionArray.html#legate.core.task.ReductionArray" title="legate.core.task.ReductionArray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReductionArray</span></code></a></p></td>
-<td><p>Convenience class for specifying reduction arrays for Legate task variants.</p></td>
 </tr>
 </tbody>
 </table>

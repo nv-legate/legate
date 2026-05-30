@@ -1,6 +1,0 @@
-legate.core.PhysicalArray.ndim
-==============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: PhysicalArray.ndim

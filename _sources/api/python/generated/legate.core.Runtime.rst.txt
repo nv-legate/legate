@@ -36,17 +36,13 @@ legate.core.Runtime
    
       ~Runtime.add_shutdown_callback
       ~Runtime.config
-      ~Runtime.create_array
-      ~Runtime.create_array_like
       ~Runtime.create_auto_task
       ~Runtime.create_library
       ~Runtime.create_manual_task
-      ~Runtime.create_nullable_array
       ~Runtime.create_store
       ~Runtime.create_store_from_buffer
       ~Runtime.create_store_from_scalar
       ~Runtime.create_store_from_tiles
-      ~Runtime.create_struct_array
       ~Runtime.find_library
       ~Runtime.find_or_create_library
       ~Runtime.finish

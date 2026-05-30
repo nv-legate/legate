@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.AutoTask.add_output &#8212; NVIDIA legate (26.07.00.dev7+gfaf63cb44)</title>
+    <title>legate.core.AutoTask.add_output &#8212; NVIDIA legate (26.07.00.dev8+ge404db84c)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=da8b9022"></script>
+    <script src="../../../_static/documentation_options.js?v=488f73a7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a>
 
@@ -384,9 +384,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4 current active"><a class="reference internal" href="../operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../logical_store.html">Store</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="../logical_array.html">Arrays</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../physical_array.html">Physical Array</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shape.html">Shape</a></li>
@@ -414,9 +412,6 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
 </ul>
@@ -733,13 +728,21 @@ SPDX-License-Identifier: Apache-2.0
 <h1>legate.core.AutoTask.add_output<a class="headerlink" href="#legate-core-autotask-add-output" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="legate.core.AutoTask.add_output">
-<span class="sig-prename descclassname"><span class="pre">AutoTask.</span></span><span class="sig-name descname"><span class="pre">add_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_or_store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="legate.core.Variable.html#legate.core.Variable" title="legate.core.Variable"><span class="pre">Variable</span></a></span></span><a class="headerlink" href="#legate.core.AutoTask.add_output" title="Link to this definition">#</a></dt>
-<dd><p>Adds a logical array/store as output to the task</p>
+<span class="sig-prename descclassname"><span class="pre">AutoTask.</span></span><span class="sig-name descname"><span class="pre">add_output</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">LogicalStore</span> <span class="pre">store</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">partition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="legate.core.Variable.html#legate.core.Variable" title="legate.core.Variable"><span class="pre">Variable</span></a></span></span><a class="headerlink" href="#legate.core.AutoTask.add_output" title="Link to this definition">#</a></dt>
+<dd><p>Adds a logical store as output to the task</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>array_or_store</strong> (<a class="reference internal" href="legate.core.LogicalArray.html#legate.core.LogicalArray" title="legate.core.LogicalArray"><em>LogicalArray</em></a><em> or </em><em>LogicalStore</em>) – LogicalArray or LogicalStore to pass as output</p></li>
-<li><p><strong>partition</strong> (<a class="reference internal" href="legate.core.Variable.html#legate.core.Variable" title="legate.core.Variable"><em>Variable</em></a><em>, </em><em>optional</em>) – Partition to associate with the array/store. The default
+<li><p><strong>store</strong> (<em>LogicalStore</em>) – LogicalStore to pass as output</p></li>
+<li><p><strong>partition</strong> (<a class="reference internal" href="legate.core.Variable.html#legate.core.Variable" title="legate.core.Variable"><em>Variable</em></a><em>, </em><em>optional</em>) – Partition to associate with the store. The default
 partition is picked if none is given.</p></li>
 </ul>
 </dd>

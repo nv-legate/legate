@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Scalar &#8212; NVIDIA legate (26.07.00.dev7+gfaf63cb44)</title>
+    <title>Scalar &#8212; NVIDIA legate (26.07.00.dev8+ge404db84c)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../_static/documentation_options.js?v=da8b9022"></script>
+    <script src="../../_static/documentation_options.js?v=488f73a7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -68,7 +68,7 @@ SPDX-License-Identifier: Apache-2.0
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="legate.core.Scalar" href="generated/legate.core.Scalar.html" />
-    <link rel="prev" title="legate.core.PhysicalArray.null_mask" href="generated/legate.core.PhysicalArray.null_mask.html" />
+    <link rel="prev" title="legate.core.PhysicalStore.to_logical_store" href="generated/legate.core.PhysicalStore.to_logical_store.html" />
 
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a></div>
     
@@ -256,11 +256,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a>
 
@@ -380,9 +380,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="logical_store.html">Store</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="logical_array.html">Arrays</a></li>
 <li class="toctree-l4"><a class="reference internal" href="physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="physical_array.html">Physical Array</a></li>
 <li class="toctree-l4 current active"><a class="current reference internal" href="#">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shape.html">Shape</a></li>
@@ -410,9 +408,6 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
 </ul>
@@ -724,10 +719,9 @@ SPDX-License-Identifier: Apache-2.0
                   
   <section id="scalar">
 <h1>Scalar<a class="headerlink" href="#scalar" title="Link to this heading">#</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">Scalar</span></code> represents a single, immutable value within a task. These are usually small or
-trivially copyable types. Unlike <code class="docutils literal notranslate"><span class="pre">LogicalStore</span></code> or <code class="docutils literal notranslate"><span class="pre">LogicalArray</span></code> which are
-partitioned and split across tasks for a particular task launch, <code class="docutils literal notranslate"><span class="pre">Scalar</span></code> s are always
-copied across all instances.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Scalar</span></code> represents a single, immutable value within a task. These are usually small or trivially
+copyable types. Unlike <code class="docutils literal notranslate"><span class="pre">LogicalStore</span></code> which is partitioned and split across tasks for a particular
+task launch, <code class="docutils literal notranslate"><span class="pre">Scalar</span></code> s are always copied across all instances.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Scalar.html#legate.core.Scalar" title="legate.core.Scalar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Scalar</span></code></a>(value[, dtype])</p></td>
@@ -749,12 +743,12 @@ copied across all instances.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="generated/legate.core.PhysicalArray.null_mask.html"
+       href="generated/legate.core.PhysicalStore.to_logical_store.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">legate.core.PhysicalArray.null_mask</p>
+        <p class="prev-next-title">legate.core.PhysicalStore.to_logical_store</p>
       </div>
     </a>
     <a class="right-next"

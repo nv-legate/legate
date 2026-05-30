@@ -1,6 +1,0 @@
-legate.core.StructLogicalArray.type
-===================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructLogicalArray.type

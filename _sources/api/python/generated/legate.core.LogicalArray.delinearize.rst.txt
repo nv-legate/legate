@@ -1,6 +1,0 @@
-legate.core.LogicalArray.delinearize
-====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalArray.delinearize

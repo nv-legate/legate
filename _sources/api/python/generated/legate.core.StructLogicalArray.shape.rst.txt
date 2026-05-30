@@ -1,6 +1,0 @@
-legate.core.StructLogicalArray.shape
-====================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructLogicalArray.shape

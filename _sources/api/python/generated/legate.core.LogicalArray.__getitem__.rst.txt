@@ -1,6 +1,0 @@
-legate.core.LogicalArray.\_\_getitem\_\_
-========================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalArray.__getitem__

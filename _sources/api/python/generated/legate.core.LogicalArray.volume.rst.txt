@@ -1,6 +1,0 @@
-legate.core.LogicalArray.volume
-===============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalArray.volume

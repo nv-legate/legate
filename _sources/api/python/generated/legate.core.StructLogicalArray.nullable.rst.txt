@@ -1,6 +1,0 @@
-legate.core.StructLogicalArray.nullable
-=======================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructLogicalArray.nullable

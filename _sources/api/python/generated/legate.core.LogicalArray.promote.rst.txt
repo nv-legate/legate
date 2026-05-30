@@ -1,6 +1,0 @@
-legate.core.LogicalArray.promote
-================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalArray.promote

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.task.task &#8212; NVIDIA legate (26.07.00.dev7+gfaf63cb44)</title>
+    <title>legate.core.task.task &#8212; NVIDIA legate (26.07.00.dev8+ge404db84c)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=da8b9022"></script>
+    <script src="../../../_static/documentation_options.js?v=488f73a7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a>
 
@@ -384,9 +384,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="../operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../logical_store.html">Store</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="../logical_array.html">Arrays</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../physical_array.html">Physical Array</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shape.html">Shape</a></li>
@@ -414,9 +412,6 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
 </ul>
@@ -769,12 +764,12 @@ configuration.</p></li>
 </dl>
 <p class="rubric">Example</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">legate.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">broadcast</span><span class="p">,</span> <span class="n">align</span><span class="p">,</span> <span class="n">VariantCode</span><span class="p">,</span> <span class="n">VariantOptions</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">legate.core.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">task</span><span class="p">,</span> <span class="n">InputArray</span><span class="p">,</span> <span class="n">OutputArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">legate.core.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">task</span><span class="p">,</span> <span class="n">InputStore</span><span class="p">,</span> <span class="n">OutputStore</span>
 
 <span class="nd">@task</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_basic_task</span><span class="p">(</span>
-    <span class="n">x</span><span class="p">:</span> <span class="n">InputArray</span><span class="p">,</span>
-    <span class="n">y</span><span class="p">:</span> <span class="n">OutputArray</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">InputStore</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">OutputStore</span><span class="p">,</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
  <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="o">...</span>
@@ -785,8 +780,8 @@ configuration.</p></li>
     <span class="n">options</span><span class="o">=</span><span class="n">VariantOptions</span><span class="p">(</span><span class="n">may_throw_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_task_with_options</span><span class="p">(</span>
-    <span class="n">x</span><span class="p">:</span> <span class="n">InputArray</span><span class="p">,</span>
-    <span class="n">y</span><span class="p">:</span> <span class="n">OutputArray</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">InputStore</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">OutputStore</span><span class="p">,</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Exceptional!&quot;</span><span class="p">)</span>

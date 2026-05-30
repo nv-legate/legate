@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.AutoTask.add_alignment &#8212; NVIDIA legate (26.07.00.dev7+gfaf63cb44)</title>
+    <title>legate.core.AutoTask.add_alignment &#8212; NVIDIA legate (26.07.00.dev8+ge404db84c)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=da8b9022"></script>
+    <script src="../../../_static/documentation_options.js?v=488f73a7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev7+gfaf63cb44) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev8+ge404db84c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev7+gfaf63cb44)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev8+ge404db84c)</p>
   
 </a>
 
@@ -384,9 +384,7 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4 current active"><a class="reference internal" href="../operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../logical_store.html">Store</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="../logical_array.html">Arrays</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../physical_array.html">Physical Array</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shape.html">Shape</a></li>
@@ -414,9 +412,6 @@ SPDX-License-Identifier: Apache-2.0
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
 </ul>
@@ -733,7 +728,15 @@ SPDX-License-Identifier: Apache-2.0
 <h1>legate.core.AutoTask.add_alignment<a class="headerlink" href="#legate-core-autotask-add-alignment" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="legate.core.AutoTask.add_alignment">
-<span class="sig-prename descclassname"><span class="pre">AutoTask.</span></span><span class="sig-name descname"><span class="pre">add_alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_or_store1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_or_store2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#legate.core.AutoTask.add_alignment" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">AutoTask.</span></span><span class="sig-name descname"><span class="pre">add_alignment</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">LogicalStore</span> <span class="pre">store1</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">LogicalStore</span> <span class="pre">store2</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#legate.core.AutoTask.add_alignment" title="Link to this definition">#</a></dt>
 <dd><p>Sets an alignment between stores. Equivalent to the following code:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">symb1</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">declare_partition</span><span class="p">(</span><span class="n">store1</span><span class="p">)</span>
 <span class="n">symb2</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">declare_partition</span><span class="p">(</span><span class="n">store2</span><span class="p">)</span>
@@ -743,8 +746,8 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>arr_or_store1</strong> (<a class="reference internal" href="legate.core.LogicalArray.html#legate.core.LogicalArray" title="legate.core.LogicalArray"><em>LogicalArray</em></a><em> or </em><em>LogicalStore</em>) – LogicalArrays or LogicalStores to align</p></li>
-<li><p><strong>arr_or_store2</strong> (<a class="reference internal" href="legate.core.LogicalArray.html#legate.core.LogicalArray" title="legate.core.LogicalArray"><em>LogicalArray</em></a><em> or </em><em>LogicalStore</em>) – LogicalArrays or LogicalStores to align</p></li>
+<li><p><strong>store1</strong> (<em>LogicalStore</em>) – LogicalStores to align</p></li>
+<li><p><strong>store2</strong> (<em>LogicalStore</em>) – LogicalStores to align</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
