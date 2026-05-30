@@ -72,10 +72,13 @@ namespace {
 [[nodiscard]] constexpr bool smallest_extent_smaller_than_min_extent(
   const std::uint64_t& extent, const std::uint64_t& num_colors, const std::uint64_t& min_extent)
 {
-  const auto tile_extent     = (extent + num_colors - 1) / num_colors;
-  const auto smallest_extent = extent - ((num_colors - 1) * tile_extent);
+  const auto tile_extent = (extent + num_colors - 1) / num_colors;
+  // This value can be negative when there are more than one empty tiles in the partition
+  const std::int64_t smallest_extent =
+    // NOLINTNEXTLINE(bugprone-narrowing-conversions)
+    static_cast<std::int64_t>(extent) - ((num_colors - 1) * tile_extent);
 
-  return smallest_extent < min_extent;
+  return static_cast<std::uint64_t>(std::max<>(smallest_extent, std::int64_t{0})) < min_extent;
 }
 
 }  // namespace

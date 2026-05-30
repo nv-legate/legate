@@ -205,7 +205,9 @@ def basic_min_extents_task(
     domain = store.domain
 
     for dim in range(store.ndim):
-        assert (domain.hi[dim] - domain.lo[dim] + 1) >= minimum_extents[dim]
+        assert (
+            max(0, domain.hi[dim] - domain.lo[dim] + 1) >= minimum_extents[dim]
+        )
 
 
 def basic_image_task(func_store: InputStore, range_store: InputStore) -> None:
