@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as _np  # noqa: ICN001
 
-from .._libnccl_loader import _libnccl
 from ._lib.data.buffer import TaskLocalBuffer
 from ._lib.data.external_allocation import ExternalAllocation
 from ._lib.data.inline_allocation import InlineAllocation
