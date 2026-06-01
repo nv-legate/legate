@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from ..._libnccl_loader import _libnccl
 from ._lib.has_started import runtime_has_started
 
 __all__ = ["runtime_has_started"]

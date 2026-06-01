@@ -131,6 +131,10 @@ function(legate_populate_cython_dependency_rpaths)
         "${CMAKE_INSTALL_LIBDIR}"
         "${CMAKE_INSTALL_LIBDIR}/legate/deps"
       )
+      if(legate_USE_NCCL)
+        # Add the runtime path to the nvidia-nccl-cu* PyPi packages
+        list(APPEND legate_cython_rpaths "../nvidia/nccl/lib")
+      endif()
     endif()
   endif()
 
