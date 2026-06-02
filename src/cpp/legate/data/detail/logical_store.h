@@ -231,8 +231,6 @@ class LogicalStore {
                                                const Domain& launch_domain,
                                                Legion::PrivilegeMode privilege,
                                                GlobalRedopID redop);
-  friend RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<LogicalStore>& self,
-                                                        Legion::PrivilegeMode privilege);
 
   [[nodiscard]] StoreAnalyzable to_launcher_arg_(const InternalSharedPtr<LogicalStore>& self,
                                                  const Variable* variable,
@@ -240,8 +238,6 @@ class LogicalStore {
                                                  const Domain& launch_domain,
                                                  Legion::PrivilegeMode privilege,
                                                  GlobalRedopID redop);
-  [[nodiscard]] RegionFieldArg to_launcher_arg_for_fixup_(
-    const InternalSharedPtr<LogicalStore>& self, Legion::PrivilegeMode privilege);
 
   [[nodiscard]] StoreAnalyzable future_to_launcher_arg_(Legion::Future future,
                                                         const Domain& launch_domain,
@@ -293,9 +289,6 @@ class LogicalStore {
                                                     const Domain& launch_domain,
                                                     Legion::PrivilegeMode privilege,
                                                     GlobalRedopID redop = GlobalRedopID{-1});
-
-[[nodiscard]] RegionFieldArg store_to_launcher_arg_for_fixup(
-  const InternalSharedPtr<LogicalStore>& self, Legion::PrivilegeMode privilege);
 
 [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
   const InternalSharedPtr<LogicalStore>& self,

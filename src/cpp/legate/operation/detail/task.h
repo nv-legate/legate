@@ -268,8 +268,6 @@ class AutoTask final : public LogicalTask {
   [[nodiscard]] bool needs_partitioning() const override;
 
  private:
-  void fixup_ranges_(Strategy& strategy);
-
   SmallVector<InternalSharedPtr<Constraint>> constraints_{};
 };
 

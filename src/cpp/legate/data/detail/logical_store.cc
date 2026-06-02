@@ -824,21 +824,6 @@ StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
   return RegionFieldArg{this, privilege, std::move(store_proj)};
 }
 
-RegionFieldArg LogicalStore::to_launcher_arg_for_fixup_(const InternalSharedPtr<LogicalStore>& self,
-                                                        Legion::PrivilegeMode privilege)
-{
-  LEGATE_ASSERT(self.get() == this);
-  LEGATE_ASSERT(self->key_partition_.has_value());
-  LEGATE_ASSERT(get_storage()->kind() == Storage::Kind::REGION_FIELD);
-  auto store_partition =
-    create_partition_(self,
-                      *self->key_partition_  // NOLINT(bugprone-unchecked-optional-access)
-    );
-  auto store_proj =
-    StoreProjection{store_partition->storage_partition()->get_legion_partition(), /*proj_id=*/0};
-  return RegionFieldArg{this, privilege, std::move(store_proj)};
-}
-
 std::string LogicalStore::to_string() const
 {
   auto result = fmt::format("Store({}) {{shape: ", store_id_);
