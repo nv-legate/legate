@@ -1,4 +1,0 @@
-legate::ListLogicalArray
-========================
-
-.. doxygenclass:: legate::ListLogicalArray

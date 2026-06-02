@@ -1,4 +1,0 @@
-legate::StructLogicalArray
-==========================
-
-.. doxygenclass:: legate::StructLogicalArray

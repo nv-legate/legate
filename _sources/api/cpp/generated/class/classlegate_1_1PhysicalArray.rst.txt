@@ -1,4 +1,0 @@
-legate::PhysicalArray
-=====================
-
-.. doxygenclass:: legate::PhysicalArray
