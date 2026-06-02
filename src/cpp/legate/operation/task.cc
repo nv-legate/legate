@@ -6,7 +6,7 @@
 
 #include <legate/operation/task.h>
 
-#include <legate/data/physical_array.h>
+#include <legate/data/physical_store.h>
 #include <legate/operation/detail/task.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
@@ -26,9 +26,9 @@ class AutoTask::Impl {
 
   explicit Impl(InternalSharedPtr<detail::PhysicalTask> impl) : task_{std::move(impl)} {}
 
-  [[nodiscard]] const SharedPtr<detail::LogicalArray>& add_ref(LogicalArray array)
+  [[nodiscard]] const SharedPtr<detail::LogicalStore>& add_ref(LogicalStore store)
   {
-    auto&& inserted = refs_.emplace_back(std::move(array));
+    auto&& inserted = refs_.emplace_back(std::move(store));
     return inserted.impl();
   }
 
@@ -84,7 +84,7 @@ class AutoTask::Impl {
  private:
   InternalSharedPtr<detail::TaskBase> task_{};
   mutable SharedPtr<detail::AutoTask> cached_auto_{};
-  std::vector<LogicalArray> refs_{};
+  std::vector<LogicalStore> refs_{};
 };
 
 // ==========================================================================================
@@ -118,90 +118,90 @@ bool AutoTask::needs_inline_execution_() const { return pimpl_->is_physical_task
 
 const SharedPtr<detail::AutoTask>& AutoTask::impl_() const { return pimpl_->auto_task_for_test(); }
 
-InternalSharedPtr<detail::LogicalArray> AutoTask::record_user_ref_(LogicalArray array)
+InternalSharedPtr<detail::LogicalStore> AutoTask::record_user_ref_(LogicalStore store)
 {
-  return pimpl_->add_ref(std::move(array));
+  return pimpl_->add_ref(std::move(store));
 }
 
 void AutoTask::clear_user_refs_() { pimpl_->clear_refs(); }
 
 // ==========================================================================================
 
-Variable AutoTask::add_input(LogicalArray array)
+Variable AutoTask::add_input(LogicalStore store)
 {
   if (needs_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_input(physical_array.impl());
+    auto physical_store = store.get_physical_store(get_inline_store_target_());
+    pimpl_->physical_task_impl()->add_input(physical_store.impl());
     return Variable{nullptr};
   }
-  return Variable{impl_()->add_input(record_user_ref_(std::move(array)))};
+  return Variable{impl_()->add_input(record_user_ref_(std::move(store)))};
 }
 
-Variable AutoTask::add_output(LogicalArray array)
+Variable AutoTask::add_output(LogicalStore store)
 {
   if (needs_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_output(physical_array.impl());
+    auto physical_store = store.get_physical_store(get_inline_store_target_());
+    pimpl_->physical_task_impl()->add_output(physical_store.impl());
     return Variable{nullptr};
   }
-  return Variable{impl_()->add_output(record_user_ref_(std::move(array)))};
+  return Variable{impl_()->add_output(record_user_ref_(std::move(store)))};
 }
 
-Variable AutoTask::add_reduction(LogicalArray array, ReductionOpKind redop_kind)
+Variable AutoTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
 {
-  return add_reduction(std::move(array), static_cast<std::int32_t>(redop_kind));
+  return add_reduction(std::move(store), static_cast<std::int32_t>(redop_kind));
 }
 
-Variable AutoTask::add_reduction(LogicalArray array, std::int32_t redop_kind)
-{
-  if (needs_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_reduction(physical_array.impl(), redop_kind);
-    return Variable{nullptr};
-  }
-  return Variable{impl_()->add_reduction(record_user_ref_(std::move(array)), redop_kind)};
-}
-
-Variable AutoTask::add_input(LogicalArray array, Variable partition_symbol)
+Variable AutoTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
 {
   if (needs_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_input(physical_array.impl());
+    auto physical_store = store.get_physical_store(get_inline_store_target_());
+    pimpl_->physical_task_impl()->add_reduction(physical_store.impl(), redop_kind);
     return Variable{nullptr};
   }
-  impl_()->add_input(record_user_ref_(std::move(array)), partition_symbol.impl());
+  return Variable{impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind)};
+}
+
+Variable AutoTask::add_input(LogicalStore store, Variable partition_symbol)
+{
+  if (needs_inline_execution_()) {
+    auto physical_store = store.get_physical_store(get_inline_store_target_());
+    pimpl_->physical_task_impl()->add_input(physical_store.impl());
+    return Variable{nullptr};
+  }
+  impl_()->add_input(record_user_ref_(std::move(store)), partition_symbol.impl());
   return partition_symbol;
 }
 
-Variable AutoTask::add_output(LogicalArray array, Variable partition_symbol)
+Variable AutoTask::add_output(LogicalStore store, Variable partition_symbol)
 {
   if (needs_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_output(physical_array.impl());
+    auto physical_store = store.get_physical_store(get_inline_store_target_());
+    pimpl_->physical_task_impl()->add_output(physical_store.impl());
     return Variable{nullptr};
   }
-  impl_()->add_output(record_user_ref_(std::move(array)), partition_symbol.impl());
+  impl_()->add_output(record_user_ref_(std::move(store)), partition_symbol.impl());
   return partition_symbol;
 }
 
-Variable AutoTask::add_reduction(LogicalArray array,
+Variable AutoTask::add_reduction(LogicalStore store,
                                  ReductionOpKind redop_kind,
                                  Variable partition_symbol)
 {
   return add_reduction(
-    std::move(array), static_cast<std::int32_t>(redop_kind), std::move(partition_symbol));
+    std::move(store), static_cast<std::int32_t>(redop_kind), std::move(partition_symbol));
 }
 
-Variable AutoTask::add_reduction(LogicalArray array,
+Variable AutoTask::add_reduction(LogicalStore store,
                                  std::int32_t redop_kind,
                                  Variable partition_symbol)
 {
   if (needs_inline_execution_()) {
-    auto physical_array = array.get_physical_array(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_reduction(physical_array.impl(), redop_kind);
+    auto physical_store = store.get_physical_store(get_inline_store_target_());
+    pimpl_->physical_task_impl()->add_reduction(physical_store.impl(), redop_kind);
     return Variable{nullptr};
   }
-  impl_()->add_reduction(record_user_ref_(std::move(array)), redop_kind, partition_symbol.impl());
+  impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind, partition_symbol.impl());
   return partition_symbol;
 }
 
@@ -232,12 +232,12 @@ void AutoTask::add_constraints(Span<const Constraint> constraints)
 }
 
 Variable AutoTask::find_or_declare_partition(  // NOLINT(readability-make-member-function-const)
-  const LogicalArray& array)
+  const LogicalStore& store)
 {
   if (needs_inline_execution_()) {
     return Variable{nullptr};
   }
-  return Variable{impl_()->find_or_declare_partition(array.impl())};
+  return Variable{impl_()->find_or_declare_partition(store.impl())};
 }
 
 Variable AutoTask::declare_partition()  // NOLINT(readability-make-member-function-const)
@@ -377,7 +377,7 @@ void ManualTask::clear_user_refs_() { pimpl_->clear_refs(); }
 
 void ManualTask::add_input(LogicalStore store)
 {
-  impl_()->add_input(record_user_ref_(std::move(store)));
+  static_cast<void>(impl_()->add_input(record_user_ref_(std::move(store))));
 }
 
 void ManualTask::add_input(LogicalStorePartition store_partition,
@@ -390,7 +390,7 @@ void ManualTask::add_input(LogicalStorePartition store_partition,
 
 void ManualTask::add_output(LogicalStore store)
 {
-  impl_()->add_output(record_user_ref_(std::move(store)));
+  static_cast<void>(impl_()->add_output(record_user_ref_(std::move(store))));
 }
 
 void ManualTask::add_output(LogicalStorePartition store_partition,
@@ -408,7 +408,7 @@ void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
 
 void ManualTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
 {
-  impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind);
+  static_cast<void>(impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind));
 }
 
 void ManualTask::add_reduction(LogicalStorePartition store_partition,

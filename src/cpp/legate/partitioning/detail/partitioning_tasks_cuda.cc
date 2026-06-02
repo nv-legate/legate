@@ -207,8 +207,8 @@ struct FindBoundingBoxSortedFn {
 
 /*static*/ void FindBoundingBox::gpu_variant(legate::TaskContext context)
 {
-  auto input  = context.input(0).data();
-  auto output = context.output(0).data();
+  auto input  = context.input(0);
+  auto output = context.output(0);
 
   auto type = input.type();
 
@@ -227,8 +227,8 @@ struct FindBoundingBoxSortedFn {
 
 /*static*/ void FindBoundingBoxSorted::gpu_variant(legate::TaskContext context)
 {
-  auto input  = context.input(0).data();
-  auto output = context.output(0).data();
+  auto input  = context.input(0);
+  auto output = context.output(0);
 
   auto type = input.type();
 

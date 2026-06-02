@@ -7,7 +7,7 @@
 #include <legate/partitioning/detail/proxy/broadcast.h>
 
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
@@ -36,20 +36,20 @@ void do_broadcast_final(const Variable* var,
   task->add_constraint(constraint.impl(), /* bypass_signature_check */ true);
 }
 
-void do_broadcast(const TaskArrayArg* arg,
+void do_broadcast(const TaskStoreArg* arg,
                   const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes,
                   AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
-                        do_broadcast_final(task->find_or_declare_partition(arr), axes, task);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
+                        do_broadcast_final(task->find_or_declare_partition(st), axes, task);
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             arg->array);
+             arg->store);
 }
 
-void do_broadcast(Span<const TaskArrayArg> args,
+void do_broadcast(Span<const TaskStoreArg> args,
                   const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes,
                   AutoTask* task)
 {

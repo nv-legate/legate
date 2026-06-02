@@ -264,9 +264,9 @@ supply the actual input/output/scalar/etc. arguments at the task launch site:
    #include <legate.h>
 
    void launch_my_task(
-     const legate::LogicalArray& input_array,
+     const legate::LogicalStore& input_store,
      // ...
-     const legate::LogicalArray& output_array,
+     const legate::LogicalStore& output_store,
      // ...
    )
    {
@@ -274,9 +274,9 @@ supply the actual input/output/scalar/etc. arguments at the task launch site:
      auto lib = runtime->find_library("my_library");
      auto task = runtime->create_task(lib, MyTask::TASK_CONFIG.task_id());
 
-     task.add_input(input_array);
+     task.add_input(input_store);
      // ...
-     task.add_output(output_array);
+     task.add_output(output_store);
      // ...
 
      runtime->submit(std::move(task));

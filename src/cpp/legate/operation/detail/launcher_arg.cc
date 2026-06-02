@@ -6,7 +6,6 @@
 
 #include <legate/operation/detail/launcher_arg.h>
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/operation/detail/store_analyzer.h>
@@ -120,120 +119,6 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
     buffer.pack<std::uint64_t>(extents);
   } else {
     buffer.pack<std::uint64_t>(store_->get_storage()->extents());
-  }
-}
-
-void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
-{
-  buffer.pack(to_underlying(ArrayKind::BASE));
-  std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, data_);
-
-  const bool nullable = null_mask_.has_value();
-  buffer.pack<bool>(nullable);
-  if (nullable) {
-    std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, *null_mask_);
-  }
-}
-
-void BaseArrayArg::analyze(StoreAnalyzer& analyzer) const
-{
-  std::visit([&](auto& arg) { arg.analyze(analyzer); }, data_);
-  if (null_mask_.has_value()) {
-    std::visit([&](auto& arg) { arg.analyze(analyzer); }, *null_mask_);
-  }
-}
-
-void BaseArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
-{
-  std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, data_);
-  if (null_mask_.has_value()) {
-    std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, *null_mask_);
-  }
-}
-
-void BaseArrayArg::perform_invalidations() const
-{
-  // We don't need to invalidate any cached state for null masks
-  std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, data_);
-}
-
-ListArrayArg::ListArrayArg(InternalSharedPtr<Type> type,
-                           ArrayAnalyzable&& descriptor,
-                           ArrayAnalyzable&& vardata)
-  : type_{std::move(type)},
-    pimpl_{std::make_unique<Impl>(std::move(descriptor), std::move(vardata))}
-{
-}
-
-void ListArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
-{
-  buffer.pack(to_underlying(ArrayKind::LIST));
-  type_->pack(buffer);
-  std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, pimpl_->descriptor);
-  std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, pimpl_->vardata);
-}
-
-void ListArrayArg::analyze(StoreAnalyzer& analyzer) const
-{
-  std::visit([&](auto& arg) { arg.analyze(analyzer); }, pimpl_->descriptor);
-  std::visit([&](auto& arg) { arg.analyze(analyzer); }, pimpl_->vardata);
-}
-
-void ListArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
-{
-  std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, pimpl_->descriptor);
-  std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, pimpl_->vardata);
-}
-
-void ListArrayArg::perform_invalidations() const
-{
-  std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, pimpl_->descriptor);
-  std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, pimpl_->vardata);
-}
-
-void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
-{
-  buffer.pack(to_underlying(ArrayKind::STRUCT));
-  type_->pack(buffer);
-
-  const bool nullable = null_mask_.has_value();
-  buffer.pack<bool>(nullable);
-  if (nullable) {
-    std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, *null_mask_);
-  }
-
-  for (auto&& field : fields_) {
-    std::visit([&](const auto& arg) { arg.pack(buffer, analyzer); }, field);
-  }
-}
-
-void StructArrayArg::analyze(StoreAnalyzer& analyzer) const
-{
-  if (null_mask_.has_value()) {
-    std::visit([&](auto& arg) { arg.analyze(analyzer); }, *null_mask_);
-  }
-  for (auto&& field : fields_) {
-    std::visit([&](auto& arg) { arg.analyze(analyzer); }, field);
-  }
-}
-
-void StructArrayArg::record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const
-{
-  if (null_mask_.has_value()) {
-    std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, *null_mask_);
-  }
-  for (auto&& field : fields_) {
-    std::visit([&](const auto& arg) { return arg.record_unbound_stores(args); }, field);
-  }
-}
-
-void StructArrayArg::perform_invalidations() const
-{
-  if (null_mask_.has_value()) {
-    std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, *null_mask_);
-  }
-  for (auto&& field : fields_) {
-    std::visit([&](const auto& arg) { return arg.perform_invalidations(); }, field);
   }
 }
 

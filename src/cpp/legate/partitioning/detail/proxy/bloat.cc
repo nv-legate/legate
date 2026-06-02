@@ -7,7 +7,7 @@
 #include <legate/partitioning/detail/proxy/bloat.h>
 
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
@@ -35,94 +35,94 @@ void do_bloat_final(const Variable* var_source,
   }
 }
 
-void do_bloat(const TaskArrayArg* var_source,
-              const TaskArrayArg* var_bloat,
+void do_bloat(const TaskStoreArg* var_source,
+              const TaskStoreArg* var_bloat,
               Span<const std::uint64_t> low_offsets,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& source_arr) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bloat_arr) {
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& source_st) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bloat_st) {
                                               do_bloat_final(
-                                                task->find_or_declare_partition(source_arr),
-                                                task->find_or_declare_partition(bloat_arr),
+                                                task->find_or_declare_partition(source_st),
+                                                task->find_or_declare_partition(bloat_st),
                                                 low_offsets,
                                                 high_offsets,
                                                 task);
                                             },
-                                            [&](const InternalSharedPtr<PhysicalArray>&) {
-                                              // Do nothing for PhysicalArray
+                                            [&](const InternalSharedPtr<PhysicalStore>&) {
+                                              // Do nothing for PhysicalStore
                                             }},
-                                   var_bloat->array);
+                                   var_bloat->store);
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_source->array);
+             var_source->store);
 }
 
-void do_bloat(const TaskArrayArg* var_source,
-              Span<const TaskArrayArg> var_bloat,
+void do_bloat(const TaskStoreArg* var_source,
+              Span<const TaskStoreArg> var_bloat,
               Span<const std::uint64_t> low_offsets,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& source_arr) {
-                        const auto* source_part = task->find_or_declare_partition(source_arr);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& source_st) {
+                        const auto* source_part = task->find_or_declare_partition(source_st);
 
                         for (auto&& bloat : var_bloat) {
-                          std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalArray>& bloat_arr) {
-                                       do_bloat_final(source_part,
-                                                      task->find_or_declare_partition(bloat_arr),
-                                                      low_offsets,
-                                                      high_offsets,
-                                                      task);
-                                     },
-                                     [&](const InternalSharedPtr<PhysicalArray>&) {
-                                       // Do nothing for PhysicalArray
-                                     }},
-                            bloat.array);
+                          std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bloat_st) {
+                                                do_bloat_final(
+                                                  source_part,
+                                                  task->find_or_declare_partition(bloat_st),
+                                                  low_offsets,
+                                                  high_offsets,
+                                                  task);
+                                              },
+                                              [&](const InternalSharedPtr<PhysicalStore>&) {
+                                                // Do nothing for PhysicalStore
+                                              }},
+                                     bloat.store);
                         }
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_source->array);
+             var_source->store);
 }
 
-void do_bloat(Span<const TaskArrayArg> var_source,
-              const TaskArrayArg* var_bloat,
+void do_bloat(Span<const TaskStoreArg> var_source,
+              const TaskStoreArg* var_bloat,
               Span<const std::uint64_t> low_offsets,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bloat_arr) {
-                        const auto* bloat_part = task->find_or_declare_partition(bloat_arr);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bloat_st) {
+                        const auto* bloat_part = task->find_or_declare_partition(bloat_st);
 
                         for (auto&& src : var_source) {
                           std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalArray>& source_arr) {
-                                       do_bloat_final(task->find_or_declare_partition(source_arr),
+                            Overload{[&](const InternalSharedPtr<LogicalStore>& source_st) {
+                                       do_bloat_final(task->find_or_declare_partition(source_st),
                                                       bloat_part,
                                                       low_offsets,
                                                       high_offsets,
                                                       task);
                                      },
-                                     [&](const InternalSharedPtr<PhysicalArray>&) {
-                                       // Do nothing for PhysicalArray
+                                     [&](const InternalSharedPtr<PhysicalStore>&) {
+                                       // Do nothing for PhysicalStore
                                      }},
-                            src.array);
+                            src.store);
                         }
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_bloat->array);
+             var_bloat->store);
 }
 
-void do_bloat(Span<const TaskArrayArg> var_source,
-              Span<const TaskArrayArg> var_bloat,
+void do_bloat(Span<const TaskStoreArg> var_source,
+              Span<const TaskStoreArg> var_bloat,
               Span<const std::uint64_t> low_offsets,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)

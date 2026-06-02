@@ -7,7 +7,7 @@
 #pragma once
 
 #include <legate/comm/communicator.h>
-#include <legate/data/physical_array.h>
+#include <legate/data/physical_store.h>
 #include <legate/data/scalar.h>
 #include <legate/mapping/machine.h>
 #include <legate/mapping/mapping.h>
@@ -54,47 +54,47 @@ class LEGATE_EXPORT TaskContext {
    */
   [[nodiscard]] VariantCode variant_kind() const noexcept;
   /**
-   * @brief Returns an input array of the task
+   * @brief Returns an input store of the task
    *
-   * @param index Index of the array
+   * @param index Index of the store
    *
-   * @return Array
+   * @return Store
    */
-  [[nodiscard]] PhysicalArray input(std::uint32_t index) const;
+  [[nodiscard]] PhysicalStore input(std::uint32_t index) const;
   /**
-   * @brief Returns all input arrays of the task
+   * @brief Returns all input stores of the task
    *
-   * @return Vector of arrays
+   * @return Vector of stores
    */
-  [[nodiscard]] std::vector<PhysicalArray> inputs() const;
+  [[nodiscard]] std::vector<PhysicalStore> inputs() const;
   /**
-   * @brief Returns an output array of the task
+   * @brief Returns an output store of the task
    *
-   * @param index Index of the array
+   * @param index Index of the store
    *
-   * @return Array
+   * @return Store
    */
-  [[nodiscard]] PhysicalArray output(std::uint32_t index) const;
+  [[nodiscard]] PhysicalStore output(std::uint32_t index) const;
   /**
-   * @brief Returns all output arrays of the task
+   * @brief Returns all output stores of the task
    *
-   * @return Vector of arrays
+   * @return Vector of stores
    */
-  [[nodiscard]] std::vector<PhysicalArray> outputs() const;
+  [[nodiscard]] std::vector<PhysicalStore> outputs() const;
   /**
-   * @brief Returns a reduction array of the task
+   * @brief Returns a reduction store of the task
    *
-   * @param index Index of the array
+   * @param index Index of the store
    *
-   * @return Array
+   * @return Store
    */
-  [[nodiscard]] PhysicalArray reduction(std::uint32_t index) const;
+  [[nodiscard]] PhysicalStore reduction(std::uint32_t index) const;
   /**
-   * @brief Returns all reduction arrays of the task
+   * @brief Returns all reduction stores of the task
    *
-   * @return Vector of arrays
+   * @return Vector of stores
    */
-  [[nodiscard]] std::vector<PhysicalArray> reductions() const;
+  [[nodiscard]] std::vector<PhysicalStore> reductions() const;
   /**
    * @brief Returns a by-value argument of the task
    *
@@ -135,19 +135,19 @@ class LEGATE_EXPORT TaskContext {
   /**
    * @brief Returns the number of task's inputs
    *
-   * @return Number of arrays
+   * @return Number of stores
    */
   [[nodiscard]] std::size_t num_inputs() const;
   /**
    * @brief Returns the number of task's outputs
    *
-   * @return Number of arrays
+   * @return Number of stores
    */
   [[nodiscard]] std::size_t num_outputs() const;
   /**
    * @brief Returns the number of task's reductions
    *
-   * @return Number of arrays
+   * @return Number of stores
    */
   [[nodiscard]] std::size_t num_reductions() const;
 

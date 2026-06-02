@@ -22,10 +22,7 @@ struct Producer : public legate::LegateTask<Producer> {
   {
     auto outputs = context.outputs();
     for (auto&& output : outputs) {
-      output.data().bind_empty_data();
-      if (output.nullable()) {
-        output.null_mask().bind_empty_data();
-      }
+      output.bind_empty_data();
     }
   }
 };
@@ -60,21 +57,6 @@ TEST_F(AlignedUnboundStores, Standalone)
     runtime->submit(std::move(task));
   }
   EXPECT_EQ(store1.shape().extents(), legate::tuple<std::uint64_t>{0});
-}
-
-TEST_F(AlignedUnboundStores, ViaNullableArray)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(Config::LIBRARY_NAME);
-
-  auto arr = runtime->create_array(legate::int32(), /*dim=*/1, /*nullable=*/true);
-
-  {
-    auto task = runtime->create_task(library, Producer::TASK_CONFIG.task_id());
-    task.add_output(arr);
-    runtime->submit(std::move(task));
-  }
-  EXPECT_EQ(arr.shape().extents(), legate::tuple<std::uint64_t>{0});
 }
 
 }  // namespace aligned_unbound_stores_test

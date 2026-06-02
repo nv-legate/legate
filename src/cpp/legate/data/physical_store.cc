@@ -12,7 +12,6 @@
 #include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/data/logical_store.h>
-#include <legate/data/physical_array.h>
 #include <legate/utilities/detail/dlpack/to_dlpack.h>
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -145,15 +144,6 @@ std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)>
 PhysicalStore::to_dlpack(std::optional<bool> copy, std::optional<CUstream_st*> stream) const
 {
   return detail::to_dlpack(*this, std::move(copy), std::move(stream));
-}
-
-PhysicalStore::PhysicalStore(const PhysicalArray& array)
-  : PhysicalStore{
-      array.nullable() ? throw detail::TracedException<
-                           std::invalid_argument>{"Nullable array cannot be converted to a store"}
-                       : array.data().impl(),
-      array.owner().has_value() ? std::make_optional(array.owner()->data()) : std::nullopt}
-{
 }
 
 void PhysicalStore::check_accessor_type_(Type::Code code, std::size_t size_of_T) const

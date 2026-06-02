@@ -87,29 +87,29 @@ class Config {
 
 class ProjectionTest : public RegisterOnceFixture<Config> {};
 
-void test_extra_projection(const legate::LogicalArray& arr1)
+void test_extra_projection(const legate::LogicalStore& st1)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto arr2 =
-    runtime->create_array(legate::Shape{BIG_EXTENT, SMALL_EXTENT, SMALL_EXTENT}, legate::int64());
+  auto st2 =
+    runtime->create_store(legate::Shape{BIG_EXTENT, SMALL_EXTENT, SMALL_EXTENT}, legate::int64());
   auto task = runtime->create_task(library, ExtraProjectionTester::TASK_CONFIG.task_id());
-  task.add_output(arr1);
-  task.add_output(arr2);
+  task.add_output(st1);
+  task.add_output(st2);
   runtime->submit(std::move(task));
 }
 
-void test_delinearization(const legate::LogicalArray& arr1)
+void test_delinearization(const legate::LogicalStore& st1)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto arr2 =
-    runtime->create_array(legate::Shape{BIG_EXTENT, BIG_EXTENT, SMALL_EXTENT}, legate::int64());
+  auto st2 =
+    runtime->create_store(legate::Shape{BIG_EXTENT, BIG_EXTENT, SMALL_EXTENT}, legate::int64());
   auto task = runtime->create_task(library, DelinearizeTester::TASK_CONFIG.task_id());
-  task.add_output(arr1);
-  task.add_output(arr2);
+  task.add_output(st1);
+  task.add_output(st2);
   runtime->submit(std::move(task));
 }
 
@@ -117,35 +117,35 @@ void test_delinearization(const legate::LogicalArray& arr1)
 
 TEST_F(ProjectionTest, ExtraProjection1)
 {
-  test_extra_projection(legate::Runtime::get_runtime()->create_array(
+  test_extra_projection(legate::Runtime::get_runtime()->create_store(
     legate::Shape{SMALL_EXTENT, BIG_EXTENT, SMALL_EXTENT}, legate::int64()));
 }
 
 TEST_F(ProjectionTest, ExtraProjection2)
 {
   test_extra_projection(legate::Runtime::get_runtime()
-                          ->create_array(legate::Shape{SMALL_EXTENT, BIG_EXTENT}, legate::int64())
+                          ->create_store(legate::Shape{SMALL_EXTENT, BIG_EXTENT}, legate::int64())
                           .promote(/*extra_dim=*/2, SMALL_EXTENT));
 }
 
 TEST_F(ProjectionTest, ExtraProjection3)
 {
   test_extra_projection(legate::Runtime::get_runtime()
-                          ->create_array(legate::Shape{BIG_EXTENT}, legate::int64())
+                          ->create_store(legate::Shape{BIG_EXTENT}, legate::int64())
                           .promote(/*extra_dim=*/0, SMALL_EXTENT)
                           .promote(/*extra_dim=*/2, SMALL_EXTENT));
 }
 
 TEST_F(ProjectionTest, Delinearization1)
 {
-  test_delinearization(legate::Runtime::get_runtime()->create_array(
+  test_delinearization(legate::Runtime::get_runtime()->create_store(
     legate::Shape{BIG_EXTENT, SMALL_EXTENT, BIGGER_EXTENT}, legate::int64()));
 }
 
 TEST_F(ProjectionTest, Delinearization2)
 {
   test_delinearization(legate::Runtime::get_runtime()
-                         ->create_array(legate::Shape{BIG_EXTENT, BIGGER_EXTENT}, legate::int64())
+                         ->create_store(legate::Shape{BIG_EXTENT, BIGGER_EXTENT}, legate::int64())
                          .promote(/*extra_dim=*/1, SMALL_EXTENT));
 }
 

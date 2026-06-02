@@ -27,10 +27,10 @@ enum TaskIDs : std::uint8_t {
   ALIGNMENT_ALL_INPUTS_ALL_REDUCTIONS,
 };
 
-[[nodiscard]] legate::LogicalArray make_array()
+[[nodiscard]] legate::LogicalStore make_store()
 {
   auto* runtime = legate::Runtime::get_runtime();
-  auto ret      = runtime->create_array(legate::Shape{3}, legate::int32());
+  auto ret      = runtime->create_store(legate::Shape{3}, legate::int32());
 
   runtime->issue_fill(ret, legate::Scalar{0});
   return ret;
@@ -125,9 +125,9 @@ TYPED_TEST(TaskSignatureAlignmentUnit, Basic)
   auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(library, TypeParam::TASK_CONFIG.task_id());
 
-  task.add_input(make_array());
-  task.add_output(make_array());
-  task.add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task.add_input(make_store());
+  task.add_output(make_store());
+  task.add_reduction(make_store(), legate::ReductionOpKind::ADD);
   runtime->submit(std::move(task));
 }
 

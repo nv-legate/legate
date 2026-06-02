@@ -47,7 +47,7 @@ legate::TaskRegistrar& Registry::get_registrar()
 
 void hello_cpu_variant(legate::TaskContext& context)
 {
-  auto output = context.output(0).data();
+  auto output = context.output(0);
   auto shape  = output.shape<2>();
 
   if (shape.empty()) {

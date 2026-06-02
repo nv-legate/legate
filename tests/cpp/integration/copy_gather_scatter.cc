@@ -27,10 +27,10 @@ struct CheckGatherScatterTask
     {
       using VAL = legate::type_of_t<CODE>;
 
-      auto src_store     = context.input(0).data();
-      auto tgt_store     = context.input(1).data();
-      auto src_ind_store = context.input(2).data();
-      auto tgt_ind_store = context.input(3).data();
+      auto src_store     = context.input(0);
+      auto tgt_store     = context.input(1);
+      auto src_ind_store = context.input(2);
+      auto tgt_ind_store = context.input(3);
       auto init          = context.scalar(0).value<VAL>();
 
       auto src_shape = src_store.shape<SRC_DIM>();

@@ -12,17 +12,17 @@
 
 namespace legate::detail {
 
-inline Span<const InternalSharedPtr<PhysicalArray>> TaskContext::inputs() const noexcept
+inline Span<const InternalSharedPtr<PhysicalStore>> TaskContext::inputs() const noexcept
 {
   return inputs_;
 }
 
-inline Span<const InternalSharedPtr<PhysicalArray>> TaskContext::outputs() const noexcept
+inline Span<const InternalSharedPtr<PhysicalStore>> TaskContext::outputs() const noexcept
 {
   return outputs_;
 }
 
-inline Span<const InternalSharedPtr<PhysicalArray>> TaskContext::reductions() const noexcept
+inline Span<const InternalSharedPtr<PhysicalStore>> TaskContext::reductions() const noexcept
 {
   return reductions_;
 }

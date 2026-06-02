@@ -49,7 +49,7 @@ TEST_F(InlineStorageUnit, Basic)
   const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
   constexpr auto VALUE = std::int32_t{32};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   auto&& impl = store.impl();
 
@@ -98,7 +98,7 @@ TEST_F(InlineStorageUnit, Slice)
   const auto store     = runtime->create_store(legate::Shape{2, 3}, legate::int32());
   constexpr auto VALUE = std::int32_t{32};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto first_row     = store.slice(/*dim=*/0, legate::Slice{legate::Slice::OPEN, /*stop=*/1});
   constexpr auto NEW_VALUE = 2 * VALUE;
@@ -138,7 +138,7 @@ TEST_F(InlineStorageUnit, Project)
   const auto store     = runtime->create_store(legate::Shape{2, 3}, legate::int32());
   constexpr auto VALUE = std::int32_t{32};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto last_column   = store.project(/*dim=*/1, /*index=*/2);
   constexpr auto NEW_VALUE = 2 * VALUE;
@@ -175,7 +175,7 @@ TEST_F(InlineStorageUnit, Promote)
   const auto store    = runtime->create_store(legate::Shape{3}, legate::int32());
   constexpr auto VALUE{std::int32_t{32}};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   constexpr auto NEW_VALUE{2 * VALUE};
@@ -205,7 +205,7 @@ TEST_F(InlineStorageUnit, Broadcast)
   const auto store    = runtime->create_store(legate::Shape{1, 3}, legate::int32());
   constexpr auto VALUE{std::int32_t{32}};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto broadcasted = store.broadcast(/*dim=*/0, /*dim_size=*/2);
   constexpr auto NEW_VALUE{2 * VALUE};
@@ -248,8 +248,8 @@ TEST_F(InlineStorageUnit, FillAndCopy)
   constexpr std::int32_t VALUE1 = 123;
   constexpr std::int32_t VALUE2 = 555;
 
-  runtime->issue_fill(legate::LogicalArray{store1}, legate::Scalar{VALUE1});
-  runtime->issue_fill(legate::LogicalArray{store2}, legate::Scalar{VALUE2});
+  runtime->issue_fill(store1, legate::Scalar{VALUE1});
+  runtime->issue_fill(store2, legate::Scalar{VALUE2});
 
   {
     const auto span1 = store1.get_physical_store().span_read_accessor<std::int32_t, 1>();
@@ -314,7 +314,7 @@ TEST_F(InlineStorageUnit, RemapSysmemToSocketmem)
   auto* const runtime  = legate::Runtime::get_runtime();
   const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto phys_sys = store.get_physical_store(legate::mapping::StoreTarget::SYSMEM);
 
@@ -340,7 +340,7 @@ TEST_F(InlineStorageUnit, GetInlineAllocationTransformed)
   auto* const runtime  = legate::Runtime::get_runtime();
   const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   auto promoted   = store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   const auto phys = promoted.get_physical_store();
@@ -360,7 +360,7 @@ TEST_F(InlineStorageUnit, ToLogicalStoreThrows)
   auto* const runtime  = legate::Runtime::get_runtime();
   const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto phys = store.get_physical_store();
 
@@ -375,7 +375,7 @@ TEST_F(InlineStorageUnit, TransformedReadAccessor)
   const auto store     = runtime->create_store(legate::Shape{3}, legate::int32());
   constexpr auto VALUE = std::int32_t{42};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();
@@ -396,7 +396,7 @@ TEST_F(InlineStorageUnit, TransformedWriteAccessor)
   const auto store     = runtime->create_store(legate::Shape{3}, legate::int32());
   constexpr auto VALUE = std::int32_t{7};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{std::int32_t{0}});
+  runtime->issue_fill(store, legate::Scalar{std::int32_t{0}});
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();
@@ -429,7 +429,7 @@ TEST_F(InlineStorageUnit, TransformedReadWriteAccessor)
   constexpr auto INIT_VALUE = std::int32_t{10};
   constexpr auto DELTA      = std::int32_t{5};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{INIT_VALUE});
+  runtime->issue_fill(store, legate::Scalar{INIT_VALUE});
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();
@@ -461,7 +461,7 @@ TEST_F(InlineStorageUnit, ReduceAccessor)
   constexpr auto INIT_VALUE = std::int32_t{10};
   constexpr auto RED_VALUE  = std::int32_t{5};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{INIT_VALUE});
+  runtime->issue_fill(store, legate::Scalar{INIT_VALUE});
 
   const auto phys = store.get_physical_store();
 
@@ -493,7 +493,7 @@ TEST_F(InlineStorageUnit, TransformedReduceAccessor)
   constexpr auto INIT_VALUE = std::int32_t{10};
   constexpr auto RED_VALUE  = std::int32_t{5};
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{INIT_VALUE});
+  runtime->issue_fill(store, legate::Scalar{INIT_VALUE});
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();

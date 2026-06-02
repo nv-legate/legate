@@ -33,7 +33,7 @@ class AccessStoreFn {
   void operator()(legate::TaskContext context)
   {
     using T                    = legate::type_of_t<CODE>;
-    auto p_store               = context.input(0).data();
+    auto p_store               = context.input(0);
     constexpr std::int32_t DIM = 1;
     auto shape                 = p_store.shape<DIM>();
 
@@ -62,7 +62,7 @@ class AccessTask : public legate::LegateTask<AccessTask> {
 
 /*static*/ void AccessTask::cpu_variant(legate::TaskContext context)
 {
-  auto p_store = context.input(0).data();
+  auto p_store = context.input(0);
 
   legate::type_dispatch(p_store.code(), AccessStoreFn{}, context);
 }

@@ -6,7 +6,7 @@ from ....core._ext.cython_libcpp.string_view cimport std_string_view
 from ....core._lib.data.logical_store cimport LogicalStore, _LogicalStore
 
 
-cdef extern from "legate/io/hdf5/detail/hidden.h" namespace "legate" nogil:
+cdef extern from "legate/io/hdf5/interface.h" namespace "legate" nogil:
     # These std_string_view arguments are in reality std::filesystem::path, so
     # these prototypes are actually a lie. But:
     #
@@ -15,11 +15,11 @@ cdef extern from "legate/io/hdf5/detail/hidden.h" namespace "legate" nogil:
     #    std_string_view.
     #
     # So this gives us the best of both worlds.
-    cdef _LogicalStore _from_file "legate::io::hdf5::from_file_" (
+    cdef _LogicalStore _from_file "legate::io::hdf5::from_file" (
         std_string_view, std_string_view
     ) except+
 
-    cdef void _to_file "legate::io::hdf5::to_file_" (
+    cdef void _to_file "legate::io::hdf5::to_file" (
         const _LogicalStore&, std_string_view, std_string_view
     ) except+
 

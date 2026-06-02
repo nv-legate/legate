@@ -23,21 +23,21 @@ class CheckTask : public legate::LegateTask<CheckTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    const auto arg = context.input(0).data();
+    const auto arg = context.input(0);
 
     ASSERT_EQ(arg.target(), legate::mapping::StoreTarget::SYSMEM);
   }
 
   static void gpu_variant(legate::TaskContext context)
   {
-    const auto arg = context.input(0).data();
+    const auto arg = context.input(0);
 
     ASSERT_EQ(arg.target(), legate::mapping::StoreTarget::FBMEM);
   }
 
   static void omp_variant(legate::TaskContext context)
   {
-    const auto arg = context.input(0).data();
+    const auto arg = context.input(0);
 
     ASSERT_EQ(arg.target(), legate::mapping::StoreTarget::SOCKETMEM);
   }

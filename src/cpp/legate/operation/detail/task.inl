@@ -25,11 +25,11 @@ inline LocalTaskID TaskBase::local_task_id() const { return task_id_; }
 
 inline Span<const InternalSharedPtr<Scalar>> TaskBase::scalars() const { return scalars_; }
 
-inline Span<const TaskArrayArg> TaskBase::inputs() const { return inputs_; }
+inline Span<const TaskStoreArg> TaskBase::inputs() const { return inputs_; }
 
-inline Span<const TaskArrayArg> TaskBase::outputs() const { return outputs_; }
+inline Span<const TaskStoreArg> TaskBase::outputs() const { return outputs_; }
 
-inline Span<const TaskArrayArg> TaskBase::reductions() const { return reductions_; }
+inline Span<const TaskStoreArg> TaskBase::reductions() const { return reductions_; }
 
 inline const VariantInfo& TaskBase::variant_info_() const { return vinfo_; }
 

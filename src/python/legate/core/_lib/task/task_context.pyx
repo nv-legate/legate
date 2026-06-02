@@ -104,9 +104,7 @@ cdef class TaskContext(Unconstructable):
 
         if self._inputs is None:
             self._inputs = tuple(
-                PhysicalStore.from_handle(
-                    self._handle.input(i).data()
-                )
+                PhysicalStore.from_handle(self._handle.input(i))
                 for i in range(self._handle.num_inputs())
             )
         return self._inputs
@@ -123,9 +121,7 @@ cdef class TaskContext(Unconstructable):
 
         if self._outputs is None:
             self._outputs = tuple(
-                PhysicalStore.from_handle(
-                    self._handle.output(i).data()
-                )
+                PhysicalStore.from_handle(self._handle.output(i))
                 for i in range(self._handle.num_outputs())
             )
         return self._outputs
@@ -142,9 +138,7 @@ cdef class TaskContext(Unconstructable):
 
         if self._reductions is None:
             self._reductions = tuple(
-                PhysicalStore.from_handle(
-                    self._handle.reduction(i).data()
-                )
+                PhysicalStore.from_handle(self._handle.reduction(i))
                 for i in range(self._handle.num_reductions())
             )
         return self._reductions

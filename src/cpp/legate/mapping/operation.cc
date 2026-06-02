@@ -6,8 +6,8 @@
 
 #include <legate/mapping/operation.h>
 
-#include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/operation.h>
+#include <legate/mapping/detail/store.h>
 
 namespace legate::mapping {
 
@@ -15,25 +15,25 @@ LocalTaskID Task::task_id() const { return impl()->task_id(); }
 
 namespace {
 
-template <typename Arrays>
-std::vector<Array> convert_arrays(const Arrays& arrays)
+template <typename Stores>
+std::vector<Store> convert_stores(const Stores& stores)
 {
-  std::vector<Array> result;
+  std::vector<Store> result;
 
-  result.reserve(arrays.size());
-  for (auto&& array : arrays) {
-    result.emplace_back(array.get());
+  result.reserve(stores.size());
+  for (auto&& store : stores) {
+    result.emplace_back(store.get());
   }
   return result;
 }
 
 }  // namespace
 
-std::vector<Array> Task::inputs() const { return convert_arrays(impl()->inputs()); }
+std::vector<Store> Task::inputs() const { return convert_stores(impl()->inputs()); }
 
-std::vector<Array> Task::outputs() const { return convert_arrays(impl()->outputs()); }
+std::vector<Store> Task::outputs() const { return convert_stores(impl()->outputs()); }
 
-std::vector<Array> Task::reductions() const { return convert_arrays(impl()->reductions()); }
+std::vector<Store> Task::reductions() const { return convert_stores(impl()->reductions()); }
 
 std::vector<Scalar> Task::scalars() const
 {
@@ -42,13 +42,13 @@ std::vector<Scalar> Task::scalars() const
   return {scals.begin(), scals.end()};
 }
 
-Array Task::input(std::uint32_t index) const { return Array{impl()->inputs().at(index).get()}; }
+Store Task::input(std::uint32_t index) const { return Store{impl()->inputs().at(index).get()}; }
 
-Array Task::output(std::uint32_t index) const { return Array{impl()->outputs().at(index).get()}; }
+Store Task::output(std::uint32_t index) const { return Store{impl()->outputs().at(index).get()}; }
 
-Array Task::reduction(std::uint32_t index) const
+Store Task::reduction(std::uint32_t index) const
 {
-  return Array{impl()->reductions().at(index).get()};
+  return Store{impl()->reductions().at(index).get()};
 }
 
 Scalar Task::scalar(std::uint32_t index) const { return Scalar{impl()->scalars().at(index)}; }

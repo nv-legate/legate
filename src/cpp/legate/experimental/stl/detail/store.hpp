@@ -499,16 +499,6 @@ LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
 /**
  * @overload
  */
-template <typename ElementType, std::int32_t Dim>
-LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
-  const legate::PhysicalArray& array)
-{
-  return stl::as_mdspan<ElementType, Dim>(array.data());
-}
-
-/**
- * @overload
- */
 template <typename ElementType, std::int32_t Dim, template <typename, std::int32_t> typename StoreT>
   requires(std::is_same_v<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
 LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(

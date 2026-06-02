@@ -140,7 +140,7 @@ def benchmark_write(
     output_file : Path
         Path to the output HDF5 file.
     shape : tuple[int, ...]
-        Shape of the array to write.
+        Shape of the store to write.
     dtype_str : str
         Data type as string.
 
@@ -164,14 +164,14 @@ def benchmark_write(
     # Start wall time measurement
     wall_start = pytime.time()
 
-    # Creates an array with the given type and shape and fill it with a
-    # constant value of 1. This array is written to a HDF5 file with
+    # Creates a a store with the given type and shape and fill it with a
+    # constant value of 1. This store is written to a HDF5 file with
     # the given name and dataset name. Legate will create a HDF5
     # virtual dataset on disk for the dataset.
-    array = runtime.create_array(dtype=legate_dtype, shape=shape)
+    store = runtime.create_store(dtype=legate_dtype, shape=shape)
 
-    runtime.issue_fill(array, 1)
-    to_file(array=array, path=output_file, dataset_name="/data")
+    runtime.issue_fill(store, 1)
+    to_file(obj=store, path=output_file, dataset_name="/data")
 
     # We need to block here to ensure that the write operation is completed
     # before we can measure the time taken.

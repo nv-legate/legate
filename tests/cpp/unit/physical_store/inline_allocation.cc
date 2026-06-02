@@ -26,7 +26,7 @@ class FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
 
 /*static*/ void FutureStoreTask::cpu_variant(legate::TaskContext context)
 {
-  auto store = context.output(0).data();
+  auto store = context.output(0);
 
   ASSERT_NE(store.get_inline_allocation().ptr, nullptr);
   ASSERT_EQ(store.get_inline_allocation().strides.size(), store.dim());
@@ -45,7 +45,7 @@ class GPUTask : public legate::LegateTask<GPUTask> {
 
 /*static*/ void GPUTask::gpu_variant(legate::TaskContext context)
 {
-  const auto store = context.input(0).data();
+  const auto store = context.input(0);
   const auto alloc = store.get_inline_allocation();
 
   ASSERT_THAT(

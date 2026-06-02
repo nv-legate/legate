@@ -9,7 +9,6 @@
 #include <legate.h>
 
 #include <legate/data/detail/transform/transform_stack.h>
-#include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/utilities/detail/tuple.h>
 

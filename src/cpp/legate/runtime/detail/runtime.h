@@ -71,11 +71,8 @@ class Mapper;
 namespace legate::detail {
 
 class AutoTask;
-class BaseLogicalArray;
-class LogicalArray;
 class ManualTask;
 class PhysicalTask;
-class StructLogicalArray;
 class LogicalStore;
 class LogicalStorePartition;
 class Operation;
@@ -177,9 +174,6 @@ class Runtime {
                             InternalSharedPtr<LogicalStore> source,
                             InternalSharedPtr<LogicalStore> source_indirect,
                             std::optional<std::int32_t> redop);
-  void issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
-                  InternalSharedPtr<LogicalStore> value);
-  void issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
   void tree_reduce(const Library& library,
@@ -189,7 +183,7 @@ class Runtime {
                    std::int32_t radix);
 
   // also used for offloading stores
-  void offload_to(mapping::StoreTarget target_mem, const InternalSharedPtr<LogicalArray>& array);
+  void offload_to(mapping::StoreTarget target_mem, const InternalSharedPtr<LogicalStore>& store);
 
   /**
    * @brief Launch operations in Legate's queue.
@@ -203,54 +197,6 @@ class Runtime {
   void flush_scheduling_window(bool streaming_scope_change = false);
   void submit(InternalSharedPtr<Operation> op);
   static void launch_immediately(const InternalSharedPtr<Operation>& op);
-
-  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const InternalSharedPtr<Shape>& shape,
-                                                             InternalSharedPtr<Type> type,
-                                                             bool nullable,
-                                                             bool optimize_scalar);
-  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array_like(
-    const InternalSharedPtr<LogicalArray>& array, InternalSharedPtr<Type> type);
-  /**
-   * @brief Creates a nullable array from a given store and null mask.
-   *
-   * @param store Store for the array's data.
-   * @param null_mask Store for the array's null mask.
-   *
-   * @note This call can block if either `store` or `null_mask` is unbound.
-   *
-   * @return Nullable logical array.
-   *
-   * @throw std::invalid_argument When any of the following is true:
-   * #. `null_mask` is not of boolean type.
-   * #. `store` and `null_mask` have different shapes.
-   * #. `store` or `null_mask` are not top-level stores.
-   */
-  [[nodiscard]] InternalSharedPtr<LogicalArray> create_nullable_array(
-    const InternalSharedPtr<LogicalStore>& store, const InternalSharedPtr<LogicalStore>& null_mask);
-  [[nodiscard]] InternalSharedPtr<LogicalArray> create_list_array(
-    InternalSharedPtr<Type> type,
-    const InternalSharedPtr<LogicalArray>& descriptor,
-    InternalSharedPtr<LogicalArray> vardata);
-  /**
-   * @brief Creates a struct array from existing sub-arrays and null mask.
-   *
-   * The caller is responsible for making sure that the fields sub-arrays are valid.
-   *
-   * @param fields Sub-arrays for fields.
-   * @param null_mask Optional null mask for the struct array.
-   *
-   * @note This call can block if either `fields` or `null_mask` is unbound.
-   *
-   * @return Struct logical array
-   *
-   * @throw std::invalid_argument When any of the following is true:
-   * #. `null_mask` is not of boolean type if provided.
-   * #.  any of `fields` or `null_mask`, if provided, have different shapes.
-   * #.  any of the `fields` or `null_mask` are transformed (i.e., not a top-level store).
-   */
-  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
-    SmallVector<InternalSharedPtr<LogicalArray>>&& fields,
-    const std::optional<InternalSharedPtr<LogicalStore>>& null_mask);
 
   /**
    * @brief Give access to certain methods via this class.
@@ -276,18 +222,6 @@ class Runtime {
 
   [[nodiscard]] std::pair<mapping::detail::Machine, const VariantInfo&> slice_machine_for_task_(
     const TaskInfo& info) const;
-
-  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array_(
-    const InternalSharedPtr<Shape>& shape,
-    InternalSharedPtr<Type> type,
-    bool nullable,
-    bool optimize_scalar);
-
-  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array_(
-    InternalSharedPtr<Shape> shape,
-    InternalSharedPtr<Type> type,
-    bool nullable,
-    bool optimize_scalar);
 
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Type> type,

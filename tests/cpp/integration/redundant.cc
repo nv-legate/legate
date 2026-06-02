@@ -47,8 +47,8 @@ class LibraryMapper : public legate::mapping::Mapper {
   {
     auto mappings = std::vector<legate::mapping::StoreMapping>{};
     for (auto&& input : task.inputs()) {
-      auto mapping = legate::mapping::StoreMapping::default_mapping(
-        input.data(), options.front(), /*exact=*/true);
+      auto mapping =
+        legate::mapping::StoreMapping::default_mapping(input, options.front(), /*exact=*/true);
       mapping.policy().redundant = true;
       mappings.push_back(std::move(mapping));
     }

@@ -7,7 +7,7 @@
 #include <legate/partitioning/detail/proxy/image.h>
 
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
@@ -39,87 +39,87 @@ void do_image_final(const Variable* var_function,
   task->add_constraint(constraint.impl(), /* bypass_signature_check */ true);
 }
 
-void do_image(const TaskArrayArg* var_function,
-              const TaskArrayArg* var_range,
+void do_image(const TaskStoreArg* var_function,
+              const TaskStoreArg* var_range,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& function_arr) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& range_arr) {
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& function_st) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& range_st) {
                                               do_image_final(
-                                                task->find_or_declare_partition(function_arr),
-                                                task->find_or_declare_partition(range_arr),
+                                                task->find_or_declare_partition(function_st),
+                                                task->find_or_declare_partition(range_st),
                                                 hint,
                                                 task);
                                             },
-                                            [&](const InternalSharedPtr<PhysicalArray>&) {
-                                              // Do nothing for PhysicalArray
+                                            [&](const InternalSharedPtr<PhysicalStore>&) {
+                                              // Do nothing for PhysicalStore
                                             }},
-                                   var_range->array);
+                                   var_range->store);
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_function->array);
+             var_function->store);
 }
 
-void do_image(const TaskArrayArg* var_function,
-              Span<const TaskArrayArg> var_ranges,
+void do_image(const TaskStoreArg* var_function,
+              Span<const TaskStoreArg> var_ranges,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
   std::visit(
-    Overload{[&](const InternalSharedPtr<LogicalArray>& function_arr) {
-               const auto* func_part = task->find_or_declare_partition(function_arr);
+    Overload{[&](const InternalSharedPtr<LogicalStore>& function_st) {
+               const auto* func_part = task->find_or_declare_partition(function_st);
 
                for (auto&& range : var_ranges) {
                  std::visit(
-                   Overload{[&](const InternalSharedPtr<LogicalArray>& range_arr) {
+                   Overload{[&](const InternalSharedPtr<LogicalStore>& range_st) {
                               do_image_final(
-                                func_part, task->find_or_declare_partition(range_arr), hint, task);
+                                func_part, task->find_or_declare_partition(range_st), hint, task);
                             },
-                            [&](const InternalSharedPtr<PhysicalArray>&) {
-                              // Do nothing for PhysicalArray
+                            [&](const InternalSharedPtr<PhysicalStore>&) {
+                              // Do nothing for PhysicalStore
                             }},
-                   range.array);
+                   range.store);
                }
              },
-             [&](const InternalSharedPtr<PhysicalArray>&) {
-               // Do nothing for PhysicalArray
+             [&](const InternalSharedPtr<PhysicalStore>&) {
+               // Do nothing for PhysicalStore
              }},
-    var_function->array);
+    var_function->store);
 }
 
-void do_image(Span<const TaskArrayArg> var_functions,
-              const TaskArrayArg* var_range,
+void do_image(Span<const TaskStoreArg> var_functions,
+              const TaskStoreArg* var_range,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& range_arr) {
-                        const auto* range_part = task->find_or_declare_partition(range_arr);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& range_st) {
+                        const auto* range_part = task->find_or_declare_partition(range_st);
 
                         for (auto&& func : var_functions) {
                           std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalArray>& function_arr) {
-                                       do_image_final(task->find_or_declare_partition(function_arr),
+                            Overload{[&](const InternalSharedPtr<LogicalStore>& function_st) {
+                                       do_image_final(task->find_or_declare_partition(function_st),
                                                       range_part,
                                                       hint,
                                                       task);
                                      },
-                                     [&](const InternalSharedPtr<PhysicalArray>&) {
-                                       // Do nothing for PhysicalArray
+                                     [&](const InternalSharedPtr<PhysicalStore>&) {
+                                       // Do nothing for PhysicalStore
                                      }},
-                            func.array);
+                            func.store);
                         }
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_range->array);
+             var_range->store);
 }
 
-void do_image(Span<const TaskArrayArg> var_functions,
-              Span<const TaskArrayArg> var_ranges,
+void do_image(Span<const TaskStoreArg> var_functions,
+              Span<const TaskStoreArg> var_ranges,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {

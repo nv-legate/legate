@@ -30,7 +30,7 @@ class DummyTask : public legate::LegateTask<DummyTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
+    auto output = context.output(0);
 
     if (output.is_unbound_store()) {
       static_cast<void>(
@@ -58,38 +58,38 @@ TEST_F(InterferingRequirements, OpaqueLeadsToDuplicateLegionPartitions)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  // A dummy array to initialization tasks. without it, the tasks aren't parallelized.
-  auto dummy = runtime->create_array(legate::Shape{EXT}, legate::int64());
-  // Create and initializes an unbound array arr1
-  auto arr1 = runtime->create_array(legate::int64());
+  // A dummy store to initialization tasks. without it, the tasks aren't parallelized.
+  auto dummy = runtime->create_store(legate::Shape{EXT}, legate::int64());
+  // Create and initializes an unbound store st1
+  auto st1 = runtime->create_store(legate::int64());
 
   {
     auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
 
-    task.add_output(arr1);
+    task.add_output(st1);
     task.add_output(dummy);
     runtime->submit(std::move(task));
   }
 
-  // Transfer arr1's key partition to another array arr2. As a result, arr2 gets an Opque partition
+  // Transfer st1's key partition to another array st2. As a result, st2 gets an Opque partition
   // as its key partition.
-  auto arr2 = runtime->create_array(legate::Shape{arr1.shape()[0]}, legate::int8());
+  auto st2 = runtime->create_store(legate::Shape{st1.shape()[0]}, legate::int8());
   {
     auto task  = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
-    auto part1 = task.add_input(arr1);
-    auto part2 = task.add_output(arr2);
+    auto part1 = task.add_input(st1);
+    auto part2 = task.add_output(st2);
 
     task.add_output(dummy);
     task.add_constraint(legate::align(part1, part2));
     runtime->submit(std::move(task));
   }
 
-  // Finally, pass arr2 twice in conflicting modes to a task. Unless the Opaque partition cached in
-  // arr2 leads to the same Legion partition, the code will encounter interfering requirements.
+  // Finally, pass st2 twice in conflicting modes to a task. Unless the Opaque partition cached in
+  // st2 leads to the same Legion partition, the code will encounter interfering requirements.
   {
     auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
-    task.add_input(arr2);
-    task.add_output(arr2);
+    task.add_input(st2);
+    task.add_output(st2);
     runtime->submit(std::move(task));
   }
 }

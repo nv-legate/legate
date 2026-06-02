@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/data/logical_array.h>
+#include <legate/data/logical_store.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
@@ -34,19 +34,19 @@ namespace legate::experimental::io::kvikio {
  */
 
 /**
- * @brief Read a LogicalArray from a file.
+ * @brief Read a LogicalStore from a file.
  *
- * The array stored in file_path must have been written by a call to
- * `to_file(const std::filesystem::path&, const LogicalArray&)`.
+ * The store contained in file_path must have been written by a call to
+ * `to_file(const std::filesystem::path&, const LogicalStore&)`.
  *
  * This routine expects the file to contain nothing but the raw data linearly in memory,
  * starting at offset 0. The file must contain no other metadata, padding, or other data, it
  * will be interpreted as data to be read into the store.
  *
  * @param file_path The path to the file.
- * @param type The datatype of the array.
+ * @param type The datatype of the store.
  *
- * @return LogicalArray The loaded array.
+ * @return LogicalStore The loaded store.
  *
  * @throws std::system_error If `file_path` does not exist.
  *
@@ -54,48 +54,48 @@ namespace legate::experimental::io::kvikio {
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-[[nodiscard]] LEGATE_EXPORT LogicalArray from_file(const std::filesystem::path& file_path,
+[[nodiscard]] LEGATE_EXPORT LogicalStore from_file(const std::filesystem::path& file_path,
                                                    const Type& type);
 
 /**
- * @brief Write a LogicalArray to a file.
+ * @brief Write a LogicalStore to a file.
  *
- * The array must be linear, i.e. have dimension of 1.
+ * The store must be linear, i.e. have dimension of 1.
  *
  * @param file_path The path to the file.
- * @param array The array to serialize.
+ * @param store The store to serialize.
  *
- * @throws std::invalid_argument If the dimension of `array` is not 1.
+ * @throws std::invalid_argument If the dimension of `store` is not 1.
  *
  * @warning This API is experimental. A future release may change or remove this API without
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-LEGATE_EXPORT void to_file(const std::filesystem::path& file_path, const LogicalArray& array);
+LEGATE_EXPORT void to_file(const std::filesystem::path& file_path, const LogicalStore& store);
 
 // ==========================================================================================
 
 /**
- * @brief Load a LogicalArray from a file in tiles.
+ * @brief Load a LogicalStore from a file in tiles.
  *
  * The file must have been written by a call to `to_file()`. If `tile_start` is not given, it is
  * initialized with zeros.
  *
  * `tile_start` and `tile_shape` must have the same size.
  *
- * `array` must have the same number of dimensions as tiles. In effect `array.dim()` must equal
+ * `store` must have the same number of dimensions as tiles. In effect `store.dim()` must equal
  * `tile_shape.size()`.
  *
- * The array shape must be divisible by the tile shape.
+ * The store shape must be divisible by the tile shape.
  *
- * Given some array stored on disk as:
+ * Given some store stored on disk as:
  *
  * @code{.unparsed}
  * [1, 2, 3, 4, 5, 6, 7, 8, 9]
  * @endcode
  *
  * `tile_shape` sets the leaf-task launch group size. For example, `tile_shape = [3]` would
- * result in each leaf-task getting assigned a contiguous triplet of the array:
+ * result in each leaf-task getting assigned a contiguous triplet of the store:
  *
  * @code{.unparsed}
  *   task_0     task_1     task_2
@@ -104,7 +104,7 @@ LEGATE_EXPORT void to_file(const std::filesystem::path& file_path, const Logical
  * @endcode
  *
  * `tile_start` is a local offset into the tile from which to begin reading. Given `tile_start
- * = [1]`, in the above example would mean that the resulting array would be read as:
+ * = [1]`, in the above example would mean that the resulting store would be read as:
  *
  * @code{.unparsed}
  * // First, split into tile_shape shapes.
@@ -113,30 +113,30 @@ LEGATE_EXPORT void to_file(const std::filesystem::path& file_path, const Logical
  *    [2, 3],    [5, 6],    [8, 9]
  * @endcode
  *
- * Such that the resulting array would contain:
+ * Such that the resulting store would contain:
  *
  * @code{.unparsed}
  * [2, 3, 5, 6, 8, 9]
  * @endcode
  *
  * @param file_path The path to the dataset.
- * @param shape The shape of the resulting array.
- * @param type The datatype of the array.
+ * @param shape The shape of the resulting store.
+ * @param type The datatype of the store.
  * @param tile_shape The shape of each tile.
  * @param tile_start The offsets into each tile from which to read.
  *
- * @return LogicalArray The loaded array.
+ * @return LogicalStore The loaded store.
  *
  * @throws std::system_error If `file_path` does not exist.
  * @throws std::invalid_argument If `tile_shape` and `tile_start` are not the same size.
- * @throws std::invalid_argument If the array dimension does not match the tile shape.
- * @throws std::invalid_argument If the array shape is not divisible by the tile shape.
+ * @throws std::invalid_argument If the store dimension does not match the tile shape.
+ * @throws std::invalid_argument If the store shape is not divisible by the tile shape.
  *
  * @warning This API is experimental. A future release may change or remove this API without
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-[[nodiscard]] LEGATE_EXPORT LogicalArray
+[[nodiscard]] LEGATE_EXPORT LogicalStore
 from_file(const std::filesystem::path& file_path,
           const Shape& shape,
           const Type& type,
@@ -144,57 +144,57 @@ from_file(const std::filesystem::path& file_path,
           std::optional<std::vector<std::uint64_t>> tile_start = {});
 
 /**
- * @brief Write a LogicalArray to file in tiles.
+ * @brief Write a LogicalStore to file in tiles.
  *
  * If `tile_start` is not given, it is initialized with zeros.
  *
  * `tile_start` and `tile_shape` must have the same size.
  *
- * `array` must have the same number of dimensions as tiles. In effect `array.dim()` must equal
+ * `store` must have the same number of dimensions as tiles. In effect `store.dim()` must equal
  * `tile_shape.size()`.
  *
- * The array shape must be divisible by the tile shape.
+ * The store shape must be divisible by the tile shape.
  *
  * See `from_file()` for further discussion on the arguments.
  *
  * @param file_path The base path of the dataset to write.
- * @param array The array to serialize.
+ * @param store The store to serialize.
  * @param tile_shape The shape of the tiles.
  * @param tile_start The offsets into each tile from which to write.
  *
  * @throws std::invalid_argument If `tile_shape` and `tile_start` are not the same size.
- * @throws std::invalid_argument If the array dimension does not match the tile shape.
- * @throws std::invalid_argument If the array shape is not divisible by the tile shape.
+ * @throws std::invalid_argument If the store dimension does not match the tile shape.
+ * @throws std::invalid_argument If the store shape is not divisible by the tile shape.
  *
  * @warning This API is experimental. A future release may change or remove this API without
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
 LEGATE_EXPORT void to_file(const std::filesystem::path& file_path,
-                           const LogicalArray& array,
+                           const LogicalStore& store,
                            const std::vector<std::uint64_t>& tile_shape,
                            std::optional<std::vector<std::uint64_t>> tile_start = {});
 
 // ==========================================================================================
 
 /**
- * @brief Load a LogicalArray from a file in tiles.
+ * @brief Load a LogicalStore from a file in tiles.
  *
- * `array` must have the same number of dimensions as tiles. In effect `array.dim()` must equal
+ * `store` must have the same number of dimensions as tiles. In effect `store.dim()` must equal
  * `tile_shape.size()`.
  *
  * This routine should be used if each leaf task in a tile should read from a potentially
  * non-uniform offset than the others. If the offset is uniform (i.e. can be deduced by the
  * leaf task index, and the tile shape), then `from_file()` should be preferred.
  *
- * For example, given some array (of int32's) stored on disk as:
+ * For example, given some store (of int32's) stored on disk as:
  *
  * @code{.unparsed}
  * [1, 2, 3, 4, 5, 6, 7, 8, 9]
  * @endcode
  *
  * `tile_shape` sets the leaf-task launch group size. For example, `tile_shape = {3}` would
- * result in each leaf-task getting assigned a contiguous triplet of the array:
+ * result in each leaf-task getting assigned a contiguous triplet of the store:
  *
  * @code{.unparsed}
  *   task_0     task_1     task_2
@@ -205,7 +205,7 @@ LEGATE_EXPORT void to_file(const std::filesystem::path& file_path,
  * It also sets the number of elements to read. Each leaf-task will read
  * `tile_shape.volume() * type.size()` bytes from the file.
  *
- * `offsets` encodes the per-leaf-task global offset in bytes into the array for each
+ * `offsets` encodes the per-leaf-task global offset in bytes into the store for each
  * tile. Crucially, these offsets need not (and by definition shall not) be the same for each
  * leaf task. For example, assuming `sizeof(std::int32_t) = 4`:
  *
@@ -221,7 +221,7 @@ LEGATE_EXPORT void to_file(const std::filesystem::path& file_path,
  * @endcode
  *
  * Note how the final offset is arbitrary. If the offsets were uniform, it would start from
- * element 7. The resulting array would then contain:
+ * element 7. The resulting store would then contain:
  *
  * @code{.unparsed}
  * [1, 2, 3, 4, 5, 6, 8, 9]
@@ -239,22 +239,22 @@ LEGATE_EXPORT void to_file(const std::filesystem::path& file_path,
  * @endcode
  *
  * @param file_path The path to the file to read.
- * @param shape The shape of the resulting array.
- * @param type The datatype of the array.
+ * @param shape The shape of the resulting store.
+ * @param type The datatype of the store.
  * @param offsets The per-leaf-task global offsets (in bytes) into the file from which to read.
  * @param tile_shape The shape of each tile.
  *
- * @return LogicalArray The loaded array.
+ * @return LogicalStore The loaded store.
  *
  * @throws std::system_error If `file_path` does not exist.
- * @throws std::invalid_argument If `offsets.size()` does not equal the number of partitioned array
+ * @throws std::invalid_argument If `offsets.size()` does not equal the number of partitioned store
  * tiles.
  *
  * @warning This API is experimental. A future release may change or remove this API without
  * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
  * and submit any feedback to legate@nvidia.com.
  */
-[[nodiscard]] LEGATE_EXPORT LogicalArray
+[[nodiscard]] LEGATE_EXPORT LogicalStore
 from_file_by_offsets(const std::filesystem::path& file_path,
                      const Shape& shape,
                      const Type& type,

@@ -50,17 +50,12 @@ class OutputRegionArg;
 class ScalarStoreArg;
 class ReplicatedScalarStoreArg;
 class WriteOnlyScalarStoreArg;
-class BaseArrayArg;
-class ListArrayArg;
-class StructArrayArg;
 
 using StoreAnalyzable = std::variant<RegionFieldArg,
                                      OutputRegionArg,
                                      ScalarStoreArg,
                                      ReplicatedScalarStoreArg,
                                      WriteOnlyScalarStoreArg>;
-
-using ArrayAnalyzable = std::variant<BaseArrayArg, ListArrayArg, StructArrayArg>;
 
 namespace variant_detail {
 
@@ -103,7 +98,7 @@ constexpr variant_detail::VariantProxy<T...> variant_cast(std::variant<T...> v)
   return {std::move(v)};
 }
 
-using Analyzable = variant_detail::variant_concat_t<StoreAnalyzable, ArrayAnalyzable>;
+using Analyzable = StoreAnalyzable;
 
 // ==========================================================================================
 
@@ -213,80 +208,6 @@ class WriteOnlyScalarStoreArg final : public AnalyzableBase {
  private:
   LogicalStore* store_{};
   GlobalRedopID redop_{};
-};
-
-// ==========================================================================================
-
-class BaseArrayArg final : public AnalyzableBase {
- public:
-  BaseArrayArg(StoreAnalyzable data, std::optional<StoreAnalyzable> null_mask);
-
-  explicit BaseArrayArg(StoreAnalyzable data);
-
-  void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) const override;
-  void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
-  void perform_invalidations() const override;
-
- private:
-  StoreAnalyzable data_;
-  std::optional<StoreAnalyzable> null_mask_{};
-};
-
-class ListArrayArg final : public AnalyzableBase {
- public:
-  ListArrayArg(InternalSharedPtr<Type> type,
-               ArrayAnalyzable&& descriptor,
-               ArrayAnalyzable&& vardata);
-
-  void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) const override;
-  void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
-  void perform_invalidations() const override;
-
- private:
-  InternalSharedPtr<Type> type_{};
-
-  // We still need to pimpl these because ListArrayArg holds ArrayAnalyzable. And since
-  // ArrayAnalyzable is a variant containing ListArrayArg, this leads to an infinite recursive
-  // definition, that is similar to:
-  //
-  // class Foo {
-  //   Foo f;
-  // };
-  //
-  // Which is not allowed. We are able to remove the allocation for all other cases (and
-  // ListArrayArg is rare anyways), so this one pimpl is a price worth paying.
-  class Impl;
-
-  std::unique_ptr<Impl> pimpl_;
-};
-
-class StructArrayArg final : public AnalyzableBase {
- public:
-  StructArrayArg(InternalSharedPtr<Type> type,
-                 std::optional<StoreAnalyzable> null_mask,
-                 std::vector<ArrayAnalyzable>&& fields);
-
-  void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
-  void analyze(StoreAnalyzer& analyzer) const override;
-  void record_unbound_stores(SmallVector<const OutputRegionArg*>& args) const override;
-  void perform_invalidations() const override;
-
- private:
-  InternalSharedPtr<Type> type_{};
-  std::optional<StoreAnalyzable> null_mask_{};
-  // This must stay as a vector because SmallVector tries to inspect sizeof(T), which at this
-  // point would be incomplete
-  std::vector<ArrayAnalyzable> fields_{};
-};
-
-class ListArrayArg::Impl {
- public:
-  Impl(ArrayAnalyzable descr, ArrayAnalyzable var);
-
-  ArrayAnalyzable descriptor;
-  ArrayAnalyzable vardata;
 };
 
 }  // namespace legate::detail

@@ -35,9 +35,9 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
     {
       using VAL = legate::type_of_t<CODE>;
 
-      auto src_store = context.input(0).data();
-      auto tgt_store = context.input(1).data();
-      auto ind_store = context.input(2).data();
+      auto src_store = context.input(0);
+      auto tgt_store = context.input(1);
+      auto ind_store = context.input(2);
       auto init      = context.scalar(0).value<VAL>();
 
       auto ind_shape = ind_store.shape<IND_DIM>();

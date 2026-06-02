@@ -71,7 +71,7 @@ class TestTaskBase :  // NOLINT (bugprone-crtp-constructor-accessibility)
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto store               = context.output(0).data();
+    auto store               = context.output(0);
     const bool fortran_order = context.scalar(0).value<bool>();
 
     Derived::check(store, fortran_order);
@@ -85,7 +85,7 @@ class LibraryMapper : public legate::mapping::Mapper {
     const std::vector<legate::mapping::StoreTarget>& options) override
   {
     const auto fortran_order = task.scalar(0).value<bool>();
-    auto output              = task.output(0).data();
+    auto output              = task.output(0);
     auto dim_ordering        = fortran_order ? legate::mapping::DimOrdering::fortran_order()
                                              : legate::mapping::DimOrdering::c_order();
 

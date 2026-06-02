@@ -138,7 +138,6 @@ set(
   bug/key_partition_invalidation.cc
   bug/interfering_requirements.cc
   bug/logical_store_transform.cc
-  bug/nullable_arrays.cc
   bug/premature_free.cc
   bug/remap_double_detach.cc
   bug/singleton_index_task.cc
@@ -146,7 +145,6 @@ set(
   bug/transpose_c_order.cc
   bug/transpose_fortran_order.cc
   bug/temporary_logical_store.cc
-  bug/string_physical_array_owner.cc
   bug/private_scalar_copy.cc
   # integration
   integration/aligned_unbound_stores.cc
@@ -229,16 +227,6 @@ set(
   unit/timing.cc
   unit/buffer/typed_buffer.cc
   unit/buffer/task_local_buffer.cc
-  unit/logical_array/create_list_array.cc
-  unit/logical_array/create_primitive_array.cc
-  unit/logical_array/create_string_array.cc
-  unit/logical_array/create_struct_array.cc
-  unit/logical_array/delinearize.cc
-  unit/logical_array/project.cc
-  unit/logical_array/promote.cc
-  unit/logical_array/slice.cc
-  unit/logical_array/transpose.cc
-  unit/logical_array/utils.cc
   unit/logical_store/broadcast.cc
   unit/logical_store/create_store.cc
   unit/logical_store/delinearize.cc
@@ -257,9 +245,6 @@ set(
   unit/machine/global_machine.cc
   unit/machine/local_machine.cc
   unit/machine/local_machine_selector.cc
-  unit/mapping/array/base_array.cc
-  unit/mapping/array/list_array.cc
-  unit/mapping/array/struct_array.cc
   unit/mapping/base_mapper.cc
   unit/mapping/common_api.cc
   unit/mapping/dim_ordering.cc
@@ -276,15 +261,7 @@ set(
   unit/partition/nopartition.cc
   unit/partition/tiling.cc
   unit/partition/opaque.cc
-  unit/physical_array/create_array.cc
-  unit/physical_array/create_list_array.cc
-  unit/physical_array/create_string_array.cc
-  unit/physical_array/create_struct_array.cc
-  unit/physical_array/fill_array.cc
-  unit/physical_array/fill_list_array.cc
-  unit/physical_array/fill_string_array.cc
   unit/physical_store/create_bound_store.cc
-  unit/physical_store/create_by_physical_array.cc
   unit/physical_store/create_future_store.cc
   unit/physical_store/create_unbound_store.cc
   unit/physical_store/inline_allocation.cc
@@ -420,7 +397,6 @@ set(
   non_reentrant_with_runtime_SRC
   non_reentrant/death_example.cc
   unit/logical_store/offload_to.cc
-  unit/logical_array/offload_to.cc
   non_reentrant/oom_message.cc
   non_reentrant/runtime.cc
   non_reentrant/shutdown_callback.cc

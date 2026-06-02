@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/data/external_allocation.h>
-#include <legate/data/logical_array.h>
 #include <legate/data/logical_store.h>
 #include <legate/data/shape.h>
 #include <legate/mapping/machine.h>
@@ -319,19 +318,19 @@ class LEGATE_EXPORT Runtime {
                             const LogicalStore& source_indirect,
                             std::optional<std::int32_t> redop_kind);
   /**
-   * @brief Fills a given array with a constant
+   * @brief Fills a given store with a constant
    *
-   * @param lhs Logical array to fill
+   * @param lhs Logical store to fill
    * @param value Logical store that contains the constant value to fill the array with
    */
-  void issue_fill(const LogicalArray& lhs, const LogicalStore& value);
+  void issue_fill(const LogicalStore& lhs, const LogicalStore& value);
   /**
-   * @brief Fills a given array with a constant
+   * @brief Fills a given store with a constant
    *
-   * @param lhs Logical array to fill
+   * @param lhs Logical store to fill
    * @param value Value to fill the array with
    */
-  void issue_fill(const LogicalArray& lhs, const Scalar& value);
+  void issue_fill(const LogicalStore& lhs, const Scalar& value);
   /**
    * @brief Performs reduction on a given store via a task
    *
@@ -371,128 +370,6 @@ class LEGATE_EXPORT Runtime {
    * @param task A ManualTask to execute
    */
   void submit(ManualTask&& task);
-
-  /**
-   * @brief Creates an unbound array
-   *
-   * @param type Element type
-   * @param dim Number of dimensions
-   * @param nullable Nullability of the array
-   *
-   * @return Logical array
-   */
-  [[nodiscard]] LogicalArray create_array(const Type& type,
-                                          std::uint32_t dim = 1,
-                                          bool nullable     = false);
-  /**
-   * @brief Creates a normal array
-   *
-   * @param shape Shape of the array. The call does not block on this shape
-   * @param type Element type
-   * @param nullable Nullability of the array
-   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
-   * scalars
-   *
-   * @return Logical array
-   */
-  [[nodiscard]] LogicalArray create_array(const Shape& shape,
-                                          const Type& type,
-                                          bool nullable        = false,
-                                          bool optimize_scalar = false);
-  /**
-   * @brief Creates an array isomorphic to the given array
-   *
-   * @param to_mirror The array whose shape would be used to create the output array. The call does
-   * not block on the array's shape.
-   * @param type Optional type for the resulting array. Must be compatible with the input array's
-   * type
-   *
-   * @return Logical array isomorphic to the input
-   */
-  [[nodiscard]] LogicalArray create_array_like(const LogicalArray& to_mirror,
-                                               std::optional<Type> type = std::nullopt);
-
-  /**
-   * @brief Creates a nullable array from a given store and null mask.
-   *
-   * @param store Store for the array's data.
-   * @param null_mask Store for the array's null mask.
-   *
-   * @note This call can block if either `store` or `null_mask` is unbound.
-   *
-   * @return Nullable logical array.
-   *
-   * @throw std::invalid_argument When any of the following is true:
-   * #. `null_mask` is not of boolean type.
-   * #. `store` and `null_mask` have different shapes.
-   * #. `store` or `null_mask` are not top-level stores.
-   * (i.e. they must be created directly and not be transformations or subsets of other stores))
-   */
-  [[nodiscard]] LogicalArray create_nullable_array(const LogicalStore& store,
-                                                   const LogicalStore& null_mask);
-
-  /**
-   * @brief Creates a string array from the existing sub-arrays
-   *
-   * The caller is responsible for making sure that the vardata sub-array is valid for all the
-   * descriptors in the descriptor sub-array
-   *
-   * @param descriptor Sub-array for descriptors
-   * @param vardata Sub-array for characters
-   *
-   * @return String logical array
-   *
-   * @throw std::invalid_argument When any of the following is true:
-   * 1) `descriptor` or `vardata` is unbound or N-D where N > 1
-   * 2) `descriptor` does not have a 1D rect type
-   * 3) `vardata` is nullable
-   * 4) `vardata` does not have an int8 type
-   */
-  [[nodiscard]] StringLogicalArray create_string_array(const LogicalArray& descriptor,
-                                                       const LogicalArray& vardata);
-
-  /**
-   * @brief Creates a list array from the existing sub-arrays
-   *
-   * The caller is responsible for making sure that the vardata sub-array is valid for all the
-   * descriptors in the descriptor sub-array
-   *
-   * @param descriptor Sub-array for descriptors
-   * @param vardata Sub-array for vardata
-   * @param type Optional list type the returned array would have
-   *
-   * @return List logical array
-   *
-   * @throw std::invalid_argument When any of the following is true:
-   * 1) `type` is not a list type
-   * 2) `descriptor` or `vardata` is unbound or N-D where N > 1
-   * 3) `descriptor` does not have a 1D rect type
-   * 4) `vardata` is nullable
-   * 5) `vardata` and `type` have different element types
-   */
-  [[nodiscard]] ListLogicalArray create_list_array(const LogicalArray& descriptor,
-                                                   const LogicalArray& vardata,
-                                                   std::optional<Type> type = std::nullopt);
-
-  /**
-   * @brief Creates a struct array from existing sub-arrays and null mask.
-   *
-   * The caller is responsible for making sure that the fields sub-arrays are valid.
-   *
-   * @param fields Span of sub-arrays for fields.
-   * @param null_mask Optional null mask for the struct array.
-   *
-   * @note This call can block if either `fields` or `null_mask` is unbound.
-   *
-   * @return Struct logical array
-   *
-   * @throw std::invalid_argument When any of the following is true:
-   * #. `null_mask` is not of boolean type if provided.
-   * #.  any of `fields` or `null_mask`, if provided, have different shapes.
-   * #.  any of the `fields` or `null_mask` are not top-level stores.
-   */
-  [[nodiscard]] StructLogicalArray create_struct_array(
-    Span<const LogicalArray> fields, const std::optional<LogicalStore>& null_mask = std::nullopt);
 
   /**
    * @brief Creates an unbound store

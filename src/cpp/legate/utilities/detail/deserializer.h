@@ -12,7 +12,6 @@
 #include <legate/data/detail/transform/transform_stack.h>
 #include <legate/data/physical_store.h>
 #include <legate/data/scalar.h>
-#include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/runtime/detail/streaming/generation.h>
@@ -35,11 +34,6 @@ namespace legate::detail {
 class FutureWrapper;
 class RegionField;
 class UnboundRegionField;
-
-class PhysicalArray;
-class BasePhysicalArray;
-class ListPhysicalArray;
-class StructPhysicalArray;
 
 template <typename Deserializer>
 class BaseDeserializer {
@@ -96,11 +90,7 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
 
   using BaseDeserializer::unpack_impl;
 
-  [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalArray>> unpack_arrays();
-  [[nodiscard]] InternalSharedPtr<PhysicalArray> unpack_array();
-  [[nodiscard]] InternalSharedPtr<BasePhysicalArray> unpack_base_array();
-  [[nodiscard]] InternalSharedPtr<ListPhysicalArray> unpack_list_array();
-  [[nodiscard]] InternalSharedPtr<StructPhysicalArray> unpack_struct_array();
+  [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> unpack_stores();
   [[nodiscard]] InternalSharedPtr<PhysicalStore> unpack_store();
 
   void unpack_impl(FutureWrapper& value);
@@ -135,14 +125,9 @@ class TaskDeserializer : public legate::detail::BaseDeserializer<TaskDeserialize
 
   using BaseDeserializer::unpack_impl;
 
-  [[nodiscard]] legate::detail::SmallVector<InternalSharedPtr<Array>> unpack_arrays();
-  [[nodiscard]] InternalSharedPtr<Array> unpack_array();
-  [[nodiscard]] InternalSharedPtr<BaseArray> unpack_base_array();
-  [[nodiscard]] InternalSharedPtr<ListArray> unpack_list_array();
-  [[nodiscard]] InternalSharedPtr<StructArray> unpack_struct_array();
+  [[nodiscard]] legate::detail::SmallVector<InternalSharedPtr<Store>> unpack_stores();
   [[nodiscard]] InternalSharedPtr<Store> unpack_store();
 
-  void unpack_impl(Array& array);
   void unpack_impl(Store& store);
   void unpack_impl(FutureWrapper& value);
   void unpack_impl(RegionField& value, bool unbound);

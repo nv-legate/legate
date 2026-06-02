@@ -37,7 +37,7 @@ struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
+    auto output = context.output(0);
     auto size   = context.get_task_index()[0] + 1;
     auto buffer = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size},
                                                                /*bind_buffer=*/true /*bind*/);
@@ -54,7 +54,7 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto inputs = context.inputs();
-    auto output = context.output(0).data();
+    auto output = context.output(0);
     for (auto& input : inputs) {
       auto shape = input.shape<1>();
       EXPECT_TRUE(shape.empty() || shape.volume() == TILE_SIZE);
@@ -70,7 +70,7 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto inputs            = context.inputs();
-    auto output            = context.output(0).data();
+    auto output            = context.output(0);
     std::uint32_t expected = 1;
     for (auto& input : inputs) {
       auto shape = input.shape<1>();

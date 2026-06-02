@@ -7,7 +7,7 @@
 #include <legate/partitioning/detail/proxy/align.h>
 
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
@@ -26,75 +26,75 @@ void do_align_final(const Variable* left, const Variable* right, AutoTask* task)
   }
 }
 
-void do_align(const TaskArrayArg* left, const TaskArrayArg* right, AutoTask* task)
+void do_align(const TaskStoreArg* left, const TaskStoreArg* right, AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& left_arr) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& right_arr) {
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& left_st) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& right_st) {
                                               do_align_final(
-                                                task->find_or_declare_partition(left_arr),
-                                                task->find_or_declare_partition(right_arr),
+                                                task->find_or_declare_partition(left_st),
+                                                task->find_or_declare_partition(right_st),
                                                 task);
                                             },
-                                            [&](const InternalSharedPtr<PhysicalArray>&) {
-                                              // Do nothing for PhysicalArray
+                                            [&](const InternalSharedPtr<PhysicalStore>&) {
+                                              // Do nothing for PhysicalStore
                                             }},
-                                   right->array);
+                                   right->store);
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             left->array);
+             left->store);
 }
 
-void do_align(const TaskArrayArg* left, Span<const TaskArrayArg> right, AutoTask* task)
+void do_align(const TaskStoreArg* left, Span<const TaskStoreArg> right, AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& left_arr) {
-                        const auto* left_part = task->find_or_declare_partition(left_arr);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& left_st) {
+                        const auto* left_part = task->find_or_declare_partition(left_st);
 
                         for (auto&& right_arg : right) {
-                          std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalArray>& right_arr) {
-                                       do_align_final(left_part,
-                                                      task->find_or_declare_partition(right_arr),
-                                                      task);
-                                     },
-                                     [&](const InternalSharedPtr<PhysicalArray>&) {
-                                       // Do nothing for PhysicalArray
-                                     }},
-                            right_arg.array);
+                          std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& right_st) {
+                                                do_align_final(
+                                                  left_part,
+                                                  task->find_or_declare_partition(right_st),
+                                                  task);
+                                              },
+                                              [&](const InternalSharedPtr<PhysicalStore>&) {
+                                                // Do nothing for PhysicalStore
+                                              }},
+                                     right_arg.store);
                         }
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             left->array);
+             left->store);
 }
 
-void do_align(Span<const TaskArrayArg> left, const TaskArrayArg* right, AutoTask* task)
+void do_align(Span<const TaskStoreArg> left, const TaskStoreArg* right, AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& right_arr) {
-                        const auto* right_part = task->find_or_declare_partition(right_arr);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& right_st) {
+                        const auto* right_part = task->find_or_declare_partition(right_st);
 
                         for (auto&& left_arg : left) {
-                          std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& left_arr) {
+                          std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& left_st) {
                                                 do_align_final(
-                                                  task->find_or_declare_partition(left_arr),
+                                                  task->find_or_declare_partition(left_st),
                                                   right_part,
                                                   task);
                                               },
-                                              [&](const InternalSharedPtr<PhysicalArray>&) {
-                                                // Do nothing for PhysicalArray
+                                              [&](const InternalSharedPtr<PhysicalStore>&) {
+                                                // Do nothing for PhysicalStore
                                               }},
-                                     left_arg.array);
+                                     left_arg.store);
                         }
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             right->array);
+             right->store);
 }
 
-void do_align(Span<const TaskArrayArg> left, Span<const TaskArrayArg> right, AutoTask* task)
+void do_align(Span<const TaskStoreArg> left, Span<const TaskStoreArg> right, AutoTask* task)
 {
   for (auto&& left_arg : left) {
     do_align(&left_arg, right, task);

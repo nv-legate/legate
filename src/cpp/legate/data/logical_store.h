@@ -567,7 +567,7 @@ class LEGATE_EXPORT LogicalStore {
    *
    * @see `LogicalArray::offload_to()`.
    */
-  void offload_to(mapping::StoreTarget target_mem);
+  void offload_to(mapping::StoreTarget target_mem) const;
 
   /**
    * @brief Determine whether two stores refer to the same memory.

@@ -23,7 +23,7 @@ struct Tester : public legate::LegateTask<Tester> {
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE(context.is_single_task());
-    context.output(0).data().bind_empty_data();
+    context.output(0).bind_empty_data();
   }
 };
 

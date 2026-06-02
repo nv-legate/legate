@@ -65,7 +65,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
     auto&& scalars = context.scalars();
 
     for (auto&& [output, scalar] : legate::detail::zip_equal(outputs, scalars)) {
-      double_dispatch(output.dim(), output.type().code(), WriteFn{}, output.data(), scalar);
+      double_dispatch(output.dim(), output.type().code(), WriteFn{}, output, scalar);
     }
   }
 };
@@ -83,7 +83,7 @@ class ReducerTask : public legate::LegateTask<ReducerTask> {
 
     for (auto&& [reduction, scalar] : legate::detail::zip_equal(reductions, scalars)) {
       double_dispatch(
-        reduction.dim(), reduction.type().code(), ReduceFn{}, reduction.data(), scalar, in_shape);
+        reduction.dim(), reduction.type().code(), ReduceFn{}, reduction, scalar, in_shape);
     }
   }
 };
@@ -107,10 +107,10 @@ class MixedTask : public legate::LegateTask<MixedTask> {
       if (idx % 3 == 1) {
         auto&& reduction = reductions[red_idx++];
         double_dispatch(
-          reduction.dim(), reduction.type().code(), ReduceFn{}, reduction.data(), scalar, in_shape);
+          reduction.dim(), reduction.type().code(), ReduceFn{}, reduction, scalar, in_shape);
       } else {
         auto&& output = outputs[out_idx++];
-        double_dispatch(output.dim(), output.type().code(), WriteFn{}, output.data(), scalar);
+        double_dispatch(output.dim(), output.type().code(), WriteFn{}, output, scalar);
       }
     }
   }
@@ -127,10 +127,10 @@ class UnboundTask : public legate::LegateTask<UnboundTask> {
     auto&& scalars = context.scalars();
 
     for (auto&& [output, scalar] : legate::detail::zip_shortest(outputs, scalars)) {
-      double_dispatch(output.dim(), output.type().code(), WriteFn{}, output.data(), scalar);
+      double_dispatch(output.dim(), output.type().code(), WriteFn{}, output, scalar);
     }
 
-    outputs.back().data().bind_empty_data();
+    outputs.back().bind_empty_data();
   }
 };
 
@@ -168,7 +168,7 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto&& output = context.input(0).data();
+    auto&& output = context.input(0);
     auto&& scalar = context.scalar(0);
     double_dispatch(output.dim(), output.type().code(), CheckFn{}, output, scalar);
   }

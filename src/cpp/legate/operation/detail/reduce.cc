@@ -101,8 +101,7 @@ void Reduce::launch(Strategy* p_strategy)
       auto store_proj = StoreProjection{
         input_partition->storage_partition()->get_legion_partition(), projection_id};
 
-      launcher.add_input(
-        BaseArrayArg{RegionFieldArg{input_.get(), LEGION_READ_ONLY, std::move(store_proj)}});
+      launcher.add_input(RegionFieldArg{input_.get(), LEGION_READ_ONLY, std::move(store_proj)});
     }
 
     // calculating #of sub-tasks in the reduction task
@@ -118,22 +117,22 @@ void Reduce::launch(Strategy* p_strategy)
     // a new output region
     if (n_tasks != 1) {
       new_output = runtime.create_store(input_->type(), /*dim=*/1);
-      launcher.add_output(BaseArrayArg{OutputRegionArg{new_output.get(),
-                                                       field_space,
-                                                       field_id,
-                                                       Legion::ProjectionID{0},
-                                                       Legion::IndexSpace::NO_SPACE}});
+      launcher.add_output(OutputRegionArg{new_output.get(),
+                                          field_space,
+                                          field_id,
+                                          Legion::ProjectionID{0},
+                                          Legion::IndexSpace::NO_SPACE});
 
       // Create placeholder Opaque partition
       const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
       new_output->set_key_partition(machine_, parallel_policy_, opaque_partition);
       new_output->get_storage()->set_bound(true /* bound */);
     } else {
-      launcher.add_output(BaseArrayArg{OutputRegionArg{output_.get(),
-                                                       field_space,
-                                                       field_id,
-                                                       Legion::ProjectionID{0},
-                                                       Legion::IndexSpace::NO_SPACE}});
+      launcher.add_output(OutputRegionArg{output_.get(),
+                                          field_space,
+                                          field_id,
+                                          Legion::ProjectionID{0},
+                                          Legion::IndexSpace::NO_SPACE});
     }
 
     launcher.execute(Domain{DomainPoint{0}, DomainPoint{static_cast<coord_t>(n_tasks - 1)}});
@@ -168,16 +167,15 @@ void Reduce::launch_single_()
                          static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)};
 
   launcher.set_priority(priority());
-  launcher.add_input(
-    BaseArrayArg{RegionFieldArg{input_.get(), LEGION_READ_ONLY, StoreProjection{}}});
+  launcher.add_input(RegionFieldArg{input_.get(), LEGION_READ_ONLY, StoreProjection{}});
 
   // adding output region
   auto field_space = runtime.create_field_space();
   auto field_id =
     runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, input_->type()->size());
 
-  launcher.add_output(BaseArrayArg{OutputRegionArg{
-    output_.get(), field_space, field_id, Legion::ProjectionID{0}, Legion::IndexSpace::NO_SPACE}});
+  launcher.add_output(OutputRegionArg{
+    output_.get(), field_space, field_id, Legion::ProjectionID{0}, Legion::IndexSpace::NO_SPACE});
 
   launcher.execute_single();
 }

@@ -115,7 +115,7 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output    = context.output(0).data();
+    auto output    = context.output(0);
     auto extents   = context.scalar(0);
     auto ascending = context.scalar(1).value<bool>();
     if constexpr (RECT) {
@@ -179,7 +179,7 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto func  = context.input(0).data();
+    auto func  = context.input(0);
     auto range = context.input(1).domain();
     auto hint  = context.scalar(0).value<legate::ImageComputationHint>();
 

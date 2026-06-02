@@ -6,10 +6,7 @@
 
 #include <legate/utilities/detail/deserializer.h>
 
-#include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/future_wrapper.h>
-#include <legate/data/detail/physical_arrays/list_physical_array.h>
-#include <legate/data/detail/physical_arrays/struct_physical_array.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/region_physical_store.h>
@@ -38,62 +35,16 @@ TaskDeserializer::TaskDeserializer(const Legion::Task& task,
   runtime->get_output_regions(ctx, outputs_);
 }
 
-SmallVector<InternalSharedPtr<PhysicalArray>> TaskDeserializer::unpack_arrays()
+SmallVector<InternalSharedPtr<PhysicalStore>> TaskDeserializer::unpack_stores()
 {
-  SmallVector<InternalSharedPtr<PhysicalArray>> arrays;
+  SmallVector<InternalSharedPtr<PhysicalStore>> stores;
   const auto size = unpack<std::uint32_t>();
 
-  arrays.reserve(size);
+  stores.reserve(size);
   for (std::uint32_t idx = 0; idx < size; ++idx) {
-    arrays.emplace_back(unpack_array());
+    stores.emplace_back(unpack_store());
   }
-  return arrays;
-}
-
-InternalSharedPtr<PhysicalArray> TaskDeserializer::unpack_array()
-{
-  switch (unpack<ArrayKind>()) {
-    case ArrayKind::BASE: return unpack_base_array();
-    case ArrayKind::LIST: return unpack_list_array();
-    case ArrayKind::STRUCT: return unpack_struct_array();
-  }
-  return {};
-}
-
-InternalSharedPtr<BasePhysicalArray> TaskDeserializer::unpack_base_array()
-{
-  auto data      = unpack_store();
-  auto nullable  = unpack<bool>();
-  auto null_mask = nullable ? std::make_optional(unpack_store()) : std::nullopt;
-  return make_internal_shared<BasePhysicalArray>(std::move(data), std::move(null_mask));
-}
-
-InternalSharedPtr<ListPhysicalArray> TaskDeserializer::unpack_list_array()
-{
-  auto type = unpack_type_();
-  static_cast<void>(unpack<ArrayKind>());  // Unpack kind
-  auto descriptor = unpack_base_array();
-  auto vardata    = unpack_array();
-  return make_internal_shared<ListPhysicalArray>(
-    std::move(type), std::move(descriptor), std::move(vardata));
-}
-
-InternalSharedPtr<StructPhysicalArray> TaskDeserializer::unpack_struct_array()
-{
-  auto type = unpack_type_();
-  LEGATE_CHECK(type->code == Type::Code::STRUCT);
-
-  SmallVector<InternalSharedPtr<PhysicalArray>> fields;
-  const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
-  auto nullable       = unpack<bool>();
-  auto null_mask      = nullable ? std::make_optional(unpack_store()) : std::nullopt;
-
-  fields.reserve(st_type.num_fields());
-  for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
-    fields.emplace_back(unpack_array());
-  }
-  return make_internal_shared<StructPhysicalArray>(
-    std::move(type), std::move(null_mask), std::move(fields));
+  return stores;
 }
 
 InternalSharedPtr<PhysicalStore> TaskDeserializer::unpack_store()
@@ -198,63 +149,16 @@ TaskDeserializer::TaskDeserializer(const Legion::Task& task,
 {
 }
 
-legate::detail::SmallVector<InternalSharedPtr<Array>> TaskDeserializer::unpack_arrays()
+legate::detail::SmallVector<InternalSharedPtr<Store>> TaskDeserializer::unpack_stores()
 {
-  legate::detail::SmallVector<InternalSharedPtr<Array>> arrays;
+  legate::detail::SmallVector<InternalSharedPtr<Store>> stores;
   const auto size = unpack<std::uint32_t>();
 
-  arrays.reserve(size);
+  stores.reserve(size);
   for (std::uint32_t idx = 0; idx < size; ++idx) {
-    arrays.emplace_back(unpack_array());
+    stores.emplace_back(unpack_store());
   }
-  return arrays;
-}
-
-InternalSharedPtr<Array> TaskDeserializer::unpack_array()
-{
-  switch (unpack<legate::detail::ArrayKind>()) {
-    case legate::detail::ArrayKind::BASE: return unpack_base_array();
-    case legate::detail::ArrayKind::LIST: return unpack_list_array();
-    case legate::detail::ArrayKind::STRUCT: return unpack_struct_array();
-  }
-  return {};
-}
-
-InternalSharedPtr<BaseArray> TaskDeserializer::unpack_base_array()
-{
-  auto data      = unpack_store();
-  auto nullable  = unpack<bool>();
-  auto null_mask = nullable ? std::make_optional(unpack_store()) : std::nullopt;
-
-  return make_internal_shared<BaseArray>(std::move(data), std::move(null_mask));
-}
-
-InternalSharedPtr<ListArray> TaskDeserializer::unpack_list_array()
-{
-  auto type = unpack_type_();
-  static_cast<void>(unpack<legate::detail::ArrayKind>());  // Unpack kind
-  auto descriptor = unpack_base_array();
-  auto vardata    = unpack_array();
-  return make_internal_shared<ListArray>(
-    std::move(type), std::move(descriptor), std::move(vardata));
-}
-
-InternalSharedPtr<StructArray> TaskDeserializer::unpack_struct_array()
-{
-  auto type = unpack_type_();
-  LEGATE_CHECK(type->code == Type::Code::STRUCT);
-
-  legate::detail::SmallVector<InternalSharedPtr<Array>> fields;
-  const auto& st_type = dynamic_cast<const legate::detail::StructType&>(*type);
-  auto nullable       = unpack<bool>();
-  auto null_mask      = nullable ? std::make_optional(unpack_store()) : std::nullopt;
-
-  fields.reserve(st_type.num_fields());
-  for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
-    fields.emplace_back(unpack_array());
-  }
-  return make_internal_shared<StructArray>(
-    std::move(type), std::move(null_mask), std::move(fields));
+  return stores;
 }
 
 InternalSharedPtr<Store> TaskDeserializer::unpack_store()

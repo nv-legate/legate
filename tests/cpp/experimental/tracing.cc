@@ -35,20 +35,20 @@ class Config {
 
 class Tracing : public RegisterOnceFixture<Config> {};
 
-void launch_tasks(legate::LogicalArray& array)
+void launch_tasks(legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  runtime->issue_fill(array, legate::Scalar{std::int64_t{123}});
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{123}});
   {
     auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
-    task.add_input(array);
+    task.add_input(store);
     runtime->submit(std::move(task));
   }
   {
     auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
-    task.add_input(array);
-    task.add_output(array);
+    task.add_input(store);
+    task.add_output(store);
     runtime->submit(std::move(task));
   }
 }
@@ -73,12 +73,12 @@ TEST_F(Tracing, DISABLED_RAII)
     return;
   }
   auto runtime = legate::Runtime::get_runtime();
-  auto array   = runtime->create_array(legate::Shape{10}, legate::int64());
-  launch_tasks(array);
+  auto store   = runtime->create_store(legate::Shape{10}, legate::int64());
+  launch_tasks(store);
   for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
     const legate::experimental::Trace trace{TRACE_ID};
 
-    launch_tasks(array);
+    launch_tasks(store);
   }
 }
 
@@ -98,11 +98,11 @@ TEST_F(Tracing, DISABLED_BeginEnd)
   }
 
   auto runtime = legate::Runtime::get_runtime();
-  auto array   = runtime->create_array(legate::Shape{10}, legate::int64());
-  launch_tasks(array);
+  auto store   = runtime->create_store(legate::Shape{10}, legate::int64());
+  launch_tasks(store);
   for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
     legate::experimental::Trace::begin_trace(TRACE_ID);
-    launch_tasks(array);
+    launch_tasks(store);
     legate::experimental::Trace::end_trace(TRACE_ID);
   }
 }

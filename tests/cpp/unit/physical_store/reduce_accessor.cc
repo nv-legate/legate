@@ -155,7 +155,7 @@ class ReduceAccessorTestTask : public legate::LegateTask<ReduceAccessorTestTask>
 
 /*static*/ void ReduceAccessorTestTask::cpu_variant(legate::TaskContext context)
 {
-  auto store = context.reduction(0).data();
+  auto store = context.reduction(0);
 
   legate::double_dispatch(store.dim(), store.type().code(), ReduceAccessorFn{}, store);
 }

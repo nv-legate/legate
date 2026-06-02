@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/data/logical_array.h>
+#include <legate/data/logical_store.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <filesystem>
@@ -68,22 +68,22 @@ class LEGATE_EXPORT InvalidDataSetError : public std::invalid_argument {
 };
 
 /**
- * @brief Load a HDF5 dataset into a LogicalArray.
+ * @brief Load a HDF5 dataset into a LogicalStore.
  *
  * @param file_path The path to the file to load.
  * @param dataset_name The name of the HDF5 dataset to load from the file.
  *
- * @return LogicalArray The loaded array.
+ * @return LogicalStore The loaded store.
  *
  * @throws std::system_error If file_path does not exist.
  * @throws UnusupportedHDF5DataType If the data type cannot be converted to a Type.
  * @throws InvalidDataSetError If the dataset is invalid, or is not found.
  */
-[[nodiscard]] LEGATE_EXPORT LogicalArray from_file(const std::filesystem::path& file_path,
+[[nodiscard]] LEGATE_EXPORT LogicalStore from_file(const std::filesystem::path& file_path,
                                                    std::string_view dataset_name);
 
 /**
- * @brief Write a LogicalArray to disk as a HDF5 dataset.
+ * @brief Write a LogicalStore to disk as a HDF5 dataset.
  *
  * If `file_path` already exists at the time of writing, the file will be overwritten.
  *
@@ -95,11 +95,11 @@ class LEGATE_EXPORT InvalidDataSetError : public std::invalid_argument {
  * are launched. However, no protection is provided if those directories are later deleted
  * before the task executes -- the tasks assume these directories exist when they execute.
  *
- * `array` must not be unbound.
+ * `store` must not be unbound.
  *
- * @param array The array to store.
+ * @param store The store to write.
  * @param file_path The resulting HDF5 file.
- * @param dataset_name The HDF5 dataset name to store the array under. See
+ * @param dataset_name The HDF5 dataset name to write the store under. See
  * https://support.hdfgroup.org/documentation/hdf5/latest/_h5_d__u_g.html for further
  * discussion on datasets.
  *
@@ -107,7 +107,7 @@ class LEGATE_EXPORT InvalidDataSetError : public std::invalid_argument {
  * it is a directory name. Generally speaking this means that it must be of the form
  * `/path/to/file.h5`.
  */
-LEGATE_EXPORT void to_file(const LogicalArray& array,
+LEGATE_EXPORT void to_file(const LogicalStore& store,
                            std::filesystem::path file_path,
                            std::string_view dataset_name);
 

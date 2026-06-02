@@ -29,7 +29,7 @@ struct InitRanges : public legate::LegateTask<InitRanges> {
   {
     auto output = context.output(0);
     auto shape  = output.shape<1>();
-    auto acc    = output.data().write_accessor<legate::Rect<1>, 1>();
+    auto acc    = output.write_accessor<legate::Rect<1>, 1>();
     for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
       auto idx = legate::coord_t{*it};
       acc[*it] = legate::Rect<1>{idx * TILE_SIZE, ((idx + 1) * TILE_SIZE) - 1};

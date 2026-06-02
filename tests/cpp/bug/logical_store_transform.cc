@@ -27,8 +27,8 @@ class InitTask : public legate::LegateTask<InitTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0);
-    auto buffer = output.data().create_output_buffer<std::int64_t, 1>(legate::Point<1>{EXT},
-                                                                      /*bind_buffer=*/true);
+    auto buffer = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{EXT},
+                                                               /*bind_buffer=*/true);
     for (std::int64_t idx = 0; idx < static_cast<std::int64_t>(EXT); ++idx) {
       buffer[idx] = VAL;
     }
@@ -52,8 +52,8 @@ class CopyTask : public legate::LegateTask<CopyTask> {
       return;
     }
 
-    auto in_acc  = input.data().read_accessor<std::int64_t, 1>();
-    auto out_acc = output.data().write_accessor<std::int64_t, 1>();
+    auto in_acc  = input.read_accessor<std::int64_t, 1>();
+    auto out_acc = output.write_accessor<std::int64_t, 1>();
 
     for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
       out_acc[*it] = in_acc[*it] + value;
@@ -115,13 +115,13 @@ TEST_F(LogicalStoreTransform, SliceBug2)
 
 namespace {
 
-void init(const legate::LogicalArray& output)
+void init(const legate::LogicalStore& output)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   // Dummy argument to get the task parallelized
-  auto dummy = runtime->create_array(legate::Shape{EXT}, legate::int64());
+  auto dummy = runtime->create_store(legate::Shape{EXT}, legate::int64());
 
   auto task1 = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
   task1.add_output(output);
@@ -129,8 +129,8 @@ void init(const legate::LogicalArray& output)
   runtime->submit(std::move(task1));
 }
 
-void add_and_copy(const legate::LogicalArray& output,
-                  const legate::LogicalArray& input,
+void add_and_copy(const legate::LogicalStore& output,
+                  const legate::LogicalStore& input,
                   std::int64_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -150,15 +150,15 @@ TEST_F(LogicalStoreTransform, OpaqueShouldBeRejected)
 {
   auto runtime = legate::Runtime::get_runtime();
 
-  auto arr1 = runtime->create_array(legate::int64());
+  auto arr1 = runtime->create_store(legate::int64());
   init(arr1);
 
-  auto arr2 = runtime->create_array(legate::Shape{arr1.shape()[0], 3}, legate::int64());
+  auto arr2 = runtime->create_store(legate::Shape{arr1.shape()[0], 3}, legate::int64());
   for (std::int64_t idx = 0; idx < 3; ++idx) {
     add_and_copy(arr2, arr1, idx);
   }
 
-  auto store = arr2.data().get_physical_store();
+  auto store = arr2.get_physical_store();
   auto acc   = store.read_accessor<std::int64_t, 2>();
   auto shape = store.shape<2>();
 

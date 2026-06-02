@@ -22,9 +22,8 @@ class Init : public legate::LegateTask<Init> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto acc1 = context.output(0).data().write_accessor<std::int64_t, 3>();
-    auto acc2 =
-      context.output(1).data().write_accessor<std::int64_t*, 1, /* VALIDATE_TYPE */ false>();
+    auto acc1 = context.output(0).write_accessor<std::int64_t, 3>();
+    auto acc2 = context.output(1).write_accessor<std::int64_t*, 1, /* VALIDATE_TYPE */ false>();
 
     acc2[0] = acc1.ptr(legate::Point<3>{0, 0, 0});
   }
@@ -37,9 +36,8 @@ class Tester : public legate::LegateTask<Tester> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto acc1 = context.input(0).data().read_accessor<std::int64_t, 2>();
-    auto acc2 =
-      context.input(1).data().read_accessor<std::int64_t*, 1, /* VALIDATE_TYPE */ false>();
+    auto acc1 = context.input(0).read_accessor<std::int64_t, 2>();
+    auto acc2 = context.input(1).read_accessor<std::int64_t*, 1, /* VALIDATE_TYPE */ false>();
 
     ASSERT_EQ(acc2[0], acc1.ptr(legate::Point<2>{0, 0}));
   }
@@ -52,7 +50,7 @@ class Tester2 : public legate::LegateTask<Tester2> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto store     = context.output(0).data();
+    auto store     = context.output(0);
     auto store_acc = store.read_accessor<std::int64_t, 2>();
     EXPECT_EQ(&(store_acc[{0, 1}]) - &(store_acc[{0, 0}]), 1);
   }
@@ -73,7 +71,7 @@ class LibraryMapper : public legate::mapping::Mapper {
     std::vector<legate::mapping::StoreMapping> mappings;
 
     mappings.push_back(
-      legate::mapping::StoreMapping::default_mapping(task.output(0).data(),
+      legate::mapping::StoreMapping::default_mapping(task.output(0),
                                                      options.front(),
                                                      /*exact*/ true,
                                                      legate::mapping::DimOrdering::c_order()));

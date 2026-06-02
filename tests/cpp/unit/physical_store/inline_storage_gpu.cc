@@ -38,7 +38,7 @@ TEST_F(InlineStorageGpuUnit, GetPhysicalStoreFBMEM)
   auto* const runtime  = legate::Runtime::get_runtime();
   const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto phys = store.get_physical_store(legate::mapping::StoreTarget::FBMEM);
 
@@ -52,7 +52,7 @@ TEST_F(InlineStorageGpuUnit, GetPhysicalStoreZCMEM)
   auto* const runtime  = legate::Runtime::get_runtime();
   const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
 
-  runtime->issue_fill(legate::LogicalArray{store}, legate::Scalar{VALUE});
+  runtime->issue_fill(store, legate::Scalar{VALUE});
 
   const auto phys = store.get_physical_store(legate::mapping::StoreTarget::ZCMEM);
 

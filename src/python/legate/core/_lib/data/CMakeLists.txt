@@ -10,7 +10,6 @@ set(
   external_allocation.pyx
   inline_allocation.pyx
   logical_store.pyx
-  physical_array.pyx
   physical_store.pyx
   scalar.pyx
   shape.pyx

@@ -9,11 +9,7 @@
 #include <legate/comm/detail/coll.h>
 #include <legate/comm/detail/comm.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
-#include <legate/data/detail/array_tasks.h>
 #include <legate/data/detail/external_allocation.h>
-#include <legate/data/detail/logical_array.h>
-#include <legate/data/detail/logical_arrays/list_logical_array.h>
-#include <legate/data/detail/logical_arrays/struct_logical_array.h>
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
@@ -380,55 +376,6 @@ void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
                                              redop));
 }
 
-void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
-                         InternalSharedPtr<LogicalStore> value)
-{
-  if (const auto lhs_base = dynamic_pointer_cast<BaseLogicalArray>(lhs); !lhs_base) {
-    throw TracedException<std::invalid_argument>{
-      "Fills on list or struct arrays are not supported yet"};
-  }
-
-  if (value->type()->code == Type::Code::NIL) {
-    if (!lhs->nullable()) {
-      throw TracedException<std::invalid_argument>{
-        "Non-nullable arrays cannot be filled with null"};
-    }
-    issue_fill(lhs->data(), Scalar{lhs->type()});
-    issue_fill(lhs->null_mask(), Scalar{false});
-    return;
-  }
-
-  issue_fill(lhs->data(), std::move(value));
-  if (!lhs->nullable()) {
-    return;
-  }
-  issue_fill(lhs->null_mask(), Scalar{true});
-}
-
-void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar value)
-{
-  if (const auto lhs_base = dynamic_pointer_cast<BaseLogicalArray>(lhs); !lhs_base) {
-    throw TracedException<std::invalid_argument>{
-      "Fills on list or struct arrays are not supported yet"};
-  }
-
-  if (value.type()->code == Type::Code::NIL) {
-    if (!lhs->nullable()) {
-      throw TracedException<std::invalid_argument>{
-        "Non-nullable arrays cannot be filled with null"};
-    }
-    issue_fill(lhs->data(), Scalar{lhs->type()});
-    issue_fill(lhs->null_mask(), Scalar{false});
-    return;
-  }
-
-  issue_fill(lhs->data(), std::move(value));
-  if (!lhs->nullable()) {
-    return;
-  }
-  issue_fill(lhs->null_mask(), Scalar{true});
-}
-
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->unbound()) {
@@ -478,7 +425,7 @@ void Runtime::tree_reduce(const Library& library,
 }
 
 void Runtime::offload_to(mapping::StoreTarget target_mem,
-                         const InternalSharedPtr<LogicalArray>& array)
+                         const InternalSharedPtr<LogicalStore>& store)
 {
   const auto target_proc = mapping::detail::get_matching_task_target(target_mem);
 
@@ -502,12 +449,12 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
 
   // Ask for Read/Write privileges so that data is copied to the target_mem and
   // invalidated in other memories if any other copies exist.
-  std::ignore = task->add_input(array);
-  std::ignore = task->add_output(array);
+  std::ignore = task->add_input(store);
+  std::ignore = task->add_output(store);
 
   submit(std::move(task));
   // We issue a mapping fence here because downstream tasks that do not access
-  // `array` do not have mapping order dependency on the offload task. Such tasks
+  // `store` do not have mapping order dependency on the offload task. Such tasks
   // may allocate data on the `target_mem` ahead of the offload task thus
   // preventing the offloading from happening at the right time.
   //
@@ -625,207 +572,6 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   op->launch();
 }
 
-InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Shape>& shape,
-                                                      InternalSharedPtr<Type> type,
-                                                      bool nullable,
-                                                      bool optimize_scalar)
-{
-  // TODO(wonchanl): We should be able to control colocation of fields for struct types,
-  // instead of special-casing rect types here
-  if (Type::Code::STRUCT == type->code && !is_rect_type(type)) {
-    return create_struct_array_(shape, std::move(type), nullable, optimize_scalar);
-  }
-
-  if (type->variable_size()) {
-    if (shape->ndim() != 1) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("List/string arrays can only have 1D shapes, instead got shape {}", *shape)};
-    }
-
-    auto elem_type  = Type::Code::STRING == type->code
-                        ? int8()
-                        : dynamic_cast<const detail::ListType&>(*type).element_type();
-    auto descriptor = create_base_array_(shape, rect_type(1), nullable, optimize_scalar);
-    auto vardata    = create_array(make_internal_shared<Shape>(1),
-                                   std::move(elem_type),
-                                   /*nullable=*/false,
-                                   /*optimize_scalar=*/false);
-
-    return make_internal_shared<ListLogicalArray>(
-      std::move(type), std::move(descriptor), std::move(vardata));
-  }
-
-  return create_base_array_(shape, std::move(type), nullable, optimize_scalar);
-}
-
-InternalSharedPtr<LogicalArray> Runtime::create_array_like(
-  const InternalSharedPtr<LogicalArray>& array, InternalSharedPtr<Type> type)
-{
-  if (Type::Code::STRUCT == type->code || type->variable_size()) {
-    throw TracedException<std::runtime_error>{
-      "create_array_like doesn't support variable size types or struct types"};
-  }
-  if (array->unbound()) {
-    return create_array(make_internal_shared<Shape>(array->dim()),
-                        std::move(type),
-                        array->nullable(),
-                        /*optimize_scalar=*/false);
-  }
-
-  const bool optimize_scalar = array->data()->has_scalar_storage();
-  return create_array(array->shape(), std::move(type), array->nullable(), optimize_scalar);
-}
-
-InternalSharedPtr<LogicalArray> Runtime::create_nullable_array(
-  const InternalSharedPtr<LogicalStore>& store, const InternalSharedPtr<LogicalStore>& null_mask)
-{
-  if (legate::Type::Code::BOOL != null_mask->type()->code) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Null mask must be a boolean type, instead got {}", *(null_mask->type()))};
-  }
-  if ((*store->shape()) != (*null_mask->shape())) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Store and null mask must have the same shape, instead got store of shape {} and "
-                  "null mask of shape {}",
-                  *store->shape(),
-                  *null_mask->shape())};
-  }
-  if (store->transformed() || null_mask->transformed()) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Store and null mask must be top-level stores, but input {} was not top-level",
-                  store->transformed() ? "store" : "null mask")};
-  }
-  return make_internal_shared<BaseLogicalArray>(store, null_mask);
-}
-
-InternalSharedPtr<LogicalArray> Runtime::create_list_array(
-  InternalSharedPtr<Type> type,
-  const InternalSharedPtr<LogicalArray>& descriptor,
-  InternalSharedPtr<LogicalArray> vardata)
-{
-  if (type->code != Type::Code::STRING && type->code != Type::Code::LIST) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Expected a list type but got {}", *type)};
-  }
-  if (descriptor->unbound() || vardata->unbound()) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Descriptor and vardata should not be unbound, but input {} was unbound",
-                  descriptor->unbound() ? "descriptor" : "vardata")};
-  }
-  if (descriptor->dim() != 1 || vardata->dim() != 1) {
-    auto&& fault_array = descriptor->dim() != 1 ? "descriptor" : "vardata";
-    auto&& fault_dim   = descriptor->dim() != 1 ? descriptor->dim() : vardata->dim();
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Descriptor and vardata should be 1D, but input {} has {} dimensions",
-                  fault_array,
-                  fault_dim)};
-  }
-  if (!is_rect_type(descriptor->type(), /*ndim=*/1)) {
-    throw TracedException<std::invalid_argument>{"Descriptor array does not have a 1D rect type"};
-  }
-
-  // If this doesn't hold, something bad happened (and will happen below)
-  LEGATE_CHECK(!descriptor->nested());
-  if (vardata->nullable()) {
-    throw TracedException<std::invalid_argument>{"Vardata should not be nullable"};
-  }
-
-  auto elem_type = Type::Code::STRING == type->code
-                     ? int8()
-                     : dynamic_cast<const detail::ListType&>(*type).element_type();
-  if (*vardata->type() != *elem_type) {
-    throw TracedException<std::invalid_argument>{fmt::format(
-      "Expected a vardata array of type {} but got {}", *elem_type, *(vardata->type()))};
-  }
-
-  return make_internal_shared<ListLogicalArray>(
-    std::move(type), legate::static_pointer_cast<BaseLogicalArray>(descriptor), std::move(vardata));
-}
-
-InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(
-  SmallVector<InternalSharedPtr<LogicalArray>>&& fields,
-  const std::optional<InternalSharedPtr<LogicalStore>>& null_mask)
-{
-  if (fields.empty()) {
-    throw TracedException<std::invalid_argument>{"Struct arrays must have at least one field"};
-  }
-
-  const auto& first_field  = fields[0];
-  const auto& target_shape = first_field->shape();
-
-  // validate null mask if provided
-  if (null_mask.has_value()) {
-    const auto& mask = null_mask.value();
-
-    if (mask->type()->code != Type::Code::BOOL) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("Null mask must be of boolean type, instead got {}", *(mask->type()))};
-    }
-    if (*mask->shape() != *target_shape) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("Null mask has shape {} that differs from field 0 of shape {}. Null mask must "
-                    "have the same shape as all fields",
-                    *mask->shape(),
-                    *target_shape)};
-    }
-  }
-
-  // validate all fields
-  std::vector<InternalSharedPtr<Type>> field_types;
-
-  field_types.reserve(fields.size());
-  for (auto&& [i, field] : enumerate(fields)) {
-    if (*field->shape() != *target_shape) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("Field {} has shape {} that differs from field 0 of shape {}. All fields must "
-                    "have the same shape",
-                    i,
-                    *field->shape(),
-                    *target_shape)};
-    }
-    if (field->primary_store()->transformed()) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("Field {} is not a top-level store", i)};
-    }
-    field_types.push_back(field->type());
-  }
-
-  auto struct_type = detail::struct_type(std::move(field_types), /*align=*/false);
-
-  return make_internal_shared<StructLogicalArray>(
-    std::move(struct_type), null_mask, std::move(fields));
-}
-
-InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array_(
-  const InternalSharedPtr<Shape>& shape,
-  InternalSharedPtr<Type> type,
-  bool nullable,
-  bool optimize_scalar)
-{
-  SmallVector<InternalSharedPtr<LogicalArray>> fields;
-  const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
-  auto null_mask =
-    nullable ? std::make_optional(create_store(shape, bool_(), optimize_scalar)) : std::nullopt;
-
-  fields.reserve(st_type.field_types().size());
-  for (auto&& field_type : st_type.field_types()) {
-    fields.emplace_back(create_array(shape, field_type, /*nullable=*/false, optimize_scalar));
-  }
-  return make_internal_shared<StructLogicalArray>(
-    std::move(type), std::move(null_mask), std::move(fields));
-}
-
-InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array_(InternalSharedPtr<Shape> shape,
-                                                                InternalSharedPtr<Type> type,
-                                                                bool nullable,
-                                                                bool optimize_scalar)
-{
-  auto null_mask =
-    nullable ? std::make_optional(create_store(shape, bool_(), optimize_scalar)) : std::nullopt;
-  auto data = create_store(std::move(shape), std::move(type), optimize_scalar);
-  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
-}
-
 namespace {
 
 void validate_store_shape(const InternalSharedPtr<Shape>& shape,
@@ -833,8 +579,8 @@ void validate_store_shape(const InternalSharedPtr<Shape>& shape,
 {
   if (shape->unbound()) {
     throw TracedException<std::invalid_argument>{
-      "Shape of an unbound array or store cannot be used to create another store "
-      "until the array or store is initialized by a task"};
+      "Shape of an unbound store cannot be used to create another store "
+      "until the store is initialized by a task"};
   }
   if (type->variable_size()) {
     throw TracedException<std::invalid_argument>{"Store must have a fixed-size type"};
@@ -1019,12 +765,11 @@ void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
     issue_fill(store, Scalar{store->type()});
   }
 
-  auto arr   = LogicalArray::from_store(std::move(store));
   auto task  = create_task(core_library(), LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES});
   auto part1 = task->declare_partition();
   auto part2 = task->declare_partition();
-  task->add_input(arr, part1);
-  task->add_input(std::move(arr), part2);
+  task->add_input(store, part1);
+  task->add_input(std::move(store), part2);
   task->add_constraint(bloat(part2, part1, std::move(low_offsets), std::move(high_offsets)),
                        /*bypass_signature_check=*/false);
   submit(std::move(task));
@@ -1377,7 +1122,7 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
   task->add_input(create_store_partition(store, partition, std::nullopt),
                   std::nullopt,
                   /*is_key_partition=*/true);
-  task->add_output(output);
+  static_cast<void>(task->add_output(output));
   // Directly launch the partitioning task, instead of going through the scheduling pipeline,
   // because this function is invoked only when the partition is immediately needed.
   task->validate();
@@ -2350,7 +2095,6 @@ void register_legate_core_tasks(Library& core_lib)
 
   ExtractScalar::register_variants(pub_core_lib);
   prefetch_task::PrefetchBloatedInstances::register_variants(pub_core_lib);
-  register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
   legate::experimental::io::detail::register_tasks();

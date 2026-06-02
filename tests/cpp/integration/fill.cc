@@ -67,47 +67,32 @@ class Config {
 class FillTests : public RegisterOnceFixture<Config> {};
 
 class Whole : public RegisterOnceFixture<Config>,
-              public ::testing::WithParamInterface<std::tuple<bool, std::int32_t, std::size_t>> {};
+              public ::testing::WithParamInterface<std::tuple<std::int32_t, std::size_t>> {};
 
 class Slice : public RegisterOnceFixture<Config>,
-              public ::testing::WithParamInterface<std::tuple<bool, bool, std::int32_t>> {};
+              public ::testing::WithParamInterface<std::tuple<bool, std::int32_t>> {};
 
-INSTANTIATE_TEST_SUITE_P(FillTests,
-                         Whole,
-                         ::testing::Combine(::testing::Bool(),
-                                            ::testing::Values(1, 2, 3),
-                                            ::testing::Values(1, SIZE)));
+INSTANTIATE_TEST_SUITE_P(
+  FillTests, Whole, ::testing::Combine(::testing::Values(1, 2, 3), ::testing::Values(1, SIZE)));
 
 INSTANTIATE_TEST_SUITE_P(FillTests,
                          Slice,
-                         ::testing::Combine(::testing::Bool(),
-                                            ::testing::Bool(),
-                                            ::testing::Values(1, 2, 3)));
+                         ::testing::Combine(::testing::Bool(), ::testing::Values(1, 2, 3)));
 
 template <std::int32_t DIM>
 /*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input           = context.input(0);
-  auto shape           = input.shape<DIM>();
-  const auto value     = context.scalar(0).value<std::int64_t>();
-  const auto null_mask = context.scalar(1).value<bool>();
+  auto input       = context.input(0);
+  auto shape       = input.shape<DIM>();
+  const auto value = context.scalar(0).value<std::int64_t>();
 
   if (shape.empty()) {
     return;
   }
 
-  auto val_acc = input.data().read_accessor<std::int64_t, DIM>(shape);
+  auto val_acc = input.read_accessor<std::int64_t, DIM>(shape);
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
     EXPECT_EQ(val_acc[*it], value);
-  }
-
-  if (!input.nullable()) {
-    return;
-  }
-
-  auto mask_acc = input.null_mask().read_accessor<bool, DIM>(shape);
-  for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-    EXPECT_EQ(mask_acc[*it], null_mask);
   }
 }
 
@@ -133,26 +118,11 @@ template <std::int32_t DIM>
     return true;
   };
 
-  if (!input.nullable()) {
-    auto acc         = input.data().read_accessor<std::int64_t, DIM>(shape);
-    auto v_in_slice  = value_in_slice.value<std::int64_t>();
-    auto v_out_slice = value_outside_slice.value<std::int64_t>();
-    for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-      EXPECT_EQ(acc[*it], in_slice(*it) ? v_in_slice : v_out_slice);
-    }
-    return;
-  }
-
-  auto val_acc    = input.data().read_accessor<std::int64_t, DIM>(shape);
-  auto mask_acc   = input.null_mask().read_accessor<bool, DIM>(shape);
-  auto v_in_slice = value_in_slice.value<std::int64_t>();
+  auto acc         = input.read_accessor<std::int64_t, DIM>(shape);
+  auto v_in_slice  = value_in_slice.value<std::int64_t>();
+  auto v_out_slice = value_outside_slice.value<std::int64_t>();
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-    if (in_slice(*it)) {
-      EXPECT_EQ(val_acc[*it], v_in_slice);
-      EXPECT_EQ(mask_acc[*it], true);
-    } else {
-      EXPECT_EQ(mask_acc[*it], false);
-    }
+    EXPECT_EQ(acc[*it], in_slice(*it) ? v_in_slice : v_out_slice);
   }
 }
 
@@ -161,24 +131,23 @@ template <std::int32_t DIM>
   auto output        = context.output(0);
   const auto& scalar = context.scalar(0);
 
-  auto acc = output.data().write_accessor<std::int8_t, 1, false>();
+  auto acc = output.write_accessor<std::int8_t, 1, false>();
   std::memcpy(acc.ptr(0), scalar.ptr(), scalar.size());
 }
 
-void check_output(const legate::LogicalArray& array, const legate::Scalar& value, bool null_mask)
+void check_output(const legate::LogicalStore& store, const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto task = runtime->create_task(
-    context, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_TASK) + array.dim()});
-  task.add_input(array);
+    context, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_TASK) + store.dim()});
+  task.add_input(store);
   task.add_scalar_arg(value);
-  task.add_scalar_arg(legate::Scalar{null_mask});
   runtime->submit(std::move(task));
 }
 
-void check_output_slice(const legate::LogicalArray& array,
+void check_output_slice(const legate::LogicalStore& store,
                         const legate::Scalar& value_in_slice,
                         const legate::Scalar& value_outside_slice,
                         std::int64_t offset)
@@ -187,8 +156,8 @@ void check_output_slice(const legate::LogicalArray& array,
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto task = runtime->create_task(
-    context, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_SLICE_TASK) + array.dim()});
-  task.add_input(array);
+    context, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_SLICE_TASK) + store.dim()});
+  task.add_input(store);
   task.add_scalar_arg(value_in_slice);
   task.add_scalar_arg(value_outside_slice);
   task.add_scalar_arg(legate::Scalar{offset});
@@ -209,24 +178,23 @@ legate::LogicalStore wrap_fill_value(const legate::Scalar& value)
   return result;
 }
 
-void test_fill_index(std::int32_t dim, std::uint64_t size, bool nullable)
+void test_fill_index(std::int32_t dim, std::uint64_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
 
-  auto lhs = runtime->create_array(legate::full(static_cast<std::uint64_t>(dim), size),
+  auto lhs = runtime->create_store(legate::full(static_cast<std::uint64_t>(dim), size),
                                    legate::int64(),
-                                   nullable /*nullable*/,
                                    /*optimize_scalar=*/true);
   auto v   = legate::Scalar{int64_t{10}};
 
-  // fill input array with some values
+  // fill input store with some values
   runtime->issue_fill(lhs, v);
 
   // check the result of fill
-  check_output(lhs, v, /*null_mask*/ true);
+  check_output(lhs, v);
 }
 
-void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool task_init)
+void test_fill_slice(std::int32_t dim, std::uint64_t size, bool task_init)
 {
   auto runtime = legate::Runtime::get_runtime();
 
@@ -234,10 +202,10 @@ void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool 
   constexpr std::int64_t v2     = 200;
   constexpr std::int64_t offset = 3;
 
-  auto lhs = runtime->create_array(
-    legate::full(static_cast<std::uint64_t>(dim), size), legate::int64(), null_init);
+  auto lhs =
+    runtime->create_store(legate::full(static_cast<std::uint64_t>(dim), size), legate::int64());
   auto value_in_slice      = legate::Scalar{v1};
-  auto value_outside_slice = null_init ? legate::Scalar{} : legate::Scalar{v2};
+  auto value_outside_slice = legate::Scalar{v2};
 
   // First fill the entire store with v2
   runtime->issue_fill(lhs, value_outside_slice);
@@ -260,23 +228,23 @@ void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool 
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), /*nullable=*/false);
+  auto store   = runtime->create_store(legate::Shape{10, 10}, legate::int64());
   auto v       = legate::Scalar{10.0};
 
   // Type mismatch
-  EXPECT_THROW(runtime->issue_fill(array, runtime->create_store(v)), std::invalid_argument);
-  EXPECT_THROW(runtime->issue_fill(array, v), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_fill(store, runtime->create_store(v)), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_fill(store, v), std::invalid_argument);
 
-  // Nulliyfing a non-nullable array
-  EXPECT_THROW(runtime->issue_fill(array, legate::Scalar{}), std::invalid_argument);
+  // Nulliyfing a (non-nullable) store
+  EXPECT_THROW(runtime->issue_fill(store, legate::Scalar{}), std::invalid_argument);
 }
 
 }  // namespace
 
 TEST_P(Whole, Index)
 {
-  const auto& [nullable, dim, size] = GetParam();
-  test_fill_index(dim, size, nullable);
+  const auto& [dim, size] = GetParam();
+  test_fill_index(dim, size);
 }
 
 TEST_P(Whole, Single)
@@ -285,37 +253,17 @@ TEST_P(Whole, Single)
   auto machine = runtime->get_machine();
   const legate::Scope scope{machine.slice(/*from=*/0, /*to=*/1, legate::mapping::TaskTarget::CPU)};
 
-  const auto& [nullable, dim, size] = GetParam();
-  test_fill_index(dim, size, nullable);
+  const auto& [dim, size] = GetParam();
+  test_fill_index(dim, size);
 }
 
 TEST_P(Slice, Index)
 {
-  const auto& [null_init, task_init, dim] = GetParam();
-  test_fill_slice(dim, SIZE, null_init, task_init);
+  const auto& [task_init, dim] = GetParam();
+  test_fill_slice(dim, SIZE, task_init);
 }
 
 TEST_F(FillTests, Invalid) { test_invalid(); }
-
-TEST_F(FillTests, FillNullableArrayWithScalar)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), /*nullable*/ true);
-  const auto value = legate::Scalar{};
-
-  runtime->issue_fill(array, value);
-  check_output(array, legate::Scalar{int64_t{0}}, /*null_mask*/ false);
-}
-
-TEST_F(FillTests, FillNullableArrayWithStore)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), /*nullable*/ true);
-  const auto value = runtime->create_store(legate::null_type());
-
-  runtime->issue_fill(array, value);
-  check_output(array, legate::Scalar{int64_t{0}}, /*null_mask*/ false);
-}
 
 TEST_F(FillTests, FillUnboundStoreWithScalar)
 {
@@ -337,50 +285,6 @@ TEST_F(FillTests, FillUnboundStoreWithStore)
   ASSERT_THAT([&] { runtime->issue_fill(store, value); },
               ::testing::ThrowsMessage<std::invalid_argument>(
                 ::testing::HasSubstr("Fill lhs cannot be an unbound store")));
-}
-
-TEST_F(FillTests, FillStructArrayWithScalar)
-{
-  auto runtime      = legate::Runtime::get_runtime();
-  auto struct_array = runtime->create_array(legate::struct_type(/*align=*/true, legate::int64()));
-  const auto value  = legate::Scalar{10};
-
-  ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },
-              ::testing::ThrowsMessage<std::invalid_argument>(
-                ::testing::HasSubstr("Fills on list or struct arrays are not supported yet")));
-}
-
-TEST_F(FillTests, FillStructArrayWithStore)
-{
-  auto runtime      = legate::Runtime::get_runtime();
-  auto struct_array = runtime->create_array(legate::struct_type(/*align=*/true, legate::int64()));
-  const auto value  = runtime->create_store(legate::int64());
-
-  ASSERT_THAT([&] { runtime->issue_fill(struct_array, value); },
-              ::testing::ThrowsMessage<std::invalid_argument>(
-                ::testing::HasSubstr("Fills on list or struct arrays are not supported yet")));
-}
-
-TEST_F(FillTests, FillArrayWithNullScalar)
-{
-  auto runtime     = legate::Runtime::get_runtime();
-  auto array       = runtime->create_array(legate::int64());
-  const auto value = legate::Scalar{};
-
-  ASSERT_THAT([&] { runtime->issue_fill(array, value); },
-              ::testing::ThrowsMessage<std::invalid_argument>(
-                ::testing::HasSubstr("Non-nullable arrays cannot be filled with null")));
-}
-
-TEST_F(FillTests, FillArrayWithNullStore)
-{
-  auto runtime     = legate::Runtime::get_runtime();
-  auto array       = runtime->create_array(legate::int64());
-  const auto value = runtime->create_store(legate::null_type());
-
-  ASSERT_THAT([&] { runtime->issue_fill(array, value); },
-              ::testing::ThrowsMessage<std::invalid_argument>(
-                ::testing::HasSubstr("Non-nullable arrays cannot be filled with null")));
 }
 
 // NOLINTEND(readability-magic-numbers)

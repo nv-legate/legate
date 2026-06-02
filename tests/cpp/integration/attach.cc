@@ -81,7 +81,7 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output    = context.output(0).data();
+    auto output    = context.output(0);
     const auto dim = context.scalar(0).value<std::int32_t>();
     increment_physical_store(output, dim);
   }
@@ -93,7 +93,7 @@ struct CheckerTask : public legate::LegateTask<CheckerTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto input         = context.input(0).data();
+    auto input         = context.input(0);
     const auto dim     = context.scalar(0).value<std::int32_t>();
     const auto counter = context.scalar(1).value<std::int64_t>();
     check_physical_store(input, dim, counter);

@@ -41,7 +41,7 @@ class CheckTaskTargetTask : public legate::LegateTask<CheckTaskTargetTask> {
   static void task_body_(legate::TaskContext ctx)
   {
     for (std::uint32_t i = 0; i < ctx.num_inputs(); ++i) {
-      const auto target = ctx.input(i).data().target();
+      const auto target = ctx.input(i).target();
 
       ASSERT_EQ(target, legate::mapping::StoreTarget::SYSMEM);
     }
@@ -49,7 +49,7 @@ class CheckTaskTargetTask : public legate::LegateTask<CheckTaskTargetTask> {
     {
       ASSERT_EQ(ctx.num_outputs(), 1);
 
-      const auto target = ctx.output(0).data().target();
+      const auto target = ctx.output(0).target();
 
       ASSERT_EQ(target, legate::mapping::StoreTarget::SYSMEM);
     }
@@ -106,17 +106,17 @@ TEST_F(ProxyStoreMappingUnit, Apply)
   auto task           = runtime->create_task(lib, CheckTaskTargetTask::TASK_CONFIG.task_id());
 
   for (std::size_t i = 0; i < 2; ++i) {
-    auto array = runtime->create_array(legate::Shape{1, i}, legate::int32());
+    auto store = runtime->create_store(legate::Shape{1, i}, legate::int32());
 
-    runtime->issue_fill(array, legate::Scalar{1});
-    task.add_input(std::move(array));
+    runtime->issue_fill(store, legate::Scalar{1});
+    task.add_input(std::move(store));
   }
 
   {
-    auto array = runtime->create_array(legate::Shape{2, 2}, legate::int32());
+    auto store = runtime->create_store(legate::Shape{2, 2}, legate::int32());
 
-    runtime->issue_fill(array, legate::Scalar{1});
-    task.add_output(std::move(array));
+    runtime->issue_fill(store, legate::Scalar{1});
+    task.add_output(std::move(store));
   }
 
   runtime->submit(std::move(task));
@@ -129,17 +129,17 @@ TEST_F(ProxyStoreMappingUnit, ApplyInline)
   auto task           = runtime->create_task(lib, CheckTaskTargetTask::TASK_CONFIG.task_id());
 
   for (std::size_t i = 0; i < 2; ++i) {
-    auto array = runtime->create_array(legate::Shape{1, i}, legate::int32());
+    auto store = runtime->create_store(legate::Shape{1, i}, legate::int32());
 
-    runtime->issue_fill(array, legate::Scalar{1});
-    task.add_input(std::move(array));
+    runtime->issue_fill(store, legate::Scalar{1});
+    task.add_input(std::move(store));
   }
 
   {
-    auto array = runtime->create_array(legate::Shape{2, 2}, legate::int32());
+    auto store = runtime->create_store(legate::Shape{2, 2}, legate::int32());
 
-    runtime->issue_fill(array, legate::Scalar{1});
-    task.add_output(std::move(array));
+    runtime->issue_fill(store, legate::Scalar{1});
+    task.add_output(std::move(store));
   }
 
   legate::detail::SmallVector<legate::mapping::InstanceMappingPolicy> input_policies{

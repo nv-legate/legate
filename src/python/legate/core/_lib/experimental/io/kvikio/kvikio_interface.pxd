@@ -36,16 +36,13 @@ cdef extern from "legate/experimental/io/kvikio/interface.h" \
         std_string_view, const _LogicalStore&, const std_vector[uint64_t]&
     ) except+
 
-
-cdef extern from "legate/experimental/io/kvikio/detail/hidden.h" \
-      namespace "legate" nogil:
     cdef _LogicalStore _from_file \
-        "legate::experimental::io::kvikio::from_file_" (
+        "legate::experimental::io::kvikio::from_file" (
             std_string_view, const _Type&
         ) except+
 
     cdef _LogicalStore _from_file \
-        "legate::experimental::io::kvikio::from_file_" (
+        "legate::experimental::io::kvikio::from_file" (
             std_string_view,
             const _Shape&,
             const _Type&,
@@ -53,7 +50,7 @@ cdef extern from "legate/experimental/io/kvikio/detail/hidden.h" \
             std_optional[std_vector[uint64_t]],
         ) except+
     cdef _LogicalStore _from_file \
-        "legate::experimental::io::kvikio::from_file_" (
+        "legate::experimental::io::kvikio::from_file" (
             std_string_view,
             const _Shape&,
             const _Type&,
@@ -61,7 +58,7 @@ cdef extern from "legate/experimental/io/kvikio/detail/hidden.h" \
         ) except+
 
     cdef _LogicalStore _from_file_by_offsets \
-        "legate::experimental::io::kvikio::from_file_by_offsets_" (
+        "legate::experimental::io::kvikio::from_file_by_offsets" (
             std_string_view,
             const _Shape&,
             const _Type&,

@@ -37,11 +37,11 @@ inline const legate::detail::Library& Task::library() const { return *library_; 
 
 inline const legate::detail::TaskInfo& Task::task_info() const { return *task_info_; }
 
-inline Span<const InternalSharedPtr<Array>> Task::inputs() const { return inputs_; }
+inline Span<const InternalSharedPtr<Store>> Task::inputs() const { return inputs_; }
 
-inline Span<const InternalSharedPtr<Array>> Task::outputs() const { return outputs_; }
+inline Span<const InternalSharedPtr<Store>> Task::outputs() const { return outputs_; }
 
-inline Span<const InternalSharedPtr<Array>> Task::reductions() const { return reductions_; }
+inline Span<const InternalSharedPtr<Store>> Task::reductions() const { return reductions_; }
 
 inline Span<const InternalSharedPtr<legate::detail::Scalar>> Task::scalars() const
 {

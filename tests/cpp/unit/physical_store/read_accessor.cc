@@ -131,7 +131,7 @@ class ReadAccessorTestTask : public legate::LegateTask<ReadAccessorTestTask> {
 
 /*static*/ void ReadAccessorTestTask::cpu_variant(legate::TaskContext context)
 {
-  auto store = context.input(0).data();
+  auto store = context.input(0);
 
   legate::double_dispatch(store.dim(), store.type().code(), ReadAccessorFn{}, context, store);
 }

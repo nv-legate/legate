@@ -25,9 +25,9 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
     {
       using VAL = legate::type_of_t<CODE>;
 
-      auto src_store = context.input(0).data();
-      auto tgt_store = context.input(1).data();
-      auto ind_store = context.input(2).data();
+      auto src_store = context.input(0);
+      auto tgt_store = context.input(1);
+      auto ind_store = context.input(2);
 
       auto ind_shape = ind_store.shape<IND_DIM>();
       if (ind_shape.empty()) {

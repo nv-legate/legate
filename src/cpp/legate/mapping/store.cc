@@ -16,6 +16,8 @@ bool Store::unbound() const { return impl()->unbound(); }
 
 std::uint32_t Store::dim() const { return impl()->dim(); }
 
+Type Store::type() const { return Type{impl_->type()}; }
+
 bool Store::is_reduction() const { return impl()->is_reduction(); }
 
 GlobalRedopID Store::redop() const { return impl()->redop(); }

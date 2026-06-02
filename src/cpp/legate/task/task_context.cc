@@ -21,10 +21,10 @@ namespace legate {
 
 namespace {
 
-[[nodiscard]] std::vector<PhysicalArray> to_arrays(
-  Span<const InternalSharedPtr<detail::PhysicalArray>> array_impls)
+[[nodiscard]] std::vector<PhysicalStore> to_stores(
+  Span<const InternalSharedPtr<detail::PhysicalStore>> store_impls)
 {
-  return {array_impls.begin(), array_impls.end()};
+  return {store_impls.begin(), store_impls.end()};
 }
 
 }  // namespace
@@ -33,31 +33,31 @@ GlobalTaskID TaskContext::task_id() const noexcept { return impl()->task_id(); }
 
 VariantCode TaskContext::variant_kind() const noexcept { return impl()->variant_kind(); }
 
-PhysicalArray TaskContext::input(std::uint32_t index) const
+PhysicalStore TaskContext::input(std::uint32_t index) const
 {
   CHECK_IF_CAN_USE_MEMBER_FUNCTION(inputs);
-  return PhysicalArray{impl()->inputs().at(index)};
+  return PhysicalStore{impl()->inputs().at(index)};
 }
 
-std::vector<PhysicalArray> TaskContext::inputs() const { return to_arrays(impl()->inputs()); }
+std::vector<PhysicalStore> TaskContext::inputs() const { return to_stores(impl()->inputs()); }
 
-PhysicalArray TaskContext::output(std::uint32_t index) const
+PhysicalStore TaskContext::output(std::uint32_t index) const
 {
   CHECK_IF_CAN_USE_MEMBER_FUNCTION(outputs);
-  return PhysicalArray{impl()->outputs().at(index)};
+  return PhysicalStore{impl()->outputs().at(index)};
 }
 
-std::vector<PhysicalArray> TaskContext::outputs() const { return to_arrays(impl()->outputs()); }
+std::vector<PhysicalStore> TaskContext::outputs() const { return to_stores(impl()->outputs()); }
 
-PhysicalArray TaskContext::reduction(std::uint32_t index) const
+PhysicalStore TaskContext::reduction(std::uint32_t index) const
 {
   CHECK_IF_CAN_USE_MEMBER_FUNCTION(reductions);
-  return PhysicalArray{impl()->reductions().at(index)};
+  return PhysicalStore{impl()->reductions().at(index)};
 }
 
-std::vector<PhysicalArray> TaskContext::reductions() const
+std::vector<PhysicalStore> TaskContext::reductions() const
 {
-  return to_arrays(impl()->reductions());
+  return to_stores(impl()->reductions());
 }
 
 Scalar TaskContext::scalar(std::uint32_t index) const

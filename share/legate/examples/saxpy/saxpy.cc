@@ -40,9 +40,9 @@ class SAXPYTask : public legate::LegateTask<SAXPYTask> {
     constexpr std::int32_t DIM = 2;
 
     // Retrieve the input and output store handles from the task context
-    const auto x_input_store = context.input(0).data();
-    const auto y_input_store = context.input(1).data();
-    auto output_store        = context.output(0).data();
+    const auto x_input_store = context.input(0);
+    const auto y_input_store = context.input(1);
+    auto output_store        = context.output(0);
 
     // Extract shapes
     const auto x_shape      = x_input_store.shape<DIM>();
@@ -74,7 +74,7 @@ class CheckTask : public legate::LegateTask<CheckTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     constexpr std::int32_t DIM = 2;
-    const auto result          = context.input(0).data();
+    const auto result          = context.input(0);
     const auto expected        = context.scalar(0).value<std::int32_t>();
     const auto shape           = result.shape<DIM>();
     auto acc                   = result.read_accessor<std::int32_t, DIM>();
@@ -107,9 +107,9 @@ void run_example()
 
   // Create 2D arrays (5x5)
   auto shape   = legate::Shape{5, 5};
-  auto x_array = runtime->create_array(shape, legate::int32());
-  auto y_array = runtime->create_array(shape, legate::int32());
-  auto result  = runtime->create_array(shape, legate::int32());
+  auto x_array = runtime->create_store(shape, legate::int32());
+  auto y_array = runtime->create_store(shape, legate::int32());
+  auto result  = runtime->create_store(shape, legate::int32());
 
   // Fill input arrays
   runtime->issue_fill(x_array, legate::Scalar{1});  // Fill with 1s

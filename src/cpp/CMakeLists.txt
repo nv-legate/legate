@@ -288,20 +288,13 @@ target_sources(
     legate/data/allocator.cc
     legate/data/buffer.cc
     legate/data/external_allocation.cc
-    legate/data/logical_array.cc
     legate/data/logical_store.cc
     legate/data/scalar.cc
     legate/data/shape.cc
-    legate/data/physical_array.cc
     legate/data/physical_store.cc
     legate/data/detail/allocation_cache.cc
-    legate/data/detail/array_tasks.cc
     legate/data/detail/attachment.cc
     legate/data/detail/external_allocation.cc
-    legate/data/detail/logical_array.cc
-    legate/data/detail/logical_arrays/base_logical_array.cc
-    legate/data/detail/logical_arrays/list_logical_array.cc
-    legate/data/detail/logical_arrays/struct_logical_array.cc
     legate/data/detail/logical_region_field.cc
     legate/data/partition_placement.cc
     legate/data/partition_placement_info.cc
@@ -311,10 +304,6 @@ target_sources(
     legate/data/detail/storage.cc
     legate/data/detail/storage_partition.cc
     legate/data/detail/scalar.cc
-    legate/data/detail/physical_array.cc
-    legate/data/detail/physical_arrays/base_physical_array.cc
-    legate/data/detail/physical_arrays/list_physical_array.cc
-    legate/data/detail/physical_arrays/struct_physical_array.cc
     legate/data/detail/physical_store.cc
     legate/data/detail/physical_stores/future_physical_store.cc
     legate/data/detail/physical_stores/inline_physical_store.cc
@@ -337,14 +326,12 @@ target_sources(
     legate/data/detail/buffer.cc
     legate/data/detail/inline_storage.cc
     legate/experimental/trace.cc
-    legate/mapping/array.cc
     legate/mapping/machine.cc
     legate/mapping/mapping.cc
     legate/mapping/operation.cc
     legate/mapping/store.cc
     legate/mapping/proxy_store_mapping.cc
     legate/mapping/proxy_instance_mapping_policy.cc
-    legate/mapping/detail/array.cc
     legate/mapping/detail/base_mapper.cc
     legate/mapping/detail/core_mapper.cc
     legate/mapping/detail/instance_manager.cc
@@ -376,7 +363,7 @@ target_sources(
     legate/operation/detail/scatter.cc
     legate/operation/detail/scatter_gather.cc
     legate/operation/detail/task.cc
-    legate/operation/detail/task_array_arg.cc
+    legate/operation/detail/task_store_arg.cc
     legate/operation/detail/task_launcher.cc
     legate/operation/detail/timing.cc
     legate/operation/detail/extract_scalar.cc
@@ -557,12 +544,7 @@ if(legate_USE_UCX)
 endif()
 
 if(Legion_USE_OpenMP)
-  target_sources(
-    legate_obj
-    PRIVATE
-      legate/data/detail/array_tasks_omp.cc
-      legate/partitioning/detail/partitioning_tasks_omp.cc
-  )
+  target_sources(legate_obj PRIVATE legate/partitioning/detail/partitioning_tasks_omp.cc)
 endif()
 
 if(legate_USE_NCCL)
@@ -570,12 +552,7 @@ if(legate_USE_NCCL)
 endif()
 
 if(legate_USE_CUDA)
-  target_sources(
-    legate_obj
-    PRIVATE
-      legate/data/detail/array_tasks_cuda.cc
-      legate/partitioning/detail/partitioning_tasks_cuda.cc
-  )
+  target_sources(legate_obj PRIVATE legate/partitioning/detail/partitioning_tasks_cuda.cc)
 
   include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
 
@@ -875,12 +852,9 @@ install(
     legate/data/external_allocation.h
     legate/data/external_allocation.inl
     legate/data/inline_allocation.h
-    legate/data/logical_array.h
     legate/data/logical_store.h
     legate/data/partition_placement.h
     legate/data/partition_placement_info.h
-    legate/data/physical_array.h
-    legate/data/physical_array.inl
     legate/data/physical_store.h
     legate/data/physical_store.inl
     legate/data/scalar.h
@@ -899,8 +873,6 @@ install(
 
 install(
   FILES
-    legate/mapping/array.h
-    legate/mapping/array.inl
     legate/mapping/machine.h
     legate/mapping/machine.inl
     legate/mapping/mapping.h

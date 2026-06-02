@@ -30,12 +30,10 @@ class TesterMapper : public legate::mapping::Mapper {
 
     mappings.reserve(inputs.size() + outputs.size());
     for (auto& input : inputs) {
-      mappings.push_back(
-        legate::mapping::StoreMapping::default_mapping(input.data(), options.front()));
+      mappings.push_back(legate::mapping::StoreMapping::default_mapping(input, options.front()));
     }
     for (auto& output : outputs) {
-      mappings.push_back(
-        legate::mapping::StoreMapping::default_mapping(output.data(), options.front()));
+      mappings.push_back(legate::mapping::StoreMapping::default_mapping(output, options.front()));
     }
     return mappings;
   }
@@ -58,7 +56,7 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
+    auto output = context.output(0);
     auto shape  = output.shape<2>();
 
     if (shape.empty()) {

@@ -174,14 +174,14 @@ class UnboundStoreBindTask : public legate::LegateTask<UnboundStoreBindTask> {
 
 /*static*/ void UnboundStoreCreateTask::cpu_variant(legate::TaskContext context)
 {
-  auto store = context.output(0).data();
+  auto store = context.output(0);
 
   legate::double_dispatch(store.dim(), store.code(), UnboundStoreCreateFn{}, store);
 }
 
 /*static*/ void UnboundStoreBindTask::cpu_variant(legate::TaskContext context)
 {
-  auto store   = context.output(0).data();
+  auto store   = context.output(0);
   auto op_code = context.scalar(0).value<UnboundStoreOpCode>();
 
   legate::double_dispatch(store.dim(), store.code(), UnboundStoreBindFn{}, store, op_code);

@@ -9,7 +9,6 @@
 #include <legate/data/shape.h>
 #include <legate/experimental/io/detail/library.h>
 #include <legate/experimental/io/kvikio/detail/basic.h>
-#include <legate/experimental/io/kvikio/detail/hidden.h>
 #include <legate/experimental/io/kvikio/detail/tile.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
 #include <legate/runtime/runtime.h>
@@ -46,17 +45,17 @@ void check_file_exists(const std::filesystem::path& path)
 
 // TODO (jfaibussowit):
 // Don't pass require passing type, we should be able to deduce the datatype somehow.
-LogicalArray from_file(const std::filesystem::path& file_path, const Type& type)
+LogicalStore from_file(const std::filesystem::path& file_path, const Type& type)
 {
   check_file_exists(file_path);
 
   auto* rt = Runtime::get_runtime();
-  // The task assumes the file is laid out as one giant linear array in memory. Therefore we
+  // The task assumes the file is laid out as one giant linear store in memory. Therefore we
   // can deduce the size of the required store by checking the size of the file itself.
   //
   // This is horribly error-prone and relies on several properties:
   // 1. The filesystem includes no extra header or footer in the file data itself, i.e. that
-  //    the size of the file is the size of the array.
+  //    the size of the file is the size of the store.
   // 2. The filesystem stores the data in a way that it suitably aligned for the datatype,
   //    i.e. that the task has to do no pointer swizzling to align the pointers up.
   // 3. That the file really does contain the datatype in question. Inside the task we see only
@@ -64,8 +63,8 @@ LogicalArray from_file(const std::filesystem::path& file_path, const Type& type)
   //    no conversions are done.
   //
   // We really should not do this.
-  const auto array_size = std::filesystem::file_size(file_path) / type.size();
-  auto ret              = rt->create_array(Shape{static_cast<std::uint64_t>(array_size)}, type);
+  const auto store_size = std::filesystem::file_size(file_path) / type.size();
+  auto ret              = rt->create_store(Shape{static_cast<std::uint64_t>(store_size)}, type);
   auto task =
     rt->create_task(io::detail::core_io_library(), detail::BasicRead::TASK_CONFIG.task_id());
 
@@ -73,11 +72,6 @@ LogicalArray from_file(const std::filesystem::path& file_path, const Type& type)
   task.add_output(ret);
   rt->submit(std::move(task));
   return ret;
-}
-
-LogicalStore from_file_(const std::filesystem::path& file_path, const Type& type)
-{
-  return from_file(file_path, type).data();
 }
 
 namespace {
@@ -92,11 +86,11 @@ void clear_file(const std::filesystem::path& path)
 
 }  // namespace
 
-void to_file(const std::filesystem::path& file_path, const LogicalArray& array)
+void to_file(const std::filesystem::path& file_path, const LogicalStore& store)
 {
-  if (const auto dim = array.dim(); dim != 1) {
+  if (const auto dim = store.dim(); dim != 1) {
     throw legate::detail::TracedException<std::invalid_argument>{
-      fmt::format("number of array dimensions must be 1 (have {})", dim)};
+      fmt::format("number of store dimensions must be 1 (have {})", dim)};
   }
 
   auto* rt = Runtime::get_runtime();
@@ -104,7 +98,7 @@ void to_file(const std::filesystem::path& file_path, const LogicalArray& array)
     rt->create_task(io::detail::core_io_library(), detail::BasicWrite::TASK_CONFIG.task_id());
 
   task.add_scalar_arg(Scalar{file_path.native()});
-  task.add_input(array);
+  task.add_input(store);
 
   // Truncate the file because each leaf task opens the file in "r+" mode (because otherwise
   // each open() of the file would overwrite it).
@@ -125,7 +119,7 @@ void to_file(const std::filesystem::path& file_path, const LogicalArray& array)
 
 namespace {
 
-void sanity_check_sizes(const LogicalArray& array,
+void sanity_check_sizes(const LogicalStore& store,
                         const std::vector<std::uint64_t>& tile_shape,
                         const std::vector<std::uint64_t>& tile_start)
 {
@@ -137,21 +131,21 @@ void sanity_check_sizes(const LogicalArray& array,
                   tile_shape.size())};
   }
 
-  if (array.dim() != tile_shape.size()) {
+  if (store.dim() != tile_shape.size()) {
     throw legate::detail::TracedException<std::invalid_argument>{
-      fmt::format("Array and tile_shape must have the same size. Array.dim() = {}, "
+      fmt::format("store and tile_shape must have the same size. store.dim() = {}, "
                   "tile_shape.size() = {}",
-                  array.dim(),
+                  store.dim(),
                   tile_shape.size())};
   }
 
   {
-    auto extents = array.shape().extents();
+    auto extents = store.shape().extents();
 
     for (auto&& [d, c] : legate::detail::zip_equal(extents, tile_shape)) {
       if (d % c != 0) {
         throw legate::detail::TracedException<std::invalid_argument>{fmt::format(
-          "The array shape ({}) must be divisible by the tile shape ({})", extents, tile_shape)};
+          "The store shape ({}) must be divisible by the tile shape ({})", extents, tile_shape)};
       }
     }
   }
@@ -161,7 +155,7 @@ void sanity_check_sizes(const LogicalArray& array,
 
 // TODO (jfaibussowit):
 // Don't pass require passing type, we should be able to deduce the datatype somehow.
-LogicalArray from_file(const std::filesystem::path& file_path,
+LogicalStore from_file(const std::filesystem::path& file_path,
                        const Shape& shape,
                        const Type& type,
                        const std::vector<std::uint64_t>& tile_shape,
@@ -170,7 +164,7 @@ LogicalArray from_file(const std::filesystem::path& file_path,
   check_file_exists(file_path);
 
   auto* rt = Runtime::get_runtime();
-  auto ret = rt->create_array(shape, type);
+  auto ret = rt->create_store(shape, type);
 
   if (!tile_start.has_value()) {
     // () ctor is deliberate here, we want a vector of 0's like tile_shape
@@ -178,7 +172,7 @@ LogicalArray from_file(const std::filesystem::path& file_path,
   }
   sanity_check_sizes(ret, tile_shape, *tile_start);
 
-  auto partition = ret.data().partition_by_tiling(tile_shape);
+  auto partition = ret.partition_by_tiling(tile_shape);
   auto task      = rt->create_task(io::detail::core_io_library(),
                                    detail::TileRead::TASK_CONFIG.task_id(),
                                    partition.color_shape());
@@ -190,17 +184,8 @@ LogicalArray from_file(const std::filesystem::path& file_path,
   return ret;
 }
 
-LogicalStore from_file_(const std::filesystem::path& file_path,
-                        const Shape& shape,
-                        const Type& type,
-                        const std::vector<std::uint64_t>& tile_shape,
-                        std::optional<std::vector<std::uint64_t>> tile_start)
-{
-  return from_file(file_path, shape, type, tile_shape, std::move(tile_start)).data();
-}
-
 void to_file(const std::filesystem::path& file_path,
-             const LogicalArray& array,
+             const LogicalStore& store,
              const std::vector<std::uint64_t>& tile_shape,
              std::optional<std::vector<std::uint64_t>> tile_start)
 {
@@ -208,10 +193,10 @@ void to_file(const std::filesystem::path& file_path,
     // () ctor is deliberate here, we want a vector of 0's like tile_shape
     tile_start = std::vector<std::uint64_t>(tile_shape.size(), 0);
   }
-  sanity_check_sizes(array, tile_shape, *tile_start);
+  sanity_check_sizes(store, tile_shape, *tile_start);
 
   auto* rt       = Runtime::get_runtime();
-  auto partition = array.data().partition_by_tiling(tile_shape);
+  auto partition = store.partition_by_tiling(tile_shape);
   auto task      = rt->create_task(io::detail::core_io_library(),
                                    detail::TileWrite::TASK_CONFIG.task_id(),
                                    partition.color_shape());
@@ -224,7 +209,7 @@ void to_file(const std::filesystem::path& file_path,
 
 // ==========================================================================================
 
-LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
+LogicalStore from_file_by_offsets(const std::filesystem::path& file_path,
                                   const Shape& shape,
                                   const Type& type,
                                   const std::vector<std::uint64_t>& offsets,
@@ -233,14 +218,14 @@ LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
   check_file_exists(file_path);
 
   auto* rt            = Runtime::get_runtime();
-  auto ret            = rt->create_array(shape, type);
-  auto partition      = ret.data().partition_by_tiling(tile_shape);
+  auto ret            = rt->create_store(shape, type);
+  auto partition      = ret.partition_by_tiling(tile_shape);
   auto&& launch_shape = partition.color_shape();
 
   if (const auto launch_vol = legate::detail::array_volume(launch_shape);
       launch_vol != offsets.size()) {
     throw legate::detail::TracedException<std::invalid_argument>{
-      fmt::format("Number of offsets ({}) must match the number of array tiles ({})",
+      fmt::format("Number of offsets ({}) must match the number of store tiles ({})",
                   offsets.size(),
                   launch_vol)};
   }
@@ -253,15 +238,6 @@ LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
   task.add_scalar_arg(Scalar{offsets});
   rt->submit(std::move(task));
   return ret;
-}
-
-LogicalStore from_file_by_offsets_(const std::filesystem::path& file_path,
-                                   const Shape& shape,
-                                   const Type& type,
-                                   const std::vector<std::uint64_t>& offsets,
-                                   const std::vector<std::uint64_t>& tile_shape)
-{
-  return from_file_by_offsets(file_path, shape, type, offsets, tile_shape).data();
 }
 
 }  // namespace legate::experimental::io::kvikio

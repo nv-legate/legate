@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <legate/data/logical_array.h>
+#include <legate/data/logical_store.h>
 
 #include <filesystem>
 #include <string_view>
 
 namespace legate::io::hdf5::detail {
 
-[[nodiscard]] LogicalArray from_file(const std::filesystem::path& file_path,
+[[nodiscard]] LogicalStore from_file(const std::filesystem::path& file_path,
                                      std::string_view dataset_name);
 
 /**
@@ -23,13 +23,13 @@ namespace legate::io::hdf5::detail {
  * routine. This 2-step exists purely to isolate the HDF5-specific symbols from the interface
  * (which must compile regardless of whether HDF5 is available).
  *
- * @param array The array to store.
+ * @param store The store to write.
  * @param file_path The resulting HDF5 file.
- * @param dataset_name The HDF5 dataset name to store the array under. See
+ * @param dataset_name The HDF5 dataset name to write the store under. See
  * https://support.hdfgroup.org/documentation/hdf5/latest/_h5_d__u_g.html for further
  * discussion on datasets.
  */
-void to_file(const LogicalArray& array,
+void to_file(const LogicalStore& store,
              std::filesystem::path file_path,
              std::string_view dataset_name);
 

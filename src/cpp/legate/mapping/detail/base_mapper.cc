@@ -24,7 +24,6 @@
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/linearize.h>
-#include <legate/utilities/detail/store_iterator_cache.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/detail/zip.h>
 
@@ -151,13 +150,11 @@ const std::vector<Processor>& BaseMapper::omps() const
 
 namespace {
 
-void populate_input_collective_regions(
-  Legion::Mapping::MapperRuntime* runtime,
-  Legion::Mapping::MapperContext ctx,
-  const Legion::Task& legion_task,
-  const Task& legate_task,
-  const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
-  std::set<unsigned>* check_collective_regions)
+void populate_input_collective_regions(Legion::Mapping::MapperRuntime* runtime,
+                                       Legion::Mapping::MapperContext ctx,
+                                       const Legion::Task& legion_task,
+                                       const Task& legate_task,
+                                       std::set<unsigned>* check_collective_regions)
 {
   // Bug in Legion prevents collective regions working with single controller execution
   // so skip in the meantime.
@@ -175,51 +172,47 @@ void populate_input_collective_regions(
   const auto lo          = legion_task.index_domain.lo();
   const auto task_volume = legion_task.index_domain.get_volume();
 
-  for (auto&& array : legate_task.inputs()) {
-    for (auto&& store : get_stores(*array)) {
-      if (store->is_future()) {
-        continue;
-      }
+  for (auto&& store : legate_task.inputs()) {
+    if (store->is_future()) {
+      continue;
+    }
 
-      const auto idx = store->requirement_index();
-      auto&& req     = legion_task.regions[idx];
+    const auto idx = store->requirement_index();
+    auto&& req     = legion_task.regions[idx];
 
-      if ((task_volume > 1) && req.partition == Legion::LogicalPartition::NO_PART) {
+    if ((task_volume > 1) && req.partition == Legion::LogicalPartition::NO_PART) {
+      check_collective_regions->insert(idx);
+      continue;
+    }
+
+    // Manual tasks pass broadcast stores as single-tile partitions with constant
+    // projections rather than as singular (NO_PART) regions.  In that case the
+    // store has no DimBroadcast transform, so find_imaginary_dims() returns empty
+    // and the check below never fires.  Detect this pattern explicitly: if the
+    // partition's color space has volume 1, every task point maps to the same tile
+    // and the region should be treated as collective.
+    if ((task_volume > 1) && req.handle_type == LEGION_PARTITION_PROJECTION &&
+        req.partition != Legion::LogicalPartition::NO_PART) {
+      const auto color_space =
+        runtime->get_index_partition_color_space(ctx, req.partition.get_index_partition());
+      if (color_space.get_volume() == 1) {
         check_collective_regions->insert(idx);
         continue;
       }
+    }
 
-      // Manual tasks pass broadcast stores as single-tile partitions with constant
-      // projections rather than as singular (NO_PART) regions.  In that case the
-      // store has no DimBroadcast transform, so find_imaginary_dims() returns empty
-      // and the check below never fires.  Detect this pattern explicitly: if the
-      // partition's color space has volume 1, every task point maps to the same tile
-      // and the region should be treated as collective.
-      if ((task_volume > 1) && req.handle_type == LEGION_PARTITION_PROJECTION &&
-          req.partition != Legion::LogicalPartition::NO_PART) {
-        const auto color_space =
-          runtime->get_index_partition_color_space(ctx, req.partition.get_index_partition());
-        if (color_space.get_volume() == 1) {
-          check_collective_regions->insert(idx);
-          continue;
-        }
-      }
-
-      for (auto&& d : store->find_imaginary_dims()) {
-        if ((hi[d] - lo[d]) >= 1) {
-          check_collective_regions->insert(idx);
-          break;
-        }
+    for (auto&& d : store->find_imaginary_dims()) {
+      if ((hi[d] - lo[d]) >= 1) {
+        check_collective_regions->insert(idx);
+        break;
       }
     }
   }
 }
 
-void populate_reduction_collective_regions(
-  const Legion::Task& legion_task,
-  const Task& legate_task,
-  const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
-  std::set<unsigned>* check_collective_regions)
+void populate_reduction_collective_regions(const Legion::Task& legion_task,
+                                           const Task& legate_task,
+                                           std::set<unsigned>* check_collective_regions)
 {
   // Bug in Legion prevents collective regions working with single controller execution
   // so skip in the meantime.
@@ -233,28 +226,26 @@ void populate_reduction_collective_regions(
       stream_gen.has_value()) {
     return;
   }
-  for (auto&& array : legate_task.reductions()) {
-    for (auto&& store : get_stores(*array)) {
-      if (store->is_future()) {
-        continue;
-      }
-
-      const auto idx = store->requirement_index();
-      auto&& req     = legion_task.regions[idx];
-
-      if (req.privilege & LEGION_WRITE_PRIV) {
-        continue;
-      }
-      if (req.handle_type == LEGION_PARTITION_PROJECTION && req.projection == 0) {
-        // Previously, we only checked collective regions under singular projections
-        // or non-identity partition projections. However, there are cases where
-        // Legion will have some region requirements with a region projection,
-        // under which we would still like to check for collective regions.
-        continue;
-      }
-
-      check_collective_regions->insert(idx);
+  for (auto&& store : legate_task.reductions()) {
+    if (store->is_future()) {
+      continue;
     }
+
+    const auto idx = store->requirement_index();
+    auto&& req     = legion_task.regions[idx];
+
+    if (req.privilege & LEGION_WRITE_PRIV) {
+      continue;
+    }
+    if (req.handle_type == LEGION_PARTITION_PROJECTION && req.projection == 0) {
+      // Previously, we only checked collective regions under singular projections
+      // or non-identity partition projections. However, there are cases where
+      // Legion will have some region requirements with a region projection,
+      // under which we would still like to check for collective regions.
+      continue;
+    }
+
+    check_collective_regions->insert(idx);
   }
 }
 
@@ -266,14 +257,9 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
 {
   const auto legate_task = Task{task, *runtime, ctx};
 
-  {
-    auto get_stores = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
-
-    populate_input_collective_regions(
-      runtime, ctx, task, legate_task, get_stores, &output.check_collective_regions);
-    populate_reduction_collective_regions(
-      task, legate_task, get_stores, &output.check_collective_regions);
-  }
+  populate_input_collective_regions(
+    runtime, ctx, task, legate_task, &output.check_collective_regions);
+  populate_reduction_collective_regions(task, legate_task, &output.check_collective_regions);
 
   // The initial processor just needs to have the same kind and address space as the eventual target
   // of this task in control replication mode.
@@ -455,7 +441,7 @@ void validate_policies(Span<const std::unique_ptr<StoreMapping>> for_stores,
 }
 
 void generate_default_mappings(
-  Span<const InternalSharedPtr<Array>> arrays,
+  Span<const InternalSharedPtr<Store>> stores,
   StoreTarget default_option,
   const Legion::Task& legion_task,
   std::unordered_map<std::uint32_t, const StoreMapping*>* mapped_futures,
@@ -464,34 +450,30 @@ void generate_default_mappings(
   std::vector<std::unique_ptr<StoreMapping>>* for_unbound_stores,
   std::vector<std::unique_ptr<StoreMapping>>* for_stores)
 {
-  const auto get_stores = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
+  for (auto&& store : stores) {
+    if (store->is_future()) {
+      const auto fut_idx = store->future_index();
+      // Only need to map Future-backed Stores corresponding to inputs (i.e. one of
+      // task.futures)
+      if (fut_idx >= legion_task.futures.size()) {
+        continue;
+      }
 
-  for (auto&& array : arrays) {
-    for (auto&& store : get_stores(*array)) {
-      if (store->is_future()) {
-        const auto fut_idx = store->future_index();
-        // Only need to map Future-backed Stores corresponding to inputs (i.e. one of
-        // task.futures)
-        if (fut_idx >= legion_task.futures.size()) {
-          continue;
-        }
+      if (const auto [it, inserted] = mapped_futures->try_emplace(fut_idx); inserted) {
+        auto mapping = StoreMapping::default_mapping(store.get(), default_option);
 
-        if (const auto [it, inserted] = mapped_futures->try_emplace(fut_idx); inserted) {
-          auto mapping = StoreMapping::default_mapping(store.get(), default_option);
+        it->second = for_futures->emplace_back(std::move(mapping)).get();
+      }
+    } else {
+      const auto [_, inserted] = mapped_regions->emplace(store->unique_region_field_id());
 
-          it->second = for_futures->emplace_back(std::move(mapping)).get();
-        }
-      } else {
-        const auto [_, inserted] = mapped_regions->emplace(store->unique_region_field_id());
+      if (inserted) {
+        auto mapping = StoreMapping::default_mapping(store.get(), default_option);
 
-        if (inserted) {
-          auto mapping = StoreMapping::default_mapping(store.get(), default_option);
-
-          if (store->unbound()) {
-            for_unbound_stores->push_back(std::move(mapping));
-          } else {
-            for_stores->push_back(std::move(mapping));
-          }
+        if (store->unbound()) {
+          for_unbound_stores->push_back(std::move(mapping));
+        } else {
+          for_stores->push_back(std::move(mapping));
         }
       }
     }
@@ -694,8 +676,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   // Generate default mappings for stores that are not yet mapped by the client mapper
   const auto default_option = options.front();
-  for (auto&& arr : {legate_task.inputs(), legate_task.outputs(), legate_task.reductions()}) {
-    generate_default_mappings(arr,
+  for (auto&& st : {legate_task.inputs(), legate_task.outputs(), legate_task.reductions()}) {
+    generate_default_mappings(st,
                               default_option,
                               task,
                               &mapped_futures,

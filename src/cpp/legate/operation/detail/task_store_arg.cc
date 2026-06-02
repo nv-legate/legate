@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 
-#include <legate/data/detail/logical_array.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/physical_store.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -17,8 +18,10 @@
 
 namespace legate::detail {
 
-TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<LogicalArray> _array)
-  : privilege{priv}, array{std::move(_array)}
+TaskStoreArg::TaskStoreArg(Legion::PrivilegeMode priv,
+                           InternalSharedPtr<LogicalStore> _store,
+                           const Variable* _variable)
+  : privilege{priv}, store{std::move(_store)}, variable{_variable}
 {
   // These objects should only be constructed from add_input(), add_output(), or
   // add_reduction(), so the incoming privilege should only ever be these base privileges. The
@@ -29,8 +32,8 @@ TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<Logical
                 privilege == LEGION_REDUCE);
 }
 
-TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalArray> _array)
-  : privilege{priv}, array{std::move(_array)}
+TaskStoreArg::TaskStoreArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalStore> _store)
+  : privilege{priv}, store{std::move(_store)}
 {
   // These objects should only be constructed from add_input(), add_output(), or
   // add_reduction(), so the incoming privilege should only ever be these base privileges. The
@@ -41,14 +44,14 @@ TaskArrayArg::TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<Physica
                 privilege == LEGION_REDUCE);
 }
 
-bool TaskArrayArg::needs_flush() const
+bool TaskStoreArg::needs_flush() const
 {
   return std::visit(
-    Overload{[](const InternalSharedPtr<LogicalArray>& arr) -> bool { return arr->needs_flush(); },
-             [](const InternalSharedPtr<PhysicalArray>&) -> bool {
-               return false;  // PhysicalArray doesn't need flush
+    Overload{[](const InternalSharedPtr<LogicalStore>& st) -> bool { return st->needs_flush(); },
+             [](const InternalSharedPtr<PhysicalStore>&) -> bool {
+               return false;  // PhysicalStore doesn't need flush
              }},
-    array);
+    store);
 }
 
 }  // namespace legate::detail

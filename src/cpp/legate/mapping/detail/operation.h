@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/data/scalar.h>
-#include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/mapping/mapping.h>
@@ -87,9 +86,9 @@ class Task : public Mappable {
    */
   [[nodiscard]] const legate::detail::TaskInfo& task_info() const;
 
-  [[nodiscard]] Span<const InternalSharedPtr<Array>> inputs() const;
-  [[nodiscard]] Span<const InternalSharedPtr<Array>> outputs() const;
-  [[nodiscard]] Span<const InternalSharedPtr<Array>> reductions() const;
+  [[nodiscard]] Span<const InternalSharedPtr<Store>> inputs() const;
+  [[nodiscard]] Span<const InternalSharedPtr<Store>> outputs() const;
+  [[nodiscard]] Span<const InternalSharedPtr<Store>> reductions() const;
   [[nodiscard]] Span<const InternalSharedPtr<legate::detail::Scalar>> scalars() const;
 
   [[nodiscard]] bool is_single_task() const;
@@ -121,9 +120,9 @@ class Task : public Mappable {
   // thus producing a race between the top-level task and mapper threads.
   legate::detail::TaskInfo* task_info_{};
 
-  legate::detail::SmallVector<InternalSharedPtr<Array>> inputs_{};
-  legate::detail::SmallVector<InternalSharedPtr<Array>> outputs_{};
-  legate::detail::SmallVector<InternalSharedPtr<Array>> reductions_{};
+  legate::detail::SmallVector<InternalSharedPtr<Store>> inputs_{};
+  legate::detail::SmallVector<InternalSharedPtr<Store>> outputs_{};
+  legate::detail::SmallVector<InternalSharedPtr<Store>> reductions_{};
   legate::detail::SmallVector<InternalSharedPtr<legate::detail::Scalar>> scalars_{};
   std::size_t future_size_{};
   bool can_raise_exception_{};

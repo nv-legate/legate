@@ -8,7 +8,6 @@
 
 #include <legate/comm/communicator.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
-#include <legate/data/detail/physical_array.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/mapping/detail/machine.h>
@@ -36,6 +35,11 @@ namespace legate::detail {
 
 class Library;
 
+Span<const InternalSharedPtr<PhysicalStore>> TaskContext::CtorArgs::get_outputs() const noexcept
+{
+  return outputs;
+}
+
 namespace {
 
 [[nodiscard]] TaskContext::CtorArgs make_task_context_ctor_args(
@@ -51,9 +55,9 @@ namespace {
 
   static_cast<void>(dez.unpack<Library*>());
   static_cast<void>(dez.unpack<TaskInfo*>());
-  ret.inputs     = dez.unpack_arrays();
-  ret.outputs    = dez.unpack_arrays();
-  ret.reductions = dez.unpack_arrays();
+  ret.inputs     = dez.unpack_stores();
+  ret.outputs    = dez.unpack_stores();
+  ret.reductions = dez.unpack_stores();
   ret.scalars    = dez.unpack_scalars();
   // The return future size is not used for task execution
   std::ignore                   = dez.unpack<std::size_t>();
@@ -76,11 +80,11 @@ namespace {
   // when the number of subregions isn't a multiple of the chosen radix.
   // To simplify the programming mode, we filter out those "invalid" stores out.
   if (task.tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
-    constexpr auto is_invalid_array = [](const InternalSharedPtr<PhysicalArray>& inp) {
+    constexpr auto is_invalid_store = [](const InternalSharedPtr<PhysicalStore>& inp) {
       return !inp->valid();
     };
 
-    ret.inputs.erase(std::remove_if(ret.inputs.begin(), ret.inputs.end(), is_invalid_array),
+    ret.inputs.erase(std::remove_if(ret.inputs.begin(), ret.inputs.end(), is_invalid_store),
                      ret.inputs.end());
   }
 
@@ -109,8 +113,8 @@ LegionTaskContext::LegionTaskContext(const Legion::Task& legion_task,
   // If the task is running on a GPU, AND there is at least one scalar store for reduction,
   // then we need to wait for all the host-to-device copies for initialization to finish,
   // UNLESS the user has promised to use the task stream. In that case we can skip this sync.
-  constexpr auto is_scalar_store = [](const InternalSharedPtr<PhysicalArray>& array) -> bool {
-    return dynamic_cast<const FuturePhysicalStore*>(array->data().get());
+  constexpr auto is_scalar_store = [](const InternalSharedPtr<PhysicalStore>& store) -> bool {
+    return dynamic_cast<const FuturePhysicalStore*>(store.get());
   };
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && !can_elide_device_ctx_sync() &&
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&

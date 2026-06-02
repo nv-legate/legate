@@ -24,8 +24,8 @@ class TesterTask : public legate::LegateTask<TesterTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
-    for (auto&& output : outputs) {
-      auto store = output.data();
+
+    for (auto&& store : outputs) {
       if (store.is_unbound_store()) {
         store.bind_empty_data();
       }

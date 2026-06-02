@@ -124,7 +124,7 @@ class IotaTask : public legate::LegateTask<IotaTask> {
       pt.dim = global_shape.get_dim();
       return pt;
     }();
-    auto store = context.output(0).data();
+    auto store = context.output(0);
 
     double_dispatch_with_binary(store.dim(), store.code(), Iota{}, zero, global_shape, &store);
   }
@@ -139,16 +139,15 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
   class CheckImpl {
    public:
     template <legate::Type::Code CODE, std::int32_t DIM>
-    void operator()(const legate::PhysicalArray& array,
-                    const legate::PhysicalArray& array_copy) const
+    void operator()(const legate::PhysicalStore& store,
+                    const legate::PhysicalStore& store_copy) const
     {
       using T =
         std::conditional_t<CODE == legate::Type::Code::BINARY, std::byte, legate::type_of_t<CODE>>;
       const auto arr_acc =
-        array.data()
-          .span_read_accessor<T, DIM, /* VALIDATE_TYPE */ CODE != legate::Type::Code::BINARY>();
+        store.span_read_accessor<T, DIM, /* VALIDATE_TYPE */ CODE != legate::Type::Code::BINARY>();
       const auto arr_cp_acc =
-        array_copy.data()
+        store_copy
           .span_read_accessor<T, DIM, /* VALIDATE_TYPE */ CODE != legate::Type::Code::BINARY>();
 
       ASSERT_EQ(arr_acc.extents(), arr_cp_acc.extents());
@@ -161,13 +160,13 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    const auto array      = context.input(0);
-    const auto array_copy = context.input(1);
+    const auto store      = context.input(0);
+    const auto store_copy = context.input(1);
 
-    ASSERT_EQ(array.dim(), array_copy.dim());
-    ASSERT_EQ(array.data().type(), array_copy.data().type());
+    ASSERT_EQ(store.dim(), store_copy.dim());
+    ASSERT_EQ(store.type(), store_copy.type());
 
-    double_dispatch_with_binary(array.dim(), array.data().code(), CheckImpl{}, array, array_copy);
+    double_dispatch_with_binary(store.dim(), store.code(), CheckImpl{}, store, store_copy);
   }
 };
 
@@ -287,20 +286,20 @@ TEST_P(IOHDF5WriteUnit, Basic)
   const auto& type          = GetParam();
   constexpr auto SHAPE_SIZE = 5;
   const auto shape          = legate::Shape{SHAPE_SIZE, SHAPE_SIZE, SHAPE_SIZE};
-  const auto array          = runtime->create_array(shape, type);
+  const auto store          = runtime->create_store(shape, type);
 
   {
     auto task = runtime->create_task(lib, IotaTask::TASK_CONFIG.task_id());
 
     task.add_scalar_arg(legate::Scalar{shape.extents() - 1});
-    task.add_output(array);
+    task.add_output(store);
     runtime->submit(std::move(task));
   }
 
   const auto h5_file     = base_path / "foo.h5";
   constexpr auto dataset = "my_dataset";
 
-  legate::io::hdf5::to_file(array, h5_file, dataset);
+  legate::io::hdf5::to_file(store, h5_file, dataset);
 
   if (!supported_by_hdf5_reader(type)) {
     GTEST_SUCCEED()
@@ -312,17 +311,17 @@ TEST_P(IOHDF5WriteUnit, Basic)
   // Must block here so that the file is definitely on disk.
   runtime->issue_execution_fence(/* block */ true);
 
-  const auto array_copy = legate::io::hdf5::from_file(h5_file, dataset);
+  const auto store_copy = legate::io::hdf5::from_file(h5_file, dataset);
 
-  ASSERT_EQ(array_copy.dim(), array.dim());
-  ASSERT_EQ(array_copy.shape(), array.shape());
-  ASSERT_EQ(array_copy.type(), array.type());
+  ASSERT_EQ(store_copy.dim(), store.dim());
+  ASSERT_EQ(store_copy.shape(), store.shape());
+  ASSERT_EQ(store_copy.type(), store.type());
 
   {
     auto task = runtime->create_task(lib, CheckerTask::TASK_CONFIG.task_id());
 
-    task.add_input(array);
-    task.add_input(array_copy);
+    task.add_input(store);
+    task.add_input(store_copy);
 
     runtime->submit(std::move(task));
   }
@@ -336,13 +335,13 @@ TEST_F(IOHDF5WriteUnit, IgnoresStaleSubFiles)
   const auto lib      = runtime->find_library(Config::LIBRARY_NAME);
   const auto type     = legate::int32();
   const auto shape    = legate::Shape{5, 5};
-  const auto array    = runtime->create_array(shape, type);
+  const auto store    = runtime->create_store(shape, type);
 
-  // Initialize array with iota values
+  // Initialize store with iota values
   {
     auto task = runtime->create_task(lib, IotaTask::TASK_CONFIG.task_id());
     task.add_scalar_arg(legate::Scalar{shape.extents() - 1});
-    task.add_output(array);
+    task.add_output(store);
     runtime->submit(std::move(task));
   }
 
@@ -350,7 +349,7 @@ TEST_F(IOHDF5WriteUnit, IgnoresStaleSubFiles)
   const auto dataset = std::string{"my_dataset"};
 
   // First write - creates VDS directory and sub-files
-  legate::io::hdf5::to_file(array, h5_file, dataset);
+  legate::io::hdf5::to_file(store, h5_file, dataset);
   runtime->issue_execution_fence(/* block */ true);
 
   // Compute VDS directory path (same logic as to_vds_dir in interface.cc)
@@ -370,21 +369,21 @@ TEST_F(IOHDF5WriteUnit, IgnoresStaleSubFiles)
   ASSERT_TRUE(std::filesystem::exists(stale_file));
 
   // Second write - combine_vds should ignore the stale file
-  legate::io::hdf5::to_file(array, h5_file, dataset);
+  legate::io::hdf5::to_file(store, h5_file, dataset);
   runtime->issue_execution_fence(/* block */ true);
 
   // Verify the output file is valid by reading it back
-  const auto array_copy = legate::io::hdf5::from_file(h5_file, dataset);
+  const auto store_copy = legate::io::hdf5::from_file(h5_file, dataset);
 
-  ASSERT_EQ(array_copy.dim(), array.dim());
-  ASSERT_EQ(array_copy.shape(), array.shape());
-  ASSERT_EQ(array_copy.type(), array.type());
+  ASSERT_EQ(store_copy.dim(), store.dim());
+  ASSERT_EQ(store_copy.shape(), store.shape());
+  ASSERT_EQ(store_copy.type(), store.type());
 
   // Verify data integrity
   {
     auto task = runtime->create_task(lib, CheckerTask::TASK_CONFIG.task_id());
-    task.add_input(array);
-    task.add_input(array_copy);
+    task.add_input(store);
+    task.add_input(store_copy);
     runtime->submit(std::move(task));
   }
 }

@@ -131,7 +131,7 @@ def test_bad_array_dims(tmp_path: Path) -> None:
         FileHandle(filename, "w+") as f,
         pytest.raises(
             ValueError,
-            match=re.escape("number of array dimensions must be 1 (have 2)"),
+            match=re.escape("number of store dimensions must be 1 (have 2)"),
         ),
     ):
         f.write(data)

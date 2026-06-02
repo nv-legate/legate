@@ -22,8 +22,8 @@ struct Copy : public legate::LegateTask<Copy> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto input  = context.input(0).data();
-    auto output = context.output(0).data();
+    auto input  = context.input(0);
+    auto output = context.output(0);
     auto shape  = output.shape<1>();
     if (shape.empty()) {
       return;

@@ -55,9 +55,9 @@ Task::Task(const Legion::Task& task,
   TaskDeserializer dez{task, runtime, context};
   library_             = dez.unpack<legate::detail::Library*>();
   task_info_           = dez.unpack<legate::detail::TaskInfo*>();
-  inputs_              = dez.unpack_arrays();
-  outputs_             = dez.unpack_arrays();
-  reductions_          = dez.unpack_arrays();
+  inputs_              = dez.unpack_stores();
+  outputs_             = dez.unpack_stores();
+  reductions_          = dez.unpack_stores();
   scalars_             = dez.unpack_scalars();
   future_size_         = dez.unpack<std::size_t>();
   can_raise_exception_ = dez.unpack<bool>();

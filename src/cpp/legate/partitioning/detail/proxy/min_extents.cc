@@ -7,7 +7,7 @@
 #include <legate/partitioning/detail/proxy/min_extents.h>
 
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
@@ -28,21 +28,21 @@ void do_min_extents_final(const Variable* variable,
                        /* bypass_signature_check */ true);
 }
 
-void do_min_extents(const TaskArrayArg* variable,
+void do_min_extents(const TaskStoreArg* variable,
                     const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& min_extents,
                     AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
                         do_min_extents_final(
-                          task->find_or_declare_partition(arr), min_extents, task);
+                          task->find_or_declare_partition(st), min_extents, task);
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             variable->array);
+             variable->store);
 }
 
-void do_min_extents(Span<const TaskArrayArg> variables,
+void do_min_extents(Span<const TaskStoreArg> variables,
                     const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& min_extents,
                     AutoTask* task)
 {

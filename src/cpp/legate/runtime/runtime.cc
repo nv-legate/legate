@@ -172,12 +172,12 @@ void Runtime::issue_scatter_gather(LogicalStore& target,
     target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl(), redop_kind);
 }
 
-void Runtime::issue_fill(const LogicalArray& lhs, const LogicalStore& value)
+void Runtime::issue_fill(const LogicalStore& lhs, const LogicalStore& value)
 {
   impl_->issue_fill(lhs.impl(), value.impl());
 }
 
-void Runtime::issue_fill(const LogicalArray& lhs, const Scalar& value)
+void Runtime::issue_fill(const LogicalStore& lhs, const Scalar& value)
 {
   impl_->issue_fill(lhs.impl(), *value.impl());
 }
@@ -226,75 +226,6 @@ void Runtime::submit(ManualTask&& task)
   // initialized by discard operations as part of their deallocation even before the reader task
   // runs, leading to an uninitialized access error.
   task.clear_user_refs_();
-}
-
-LogicalArray Runtime::create_array(const Type& type, std::uint32_t dim, bool nullable)
-{
-  return LogicalArray{impl_->create_array(
-    make_internal_shared<detail::Shape>(dim), type.impl(), nullable, /*optimize_scalar=*/false)};
-}
-
-LogicalArray Runtime::create_array(const Shape& shape,
-                                   const Type& type,
-                                   bool nullable,
-                                   bool optimize_scalar)
-{
-  auto shape_impl = shape.impl();
-  // We shouldn't allow users to create unbound arrays out of the same shape that hasn't be bound
-  // yet, because they may get initialized by different producer tasks and there's no guarantee that
-  // the tasks will bind the same size data to them.
-  if (shape_impl->unbound()) {
-    throw detail::TracedException<std::invalid_argument>{
-      "Shape of an unbound array or store cannot be used to create another array "
-      "until the array or store is initialized by a task"};
-  }
-  return LogicalArray{
-    impl_->create_array(std::move(shape_impl), type.impl(), nullable, optimize_scalar)};
-}
-
-LogicalArray Runtime::create_array_like(const LogicalArray& to_mirror, std::optional<Type> type)
-{
-  auto ty = type ? type.value().impl() : to_mirror.type().impl();
-
-  return LogicalArray{impl_->create_array_like(to_mirror.impl(), std::move(ty))};
-}
-
-LogicalArray Runtime::create_nullable_array(const LogicalStore& store,
-                                            const LogicalStore& null_mask)
-{
-  return LogicalArray{impl_->create_nullable_array(store.impl(), null_mask.impl())};
-}
-
-StringLogicalArray Runtime::create_string_array(const LogicalArray& descriptor,
-                                                const LogicalArray& vardata)
-{
-  return LogicalArray{
-    impl_->create_list_array(detail::string_type(), descriptor.impl(), vardata.impl())}
-    .as_string_array();
-}
-
-ListLogicalArray Runtime::create_list_array(const LogicalArray& descriptor,
-                                            const LogicalArray& vardata,
-                                            std::optional<Type> ty /*=std::nullopt*/)
-{
-  auto type =
-    ty ? ty->impl() : static_pointer_cast<detail::Type>(detail::list_type(vardata.type().impl()));
-  return LogicalArray{impl_->create_list_array(std::move(type), descriptor.impl(), vardata.impl())}
-    .as_list_array();
-}
-
-StructLogicalArray Runtime::create_struct_array(Span<const LogicalArray> fields,
-                                                const std::optional<LogicalStore>& null_mask)
-{
-  const std::optional<InternalSharedPtr<detail::LogicalStore>> null_mask_impl =
-    null_mask ? std::make_optional(null_mask.value().impl()) : std::nullopt;
-  detail::SmallVector<InternalSharedPtr<detail::LogicalArray>> fields_impl;
-
-  fields_impl.reserve(fields.size());
-  for (auto&& field : fields) {
-    fields_impl.push_back(field.impl());
-  }
-  return StructLogicalArray{impl_->create_struct_array(std::move(fields_impl), null_mask_impl)};
 }
 
 LogicalStore Runtime::create_store(const Type& type, std::uint32_t dim)

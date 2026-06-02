@@ -19,10 +19,10 @@ namespace test_task_signature_register {
 
 namespace {
 
-[[nodiscard]] legate::LogicalArray make_array()
+[[nodiscard]] legate::LogicalStore make_store()
 {
   auto* runtime = legate::Runtime::get_runtime();
-  auto ret      = runtime->create_array(legate::Shape{3}, legate::int32());
+  auto ret      = runtime->create_store(legate::Shape{3}, legate::int32());
 
   runtime->issue_fill(ret, legate::Scalar{0});
   return ret;
@@ -98,9 +98,9 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, Basic)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   // Argument checking occurs during submission
   runtime->submit(std::move(*task));
@@ -111,8 +111,8 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, TooFewInputs)
   auto* runtime = legate::Runtime::get_runtime();
 
   // Note, no input
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -122,10 +122,10 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, TooManyInputs)
   auto* runtime = legate::Runtime::get_runtime();
 
   // Note, too many inputs
-  task->add_input(make_array());
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -134,9 +134,9 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, TooFewOutputs)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
+  task->add_input(make_store());
   // Note, no outputs
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -145,11 +145,11 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, TooManyOutputs)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
+  task->add_input(make_store());
   // Note, too many outputs
-  task->add_output(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_output(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -158,10 +158,10 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, TooFewScalars)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
+  task->add_input(make_store());
+  task->add_output(make_store());
   // Note, no scalars
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
 
@@ -169,10 +169,10 @@ TEST_F(TaskSignatureRegisterUnitBasicTask, TooManyScalars)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
+  task->add_input(make_store());
+  task->add_output(make_store());
   // Note, too many scalars
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
@@ -201,10 +201,10 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, Basic)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   task->add_scalar_arg(legate::Scalar{0});
   runtime->submit(std::move(*task));
@@ -215,8 +215,8 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooFewInputs)
   auto* runtime = legate::Runtime::get_runtime();
 
   // Note, no inputs
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -225,11 +225,11 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooManyInputs)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_input(make_array());
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_input(make_store());
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -238,7 +238,7 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooFewOutputs)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
+  task->add_input(make_store());
   // Note, no outputs
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
@@ -248,11 +248,11 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooManyOutputs)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_output(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_output(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -261,8 +261,8 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooFewRedops)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
+  task->add_input(make_store());
+  task->add_output(make_store());
   // Note, no redops
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
@@ -272,11 +272,11 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooManyRedops)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -285,9 +285,9 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooFewScalars)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   // Note, no scalars
   ASSERT_THROW(runtime->submit(std::move(*task)), std::out_of_range);
 }
@@ -296,9 +296,9 @@ TEST_F(TaskSignatureRegisterUnitRangeTask, TooManyScalars)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
-  task->add_reduction(make_array(), legate::ReductionOpKind::ADD);
+  task->add_input(make_store());
+  task->add_output(make_store());
+  task->add_reduction(make_store(), legate::ReductionOpKind::ADD);
   task->add_scalar_arg(legate::Scalar{0});
   task->add_scalar_arg(legate::Scalar{0});
   task->add_scalar_arg(legate::Scalar{0});
@@ -329,15 +329,15 @@ TEST_F(TaskSignatureRegisterUnitConstrainedTask, Basic)
 {
   auto* runtime = legate::Runtime::get_runtime();
 
-  task->add_input(make_array());
-  task->add_output(make_array());
+  task->add_input(make_store());
+  task->add_output(make_store());
   runtime->submit(std::move(*task));
 }
 
 TEST_F(TaskSignatureRegisterUnitConstrainedTask, BadConstraint)
 {
-  auto in_var  = task->add_input(make_array());
-  auto out_var = task->add_output(make_array());
+  auto in_var  = task->add_input(make_store());
+  auto out_var = task->add_output(make_store());
 
   ASSERT_THROW(task->add_constraint(legate::align(in_var, out_var)), std::runtime_error);
 }

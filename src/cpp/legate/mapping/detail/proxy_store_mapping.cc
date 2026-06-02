@@ -6,13 +6,11 @@
 
 #include <legate/mapping/detail/proxy_store_mapping.h>
 
-#include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/detail/operation.h>
 #include <legate/mapping/detail/store.h>
 #include <legate/operation/detail/task.h>
 #include <legate/utilities/abort.h>
-#include <legate/utilities/detail/store_iterator_cache.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
@@ -36,15 +34,11 @@ ProxyStoreMapping::ProxyStoreMapping(std::variant<ProxyArrayArgument,
 namespace {
 
 void populate_store_mappings(const InstanceMappingPolicy& policy,
-                             Span<const InternalSharedPtr<Array>> args,
+                             Span<const InternalSharedPtr<Store>> stores,
                              std::vector<mapping::StoreMapping>* store_mappings)
 {
-  auto cache = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
-
-  for (auto&& arr : args) {
-    auto&& stores = cache(*arr);
-
-    store_mappings->emplace_back(std::make_unique<StoreMapping>(policy, stores));
+  for (auto&& store : stores) {
+    store_mappings->emplace_back(std::make_unique<StoreMapping>(policy, store.get()));
   }
 }
 

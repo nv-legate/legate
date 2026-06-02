@@ -107,7 +107,7 @@ void TileReadWriteFn::operator()(legate::TaskContext context,
 
 /*static*/ void TileRead::cpu_variant(legate::TaskContext context)
 {
-  auto store = context.output(0).data();
+  auto store = context.output(0);
 
   legate::double_dispatch(
     store.dim(), store.code(), TileReadWriteFn{}, context, /*read*/ true, &store);
@@ -129,7 +129,7 @@ void TileReadWriteFn::operator()(legate::TaskContext context,
 
 /*static*/ void TileWrite::cpu_variant(legate::TaskContext context)
 {
-  auto store = context.input(0).data();
+  auto store = context.input(0);
 
   legate::double_dispatch(
     store.dim(), store.code(), TileReadWriteFn{}, context, /*read*/ false, &store);

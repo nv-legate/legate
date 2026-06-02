@@ -51,18 +51,15 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
 
     const legate::PhysicalStore store = [&] {
       switch (data_mode) {
-        case TaskDataMode::INPUT: return context.input(0).data(); break;
-        case TaskDataMode::OUTPUT: return context.output(0).data(); break;
-        case TaskDataMode::REDUCTION: return context.reduction(0).data(); break;
+        case TaskDataMode::INPUT: return context.input(0); break;
+        case TaskDataMode::OUTPUT: return context.output(0); break;
+        case TaskDataMode::REDUCTION: return context.reduction(0); break;
       }
       LEGATE_ABORT("Invalid data mode");
     }();
 
     if (store_type == StoreType::UNBOUND_STORE) {
       store.bind_empty_data();
-      if (data_mode == TaskDataMode::OUTPUT && context.output(0).nullable()) {
-        context.output(0).null_mask().bind_empty_data();
-      }
       return;
     }
 

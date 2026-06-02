@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/typedefs.h>
 
@@ -53,6 +54,12 @@ class LEGATE_EXPORT Store {
    * @return Store's dimension
    */
   [[nodiscard]] std::uint32_t dim() const;
+  /**
+   * @brief Returns the store's type
+   *
+   * @return Type
+   */
+  [[nodiscard]] Type type() const;
 
   /**
    * @brief Indicates whether the store is a reduction store

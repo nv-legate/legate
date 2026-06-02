@@ -29,9 +29,9 @@ class Tester : public legate::LegateTask<Tester> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    const auto output1 = context.output(0).data();
-    const auto output2 = context.output(1).data();
-    const auto output3 = context.output(2).data();
+    const auto output1 = context.output(0);
+    const auto output2 = context.output(1);
+    const auto output3 = context.output(2);
 
     if (!context.is_single_task()) {
       EXPECT_TRUE(output1.is_partitioned());
@@ -55,8 +55,8 @@ class CopyTask : public legate::LegateTask<CopyTask> {
     {
       if (context.num_inputs() > 0) {
         // Copy from input to output
-        const auto input  = context.input(0).data();
-        const auto output = context.output(0).data();
+        const auto input  = context.input(0);
+        const auto output = context.output(0);
         const auto shape  = input.shape<DIM>();
 
         if (shape.empty()) {
@@ -71,7 +71,7 @@ class CopyTask : public legate::LegateTask<CopyTask> {
         }
       } else {
         // Just write zeros to output (for initialization)
-        const auto output = context.output(0).data();
+        const auto output = context.output(0);
         const auto shape  = output.shape<DIM>();
 
         if (shape.empty()) {
@@ -88,8 +88,7 @@ class CopyTask : public legate::LegateTask<CopyTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto dim =
-      context.num_inputs() > 0 ? context.input(0).data().dim() : context.output(0).data().dim();
+    auto dim = context.num_inputs() > 0 ? context.input(0).dim() : context.output(0).dim();
     legate::dim_dispatch(dim, CopyTaskBody{}, context);
   }
 };
@@ -101,9 +100,9 @@ class SumTask : public legate::LegateTask<SumTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    const auto input1 = context.input(0).data();
-    const auto input2 = context.input(1).data();
-    const auto output = context.output(0).data();
+    const auto input1 = context.input(0);
+    const auto input2 = context.input(1);
+    const auto output = context.output(0);
     const auto shape  = input1.shape<1>();
 
     if (shape.empty()) {

@@ -20,7 +20,6 @@
 
 namespace legate::detail {
 
-class PhysicalArray;
 class PhysicalStore;
 
 class TaskContext {
@@ -29,18 +28,20 @@ class TaskContext {
     VariantCode variant_kind;
     bool can_raise_exception{};
     bool can_elide_device_ctx_sync{};
-    SmallVector<InternalSharedPtr<PhysicalArray>> inputs{};
-    SmallVector<InternalSharedPtr<PhysicalArray>> outputs{};
-    SmallVector<InternalSharedPtr<PhysicalArray>> reductions{};
+    SmallVector<InternalSharedPtr<PhysicalStore>> inputs{};
+    SmallVector<InternalSharedPtr<PhysicalStore>> outputs{};
+    SmallVector<InternalSharedPtr<PhysicalStore>> reductions{};
     SmallVector<InternalSharedPtr<Scalar>> scalars{};
     SmallVector<legate::comm::Communicator> comms{};
+
+    [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> get_outputs() const noexcept;
   };
 
   explicit TaskContext(CtorArgs&& args);
 
-  [[nodiscard]] Span<const InternalSharedPtr<PhysicalArray>> inputs() const noexcept;
-  [[nodiscard]] Span<const InternalSharedPtr<PhysicalArray>> outputs() const noexcept;
-  [[nodiscard]] Span<const InternalSharedPtr<PhysicalArray>> reductions() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> inputs() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> outputs() const noexcept;
+  [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> reductions() const noexcept;
   [[nodiscard]] Span<const InternalSharedPtr<Scalar>> scalars() const noexcept;
   [[nodiscard]] Span<const legate::comm::Communicator> communicators() const noexcept;
 
@@ -72,9 +73,9 @@ class TaskContext {
 
  private:
   VariantCode variant_kind_;
-  SmallVector<InternalSharedPtr<PhysicalArray>> inputs_{};
-  SmallVector<InternalSharedPtr<PhysicalArray>> outputs_{};
-  SmallVector<InternalSharedPtr<PhysicalArray>> reductions_{};
+  SmallVector<InternalSharedPtr<PhysicalStore>> inputs_{};
+  SmallVector<InternalSharedPtr<PhysicalStore>> outputs_{};
+  SmallVector<InternalSharedPtr<PhysicalStore>> reductions_{};
   SmallVector<InternalSharedPtr<PhysicalStore>> unbound_stores_{};
   SmallVector<InternalSharedPtr<PhysicalStore>> scalar_stores_{};
   SmallVector<InternalSharedPtr<Scalar>> scalars_{};

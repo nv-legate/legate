@@ -75,7 +75,7 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
+    auto output = context.output(0);
     auto shape  = output.shape<DIM>();
     auto seed   = context.scalar(0);
 
@@ -108,7 +108,7 @@ struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DA
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output     = context.output(0).data();
+    auto output     = context.output(0);
     auto ind_shape  = output.shape<IND_DIM>();
     auto data_shape = context.scalar(0).value<legate::Rect<DATA_DIM>>();
 

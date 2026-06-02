@@ -8,13 +8,13 @@
 
 #include <legate/comm/communicator.h>
 #include <legate/cuda/detail/cuda_util.h>
-#include <legate/data/detail/logical_array.h>
-#include <legate/data/detail/physical_array.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/task.h>
@@ -22,7 +22,6 @@
 #include <legate/task/detail/task_info.h>
 #include <legate/task/task_context.h>
 #include <legate/utilities/assert.h>
-#include <legate/utilities/detail/store_iterator_cache.h>
 #include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/scope_guard.h>
@@ -42,9 +41,9 @@ namespace {
 class InlineTaskContext final : public TaskContext {
  public:
   InlineTaskContext(VariantCode variant_code,
-                    SmallVector<InternalSharedPtr<PhysicalArray>> inputs,
-                    SmallVector<InternalSharedPtr<PhysicalArray>> outputs,
-                    SmallVector<InternalSharedPtr<PhysicalArray>> reductions,
+                    SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
+                    SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
+                    SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
                     SmallVector<InternalSharedPtr<Scalar>> scalars,
                     const TaskBase* task);
 
@@ -68,9 +67,9 @@ const TaskBase& InlineTaskContext::task_() const { return *op_task_; }
 // ==========================================================================================
 
 InlineTaskContext::InlineTaskContext(VariantCode variant_code,
-                                     SmallVector<InternalSharedPtr<PhysicalArray>> inputs,
-                                     SmallVector<InternalSharedPtr<PhysicalArray>> outputs,
-                                     SmallVector<InternalSharedPtr<PhysicalArray>> reductions,
+                                     SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
+                                     SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
+                                     SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
                                      SmallVector<InternalSharedPtr<Scalar>> scalars,
                                      const TaskBase* task)
   : TaskContext{{variant_code,
@@ -121,17 +120,17 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 // ==========================================================================================
 
 /**
- * @brief Extract the physical array from the task array argument
+ * @brief Extract the physical store from the task store argument
  *
  * @param elem The param to extract from
  * @param policy The instance mapping policy to use to get the right store location.
- * @param ignore_future_mutability If the array is future-backed, and has write privileges, we
+ * @param ignore_future_mutability If the store is future-backed, and has write privileges, we
  * need to ignore the normal immutability checks for futures.
  *
- * @return The physical array.
+ * @return The physical store.
  */
-[[nodiscard]] InternalSharedPtr<PhysicalArray> extract_physical_array(
-  const TaskArrayArg& elem,
+[[nodiscard]] InternalSharedPtr<PhysicalStore> extract_physical_store(
+  const TaskStoreArg& elem,
   const mapping::InstanceMappingPolicy& policy,
   bool ignore_future_mutability)
 {
@@ -149,42 +148,38 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
       "Dimension orderings other than C (or unspecified) not yet supported in inline execution."};
   }
 
-  return std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
-                               return arr->get_physical_array(policy.target,
-                                                              ignore_future_mutability);
+  return std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
+                               return st->get_physical_store(policy.target,
+                                                             ignore_future_mutability);
                              },
-                             [&](const InternalSharedPtr<PhysicalArray>& arr) {
-                               LEGATE_CHECK(arr->data()->target() == policy.target);
-                               return arr;
+                             [&](const InternalSharedPtr<PhysicalStore>& st) {
+                               LEGATE_CHECK(st->target() == policy.target);
+                               return st;
                              }},
-                    elem.array);
+                    elem.store);
 }
 
-[[nodiscard]] SmallVector<InternalSharedPtr<PhysicalArray>> fill_vector(
-  Span<const TaskArrayArg> src,
+[[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> fill_vector(
+  Span<const TaskStoreArg> src,
   Span<const mapping::InstanceMappingPolicy> mapping_policies,
   bool ignore_future_mutability,
-  const StoreIteratorCache<InternalSharedPtr<PhysicalStore>>& get_stores_cache,
   SmallVector<Legion::UntypedDeferredValue>* deferred_buffers)
 {
-  SmallVector<InternalSharedPtr<PhysicalArray>> dest;
+  SmallVector<InternalSharedPtr<PhysicalStore>> dest;
 
   dest.reserve(src.size());
   for (auto&& [elem, policy] : zip_equal(src, mapping_policies)) {
-    auto&& phys_array =
-      dest.emplace_back(extract_physical_array(elem, policy, ignore_future_mutability));
+    auto&& phys_store =
+      dest.emplace_back(extract_physical_store(elem, policy, ignore_future_mutability));
 
     if (!ignore_future_mutability) {
       continue;
     }
 
-    for (auto&& phys_store : get_stores_cache(*phys_array)) {
-      if (const auto* const fut_store =
-            dynamic_cast<const FuturePhysicalStore*>(phys_store.get())) {
-        // Was an output scalar or scalar reduction, save a reference to the deferred buffer so
-        // we can create a new future out of it down the line in finalize().
-        deferred_buffers->emplace_back(fut_store->get_buffer());
-      }
+    if (const auto* const fut_store = dynamic_cast<const FuturePhysicalStore*>(phys_store.get())) {
+      // Was an output scalar or scalar reduction, save a reference to the deferred buffer so
+      // we can create a new future out of it down the line in finalize().
+      deferred_buffers->emplace_back(fut_store->get_buffer());
     }
   }
   return dest;
@@ -264,14 +259,12 @@ struct TaskStoreMappingPolicies {
 [[nodiscard]] std::pair<InlineTaskContext, SmallVector<Legion::UntypedDeferredValue>>
 make_inline_task_context(const TaskBase& task, VariantCode variant_code)
 {
-  const auto get_stores_cache = StoreIteratorCache<InternalSharedPtr<PhysicalStore>>{};
   const auto mapping_policies = make_store_mapping_policies(task, variant_code);
   auto deferred_buffers       = SmallVector<Legion::UntypedDeferredValue>{};
 
   auto inputs = fill_vector(task.inputs(),
                             mapping_policies.input_policies,
                             /* ignore_future_mutability */ false,
-                            get_stores_cache,
                             &deferred_buffers);
   // None of the inputs should ever create an output buffer
   LEGATE_CHECK(deferred_buffers.empty());
@@ -311,12 +304,10 @@ make_inline_task_context(const TaskBase& task, VariantCode variant_code)
   auto outputs    = fill_vector(task.outputs(),
                                 mapping_policies.output_policies,
                                 /* ignore_future_mutability */ true,
-                                get_stores_cache,
                                 &deferred_buffers);
   auto reductions = fill_vector(task.reductions(),
                                 mapping_policies.reduction_policies,
                                 /* ignore_future_mutability */ true,
-                                get_stores_cache,
                                 &deferred_buffers);
 
   return {InlineTaskContext{variant_code,

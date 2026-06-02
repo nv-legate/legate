@@ -273,10 +273,10 @@ class Verify2DTask : public legate::LegateTask<Verify2DTask> {
 
   static void cpu_variant(legate::TaskContext ctx)
   {
-    const auto& array       = ctx.input(0);
+    const auto& store       = ctx.input(0);
     const auto global_y_dim = ctx.scalar(0).value<std::uint32_t>();  // Global Y dimension
-    const auto shape        = array.shape<2>();
-    const auto acc          = array.data().read_accessor<float, 2>();
+    const auto shape        = store.shape<2>();
+    const auto acc          = store.read_accessor<float, 2>();
 
     for (auto it = legate::PointInRectIterator<2>{shape}; it.valid(); ++it) {
       const auto point = *it;
@@ -300,11 +300,11 @@ class Verify3DTask : public legate::LegateTask<Verify3DTask> {
 
   static void cpu_variant(legate::TaskContext ctx)
   {
-    const auto array        = ctx.input(0);
+    const auto store        = ctx.input(0);
     const auto global_y_dim = ctx.scalar(0).value<std::uint32_t>();  // Global Y dimension
     const auto global_z_dim = ctx.scalar(1).value<std::uint32_t>();  // Global Z dimension
-    const auto shape        = array.shape<3>();
-    const auto acc          = array.data().read_accessor<float, 3>();
+    const auto shape        = store.shape<3>();
+    const auto acc          = store.read_accessor<float, 3>();
 
     for (auto it = legate::PointInRectIterator<3>{shape}; it.valid(); ++it) {
       const auto point = *it;
@@ -328,9 +328,9 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
   {
     constexpr auto DIM = 1;
 
-    const auto array = ctx.input(0);
-    const auto shape = array.shape<DIM>();
-    const auto acc   = array.data().read_accessor<OpaqueType, DIM, /* VALIDATE_TYPE */ false>();
+    const auto store = ctx.input(0);
+    const auto shape = store.shape<DIM>();
+    const auto acc   = store.read_accessor<OpaqueType, DIM, /* VALIDATE_TYPE */ false>();
 
     for (auto it = legate::PointInRectIterator<DIM>{shape}; it.valid(); ++it) {
       ASSERT_EQ(acc[*it], MAGIC_BYTE);
@@ -555,24 +555,24 @@ INSTANTIATE_TEST_SUITE_P(IOHDF5ReadUnit,
                            return param_info.param.legate_type.to_string();
                          });
 
-void submit_verify_2d_task(const legate::LogicalArray& read_array, std::uint32_t y)
+void submit_verify_2d_task(const legate::LogicalStore& read_store, std::uint32_t y)
 {
   auto* runtime    = legate::Runtime::get_runtime();
   auto lib         = runtime->find_library(Config::LIBRARY_NAME);
   auto verify_task = runtime->create_task(lib, Verify2DTask::TASK_CONFIG.task_id());
 
-  verify_task.add_input(read_array);
+  verify_task.add_input(read_store);
   verify_task.add_scalar_arg(legate::Scalar{y});
   runtime->submit(std::move(verify_task));
 }
 
-void submit_verify_3d_task(const legate::LogicalArray& read_array, std::uint32_t y, std::uint32_t z)
+void submit_verify_3d_task(const legate::LogicalStore& read_store, std::uint32_t y, std::uint32_t z)
 {
   auto* runtime    = legate::Runtime::get_runtime();
   auto lib         = runtime->find_library(Config::LIBRARY_NAME);
   auto verify_task = runtime->create_task(lib, Verify3DTask::TASK_CONFIG.task_id());
 
-  verify_task.add_input(read_array);
+  verify_task.add_input(read_store);
   verify_task.add_scalar_arg(legate::Scalar{y});
   verify_task.add_scalar_arg(legate::Scalar{z});
   runtime->submit(std::move(verify_task));
@@ -628,17 +628,17 @@ TEST_F(IOHDF5ReadUnit, Binary)
     ASSERT_GE(H5Gclose(sub_group), 0);
   }
 
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
-  ASSERT_EQ(read_array.shape(), legate::Shape{SIZE});
-  ASSERT_EQ(read_array.type(), legate::binary_type(1));
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape(), legate::Shape{SIZE});
+  ASSERT_EQ(read_store.type(), legate::binary_type(1));
+  ASSERT_EQ(read_store.dim(), DIM);
 
   auto* runtime     = legate::Runtime::get_runtime();
   auto lib          = runtime->find_library(Config::LIBRARY_NAME);
   auto checker_task = runtime->create_task(lib, CheckerTask::TASK_CONFIG.task_id());
 
-  checker_task.add_input(read_array);
+  checker_task.add_input(read_store);
   runtime->submit(std::move(checker_task));
 }
 
@@ -657,15 +657,15 @@ TEST_F(IOHDF5ReadUnit, ThreeDimensional)
   create_hdf5_file_with_sequential_data(file_path, DATASET, dims);
 
   // Read the 3D array back using Legate HDF5 interface
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
   // Verify dimensions and shape
-  ASSERT_EQ(read_array.shape().volume(), X * Y * Z);
-  ASSERT_EQ(read_array.type(), legate::float32());
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape().volume(), X * Y * Z);
+  ASSERT_EQ(read_store.type(), legate::float32());
+  ASSERT_EQ(read_store.dim(), DIM);
 
   // Verify the data pattern
-  submit_verify_3d_task(read_array, Y, Z);
+  submit_verify_3d_task(read_store, Y, Z);
 }
 
 TEST_F(IOHDF5ReadUnit, TwoDimensional)
@@ -682,15 +682,15 @@ TEST_F(IOHDF5ReadUnit, TwoDimensional)
   create_hdf5_file_with_sequential_data(file_path, DATASET, dims);
 
   // Read the 2D array back using Legate HDF5 interface
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
   // Verify dimensions and shape
-  ASSERT_EQ(read_array.shape().volume(), X * Y);
-  ASSERT_EQ(read_array.type(), legate::float32());
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape().volume(), X * Y);
+  ASSERT_EQ(read_store.type(), legate::float32());
+  ASSERT_EQ(read_store.dim(), DIM);
 
   // Verify the data pattern
-  submit_verify_2d_task(read_array, Y);
+  submit_verify_2d_task(read_store, Y);
 }
 
 TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
@@ -735,13 +735,13 @@ TEST_P(IOHDF5ReadTypeDeduction, DeduceType)
   }
 
   // Read the array back and verify type deduction
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
-  ASSERT_EQ(read_array.shape(), legate::Shape{SIZE});
-  ASSERT_EQ(read_array.type(), param.legate_type)
-    << "Type mismatch for " << read_array.type().to_string() << ": expected "
-    << param.legate_type.to_string() << ", got " << read_array.type().to_string();
-  ASSERT_EQ(read_array.dim(), 1);
+  ASSERT_EQ(read_store.shape(), legate::Shape{SIZE});
+  ASSERT_EQ(read_store.type(), param.legate_type)
+    << "Type mismatch for " << read_store.type().to_string() << ": expected "
+    << param.legate_type.to_string() << ", got " << read_store.type().to_string();
+  ASSERT_EQ(read_store.dim(), 1);
 }
 
 TEST_F(IOHDF5ReadUnit, ThreeDimensionalChunked)
@@ -760,15 +760,15 @@ TEST_F(IOHDF5ReadUnit, ThreeDimensionalChunked)
   create_hdf5_file_with_sequential_data(file_path, DATASET, dims, &chunk_dims);
 
   // Read the 3D array back using Legate HDF5 interface
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
   // Verify dimensions and shape
-  ASSERT_EQ(read_array.shape().volume(), X * Y * Z);
-  ASSERT_EQ(read_array.type(), legate::float32());
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape().volume(), X * Y * Z);
+  ASSERT_EQ(read_store.type(), legate::float32());
+  ASSERT_EQ(read_store.dim(), DIM);
 
   // Verify the data pattern
-  submit_verify_3d_task(read_array, Y, Z);
+  submit_verify_3d_task(read_store, Y, Z);
 }
 
 TEST_F(IOHDF5ReadUnit, TwoDimensionalChunked)
@@ -786,15 +786,15 @@ TEST_F(IOHDF5ReadUnit, TwoDimensionalChunked)
   create_hdf5_file_with_sequential_data(file_path, DATASET, dims, &chunk_dims);
 
   // Read the 2D array back using Legate HDF5 interface
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
   // Verify dimensions and shape
-  ASSERT_EQ(read_array.shape().volume(), X * Y);
-  ASSERT_EQ(read_array.type(), legate::float32());
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape().volume(), X * Y);
+  ASSERT_EQ(read_store.type(), legate::float32());
+  ASSERT_EQ(read_store.dim(), DIM);
 
   // Verify the data pattern
-  submit_verify_2d_task(read_array, Y);
+  submit_verify_2d_task(read_store, Y);
 }
 
 TEST_F(IOHDF5ReadUnit, TwoDimensionalVDS)
@@ -813,15 +813,15 @@ TEST_F(IOHDF5ReadUnit, TwoDimensionalVDS)
   create_vds_with_sequential_data(vds_file_path, source_dir, DATASET, dims, NUM_FILES);
 
   // Read the 2D array back using Legate HDF5 interface
-  const auto read_array = legate::io::hdf5::from_file(vds_file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(vds_file_path, DATASET);
 
   // Verify dimensions and shape
-  ASSERT_EQ(read_array.shape().volume(), X * Y);
-  ASSERT_EQ(read_array.type(), legate::float32());
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape().volume(), X * Y);
+  ASSERT_EQ(read_store.type(), legate::float32());
+  ASSERT_EQ(read_store.dim(), DIM);
 
   // Verify the data pattern
-  submit_verify_2d_task(read_array, Y);
+  submit_verify_2d_task(read_store, Y);
 }
 
 TEST_F(IOHDF5ReadUnit, ThreeDimensionalVDS)
@@ -841,15 +841,15 @@ TEST_F(IOHDF5ReadUnit, ThreeDimensionalVDS)
   create_vds_with_sequential_data(vds_file_path, source_dir, DATASET, dims, NUM_FILES);
 
   // Read the 2D array back using Legate HDF5 interface
-  const auto read_array = legate::io::hdf5::from_file(vds_file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(vds_file_path, DATASET);
 
   // Verify dimensions and shape
-  ASSERT_EQ(read_array.shape().volume(), X * Y * Z);
-  ASSERT_EQ(read_array.type(), legate::float32());
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape().volume(), X * Y * Z);
+  ASSERT_EQ(read_store.type(), legate::float32());
+  ASSERT_EQ(read_store.dim(), DIM);
 
   // Verify the data pattern
-  submit_verify_3d_task(read_array, Y, Z);
+  submit_verify_3d_task(read_store, Y, Z);
 }
 
 TEST_F(IOHDF5ReadUnit, TwoDimensionalVDSChunked)
@@ -869,15 +869,15 @@ TEST_F(IOHDF5ReadUnit, TwoDimensionalVDSChunked)
   create_vds_with_sequential_data(vds_file_path, source_dir, DATASET, dims, NUM_FILES, &chunk_dims);
 
   // Read the 2D array back using Legate HDF5 interface
-  const auto read_array = legate::io::hdf5::from_file(vds_file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(vds_file_path, DATASET);
 
   // Verify dimensions and shape
-  ASSERT_EQ(read_array.shape().volume(), X * Y);
-  ASSERT_EQ(read_array.type(), legate::float32());
-  ASSERT_EQ(read_array.dim(), DIM);
+  ASSERT_EQ(read_store.shape().volume(), X * Y);
+  ASSERT_EQ(read_store.type(), legate::float32());
+  ASSERT_EQ(read_store.dim(), DIM);
 
   // Verify the data pattern
-  submit_verify_2d_task(read_array, Y);
+  submit_verify_2d_task(read_store, Y);
 }
 
 TEST_F(IOHDF5ReadUnit, ScalarDataspace)
@@ -904,10 +904,10 @@ TEST_F(IOHDF5ReadUnit, ScalarDataspace)
   ASSERT_GE(H5Dclose(dset), 0);
   ASSERT_GE(H5Fclose(file), 0);
 
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
-  ASSERT_EQ(read_array.shape(), legate::Shape{1});
-  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_store.shape(), legate::Shape{1});
+  ASSERT_EQ(read_store.type(), legate::float32());
 }
 
 TEST_F(IOHDF5ReadUnit, NullDataspace)
@@ -930,10 +930,10 @@ TEST_F(IOHDF5ReadUnit, NullDataspace)
   ASSERT_GE(H5Dclose(dset), 0);
   ASSERT_GE(H5Fclose(file), 0);
 
-  const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
+  const auto read_store = legate::io::hdf5::from_file(file_path, DATASET);
 
-  ASSERT_EQ(read_array.shape(), legate::Shape{1});
-  ASSERT_EQ(read_array.type(), legate::float32());
+  ASSERT_EQ(read_store.shape(), legate::Shape{1});
+  ASSERT_EQ(read_store.type(), legate::float32());
 }
 
 }  // namespace test_io_hdf5_read

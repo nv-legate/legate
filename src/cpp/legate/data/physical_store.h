@@ -49,8 +49,6 @@ namespace legate {
  * @{
  */
 
-class PhysicalArray;
-
 #define LEGATE_TRUE_WHEN_DEBUG LEGATE_DEFINED(LEGATE_USE_DEBUG)
 
 /**
@@ -782,14 +780,6 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)>
   to_dlpack(std::optional<bool> copy           = std::nullopt,
             std::optional<CUstream_st*> stream = std::nullopt) const;
-
-  /**
-   * @brief Constructs a store out of an array
-   *
-   * @throw std::invalid_argument If the array is nullable or has sub-arrays
-   */
-  // NOLINTNEXTLINE(google-explicit-constructor) very common pattern in cuPyNumeric
-  PhysicalStore(const PhysicalArray& array);
 
   PhysicalStore() = LEGATE_DEFAULT_WHEN_CYTHON;
 

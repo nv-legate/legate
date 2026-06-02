@@ -37,8 +37,8 @@ class DummyImageTask : public legate::LegateTask<DummyImageTask<DIM>> {
   {
     // Simple no-op task - we just want to trigger the image constraint processing
     // Note: both are inputs to avoid non-disjoint partition write issues
-    auto domain_input = context.input(0).data();
-    auto range_input  = context.input(1).data();
+    auto domain_input = context.input(0);
+    auto range_input  = context.input(1);
 
     // Just read the data (no-op task for triggering image constraint)
     auto domain_shape = domain_input.shape<1>();

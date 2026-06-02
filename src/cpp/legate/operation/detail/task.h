@@ -11,7 +11,7 @@
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/mapping.h>
 #include <legate/operation/detail/operation.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/streaming/generation.h>
@@ -32,7 +32,6 @@ class Scalar;
 
 namespace legate::detail {
 
-class LogicalArray;
 class PhysicalStore;
 class CommunicatorFactory;
 class ConstraintSolver;
@@ -70,73 +69,73 @@ class TaskBase : public Operation {
   /**
    * @return The input arguments for the task.
    */
-  [[nodiscard]] Span<const TaskArrayArg> inputs() const;
+  [[nodiscard]] Span<const TaskStoreArg> inputs() const;
 
   /**
    * @return The output arguments for the task.
    */
-  [[nodiscard]] Span<const TaskArrayArg> outputs() const;
+  [[nodiscard]] Span<const TaskStoreArg> outputs() const;
 
   /**
    * @return The reduction arguments for the task.
    */
-  [[nodiscard]] Span<const TaskArrayArg> reductions() const;
+  [[nodiscard]] Span<const TaskStoreArg> reductions() const;
 
   [[nodiscard]] const Library& library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
   /**
-   * @brief Add an input array to the task, auto-assigning a partition symbol.
+   * @brief Add an input store to the task, auto-assigning a partition symbol.
    *
-   * @param array The array to add as input.
-   * @return The auto-assigned partition symbol for the array.
+   * @param store The store to add as input.
+   * @return The auto-assigned partition symbol for the store.
    */
-  [[nodiscard]] virtual const Variable* add_input(InternalSharedPtr<LogicalArray> array) = 0;
+  [[nodiscard]] virtual const Variable* add_input(InternalSharedPtr<LogicalStore> store) = 0;
 
   /**
-   * @brief Add an output array to the task, auto-assigning a partition symbol.
+   * @brief Add an output store to the task, auto-assigning a partition symbol.
    *
-   * @param array The array to add as output.
-   * @return The auto-assigned partition symbol for the array.
+   * @param store The store to add as output.
+   * @return The auto-assigned partition symbol for the store.
    */
-  [[nodiscard]] virtual const Variable* add_output(InternalSharedPtr<LogicalArray> array) = 0;
+  [[nodiscard]] virtual const Variable* add_output(InternalSharedPtr<LogicalStore> store) = 0;
 
   /**
-   * @brief Add a reduction array to the task, auto-assigning a partition symbol.
+   * @brief Add a reduction store to the task, auto-assigning a partition symbol.
    *
-   * @param array The array to add for reductions.
+   * @param store The store to add for reductions.
    * @param redop_kind The reduction operator kind.
-   * @return The auto-assigned partition symbol for the array.
+   * @return The auto-assigned partition symbol for the store.
    */
-  [[nodiscard]] virtual const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+  [[nodiscard]] virtual const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
                                                       std::int32_t redop_kind) = 0;
 
   /**
-   * @brief Add an input array with a caller-provided partition symbol.
+   * @brief Add an input store with a caller-provided partition symbol.
    *
-   * @param array The array to add as input.
-   * @param partition_symbol The partition symbol to bind to the array.
+   * @param store The store to add as input.
+   * @param partition_symbol The partition symbol to bind to the store.
    */
-  virtual void add_input(InternalSharedPtr<LogicalArray> array,
+  virtual void add_input(InternalSharedPtr<LogicalStore> store,
                          const Variable* partition_symbol) = 0;
 
   /**
-   * @brief Add an output array with a caller-provided partition symbol.
+   * @brief Add an output store with a caller-provided partition symbol.
    *
-   * @param array The array to add as output.
-   * @param partition_symbol The partition symbol to bind to the array.
+   * @param store The store to add as output.
+   * @param partition_symbol The partition symbol to bind to the store.
    */
-  virtual void add_output(InternalSharedPtr<LogicalArray> array,
+  virtual void add_output(InternalSharedPtr<LogicalStore> store,
                           const Variable* partition_symbol) = 0;
 
   /**
-   * @brief Add a reduction array with a caller-provided partition symbol.
+   * @brief Add a reduction store with a caller-provided partition symbol.
    *
-   * @param array The array to add for reductions.
+   * @param store The store to add for reductions.
    * @param redop_kind The reduction operator kind.
-   * @param partition_symbol The partition symbol to bind to the array.
+   * @param partition_symbol The partition symbol to bind to the store.
    */
-  virtual void add_reduction(InternalSharedPtr<LogicalArray> array,
+  virtual void add_reduction(InternalSharedPtr<LogicalStore> store,
                              std::int32_t redop_kind,
                              const Variable* partition_symbol) = 0;
 
@@ -157,15 +156,6 @@ class TaskBase : public Operation {
    */
   virtual void add_communicator(std::string_view name, bool bypass_signature_check);
 
-  /**
-   * @brief Finds an existing partition symbol for the array, or declares a new one.
-   *
-   * @param array The logical array to find or declare a partition for.
-   * @return Pointer to the partition symbol.
-   */
-  [[nodiscard]] virtual const Variable* find_or_declare_partition(
-    const InternalSharedPtr<LogicalArray>& array);
-
  protected:
   [[nodiscard]] const VariantInfo& variant_info_() const;
 
@@ -177,9 +167,9 @@ class TaskBase : public Operation {
   bool can_throw_exception_{};
   bool can_elide_device_ctx_sync_{};
   SmallVector<InternalSharedPtr<Scalar>> scalars_{};
-  SmallVector<TaskArrayArg> inputs_{};
-  SmallVector<TaskArrayArg> outputs_{};
-  SmallVector<TaskArrayArg> reductions_{};
+  SmallVector<TaskStoreArg> inputs_{};
+  SmallVector<TaskStoreArg> outputs_{};
+  SmallVector<TaskStoreArg> reductions_{};
   SmallVector<GlobalRedopID> reduction_ops_{};
 };
 
@@ -251,19 +241,16 @@ class AutoTask final : public LogicalTask {
            std::int32_t priority,
            mapping::detail::Machine machine);
 
-  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array) override;
-  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array) override;
-  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalStore> store) override;
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalStore> store) override;
+  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
                                               std::int32_t redop_kind) override;
 
-  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
-  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
-  void add_reduction(InternalSharedPtr<LogicalArray> array,
+  void add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
+  void add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
+  void add_reduction(InternalSharedPtr<LogicalStore> store,
                      std::int32_t redop_kind,
                      const Variable* partition_symbol) override;
-
-  [[nodiscard]] const Variable* find_or_declare_partition(
-    const InternalSharedPtr<LogicalArray>& array) override;
 
   void add_constraint(InternalSharedPtr<Constraint> constraint,
                       bool bypass_signature_check) override;
@@ -284,7 +271,6 @@ class AutoTask final : public LogicalTask {
   void fixup_ranges_(Strategy& strategy);
 
   SmallVector<InternalSharedPtr<Constraint>> constraints_{};
-  SmallVector<LogicalArray*> arrays_to_fixup_{};
 };
 
 class ManualTask final : public LogicalTask {
@@ -297,25 +283,22 @@ class ManualTask final : public LogicalTask {
              std::int32_t priority,
              mapping::detail::Machine machine);
 
-  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array) override;
-  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array) override;
-  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalStore> store) override;
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalStore> store) override;
+  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
                                               std::int32_t redop_kind) override;
-  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
-  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
-  void add_reduction(InternalSharedPtr<LogicalArray> array,
+  void add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
+  void add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
+  void add_reduction(InternalSharedPtr<LogicalStore> store,
                      std::int32_t redop_kind,
                      const Variable* partition_symbol) override;
 
-  void add_input(const InternalSharedPtr<LogicalStore>& store);
   void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                  std::optional<SymbolicPoint> projection,
                  bool is_key_partition);
-  void add_output(const InternalSharedPtr<LogicalStore>& store);
   void add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                   std::optional<SymbolicPoint> projection,
                   bool is_key_partition);
-  void add_reduction(const InternalSharedPtr<LogicalStore>& store, std::int32_t redop_kind);
   void add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                      std::int32_t redop_kind,
                      std::optional<SymbolicPoint> projection,
@@ -357,15 +340,15 @@ class ManualTask final : public LogicalTask {
   /**
    * @brief Add a store as an argument to the `ManualTask`
    *
-   * @param priv The privilege of the store to add. See `TaskArrayArg` for further discussion
+   * @param priv The privilege of the store to add. See `TaskStoreArg` for further discussion
    * on this value.
-   * @param store_args The array of arguments to append to.
+   * @param store_args The store of arguments to append to.
    * @param store The store to add as an argument.
    * @param partition The partitioning descriptor for the store.
    * @param projection An optional projection to use on the partitioned store.
    */
   void add_store_(Legion::PrivilegeMode priv,
-                  SmallVector<TaskArrayArg>& store_args,
+                  SmallVector<TaskStoreArg>& store_args,
                   const InternalSharedPtr<LogicalStore>& store,
                   InternalSharedPtr<Partition> partition,
                   std::optional<SymbolicPoint> projection = {},
@@ -375,11 +358,11 @@ class ManualTask final : public LogicalTask {
 };
 
 /**
- * @brief A task that operates directly on physical data arrays with explicit memory layouts.
+ * @brief A task that operates directly on physical stores with explicit memory layouts.
  *
  * PhysicalTask represents the leaf level of task execution in Legate, where tasks work
  * directly with physical memory representations of data. Unlike AutoTask and ManualTask
- * which work with logical arrays, PhysicalTask requires explicit physical array inputs
+ * which work with logical stores, PhysicalTask requires explicit physical store inputs
  * and outputs with known memory layouts and partitioning.
  *
  * Physical tasks are typically created by top-level tasks (AutoTask/ManualTask) during their
@@ -404,45 +387,45 @@ class PhysicalTask final : public TaskBase {
                mapping::detail::Machine machine);
 
   /**
-   * @brief Adds a read-only input array to the task.
+   * @brief Adds a read-only input store to the task.
    *
-   * The input array will be available for reading during task execution.
-   * The array's physical layout and partitioning must already be determined.
+   * The input store will be available for reading during task execution.
+   * The store's physical layout and partitioning must already be determined.
    *
-   * @param array Physical array to add as input with read-only access
+   * @param store Physical store to add as input with read-only access
    */
-  void add_input(InternalSharedPtr<PhysicalArray> array);
+  void add_input(InternalSharedPtr<PhysicalStore> store);
 
   /**
-   * @brief Adds a write-only output array to the task.
+   * @brief Adds a write-only output store to the task.
    *
-   * The output array will be available for writing during task execution.
-   * The array's physical layout and partitioning must already be determined.
+   * The output store will be available for writing during task execution.
+   * The store's physical layout and partitioning must already be determined.
    *
-   * @param array Physical array to add as output with write-only access
+   * @param store Physical store to add as output with write-only access
    */
-  void add_output(InternalSharedPtr<PhysicalArray> array);
+  void add_output(InternalSharedPtr<PhysicalStore> store);
 
   /**
-   * @brief Adds a reduction array to the task with a specific reduction operator.
+   * @brief Adds a reduction store to the task with a specific reduction operator.
    *
-   * The reduction array will be available for reduction operations during task execution.
-   * Multiple tasks can perform reductions on the same array, with the runtime handling
+   * The reduction store will be available for reduction operations during task execution.
+   * Multiple tasks can perform reductions on the same store, with the runtime handling
    * the combination of partial results using the specified reduction operator.
    *
-   * @param array Physical array to add as reduction target
+   * @param store Physical store to add as reduction target
    * @param redop_kind Reduction operator kind (e.g., sum, max, min, product)
    */
-  void add_reduction(InternalSharedPtr<PhysicalArray> array, std::int32_t redop_kind);
+  void add_reduction(InternalSharedPtr<PhysicalStore> store, std::int32_t redop_kind);
 
-  // Polymorphic array operations (override from TaskBase); convert LogicalArray to PhysicalArray
-  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array) override;
-  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array) override;
-  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+  // Polymorphic store operations (override from TaskBase); convert LogicalStore to PhysicalStore
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalStore> store) override;
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalStore> store) override;
+  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
                                               std::int32_t redop_kind) override;
-  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
-  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol) override;
-  void add_reduction(InternalSharedPtr<LogicalArray> array,
+  void add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
+  void add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
+  void add_reduction(InternalSharedPtr<LogicalStore> store,
                      std::int32_t redop_kind,
                      const Variable* partition_symbol) override;
 
@@ -453,7 +436,7 @@ class PhysicalTask final : public TaskBase {
    * @brief Launches the physical task for execution.
    *
    * Submits the task to the Legion runtime for execution on the target machine.
-   * All input, output, and reduction arrays must be added before launching.
+   * All input, output, and reduction stores must be added before launching.
    * This is a non-blocking operation that returns immediately.
    *
    * @throws std::runtime_error if the task cannot be launched
@@ -470,7 +453,7 @@ class PhysicalTask final : public TaskBase {
   /**
    * @brief Indicates whether this task needs runtime partitioning.
    *
-   * PhysicalTask operations work with pre-partitioned physical arrays, so they
+   * PhysicalTask operations work with pre-partitioned physical stores, so they
    * do not require additional partitioning by the runtime.
    *
    * @return Always returns `false` for PhysicalTask instances
@@ -520,8 +503,6 @@ class PhysicalTask final : public TaskBase {
   physical_scalar_reductions() const;
 
  private:
-  void fixup_ranges_(Strategy& strategy);
-
   // Storage for scalar outputs and reductions (PhysicalTask-specific)
   SmallVector<InternalSharedPtr<PhysicalStore>> scalar_outputs_{};
   SmallVector<std::pair<InternalSharedPtr<PhysicalStore>, GlobalRedopID>> scalar_reductions_{};

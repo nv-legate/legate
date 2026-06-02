@@ -8,7 +8,6 @@
 
 #include <legate_defines.h>
 
-#include <legate/io/hdf5/detail/hidden.h>
 #include <legate/io/hdf5/detail/interface.h>
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -32,7 +31,7 @@ std::string_view InvalidDataSetError::dataset_name() const noexcept { return dat
 
 // ==========================================================================================
 
-LogicalArray from_file(const std::filesystem::path& file_path, std::string_view dataset_name)
+LogicalStore from_file(const std::filesystem::path& file_path, std::string_view dataset_name)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_HDF5)) {
     return detail::from_file(file_path, dataset_name);
@@ -43,30 +42,17 @@ LogicalArray from_file(const std::filesystem::path& file_path, std::string_view 
   }
 }
 
-void to_file(const LogicalArray& array,
+void to_file(const LogicalStore& store,
              std::filesystem::path file_path,
              std::string_view dataset_name)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_HDF5)) {
-    detail::to_file(array, std::move(file_path), dataset_name);
+    detail::to_file(store, std::move(file_path), dataset_name);
   } else {
     throw legate::detail::TracedException<std::runtime_error>{
       "Legate was not configured with HDF5 support. Please reconfigure Legate with HDF5 support to "
       "use this API."};
   }
-}
-
-// Defined in io/hdf5/detail/hidden.h
-LogicalStore from_file_(const std::filesystem::path& file_path, std::string_view dataset_name)
-{
-  return from_file(file_path, dataset_name).data();
-}
-
-void to_file_(const LogicalStore& store,
-              std::filesystem::path file_path,
-              std::string_view dataset_name)
-{
-  to_file(LogicalArray{store}, std::move(file_path), dataset_name);
 }
 
 }  // namespace legate::io::hdf5

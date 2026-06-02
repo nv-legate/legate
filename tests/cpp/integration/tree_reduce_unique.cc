@@ -25,7 +25,7 @@ struct FillTask : public legate::LegateTask<FillTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
+    auto output = context.output(0);
     auto span   = output.span_write_accessor<std::int64_t, 1>();
 
     for (legate::coord_t i = 0; i < span.extent(0); ++i) {
@@ -41,8 +41,8 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto input  = context.input(0).data();
-    auto output = context.output(0).data();
+    auto input  = context.input(0);
+    auto output = context.output(0);
     auto span   = input.span_read_accessor<std::int64_t, 1>();
     std::unordered_set<std::int64_t> dedup_set;
 
@@ -66,11 +66,11 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
+    auto output = context.output(0);
     std::vector<std::pair<legate::AccessorRO<std::int64_t, 1>, legate::Rect<1>>> inputs;
     for (auto& input_arr : context.inputs()) {
       auto shape = input_arr.shape<1>();
-      auto acc   = input_arr.data().read_accessor<std::int64_t, 1>(shape);
+      auto acc   = input_arr.read_accessor<std::int64_t, 1>(shape);
       inputs.emplace_back(acc, shape);
     }
     std::set<std::int64_t> dedup_set;
@@ -98,7 +98,7 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto input  = context.input(0).data();
+    auto input  = context.input(0);
     auto rect   = input.shape<1>();
     auto volume = rect.volume();
     auto in     = input.read_accessor<std::int64_t, 1>(rect);

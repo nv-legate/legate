@@ -33,7 +33,7 @@ def test_read_write_tiles_error(
     tmp_path: Path, shape: tuple[int, ...], tile_shape: tuple[int, ...]
 ) -> None:
     match_re = re.escape(
-        f"The array shape ({list(shape)}) must be divisible by the "
+        f"The store shape ({list(shape)}) must be divisible by the "
         f"tile shape ({list(tile_shape)})"
     )
     data = get_legate_runtime().create_store(ty.int32, shape=shape)

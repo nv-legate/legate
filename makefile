@@ -187,9 +187,9 @@ docserve:
 check:
 	@$(SHELL) $(LEGATE_DIR)/scripts/maint/run_check.sh \
                 'single-node' \
-                --gtest-filter 'LogicalArrayCreateUnit.*CreateBoundPrimitiveArray.*'
+                --gtest-filter 'LogicalStoreCreateUnit/CreateStoreTest.*'
 	@$(SHELL) $(LEGATE_DIR)/scripts/maint/run_check.sh \
                 'multi-node' \
                 --ranks-per-node 2 \
                 --launcher mpirun \
-                --gtest-filter 'LogicalArrayCreateUnit.*CreateBoundPrimitiveArray.*'
+                --gtest-filter 'LogicalStoreCreateUnit/CreateStoreTest.*'

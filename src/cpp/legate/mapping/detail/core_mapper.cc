@@ -48,10 +48,9 @@ std::vector<legate::mapping::StoreMapping> CoreMapper::store_mappings(
     LEGATE_ASSERT(task.num_inputs() == task.num_outputs());
     // Offload task has the same inputs as outputs so mapping
     // just the inputs should be sufficient
+    mappings.reserve(task.num_inputs());
     for (std::size_t i = 0; i < task.num_inputs(); ++i) {
-      for (const auto& store : task.input(i).stores()) {
-        mappings.emplace_back(mapping::StoreMapping::default_mapping(store, mem_target));
-      }
+      mappings.emplace_back(mapping::StoreMapping::default_mapping(task.input(i), mem_target));
     }
     LEGATE_ASSERT(!mappings.empty());
     return mappings;

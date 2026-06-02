@@ -50,8 +50,8 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto source = context.input(0).data();
-    auto target = context.input(1).data();
+    auto source = context.input(0);
+    auto target = context.input(1);
     auto shape  = source.shape<DIM>();
 
     if (shape.empty()) {

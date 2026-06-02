@@ -7,7 +7,7 @@
 #include <legate/partitioning/detail/proxy/scale.h>
 
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_array_arg.h>
+#include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/proxy/select.h>
 #include <legate/partitioning/detail/proxy/validate.h>
@@ -33,88 +33,88 @@ void do_scale_final(Span<const std::uint64_t> factors,
 }
 
 void do_scale(Span<const std::uint64_t> factors,
-              const TaskArrayArg* var_smaller,
-              const TaskArrayArg* var_bigger,
+              const TaskStoreArg* var_smaller,
+              const TaskStoreArg* var_bigger,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& smaller_arr) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bigger_arr) {
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& smaller_st) {
+                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bigger_st) {
                                               do_scale_final(
                                                 factors,
-                                                task->find_or_declare_partition(smaller_arr),
-                                                task->find_or_declare_partition(bigger_arr),
+                                                task->find_or_declare_partition(smaller_st),
+                                                task->find_or_declare_partition(bigger_st),
                                                 task);
                                             },
-                                            [&](const InternalSharedPtr<PhysicalArray>&) {
-                                              // Do nothing for PhysicalArray
+                                            [&](const InternalSharedPtr<PhysicalStore>&) {
+                                              // Do nothing for PhysicalStore
                                             }},
-                                   var_bigger->array);
+                                   var_bigger->store);
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_smaller->array);
+             var_smaller->store);
 }
 
 void do_scale(Span<const std::uint64_t> factors,
-              const TaskArrayArg* var_smaller,
-              Span<const TaskArrayArg> var_bigger,
+              const TaskStoreArg* var_smaller,
+              Span<const TaskStoreArg> var_bigger,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& smaller_arr) {
-                        const auto* small_part = task->find_or_declare_partition(smaller_arr);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& smaller_st) {
+                        const auto* small_part = task->find_or_declare_partition(smaller_st);
 
                         for (auto&& big : var_bigger) {
                           std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalArray>& bigger_arr) {
+                            Overload{[&](const InternalSharedPtr<LogicalStore>& bigger_st) {
                                        do_scale_final(factors,
                                                       small_part,
-                                                      task->find_or_declare_partition(bigger_arr),
+                                                      task->find_or_declare_partition(bigger_st),
                                                       task);
                                      },
-                                     [&](const InternalSharedPtr<PhysicalArray>&) {
-                                       // Do nothing for PhysicalArray
+                                     [&](const InternalSharedPtr<PhysicalStore>&) {
+                                       // Do nothing for PhysicalStore
                                      }},
-                            big.array);
+                            big.store);
                         }
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_smaller->array);
+             var_smaller->store);
 }
 
 void do_scale(Span<const std::uint64_t> factors,
-              Span<const TaskArrayArg> var_smaller,
-              const TaskArrayArg* var_bigger,
+              Span<const TaskStoreArg> var_smaller,
+              const TaskStoreArg* var_bigger,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalArray>& bigger_arr) {
-                        const auto* big_part = task->find_or_declare_partition(bigger_arr);
+  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bigger_st) {
+                        const auto* big_part = task->find_or_declare_partition(bigger_st);
 
                         for (auto&& small : var_smaller) {
                           std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalArray>& smaller_arr) {
+                            Overload{[&](const InternalSharedPtr<LogicalStore>& smaller_st) {
                                        do_scale_final(factors,
-                                                      task->find_or_declare_partition(smaller_arr),
+                                                      task->find_or_declare_partition(smaller_st),
                                                       big_part,
                                                       task);
                                      },
-                                     [&](const InternalSharedPtr<PhysicalArray>&) {
-                                       // Do nothing for PhysicalArray
+                                     [&](const InternalSharedPtr<PhysicalStore>&) {
+                                       // Do nothing for PhysicalStore
                                      }},
-                            small.array);
+                            small.store);
                         }
                       },
-                      [&](const InternalSharedPtr<PhysicalArray>&) {
-                        // Do nothing for PhysicalArray
+                      [&](const InternalSharedPtr<PhysicalStore>&) {
+                        // Do nothing for PhysicalStore
                       }},
-             var_bigger->array);
+             var_bigger->store);
 }
 
 void do_scale(Span<const std::uint64_t> factors,
-              Span<const TaskArrayArg> var_smaller,
-              Span<const TaskArrayArg> var_bigger,
+              Span<const TaskStoreArg> var_smaller,
+              Span<const TaskStoreArg> var_bigger,
               AutoTask* task)
 {
   for (auto&& small : var_smaller) {

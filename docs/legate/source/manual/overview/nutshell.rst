@@ -27,8 +27,6 @@ Logical Data Objects
 --------------------
 
 - ``LogicalStore`` - An abstract handle to a dense collection of generic, *mutable* data.
-- ``LogicalArray`` - A grouping of one or more ``LogicalStore`` s that must be partitioned
-  in a related way (e.g. a data store accompanied by a null mask).
 - ``Scalar`` - An abstract handle to generic, *immutable* data.
 
 Runtime Objects

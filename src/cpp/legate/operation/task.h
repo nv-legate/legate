@@ -8,7 +8,6 @@
 
 #include <legate_defines.h>
 
-#include <legate/data/logical_array.h>
 #include <legate/data/logical_store.h>
 #include <legate/data/scalar.h>
 #include <legate/operation/projection.h>
@@ -47,106 +46,106 @@ namespace legate {
 class LEGATE_EXPORT AutoTask {
  public:
   /**
-   * @brief Adds an array to the task as input
+   * @brief Adds a store to the task as input
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task as input
+   * @param store A store to add to the task as input
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_input(LogicalArray array);
+  Variable add_input(LogicalStore store);
   /**
-   * @brief Adds an array to the task as output
+   * @brief Adds a store to the task as output
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task as output
+   * @param store A store to add to the task as output
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_output(LogicalArray array);
+  Variable add_output(LogicalStore store);
   /**
-   * @brief Adds an array to the task for reductions
+   * @brief Adds a store to the task for reductions
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task for reductions
-   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * @param store A store to add to the task for reductions
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalArray array, ReductionOpKind redop_kind);
+  Variable add_reduction(LogicalStore store, ReductionOpKind redop_kind);
   /**
-   * @brief Adds an array to the task for reductions
+   * @brief Adds a store to the task for reductions
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task for reductions
-   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * @param store A store to add to the task for reductions
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalArray array, std::int32_t redop_kind);
+  Variable add_reduction(LogicalStore store, std::int32_t redop_kind);
 
   /**
-   * @brief Adds an array to the task as input
+   * @brief Adds a store to the task as input
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task as input
-   * @param partition_symbol A partition symbol for the array
+   * @param store A store to add to the task as input
+   * @param partition_symbol A partition symbol for the store
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_input(LogicalArray array, Variable partition_symbol);
+  Variable add_input(LogicalStore store, Variable partition_symbol);
   /**
-   * @brief Adds an array to the task as output
+   * @brief Adds a store to the task as output
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task as output
-   * @param partition_symbol A partition symbol for the array
+   * @param store A store to add to the task as output
+   * @param partition_symbol A partition symbol for the store
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_output(LogicalArray array, Variable partition_symbol);
+  Variable add_output(LogicalStore store, Variable partition_symbol);
   /**
-   * @brief Adds an array to the task for reductions
+   * @brief Adds a store to the task for reductions
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task for reductions
-   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * @param store A store to add to the task for reductions
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
-   * @param partition_symbol A partition symbol for the array
+   * @param partition_symbol A partition symbol for the store
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalArray array, ReductionOpKind redop_kind, Variable partition_symbol);
+  Variable add_reduction(LogicalStore store, ReductionOpKind redop_kind, Variable partition_symbol);
   /**
-   * @brief Adds an array to the task for reductions
+   * @brief Adds a store to the task for reductions
    *
-   * Partitioning of the array is controlled by constraints on the partition symbol
-   * associated with the array
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
    *
-   * @param array An array to add to the task for reductions
-   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * @param store A store to add to the task for reductions
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
-   * @param partition_symbol A partition symbol for the array
+   * @param partition_symbol A partition symbol for the store
    *
-   * @return The partition symbol assigned to the array
+   * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalArray array, std::int32_t redop_kind, Variable partition_symbol);
+  Variable add_reduction(LogicalStore store, std::int32_t redop_kind, Variable partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -202,17 +201,17 @@ class LEGATE_EXPORT AutoTask {
   void add_constraints(Span<const Constraint> constraints);
 
   /**
-   * @brief Finds or creates a partition symbol for the given array
+   * @brief Finds or creates a partition symbol for the given store
    *
-   * @param array Array for which the partition symbol is queried
+   * @param store The store for which the partition symbol is queried
    *
-   * @return The existing symbol if there is one for the array, a fresh symbol otherwise
+   * @return The existing symbol if there is one for the store, a fresh symbol otherwise
    */
-  [[nodiscard]] Variable find_or_declare_partition(const LogicalArray& array);
+  [[nodiscard]] Variable find_or_declare_partition(const LogicalStore& store);
   /**
    * @brief Declares partition symbol
    *
-   * @return A new symbol that can be used when passing an array to an operation
+   * @return A new symbol that can be used when passing a store to an operation
    */
   [[nodiscard]] Variable declare_partition();
   /**
@@ -286,7 +285,7 @@ class LEGATE_EXPORT AutoTask {
 
   [[nodiscard]] SharedPtr<detail::AutoTask> release_();
   [[nodiscard]] SharedPtr<detail::PhysicalTask> release_physical_();
-  [[nodiscard]] InternalSharedPtr<detail::LogicalArray> record_user_ref_(LogicalArray array);
+  [[nodiscard]] InternalSharedPtr<detail::LogicalStore> record_user_ref_(LogicalStore store);
   void clear_user_refs_();
 
   class Impl;

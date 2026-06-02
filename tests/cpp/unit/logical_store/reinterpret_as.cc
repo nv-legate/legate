@@ -38,10 +38,10 @@ class Writer : public legate::LegateTask<Writer> {
   class DoWrite {
    public:
     template <std::int32_t DIM>
-    void operator()(legate::PhysicalArray* array) const
+    void operator()(legate::PhysicalStore* store) const
     {
-      const auto shape = array->shape<DIM>();
-      const auto acc   = array->data().write_accessor<std::int32_t, DIM>();
+      const auto shape = store->shape<DIM>();
+      const auto acc   = store->write_accessor<std::int32_t, DIM>();
 
       for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
         acc[*it] = INT_VAL;
@@ -66,10 +66,10 @@ class Reader : public legate::LegateTask<Reader> {
   class DoRead {
    public:
     template <std::int32_t DIM>
-    void operator()(const legate::PhysicalArray& array) const
+    void operator()(const legate::PhysicalStore& store) const
     {
-      const auto shape = array.shape<DIM>();
-      const auto acc   = array.data().read_accessor<float, DIM>();
+      const auto shape = store.shape<DIM>();
+      const auto acc   = store.read_accessor<float, DIM>();
       auto float_val   = float{};
 
       static_assert(sizeof(float_val) == sizeof(INT_VAL));

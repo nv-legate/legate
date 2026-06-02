@@ -8,11 +8,9 @@
 
 #include <legate_defines.h>
 
-#include <legate/data/detail/array_tasks.h>
-#include <legate/data/detail/logical_array.h>
-#include <legate/data/detail/logical_arrays/list_logical_array.h>
 #include <legate/data/detail/logical_region_field.h>
-#include <legate/data/detail/physical_array.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/physical_store.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/task_launcher.h>
@@ -123,7 +121,7 @@ std::string TaskBase::to_string(bool show_provenance) const
 
 bool TaskBase::needs_flush() const
 {
-  constexpr auto needs_flush = [](auto&& array_arg) { return array_arg.needs_flush(); };
+  constexpr auto needs_flush = [](auto&& store_arg) { return store_arg.needs_flush(); };
   return can_throw_exception() || std::any_of(inputs_.begin(), inputs_.end(), needs_flush) ||
          std::any_of(outputs_.begin(), outputs_.end(), needs_flush) ||
          std::any_of(reductions_.begin(), reductions_.end(), needs_flush);
@@ -138,12 +136,6 @@ void TaskBase::add_constraint(InternalSharedPtr<Constraint>, bool)
 void TaskBase::add_communicator(std::string_view, bool)
 {
   throw TracedException<std::runtime_error>{"add_communicator not supported for this task type"};
-}
-
-const Variable* TaskBase::find_or_declare_partition(const InternalSharedPtr<LogicalArray>&)
-{
-  throw TracedException<std::runtime_error>{
-    "find_or_declare_partition not supported for this task type"};
 }
 
 ////////////////////////////////////////////////////
@@ -235,55 +227,65 @@ void LogicalTask::legion_launch_(Strategy* strategy_ptr)
   launcher.reserve_inputs(inputs_.size());
   for (auto&& task_arg : inputs_) {
     std::visit(
-      Overload{
-        [&](const InternalSharedPtr<LogicalArray>& arr) {
-          launcher.add_input(variant_cast(arr->to_launcher_arg(
-            task_arg.mapping, strategy, launch_domain, task_arg.privilege, GlobalRedopID{-1})));
-        },
-        [&](const InternalSharedPtr<PhysicalArray>&) {
-          LEGATE_ABORT(
-            "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
-            "PhysicalArrays should never go through Legion launch mechanisms, use "
-            "PhysicalTask instead");
-        }},
-      task_arg.array);
+      Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
+                 launcher.add_input(variant_cast(store_to_launcher_arg(st,
+                                                                       task_arg.variable,
+                                                                       strategy,
+                                                                       launch_domain,
+                                                                       task_arg.privilege,
+                                                                       GlobalRedopID{-1})));
+               },
+               [&](const InternalSharedPtr<PhysicalStore>&) {
+                 LEGATE_ABORT(
+                   "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
+                   "PhysicalArrays should never go through Legion launch mechanisms, use "
+                   "PhysicalTask instead");
+               }},
+      task_arg.store);
   }
 
   launcher.reserve_outputs(outputs_.size());
   for (auto&& task_arg : outputs_) {
     std::visit(
-      Overload{
-        [&](const InternalSharedPtr<LogicalArray>& arr) {
-          launcher.add_output(variant_cast(arr->to_launcher_arg(
-            task_arg.mapping, strategy, launch_domain, task_arg.privilege, GlobalRedopID{-1})));
-        },
-        [&](const InternalSharedPtr<PhysicalArray>&) {
-          LEGATE_ABORT(
-            "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
-            "PhysicalArrays should never go through Legion launch mechanisms, use "
-            "PhysicalTask instead");
-        }},
-      task_arg.array);
+      Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
+                 launcher.add_output(variant_cast(store_to_launcher_arg(st,
+                                                                        task_arg.variable,
+                                                                        strategy,
+                                                                        launch_domain,
+                                                                        task_arg.privilege,
+                                                                        GlobalRedopID{-1})));
+               },
+               [&](const InternalSharedPtr<PhysicalStore>&) {
+                 LEGATE_ABORT(
+                   "PhysicalArray passed to LogicalTask::legion_launch_() for outputs - "
+                   "PhysicalArrays should never go through Legion launch mechanisms, use "
+                   "PhysicalTask instead");
+               }},
+      task_arg.store);
   }
 
+  LEGATE_ASSERT(reductions_.size() == reduction_ops_.size());
   launcher.reserve_reductions(reductions_.size());
-  for (auto&& [task_arg, redop] : zip_equal(reductions_, reduction_ops_)) {
-    LEGATE_CPP_VERSION_TODO(20, "Use original structured binding capture");
-    const auto& task_arg_ref = task_arg;
-    const auto redop_copy    = redop;
+  for (std::uint32_t idx = 0; idx < reductions_.size(); ++idx) {
+    const auto& task_arg = reductions_[idx];
+    const auto& redop    = reduction_ops_[idx];
+
     std::visit(
-      Overload{
-        [&, redop_copy](const InternalSharedPtr<LogicalArray>& arr) {
-          launcher.add_reduction(variant_cast(arr->to_launcher_arg(
-            task_arg_ref.mapping, strategy, launch_domain, task_arg_ref.privilege, redop_copy)));
-        },
-        [&](const InternalSharedPtr<PhysicalArray>&) {
-          LEGATE_ABORT(
-            "PhysicalArray passed to LogicalTask::legion_launch_() for reductions - "
-            "PhysicalArrays should never go through Legion launch mechanisms, use "
-            "PhysicalTask instead");
-        }},
-      task_arg_ref.array);
+      Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
+                 launcher.add_reduction(variant_cast(store_to_launcher_arg(st,
+                                                                           task_arg.variable,
+                                                                           strategy,
+                                                                           launch_domain,
+                                                                           task_arg.privilege,
+                                                                           GlobalRedopID{redop})));
+               },
+               [&](const InternalSharedPtr<PhysicalStore>&) {
+                 LEGATE_ABORT(
+                   "PhysicalArray passed to LogicalTask::legion_launch_() for reductions - "
+                   "PhysicalArrays should never go through Legion launch mechanisms, use "
+                   "PhysicalTask instead");
+               }},
+      task_arg.store);
   }
 
   // Add by-value scalars
@@ -420,19 +422,19 @@ std::size_t LogicalTask::calculate_future_size_() const
   // keep track of the store's key partition (of the legate::detail::Weighted type).
   auto layout = TaskReturnLayoutForUnpack{};
 
-  for (auto&& array_args : {inputs(), outputs(), reductions()}) {
-    for (auto&& [priv, arr, mapping] : array_args) {
+  for (auto&& store_args : {inputs(), outputs(), reductions()}) {
+    for (auto&& arg : store_args) {
       std::visit(
         Overload{
-          [&](const InternalSharedPtr<LogicalArray>& logical_arr) {
-            logical_arr->calculate_pack_size(&layout);
+          [&](const InternalSharedPtr<LogicalStore>& logical_st) {
+            logical_st->calculate_pack_size(&layout);
           },
-          [&](const InternalSharedPtr<PhysicalArray>&) {
+          [&](const InternalSharedPtr<PhysicalStore>&) {
             LEGATE_ABORT(
-              "PhysicalArray passed to LogicalTask::calculate_future_size_() - "
-              "LogicalTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
+              "PhysicalStore passed to LogicalTask::calculate_future_size_() - "
+              "LogicalTask only supports LogicalStores, use PhysicalTask for PhysicalStores");
           }},
-        arr);
+        arg.store);
     }
   }
 
@@ -458,115 +460,76 @@ AutoTask::AutoTask(const Library& library,
 {
 }
 
-const Variable* AutoTask::add_input(InternalSharedPtr<LogicalArray> array)
+const Variable* AutoTask::add_input(InternalSharedPtr<LogicalStore> store)
 {
-  const auto* symb = find_or_declare_partition(array);
-  add_input(std::move(array), symb);
+  const auto* symb = find_or_declare_partition(store);
+  add_input(std::move(store), symb);
   return symb;
 }
 
-const Variable* AutoTask::add_output(InternalSharedPtr<LogicalArray> array)
+const Variable* AutoTask::add_output(InternalSharedPtr<LogicalStore> store)
 {
-  const auto* symb = find_or_declare_partition(array);
-  add_output(std::move(array), symb);
+  const auto* symb = find_or_declare_partition(store);
+  add_output(std::move(store), symb);
   return symb;
 }
 
-const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
+const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
                                         std::int32_t redop_kind)
 {
-  const auto* symb = find_or_declare_partition(array);
-  add_reduction(std::move(array), redop_kind, symb);
+  const auto* symb = find_or_declare_partition(store);
+  add_reduction(std::move(store), redop_kind, symb);
   return symb;
 }
 
-void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol)
+void AutoTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol)
 {
-  if (array->unbound()) {
+  if (store->unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used as input"};
   }
 
-  auto& arg = inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, array);
+  auto& arg = inputs_.emplace_back(
+    Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(store), partition_symbol);
 
-  std::visit(
-    Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
-               arr->generate_constraints(this, arg.mapping, partition_symbol);
-             },
-             [&](const InternalSharedPtr<PhysicalArray>&) {
-               LEGATE_ABORT(
-                 "PhysicalArray passed to AutoTask::add_input() - "
-                 "AutoTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
-             }},
-    arg.array);
-  for (auto&& [store, symb] : arg.mapping) {
-    record_partition_(symb, store, AccessMode::READ);
-  }
+  record_partition_(partition_symbol, std::get<0>(arg.store), AccessMode::READ);
 }
 
-void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol)
+void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol)
 {
-  // TODO(wonchanl): We will later support structs with list/string fields
-  if (const auto list_array = dynamic_pointer_cast<ListLogicalArray>(array);
-      list_array && array->unbound()) {
-    arrays_to_fixup_.push_back(array.get());
+  if (store->has_scalar_storage()) {
+    record_scalar_output(store);
+  }
+  if (store->unbound()) {
+    record_unbound_output(store);
   }
 
-  array->record_scalar_or_unbound_outputs(this);
+  auto& arg = outputs_.emplace_back(
+    Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(store), partition_symbol);
 
-  auto& arg = outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(array));
-
-  std::visit(
-    Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
-               arr->generate_constraints(this, arg.mapping, partition_symbol);
-             },
-             [&](const InternalSharedPtr<PhysicalArray>&) {
-               LEGATE_ABORT(
-                 "PhysicalArray passed to AutoTask::add_output() - "
-                 "AutoTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
-             }},
-    arg.array);
-  for (auto&& [store, symb] : arg.mapping) {
-    record_partition_(symb, store, AccessMode::WRITE);
-  }
+  record_partition_(partition_symbol, std::get<0>(arg.store), AccessMode::WRITE);
 }
 
-void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
+void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
                              std::int32_t redop_kind,
                              const Variable* partition_symbol)
 {
-  if (array->unbound()) {
-    throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used for reductions"};
+  if (store->unbound()) {
+    throw TracedException<std::invalid_argument>{"Unbound store cannot be used for reductions"};
   }
 
-  if (array->type()->variable_size()) {
-    throw TracedException<std::invalid_argument>{"List/string arrays cannot be used for reduction"};
+  LEGATE_ASSERT(!store->type()->variable_size());
+
+  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
+
+  if (store->has_scalar_storage()) {
+    record_scalar_reduction(store, legion_redop_id);
   }
-
-  auto legion_redop_id = array->type()->find_reduction_operator(redop_kind);
-
-  array->record_scalar_reductions(this, legion_redop_id);
   reduction_ops_.push_back(legion_redop_id);
 
-  auto& arg = reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, array);
+  auto& arg = reductions_.emplace_back(
+    Legion::PrivilegeMode::LEGION_REDUCE, std::move(store), partition_symbol);
 
-  std::visit(
-    Overload{[&](const InternalSharedPtr<LogicalArray>& arr) {
-               arr->generate_constraints(this, arg.mapping, partition_symbol);
-             },
-             [&](const InternalSharedPtr<PhysicalArray>&) {
-               LEGATE_ABORT(
-                 "PhysicalArray passed to AutoTask::add_reduction() - "
-                 "AutoTask only supports LogicalArrays, use PhysicalTask for PhysicalArrays");
-             }},
-    arg.array);
-  for (auto&& [store, symb] : arg.mapping) {
-    record_partition_(symb, store, AccessMode::REDUCE);
-  }
-}
-
-const Variable* AutoTask::find_or_declare_partition(const InternalSharedPtr<LogicalArray>& array)
-{
-  return Operation::find_or_declare_partition(array->primary_store());
+  record_partition_(partition_symbol, std::get<0>(arg.store), AccessMode::REDUCE);
 }
 
 void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint, bool bypass_signature_check)
@@ -599,22 +562,16 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
     solver.add_constraint(constraint);
   }
   for (auto&& output : outputs_) {
-    for (auto&& [store, symb] : output.mapping) {
-      solver.add_partition_symbol(symb, AccessMode::WRITE);
-      if (store->has_scalar_storage()) {
-        solver.add_constraint(broadcast(symb));
-      }
+    solver.add_partition_symbol(output.variable, AccessMode::WRITE);
+    if (std::get<0>(output.store)->has_scalar_storage()) {
+      solver.add_constraint(broadcast(output.variable));
     }
   }
   for (auto&& input : inputs_) {
-    for (auto&& [_, symb] : input.mapping) {
-      solver.add_partition_symbol(symb, AccessMode::READ);
-    }
+    solver.add_partition_symbol(input.variable, AccessMode::READ);
   }
   for (auto&& reduction : reductions_) {
-    for (auto&& [_, symb] : reduction.mapping) {
-      solver.add_partition_symbol(symb, AccessMode::REDUCE);
-    }
+    solver.add_partition_symbol(reduction.variable, AccessMode::REDUCE);
   }
 }
 
@@ -629,40 +586,7 @@ void AutoTask::validate()
   }
 }
 
-void AutoTask::launch(Strategy* p_strategy)
-{
-  launch_task_(p_strategy);
-  if (!arrays_to_fixup_.empty()) {
-    fixup_ranges_(*p_strategy);
-  }
-}
-
-void AutoTask::fixup_ranges_(Strategy& strategy)
-{
-  auto&& launch_domain = strategy.launch_domain();
-  if (!launch_domain.is_valid()) {
-    return;
-  }
-
-  auto&& runtime  = Runtime::get_runtime();
-  auto&& core_lib = runtime.core_library();
-  auto launcher   = detail::TaskLauncher{core_lib,
-                                         machine(),
-                                         parallel_policy(),
-                                         provenance(),
-                                         FixupRanges::TASK_CONFIG.task_id(),
-                                         strategy.find_key_store_projection()};
-
-  launcher.set_priority(priority());
-
-  for (auto* array : arrays_to_fixup_) {
-    // TODO(wonchanl): We should pass projection functors here once we start supporting
-    // string/list legate arrays in ManualTasks
-    launcher.add_output(variant_cast(array->to_launcher_arg_for_fixup(LEGION_NO_ACCESS)));
-  }
-
-  launcher.execute(launch_domain);
-}
+void AutoTask::launch(Strategy* p_strategy) { launch_task_(p_strategy); }
 
 ////////////////////////////////////////////////////
 // legate::ManualTask
@@ -691,58 +615,18 @@ ManualTask::ManualTask(const Library& library,
 
 const Domain& ManualTask::launch_domain() const { return strategy_->launch_domain(); }
 
-const Variable* ManualTask::add_input(InternalSharedPtr<LogicalArray>)
-{
-  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
-}
-
-const Variable* ManualTask::add_output(InternalSharedPtr<LogicalArray>)
-{
-  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
-}
-
-const Variable* ManualTask::add_reduction(InternalSharedPtr<LogicalArray>, std::int32_t)
-{
-  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
-}
-
-void ManualTask::add_input(InternalSharedPtr<LogicalArray>, const Variable*)
-{
-  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
-}
-
-void ManualTask::add_output(InternalSharedPtr<LogicalArray>, const Variable*)
-{
-  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
-}
-
-void ManualTask::add_reduction(InternalSharedPtr<LogicalArray>, std::int32_t, const Variable*)
-{
-  throw TracedException<std::runtime_error>{"LogicalArray not supported for ManualTask"};
-}
-
-void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
+const Variable* ManualTask::add_input(InternalSharedPtr<LogicalStore> store)
 {
   if (store->unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used as input"};
   }
 
   add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY, inputs_, store, create_no_partition());
+
+  return nullptr;
 }
 
-void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                           std::optional<SymbolicPoint> projection,
-                           bool is_key_partition)
-{
-  add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY,
-             inputs_,
-             store_partition->store(),
-             store_partition->partition(),
-             std::move(projection),
-             is_key_partition);
-}
-
-void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
+const Variable* ManualTask::add_output(InternalSharedPtr<LogicalStore> store)
 {
   add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
 
@@ -755,6 +639,54 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
   if (store->unbound()) {
     record_unbound_output(store);
   }
+
+  return nullptr;
+}
+
+const Variable* ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store,
+                                          std::int32_t redop_kind)
+{
+  if (store->unbound()) {
+    throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reduction"};
+  }
+
+  add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
+
+  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
+
+  reduction_ops_.push_back(legion_redop_id);
+  if (store->has_scalar_storage()) {
+    record_scalar_reduction(store, legion_redop_id);
+  }
+
+  return nullptr;
+}
+
+void ManualTask::add_input(InternalSharedPtr<LogicalStore>, const Variable*)
+{
+  throw TracedException<std::runtime_error>{"Not supported for ManualTask"};
+}
+
+void ManualTask::add_output(InternalSharedPtr<LogicalStore>, const Variable*)
+{
+  throw TracedException<std::runtime_error>{"Not supported for ManualTask"};
+}
+
+void ManualTask::add_reduction(InternalSharedPtr<LogicalStore>, std::int32_t, const Variable*)
+{
+  throw TracedException<std::runtime_error>{"Not supported for ManualTask"};
+}
+
+void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
+                           std::optional<SymbolicPoint> projection,
+                           bool is_key_partition)
+{
+  add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY,
+             inputs_,
+             store_partition->store(),
+             store_partition->partition(),
+             std::move(projection),
+             is_key_partition);
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -771,23 +703,6 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
              is_key_partition);
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_output(store_partition->store());
-  }
-}
-
-void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
-                               std::int32_t redop_kind)
-{
-  if (store->unbound()) {
-    throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reduction"};
-  }
-
-  add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
-
-  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
-
-  reduction_ops_.push_back(legion_redop_id);
-  if (store->has_scalar_storage()) {
-    record_scalar_reduction(store, legion_redop_id);
   }
 }
 
@@ -812,14 +727,15 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
 }
 
 void ManualTask::add_store_(Legion::PrivilegeMode priv,
-                            SmallVector<TaskArrayArg>& store_args,
+                            SmallVector<TaskStoreArg>& store_args,
                             const InternalSharedPtr<LogicalStore>& store,
                             InternalSharedPtr<Partition> partition,
                             std::optional<SymbolicPoint> projection,
                             bool is_key_partition)
 {
   const auto* partition_symbol = declare_partition();
-  auto& arg = store_args.emplace_back(priv, make_internal_shared<BaseLogicalArray>(store));
+
+  store_args.emplace_back(priv, store, partition_symbol);
 
   const auto privelege_to_access_mode = [](Legion::PrivilegeMode p) {
     switch (p) {
@@ -842,7 +758,6 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
 
   record_partition_(partition_symbol, store, privelege_to_access_mode(priv));
 
-  arg.mapping.insert({store, partition_symbol});
   if (is_key_partition) {
     strategy_->record_key_partition({}, *partition_symbol);
   }
@@ -907,21 +822,21 @@ PhysicalTask::PhysicalTask(const Library& library,
 {
 }
 
-void PhysicalTask::add_input(InternalSharedPtr<PhysicalArray> array)
+void PhysicalTask::add_input(InternalSharedPtr<PhysicalStore> store)
 {
-  inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(array));
+  inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(store));
 }
 
-void PhysicalTask::add_output(InternalSharedPtr<PhysicalArray> array)
+void PhysicalTask::add_output(InternalSharedPtr<PhysicalStore> store)
 {
-  outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(array));
+  outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(store));
 }
 
-void PhysicalTask::add_reduction(InternalSharedPtr<PhysicalArray> array, std::int32_t redop_kind)
+void PhysicalTask::add_reduction(InternalSharedPtr<PhysicalStore> store, std::int32_t redop_kind)
 {
-  auto legion_redop_id = array->type()->find_reduction_operator(redop_kind);
+  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
 
-  reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, std::move(array));
+  reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, std::move(store));
   reduction_ops_.emplace_back(legion_redop_id);
 }
 
@@ -946,51 +861,51 @@ namespace {
 
 }  // namespace
 
-const Variable* PhysicalTask::add_input(InternalSharedPtr<LogicalArray> array)
+const Variable* PhysicalTask::add_input(InternalSharedPtr<LogicalStore> store)
 {
   auto physical =
-    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
   add_input(std::move(physical));
   return nullptr;
 }
 
-const Variable* PhysicalTask::add_output(InternalSharedPtr<LogicalArray> array)
+const Variable* PhysicalTask::add_output(InternalSharedPtr<LogicalStore> store)
 {
   auto physical =
-    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
   add_output(std::move(physical));
   return nullptr;
 }
 
-const Variable* PhysicalTask::add_reduction(InternalSharedPtr<LogicalArray> array,
+const Variable* PhysicalTask::add_reduction(InternalSharedPtr<LogicalStore> store,
                                             std::int32_t redop_kind)
 {
   auto physical =
-    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
   add_reduction(std::move(physical), redop_kind);
   return nullptr;
 }
 
-void PhysicalTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable*)
+void PhysicalTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable*)
 {
   auto physical =
-    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
   add_input(std::move(physical));
 }
 
-void PhysicalTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*)
+void PhysicalTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable*)
 {
   auto physical =
-    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
   add_output(std::move(physical));
 }
 
-void PhysicalTask::add_reduction(InternalSharedPtr<LogicalArray> array,
+void PhysicalTask::add_reduction(InternalSharedPtr<LogicalStore> store,
                                  std::int32_t redop_kind,
                                  const Variable*)
 {
   auto physical =
-    array->get_physical_array(inline_store_target(), /*ignore_future_mutability=*/false);
+    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
   add_reduction(std::move(physical), redop_kind);
 }
 
@@ -1012,11 +927,6 @@ void PhysicalTask::launch()
 
   // If executing first inline task, we would like to use the preferred proc
   inline_task_body(*this, machine().preferred_variant(), variant_info_().body);
-}
-
-void PhysicalTask::fixup_ranges_(Strategy&)
-{
-  // TODO(sbahirnv): Implement PhysicalTask::fixup_ranges_ stub
 }
 
 }  // namespace legate::detail

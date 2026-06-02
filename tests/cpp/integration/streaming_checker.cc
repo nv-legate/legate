@@ -43,8 +43,8 @@ class InitTask : public legate::LegateTask<InitTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto store_a = context.output(0).data();
-    auto store_b = context.output(1).data();
+    auto store_a = context.output(0);
+    auto store_b = context.output(1);
     auto acc_a   = store_a.write_accessor<val_ty, DIM>();
     auto acc_b   = store_b.write_accessor<val_ty, DIM>();
 
@@ -64,8 +64,8 @@ class SumTask : public legate::LegateTask<SumTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto store_a = context.input(0).data();
-    auto store_b = context.input(1).data();
+    auto store_a = context.input(0);
+    auto store_b = context.input(1);
     auto acc_a   = store_a.write_accessor<val_ty, DIM>();
     auto acc_b   = store_b.read_accessor<val_ty, DIM>();
 
@@ -84,8 +84,8 @@ class CheckTask : public legate::LegateTask<CheckTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto store_a = context.input(0).data();
-    auto store_b = context.input(1).data();
+    auto store_a = context.input(0);
+    auto store_b = context.input(1);
     auto acc_a   = store_a.read_accessor<val_ty, DIM>();
     auto acc_b   = store_b.read_accessor<val_ty, DIM>();
 
@@ -104,7 +104,7 @@ struct ReduceTask : public legate::LegateTask<ReduceTask> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto store_a = context.reduction(0).data();
+    auto store_a = context.reduction(0);
     auto acc_a   = store_a.reduce_accessor<legate::SumReduction<val_ty>, false, DIM>();
 
     const auto shape = store_a.shape<DIM>();
@@ -569,15 +569,15 @@ TEST_F(StreamingChecker, HDF5WritePass)
 
   auto runtime              = legate::Runtime::get_runtime();
   constexpr auto SHAPE_SIZE = 16;
-  const auto array          = runtime->create_array(legate::Shape{SHAPE_SIZE}, legate::int8());
+  const auto store          = runtime->create_store(legate::Shape{SHAPE_SIZE}, legate::int8());
 
-  runtime->issue_fill(array, legate::Scalar{std::int8_t{0}});
+  runtime->issue_fill(store, legate::Scalar{std::int8_t{0}});
 
   const auto* scope      = create_streaming_scope(legate::StreamingMode::STRICT);
   constexpr auto dataset = "my_dataset";
   const auto h5_file     = std::filesystem::current_path() / "test" / "foo.h5";
 
-  legate::io::hdf5::to_file(array, h5_file, dataset);
+  legate::io::hdf5::to_file(store, h5_file, dataset);
 
   ASSERT_NO_THROW(delete scope);
 }

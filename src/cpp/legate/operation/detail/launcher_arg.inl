@@ -90,32 +90,4 @@ inline WriteOnlyScalarStoreArg::WriteOnlyScalarStoreArg(LogicalStore* store, Glo
 
 inline void WriteOnlyScalarStoreArg::analyze(StoreAnalyzer& /*analyzer*/) const {}
 
-// ==========================================================================================
-
-inline BaseArrayArg::BaseArrayArg(StoreAnalyzable data, std::optional<StoreAnalyzable> null_mask)
-  : data_{std::move(data)}, null_mask_{std::move(null_mask)}
-{
-}
-
-inline BaseArrayArg::BaseArrayArg(StoreAnalyzable data)
-  : BaseArrayArg{std::move(data), std::nullopt}
-{
-}
-
-// ==========================================================================================
-
-inline ListArrayArg::Impl::Impl(ArrayAnalyzable descr, ArrayAnalyzable var)
-  : descriptor{std::move(descr)}, vardata{std::move(var)}
-{
-}
-
-// ==========================================================================================
-
-inline StructArrayArg::StructArrayArg(InternalSharedPtr<Type> type,
-                                      std::optional<StoreAnalyzable> null_mask,
-                                      std::vector<ArrayAnalyzable>&& fields)
-  : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
-{
-}
-
 }  // namespace legate::detail

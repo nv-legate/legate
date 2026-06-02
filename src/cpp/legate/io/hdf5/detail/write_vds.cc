@@ -232,7 +232,7 @@ class TypeDispatcher : public legate::detail::InnerTypeDispatchFn<DIM> {
  */
 void task_body(const legate::TaskContext& context, bool is_device)
 {
-  const auto store        = context.input(0).data();
+  const auto store        = context.input(0);
   const auto base_dir     = std::filesystem::path{context.scalar(0).value<std::string_view>()};
   const auto dataset_name = context.scalar(1).value<std::string>();
   const auto&& [domain, index_point] = [&context, &store]() -> std::pair<Domain, DomainPoint> {

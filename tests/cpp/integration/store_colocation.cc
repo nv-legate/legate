@@ -22,18 +22,15 @@ namespace {
   mappings.reserve(task.inputs().size() + task.outputs().size() + task.reductions().size());
 
   for (auto& input : task.inputs()) {
-    mappings.push_back(
-      legate::mapping::StoreMapping::default_mapping(input.data(), options.front()));
+    mappings.push_back(legate::mapping::StoreMapping::default_mapping(input, options.front()));
   }
 
   for (auto& output : task.outputs()) {
-    mappings.push_back(
-      legate::mapping::StoreMapping::default_mapping(output.data(), options.front()));
+    mappings.push_back(legate::mapping::StoreMapping::default_mapping(output, options.front()));
   }
 
   for (auto& reduction : task.reductions()) {
-    mappings.push_back(
-      legate::mapping::StoreMapping::default_mapping(reduction.data(), options.front()));
+    mappings.push_back(legate::mapping::StoreMapping::default_mapping(reduction, options.front()));
   }
 
   return mappings;
@@ -47,8 +44,7 @@ class ColocationTestTask : public legate::LegateTask<ColocationTestTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
-    for (auto& output : outputs) {
-      auto store = output.data();
+    for (auto& store : outputs) {
       if (store.is_unbound_store()) {
         store.bind_empty_data();
       }
@@ -66,15 +62,13 @@ class ReductionTestTask : public legate::LegateTask<ReductionTestTask> {
     auto outputs    = context.outputs();
     auto reductions = context.reductions();
 
-    for (auto& output : outputs) {
-      auto store = output.data();
+    for (auto& store : outputs) {
       if (store.is_unbound_store()) {
         store.bind_empty_data();
       }
     }
 
-    for (auto& reduction : reductions) {
-      auto store = reduction.data();
+    for (auto& store : reductions) {
       if (store.is_unbound_store()) {
         store.bind_empty_data();
       }
@@ -93,8 +87,8 @@ class UnboundColocationMapper : public legate::mapping::Mapper {
 
     // Two unbound stores cannot colocate
     if (outputs.size() >= 2) {
-      auto store1 = outputs[0].data();
-      auto store2 = outputs[1].data();
+      auto store1 = outputs[0];
+      auto store2 = outputs[1];
 
       EXPECT_TRUE(store1.unbound());
       EXPECT_TRUE(store2.unbound());
@@ -128,8 +122,8 @@ class BoundColocationMapper : public legate::mapping::Mapper {
     auto outputs = task.outputs();
 
     if (outputs.size() >= 2) {
-      auto store1 = outputs[0].data();
-      auto store2 = outputs[1].data();
+      auto store1 = outputs[0];
+      auto store2 = outputs[1];
 
       // Bound store cannot colocate with unbound store
       if (!store1.unbound() && store2.unbound()) {
@@ -168,8 +162,8 @@ class ReductionColocationMapper : public legate::mapping::Mapper {
 
     // Test 1: Reduction stores with same redop but different regions
     if (reductions.size() >= 2) {
-      auto red1 = reductions[0].data();
-      auto red2 = reductions[1].data();
+      auto red1 = reductions[0];
+      auto red2 = reductions[1];
 
       if (red1.is_reduction() && red2.is_reduction()) {
         const bool can_colocate = red1.can_colocate_with(red2);
@@ -180,8 +174,8 @@ class ReductionColocationMapper : public legate::mapping::Mapper {
 
     // Test 2: Normal store with reduction store from different regions
     if (!outputs.empty() && !reductions.empty()) {
-      auto normal_store    = outputs[0].data();
-      auto reduction_store = reductions[0].data();
+      auto normal_store    = outputs[0];
+      auto reduction_store = reductions[0];
 
       if (!normal_store.is_reduction() && reduction_store.is_reduction()) {
         const bool can_colocate = normal_store.can_colocate_with(reduction_store);

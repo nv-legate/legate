@@ -21,19 +21,14 @@ from ..mapping.mapping cimport TaskTarget
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
 
-cdef extern from "legate/data/physical_array.h" namespace "legate" nogil:
-    cdef cppclass _PhysicalArray "legate::PhysicalArray":
-        _PhysicalStore data() except+
-
-
 cdef extern from "legate/task/task_context.h" namespace "legate" nogil:
     cdef cppclass _TaskContext "legate::TaskContext":
         _GlobalTaskID task_id() except+
         VariantCode variant_kind() except+
 
-        _PhysicalArray input(uint32_t) except+
-        _PhysicalArray output(uint32_t) except+
-        _PhysicalArray reduction(uint32_t) except+
+        _PhysicalStore input(uint32_t) except+
+        _PhysicalStore output(uint32_t) except+
+        _PhysicalStore reduction(uint32_t) except+
         _Scalar scalar(uint32_t) except+
         size_t num_inputs() except+
         size_t num_outputs() except+

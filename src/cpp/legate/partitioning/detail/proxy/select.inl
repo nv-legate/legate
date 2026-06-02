@@ -13,7 +13,7 @@
 
 namespace legate::detail {
 
-inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
+inline std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> ArgSelectVisitor::operator()(
   const ProxyArrayArgument& array) const
 {
   switch (array.kind) {
@@ -30,19 +30,19 @@ inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisi
   LEGATE_ABORT("Unhandled array kind ", static_cast<std::uint8_t>(array.kind));
 }
 
-inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
+inline std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> ArgSelectVisitor::operator()(
   const ProxyInputArguments&) const noexcept
 {
   return task->inputs();
 }
 
-inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
+inline std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> ArgSelectVisitor::operator()(
   const ProxyOutputArguments&) const noexcept
 {
   return task->outputs();
 }
 
-inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
+inline std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> ArgSelectVisitor::operator()(
   const ProxyReductionArguments&) const noexcept
 {
   return task->reductions();

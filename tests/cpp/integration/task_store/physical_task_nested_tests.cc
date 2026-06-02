@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/data/detail/logical_array.h>
 #include <legate/operation/detail/task.h>
 #include <legate/utilities/detail/tuple.h>
 
@@ -98,8 +97,7 @@ struct PrimeSquareTask : public legate::LegateTask<PrimeSquareTask> {
     ASSERT_EQ(context.inputs().size(), 1);
     ASSERT_EQ(context.outputs().size(), 2);
 
-    auto input_array = context.input(0);
-    auto input_store = input_array.data();
+    auto input_store = context.input(0);
 
     auto square_output = context.output(0);
     auto sqrt_output   = context.output(1);
@@ -110,10 +108,10 @@ struct PrimeSquareTask : public legate::LegateTask<PrimeSquareTask> {
     const std::int32_t square = prime * prime;
     const float sqrt_val      = std::sqrt(static_cast<float>(prime));
 
-    auto square_acc                 = square_output.data().write_accessor<std::int32_t, 1>();
+    auto square_acc                 = square_output.write_accessor<std::int32_t, 1>();
     square_acc[legate::Point<1>{0}] = square;
 
-    auto sqrt_acc                 = sqrt_output.data().write_accessor<float, 1>();
+    auto sqrt_acc                 = sqrt_output.write_accessor<float, 1>();
     sqrt_acc[legate::Point<1>{0}] = sqrt_val;
   }
 };
@@ -127,11 +125,8 @@ struct SimpleNegationTask : public legate::LegateTask<SimpleNegationTask> {
     ASSERT_EQ(context.inputs().size(), 1);
     ASSERT_EQ(context.outputs().size(), 1);
 
-    auto input_array  = context.input(0);
-    auto output_array = context.output(0);
-
-    auto input_store  = input_array.data();
-    auto output_store = output_array.data();
+    auto input_store  = context.input(0);
+    auto output_store = context.output(0);
 
     auto input_accessor  = input_store.read_accessor<std::int32_t, 1>();
     auto output_accessor = output_store.write_accessor<std::int32_t, 1>();
@@ -156,18 +151,15 @@ struct ParentTaskWithNestedAutoTask : public legate::LegateTask<ParentTaskWithNe
     ASSERT_EQ(context.inputs().size(), 1);
     ASSERT_EQ(context.outputs().size(), 1);
 
-    auto input_physical_array  = context.input(0);
-    auto output_physical_array = context.output(0);
+    auto input_physical_store  = context.input(0);
+    auto output_physical_store = context.output(0);
 
-    auto input_logical_store  = input_physical_array.data().to_logical_store();
-    auto output_logical_store = output_physical_array.data().to_logical_store();
-
-    auto input_logical_array  = legate::LogicalArray{input_logical_store};
-    auto output_logical_array = legate::LogicalArray{output_logical_store};
+    auto input_logical_store  = input_physical_store.to_logical_store();
+    auto output_logical_store = output_physical_store.to_logical_store();
 
     auto auto_task = runtime->create_task(library, SimpleNegationTask::TASK_CONFIG.task_id());
-    auto_task.add_input(input_logical_array);
-    auto_task.add_output(output_logical_array);
+    auto_task.add_input(input_logical_store);
+    auto_task.add_output(output_logical_store);
 
     runtime->submit(std::move(auto_task));
   }
@@ -232,7 +224,7 @@ TEST_F(NestedTaskTests, InlineExecution)
 
   auto parent_task =
     runtime->create_task(library, ParentTaskWithNestedAutoTask::TASK_CONFIG.task_id());
-  parent_task.add_input(legate::LogicalArray{input_store});
+  parent_task.add_input(input_store);
   parent_task.add_output(output_store);
 
   runtime->submit(std::move(parent_task));

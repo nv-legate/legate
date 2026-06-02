@@ -40,7 +40,7 @@ class InitTask : public legate::LegateTask<InitTask> {
     // of indices in the launch would be equal to the number of
     // tiles in created data  partitions
     auto&& task_index = context.get_task_index();
-    auto output       = context.output(0).data();
+    auto output       = context.output(0);
 
     const auto shape = output.shape<DIM>();
     auto acc         = output.write_accessor<std::int32_t, DIM>();
@@ -70,7 +70,7 @@ class VerificationTask : public legate::LegateTask<VerificationTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     constexpr std::int32_t DIM = 2;
-    const auto input           = context.input(0).data();
+    const auto input           = context.input(0);
 
     const auto shape = input.shape<DIM>();
     auto acc         = input.read_accessor<std::int32_t, DIM>();

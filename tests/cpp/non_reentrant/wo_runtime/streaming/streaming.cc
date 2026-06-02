@@ -98,7 +98,7 @@ class NegateTask : public legate::LegateTask<NegateTask> {
   {
     constexpr auto DIM = 2;
     const auto arr     = context.output(0);
-    const auto acc     = arr.data().read_write_accessor<std::int64_t, DIM>();
+    const auto acc     = arr.read_write_accessor<std::int64_t, DIM>();
 
     for (legate::PointInRectIterator<DIM> it{arr.shape<DIM>()}; it.valid(); ++it) {
       acc[*it] *= -1;
@@ -116,8 +116,8 @@ class SumTask : public legate::LegateTask<SumTask> {
   {
     const auto in      = context.input(0);
     const auto red     = context.reduction(0);
-    const auto in_acc  = in.data().read_accessor<std::int64_t, 2>();
-    const auto red_acc = red.data().reduce_accessor<legate::SumReduction<std::int64_t>, true, 1>();
+    const auto in_acc  = in.read_accessor<std::int64_t, 2>();
+    const auto red_acc = red.reduce_accessor<legate::SumReduction<std::int64_t>, true, 1>();
 
     for (legate::PointInRectIterator<2> it{in.shape<2>()}; it.valid(); ++it) {
       red_acc.reduce(0, in_acc[*it]);
@@ -436,18 +436,18 @@ constexpr std::uint32_t NUM_ITER = 4;
 constexpr std::uint64_t EXT      = 10;
 constexpr std::int64_t MAGIC     = 42;
 
-void launch_negate_task(const legate::LogicalArray& array)
+void launch_negate_task(const legate::LogicalStore& store)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto library  = runtime->find_library(Config::LIBRARY_NAME);
   auto task           = runtime->create_task(library, NegateTask::TASK_CONFIG.task_id());
 
-  task.add_input(array);
-  task.add_output(array);
+  task.add_input(store);
+  task.add_output(store);
   runtime->submit(std::move(task));
 }
 
-void launch_sum_task(const legate::LogicalArray& input, const legate::LogicalArray& sum)
+void launch_sum_task(const legate::LogicalStore& input, const legate::LogicalStore& sum)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto library  = runtime->find_library(Config::LIBRARY_NAME);
@@ -458,23 +458,23 @@ void launch_sum_task(const legate::LogicalArray& input, const legate::LogicalArr
   runtime->submit(std::move(task));
 }
 
-void validate_pointwise(const legate::LogicalArray& array)
+void validate_pointwise(const legate::LogicalStore& store)
 {
   constexpr auto DIM = 2;
-  const auto p_array = array.get_physical_array();
-  const auto acc     = p_array.data().read_accessor<std::int64_t, DIM>();
+  const auto p_store = store.get_physical_store();
+  const auto acc     = p_store.read_accessor<std::int64_t, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{p_array.shape<DIM>()}; it.valid(); ++it) {
+  for (legate::PointInRectIterator<DIM> it{p_store.shape<DIM>()}; it.valid(); ++it) {
     const auto expected = MAGIC * (NUM_ITER % 2 == 0 ? 1 : -1);
 
     ASSERT_EQ(acc[*it], expected);
   }
 }
 
-void validate_sum(const legate::LogicalArray& array)
+void validate_sum(const legate::LogicalStore& store)
 {
-  const auto p_array  = array.get_physical_array();
-  const auto acc      = p_array.data().read_accessor<std::int64_t, 1>();
+  const auto p_store  = store.get_physical_store();
+  const auto acc      = p_store.read_accessor<std::int64_t, 1>();
   const auto expected = EXT * EXT * MAGIC * (NUM_ITER % 2 == 0 ? 1 : -1);
 
   ASSERT_EQ(acc[0], expected);
@@ -485,9 +485,9 @@ void validate_sum(const legate::LogicalArray& array)
 TEST_F(StreamingUnit, Pointwise)
 {
   auto* const runtime = legate::Runtime::get_runtime();
-  const auto array    = runtime->create_array(legate::Shape{EXT, EXT}, legate::int64());
+  const auto store    = runtime->create_store(legate::Shape{EXT, EXT}, legate::int64());
 
-  runtime->issue_fill(array, legate::Scalar{MAGIC});
+  runtime->issue_fill(store, legate::Scalar{MAGIC});
 
   {
     const auto scope = legate::Scope{legate::ParallelPolicy{}
@@ -497,20 +497,19 @@ TEST_F(StreamingUnit, Pointwise)
     for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
       const auto nested = legate::Scope{"Task " + std::to_string(idx)};
 
-      launch_negate_task(array);
+      launch_negate_task(store);
     }
   }
 
-  validate_pointwise(array);
+  validate_pointwise(store);
 }
 
 TEST_F(StreamingUnit, SumAfterPointwise)
 {
   auto* const runtime = legate::Runtime::get_runtime();
-  const auto input    = runtime->create_array(legate::Shape{EXT, EXT}, legate::int64());
-  const auto output   = runtime->create_array(legate::Shape{1},
+  const auto input    = runtime->create_store(legate::Shape{EXT, EXT}, legate::int64());
+  const auto output   = runtime->create_store(legate::Shape{1},
                                               legate::int64(),
-                                              /*nullable=*/false,
                                               /*optimize_scalar=*/true);
 
   runtime->issue_fill(input, legate::Scalar{MAGIC});
@@ -535,9 +534,8 @@ TEST_F(StreamingUnit, SumAfterPointwise)
 TEST_F(StreamingUnit, DISABLED_SumForTemporary)
 {
   auto* const runtime = legate::Runtime::get_runtime();
-  const auto output   = runtime->create_array(legate::Shape{1},
+  const auto output   = runtime->create_store(legate::Shape{1},
                                               legate::int64(),
-                                              /*nullable=*/false,
                                               /*optimize_scalar=*/true);
 
   runtime->issue_fill(output, legate::Scalar{std::int64_t{0}});
@@ -546,7 +544,7 @@ TEST_F(StreamingUnit, DISABLED_SumForTemporary)
     const auto scope = legate::Scope{legate::ParallelPolicy{}
                                        .with_streaming(legate::StreamingMode::RELAXED)
                                        .with_overdecompose_factor(2)};
-    const auto input = runtime->create_array(legate::Shape{EXT, EXT}, legate::int64());
+    const auto input = runtime->create_store(legate::Shape{EXT, EXT}, legate::int64());
 
     runtime->issue_fill(input, legate::Scalar{MAGIC});
 

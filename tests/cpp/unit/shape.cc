@@ -32,9 +32,9 @@ class UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
 
 /*static*/ void UnboundStoreTask::cpu_variant(legate::TaskContext context)
 {
-  auto store1 = context.output(0).data();
-  auto store2 = context.output(1).data();
-  auto store3 = context.output(2).data();
+  auto store1 = context.output(0);
+  auto store2 = context.output(1);
+  auto store3 = context.output(2);
 
   store1.bind_empty_data();
   store2.bind_empty_data();

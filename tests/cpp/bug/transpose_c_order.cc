@@ -21,7 +21,7 @@ class Tester : public legate::LegateTask<Tester> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto store     = context.output(0).data();
+    auto store     = context.output(0);
     auto store_acc = store.read_accessor<std::int64_t, 3>();
     EXPECT_EQ(&(store_acc[{0, 0, 1}]) - &(store_acc[{0, 0, 0}]), 1);
   }
@@ -38,7 +38,7 @@ class LibraryMapper : public legate::mapping::Mapper {
     std::vector<legate::mapping::StoreMapping> mappings;
 
     mappings.push_back(
-      legate::mapping::StoreMapping::default_mapping(task.output(0).data(),
+      legate::mapping::StoreMapping::default_mapping(task.output(0),
                                                      options.front(),
                                                      /*exact*/ true,
                                                      legate::mapping::DimOrdering::c_order()));

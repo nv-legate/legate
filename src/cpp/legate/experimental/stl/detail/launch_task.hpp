@@ -636,8 +636,8 @@ class IterationCPU<Function<Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss...>> 
   static void impl(std::index_sequence<InputsIs...>,
                    std::index_sequence<OutputIs...>,
                    std::index_sequence<ScalarsIs...>,
-                   const std::vector<PhysicalArray>& inputs,
-                   std::vector<PhysicalArray>& outputs,
+                   const std::vector<PhysicalStore>& inputs,
+                   std::vector<PhysicalStore>& outputs,
                    const std::vector<Scalar>& scalars)
   {
     cpu_detail::cpu_for_each(
@@ -650,8 +650,8 @@ class IterationCPU<Function<Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss...>> 
   }
 
   template <std::int32_t ActualDim>
-  void operator()(const std::vector<PhysicalArray>& inputs,
-                  std::vector<PhysicalArray>& outputs,
+  void operator()(const std::vector<PhysicalStore>& inputs,
+                  std::vector<PhysicalStore>& outputs,
                   const std::vector<Scalar>& scalars)
   {
     constexpr std::int32_t DIM = dim_of_v<meta::front<Is...>>;
@@ -702,8 +702,8 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
                    std::index_sequence<OutputIs...>,
                    std::index_sequence<ScalarIs...>,
                    const legate::TaskContext& context,
-                   const std::vector<PhysicalArray>& inputs,
-                   std::vector<PhysicalArray>& outputs,
+                   const std::vector<PhysicalStore>& inputs,
+                   std::vector<PhysicalStore>& outputs,
                    const std::vector<Scalar>& scalars)
   {
     const auto stream            = context.get_task_stream();
@@ -721,8 +721,8 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
 
   template <std::int32_t ActualDim>
   void operator()(const legate::TaskContext& context,
-                  const std::vector<PhysicalArray>& inputs,
-                  std::vector<PhysicalArray>& outputs,
+                  const std::vector<PhysicalStore>& inputs,
+                  std::vector<PhysicalStore>& outputs,
                   const std::vector<Scalar>& scalars)
   {
     constexpr std::int32_t Dim = dim_of_v<meta::front<Is...>>;
@@ -790,11 +790,9 @@ struct IterationOperation  //
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Op, std::int32_t Dim, bool Exclusive = false>
-[[nodiscard]] inline auto as_mdspan_reduction(PhysicalArray& array, Rect<Dim> working_set)
+[[nodiscard]] inline auto as_mdspan_reduction(PhysicalStore& store, Rect<Dim> working_set)
   -> mdspan_reduction_t<Op, Dim, Exclusive>
 {
-  PhysicalStore store = array.data();
-
   using Mapping = ::cuda::std::layout_right::mapping<::cuda::std::dextents<coord_t, Dim>>;
   Mapping mapping{detail::dynamic_extents<Dim>(working_set)};  // NOLINT(misc-const-correctness)
 
@@ -836,9 +834,9 @@ class ReductionCPU<Reduction<Red, Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss
   static void impl(std::index_sequence<InputIs...>,
                    std::index_sequence<OutputIs...>,
                    std::index_sequence<ScalarIs...>,
-                   PhysicalArray& reduction,
-                   const std::vector<PhysicalArray>& inputs,
-                   std::vector<PhysicalArray>& outputs,
+                   PhysicalStore& reduction,
+                   const std::vector<PhysicalStore>& inputs,
+                   std::vector<PhysicalStore>& outputs,
                    const std::vector<Scalar>& scalars)
   {
     constexpr std::int32_t DIM = stl::dim_of_v<Red>;
@@ -857,9 +855,9 @@ class ReductionCPU<Reduction<Red, Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss
   }
 
   template <std::int32_t ActualDim>
-  void operator()(std::vector<PhysicalArray>& reductions,
-                  const std::vector<PhysicalArray>& inputs,
-                  std::vector<PhysicalArray>& outputs,
+  void operator()(std::vector<PhysicalStore>& reductions,
+                  const std::vector<PhysicalStore>& inputs,
+                  std::vector<PhysicalStore>& outputs,
                   const std::vector<Scalar>& scalars)
   {
     constexpr std::int32_t DIM = dim_of_v<Red>;
@@ -916,9 +914,9 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
                    std::index_sequence<OutputIs...>,
                    std::index_sequence<ScalarIs...>,
                    const legate::TaskContext& context,
-                   PhysicalArray& reduction,
-                   const std::vector<PhysicalArray>& inputs,
-                   std::vector<PhysicalArray>& outputs,
+                   PhysicalStore& reduction,
+                   const std::vector<PhysicalStore>& inputs,
+                   std::vector<PhysicalStore>& outputs,
                    const std::vector<Scalar>& scalars)
   {
     const auto stream            = context.get_task_stream();
@@ -942,9 +940,9 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
 
   template <std::int32_t ActualDim>
   void operator()(const legate::TaskContext& context,
-                  std::vector<PhysicalArray>& reductions,
-                  const std::vector<PhysicalArray>& inputs,
-                  std::vector<PhysicalArray>& outputs,
+                  std::vector<PhysicalStore>& reductions,
+                  const std::vector<PhysicalStore>& inputs,
+                  std::vector<PhysicalStore>& outputs,
                   const std::vector<Scalar>& scalars)
   {
     constexpr std::int32_t DIM = dim_of_v<Red>;

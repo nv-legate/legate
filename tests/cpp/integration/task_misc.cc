@@ -39,7 +39,8 @@ class ExceptionUnboundTask : public legate::LegateTask<ExceptionUnboundTask> {
     ASSERT_EQ(scalar_value, SCL_VAL);
     ASSERT_TRUE(context.can_raise_exception());
 
-    auto store = context.output(0).data();
+    auto store = context.output(0);
+
     store.bind_empty_data();
   }
 };

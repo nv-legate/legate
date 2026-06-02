@@ -119,29 +119,28 @@ namespace {
 }
 
 /**
- * @brief Create a LogicalArray from a HDF5 dataset and shape.
+ * @brief Create a LogicalStore from a HDF5 dataset and shape.
  *
  * @param dataset The HDF5 dataset.
  * @param shape The shape of the dataset.
  *
- * @return The LogicalArray.
+ * @return The LogicalStore.
  */
-[[nodiscard]] LogicalArray create_output_array(const wrapper::HDF5DataSet& dataset,
+[[nodiscard]] LogicalStore create_output_store(const wrapper::HDF5DataSet& dataset,
                                                const Shape& shape)
 {
   auto* rt              = Runtime::get_runtime();
-  const auto array_type = deduce_type_from_dataset(dataset);
+  const auto store_type = deduce_type_from_dataset(dataset);
 
   // Safe to call volume here. We constructed the shape ourselves, so it is always ready and
   // volume() will never block.
-  return rt->create_array(
-    shape, array_type, /* nullable */ false, /* optimize_for_scalar */ shape.volume() <= 1);
+  return rt->create_store(shape, store_type, /* optimize_for_scalar */ shape.volume() <= 1);
 }
 
 /**
- * @brief Submit a tiled HDF5 read task and return the result array.
+ * @brief Submit a tiled HDF5 read task and return the result store.
  *
- * Creates an output array, partitions it by the given tile shape, and submits
+ * Creates an output store, partitions it by the given tile shape, and submits
  * a parallel read task.
  *
  * @param native_path The path to the HDF5 file.
@@ -149,15 +148,15 @@ namespace {
  * @param tile_shape The shape of each tile for partitioning.
  * @param dataset The dataset to read.
  *
- * @return The LogicalArray that will contain the read data.
+ * @return The LogicalStore that will contain the read data.
  */
-[[nodiscard]] LogicalArray submit_tiled_read_task(std::string_view native_path,
+[[nodiscard]] LogicalStore submit_tiled_read_task(std::string_view native_path,
                                                   const Shape& shape,
                                                   Span<const std::uint64_t> tile_shape,
                                                   const wrapper::HDF5DataSet& dataset)
 {
-  auto ret       = create_output_array(dataset, shape);
-  auto partition = ret.data().partition_by_tiling(tile_shape);
+  auto ret       = create_output_store(dataset, shape);
+  auto partition = ret.partition_by_tiling(tile_shape);
   auto* rt       = Runtime::get_runtime();
 
   // Create task with launch shape equal to the partition's color shape
@@ -174,7 +173,7 @@ namespace {
 
 }  // namespace
 
-LogicalArray from_file(const std::filesystem::path& file_path, std::string_view dataset_name)
+LogicalStore from_file(const std::filesystem::path& file_path, std::string_view dataset_name)
 {
   if (!std::filesystem::exists(file_path)) {
     throw legate::detail::TracedException<std::system_error>{
@@ -211,7 +210,7 @@ LogicalArray from_file(const std::filesystem::path& file_path, std::string_view 
 
   // this is the fallback case, we use an auto task, which will be parallelized automatically
   // by the runtime
-  auto ret  = create_output_array(dataset, shape);
+  auto ret  = create_output_store(dataset, shape);
   auto task = rt->create_task(experimental::io::detail::core_io_library(),
                               detail::HDF5Read::TASK_CONFIG.task_id());
 
@@ -258,7 +257,7 @@ namespace {
 
 }  // namespace
 
-void to_file(const LogicalArray& array,
+void to_file(const LogicalStore& store,
              std::filesystem::path file_path,
              std::string_view dataset_name)
 {
@@ -286,7 +285,7 @@ void to_file(const LogicalArray& array,
 
     task.add_scalar_arg(vds_dir_scal);
     task.add_scalar_arg(dset_scal);
-    task.add_input(array);
+    task.add_input(store);
     task.add_reduction(dummy_data_dependence, ReductionOpKind::ADD);
     // The point of no return. Once we submit the task, the user will be unable to potentially
     // catch any exceptions thrown by the task, so wait until this moment to actually create the
@@ -302,7 +301,7 @@ void to_file(const LogicalArray& array,
   task.add_scalar_arg(Scalar{file_path.native()});
   task.add_scalar_arg(vds_dir_scal);
   task.add_scalar_arg(Scalar{
-    array.extents()  // This blocks
+    store.extents()  // This blocks
   });
   task.add_scalar_arg(dset_scal);
   task.add_input(dummy_data_dependence);

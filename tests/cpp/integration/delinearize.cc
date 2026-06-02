@@ -27,7 +27,7 @@ struct Arange : public legate::LegateTask<Arange> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
+    auto output = context.output(0);
     auto shape  = output.shape<1>();
     auto acc    = output.write_accessor<std::int64_t, 1>();
     for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
@@ -43,8 +43,8 @@ struct Copy : public legate::LegateTask<Copy> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto input   = context.input(0).data();
-    auto output  = context.output(0).data();
+    auto input   = context.input(0);
+    auto output  = context.output(0);
     auto shape   = output.shape<3>();
     auto out_acc = output.write_accessor<std::int64_t, 3>();
     auto in_acc  = input.read_accessor<std::int64_t, 3>();
@@ -72,8 +72,8 @@ void test_delinearize()
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto input  = runtime->create_array(legate::Shape{16}, legate::int64());
-  auto output = runtime->create_array(legate::Shape{1, 8, 2}, legate::int64());
+  auto input  = runtime->create_store(legate::Shape{16}, legate::int64());
+  auto output = runtime->create_store(legate::Shape{1, 8, 2}, legate::int64());
 
   {
     auto task = runtime->create_task(library, Arange::TASK_CONFIG.task_id());
@@ -90,7 +90,7 @@ void test_delinearize()
     runtime->submit(std::move(task));
   }
 
-  auto p_out = output.data().get_physical_store();
+  auto p_out = output.get_physical_store();
   auto acc   = p_out.read_accessor<std::int64_t, 3>();
   auto shape = p_out.shape<3>();
   for (legate::PointInRectIterator<3> it{shape}; it.valid(); ++it) {

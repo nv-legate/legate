@@ -40,7 +40,7 @@ class ReduceTask : public legate::LegateTask<ReduceTask> {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context)
   {
-    LEGATE_CHECK(context.reduction(0).data().target() == legate::mapping::StoreTarget::FBMEM);
+    LEGATE_CHECK(context.reduction(0).target() == legate::mapping::StoreTarget::FBMEM);
   }
 #endif
 };
@@ -71,7 +71,7 @@ class DupFutureMapper final : public legate::mapping::Mapper {
     const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
   {
     std::vector<legate::mapping::StoreMapping> mappings;
-    const auto store = task.input(0).data();
+    const auto store = task.input(0);
 
     // Two different policies for the SAME future store -> triggers duplicate detection
     auto p1 =
@@ -100,7 +100,7 @@ class CpuRedMapper final : public legate::mapping::Mapper {
     const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
   {
     std::vector<legate::mapping::StoreMapping> v;
-    auto st = task.reduction(0).data();
+    auto st = task.reduction(0);
     auto pol =
       legate::mapping::InstanceMappingPolicy{}.with_target(legate::mapping::StoreTarget::SYSMEM);
     v.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
@@ -123,7 +123,7 @@ class GpuRedMapper final : public legate::mapping::Mapper {
     const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
   {
     std::vector<legate::mapping::StoreMapping> v;
-    auto st = task.reduction(0).data();
+    auto st = task.reduction(0);
     auto pol =
       legate::mapping::InstanceMappingPolicy{}.with_target(legate::mapping::StoreTarget::FBMEM);
     v.emplace_back(legate::mapping::StoreMapping::create(st, std::move(pol)));
@@ -145,7 +145,7 @@ class GpuRedMustAllocMapper final : public legate::mapping::Mapper {
     const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
   {
     std::vector<legate::mapping::StoreMapping> mappings;
-    auto store  = task.reduction(0).data();
+    auto store  = task.reduction(0);
     auto policy = legate::mapping::InstanceMappingPolicy{}
                     .with_target(legate::mapping::StoreTarget::FBMEM)
                     .with_allocation_policy(legate::mapping::AllocPolicy::MUST_ALLOC);
@@ -172,7 +172,7 @@ class PartialFailMapper final : public legate::mapping::Mapper {
 
     // First store (input): use exact=true to ensure successful mapping
     if (!task.inputs().empty()) {
-      auto st  = task.input(0).data();
+      auto st  = task.input(0);
       auto pol = legate::mapping::InstanceMappingPolicy{}
                    .with_target(legate::mapping::StoreTarget::SYSMEM)
                    .with_exact(true);
@@ -181,7 +181,7 @@ class PartialFailMapper final : public legate::mapping::Mapper {
 
     // Second store (reduction): use exact=false, may fail
     if (!task.reductions().empty()) {
-      auto st  = task.reduction(0).data();
+      auto st  = task.reduction(0);
       auto pol = legate::mapping::InstanceMappingPolicy{}
                    .with_target(legate::mapping::StoreTarget::SYSMEM)
                    .with_exact(false);
@@ -210,7 +210,7 @@ class ReadOnlyNonExactMapper final : public legate::mapping::Mapper {
 
     // Use exact=false for input store
     if (!task.inputs().empty()) {
-      auto st  = task.input(0).data();
+      auto st  = task.input(0);
       auto pol = legate::mapping::InstanceMappingPolicy{}
                    .with_target(legate::mapping::StoreTarget::SYSMEM)
                    .with_exact(false);
@@ -235,7 +235,7 @@ class PromotedInputMapper final : public legate::mapping::Mapper {
     const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>&) override
   {
     LEGATE_CHECK(task.inputs().size() == 1);
-    auto store                = task.input(0).data();
+    auto store                = task.input(0);
     const auto imaginary_dims = store.impl()->find_imaginary_dims();
     LEGATE_CHECK(imaginary_dims.size() == 1);
     LEGATE_CHECK(imaginary_dims.front() == 0);

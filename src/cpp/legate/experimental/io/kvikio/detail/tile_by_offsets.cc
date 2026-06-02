@@ -72,7 +72,7 @@ void TileByOffsetsReadFn::operator()(legate::TaskContext context,
 
 /*static*/ void TileByOffsetsRead::cpu_variant(legate::TaskContext context)
 {
-  auto store = context.output(0).data();
+  auto store = context.output(0);
 
   legate::double_dispatch(store.dim(), store.code(), TileByOffsetsReadFn{}, context, &store);
 }

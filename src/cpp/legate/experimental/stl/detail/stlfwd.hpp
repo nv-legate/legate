@@ -219,10 +219,6 @@ template <typename ElementType, std::int32_t Dim, template <typename, std::int32
 LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
   const StoreT<ElementType, Dim>& store);
 
-template <typename ElementType, std::int32_t Dim>
-LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
-  const legate::PhysicalArray& array);
-
 void as_mdspan(const PhysicalStore&&) = delete;
 
 /** @endcond */

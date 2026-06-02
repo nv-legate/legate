@@ -9,7 +9,6 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/user_storage_tracker.h>
-#include <legate/data/logical_array.h>
 #include <legate/data/physical_store.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
@@ -156,10 +155,9 @@ const SharedPtr<detail::LogicalStore>& LogicalStore::impl() const { return impl_
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::detach() { impl()->detach(); }
 
-void LogicalStore::offload_to(mapping::StoreTarget target_mem)
+void LogicalStore::offload_to(mapping::StoreTarget target_mem) const
 {
-  const LogicalArray array{*this};
-  array.offload_to(target_mem);
+  detail::Runtime::get_runtime().offload_to(target_mem, impl());
 }
 
 LogicalStore::~LogicalStore() noexcept = default;

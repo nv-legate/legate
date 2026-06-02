@@ -21,7 +21,8 @@ class ProxyReductionArguments;
 
 namespace legate::detail {
 
-class TaskArrayArg;
+class AutoTask;
+class TaskStoreArg;
 
 /**
  * @brief A visitor used to select a particular argument, or argument group from a task.
@@ -33,9 +34,9 @@ class ArgSelectVisitor {
    *
    * @param array The array.
    *
-   * @return Always returns a `TaskArrayArg`, i.e. a specific argument of the task.
+   * @return Always returns a `TaskStoreArg`, i.e. a specific argument of the task.
    */
-  [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
+  [[nodiscard]] std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> operator()(
     const ProxyArrayArgument& array) const;
 
   /**
@@ -43,7 +44,7 @@ class ArgSelectVisitor {
    *
    * @return Always returns `task->inputs()`.
    */
-  [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
+  [[nodiscard]] std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> operator()(
     const ProxyInputArguments&) const noexcept;
 
   /**
@@ -51,7 +52,7 @@ class ArgSelectVisitor {
    *
    * @return Always returns `task->outputs()`.
    */
-  [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
+  [[nodiscard]] std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> operator()(
     const ProxyOutputArguments&) const noexcept;
 
   /**
@@ -59,7 +60,7 @@ class ArgSelectVisitor {
    *
    * @return Always returns `task->reductions()`.
    */
-  [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
+  [[nodiscard]] std::variant<const TaskStoreArg*, Span<const TaskStoreArg>> operator()(
     const ProxyReductionArguments&) const noexcept;
 
   const AutoTask* task{}; /** The task to select from */

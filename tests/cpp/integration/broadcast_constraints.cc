@@ -45,9 +45,9 @@ struct TesterForUnboundStoresTask : public legate::LegateTask<TesterForUnboundSt
   {
     // If LEGATE_TEST=1 wasn't set, this test doesn't check what it's designed to do
     if (context.is_single_task()) {
-      context.output(0).data().bind_empty_data();
-      context.output(1).data().bind_empty_data();
-      context.output(2).data().bind_empty_data();
+      context.output(0).bind_empty_data();
+      context.output(1).bind_empty_data();
+      context.output(2).bind_empty_data();
       return;
     }
 
@@ -62,9 +62,9 @@ struct TesterForUnboundStoresTask : public legate::LegateTask<TesterForUnboundSt
       ASSERT_EQ(hi[dim], 0);
     }
 
-    context.output(0).data().bind_empty_data();
-    context.output(1).data().bind_empty_data();
-    context.output(2).data().bind_empty_data();
+    context.output(0).bind_empty_data();
+    context.output(1).bind_empty_data();
+    context.output(2).bind_empty_data();
   }
 };
 

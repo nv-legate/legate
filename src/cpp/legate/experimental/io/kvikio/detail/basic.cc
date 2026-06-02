@@ -82,7 +82,7 @@ void KvikioReadWriteFn::operator()(const legate::TaskContext& context,
 /*static*/ void BasicRead::cpu_variant(legate::TaskContext context)
 {
   const auto path = context.scalar(0).value<std::string_view>();
-  auto store      = context.output(0).data();
+  auto store      = context.output(0);
 
   legate::type_dispatch(
     store.code(), KvikioReadWriteFn{}, context, path, &store, /* read_op */ true);
@@ -107,7 +107,7 @@ void KvikioReadWriteFn::operator()(const legate::TaskContext& context,
 /*static*/ void BasicWrite::cpu_variant(legate::TaskContext context)
 {
   const auto path = context.scalar(0).value<std::string_view>();
-  auto store      = context.input(0).data();
+  auto store      = context.input(0);
 
   legate::type_dispatch(
     store.code(), KvikioReadWriteFn{}, context, path, &store, /* read_op */ false);

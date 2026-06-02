@@ -7,7 +7,7 @@
 #pragma once
 
 #include <legate/data/scalar.h>
-#include <legate/mapping/array.h>
+#include <legate/mapping/store.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <vector>
@@ -43,26 +43,26 @@ class LEGATE_EXPORT Task {
   [[nodiscard]] LocalTaskID task_id() const;
 
   /**
-   * @brief Returns metadata for the task's input arrays
+   * @brief Returns metadata for the task's input stores
    *
-   * @return Vector of array metadata objects
+   * @return Vector of store metadata objects
    */
-  [[nodiscard]] std::vector<Array> inputs() const;
+  [[nodiscard]] std::vector<Store> inputs() const;
   /**
-   * @brief Returns metadata for the task's output arrays
+   * @brief Returns metadata for the task's output stores
    *
-   * @return Vector of array metadata objects
+   * @return Vector of store metadata objects
    */
-  [[nodiscard]] std::vector<Array> outputs() const;
+  [[nodiscard]] std::vector<Store> outputs() const;
   /**
-   * @brief Returns metadata for the task's reduction arrays
+   * @brief Returns metadata for the task's reduction stores
    *
-   * @return Vector of array metadata objects
+   * @return Vector of store metadata objects
    */
-  [[nodiscard]] std::vector<Array> reductions() const;
+  [[nodiscard]] std::vector<Store> reductions() const;
   /**
-   * @brief Returns the vector of the task's by-value arguments. Unlike `mapping::Array`
-   * objects that have no access to data in the arrays, the returned `Scalar` objects
+   * @brief Returns the vector of the task's by-value arguments. Unlike `mapping::Store`
+   * objects that have no access to data in the stores, the returned `Scalar` objects
    * contain valid arguments to the task
    *
    * @return Vector of `Scalar` objects
@@ -70,29 +70,29 @@ class LEGATE_EXPORT Task {
   [[nodiscard]] std::vector<Scalar> scalars() const;
 
   /**
-   * @brief Returns metadata for the task's input array
+   * @brief Returns metadata for the task's input store
    *
-   * @param index Index of the input array
+   * @param index Index of the input store
    *
-   * @return Array metadata object
+   * @return Store metadata object
    */
-  [[nodiscard]] Array input(std::uint32_t index) const;
+  [[nodiscard]] Store input(std::uint32_t index) const;
   /**
-   * @brief Returns metadata for the task's output array
+   * @brief Returns metadata for the task's output store
    *
-   * @param index Index of the output array
+   * @param index Index of the output store
    *
-   * @return Array metadata object
+   * @return Store metadata object
    */
-  [[nodiscard]] Array output(std::uint32_t index) const;
+  [[nodiscard]] Store output(std::uint32_t index) const;
   /**
-   * @brief Returns metadata for the task's reduction array
+   * @brief Returns metadata for the task's reduction store
    *
-   * @param index Index of the reduction array
+   * @param index Index of the reduction store
    *
-   * @return Array metadata object
+   * @return Store metadata object
    */
-  [[nodiscard]] Array reduction(std::uint32_t index) const;
+  [[nodiscard]] Store reduction(std::uint32_t index) const;
   /**
    * @brief Returns a by-value argument of the task
    *
@@ -105,19 +105,19 @@ class LEGATE_EXPORT Task {
   /**
    * @brief Returns the number of task's inputs
    *
-   * @return Number of arrays
+   * @return Number of input stores
    */
   [[nodiscard]] std::size_t num_inputs() const;
   /**
    * @brief Returns the number of task's outputs
    *
-   * @return Number of arrays
+   * @return Number of output stores
    */
   [[nodiscard]] std::size_t num_outputs() const;
   /**
    * @brief Returns the number of task's reductions
    *
-   * @return Number of arrays
+   * @return Number of redeuction stores
    */
   [[nodiscard]] std::size_t num_reductions() const;
   /**

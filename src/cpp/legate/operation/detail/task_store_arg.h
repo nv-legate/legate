@@ -16,15 +16,14 @@
 
 namespace legate::detail {
 
-class LogicalArray;
 class LogicalStore;
-class PhysicalArray;
+class PhysicalStore;
 class Variable;
 
-class TaskArrayArg {
+class TaskStoreArg {
  public:
   /**
-   * @brief Construct a TaskArrayArg for LogicalArray.
+   * @brief Construct a TaskStoreArg for LogicalStore.
    *
    * `priv` should be initialized to the following values based on whether the argument as an
    * input, output, or reduction:
@@ -38,23 +37,24 @@ class TaskArrayArg {
    * member should *not* be considered stable until the task is sent to Legion.
    *
    * @param priv The access privilege for this task argument.
-   * @param _array The LogicalArray for this argument.
+   * @param _store The LogicalStore for this argument.
    */
-  TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<LogicalArray> _array);
+  TaskStoreArg(Legion::PrivilegeMode priv,
+               InternalSharedPtr<LogicalStore> _store,
+               const Variable* _variable = nullptr);
 
   /**
-   * @brief Construct a TaskArrayArg for PhysicalArray.
+   * @brief Construct a TaskStoreArg for PhysicalStore.
    *
    * @param priv The access privilege for this task argument.
-   * @param _array The PhysicalArray for this argument.
+   * @param _store The PhysicalStore for this argument.
    */
-  TaskArrayArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalArray> _array);
+  TaskStoreArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalStore> _store);
   [[nodiscard]] bool needs_flush() const;
 
   Legion::PrivilegeMode privilege{Legion::PrivilegeMode::LEGION_NO_ACCESS};
-  std::variant<InternalSharedPtr<LogicalArray>, InternalSharedPtr<PhysicalArray>> array{};
-  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>
-    mapping{};  // Only used for LogicalArray
+  std::variant<InternalSharedPtr<LogicalStore>, InternalSharedPtr<PhysicalStore>> store{};
+  const Variable* variable{};
 };
 
 }  // namespace legate::detail

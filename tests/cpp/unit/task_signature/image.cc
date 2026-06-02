@@ -27,18 +27,17 @@ enum TaskIDs : std::uint8_t {
   IMAGE_SINGLE_INPUT_SINGLE_INPUT,
 };
 
-[[nodiscard]] legate::LogicalArray make_array()
+[[nodiscard]] legate::LogicalStore make_store()
 {
-  auto* runtime = legate::Runtime::get_runtime();
-  auto ret      = runtime->create_array(legate::Shape{3}, legate::point_type(1));
+  auto* runtime   = legate::Runtime::get_runtime();
+  auto data_store = runtime->create_store(legate::Shape{3}, legate::point_type(1));
 
-  auto data_store = ret.data();
-  auto accessor   = data_store.get_physical_store().write_accessor<legate::Point<1>, 1>();
-  accessor[0]     = legate::Point<1>{0};
-  accessor[1]     = legate::Point<1>{1};
-  accessor[2]     = legate::Point<1>{2};
+  auto accessor = data_store.get_physical_store().write_accessor<legate::Point<1>, 1>();
+  accessor[0]   = legate::Point<1>{0};
+  accessor[1]   = legate::Point<1>{1};
+  accessor[2]   = legate::Point<1>{2};
 
-  return ret;
+  return data_store;
 }
 
 class ImageSingleInputSingleOutput : public legate::LegateTask<ImageSingleInputSingleOutput> {
@@ -129,8 +128,8 @@ TYPED_TEST(TaskSignatureImageUnit, Basic)
   auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(library, TypeParam::TASK_CONFIG.task_id());
 
-  task.add_input(make_array());
-  task.add_output(make_array());
+  task.add_input(make_store());
+  task.add_output(make_store());
   runtime->submit(std::move(task));
 }
 

@@ -53,12 +53,12 @@ std::vector<mapping::StoreMapping> Mapper::store_mappings(
 
   mappings.reserve(task.num_inputs() + task.num_outputs());
   for (std::size_t i = 0; i < task.num_inputs(); ++i) {
-    auto&& store = task.input(static_cast<std::uint32_t>(i)).data();
+    auto&& store = task.input(static_cast<std::uint32_t>(i));
 
     mappings.emplace_back(mapping::StoreMapping::default_mapping(store, target, /* exact */ true));
   }
   for (std::size_t i = 0; i < task.num_outputs(); ++i) {
-    auto&& store = task.output(static_cast<std::uint32_t>(i)).data();
+    auto&& store = task.output(static_cast<std::uint32_t>(i));
 
     mappings.emplace_back(mapping::StoreMapping::default_mapping(store, target, /* exact */ true));
   }
@@ -70,13 +70,13 @@ namespace {
 /**
  * @brief Computes the HDF5 task's Legion pool size.
  *
- * @param array The input or output array being written to disk.
+ * @param store The input or output store being written to disk.
  *
  * @return The task pool size.
  */
-[[nodiscard]] std::size_t hdf5_task_pool_size(const legate::mapping::Array& array)
+[[nodiscard]] std::size_t hdf5_task_pool_size(const legate::mapping::Store& store)
 {
-  const auto bytes = array.domain().get_volume() * array.type().size();
+  const auto bytes = store.domain().get_volume() * store.type().size();
 
   return legate::detail::round_up_to_multiple(bytes, DEFAULT_ALIGNMENT);
 }

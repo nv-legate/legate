@@ -357,7 +357,7 @@ class TestStoreOpsErrors:
 
     def test_fill_non_nullable(self) -> None:
         runtime = get_legate_runtime()
-        msg = "Non-nullable arrays cannot be filled with null"
+        msg = "Fill value and target must have the same type"
         store = runtime.create_store(ty.float64, (1, 1))
         with pytest.raises(ValueError, match=msg):
             runtime.issue_fill(store, None)

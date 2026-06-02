@@ -31,50 +31,6 @@ namespace test_io_hdf5_negative {
 
 namespace {
 
-/**
- * @brief Helper function to create an HDF5 file with variable-length string data.
- */
-void create_hdf5_file_with_strings(const std::filesystem::path& file_path,
-                                   const std::string& dataset_name,
-                                   const std::vector<std::string>& strings)
-{
-  const auto file = H5Fcreate(file_path.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-
-  ASSERT_GE(file, 0);
-
-  const auto dims  = std::array<hsize_t, 1>{strings.size()};
-  const auto space = H5Screate_simple(dims.size(), dims.data(), nullptr);
-
-  ASSERT_GE(space, 0);
-
-  // Create variable-length string type
-  const auto str_type = H5Tcopy(H5T_C_S1);
-
-  ASSERT_GE(str_type, 0);
-  ASSERT_GE(H5Tset_size(str_type, H5T_VARIABLE), 0);
-
-  const auto dset =
-    H5Dcreate(file, dataset_name.c_str(), str_type, space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  ASSERT_GE(dset, 0);
-
-  // Convert strings to C-style string pointers
-  auto c_strs = std::vector<const char*>{};
-
-  c_strs.reserve(strings.size());
-  for (const auto& s : strings) {
-    c_strs.push_back(s.c_str());
-  }
-
-  ASSERT_GE(
-    H5Dwrite(
-      dset, str_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, static_cast<const void*>(c_strs.data())),
-    0);
-  ASSERT_GE(H5Tclose(str_type), 0);
-  ASSERT_GE(H5Sclose(space), 0);
-  ASSERT_GE(H5Dclose(dset), 0);
-  ASSERT_GE(H5Fclose(file), 0);
-}
-
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_io_hdf5_negative";
@@ -159,41 +115,16 @@ TEST_F(IOHDF5NegativeTest, ToFileFilePathIsDirectory)
 
   // Create a simple array to write
   const auto shape    = legate::Shape{5};
-  const auto array    = runtime->create_array(shape, legate::int32());
+  const auto store    = runtime->create_store(shape, legate::int32());
   const auto dir_path = base_path / "test_directory";
 
   std::filesystem::create_directories(dir_path);
   ASSERT_TRUE(std::filesystem::is_directory(dir_path));
 
   // Should throw std::invalid_argument when path is a directory
-  ASSERT_THAT([&]() { legate::io::hdf5::to_file(array, dir_path, "dataset"); },
+  ASSERT_THAT([&]() { legate::io::hdf5::to_file(store, dir_path, "dataset"); },
               testing::ThrowsMessage<std::invalid_argument>(
                 ::testing::HasSubstr("must be the name of a file, not a directory")));
-}
-
-// Test that reading string type aborts (not supported)
-TEST_F(IOHDF5NegativeDeathTest, FromFileStringTypeNotSupported)
-{
-  constexpr auto DATASET = "string_dataset";
-  const auto file_path   = base_path / "string_death_test.h5";
-  const auto strings     = std::vector<std::string>{"hello", "world", "test"};
-
-  // Note: File creation must be inside ASSERT_DEATH block because death tests fork the process.
-  // If created outside, the forked child process cannot lock the already-locked HDF5 file.
-  ASSERT_DEATH(
-    {
-      create_hdf5_file_with_strings(file_path, DATASET, strings);
-
-      const auto read_array = legate::io::hdf5::from_file(file_path, DATASET);
-      // Verify type deduction works correctly
-      if (read_array.type() != legate::string_type()) {
-        std::exit(1);  // Wrong type - fail differently
-      }
-      // This will trigger the read task and abort
-      auto* runtime = legate::Runtime::get_runtime();
-      runtime->issue_execution_fence(/* block */ true);
-    },
-    "(HDF5Read.*threw an unexpected exception|Data store of a nested array cannot be retrieved)");
 }
 
 }  // namespace test_io_hdf5_negative

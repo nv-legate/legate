@@ -205,7 +205,7 @@ class TypeDispatcher : public legate::detail::InnerTypeDispatchFn<DIM> {
 
 void task_body(const legate::TaskContext& context, bool is_device)
 {
-  auto store = context.output(0).data();
+  auto store = context.output(0);
 
   // The below is just an unrolled
   //
