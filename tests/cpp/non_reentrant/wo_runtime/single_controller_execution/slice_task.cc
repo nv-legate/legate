@@ -60,23 +60,4 @@ TEST_F(SingleControllerExecutionSliceTask, IndexTaskCompletesWithSingleControlle
   runtime->issue_execution_fence(/*block=*/true);
 }
 
-TEST_F(SingleControllerExecutionSliceTask, CopyUsesGlobalMachine)
-{
-  constexpr std::uint64_t extent = 4;
-  constexpr std::int64_t value   = 123;
-  auto* const runtime            = legate::Runtime::get_runtime();
-  auto source                    = runtime->create_store(legate::Shape{extent}, legate::int64());
-  auto target                    = runtime->create_store(legate::Shape{extent}, legate::int64());
-
-  runtime->issue_fill(source, legate::Scalar{value});
-  runtime->issue_copy(target, source);
-  runtime->issue_execution_fence(/*block=*/true);
-
-  const auto accessor        = target.get_physical_store().span_read_accessor<std::int64_t, 1>();
-  const auto accessor_extent = static_cast<std::size_t>(accessor.extent(0));
-  for (std::size_t idx = 0; idx < accessor_extent; ++idx) {
-    ASSERT_EQ(accessor(idx), value);
-  }
-}
-
 }  // namespace test_single_controller_execution_slice_task

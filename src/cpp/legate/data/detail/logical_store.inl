@@ -52,18 +52,6 @@ inline std::uint64_t LogicalStore::id() const { return store_id_; }
 
 inline const InternalSharedPtr<Storage>& LogicalStore::get_storage() const { return storage_; }
 
-inline const InternalSharedPtr<LogicalRegionField>& LogicalStore::get_region_field() const
-{
-  return storage_->get_region_field();
-}
-
-inline Legion::Future LogicalStore::get_future() const { return get_storage()->get_future(); }
-
-inline Legion::FutureMap LogicalStore::get_future_map() const
-{
-  return get_storage()->get_future_map();
-}
-
 // We can't rely on the mapped_ here, as this store might just be an alias to some other store the
 // user created a physical store with. The storage_ holds the ground truth
 inline bool LogicalStore::is_mapped() const { return get_storage()->is_mapped(); }
@@ -81,22 +69,6 @@ inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<Logic
                                                    Slice sl)
 {
   return self->slice_(self, dim, std::move(sl));
-}
-
-inline StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStore>& self,
-                                             const Variable* variable,
-                                             const Strategy& strategy,
-                                             const Domain& launch_domain,
-                                             Legion::PrivilegeMode privilege,
-                                             GlobalRedopID redop)
-{
-  return self->to_launcher_arg_(self, variable, strategy, launch_domain, privilege, redop);
-}
-
-inline RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<LogicalStore>& self,
-                                                      Legion::PrivilegeMode privilege)
-{
-  return self->to_launcher_arg_for_fixup_(self, privilege);
 }
 
 inline const std::optional<InternalSharedPtr<PhysicalStore>>&

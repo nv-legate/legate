@@ -21,7 +21,6 @@
 #include <legate/data/detail/transform/transform_stack.h>
 #include <legate/data/detail/transform/transpose.h>
 #include <legate/mapping/detail/machine.h>
-#include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/partition.h>
@@ -30,7 +29,6 @@
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/task/detail/task_return_layout.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/array_algorithms.h>
@@ -136,30 +134,6 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage,
   if (log_legate().want_debug()) {
     log_legate().debug() << "Create non-owning " << to_string();
   }
-}
-
-// NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField> region_field)
-{
-  LEGATE_ASSERT(!has_scalar_storage());
-  // The shape object of this store must be an alias to that of the storage
-  LEGATE_ASSERT(get_storage()->shape() == shape());
-  // this call updates the shape for both the storage and the store
-  get_storage()->set_region_field(std::move(region_field));
-}
-
-// NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicalStore::set_future(Legion::Future future, std::size_t scalar_offset)
-{
-  LEGATE_ASSERT(has_scalar_storage());
-  get_storage()->set_future(std::move(future), scalar_offset);
-}
-
-// NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicalStore::set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset)
-{
-  LEGATE_ASSERT(has_scalar_storage());
-  get_storage()->set_future_map(std::move(future_map), scalar_offset);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::reinterpret_as(InternalSharedPtr<Type> type) const
@@ -519,14 +493,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::detach()
 {
-  if (transformed()) {
-    throw TracedException<std::invalid_argument>{"Manual detach must be called on the root store"};
-  }
-  if (has_scalar_storage() || unbound()) {
-    throw TracedException<std::invalid_argument>{
-      "Only stores created with share=true can be manually detached"};
-  }
-  get_region_field()->detach();
+  // TODO(wonchanl): Need a v2 implementation
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
@@ -641,202 +608,6 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
     get_storage(), partition->invert(partition, transform()), std::move(complete));
   return make_internal_shared<LogicalStorePartition>(
     std::move(partition), std::move(storage_partition), self);
-}
-
-void LogicalStore::pack(BufferBuilder& buffer) const
-{
-  buffer.pack<bool>(has_scalar_storage());
-  buffer.pack<bool>(deferred_bound());
-  buffer.pack<std::uint32_t>(dim());
-  type()->pack(buffer);
-  transform_->pack(buffer);
-}
-
-void LogicalStore::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
-{
-  if (has_scalar_storage()) {
-    std::ignore = layout->next(type()->size(), type()->alignment());
-  }
-}
-
-StoreAnalyzable LogicalStore::to_launcher_arg_(const InternalSharedPtr<LogicalStore>& self,
-                                               const Variable* variable,
-                                               const Strategy& strategy,
-                                               const Domain& launch_domain,
-                                               Legion::PrivilegeMode privilege,
-                                               GlobalRedopID redop)
-{
-  LEGATE_ASSERT(self.get() == this);
-
-  switch (get_storage()->kind()) {
-    case Storage::Kind::FUTURE: {
-      return future_to_launcher_arg_(get_storage()->get_future(), launch_domain, privilege, redop);
-    }
-    case Storage::Kind::FUTURE_MAP: {
-      return future_map_to_launcher_arg_(launch_domain, privilege, redop);
-    }
-    case Storage::Kind::REGION_FIELD: {
-      return region_field_to_launcher_arg_(
-        self, variable, strategy, launch_domain, privilege, redop);
-    }
-    case Storage::Kind::INLINE_STORAGE: {
-      LEGATE_ABORT("TODO");
-    }
-  }
-
-  LEGATE_ABORT("Unhandled storage kind ", to_underlying(get_storage()->kind()));
-}
-
-StoreAnalyzable LogicalStore::future_to_launcher_arg_(Legion::Future future,
-                                                      const Domain& launch_domain,
-                                                      Legion::PrivilegeMode privilege,
-                                                      GlobalRedopID redop)
-{
-  // The code below has not been updated to take other flags into account.
-  LEGATE_CHECK(privilege == LEGION_REDUCE || privilege == LEGION_WRITE_ONLY ||
-               privilege == LEGION_READ_ONLY);
-  if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
-    privilege = LEGION_READ_WRITE;
-  }
-
-  if (!future.exists()) {
-    if (privilege != LEGION_WRITE_ONLY) {
-      throw TracedException<std::invalid_argument>{
-        "Read access or reduction to an uninitialized scalar store is prohibited"};
-    }
-    return WriteOnlyScalarStoreArg{this, redop};
-  }
-
-  // Scalar reductions don't need to pass the future or future map holding the current value to the
-  // task, as the physical stores will be initialized with the reduction identity. They are later
-  // passed to a future map reduction as an initial value in the task launch postamble.
-  if (privilege == LEGION_REDUCE) {
-    return WriteOnlyScalarStoreArg{this, redop};
-  }
-
-  // TODO(wonchanl): technically, we can create a WriteOnlyScalarStoreArg when privilege is
-  // LEGION_WRITE_ONLY. Unfortunately, we don't currently track scalar stores passed as both inputs
-  // and outputs, which are currently mapped to separate physical stores in the task. So, the
-  // privilege of this store alone doesn't tell us whether it's truly a write-only store or this is
-  // also passed as an input store. For the time being, we just pass the future when it exists even
-  // when the store is not actually read by the task.
-  return ScalarStoreArg{
-    this, std::move(future), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY, redop};
-}
-
-StoreAnalyzable LogicalStore::future_map_to_launcher_arg_(const Domain& launch_domain,
-                                                          Legion::PrivilegeMode privilege,
-                                                          GlobalRedopID redop)
-{
-  // We need to check for both as we don't mark scalars as deferred_bound.
-  if (deferred_bound()) {
-    return WriteOnlyScalarStoreArg{this, GlobalRedopID{-1} /*redop*/};
-  }
-  LEGATE_ASSERT(get_storage()->replicated());
-
-  auto future_or_future_map = get_storage()->get_future_or_future_map(launch_domain);
-
-  return std::visit(
-    Overload{
-      [&](Legion::Future fut) {
-        return future_to_launcher_arg_(std::move(fut), launch_domain, privilege, redop);
-      },
-      [&](Legion::FutureMap map) -> StoreAnalyzable {
-        // The code below has not been updated to take other flags into account.
-        LEGATE_CHECK(privilege == LEGION_REDUCE || privilege == LEGION_WRITE_ONLY ||
-                     privilege == LEGION_READ_ONLY);
-        // Scalar reductions don't need to pass the future or future map holding the current value
-        // to the task, as the physical stores will be initialized with the reduction identity. They
-        // are later passed to a future map reduction as an initial value in the task launch
-        // postamble.
-        if (privilege == LEGION_REDUCE) {
-          return WriteOnlyScalarStoreArg{this, redop};
-        }
-        // TODO(wonchanl): technically, we can create a WriteOnlyScalarStoreArg when privilege is
-        // LEGION_WRITE_ONLY. Unfortunately, we don't currently track scalar stores passed as both
-        // inputs and outputs, which are currently mapped to separate physical stores in the task.
-        // So, the privilege of this store alone doesn't tell us whether it's truly a write-only
-        // store or this is also passed as an input store. For the time being, we just pass the
-        // future when it exists even when the store is not actually read by the task.
-        return ReplicatedScalarStoreArg{
-          this, std::move(map), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY};
-      }},
-    future_or_future_map);
-}
-
-StoreAnalyzable LogicalStore::region_field_to_launcher_arg_(
-  const InternalSharedPtr<LogicalStore>& self,
-  const Variable* variable,
-  const Strategy& strategy,
-  const Domain& launch_domain,
-  Legion::PrivilegeMode privilege,
-  GlobalRedopID redop)
-{
-  if (deferred_bound()) {
-    auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(*variable);
-    return OutputRegionArg{this,
-                           field_space,
-                           field_id,
-                           strategy.find_store_projection(*variable),
-                           strategy.find_color_space_for_unbound_store(*variable)};
-  }
-
-  auto&& partition      = strategy[*variable];
-  auto store_partition  = create_partition_(self, partition);
-  auto legion_partition = launch_domain.is_valid()
-                            ? store_partition->storage_partition()->get_legion_partition()
-                            : Legion::LogicalPartition::NO_PART;
-  auto store_proj = StoreProjection{legion_partition, strategy.find_store_projection(*variable)};
-
-  store_proj.redop = redop;
-
-  // We ignore LEGIION_DISCARD_OUTPUT_MASK below because it is "fake". This privilege is
-  // artificially added during streaming sections to allow early discards of the
-  // operands. Otherwise, operands should only have either:
-  //
-  // 1. LEGION_READ_ONLY.
-  // 2. LEGION_WRITE_ONLY.
-  // 3. LEGION_REDUCE.
-  if ((ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK) == LEGION_REDUCE) &&
-      store_partition->is_disjoint_for(launch_domain)) {
-    privilege |= LEGION_READ_WRITE;
-  }
-  if (((ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK) == LEGION_WRITE_ONLY) ||
-       (ignore_privilege(privilege, LEGION_DISCARD_OUTPUT_MASK) == LEGION_READ_WRITE)) &&
-      partition->has_launch_domain()) {
-    const auto* op = variable->operation();
-
-    set_key_partition(op->machine(), op->parallel_policy(), partition);
-
-    // If the cached key partition is an image partition, we need to make sure that the cache
-    // doesn't outlive the store used to derive the partition (otherwise the image operation sees an
-    // uninitialized store).
-    if (auto* const image = dynamic_cast<Image*>(partition.get()); image) {
-      image->func()->get_region_field()->add_invalidation_callback(
-        [weak_self = InternalWeakPtr<LogicalStore>{self}, to_match = partition.get()]() noexcept {
-          if (auto maybe_self = weak_self.lock(); maybe_self) {
-            maybe_self->maybe_reset_key_partition_(to_match);
-          }
-        });
-    }
-  }
-
-  return RegionFieldArg{this, privilege, std::move(store_proj)};
-}
-
-RegionFieldArg LogicalStore::to_launcher_arg_for_fixup_(const InternalSharedPtr<LogicalStore>& self,
-                                                        Legion::PrivilegeMode privilege)
-{
-  LEGATE_ASSERT(self.get() == this);
-  LEGATE_ASSERT(self->key_partition_.has_value());
-  LEGATE_ASSERT(get_storage()->kind() == Storage::Kind::REGION_FIELD);
-  auto store_partition =
-    create_partition_(self,
-                      *self->key_partition_  // NOLINT(bugprone-unchecked-optional-access)
-    );
-  auto store_proj =
-    StoreProjection{store_partition->storage_partition()->get_legion_partition(), /*proj_id=*/0};
-  return RegionFieldArg{this, privilege, std::move(store_proj)};
 }
 
 std::string LogicalStore::to_string() const

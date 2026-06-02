@@ -10,7 +10,6 @@
 #include <legate/cuda/detail/cuda_util.h>
 #include <legate/cuda/detail/nvtx.h>
 #include <legate/data/buffer.h>
-#include <legate/operation/detail/task_launcher.h>
 #include <legate/runtime/detail/communicator_manager.h>
 #include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/library.h>
@@ -235,67 +234,15 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
   return target == mapping::TaskTarget::GPU;
 }
 
-Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
-                                       std::uint32_t num_tasks)
+Legion::FutureMap Factory::initialize_(const mapping::detail::Machine&, std::uint32_t)
 {
-  const Domain launch_domain{
-    Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
-
-  // Create a communicator ID
-  //
-  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
-  // admissible to streaming; second, the over-decomposition factor is already factored in the
-  // number of tasks.
-  detail::TaskLauncher init_nccl_id_launcher{*core_library_,
-                                             machine,
-                                             ParallelPolicy{},
-                                             InitId::TASK_CONFIG.task_id(),
-                                             Legion::ProjectionID{0},
-                                             static_cast<Legion::MappingTagID>(VariantCode::GPU)};
-  init_nccl_id_launcher.set_side_effect(true);
-  // Setting this according to the return type on the task variant. Have to do this manually because
-  // this launch is using the Legion task launcher directly.
-  init_nccl_id_launcher.set_future_size(sizeof(ncclUniqueId));
-  auto nccl_id = init_nccl_id_launcher.execute_single();
-
-  // Then create the communicators on participating GPUs
-  //
-  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
-  // admissible to streaming; second, the over-decomposition factor is already factored in the
-  // number of tasks.
-  detail::TaskLauncher init_nccl_launcher{*core_library_,
-                                          machine,
-                                          ParallelPolicy{},
-                                          Init::TASK_CONFIG.task_id(),
-                                          Legion::ProjectionID{0},
-                                          static_cast<Legion::MappingTagID>(VariantCode::GPU)};
-  init_nccl_launcher.add_future(nccl_id);
-  // Setting this according to the return type on the task variant. Have to do this manually because
-  // this launch is using the Legion task launcher directly.
-  init_nccl_launcher.set_future_size(sizeof(ncclComm_t*));
-  init_nccl_launcher.set_concurrent(true);
-  return init_nccl_launcher.execute(launch_domain);
+  // TODO(wonchanl): Need a v2 implementation
+  return {};
 }
 
-void Factory::finalize_(const mapping::detail::Machine& machine,
-                        std::uint32_t num_tasks,
-                        const Legion::FutureMap& communicator)
+void Factory::finalize_(const mapping::detail::Machine&, std::uint32_t, const Legion::FutureMap&)
 {
-  const Domain launch_domain{
-    Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
-
-  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
-  // admissible to streaming; second, the over-decomposition factor is already factored in the
-  // number of tasks.
-  detail::TaskLauncher launcher{*core_library_,
-                                machine,
-                                ParallelPolicy{},
-                                Finalize::TASK_CONFIG.task_id(),
-                                Legion::ProjectionID{0},
-                                static_cast<Legion::MappingTagID>(VariantCode::GPU)};
-  launcher.set_concurrent(true);
-  launcher.add_future_map(communicator);
-  launcher.execute(launch_domain);
+  // TODO(wonchanl): Need a v2 implementation
 }
 
 }  // namespace

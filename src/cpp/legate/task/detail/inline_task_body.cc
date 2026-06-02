@@ -340,38 +340,9 @@ execute_task(const TaskBase& task,
   return {std::move(exn), std::move(deferred_buffers)};
 }
 
-void handle_return_values_impl(const LogicalTask& task,
-                               Span<const Legion::UntypedDeferredValue> deferred_buffers)
+void handle_return_values_impl(const LogicalTask&, Span<const Legion::UntypedDeferredValue>)
 {
-  // Order of deferred_buffers and scalar_outputs, scalar_reductions must be the same. See
-  // make_inline_task_context() for more details.
-  const auto scalar_set_future = [&](const InternalSharedPtr<LogicalStore>& scal,
-                                     const Legion::UntypedDeferredValue& buf) {
-    const auto size = scal->storage_size();
-    auto* ptr       = AccessorRO<std::int8_t, 1>{buf, size}.ptr(0);
-    auto fut        = Legion::Future::from_untyped_pointer(
-      ptr,
-      size,
-      // Don't take ownership because Legion already "owns" the
-      // deferred value, we wouldn't want to double-free it.
-      false,
-      // task.provenance() is a ZStringView
-      task.provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
-    );
-    static_assert(std::is_same_v<std::decay_t<decltype(task.provenance())>, ZStringView>);
-
-    scal->set_future(std::move(fut));
-  };
-  std::size_t idx = 0;
-
-  LEGATE_ASSERT(deferred_buffers.size() ==
-                task.scalar_outputs().size() + task.scalar_reductions().size());
-  for (auto&& scal : task.scalar_outputs()) {
-    scalar_set_future(scal, deferred_buffers[idx++]);
-  }
-  for (auto&& [scal, _] : task.scalar_reductions()) {
-    scalar_set_future(scal, deferred_buffers[idx++]);
-  }
+  // TODO(wonchanl): Need a v2 implementation
 }
 
 void handle_return_values_impl(const PhysicalTask& task,

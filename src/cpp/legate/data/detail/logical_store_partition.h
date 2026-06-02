@@ -12,7 +12,6 @@
 #include <legate/data/detail/storage.h>
 #include <legate/data/detail/storage_partition.h>
 #include <legate/data/slice.h>
-#include <legate/operation/detail/launcher_arg.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>

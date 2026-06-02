@@ -99,79 +99,6 @@ ManualTask Runtime::create_task(Library library, LocalTaskID task_id, const Doma
   return ManualTask{impl_->create_task(*library.impl(), task_id, launch_domain)};
 }
 
-void Runtime::issue_copy(LogicalStore& target,
-                         const LogicalStore& source,
-                         std::optional<ReductionOpKind> redop_kind)
-{
-  auto op =
-    redop_kind ? std::make_optional(static_cast<std::int32_t>(redop_kind.value())) : std::nullopt;
-  issue_copy(target, source, op);
-}
-
-void Runtime::issue_copy(LogicalStore& target,
-                         const LogicalStore& source,
-                         std::optional<std::int32_t> redop_kind)
-{
-  impl_->issue_copy(target.impl(), source.impl(), redop_kind);
-}
-
-void Runtime::issue_gather(LogicalStore& target,
-                           const LogicalStore& source,
-                           const LogicalStore& source_indirect,
-                           std::optional<ReductionOpKind> redop_kind)
-{
-  auto op =
-    redop_kind ? std::make_optional(static_cast<std::int32_t>(redop_kind.value())) : std::nullopt;
-  issue_gather(target, source, source_indirect, op);
-}
-
-void Runtime::issue_gather(LogicalStore& target,
-                           const LogicalStore& source,
-                           const LogicalStore& source_indirect,
-                           std::optional<std::int32_t> redop_kind)
-{
-  impl_->issue_gather(target.impl(), source.impl(), source_indirect.impl(), redop_kind);
-}
-
-void Runtime::issue_scatter(LogicalStore& target,
-                            const LogicalStore& target_indirect,
-                            const LogicalStore& source,
-                            std::optional<ReductionOpKind> redop_kind)
-{
-  auto op =
-    redop_kind ? std::make_optional(static_cast<std::int32_t>(redop_kind.value())) : std::nullopt;
-  issue_scatter(target, target_indirect, source, op);
-}
-
-void Runtime::issue_scatter(LogicalStore& target,
-                            const LogicalStore& target_indirect,
-                            const LogicalStore& source,
-                            std::optional<std::int32_t> redop_kind)
-{
-  impl_->issue_scatter(target.impl(), target_indirect.impl(), source.impl(), redop_kind);
-}
-
-void Runtime::issue_scatter_gather(LogicalStore& target,
-                                   const LogicalStore& target_indirect,
-                                   const LogicalStore& source,
-                                   const LogicalStore& source_indirect,
-                                   std::optional<ReductionOpKind> redop_kind)
-{
-  auto op =
-    redop_kind ? std::make_optional(static_cast<std::int32_t>(redop_kind.value())) : std::nullopt;
-  issue_scatter_gather(target, target_indirect, source, source_indirect, op);
-}
-
-void Runtime::issue_scatter_gather(LogicalStore& target,
-                                   const LogicalStore& target_indirect,
-                                   const LogicalStore& source,
-                                   const LogicalStore& source_indirect,
-                                   std::optional<std::int32_t> redop_kind)
-{
-  impl_->issue_scatter_gather(
-    target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl(), redop_kind);
-}
-
 void Runtime::issue_fill(const LogicalStore& lhs, const LogicalStore& value)
 {
   impl_->issue_fill(lhs.impl(), value.impl());
@@ -180,17 +107,6 @@ void Runtime::issue_fill(const LogicalStore& lhs, const LogicalStore& value)
 void Runtime::issue_fill(const LogicalStore& lhs, const Scalar& value)
 {
   impl_->issue_fill(lhs.impl(), *value.impl());
-}
-
-LogicalStore Runtime::tree_reduce(Library library,
-                                  LocalTaskID task_id,
-                                  const LogicalStore& store,
-                                  std::int32_t radix)
-{
-  auto out_store = create_store(store.type(), /*dim=*/1);
-
-  impl_->tree_reduce(*library.impl(), task_id, store.impl(), out_store.impl(), radix);
-  return out_store;
 }
 
 void Runtime::submit(AutoTask&& task)

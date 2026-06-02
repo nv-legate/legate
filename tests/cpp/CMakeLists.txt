@@ -134,7 +134,6 @@ set(
   # bug
   bug/alias_via_promote.cc
   bug/aligned_unpack.cc
-  bug/dangling_store_partition.cc
   bug/key_partition_invalidation.cc
   bug/interfering_requirements.cc
   bug/logical_store_transform.cc
@@ -155,22 +154,15 @@ set(
   integration/broadcast_constraints.cc
   integration/child_store.cc
   integration/consensus_match.cc
-  integration/copy_failure.cc
-  integration/copy_gather.cc
   integration/core_mapper.cc
-  integration/copy_gather_scatter.cc
-  integration/copy_normal.cc
-  integration/copy_scatter.cc
   integration/delinearize.cc
   integration/exception.cc
-  integration/field_reuse.cc
   integration/fill.cc
   integration/find_memory_kind.cc
   integration/image_constraints.cc
   integration/index_attach.cc
   integration/inline_map.cc
   integration/input_output.cc
-  integration/is_partitioned.cc
   integration/is_running_in_task.cc
   integration/machine_scope.cc
   integration/manual_task.cc
@@ -202,8 +194,6 @@ set(
   integration/task_store/manual_task_tests.cc
   integration/task_store/physical_task_nested_tests.cc
   integration/transpose_dim_order.cc
-  integration/tree_reduce.cc
-  integration/tree_reduce_unique.cc
   integration/tunable.cc
   integration/variant_options_precedence.cc
   integration/opaque.cc
@@ -214,9 +204,7 @@ set(
   unit/data/partition_placement_info.cc
   unit/dispatch.cc
   unit/formatter.cc
-  unit/future_wrapper.cc
   unit/library.cc
-  unit/logical_region_field.cc
   unit/parallel_policy.cc
   unit/registration.cc
   unit/runtime.cc
@@ -248,12 +236,10 @@ set(
   unit/mapping/base_mapper.cc
   unit/mapping/common_api.cc
   unit/mapping/dim_ordering.cc
-  unit/mapping/instance_manager.cc
   unit/mapping/instance_mapping_policy.cc
   unit/mapping/store/api_test.cc
   unit/mapping/store/colocate.cc
   unit/mapping/store/domain.cc
-  unit/mapping/store/future_wrapper.cc
   unit/mapping/store/properties.cc
   unit/mapping/store/transform.cc
   unit/mapping/store_mapping.cc
@@ -310,7 +296,6 @@ set(
   unit/dlpack/to_dlpack/to_dlpack.cc
   unit/streaming/extract_streamable_prefix.cc
   unit/streaming/nested_scopes.cc
-  unit/streaming/process_streaming_run.cc
   unit/proxy_store_mapping.cc
   # experimental
   experimental/stl/elementwise.cc
@@ -414,8 +399,6 @@ set(
   non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/inline_storage/basic.cc
   non_reentrant/wo_runtime/machine/local_machine.cc
-  non_reentrant/wo_runtime/mapping/map_partition.cc
-  non_reentrant/wo_runtime/single_controller_execution/slice_task.cc
   non_reentrant/wo_runtime/streaming/streaming.cc
 )
 

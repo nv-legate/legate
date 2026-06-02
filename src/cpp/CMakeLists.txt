@@ -345,26 +345,17 @@ target_sources(
     legate/operation/projection.cc
     legate/operation/task.cc
     legate/operation/detail/attach.cc
-    legate/operation/detail/copy.cc
-    legate/operation/detail/copy_launcher.cc
     legate/operation/detail/discard.cc
     legate/operation/detail/execution_fence.cc
     legate/operation/detail/fill.cc
-    legate/operation/detail/fill_launcher.cc
-    legate/operation/detail/gather.cc
     legate/operation/detail/index_attach.cc
     legate/operation/detail/mapping_fence.cc
-    legate/operation/detail/launcher_arg.cc
     legate/operation/detail/operation.cc
     legate/operation/detail/store_projection.cc
-    legate/operation/detail/reduce.cc
     legate/operation/detail/release_region_field.cc
     legate/operation/detail/store_analyzer.cc
-    legate/operation/detail/scatter.cc
-    legate/operation/detail/scatter_gather.cc
     legate/operation/detail/task.cc
     legate/operation/detail/task_store_arg.cc
-    legate/operation/detail/task_launcher.cc
     legate/operation/detail/timing.cc
     legate/operation/detail/extract_scalar.cc
     legate/partitioning/constraint.cc

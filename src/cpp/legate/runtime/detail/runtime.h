@@ -158,29 +158,8 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task_for_inline(
     const Library& library, LocalTaskID task_id);
 
-  void issue_copy(InternalSharedPtr<LogicalStore> target,
-                  InternalSharedPtr<LogicalStore> source,
-                  std::optional<std::int32_t> redop);
-  void issue_gather(InternalSharedPtr<LogicalStore> target,
-                    InternalSharedPtr<LogicalStore> source,
-                    InternalSharedPtr<LogicalStore> source_indirect,
-                    std::optional<std::int32_t> redop);
-  void issue_scatter(InternalSharedPtr<LogicalStore> target,
-                     InternalSharedPtr<LogicalStore> target_indirect,
-                     InternalSharedPtr<LogicalStore> source,
-                     std::optional<std::int32_t> redop);
-  void issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
-                            InternalSharedPtr<LogicalStore> target_indirect,
-                            InternalSharedPtr<LogicalStore> source,
-                            InternalSharedPtr<LogicalStore> source_indirect,
-                            std::optional<std::int32_t> redop);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
-  void tree_reduce(const Library& library,
-                   LocalTaskID task_id,
-                   InternalSharedPtr<LogicalStore> store,
-                   InternalSharedPtr<LogicalStore> out_store,
-                   std::int32_t radix);
 
   // also used for offloading stores
   void offload_to(mapping::StoreTarget target_mem, const InternalSharedPtr<LogicalStore>& store);
@@ -368,72 +347,6 @@ class Runtime {
 
   [[nodiscard]] Legion::Future get_tunable(const Library& library, std::int64_t tunable_id);
 
-  [[nodiscard]] Legion::Future dispatch(
-    Legion::TaskLauncher& launcher, std::vector<Legion::OutputRequirement>& output_requirements);
-  [[nodiscard]] Legion::FutureMap dispatch(
-    Legion::IndexTaskLauncher& launcher,
-    std::vector<Legion::OutputRequirement>& output_requirements);
-
-  void dispatch(const Legion::CopyLauncher& launcher);
-  void dispatch(const Legion::IndexCopyLauncher& launcher);
-  void dispatch(const Legion::FillLauncher& launcher);
-  void dispatch(const Legion::IndexFillLauncher& launcher);
-
-  /**
-   * @brief Given a future (`result`) that contains possibly multiple future values packed into
-   * a single value, extract a specific value and return it as a standalone future.
-   *
-   * @param parallel_policy The policy to use for the task launch.
-   * @param result The future to extract from.
-   * @param offset The byte-based offset into the buffer of `result` where the sub-value begins.
-   * @param size The maximum possible size of the value to extract. The actual value may be smaller.
-   * @param future_size The size (in bytes) of buffer held by `result`.
-   *
-   * `size` is an upper bound. While the actual size of the value may be smaller, it cannot
-   * exceed `size`. As `size` would also affect other offsets, the only time where the true
-   * size of the future may differ from `size` is if it is the "last" value contained in the future.
-   *
-   * `future_size` is passed explicitly (instead of using `result.get_untyped_size()`) because
-   * getting the size of the future requires blocking on the completion of the task that fills
-   * the future. This could end up in a deadlock if the future hasn't been allocated yet by the
-   * mapper thread.
-   *
-   * @see `legate::detail::Task::demux_scalar_stores_()`.
-   */
-  [[nodiscard]] Legion::Future extract_scalar(const ParallelPolicy& parallel_policy,
-                                              const Legion::Future& result,
-                                              std::size_t offset,
-                                              std::size_t size,
-                                              std::size_t future_size) const;
-  /**
-   * @brief Given a future-map (`result`) that contains possibly multiple future-map values
-   * packed into a single one, extract a specific value and return it as a standalone
-   * future-map.
-   *
-   * @param parallel_policy The policy to use for the task launch.
-   * @param result The future-map to extract from.
-   * @param offset The byte-based offset into the buffer of `result` where the sub-values begin.
-   * @param size The maximum possible size of the value to extract. The actual value may be smaller.
-   * @param future_size The size (in bytes) of buffer held by `result`.
-   * @param launch_domain The launch domain of the task that produced `result`.
-   *
-   * `size` is an upper bound. While the actual size of the value may be smaller, it cannot
-   * exceed `size`. As `size` would also affect other offsets, the only time where the true
-   * size of the future may differ from `size` is if it is the "last" value contained in the future.
-   *
-   * `future_size` is passed explicitly (instead of using `result.get_untyped_size()`) because
-   * getting the size of the future requires blocking on the completion of the task that fills
-   * the future. This could end up in a deadlock if the future hasn't been allocated yet by the
-   * mapper thread.
-   *
-   * @see `legate::detail::Task::demux_scalar_stores_()`.
-   */
-  [[nodiscard]] Legion::FutureMap extract_scalar(const ParallelPolicy& parallel_policy,
-                                                 const Legion::FutureMap& result,
-                                                 std::size_t offset,
-                                                 std::size_t size,
-                                                 std::size_t future_size,
-                                                 const Legion::Domain& launch_domain) const;
   [[nodiscard]] Legion::Future reduce_future_map(
     const Legion::FutureMap& future_map,
     GlobalRedopID reduction_op,

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/data/detail/scalar.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -40,8 +41,6 @@ class Fill final : public Operation {
   [[nodiscard]] bool needs_partitioning() const override;
 
  private:
-  Legion::Future get_fill_value_() const;
-
   const Variable* lhs_var_{};
   InternalSharedPtr<LogicalStore> lhs_{};
   std::variant<InternalSharedPtr<LogicalStore>, Scalar> value_{};

@@ -12,7 +12,6 @@
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/transform/shift.h>
 #include <legate/data/detail/transform/transform_stack.h>
-#include <legate/operation/detail/launcher_arg.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/runtime/detail/projection.h>

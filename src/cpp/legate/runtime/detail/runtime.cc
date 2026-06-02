@@ -22,21 +22,15 @@
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/mapping.h>
 #include <legate/operation/detail/attach.h>
-#include <legate/operation/detail/copy.h>
 #include <legate/operation/detail/discard.h>
 #include <legate/operation/detail/execution_fence.h>
 #include <legate/operation/detail/extract_scalar.h>
 #include <legate/operation/detail/fill.h>
-#include <legate/operation/detail/gather.h>
 #include <legate/operation/detail/index_attach.h>
 #include <legate/operation/detail/mapping_fence.h>
 #include <legate/operation/detail/offload.h>
-#include <legate/operation/detail/reduce.h>
 #include <legate/operation/detail/release_region_field.h>
-#include <legate/operation/detail/scatter.h>
-#include <legate/operation/detail/scatter_gather.h>
 #include <legate/operation/detail/task.h>
-#include <legate/operation/detail/task_launcher.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/partitioning/detail/partitioning_tasks.h>
@@ -324,58 +318,6 @@ InternalSharedPtr<PhysicalTask> Runtime::create_physical_task_for_inline(const L
   return make_internal_shared<PhysicalTask>(library, *variant, task_id, new_op_id(), get_machine());
 }
 
-void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,
-                         InternalSharedPtr<LogicalStore> source,
-                         std::optional<std::int32_t> redop)
-{
-  submit(make_internal_shared<Copy>(
-    std::move(target), std::move(source), new_op_id(), scope().priority(), get_machine(), redop));
-}
-
-void Runtime::issue_gather(InternalSharedPtr<LogicalStore> target,
-                           InternalSharedPtr<LogicalStore> source,
-                           InternalSharedPtr<LogicalStore> source_indirect,
-                           std::optional<std::int32_t> redop)
-{
-  submit(make_internal_shared<Gather>(std::move(target),
-                                      std::move(source),
-                                      std::move(source_indirect),
-                                      new_op_id(),
-                                      scope().priority(),
-                                      get_machine(),
-                                      redop));
-}
-
-void Runtime::issue_scatter(InternalSharedPtr<LogicalStore> target,
-                            InternalSharedPtr<LogicalStore> target_indirect,
-                            InternalSharedPtr<LogicalStore> source,
-                            std::optional<std::int32_t> redop)
-{
-  submit(make_internal_shared<Scatter>(std::move(target),
-                                       std::move(target_indirect),
-                                       std::move(source),
-                                       new_op_id(),
-                                       scope().priority(),
-                                       get_machine(),
-                                       redop));
-}
-
-void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
-                                   InternalSharedPtr<LogicalStore> target_indirect,
-                                   InternalSharedPtr<LogicalStore> source,
-                                   InternalSharedPtr<LogicalStore> source_indirect,
-                                   std::optional<std::int32_t> redop)
-{
-  submit(make_internal_shared<ScatterGather>(std::move(target),
-                                             std::move(target_indirect),
-                                             std::move(source),
-                                             std::move(source_indirect),
-                                             new_op_id(),
-                                             scope().priority(),
-                                             get_machine(),
-                                             redop));
-}
-
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->unbound()) {
@@ -398,30 +340,6 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
 
   submit(make_internal_shared<Fill>(
     std::move(lhs), std::move(value), new_op_id(), scope().priority(), get_machine()));
-}
-
-void Runtime::tree_reduce(const Library& library,
-                          LocalTaskID task_id,
-                          InternalSharedPtr<LogicalStore> store,
-                          InternalSharedPtr<LogicalStore> out_store,
-                          std::int32_t radix)
-{
-  if (store->dim() != 1) {
-    throw TracedException<std::runtime_error>{
-      fmt::format("Multi-dimensional stores are not supported and got input store of shape {}",
-                  *store->shape())};
-  }
-
-  auto&& [machine, _] = slice_machine_for_task_(*library.find_task(task_id));
-
-  submit(make_internal_shared<Reduce>(library,
-                                      std::move(store),
-                                      std::move(out_store),
-                                      task_id,
-                                      new_op_id(),
-                                      radix,
-                                      scope().priority(),
-                                      std::move(machine)));
 }
 
 void Runtime::offload_to(mapping::StoreTarget target_mem,
@@ -641,7 +559,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,
   InternalSharedPtr<ExternalAllocation> allocation,
-  InternalSharedPtr<mapping::detail::DimOrdering> ordering)
+  InternalSharedPtr<mapping::detail::DimOrdering> /*ordering*/)
 {
   validate_store_shape(shape, type);
   LEGATE_CHECK(allocation->ptr());
@@ -662,14 +580,8 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
 
   auto store = create_store(shape, std::move(type), /*optimize_scalar=*/false);
 
-  // We eagerly mark the region field as mapped if the attached allocation is not read-only, so that
-  // any access to the region field will flush the scheduling window and get serialized.
-  store->get_region_field()->set_mapped(!allocation->read_only());
-  submit(make_internal_shared<Attach>(new_op_id(),
-                                      store->get_region_field(),
-                                      store->dim(),
-                                      std::move(allocation),
-                                      std::move(ordering)));
+  // TODO(wonchanl): Need a v2 implementation
+
   return store;
 }
 
@@ -677,8 +589,8 @@ Runtime::IndexAttachResult Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
   InternalSharedPtr<Type> type,
-  Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
-  InternalSharedPtr<mapping::detail::DimOrdering> ordering)
+  Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> /*allocations*/,
+  InternalSharedPtr<mapping::detail::DimOrdering> /*ordering*/)
 {
   if (config().enable_inline_task_launch()) {
     throw TracedException<std::runtime_error>{
@@ -687,66 +599,10 @@ Runtime::IndexAttachResult Runtime::create_store(
 
   validate_store_shape(shape, type);
 
-  const auto type_size = type->size();
-  auto store           = create_store(shape, std::move(type), /*optimize_scalar=*/false);
-  auto partition       = partition_store_by_tiling(store, tile_shape);
+  auto store     = create_store(shape, std::move(type), /*optimize_scalar=*/false);
+  auto partition = partition_store_by_tiling(store, tile_shape);
 
-  std::vector<Legion::LogicalRegion> subregions;
-  std::vector<InternalSharedPtr<ExternalAllocation>> allocs;
-  std::unordered_set<std::uint64_t> visited;
-  // Use this 2-step process (instead of having a std::unordered_set<tuple>) because we don't
-  // actually want to store a copy of the color spaces in the set, we just care about if we've
-  // seen them before.
-  const hasher<tuple<std::uint64_t>> hash_color{};
-
-  subregions.reserve(allocations.size());
-  allocs.reserve(allocations.size());
-  visited.reserve(allocations.size());
-  for (auto&& [idx, spec] : enumerate(allocations)) {
-    auto&& [allocation, color] = spec;
-    const auto [_, inserted]   = visited.emplace(hash_color(color));
-
-    if (!inserted) {
-      // If we're here, this color might have been seen in one of the previous iterations
-      for (std::int64_t k = 0; k < idx; ++k) {
-        if (allocations[k].second == color) {
-          throw TracedException<std::invalid_argument>{
-            fmt::format("Multiple external allocations are found for color {}", color)};
-        }
-      }
-      // If we're here, then we've just seen a fairly rare hash collision
-    }
-
-    const auto& alloc = allocs.emplace_back(allocation.impl());
-    const auto substore =
-      partition->get_child_store({tags::iterator_tag, color.begin(), color.end()});
-    const auto required_size = substore->volume() * type_size;
-
-    LEGATE_ASSERT(alloc->ptr());
-
-    if (!alloc->read_only()) {
-      throw TracedException<std::invalid_argument>{"External allocations must be read-only"};
-    }
-
-    if (required_size > alloc->size()) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("Sub-store for color {}  requires the allocation to be at least {} bytes, but "
-                    "the allocation is only {} bytes",
-                    color,
-                    required_size,
-                    alloc->size())};
-    }
-
-    subregions.push_back(substore->get_region_field()->region());
-  }
-
-  // Unlike in the single attach case, the index attach case doesn't inline map the region field
-  submit(make_internal_shared<IndexAttach>(new_op_id(),
-                                           store->get_region_field(),
-                                           store->dim(),
-                                           std::move(subregions),
-                                           std::move(allocs),
-                                           std::move(ordering)));
+  // TODO(wonchanl): Need a v2 implementation
   return {std::move(store), std::move(partition)};
 }
 
@@ -1106,32 +962,13 @@ Legion::IndexPartition Runtime::create_image_partition(
 }
 
 Legion::IndexPartition Runtime::create_approximate_image_partition(
-  const InternalSharedPtr<LogicalStore>& store,
-  const InternalSharedPtr<Partition>& partition,
-  const Legion::IndexSpace& index_space,
-  bool sorted)
+  const InternalSharedPtr<LogicalStore>& /*store*/,
+  const InternalSharedPtr<Partition>& /*partition*/,
+  const Legion::IndexSpace& /*index_space*/,
+  bool /*sorted*/)
 {
-  LEGATE_ASSERT(partition->has_launch_domain());
-  auto&& launch_domain = partition->launch_domain();
-  auto output          = create_store(domain_type(), /*dim=*/1, /*optimize_scalar=*/true);
-  auto task            = create_task(
-    core_library(),
-    LocalTaskID{sorted ? CoreTask::FIND_BOUNDING_BOX_SORTED : CoreTask::FIND_BOUNDING_BOX},
-    launch_domain);
-
-  task->add_input(create_store_partition(store, partition, std::nullopt),
-                  std::nullopt,
-                  /*is_key_partition=*/true);
-  static_cast<void>(task->add_output(output));
-  // Directly launch the partitioning task, instead of going through the scheduling pipeline,
-  // because this function is invoked only when the partition is immediately needed.
-  task->validate();
-  launch_immediately(std::move(task));
-
-  auto domains     = output->get_future_map();
-  auto color_space = find_or_create_index_space(launch_domain);
-  return get_legion_runtime()->create_partition_by_domain(
-    get_legion_context(), index_space, domains, color_space);
+  // TODO(wonchanl): Need a v2 implementation
+  return {};
 }
 
 Legion::FieldSpace Runtime::create_field_space()
@@ -1273,108 +1110,6 @@ Legion::Future Runtime::get_tunable(const Library& library, std::int64_t tunable
     sizeof(mapper)  // NOLINT(bugprone-sizeof-expression)
   };
   return get_legion_runtime()->select_tunable_value(get_legion_context(), launcher);
-}
-
-Legion::Future Runtime::dispatch(Legion::TaskLauncher& launcher,
-                                 std::vector<Legion::OutputRequirement>& output_requirements)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  return get_legion_runtime()->execute_task(get_legion_context(), launcher, &output_requirements);
-}
-
-Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher& launcher,
-                                    std::vector<Legion::OutputRequirement>& output_requirements)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  return get_legion_runtime()->execute_index_space(
-    get_legion_context(), launcher, &output_requirements);
-}
-
-void Runtime::dispatch(const Legion::CopyLauncher& launcher)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  get_legion_runtime()->issue_copy_operation(get_legion_context(), launcher);
-}
-
-void Runtime::dispatch(const Legion::IndexCopyLauncher& launcher)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  get_legion_runtime()->issue_copy_operation(get_legion_context(), launcher);
-}
-
-void Runtime::dispatch(const Legion::FillLauncher& launcher)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  get_legion_runtime()->fill_fields(get_legion_context(), launcher);
-}
-
-void Runtime::dispatch(const Legion::IndexFillLauncher& launcher)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  get_legion_runtime()->fill_fields(get_legion_context(), launcher);
-}
-
-Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
-                                       const Legion::Future& result,
-                                       std::size_t offset,
-                                       std::size_t size,
-                                       std::size_t future_size) const
-{
-  if (offset == 0 && size == future_size) {
-    // If the future we want to extract is at the "front", and has the same size as the future
-    // itself then... it's the only thing contained within the future, and there is no need to
-    // launch the task.
-    return result;
-  }
-
-  const auto& machine = get_machine();
-  auto launcher = TaskLauncher{core_library(),
-                               machine,
-                               parallel_policy,
-                               get_provenance(),
-                               ExtractScalar::TASK_CONFIG.task_id(),
-                               Legion::ProjectionID{0},
-                               static_cast<Legion::MappingTagID>(machine.preferred_variant())};
-
-  launcher.add_future(result);
-  launcher.reserve_scalars(3);
-  launcher.add_scalar(make_internal_shared<Scalar>(offset));
-  launcher.add_scalar(make_internal_shared<Scalar>(size));
-  launcher.add_scalar(make_internal_shared<Scalar>(future_size));
-  launcher.set_future_size(size);
-  return launcher.execute_single();
-}
-
-Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
-                                          const Legion::FutureMap& result,
-                                          std::size_t offset,
-                                          std::size_t size,
-                                          std::size_t future_size,
-                                          const Legion::Domain& launch_domain) const
-{
-  if (offset == 0 && size == future_size) {
-    // If the future we want to extract is at the "front", and has the same size as the future
-    // itself then... it's the only thing contained within the future, and there is no need to
-    // launch the task.
-    return result;
-  }
-
-  const auto& machine = get_machine();
-  auto launcher = TaskLauncher{core_library(),
-                               machine,
-                               parallel_policy,
-                               get_provenance(),
-                               ExtractScalar::TASK_CONFIG.task_id(),
-                               Legion::ProjectionID{0},
-                               static_cast<Legion::MappingTagID>(machine.preferred_variant())};
-
-  launcher.add_future_map(result);
-  launcher.reserve_scalars(3);
-  launcher.add_scalar(make_internal_shared<Scalar>(offset));
-  launcher.add_scalar(make_internal_shared<Scalar>(size));
-  launcher.add_scalar(make_internal_shared<Scalar>(future_size));
-  launcher.set_future_size(size);
-  return launcher.execute(launch_domain);
 }
 
 Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,

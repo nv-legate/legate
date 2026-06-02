@@ -239,46 +239,6 @@ TEST_F(InlineStorageUnit, Broadcast)
   }
 }
 
-TEST_F(InlineStorageUnit, FillAndCopy)
-{
-  auto* const runtime = legate::Runtime::get_runtime();
-  auto store1         = runtime->create_store(legate::Shape{5}, legate::int32());
-  auto store2         = runtime->create_store(legate::Shape{5}, legate::int32());
-
-  constexpr std::int32_t VALUE1 = 123;
-  constexpr std::int32_t VALUE2 = 555;
-
-  runtime->issue_fill(store1, legate::Scalar{VALUE1});
-  runtime->issue_fill(store2, legate::Scalar{VALUE2});
-
-  {
-    const auto span1 = store1.get_physical_store().span_read_accessor<std::int32_t, 1>();
-    const auto span2 = store2.get_physical_store().span_read_accessor<std::int32_t, 1>();
-    for (auto i = 0; i < span1.extent(0); ++i) {
-      ASSERT_EQ(span1(i), VALUE1) << "span1(" << i << ") = " << span1(i) << " != " << VALUE1;
-      ASSERT_EQ(span2(i), VALUE2) << "span2(" << i << ") = " << span2(i) << " != " << VALUE2;
-    }
-  }
-
-  runtime->issue_copy(store1, store2);
-
-  {
-    const auto span2 = store2.get_physical_store().span_read_accessor<std::int32_t, 1>();
-    for (auto i = 0; i < span2.extent(0); ++i) {
-      ASSERT_EQ(span2(i), VALUE2) << "After copy, span2(" << i << ") = " << span2(i)
-                                  << " != " << VALUE2;
-    }
-  }
-
-  {
-    const auto span1 = store1.get_physical_store().span_read_accessor<std::int32_t, 1>();
-    for (auto i = 0; i < span1.extent(0); ++i) {
-      ASSERT_EQ(span1(i), VALUE2) << "After copy, span1(" << i << ") = " << span1(i)
-                                  << " != " << VALUE2;
-    }
-  }
-}
-
 TEST_F(InlineStorageUnit, ExternalAllocation)
 {
   constexpr std::size_t SIZE = 7;

@@ -10,10 +10,9 @@
 #include <legate/data/detail/storage.h>
 #include <legate/data/detail/storage_partition.h>
 #include <legate/data/slice.h>
-#include <legate/operation/detail/launcher_arg.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/restriction.h>
-#include <legate/task/detail/task_return_layout.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
@@ -100,12 +99,6 @@ class LogicalStore {
   [[nodiscard]] std::uint64_t id() const;
 
   [[nodiscard]] const InternalSharedPtr<Storage>& get_storage() const;
-  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::FutureMap get_future_map() const;
-  void set_region_field(InternalSharedPtr<LogicalRegionField> region_field);
-  void set_future(Legion::Future future, std::size_t scalar_offset = 0);
-  void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset = 0);
 
   [[nodiscard]] InternalSharedPtr<LogicalStore> reinterpret_as(InternalSharedPtr<Type> type) const;
 
@@ -221,44 +214,6 @@ class LogicalStore {
     std::optional<bool> complete = std::nullopt);
 
  public:
-  void pack(BufferBuilder& buffer) const;
-  void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const;
-
- private:
-  friend StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStore>& self,
-                                               const Variable* variable,
-                                               const Strategy& strategy,
-                                               const Domain& launch_domain,
-                                               Legion::PrivilegeMode privilege,
-                                               GlobalRedopID redop);
-  friend RegionFieldArg store_to_launcher_arg_for_fixup(const InternalSharedPtr<LogicalStore>& self,
-                                                        Legion::PrivilegeMode privilege);
-
-  [[nodiscard]] StoreAnalyzable to_launcher_arg_(const InternalSharedPtr<LogicalStore>& self,
-                                                 const Variable* variable,
-                                                 const Strategy& strategy,
-                                                 const Domain& launch_domain,
-                                                 Legion::PrivilegeMode privilege,
-                                                 GlobalRedopID redop);
-  [[nodiscard]] RegionFieldArg to_launcher_arg_for_fixup_(
-    const InternalSharedPtr<LogicalStore>& self, Legion::PrivilegeMode privilege);
-
-  [[nodiscard]] StoreAnalyzable future_to_launcher_arg_(Legion::Future future,
-                                                        const Domain& launch_domain,
-                                                        Legion::PrivilegeMode privilege,
-                                                        GlobalRedopID redop);
-  [[nodiscard]] StoreAnalyzable future_map_to_launcher_arg_(const Domain& launch_domain,
-                                                            Legion::PrivilegeMode privilege,
-                                                            GlobalRedopID redop);
-  [[nodiscard]] StoreAnalyzable region_field_to_launcher_arg_(
-    const InternalSharedPtr<LogicalStore>& self,
-    const Variable* variable,
-    const Strategy& strategy,
-    const Domain& launch_domain,
-    Legion::PrivilegeMode privilege,
-    GlobalRedopID redop);
-
- public:
   [[nodiscard]] std::string to_string() const;
 
   [[nodiscard]] bool equal_storage(const LogicalStore& other) const;
@@ -286,16 +241,6 @@ class LogicalStore {
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(
   const InternalSharedPtr<LogicalStore>& self, std::int32_t dim, Slice sl);
-
-[[nodiscard]] StoreAnalyzable store_to_launcher_arg(const InternalSharedPtr<LogicalStore>& self,
-                                                    const Variable* variable,
-                                                    const Strategy& strategy,
-                                                    const Domain& launch_domain,
-                                                    Legion::PrivilegeMode privilege,
-                                                    GlobalRedopID redop = GlobalRedopID{-1});
-
-[[nodiscard]] RegionFieldArg store_to_launcher_arg_for_fixup(
-  const InternalSharedPtr<LogicalStore>& self, Legion::PrivilegeMode privilege);
 
 [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
   const InternalSharedPtr<LogicalStore>& self,
