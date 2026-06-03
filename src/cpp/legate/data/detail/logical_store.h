@@ -10,6 +10,7 @@
 #include <legate/data/detail/storage.h>
 #include <legate/data/detail/storage_partition.h>
 #include <legate/data/slice.h>
+#include <legate/mapping/mapping.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/type/detail/types.h>
@@ -137,8 +138,11 @@ class LogicalStore {
     std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape);
 
  public:
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> get_sharded_physical_store(
-    const Partition* partition, const Domain& launch_domain, const DomainPoint& color);
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> map(
+    const Partition* partition,
+    const Domain& launch_domain,
+    const DomainPoint& color,
+    const legate::mapping::InstanceMappingPolicy& policy);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 

@@ -98,10 +98,10 @@ namespace {
         [size](void* ptr) { get_cpu_allocation_cache().return_allocation(ptr, size); });
     }
     case mapping::StoreTarget::FBMEM: {
-      // For inline-storage, allocate memory on the first GPU
-      const cuda::detail::AutoPrimaryContext ctx{0};
-      auto&& api     = cuda::detail::get_cuda_driver_api();
       auto&& runtime = Runtime::get_runtime();
+
+      const cuda::detail::AutoPrimaryContext ctx{runtime.get_current_cuda_device()};
+      auto&& api = cuda::detail::get_cuda_driver_api();
 
       return legate::ExternalAllocation::create_fbmem(
         static_cast<std::uint32_t>(runtime.get_current_cuda_device()),
@@ -118,8 +118,10 @@ namespace {
         });
     }
     case mapping::StoreTarget::ZCMEM: {
+      auto&& runtime = Runtime::get_runtime();
+
       // For inline-storage, allocate memory on the first GPU
-      const cuda::detail::AutoPrimaryContext ctx{0};
+      const cuda::detail::AutoPrimaryContext ctx{runtime.get_current_cuda_device()};
       auto&& api = cuda::detail::get_cuda_driver_api();
 
       return legate::ExternalAllocation::create_zcmem(
@@ -261,7 +263,7 @@ void InlineStorage::remap_to(mapping::StoreTarget new_target)
 
   if (device_copy) {
     // Either source or destination is on device. This will handle either case transparently.
-    const cuda::detail::AutoPrimaryContext ctx{0};
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
 
     cuda::detail::get_cuda_driver_api()->mem_cpy_async(
       tmp.data(), data(), num_bytes, Runtime::get_runtime().get_cuda_stream());

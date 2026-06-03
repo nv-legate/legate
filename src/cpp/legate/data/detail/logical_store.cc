@@ -434,12 +434,18 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   return create_partition_(self, std::move(partition), /* complete */ true);
 }
 
-InternalSharedPtr<PhysicalStore> LogicalStore::get_sharded_physical_store(
-  const Partition* partition, const Domain& launch_domain, const DomainPoint& color)
+InternalSharedPtr<PhysicalStore> LogicalStore::map(
+  const Partition* partition,
+  const Domain& launch_domain,
+  const DomainPoint& color,
+  const legate::mapping::InstanceMappingPolicy& policy)
 {
-  // TODO(wonchanl): Need to check if the storage is right for the input partition
+  // TODO(wonchanl): Need to check if the storage is right for the input partition and the policy
   if (mapped_.has_value()) {
-    return *mapped_;
+    if ((*mapped_)->target() == policy.target) {
+      return *mapped_;
+    }
+    mapped_.reset();
   }
 
   const auto domain = launch_domain.is_valid() ? partition->shard(*domain_, color) : *domain_;
@@ -447,8 +453,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_sharded_physical_store(
   LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
   LEGATE_CHECK(!transformed());
 
-  auto result =
-    get_storage()->map(legate::mapping::StoreTarget::SYSMEM, type(), shape(), transform_, domain);
+  auto result = get_storage()->map(policy.target, type(), shape(), transform_, domain);
 
   mapped_.emplace(result);
 

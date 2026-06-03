@@ -1698,6 +1698,13 @@ std::int32_t Runtime::finish()
   }
   cached_index_spaces_.clear();
 
+  if (config().need_cuda()) {
+    auto&& api = cuda::detail::get_cuda_driver_api();
+
+    api->stream_synchronize(current_stream_);
+    api->stream_destroy(&current_stream_);
+  }
+
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
   issue_execution_fence(true);
 
@@ -1843,6 +1850,18 @@ extern void register_exception_reduction_op(const Library& context);
   // driver API
   if (runtime.config().need_cuda()) {
     runtime.cu_mod_manager_.emplace(cuda::detail::get_cuda_driver_api());
+
+    auto&& api = cuda::detail::get_cuda_driver_api();
+
+    auto count              = api->device_get_count();
+    auto ordinal            = runtime.local_machine().node_id % count;
+    runtime.current_device_ = api->device_get(ordinal);
+
+    {
+      const cuda::detail::AutoPrimaryContext ctx{runtime.get_current_cuda_device()};
+
+      runtime.current_stream_ = api->stream_create(0x01 /*CU_STREAM_NON_BLOCKING*/);
+    }
   }
   comm::coll::init();
   runtime.field_manager_ = runtime.consensus_match_required()
@@ -1865,57 +1884,9 @@ extern void register_exception_reduction_op(const Library& context);
   runtime.initialized_ = true;
 }
 
-CUstream Runtime::get_cuda_stream() const
-{
-  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-    // The header-file is includable without CUDA, but the actual symbols are not compiled
-    // (leading to link errors down the line) if Realm was not compiled with CUDA support.
-    return Realm::Cuda::get_task_cuda_stream();
-  }
-  return nullptr;
-}
+CUstream Runtime::get_cuda_stream() const { return current_stream_; }
 
-CUdevice Runtime::get_current_cuda_device() const
-{
-  if (is_running_in_task()) {
-    // We are inside a task, which means Realm has set the current CUDA context and device for
-    // us.
-    auto&& api = cuda::detail::get_cuda_driver_api();
-
-    return api->ctx_get_device(api->ctx_get_current());
-  }
-
-  // We are in the top-level task, and so ctx_get_device() may not be accurate, because the
-  // current node might have multiple devices assigned to it (if we are running multiple GPU
-  // per rank). Furthermore, Realm doesn't automatically set the CUDA context for the top-level
-  // task, so chances are we don't have a valid context to query either.
-  //
-  // So as a workaround, we try to figure out what Realm considers to be the "first" GPU
-  // assigned to us, since that is what it would use for any GPU related tasks on the
-  // top-level.
-  auto&& proc = local_machine().find_first_processor_with_affinity_to(mapping::StoreTarget::FBMEM);
-
-  std::int32_t device_id = -1;
-  // The symbols for get_cuda_device_id() exist regardless of whether Realm has CUDA support,
-  // but if it doesn't we get linker errors at runtime because the CUDA module was never
-  // compiled.
-  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-    // Use explicit bool type here instead of auto in case Realm changes this to an error code
-    // return.
-    const bool success = Realm::Cuda::get_cuda_device_id(proc, &device_id);
-
-    if (!success) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("Current Processor {} is not GPU", fmt::streamed(proc))};
-    }
-  } else {
-    throw TracedException<std::runtime_error>{
-      "Legate was not compiled for CUDA support, although a GPU memory "
-      "PhysicalStore was requested. This should not happen."};
-  }
-
-  return static_cast<CUdevice>(device_id);
-}
+CUdevice Runtime::get_current_cuda_device() const { return current_device_; }
 
 cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
 {
@@ -1926,6 +1897,7 @@ cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
     throw TracedException<std::runtime_error>{
       "CUDA module manager is unavailable because Legate was started without GPUs"};
   }
+
   return cu_mod_manager_.value();
 }
 

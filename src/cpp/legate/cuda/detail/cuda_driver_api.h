@@ -79,6 +79,9 @@ class CUDADriverAPI {
   void ctx_synchronize(CUcontext ctx) const;
   void ctx_record_event(CUcontext ctx, CUevent event) const;
 
+  [[nodiscard]] int device_get_count() const;
+  [[nodiscard]] CUdevice device_get(int ordinal) const;
+
   [[nodiscard]] CUfunction kernel_get_function(CUkernel kernel) const;
 
   void launch_kernel_direct(CUfunction f,
@@ -169,6 +172,9 @@ class CUDADriverAPI {
   CUresult (*ctx_synchronize_cu_12_)()                               = nullptr;
   CUresult (*ctx_synchronize_cu_13_)(CUcontext ctx)                  = nullptr;
   CUresult (*ctx_record_event_)(CUcontext ctx, CUevent event)        = nullptr;
+
+  CUresult (*device_get_count_)(int* count)              = nullptr;
+  CUresult (*device_get_)(CUdevice* device, int ordinal) = nullptr;
 
   CUresult (*kernel_get_function_)(CUfunction* func, CUkernel kernel) = nullptr;
 

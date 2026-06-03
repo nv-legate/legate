@@ -16,6 +16,11 @@
 
 namespace legate::detail {
 
+void show_progress(const DomainPoint& task_index,
+                   std::string_view task_name,
+                   VariantCode variant_code,
+                   std::string_view provenance);
+
 void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
 
 void show_progress(const DomainPoint& index_point,

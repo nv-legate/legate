@@ -450,7 +450,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
   constexpr std::int32_t DEFAULT_UTILITY    = 2;
   constexpr std::int64_t DEFAULT_SYSMEM     = -1;
   constexpr std::int64_t DEFAULT_NUMAMEM    = -1;
-  constexpr std::int64_t DEFAULT_FBMEM      = -1;
+  constexpr std::int64_t DEFAULT_FBMEM      = 0;
   constexpr std::int64_t DEFAULT_ZCMEM      = 128;  // MB
   constexpr std::int64_t DEFAULT_REGMEM     = 0;    // MB
   constexpr auto MB                         = 1 << 20;
@@ -466,7 +466,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "\n"
     "If enabled, attempts to detect a reasonable default for most options listed hereafter and is "
     "recommended for most users. If disabled, Legate will use a minimal set of resources.",
-    LEGATE_AUTO_CONFIG.get().value_or(true));
+    LEGATE_AUTO_CONFIG.get().value_or(false));
   auto show_config =
     parser.add_argument("--show-config",
                         "Print the configuration to stdout.\n"

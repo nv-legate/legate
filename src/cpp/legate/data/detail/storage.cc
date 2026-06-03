@@ -214,7 +214,7 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
 }
 
 InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-member-function-const)
-  legate::mapping::StoreTarget /*target*/,
+  legate::mapping::StoreTarget target,
   InternalSharedPtr<Type> type,
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<TransformStack> transform,
@@ -229,9 +229,10 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
   LEGATE_CHECK(root == this);
 
   if (!storage_data_) {
-    storage_data_ =
-      make_internal_shared<InlineStorage>(domain, field_size_, mapping::StoreTarget::SYSMEM);
+    storage_data_ = make_internal_shared<InlineStorage>(domain, field_size_, target);
   }
+
+  storage_data_->remap_to(target);
 
   return make_internal_shared<InlinePhysicalStore>(shape->ndim(),
                                                    std::move(type),

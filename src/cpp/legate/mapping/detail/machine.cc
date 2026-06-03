@@ -340,7 +340,7 @@ LocalMachine::LocalMachine(
   for (auto&& gpu : gpus_) {
     Legion::Machine::MemoryQuery framebuffer{legion_machine};
 
-    localize_mq(framebuffer).only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
+    localize_mq(framebuffer).only_kind(Legion::Memory::GPU_DYNAMIC_MEM).best_affinity_to(gpu);
     LEGATE_CHECK(framebuffer.count() > 0);
     frame_buffers_[gpu] = framebuffer.first();
   }

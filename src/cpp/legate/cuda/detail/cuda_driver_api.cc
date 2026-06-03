@@ -311,6 +311,9 @@ void CUDADriverAPI::read_symbols_()
   }
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuCtxRecordEvent, &ctx_record_event_);
 
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuDeviceGetCount, &device_get_count_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuDeviceGet, &device_get_);
+
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuKernelGetFunction, &kernel_get_function_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuLaunchKernel, &launch_kernel_);
@@ -578,6 +581,22 @@ void CUDADriverAPI::ctx_record_event(CUcontext ctx, CUevent event) const
 {
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(ctx_record_event_(ctx, event));
+}
+
+int CUDADriverAPI::device_get_count() const
+{
+  int count = -1;
+
+  LEGATE_CHECK_CUDRIVER(device_get_count_(&count));
+  return count;
+}
+
+CUdevice CUDADriverAPI::device_get(int ordinal) const
+{
+  CUdevice device{};
+
+  LEGATE_CHECK_CUDRIVER(device_get_(&device, ordinal));
+  return device;
 }
 
 CUfunction CUDADriverAPI::kernel_get_function(CUkernel kernel) const

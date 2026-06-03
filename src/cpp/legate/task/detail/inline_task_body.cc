@@ -7,6 +7,7 @@
 #include <legate/task/detail/inline_task_body.h>
 
 #include <legate/comm/communicator.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/cuda_util.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
@@ -128,7 +129,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
  *
  * @return The physical store.
  */
-[[nodiscard]] InternalSharedPtr<PhysicalStore> extract_physical_store(
+[[nodiscard]] InternalSharedPtr<PhysicalStore> map_store(
   const TaskStoreArg& elem,
   const Partition* partition,
   const mapping::InstanceMappingPolicy& policy,
@@ -149,14 +150,12 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
       "Dimension orderings other than C (or unspecified) not yet supported in inline execution."};
   }
 
-  return elem.store->get_sharded_physical_store(partition, launch_domain, task_index);
+  return elem.store->map(partition, launch_domain, task_index, policy);
 }
 
-[[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> fill_vector(
+[[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
   Span<const TaskStoreArg> src,
   Span<const mapping::InstanceMappingPolicy> mapping_policies,
-  bool ignore_future_mutability,
-  SmallVector<Legion::UntypedDeferredValue>* deferred_buffers,
   const Strategy& strategy,
   const Domain& launch_domain,
   const DomainPoint& task_index)
@@ -165,19 +164,8 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
   dest.reserve(src.size());
   for (auto&& [elem, policy] : zip_equal(src, mapping_policies)) {
-    auto&& partition  = strategy[*elem.variable];
-    auto&& phys_store = dest.emplace_back(
-      extract_physical_store(elem, partition.get(), policy, launch_domain, task_index));
-
-    if (!ignore_future_mutability) {
-      continue;
-    }
-
-    if (const auto* const fut_store = dynamic_cast<const FuturePhysicalStore*>(phys_store.get())) {
-      // Was an output scalar or scalar reduction, save a reference to the deferred buffer so
-      // we can create a new future out of it down the line in finalize().
-      deferred_buffers->emplace_back(fut_store->get_buffer());
-    }
+    dest.emplace_back(
+      map_store(elem, strategy[*elem.variable].get(), policy, launch_domain, task_index));
   }
   return dest;
 }
@@ -253,92 +241,42 @@ struct TaskStoreMappingPolicies {
   return ret;
 }
 
-[[nodiscard]] std::pair<InlineTaskContext, SmallVector<Legion::UntypedDeferredValue>>
-make_inline_task_context(const TaskBase& task, VariantCode variant_code, const Strategy& strategy)
+[[nodiscard]] InlineTaskContext make_inline_task_context(const TaskBase& task,
+                                                         VariantCode variant_code,
+                                                         const Strategy& strategy)
 {
   auto launch_domain    = strategy.launch_domain();
   const auto task_index = strategy.task_index();
 
   const auto mapping_policies = make_store_mapping_policies(task, variant_code);
-  auto deferred_buffers       = SmallVector<Legion::UntypedDeferredValue>{};
 
-  auto inputs = fill_vector(task.inputs(),
-                            mapping_policies.input_policies,
-                            /* ignore_future_mutability */ false,
-                            &deferred_buffers,
-                            strategy,
-                            launch_domain,
-                            task_index);
-  // None of the inputs should ever create an output buffer
-  LEGATE_CHECK(deferred_buffers.empty());
-  // We do these here instead of inline in the function arguments because the order in which
-  // these are executed matters. We want to fill up the deferred_bufs_ vector first with output
-  // scalars, then with reduction scalars.
-  //
-  // This is based on the assumption that:
-  //
-  // for log_arr in task.outputs():
-  //   for phy_st in log_arr.get_physical_array().stores():
-  //     if phy_st.is_scalar():
-  //       yield phy_st
-  //
-  // and
-  //
-  // for log_st in task.scalar_outputs():
-  //   phy_st = log_st.get_physical_store()
-  //   if phy_st.is_scalar():
-  //     yield phy_st
-  //
-  // return stores in the same order (and similarly for reductions). If this is no longer the
-  // case, then the set of "scalar_set_future()" loops in the task body will no longer be
-  // correct.
+  auto inputs =
+    map_stores(task.inputs(), mapping_policies.input_policies, strategy, launch_domain, task_index);
+  auto outputs = map_stores(
+    task.outputs(), mapping_policies.output_policies, strategy, launch_domain, task_index);
+  auto reductions = map_stores(
+    task.reductions(), mapping_policies.reduction_policies, strategy, launch_domain, task_index);
 
-  auto outputs    = fill_vector(task.outputs(),
-                                mapping_policies.output_policies,
-                                /* ignore_future_mutability */ true,
-                                &deferred_buffers,
-                                strategy,
-                                launch_domain,
-                                task_index);
-  auto reductions = fill_vector(task.reductions(),
-                                mapping_policies.reduction_policies,
-                                /* ignore_future_mutability */ true,
-                                &deferred_buffers,
-                                strategy,
-                                launch_domain,
-                                task_index);
-
-  return {InlineTaskContext{variant_code,
-                            launch_domain,
-                            task_index,
-                            std::move(inputs),
-                            std::move(outputs),
-                            std::move(reductions),
-                            SmallVector<InternalSharedPtr<Scalar>>{task.scalars()},
-                            &task},
-          std::move(deferred_buffers)};
+  return InlineTaskContext{variant_code,
+                           launch_domain,
+                           task_index,
+                           std::move(inputs),
+                           std::move(outputs),
+                           std::move(reductions),
+                           SmallVector<InternalSharedPtr<Scalar>>{task.scalars()},
+                           &task};
 }
 
 template <typename F>
-[[nodiscard]] std::pair<std::optional<ReturnedException>, SmallVector<Legion::UntypedDeferredValue>>
-execute_task(const TaskBase& task,
-             VariantCode variant_code,
-             VariantImpl variant_impl,
-             F&& get_task_name,
-             const Strategy& strategy)
+void execute_task(const TaskBase& task,
+                  VariantCode variant_code,
+                  VariantImpl variant_impl,
+                  F&& get_task_name,
+                  const Strategy& strategy)
 {
-  auto [ctx, deferred_buffers] = make_inline_task_context(task, variant_code, strategy);
-  auto exn =
+  auto ctx = make_inline_task_context(task, variant_code, strategy);
+  std::ignore =
     task_detail::task_body(legate::TaskContext{&ctx}, variant_impl, std::forward<F>(get_task_name));
-
-  // Normally implicit device synchronization is handled for us by Realm, but in the fast-path
-  // we bypass Legion/Realm entirely so we need to handle the sync ourselves.
-  if (variant_code == VariantCode::GPU && !task.can_elide_device_ctx_sync() &&
-      Runtime::get_runtime().config().enable_inline_task_launch()) {
-    cuda::detail::sync_current_ctx();
-  }
-
-  return {std::move(exn), std::move(deferred_buffers)};
 }
 
 }  // namespace
@@ -357,15 +295,14 @@ void inline_task_body(const TaskBase& task,
     task_detail::make_nvtx_range(get_task_name, [&] { return task.provenance().as_string_view(); });
   static_cast<void>(_1);
 
-  show_progress({}, get_task_name(), task.provenance().as_string_view());
+  show_progress(
+    strategy.task_index(), get_task_name(), variant_code, task.provenance().as_string_view());
 
-  auto [exception, deferred_buffers] =
-    execute_task(task, variant_code, variant_impl, get_task_name, strategy);
+  execute_task(task, variant_code, variant_impl, get_task_name, strategy);
 
-  LEGATE_CHECK(deferred_buffers.empty());
-
-  if (exception.has_value()) {
-    detail::Runtime::get_runtime().record_pending_exception(*std::move(exception));
+  if (variant_code == VariantCode::GPU) {
+    auto&& api = cuda::detail::get_cuda_driver_api();
+    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
   }
 }
 

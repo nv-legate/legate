@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#undef NDEBUG
+#include <saxpy.h>
 
 #include <legate.h>
 
@@ -12,113 +12,83 @@
 #include <iostream>
 #include <string_view>
 
-namespace {
-
 // We define the tasks here, but at this point, Legate is not yet aware of it.
 // The task cannot be used until it is registered with a library,
 // after which Legate can recognize it and allow instances to be
 // created and executed.
 
-class InitTask : public legate::LegateTask<InitTask> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{1}}.with_signature(legate::TaskSignature{}.outputs(1));
+void InitTask::cpu_variant(legate::TaskContext context)
+{
+  constexpr std::int32_t DIM = 1;
 
-  static void cpu_variant(legate::TaskContext context)
-  {
-    constexpr std::int32_t DIM = 2;
+  auto store       = context.output(0);
+  const auto value = context.scalar(0).value<std::int32_t>();
+  const auto shape = store.shape<DIM>();
 
-    auto store       = context.output(0);
-    const auto value = context.scalar(0).value<std::int32_t>();
-    const auto shape = store.shape<DIM>();
+  // Create accessors for reading input and writing output
+  auto accessor = store.write_accessor<std::int32_t, DIM>();
 
-    // Create accessors for reading input and writing output
-    auto accessor = store.write_accessor<std::int32_t, DIM>();
+  // Iterate over each point in the 2D domain (dense rectangular iteration)
+  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+    // Perform the element-wise SAXPY operation: output = x + y
+    accessor[*it] = value;
+  }
+}
 
-    // Iterate over each point in the 2D domain (dense rectangular iteration)
-    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-      // Perform the element-wise SAXPY operation: output = x + y
-      accessor[*it] = value;
+void SAXPYTask::cpu_variant(legate::TaskContext context)
+{
+  // DIM is a dimension of the input/output arrays in this
+  // example. We fix it to 2 as we are operating on 2D arrays here.
+  // The same task can be reused for arrays different dimensions
+  // if we template it on DIM
+  constexpr std::int32_t DIM = 1;
+
+  // Retrieve the input and output store handles from the task context
+  const auto x_input_store = context.input(0);
+  const auto y_input_store = context.input(1);
+  auto output_store        = context.output(0);
+
+  // Extract shapes
+  const auto x_shape      = x_input_store.shape<DIM>();
+  const auto y_shape      = y_input_store.shape<DIM>();
+  const auto output_shape = output_store.shape<DIM>();
+
+  // Assert that all shapes are equal
+  LEGATE_CHECK(x_shape == y_shape && y_shape == output_shape);
+
+  // Create accessors for reading input and writing output
+  auto x_accessor      = x_input_store.read_accessor<std::int32_t, DIM>();
+  auto y_accessor      = y_input_store.read_accessor<std::int32_t, DIM>();
+  auto output_accessor = output_store.write_accessor<std::int32_t, DIM>();
+
+  // Iterate over each point in the 2D domain (dense rectangular iteration)
+  for (legate::PointInRectIterator<DIM> it{x_shape}; it.valid(); ++it) {
+    // Perform the element-wise SAXPY operation: output = x + y
+    output_accessor[*it] = x_accessor[*it] + y_accessor[*it] + (*it)[0];
+  }
+}
+
+void CheckTask::cpu_variant(legate::TaskContext context)
+{
+  constexpr std::int32_t DIM = 1;
+  const auto result          = context.input(0);
+  const auto expected        = context.scalar(0).value<std::int32_t>();
+  const auto shape           = result.shape<DIM>();
+  auto acc                   = result.read_accessor<std::int32_t, DIM>();
+
+  bool all_correct = true;
+  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+    if (acc[*it] != expected + (*it)[0]) {
+      std::cerr << "Error at position (" << (*it)[0] << "," << (*it)[1] << "): expected "
+                << expected << ", got " << acc[*it] << "\n";
+      all_correct = false;
     }
   }
-};
 
-// saxpy task
-class SAXPYTask : public legate::LegateTask<SAXPYTask> {
- public:
-  //  This `TaskConfig` signature below does the following:
-  //    - Assigns a local task ID of 1 ((should be unique within the library).
-  //    - Specifies that the task takes exactly 2 input stores and 1 output
-  //      store; this calling convention will be checked at runtime when
-  //      the task is launched.
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{2}}.with_signature(
-      legate::TaskSignature{}.inputs(2).outputs(1));
-
-  // This is the CPU variant of the task
-  // there could be also OpenMP and CUDA variants in Legate
-  static void cpu_variant(legate::TaskContext context)
-  {
-    // DIM is a dimension of the input/output arrays in this
-    // example. We fix it to 2 as we are operating on 2D arrays here.
-    // The same task can be reused for arrays different dimensions
-    // if we template it on DIM
-    constexpr std::int32_t DIM = 2;
-
-    // Retrieve the input and output store handles from the task context
-    const auto x_input_store = context.input(0);
-    const auto y_input_store = context.input(1);
-    auto output_store        = context.output(0);
-
-    // Extract shapes
-    const auto x_shape      = x_input_store.shape<DIM>();
-    const auto y_shape      = y_input_store.shape<DIM>();
-    const auto output_shape = output_store.shape<DIM>();
-
-    // Assert that all shapes are equal
-    LEGATE_CHECK(x_shape == y_shape && y_shape == output_shape);
-
-    // Create accessors for reading input and writing output
-    auto x_accessor      = x_input_store.read_accessor<std::int32_t, DIM>();
-    auto y_accessor      = y_input_store.read_accessor<std::int32_t, DIM>();
-    auto output_accessor = output_store.write_accessor<std::int32_t, DIM>();
-
-    // Iterate over each point in the 2D domain (dense rectangular iteration)
-    for (legate::PointInRectIterator<DIM> it{x_shape}; it.valid(); ++it) {
-      // Perform the element-wise SAXPY operation: output = x + y
-      output_accessor[*it] = x_accessor[*it] + y_accessor[*it] + (*it)[0];
-    }
+  if (all_correct) {
+    std::cout << "All " << shape.volume() << " values correct in 2D array!\n";
   }
-};
-
-// verification task
-class CheckTask : public legate::LegateTask<CheckTask> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{3}}.with_signature(legate::TaskSignature{}.inputs(1));
-
-  static void cpu_variant(legate::TaskContext context)
-  {
-    constexpr std::int32_t DIM = 2;
-    const auto result          = context.input(0);
-    const auto expected        = context.scalar(0).value<std::int32_t>();
-    const auto shape           = result.shape<DIM>();
-    auto acc                   = result.read_accessor<std::int32_t, DIM>();
-
-    bool all_correct = true;
-    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-      if (acc[*it] != expected + (*it)[0]) {
-        std::cerr << "Error at position (" << (*it)[0] << "," << (*it)[1] << "): expected "
-                  << expected << ", got " << acc[*it] << "\n";
-        all_correct = false;
-      }
-    }
-
-    if (all_correct) {
-      std::cout << "All " << shape.volume() << " values correct in 2D array!\n";
-    }
-  }
-};
+}
 
 void run_example()
 {
@@ -132,8 +102,9 @@ void run_example()
   SAXPYTask::register_variants(library);
   CheckTask::register_variants(library);
 
-  // Create 2D arrays (5x5)
-  auto shape   = legate::Shape{16, 16};
+  // Create 1D arrays
+  // auto shape   = legate::Shape{256};
+  auto shape   = legate::Shape{2 << 24};
   auto x_store = runtime->create_store(shape, legate::int32());
   auto y_store = runtime->create_store(shape, legate::int32());
   auto result  = runtime->create_store(shape, legate::int32());
@@ -171,8 +142,6 @@ void run_example()
   check_task.add_scalar_arg(legate::Scalar{3});  // Expected sum
   runtime->submit(std::move(check_task));
 }
-
-}  // namespace
 
 int main()
 {

@@ -10,7 +10,8 @@ build_dir="${script_dir}/saxpy-build"
 
 cmake_args=(--fresh)
 if [[ "${CMAKE_ARGS:-}" != '' ]]; then
-  cmake_args+=("${CMAKE_ARGS}")
+  read -ra args <<< "${CMAKE_ARGS}"
+  cmake_args+=("${args[@]}")
 fi
 
 cmake -B "${build_dir}" -S "${script_dir}" "${cmake_args[@]}"

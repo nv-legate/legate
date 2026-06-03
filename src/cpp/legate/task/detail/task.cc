@@ -8,6 +8,7 @@
 
 #include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <cstdint>
 #include <ios>
@@ -15,6 +16,29 @@
 #include <string_view>
 
 namespace legate::detail {
+
+void show_progress(const DomainPoint& task_index,
+                   std::string_view task_name,
+                   VariantCode variant_code,
+                   std::string_view provenance)
+{
+  if (!Runtime::get_runtime().config().show_progress_requested()) {
+    return;
+  }
+
+  const auto variant_str = [&]() -> std::string_view {
+    switch (variant_code) {
+      case VariantCode::CPU: return "CPU";
+      case VariantCode::GPU: return "GPU";
+      case VariantCode::OMP: return "OpenMP";
+    }
+    LEGATE_ABORT("Unknown variant code: " + std::to_string(to_underlying(variant_code)));
+    return "";
+  }();
+
+  log_legate().print() << task_name << ' ' << variant_str << " task [" << provenance
+                       << "], pt = " << task_index;
+}
 
 void show_progress(const DomainPoint& index_point,
                    std::string_view task_name,

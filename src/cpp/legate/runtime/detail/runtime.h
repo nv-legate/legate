@@ -432,6 +432,8 @@ class Runtime {
   std::optional<std::reference_wrapper<Library>> core_library_{};
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
+  CUdevice current_device_{};
+  CUstream current_stream_{};
 
   std::unique_ptr<FieldManager> field_manager_{};
   using RegionManagerKey = Legion::IndexSpace;
