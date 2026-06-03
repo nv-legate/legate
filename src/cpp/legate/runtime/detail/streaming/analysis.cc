@@ -273,8 +273,7 @@ void scan_task_discards(
       // TODO(amberhassaan): move generation field to Operation class. Current code
       // only handles task operations.
       case Operation::Kind::AUTO_TASK: [[fallthrough]];
-      case Operation::Kind::MANUAL_TASK: [[fallthrough]];
-      case Operation::Kind::PHYSICAL_TASK: break;
+      case Operation::Kind::MANUAL_TASK: break;
     }
 
     LEGATE_ASSERT(dynamic_cast<LogicalTask*>(op.get()) != nullptr);
@@ -367,7 +366,6 @@ void assign_streaming_generation(std::uint32_t generation_size,
             case Operation::Kind::TIMING: [[fallthrough]];
             case Operation::Kind::AUTO_TASK: [[fallthrough]];
             case Operation::Kind::MANUAL_TASK: [[fallthrough]];
-            case Operation::Kind::PHYSICAL_TASK: [[fallthrough]];
             case Operation::Kind::RELEASE_REGION_FIELD: {
               return false;
             }
@@ -481,8 +479,7 @@ void process_streaming_run(std::deque<InternalSharedPtr<Operation>>* ops)
 
         // Only user tasks need their privileges fixed
       case Operation::Kind::AUTO_TASK: [[fallthrough]];
-      case Operation::Kind::MANUAL_TASK: [[fallthrough]];
-      case Operation::Kind::PHYSICAL_TASK: break;
+      case Operation::Kind::MANUAL_TASK: break;
     }
 
     LEGATE_ASSERT(dynamic_cast<LogicalTask*>(op) != nullptr);

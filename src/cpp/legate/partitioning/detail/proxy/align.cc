@@ -28,70 +28,27 @@ void do_align_final(const Variable* left, const Variable* right, AutoTask* task)
 
 void do_align(const TaskStoreArg* left, const TaskStoreArg* right, AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& left_st) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& right_st) {
-                                              do_align_final(
-                                                task->find_or_declare_partition(left_st),
-                                                task->find_or_declare_partition(right_st),
-                                                task);
-                                            },
-                                            [&](const InternalSharedPtr<PhysicalStore>&) {
-                                              // Do nothing for PhysicalStore
-                                            }},
-                                   right->store);
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             left->store);
+  do_align_final(task->find_or_declare_partition(left->store),
+                 task->find_or_declare_partition(right->store),
+                 task);
 }
 
 void do_align(const TaskStoreArg* left, Span<const TaskStoreArg> right, AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& left_st) {
-                        const auto* left_part = task->find_or_declare_partition(left_st);
+  const auto* left_part = task->find_or_declare_partition(left->store);
 
-                        for (auto&& right_arg : right) {
-                          std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& right_st) {
-                                                do_align_final(
-                                                  left_part,
-                                                  task->find_or_declare_partition(right_st),
-                                                  task);
-                                              },
-                                              [&](const InternalSharedPtr<PhysicalStore>&) {
-                                                // Do nothing for PhysicalStore
-                                              }},
-                                     right_arg.store);
-                        }
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             left->store);
+  for (auto&& right_arg : right) {
+    do_align_final(left_part, task->find_or_declare_partition(right_arg.store), task);
+  }
 }
 
 void do_align(Span<const TaskStoreArg> left, const TaskStoreArg* right, AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& right_st) {
-                        const auto* right_part = task->find_or_declare_partition(right_st);
+  const auto* right_part = task->find_or_declare_partition(right->store);
 
-                        for (auto&& left_arg : left) {
-                          std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& left_st) {
-                                                do_align_final(
-                                                  task->find_or_declare_partition(left_st),
-                                                  right_part,
-                                                  task);
-                                              },
-                                              [&](const InternalSharedPtr<PhysicalStore>&) {
-                                                // Do nothing for PhysicalStore
-                                              }},
-                                     left_arg.store);
-                        }
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             right->store);
+  for (auto&& left_arg : left) {
+    do_align_final(task->find_or_declare_partition(left_arg.store), right_part, task);
+  }
 }
 
 void do_align(Span<const TaskStoreArg> left, Span<const TaskStoreArg> right, AutoTask* task)

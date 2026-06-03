@@ -32,14 +32,7 @@ void do_min_extents(const TaskStoreArg* variable,
                     const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& min_extents,
                     AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
-                        do_min_extents_final(
-                          task->find_or_declare_partition(st), min_extents, task);
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             variable->store);
+  do_min_extents_final(task->find_or_declare_partition(variable->store), min_extents, task);
 }
 
 void do_min_extents(Span<const TaskStoreArg> variables,

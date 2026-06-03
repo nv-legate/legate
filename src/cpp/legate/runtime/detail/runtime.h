@@ -72,7 +72,6 @@ namespace legate::detail {
 
 class AutoTask;
 class ManualTask;
-class PhysicalTask;
 class LogicalStore;
 class LogicalStorePartition;
 class Operation;
@@ -124,40 +123,6 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library& library,
                                                           LocalTaskID task_id,
                                                           const Domain& launch_domain);
-  /**
-   * @brief Creates a PhysicalTask using top-level machine context.
-   *
-   * This method creates a PhysicalTask that will execute on the machine determined by the
-   * runtime's top-level context. This is appropriate for tasks launched from the main
-   * execution context, not from within other tasks.
-   *
-   * PhysicalTasks are designed for direct, inline execution with pre-partitioned physical
-   * arrays. They bypass Legate's automatic partitioning and are executed immediately
-   * without going through Legion's task scheduling.
-   *
-   * @param library The library containing the task implementation
-   * @param task_id Local task identifier within the library
-   * @return A shared pointer to the created PhysicalTask
-   */
-  [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task(const Library& library,
-                                                                     LocalTaskID task_id);
-
-  /**
-   * @brief Creates a PhysicalTask for inline execution in nested task context.
-   *
-   * This method creates a PhysicalTask using the current executing processor's context.
-   * It should only be called when is_running_in_task() returns true. This is used
-   * internally by AutoTask when created in a nested context to enable immediate
-   * inline execution.
-   *
-   * @param library The library containing the task implementation
-   * @param task_id Local task identifier within the library
-   * @return A shared pointer to the created PhysicalTask
-   * @throws std::runtime_error if not running inside a task
-   */
-  [[nodiscard]] InternalSharedPtr<PhysicalTask> create_physical_task_for_inline(
-    const Library& library, LocalTaskID task_id);
-
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
 

@@ -292,32 +292,6 @@ InternalSharedPtr<ManualTask> Runtime::create_task(const Library& library,
     library, vinfo, task_id, launch_domain, new_op_id(), scope().priority(), std::move(machine));
 }
 
-InternalSharedPtr<PhysicalTask> Runtime::create_physical_task(const Library& library,
-                                                              LocalTaskID task_id)
-{
-  auto&& [machine, vinfo] = slice_machine_for_task_(*library.find_task(task_id));
-  return make_internal_shared<PhysicalTask>(
-    library, vinfo, task_id, new_op_id(), std::move(machine));
-}
-
-InternalSharedPtr<PhysicalTask> Runtime::create_physical_task_for_inline(const Library& library,
-                                                                         LocalTaskID task_id)
-{
-  LEGATE_ASSERT(legate::is_running_in_task());
-
-  const auto processor    = get_executing_processor();
-  const auto variant_code = mapping::detail::to_variant_code(processor.kind());
-  const auto& task_info   = *library.find_task(task_id);
-  const auto variant      = task_info.find_variant(variant_code);
-
-  if (!variant.has_value()) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Task {} does not have variant for {}", task_info, variant_code)};
-  }
-
-  return make_internal_shared<PhysicalTask>(library, *variant, task_id, new_op_id(), get_machine());
-}
-
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->unbound()) {

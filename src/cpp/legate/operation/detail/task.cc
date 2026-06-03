@@ -255,7 +255,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable* 
   auto& arg = inputs_.emplace_back(
     Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(store), partition_symbol);
 
-  record_partition_(partition_symbol, std::get<0>(arg.store), AccessMode::READ);
+  record_partition_(partition_symbol, arg.store, AccessMode::READ);
 }
 
 void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol)
@@ -270,7 +270,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable*
   auto& arg = outputs_.emplace_back(
     Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(store), partition_symbol);
 
-  record_partition_(partition_symbol, std::get<0>(arg.store), AccessMode::WRITE);
+  record_partition_(partition_symbol, arg.store, AccessMode::WRITE);
 }
 
 void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
@@ -293,7 +293,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
   auto& arg = reductions_.emplace_back(
     Legion::PrivilegeMode::LEGION_REDUCE, std::move(store), partition_symbol);
 
-  record_partition_(partition_symbol, std::get<0>(arg.store), AccessMode::REDUCE);
+  record_partition_(partition_symbol, arg.store, AccessMode::REDUCE);
 }
 
 void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint, bool bypass_signature_check)
@@ -327,7 +327,7 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
   }
   for (auto&& output : outputs_) {
     solver.add_partition_symbol(output.variable, AccessMode::WRITE);
-    if (std::get<0>(output.store)->has_scalar_storage()) {
+    if (output.store->has_scalar_storage()) {
       solver.add_constraint(broadcast(output.variable));
     }
   }
@@ -560,107 +560,5 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
 }
 
 void ManualTask::launch() { launch_task_(strategy_.get()); }
-
-////////////////////////////////////////////////////
-// legate::detail::PhysicalTask
-////////////////////////////////////////////////////
-
-PhysicalTask::PhysicalTask(const Library& library,
-                           const VariantInfo& variant_info,
-                           LocalTaskID task_id,
-                           std::uint64_t unique_id,
-                           mapping::detail::Machine machine)
-  : TaskBase{library, variant_info, task_id, unique_id, /*priority=*/0, std::move(machine)}
-{
-}
-
-void PhysicalTask::add_input(InternalSharedPtr<PhysicalStore> store)
-{
-  inputs_.emplace_back(Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(store));
-}
-
-void PhysicalTask::add_output(InternalSharedPtr<PhysicalStore> store)
-{
-  outputs_.emplace_back(Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(store));
-}
-
-void PhysicalTask::add_reduction(InternalSharedPtr<PhysicalStore> store, std::int32_t redop_kind)
-{
-  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
-
-  reductions_.emplace_back(Legion::PrivilegeMode::LEGION_REDUCE, std::move(store));
-  reduction_ops_.emplace_back(legion_redop_id);
-}
-
-void PhysicalTask::add_scalar_output(InternalSharedPtr<PhysicalStore> store)
-{
-  scalar_outputs_.emplace_back(std::move(store));
-}
-
-void PhysicalTask::add_scalar_reduction(InternalSharedPtr<PhysicalStore> store,
-                                        GlobalRedopID redop_id)
-{
-  scalar_reductions_.emplace_back(std::move(store), redop_id);
-}
-
-namespace {
-
-[[nodiscard]] mapping::StoreTarget inline_store_target()
-{
-  const auto mem_kind = find_memory_kind_for_executing_processor(/*host_accessible=*/false);
-  return mapping::detail::to_target(mem_kind);
-}
-
-}  // namespace
-
-const Variable* PhysicalTask::add_input(InternalSharedPtr<LogicalStore> store)
-{
-  auto physical =
-    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
-  add_input(std::move(physical));
-  return nullptr;
-}
-
-const Variable* PhysicalTask::add_output(InternalSharedPtr<LogicalStore> store)
-{
-  auto physical =
-    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
-  add_output(std::move(physical));
-  return nullptr;
-}
-
-const Variable* PhysicalTask::add_reduction(InternalSharedPtr<LogicalStore> store,
-                                            std::int32_t redop_kind)
-{
-  auto physical =
-    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
-  add_reduction(std::move(physical), redop_kind);
-  return nullptr;
-}
-
-void PhysicalTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable*)
-{
-  auto physical =
-    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
-  add_input(std::move(physical));
-}
-
-void PhysicalTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable*)
-{
-  auto physical =
-    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
-  add_output(std::move(physical));
-}
-
-void PhysicalTask::add_reduction(InternalSharedPtr<LogicalStore> store,
-                                 std::int32_t redop_kind,
-                                 const Variable*)
-{
-  auto physical =
-    store->get_physical_store(inline_store_target(), /*ignore_future_mutability=*/false);
-  add_reduction(std::move(physical), redop_kind);
-}
-
-void PhysicalTask::launch() {}
 
 }  // namespace legate::detail

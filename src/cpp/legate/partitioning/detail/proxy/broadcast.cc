@@ -40,13 +40,7 @@ void do_broadcast(const TaskStoreArg* arg,
                   const std::optional<SmallVector<std::uint32_t, LEGATE_MAX_DIM>>& axes,
                   AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
-                        do_broadcast_final(task->find_or_declare_partition(st), axes, task);
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             arg->store);
+  do_broadcast_final(task->find_or_declare_partition(arg->store), axes, task);
 }
 
 void do_broadcast(Span<const TaskStoreArg> args,

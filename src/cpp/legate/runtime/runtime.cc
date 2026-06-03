@@ -63,13 +63,6 @@ Library Runtime::find_or_create_library(
 
 AutoTask Runtime::create_task(Library library, LocalTaskID task_id)
 {
-  // PhysicalTask variant for inline execution
-  if (is_running_in_task()) {
-    return AutoTask{impl_->create_physical_task_for_inline(*library.impl(), task_id)};
-  }
-  if (impl_->config().enable_inline_task_launch()) {
-    return AutoTask{impl_->create_physical_task(*library.impl(), task_id)};
-  }
   return AutoTask{impl_->create_task(*library.impl(), task_id)};
 }
 
@@ -111,17 +104,6 @@ void Runtime::issue_fill(const LogicalStore& lhs, const Scalar& value)
 
 void Runtime::submit(AutoTask&& task)
 {
-  if (task.needs_inline_execution_()) {
-    // PhysicalTask variant = inline execution
-    // Execute immediately, skip queue entirely
-    const auto impl = task.release_physical_();
-
-    impl->validate();
-    impl->launch();
-    task.clear_user_refs_();
-    return;
-  }
-
   impl_->submit(task.release_());
   // The following line should never be moved before the `submit()` call above, nor should it be
   // fused with the `release_()` call, because their side effects must be ordered properly in the

@@ -67,21 +67,4 @@ inline bool ManualTask::supports_streaming() const { return true; }
 
 inline const InternalSharedPtr<Strategy>& ManualTask::strategy() const { return strategy_; }
 
-// ==========================================================================================
-
-inline Operation::Kind PhysicalTask::kind() const { return Kind::PHYSICAL_TASK; }
-
-inline bool PhysicalTask::needs_partitioning() const { return false; }
-
-inline Span<const InternalSharedPtr<PhysicalStore>> PhysicalTask::physical_scalar_outputs() const
-{
-  return scalar_outputs_;
-}
-
-inline Span<const std::pair<InternalSharedPtr<PhysicalStore>, GlobalRedopID>>
-PhysicalTask::physical_scalar_reductions() const
-{
-  return scalar_reductions_;
-}
-
 }  // namespace legate::detail

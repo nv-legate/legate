@@ -41,24 +41,11 @@ void do_bloat(const TaskStoreArg* var_source,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& source_st) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bloat_st) {
-                                              do_bloat_final(
-                                                task->find_or_declare_partition(source_st),
-                                                task->find_or_declare_partition(bloat_st),
-                                                low_offsets,
-                                                high_offsets,
-                                                task);
-                                            },
-                                            [&](const InternalSharedPtr<PhysicalStore>&) {
-                                              // Do nothing for PhysicalStore
-                                            }},
-                                   var_bloat->store);
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_source->store);
+  do_bloat_final(task->find_or_declare_partition(var_source->store),
+                 task->find_or_declare_partition(var_bloat->store),
+                 low_offsets,
+                 high_offsets,
+                 task);
 }
 
 void do_bloat(const TaskStoreArg* var_source,
@@ -67,28 +54,12 @@ void do_bloat(const TaskStoreArg* var_source,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& source_st) {
-                        const auto* source_part = task->find_or_declare_partition(source_st);
+  const auto* source_part = task->find_or_declare_partition(var_source->store);
 
-                        for (auto&& bloat : var_bloat) {
-                          std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bloat_st) {
-                                                do_bloat_final(
-                                                  source_part,
-                                                  task->find_or_declare_partition(bloat_st),
-                                                  low_offsets,
-                                                  high_offsets,
-                                                  task);
-                                              },
-                                              [&](const InternalSharedPtr<PhysicalStore>&) {
-                                                // Do nothing for PhysicalStore
-                                              }},
-                                     bloat.store);
-                        }
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_source->store);
+  for (auto&& bloat : var_bloat) {
+    do_bloat_final(
+      source_part, task->find_or_declare_partition(bloat.store), low_offsets, high_offsets, task);
+  }
 }
 
 void do_bloat(Span<const TaskStoreArg> var_source,
@@ -97,28 +68,12 @@ void do_bloat(Span<const TaskStoreArg> var_source,
               Span<const std::uint64_t> high_offsets,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bloat_st) {
-                        const auto* bloat_part = task->find_or_declare_partition(bloat_st);
+  const auto* bloat_part = task->find_or_declare_partition(var_bloat->store);
 
-                        for (auto&& src : var_source) {
-                          std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalStore>& source_st) {
-                                       do_bloat_final(task->find_or_declare_partition(source_st),
-                                                      bloat_part,
-                                                      low_offsets,
-                                                      high_offsets,
-                                                      task);
-                                     },
-                                     [&](const InternalSharedPtr<PhysicalStore>&) {
-                                       // Do nothing for PhysicalStore
-                                     }},
-                            src.store);
-                        }
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_bloat->store);
+  for (auto&& src : var_source) {
+    do_bloat_final(
+      task->find_or_declare_partition(src.store), bloat_part, low_offsets, high_offsets, task);
+  }
 }
 
 void do_bloat(Span<const TaskStoreArg> var_source,

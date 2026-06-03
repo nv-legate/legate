@@ -32,26 +32,6 @@ TaskStoreArg::TaskStoreArg(Legion::PrivilegeMode priv,
                 privilege == LEGION_REDUCE);
 }
 
-TaskStoreArg::TaskStoreArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalStore> _store)
-  : privilege{priv}, store{std::move(_store)}
-{
-  // These objects should only be constructed from add_input(), add_output(), or
-  // add_reduction(), so the incoming privilege should only ever be these base privileges. The
-  // privilege coalescing code (and by extension streaming code) assumes this is the case, with
-  // the only addition being that these privileges are additionally fixed up with
-  // LEGION_DISCARD_OUTPUT_MASK.
-  LEGATE_ASSERT(privilege == LEGION_READ_ONLY || privilege == LEGION_WRITE_ONLY ||
-                privilege == LEGION_REDUCE);
-}
-
-bool TaskStoreArg::needs_flush() const
-{
-  return std::visit(
-    Overload{[](const InternalSharedPtr<LogicalStore>& st) -> bool { return st->needs_flush(); },
-             [](const InternalSharedPtr<PhysicalStore>&) -> bool {
-               return false;  // PhysicalStore doesn't need flush
-             }},
-    store);
-}
+bool TaskStoreArg::needs_flush() const { return store->needs_flush(); }
 
 }  // namespace legate::detail

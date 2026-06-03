@@ -149,17 +149,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
       "Dimension orderings other than C (or unspecified) not yet supported in inline execution."};
   }
 
-  return std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
-                               // TODO(wonchanl): Need to handle store projections here
-                               //                 Assume identity projection for now
-                               return st->get_sharded_physical_store(
-                                 partition, launch_domain, task_index);
-                             },
-                             [&](const InternalSharedPtr<PhysicalStore>& st) {
-                               LEGATE_CHECK(st->target() == policy.target);
-                               return st;
-                             }},
-                    elem.store);
+  return elem.store->get_sharded_physical_store(partition, launch_domain, task_index);
 }
 
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> fill_vector(
@@ -303,17 +293,6 @@ make_inline_task_context(const TaskBase& task, VariantCode variant_code, const S
   // case, then the set of "scalar_set_future()" loops in the task body will no longer be
   // correct.
 
-  // Reserve space for scalar outputs and reductions based on task type
-  if (const auto* logical_task = dynamic_cast<const LogicalTask*>(&task)) {
-    deferred_buffers.reserve(logical_task->scalar_outputs().size() +
-                             logical_task->scalar_reductions().size());
-  } else if (const auto* physical_task = dynamic_cast<const PhysicalTask*>(&task)) {
-    deferred_buffers.reserve(physical_task->physical_scalar_outputs().size() +
-                             physical_task->physical_scalar_reductions().size());
-  } else {
-    LEGATE_ABORT("Unhandled task kind");
-  }
-
   auto outputs    = fill_vector(task.outputs(),
                                 mapping_policies.output_policies,
                                 /* ignore_future_mutability */ true,
@@ -362,61 +341,6 @@ execute_task(const TaskBase& task,
   return {std::move(exn), std::move(deferred_buffers)};
 }
 
-void handle_return_values_impl(const LogicalTask&, Span<const Legion::UntypedDeferredValue>)
-{
-  // TODO(wonchanl): Need a v2 implementation
-}
-
-void handle_return_values_impl(const PhysicalTask& task,
-                               Span<const Legion::UntypedDeferredValue> deferred_buffers)
-{
-  const auto scalar_set_future = [&](const InternalSharedPtr<PhysicalStore>& scal,
-                                     const Legion::UntypedDeferredValue& buf) {
-    // Create a future from the deferred buffer and update the PhysicalStore
-    const auto size = scal->type()->size();  // PhysicalStore uses type()->size()
-    auto* ptr       = AccessorRO<std::int8_t, 1>{buf, size}.ptr(0);
-    auto fut        = Legion::Future::from_untyped_pointer(
-      ptr,
-      size,
-      // Don't take ownership because Legion already "owns" the
-      // deferred value, we wouldn't want to double-free it.
-      false,
-      // task.provenance() is a ZStringView
-      task.provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
-    );
-
-    // Update the PhysicalStore with the new future
-    scal->as_future_store().set_future(std::move(fut));
-  };
-  std::size_t idx = 0;
-
-  const auto& scalar_outputs    = task.physical_scalar_outputs();
-  const auto& scalar_reductions = task.physical_scalar_reductions();
-
-  LEGATE_ASSERT(deferred_buffers.size() == scalar_outputs.size() + scalar_reductions.size());
-
-  for (auto&& scal : scalar_outputs) {
-    scalar_set_future(scal, deferred_buffers[idx++]);
-  }
-  for (auto&& [scal, _] : scalar_reductions) {
-    scalar_set_future(scal, deferred_buffers[idx++]);
-  }
-}
-
-// Dispatcher function - determines which overload to use
-void handle_return_values(const TaskBase& task,
-                          Span<const Legion::UntypedDeferredValue> deferred_buffers)
-{
-  // Runtime type check to dispatch to correct overload
-  if (const auto* physical_task = dynamic_cast<const PhysicalTask*>(&task)) {
-    handle_return_values_impl(*physical_task, deferred_buffers);
-  } else if (const auto* logical_task = dynamic_cast<const LogicalTask*>(&task)) {
-    handle_return_values_impl(*logical_task, deferred_buffers);
-  } else {
-    LEGATE_ABORT("Unknown task type in handle_return_values");
-  }
-}
-
 }  // namespace
 
 void inline_task_body(const TaskBase& task,
@@ -438,9 +362,7 @@ void inline_task_body(const TaskBase& task,
   auto [exception, deferred_buffers] =
     execute_task(task, variant_code, variant_impl, get_task_name, strategy);
 
-  if (!deferred_buffers.empty()) {
-    handle_return_values(task, deferred_buffers);
-  }
+  LEGATE_CHECK(deferred_buffers.empty());
 
   if (exception.has_value()) {
     detail::Runtime::get_runtime().record_pending_exception(*std::move(exception));

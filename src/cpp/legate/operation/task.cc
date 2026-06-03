@@ -24,8 +24,6 @@ class AutoTask::Impl {
  public:
   explicit Impl(InternalSharedPtr<detail::AutoTask> impl) : task_{std::move(impl)} {}
 
-  explicit Impl(InternalSharedPtr<detail::PhysicalTask> impl) : task_{std::move(impl)} {}
-
   [[nodiscard]] const SharedPtr<detail::LogicalStore>& add_ref(LogicalStore store)
   {
     auto&& inserted = refs_.emplace_back(std::move(store));
@@ -33,11 +31,6 @@ class AutoTask::Impl {
   }
 
   void clear_refs() { refs_.clear(); }
-
-  [[nodiscard]] bool is_physical_task() const noexcept
-  {
-    return task_ && dynamic_cast<detail::PhysicalTask*>(task_.get()) != nullptr;
-  }
 
   [[nodiscard]] const InternalSharedPtr<detail::TaskBase>& task() const
   {
@@ -60,21 +53,6 @@ class AutoTask::Impl {
     return SharedPtr<detail::AutoTask>{std::move(result)};
   }
 
-  [[nodiscard]] SharedPtr<detail::PhysicalTask> release_physical_task()
-  {
-    auto result = dynamic_pointer_cast<detail::PhysicalTask>(std::move(task_));
-    if (!result) {
-      throw detail::TracedException<std::runtime_error>{
-        "Cannot release PhysicalTask from AutoTask"};
-    }
-    return SharedPtr<detail::PhysicalTask>{std::move(result)};
-  }
-
-  [[nodiscard]] detail::PhysicalTask* physical_task_impl() const
-  {
-    return dynamic_cast<detail::PhysicalTask*>(task_.get());
-  }
-
   [[nodiscard]] const SharedPtr<detail::AutoTask>& auto_task_for_test() const
   {
     cached_auto_ = dynamic_pointer_cast<detail::AutoTask>(task_);
@@ -91,31 +69,6 @@ class AutoTask::Impl {
 
 SharedPtr<detail::AutoTask> AutoTask::release_() { return pimpl_->release_auto_task(); }
 
-SharedPtr<detail::PhysicalTask> AutoTask::release_physical_()
-{
-  return pimpl_->release_physical_task();
-}
-
-[[nodiscard]] mapping::StoreTarget AutoTask::get_inline_store_target_() const
-{
-  const auto variant = [&]() {
-    if (legate::is_running_in_task()) {
-      const auto proc = legate::detail::Runtime::get_runtime().get_executing_processor();
-      return mapping::detail::to_variant_code(proc.kind());
-    }
-    return pimpl_->physical_task_impl()->machine().preferred_variant();
-  }();
-
-  switch (variant) {
-    case VariantCode::CPU: return mapping::StoreTarget::SYSMEM;
-    case VariantCode::GPU: return mapping::StoreTarget::FBMEM;
-    case VariantCode::OMP: return mapping::StoreTarget::SOCKETMEM;
-  }
-  LEGATE_ABORT("Unhandled variant code");
-}
-
-bool AutoTask::needs_inline_execution_() const { return pimpl_->is_physical_task(); }
-
 const SharedPtr<detail::AutoTask>& AutoTask::impl_() const { return pimpl_->auto_task_for_test(); }
 
 InternalSharedPtr<detail::LogicalStore> AutoTask::record_user_ref_(LogicalStore store)
@@ -129,21 +82,11 @@ void AutoTask::clear_user_refs_() { pimpl_->clear_refs(); }
 
 Variable AutoTask::add_input(LogicalStore store)
 {
-  if (needs_inline_execution_()) {
-    auto physical_store = store.get_physical_store(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_input(physical_store.impl());
-    return Variable{nullptr};
-  }
   return Variable{impl_()->add_input(record_user_ref_(std::move(store)))};
 }
 
 Variable AutoTask::add_output(LogicalStore store)
 {
-  if (needs_inline_execution_()) {
-    auto physical_store = store.get_physical_store(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_output(physical_store.impl());
-    return Variable{nullptr};
-  }
   return Variable{impl_()->add_output(record_user_ref_(std::move(store)))};
 }
 
@@ -154,32 +97,17 @@ Variable AutoTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
 
 Variable AutoTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
 {
-  if (needs_inline_execution_()) {
-    auto physical_store = store.get_physical_store(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_reduction(physical_store.impl(), redop_kind);
-    return Variable{nullptr};
-  }
   return Variable{impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind)};
 }
 
 Variable AutoTask::add_input(LogicalStore store, Variable partition_symbol)
 {
-  if (needs_inline_execution_()) {
-    auto physical_store = store.get_physical_store(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_input(physical_store.impl());
-    return Variable{nullptr};
-  }
   impl_()->add_input(record_user_ref_(std::move(store)), partition_symbol.impl());
   return partition_symbol;
 }
 
 Variable AutoTask::add_output(LogicalStore store, Variable partition_symbol)
 {
-  if (needs_inline_execution_()) {
-    auto physical_store = store.get_physical_store(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_output(physical_store.impl());
-    return Variable{nullptr};
-  }
   impl_()->add_output(record_user_ref_(std::move(store)), partition_symbol.impl());
   return partition_symbol;
 }
@@ -196,11 +124,6 @@ Variable AutoTask::add_reduction(LogicalStore store,
                                  std::int32_t redop_kind,
                                  Variable partition_symbol)
 {
-  if (needs_inline_execution_()) {
-    auto physical_store = store.get_physical_store(get_inline_store_target_());
-    pimpl_->physical_task_impl()->add_reduction(physical_store.impl(), redop_kind);
-    return Variable{nullptr};
-  }
   impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind, partition_symbol.impl());
   return partition_symbol;
 }
@@ -208,19 +131,12 @@ Variable AutoTask::add_reduction(LogicalStore store,
 void AutoTask::add_scalar_arg(  // NOLINT(readability-make-member-function-const)
   const Scalar& scalar)
 {
-  if (needs_inline_execution_()) {
-    pimpl_->physical_task_impl()->add_scalar_arg(scalar.impl());
-    return;
-  }
   impl_()->add_scalar_arg(scalar.impl());
 }
 
 void AutoTask::add_constraint(  // NOLINT(readability-make-member-function-const)
   const Constraint& constraint)
 {
-  if (needs_inline_execution_()) {
-    return;  // No-op for inline execution (single partition)
-  }
   impl_()->add_constraint(constraint.impl(), /*bypass_signature_check=*/false);
 }
 
@@ -234,73 +150,40 @@ void AutoTask::add_constraints(Span<const Constraint> constraints)
 Variable AutoTask::find_or_declare_partition(  // NOLINT(readability-make-member-function-const)
   const LogicalStore& store)
 {
-  if (needs_inline_execution_()) {
-    return Variable{nullptr};
-  }
   return Variable{impl_()->find_or_declare_partition(store.impl())};
 }
 
 Variable AutoTask::declare_partition()  // NOLINT(readability-make-member-function-const)
 {
-  if (needs_inline_execution_()) {
-    return Variable{nullptr};
-  }
   return Variable{impl_()->declare_partition()};
 }
 
-std::string_view AutoTask::provenance() const
-{
-  if (needs_inline_execution_()) {
-    return pimpl_->physical_task_impl()->provenance().as_string_view();
-  }
-  return impl_()->provenance().as_string_view();
-}
+std::string_view AutoTask::provenance() const { return impl_()->provenance().as_string_view(); }
 
 void AutoTask::set_concurrent(bool concurrent)  // NOLINT(readability-make-member-function-const)
 {
-  if (needs_inline_execution_()) {
-    pimpl_->physical_task_impl()->set_concurrent(concurrent);
-    return;
-  }
   impl_()->set_concurrent(concurrent);
 }
 
 void AutoTask::set_side_effect(  // NOLINT(readability-make-member-function-const)
   bool has_side_effect)
 {
-  if (needs_inline_execution_()) {
-    pimpl_->physical_task_impl()->set_side_effect(has_side_effect);
-    return;
-  }
   impl_()->set_side_effect(has_side_effect);
 }
 
 void AutoTask::throws_exception(  // NOLINT(readability-make-member-function-const)
   bool can_throw_exception)
 {
-  if (needs_inline_execution_()) {
-    pimpl_->physical_task_impl()->throws_exception(can_throw_exception);
-    return;
-  }
   impl_()->throws_exception(can_throw_exception);
 }
 
 void AutoTask::add_communicator(  // NOLINT(readability-make-member-function-const)
   std::string_view name)
 {
-  if (needs_inline_execution_()) {
-    throw detail::TracedException<std::runtime_error>{
-      "Communicators are not supported for inline task execution"};
-  }
   impl_()->add_communicator(name, /*bypass_signature_check=*/false);
 }
 
 AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl)
-  : pimpl_{make_internal_shared<Impl>(std::move(impl))}
-{
-}
-
-AutoTask::AutoTask(InternalSharedPtr<detail::PhysicalTask> impl)
   : pimpl_{make_internal_shared<Impl>(std::move(impl))}
 {
 }

@@ -37,23 +37,10 @@ void do_scale(Span<const std::uint64_t> factors,
               const TaskStoreArg* var_bigger,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& smaller_st) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bigger_st) {
-                                              do_scale_final(
-                                                factors,
-                                                task->find_or_declare_partition(smaller_st),
-                                                task->find_or_declare_partition(bigger_st),
-                                                task);
-                                            },
-                                            [&](const InternalSharedPtr<PhysicalStore>&) {
-                                              // Do nothing for PhysicalStore
-                                            }},
-                                   var_bigger->store);
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_smaller->store);
+  do_scale_final(factors,
+                 task->find_or_declare_partition(var_smaller->store),
+                 task->find_or_declare_partition(var_bigger->store),
+                 task);
 }
 
 void do_scale(Span<const std::uint64_t> factors,
@@ -61,27 +48,11 @@ void do_scale(Span<const std::uint64_t> factors,
               Span<const TaskStoreArg> var_bigger,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& smaller_st) {
-                        const auto* small_part = task->find_or_declare_partition(smaller_st);
+  const auto* small_part = task->find_or_declare_partition(var_smaller->store);
 
-                        for (auto&& big : var_bigger) {
-                          std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalStore>& bigger_st) {
-                                       do_scale_final(factors,
-                                                      small_part,
-                                                      task->find_or_declare_partition(bigger_st),
-                                                      task);
-                                     },
-                                     [&](const InternalSharedPtr<PhysicalStore>&) {
-                                       // Do nothing for PhysicalStore
-                                     }},
-                            big.store);
-                        }
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_smaller->store);
+  for (auto&& big : var_bigger) {
+    do_scale_final(factors, small_part, task->find_or_declare_partition(big.store), task);
+  }
 }
 
 void do_scale(Span<const std::uint64_t> factors,
@@ -89,27 +60,11 @@ void do_scale(Span<const std::uint64_t> factors,
               const TaskStoreArg* var_bigger,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& bigger_st) {
-                        const auto* big_part = task->find_or_declare_partition(bigger_st);
+  const auto* big_part = task->find_or_declare_partition(var_bigger->store);
 
-                        for (auto&& small : var_smaller) {
-                          std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalStore>& smaller_st) {
-                                       do_scale_final(factors,
-                                                      task->find_or_declare_partition(smaller_st),
-                                                      big_part,
-                                                      task);
-                                     },
-                                     [&](const InternalSharedPtr<PhysicalStore>&) {
-                                       // Do nothing for PhysicalStore
-                                     }},
-                            small.store);
-                        }
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_bigger->store);
+  for (auto&& small : var_smaller) {
+    do_scale_final(factors, task->find_or_declare_partition(small.store), big_part, task);
+  }
 }
 
 void do_scale(Span<const std::uint64_t> factors,

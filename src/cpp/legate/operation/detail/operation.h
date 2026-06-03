@@ -77,7 +77,6 @@ class Operation {
     INDEX_ATTACH,
     MANUAL_TASK,
     MAPPING_FENCE,
-    PHYSICAL_TASK,
     REDUCE,
     RELEASE_REGION_FIELD,
     SCATTER,

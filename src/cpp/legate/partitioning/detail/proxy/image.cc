@@ -44,23 +44,10 @@ void do_image(const TaskStoreArg* var_function,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& function_st) {
-                        std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& range_st) {
-                                              do_image_final(
-                                                task->find_or_declare_partition(function_st),
-                                                task->find_or_declare_partition(range_st),
-                                                hint,
-                                                task);
-                                            },
-                                            [&](const InternalSharedPtr<PhysicalStore>&) {
-                                              // Do nothing for PhysicalStore
-                                            }},
-                                   var_range->store);
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_function->store);
+  do_image_final(task->find_or_declare_partition(var_function->store),
+                 task->find_or_declare_partition(var_range->store),
+                 hint,
+                 task);
 }
 
 void do_image(const TaskStoreArg* var_function,
@@ -68,26 +55,11 @@ void do_image(const TaskStoreArg* var_function,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  std::visit(
-    Overload{[&](const InternalSharedPtr<LogicalStore>& function_st) {
-               const auto* func_part = task->find_or_declare_partition(function_st);
+  const auto* func_part = task->find_or_declare_partition(var_function->store);
 
-               for (auto&& range : var_ranges) {
-                 std::visit(
-                   Overload{[&](const InternalSharedPtr<LogicalStore>& range_st) {
-                              do_image_final(
-                                func_part, task->find_or_declare_partition(range_st), hint, task);
-                            },
-                            [&](const InternalSharedPtr<PhysicalStore>&) {
-                              // Do nothing for PhysicalStore
-                            }},
-                   range.store);
-               }
-             },
-             [&](const InternalSharedPtr<PhysicalStore>&) {
-               // Do nothing for PhysicalStore
-             }},
-    var_function->store);
+  for (auto&& range : var_ranges) {
+    do_image_final(func_part, task->find_or_declare_partition(range.store), hint, task);
+  }
 }
 
 void do_image(Span<const TaskStoreArg> var_functions,
@@ -95,27 +67,11 @@ void do_image(Span<const TaskStoreArg> var_functions,
               const std::optional<ImageComputationHint>& hint,
               AutoTask* task)
 {
-  std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& range_st) {
-                        const auto* range_part = task->find_or_declare_partition(range_st);
+  const auto* range_part = task->find_or_declare_partition(var_range->store);
 
-                        for (auto&& func : var_functions) {
-                          std::visit(
-                            Overload{[&](const InternalSharedPtr<LogicalStore>& function_st) {
-                                       do_image_final(task->find_or_declare_partition(function_st),
-                                                      range_part,
-                                                      hint,
-                                                      task);
-                                     },
-                                     [&](const InternalSharedPtr<PhysicalStore>&) {
-                                       // Do nothing for PhysicalStore
-                                     }},
-                            func.store);
-                        }
-                      },
-                      [&](const InternalSharedPtr<PhysicalStore>&) {
-                        // Do nothing for PhysicalStore
-                      }},
-             var_range->store);
+  for (auto&& func : var_functions) {
+    do_image_final(task->find_or_declare_partition(func.store), range_part, hint, task);
+  }
 }
 
 void do_image(Span<const TaskStoreArg> var_functions,

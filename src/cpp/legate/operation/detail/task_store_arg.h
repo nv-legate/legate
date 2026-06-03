@@ -43,17 +43,10 @@ class TaskStoreArg {
                InternalSharedPtr<LogicalStore> _store,
                const Variable* _variable = nullptr);
 
-  /**
-   * @brief Construct a TaskStoreArg for PhysicalStore.
-   *
-   * @param priv The access privilege for this task argument.
-   * @param _store The PhysicalStore for this argument.
-   */
-  TaskStoreArg(Legion::PrivilegeMode priv, InternalSharedPtr<PhysicalStore> _store);
   [[nodiscard]] bool needs_flush() const;
 
   Legion::PrivilegeMode privilege{Legion::PrivilegeMode::LEGION_NO_ACCESS};
-  std::variant<InternalSharedPtr<LogicalStore>, InternalSharedPtr<PhysicalStore>> store{};
+  InternalSharedPtr<LogicalStore> store{};
   const Variable* variable{};
 };
 
