@@ -60,29 +60,12 @@ InternalSharedPtr<Storage> StoragePartition::get_child_storage(
     std::move(child_extents), self, std::move(color), std::move(child_offsets));
 }
 
-InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
-  Span<const std::uint64_t> color)
-{
-  const auto* const tiling = dynamic_cast<Tiling*>(partition_.get());
-
-  if (!tiling) {
-    throw TracedException<std::runtime_error>{"Sub-storage is implemented only for tiling"};
-  }
-
-  return parent_->get_region_field()->get_child(tiling, color, complete_);
-}
-
 std::optional<InternalSharedPtr<Partition>> StoragePartition::find_key_partition(
   const mapping::detail::Machine& machine,
   const ParallelPolicy& parallel_policy,
   const Restrictions& restrictions) const
 {
   return parent_->find_key_partition(machine, parallel_policy, restrictions);
-}
-
-Legion::LogicalPartition StoragePartition::get_legion_partition()
-{
-  return parent_->get_region_field()->get_legion_partition(partition_.get(), complete_);
 }
 
 bool StoragePartition::is_disjoint_for(const Domain& launch_domain) const

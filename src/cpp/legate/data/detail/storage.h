@@ -44,13 +44,6 @@ class ExternalAllocation;
 
 class Storage {
  public:
-  enum class Kind : std::uint8_t {
-    REGION_FIELD,
-    FUTURE,
-    FUTURE_MAP,
-    INLINE_STORAGE,
-  };
-
   /**
    * @brief Construct a Storage object lazily.
    *
@@ -61,13 +54,9 @@ class Storage {
    *
    * @param shape The shape of the storage.
    * @param field_size The size of the field.
-   * @param optimize_scalar Whether to optimize the scalar.
    * @param provenance The provenance of the storage.
    */
-  Storage(InternalSharedPtr<Shape> shape,
-          std::uint32_t field_size,
-          bool optimize_scalar,
-          std::string_view provenance);
+  Storage(InternalSharedPtr<Shape> shape, std::uint32_t field_size, std::string_view provenance);
   /**
    * @brief Construct a Storage object initialized eagerly from an existing scalar.
    *
@@ -108,19 +97,6 @@ class Storage {
           const InternalSharedPtr<Type>& type,
           InternalSharedPtr<ExternalAllocation> allocation,
           std::string_view provenance);
-  /**
-   * @brief Construct a Storage object from an existing LogicalRegionField.
-   *
-   * This constructor creates a Storage from an existing LogicalRegionField.
-   *
-   * @param shape The shape of the storage.
-   * @param region_field The existing LogicalRegionField to use for the storage.
-   * @param provenance The provenance of the storage.
-   */
-  Storage(InternalSharedPtr<Shape> shape,
-          InternalSharedPtr<LogicalRegionField> region_field,
-          std::string_view provenance);
-  ~Storage();
 
   Storage(Storage&&) noexcept            = default;
   Storage& operator=(Storage&&) noexcept = default;
@@ -146,7 +122,6 @@ class Storage {
    * @return `true` if two stores cover the same underlying memory region, `false` otherwise.
    */
   [[nodiscard]] bool equal(const Storage& other) const;
-  [[nodiscard]] Kind kind() const;
   [[nodiscard]] std::int32_t level() const;
   [[nodiscard]] std::size_t scalar_offset() const;
   [[nodiscard]] std::string_view provenance() const;
@@ -163,15 +138,6 @@ class Storage {
     const InternalSharedPtr<const Storage>& self) const;
   [[nodiscard]] InternalSharedPtr<Storage> get_root(const InternalSharedPtr<Storage>& self);
 
-  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::FutureMap get_future_map() const;
-  [[nodiscard]] std::variant<Legion::Future, Legion::FutureMap> get_future_or_future_map(
-    const Domain& launch_domain) const;
-
-  void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
-  void set_future(Legion::Future future, std::size_t scalar_offset);
-  void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset);
   void set_bound(bool bound);
 
   [[nodiscard]] InternalSharedPtr<PhysicalStore> map(
@@ -203,46 +169,6 @@ class Storage {
   [[nodiscard]] std::string to_string() const;
 
  private:
-  // Private getters for member variables
-  /**
-   * @brief Return a const reference to the region field optional of this storage.
-   *
-   * @throw std::bad_variant_access if the underlying storage variant is not a region field.
-   */
-  [[nodiscard]] const std::optional<InternalSharedPtr<LogicalRegionField>>& region_field_() const;
-  /**
-   * @brief Return the region field optional of this storage.
-   *
-   * @throw std::bad_variant_access if the underlying storage variant is not a region field.
-   */
-  [[nodiscard]] std::optional<InternalSharedPtr<LogicalRegionField>>& region_field_();
-
-  /**
-   * @brief Return a const reference to the future optional of this storage.
-   *
-   * @throw std::bad_variant_access if the underlying storage variant is not a future.
-   */
-  [[nodiscard]] const std::optional<Legion::Future>& future_() const;
-  /**
-   * @brief Return the future optional of this storage.
-   *
-   * @throw std::bad_variant_access if the underlying storage variant is not a future.
-   */
-  [[nodiscard]] std::optional<Legion::Future>& future_();
-
-  /**
-   * @brief Return a const reference to the future map optional of this storage.
-   *
-   * @throw std::bad_variant_access if the underlying storage variant is not a future map.
-   */
-  [[nodiscard]] const std::optional<Legion::FutureMap>& future_map_() const;
-  /**
-   * @brief Return the future map optional of this storage.
-   *
-   * @throw std::bad_variant_access if the underlying storage variant is not a future map.
-   */
-  [[nodiscard]] std::optional<Legion::FutureMap>& future_map_();
-
   std::uint64_t storage_id_{};
   bool replicated_{};
   bool unbound_{};
@@ -257,17 +183,7 @@ class Storage {
 
   std::size_t scalar_offset_{};
 
-  // Storage is backed by one of three different types of data
-  // noted in the variant below. However, the underlying types are optional because
-  // Storage can take a two-stage initialization process where, first, the constructor
-  // determines the type of backing for the Storage, and then, the user may set
-  // the backing data later via the set_region_field, set_future, etc methods.
-  // std::optional allows us to specify whether the specific variant alternative is set or not.
-  std::variant<std::optional<InternalSharedPtr<LogicalRegionField>>,
-               std::optional<Legion::Future>,
-               std::optional<Legion::FutureMap>,
-               std::optional<InternalSharedPtr<InlineStorage>>>
-    storage_data_{};
+  InternalSharedPtr<InlineStorage> storage_data_{};
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};

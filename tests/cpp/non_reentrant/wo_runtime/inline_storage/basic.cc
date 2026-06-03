@@ -51,10 +51,6 @@ TEST_F(InlineStorageUnit, Basic)
 
   runtime->issue_fill(store, legate::Scalar{VALUE});
 
-  auto&& impl = store.impl();
-
-  ASSERT_EQ(impl->get_storage()->kind(), legate::detail::Storage::Kind::INLINE_STORAGE);
-
   const auto phys = store.get_physical_store();
 
   ASSERT_TRUE(phys.valid());

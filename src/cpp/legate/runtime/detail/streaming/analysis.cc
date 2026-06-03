@@ -198,41 +198,12 @@ std::optional<InternalSharedPtr<Strategy>> get_strategy(const InternalSharedPtr<
  * @param discard_ops The list of discards which were handled by the current stream.
  */
 void maybe_update_task_discards(
-  TaskStoreArg* task_store_arg,
+  TaskStoreArg* /*task_store_arg*/,
   std::unordered_map<std::pair<Legion::FieldID, Legion::LogicalRegion>, std::uint32_t, hasher<>>*
-    discard_regions,
-  SmallVector<std::uint32_t>* discard_ops)
+  /*discard_regions*/,
+  SmallVector<std::uint32_t>* /*discard_ops*/)
 {
-  LEGATE_ASSERT(task_store_arg->store.index() == 0);
-  auto&& store   = std::get<0>(task_store_arg->store);
-  auto&& storage = store->get_storage();
-
-  switch (storage->kind()) {
-      // Ignore future, future-maps, and inline-storage for now, it's not clear how these should
-      // be streamed (if at all).
-    case Storage::Kind::INLINE_STORAGE: [[fallthrough]];
-    case Storage::Kind::FUTURE: [[fallthrough]];
-    case Storage::Kind::FUTURE_MAP: return;
-    case Storage::Kind::REGION_FIELD: break;
-  }
-
-  // Among other things, Legion does not yet support streaming for unbound stores. This is a
-  // LEGATE_CHECK() because the code that computes the streaming section cut-points should
-  // not have included this task in the streaming run to begin with.
-  LEGATE_CHECK(!storage->unbound());
-
-  auto&& rf     = storage->get_region_field();
-  const auto it = discard_regions->find({rf->field_id(), rf->region()});
-
-  if (it == discard_regions->end()) {
-    // Not a discarded store, or we already handled it
-    return;
-  }
-
-  task_store_arg->privilege |= Legion::PrivilegeMode::LEGION_DISCARD_OUTPUT_MASK;
-
-  discard_ops->emplace_back(it->second);
-  discard_regions->erase(it);
+  // TODO(wonchanl): Need a v2 implementation
 }
 
 void scan_task_discards(

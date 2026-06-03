@@ -106,31 +106,7 @@ class TestMappable final : public Legion::Mappable {
   }
 };
 
-Legion::LogicalPartition create_test_partition()
-{
-  auto runtime         = legate::Runtime::get_runtime();
-  auto store           = runtime->create_store(legate::Shape{4}, legate::int32());
-  auto store_partition = store.partition_by_tiling({2});
-
-  return store_partition.impl()->storage_partition()->get_legion_partition();
-}
-
 }  // namespace
-
-TEST_F(BaseMapperTest, SelectPartitionProjectionUsesOpenCompletePartition)
-{
-  legate::mapping::detail::BaseMapper mapper;
-  const TestPartition partition;
-  auto input_partition = create_test_partition();
-  Legion::Mapping::Mapper::SelectPartitionProjectionInput input;
-  Legion::Mapping::Mapper::SelectPartitionProjectionOutput output;
-
-  input.open_complete_partitions.push_back(input_partition);
-
-  mapper.select_partition_projection(/*ctx=*/nullptr, partition, input, output);
-
-  ASSERT_EQ(output.chosen_partition, input_partition);
-}
 
 TEST_F(BaseMapperTest, SelectPartitionProjectionUsesNoPartForEmptyInput)
 {

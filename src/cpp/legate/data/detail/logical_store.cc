@@ -80,18 +80,7 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
     shape_{storage->shape()},
     storage_{std::move(storage)},
     transform_{make_internal_shared<TransformStack>()},
-    domain_{[&shape = shape_]() -> std::optional<Domain> {
-      if (!Runtime::get_runtime().config().enable_inline_task_launch()) {
-        return std::nullopt;
-      }
-
-      // Unbound storages do not have a domain.
-      if (shape->unbound()) {
-        return std::nullopt;
-      }
-
-      return to_maybe_empty_domain(shape->extents());
-    }()}
+    domain_{to_maybe_empty_domain(shape()->extents())}
 {
   assert_fixed_storage_size(this->type());
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -471,21 +460,12 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime().flush_scheduling_window();
 
-  auto ret =
+  auto result =
     storage->map(effective_target, type(), shape(), transform_, ignore_future_mutability, domain_);
 
-  switch (storage->kind()) {
-    case Storage::Kind::INLINE_STORAGE: [[fallthrough]];
-    case Storage::Kind::REGION_FIELD: {
-      mapped_ = ret;
-      break;
-    }
-      // Physical stores for future-backed stores shouldn't be cached, as they are
-      // not automatically remapped to reflect changes by the runtime.
-    case Storage::Kind::FUTURE_MAP: [[fallthrough]];
-    case Storage::Kind::FUTURE: break;
-  }
-  return ret;
+  mapped_.emplace(result);
+
+  return result;
 }
 
 // Just because all the member functions used are const, doesn't mean this function

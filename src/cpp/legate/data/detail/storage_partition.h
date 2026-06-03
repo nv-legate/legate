@@ -45,14 +45,11 @@ class StoragePartition {
   [[nodiscard]] InternalSharedPtr<Storage> get_child_storage(
     const InternalSharedPtr<StoragePartition>& self,
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> color);
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child_data(
-    Span<const std::uint64_t> color);
 
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
     const mapping::detail::Machine& machine,
     const ParallelPolicy& parallel_policy,
     const Restrictions& restrictions) const;
-  [[nodiscard]] Legion::LogicalPartition get_legion_partition();
 
   [[nodiscard]] std::int32_t level() const;
 

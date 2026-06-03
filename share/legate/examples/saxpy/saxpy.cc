@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#undef NDEBUG
+
 #include <legate.h>
 
 #include <cstdint>
@@ -17,6 +19,30 @@ namespace {
 // after which Legate can recognize it and allow instances to be
 // created and executed.
 
+class InitTask : public legate::LegateTask<InitTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}}.with_signature(legate::TaskSignature{}.outputs(1));
+
+  static void cpu_variant(legate::TaskContext context)
+  {
+    constexpr std::int32_t DIM = 2;
+
+    auto store       = context.output(0);
+    const auto value = context.scalar(0).value<std::int32_t>();
+    const auto shape = store.shape<DIM>();
+
+    // Create accessors for reading input and writing output
+    auto accessor = store.write_accessor<std::int32_t, DIM>();
+
+    // Iterate over each point in the 2D domain (dense rectangular iteration)
+    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+      // Perform the element-wise SAXPY operation: output = x + y
+      accessor[*it] = value;
+    }
+  }
+};
+
 // saxpy task
 class SAXPYTask : public legate::LegateTask<SAXPYTask> {
  public:
@@ -26,7 +52,7 @@ class SAXPYTask : public legate::LegateTask<SAXPYTask> {
   //      store; this calling convention will be checked at runtime when
   //      the task is launched.
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{1}}.with_signature(
+    legate::TaskConfig{legate::LocalTaskID{2}}.with_signature(
       legate::TaskSignature{}.inputs(2).outputs(1));
 
   // This is the CPU variant of the task
@@ -69,7 +95,7 @@ class SAXPYTask : public legate::LegateTask<SAXPYTask> {
 class CheckTask : public legate::LegateTask<CheckTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{2}}.with_signature(legate::TaskSignature{}.inputs(1));
+    legate::TaskConfig{legate::LocalTaskID{3}}.with_signature(legate::TaskSignature{}.inputs(1));
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -102,23 +128,35 @@ void run_example()
   // their corresponding library before any instances can be created.
   // Since an application may use several Legate-based libraries,
   // it's important to separate their task registration logic.
+  InitTask::register_variants(library);
   SAXPYTask::register_variants(library);
   CheckTask::register_variants(library);
 
   // Create 2D arrays (5x5)
-  auto shape   = legate::Shape{5, 5};
-  auto x_array = runtime->create_store(shape, legate::int32());
-  auto y_array = runtime->create_store(shape, legate::int32());
+  auto shape   = legate::Shape{16, 16};
+  auto x_store = runtime->create_store(shape, legate::int32());
+  auto y_store = runtime->create_store(shape, legate::int32());
   auto result  = runtime->create_store(shape, legate::int32());
 
+  static_cast<void>(x_store.get_physical_store());
+  static_cast<void>(y_store.get_physical_store());
+  static_cast<void>(result.get_physical_store());
+
   // Fill input arrays
-  runtime->issue_fill(x_array, legate::Scalar{1});  // Fill with 1s
-  runtime->issue_fill(y_array, legate::Scalar{2});  // Fill with 2s
+  auto init_x_task = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
+  init_x_task.add_output(x_store);
+  init_x_task.add_scalar_arg(legate::Scalar{1});
+  runtime->submit(std::move(init_x_task));
+
+  auto init_y_task = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
+  init_y_task.add_output(y_store);
+  init_y_task.add_scalar_arg(legate::Scalar{2});
+  runtime->submit(std::move(init_y_task));
 
   // Create and submit saxpy task
   auto saxpy_task = runtime->create_task(library, SAXPYTask::TASK_CONFIG.task_id());
-  saxpy_task.add_input(x_array);
-  saxpy_task.add_input(y_array);
+  saxpy_task.add_input(x_store);
+  saxpy_task.add_input(y_store);
   saxpy_task.add_output(result);
   // When runtime->submit is called, the task is enqueued
   // into the runtime's task execution queue. Legate will

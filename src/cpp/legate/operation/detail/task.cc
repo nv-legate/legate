@@ -205,7 +205,10 @@ void LogicalTask::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
 
-void LogicalTask::launch_task_(Strategy*) {}
+void LogicalTask::launch_task_(Strategy*)
+{
+  inline_task_body(*this, machine().preferred_variant(), variant_info_().body);
+}
 
 ////////////////////////////////////////////////////
 // legate::AutoTask

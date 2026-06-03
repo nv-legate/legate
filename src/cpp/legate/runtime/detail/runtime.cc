@@ -511,13 +511,11 @@ void validate_store_shape(const InternalSharedPtr<Shape>& shape,
 // NOLINTNEXTLINE(readability-make-member-function-const)
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> type,
                                                       std::uint32_t dim,
-                                                      bool optimize_scalar)
+                                                      bool /*optimize_scalar*/)
 {
   check_dimensionality_(dim);
-  auto storage = make_internal_shared<detail::Storage>(make_internal_shared<Shape>(dim),
-                                                       type->size(),
-                                                       optimize_scalar,
-                                                       get_provenance().as_string_view());
+  auto storage = make_internal_shared<detail::Storage>(
+    make_internal_shared<Shape>(dim), type->size(), get_provenance().as_string_view());
   return make_internal_shared<LogicalStore>(std::move(storage), std::move(type));
 }  // namespace
 
@@ -527,14 +525,14 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
 // NOLINTNEXTLINE(readability-make-member-function-const)
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> shape,
                                                       InternalSharedPtr<Type> type,
-                                                      bool optimize_scalar /*=false*/)
+                                                      bool /*optimize_scalar*/)
 {
   if (type->variable_size()) {
     throw TracedException<std::invalid_argument>{"Store must have a fixed-size type"};
   }
   check_dimensionality_(shape->ndim());
   auto storage = make_internal_shared<detail::Storage>(
-    std::move(shape), type->size(), optimize_scalar, get_provenance().as_string_view());
+    std::move(shape), type->size(), get_provenance().as_string_view());
   return make_internal_shared<LogicalStore>(std::move(storage), std::move(type));
 }
 

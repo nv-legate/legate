@@ -154,16 +154,11 @@ void Operation::record_partition_(
 }
 
 StoreProjection Operation::create_store_projection_(const Strategy& strategy,
-                                                    const Domain& launch_domain,
+                                                    const Domain&,
                                                     const StoreArg& arg)
 {
-  auto legion_partition = launch_domain.is_valid()
-                            ? create_store_partition(arg.store, strategy[*arg.variable])
-                                ->storage_partition()
-                                ->get_legion_partition()
-                            : Legion::LogicalPartition::NO_PART;
-
-  return StoreProjection{legion_partition, strategy.find_store_projection(*arg.variable)};
+  return StoreProjection{Legion::LogicalPartition::NO_PART,
+                         strategy.find_store_projection(*arg.variable)};
 }
 
 }  // namespace legate::detail

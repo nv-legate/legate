@@ -101,7 +101,7 @@ class InlinePhysicalStore final : public PhysicalStore {
   InternalSharedPtr<InlineStorage> inline_storage_{};
 
   // The domain over inline_storage_ that this store spans.
-  std::reference_wrapper<const Domain> domain_;
+  Domain domain_{};
 };
 
 }  // namespace legate::detail
