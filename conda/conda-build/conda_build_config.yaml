@@ -56,10 +56,6 @@ setuptools_scm_version:
 hdf5_version:
   - ">=1.14.4,<2.2"
 
-zarr_version:
-  # FIXME: Legate code needs to be updated for zarr v3 compatibility
-  - ">=2.0,<2.19"
-
 openmpi_version:
   - ">=5,<6"
 

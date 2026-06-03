@@ -218,7 +218,6 @@ requirements:
   # Runtime python dependencies
   run:
     - numpy {{ numpy_version }}
-    - zarr {{ zarr_version }}
     - zstd
     - nvidia-ml-py
     - {{ openmp_lib }}

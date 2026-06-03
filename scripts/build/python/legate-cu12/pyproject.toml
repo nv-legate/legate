@@ -27,7 +27,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.22,!=2.1.0",
-    "zarr<3",
     "h5py",
     "rich",
     "nvidia-nccl-cu12>=2.28,<2.30; sys_platform == 'linux'",
@@ -48,6 +47,7 @@ test = [
     "jupyter_client",
     "openmpi",
     "h5py",
+    "zarr>=2,<4",
 ]
 
 [project.urls]

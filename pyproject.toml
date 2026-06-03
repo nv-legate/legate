@@ -32,7 +32,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.22,!=2.1.0",
-    "zarr<3",
     "rich",
     "h5py",
 ]
@@ -52,6 +51,7 @@ test = [
     "jupyter_client",
     "openmpi",
     "h5py",
+    "zarr>=2,<4",
 ]
 
 [project.urls]
