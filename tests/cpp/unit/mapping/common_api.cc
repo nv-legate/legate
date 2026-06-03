@@ -29,6 +29,11 @@ class StoreTargetToTaskTargetTest
     public ::testing::WithParamInterface<
       std::tuple<legate::mapping::StoreTarget, legate::mapping::TaskTarget>> {};
 
+class VariantCodeToTaskTargetTest
+  : public MappingCommonTest,
+    public ::testing::WithParamInterface<
+      std::tuple<legate::VariantCode, legate::mapping::TaskTarget>> {};
+
 class MemoryToStoreTargetTest : public MappingCommonTest,
                                 public ::testing::WithParamInterface<
                                   std::tuple<Legion::Memory::Kind, legate::mapping::StoreTarget>> {
@@ -78,6 +83,14 @@ INSTANTIATE_TEST_SUITE_P(
     std::make_tuple(legate::mapping::StoreTarget::ZCMEM, legate::mapping::TaskTarget::GPU),
     std::make_tuple(legate::mapping::StoreTarget::SOCKETMEM, legate::mapping::TaskTarget::OMP),
     std::make_tuple(legate::mapping::StoreTarget::SYSMEM, legate::mapping::TaskTarget::CPU)));
+
+// Test data for VariantCode to TaskTarget conversion
+INSTANTIATE_TEST_SUITE_P(
+  MappingCommonTest,
+  VariantCodeToTaskTargetTest,
+  ::testing::Values(std::make_tuple(legate::VariantCode::GPU, legate::mapping::TaskTarget::GPU),
+                    std::make_tuple(legate::VariantCode::OMP, legate::mapping::TaskTarget::OMP),
+                    std::make_tuple(legate::VariantCode::CPU, legate::mapping::TaskTarget::CPU)));
 
 // Test data for Memory::Kind to StoreTarget conversion
 INSTANTIATE_TEST_SUITE_P(
@@ -141,6 +154,16 @@ TEST_P(ProcessorToTaskTargetTest, ProcessorKindToTaskTarget)
 {
   const auto [processor_kind, expected_task_target] = GetParam();
   const auto actual_task_target = legate::mapping::detail::to_target(processor_kind);
+
+  ASSERT_EQ(actual_task_target, expected_task_target);
+}
+
+// Test to_target(VariantCode) function
+TEST_P(VariantCodeToTaskTargetTest, VariantCodeToTaskTarget)
+{
+  const auto [variant_code, expected_task_target] = GetParam();
+  const auto actual_task_target = legate::mapping::detail::to_target(variant_code);
+
   ASSERT_EQ(actual_task_target, expected_task_target);
 }
 
@@ -149,6 +172,7 @@ TEST_P(StoreTargetToTaskTargetTest, StoreTargetToMatchingTaskTarget)
 {
   const auto [store_target, expected_task_target] = GetParam();
   const auto actual_task_target = legate::mapping::detail::get_matching_task_target(store_target);
+
   ASSERT_EQ(actual_task_target, expected_task_target);
 }
 
@@ -157,6 +181,7 @@ TEST_P(MemoryToStoreTargetTest, MemoryKindToStoreTarget)
 {
   const auto [memory_kind, expected_store_target] = GetParam();
   const auto actual_store_target                  = legate::mapping::detail::to_target(memory_kind);
+
   ASSERT_EQ(actual_store_target, expected_store_target);
 }
 
@@ -165,6 +190,7 @@ TEST_P(TaskTargetToProcessorTest, TaskTargetToProcessorKind)
 {
   const auto [task_target, expected_processor_kind] = GetParam();
   const auto actual_processor_kind                  = legate::mapping::detail::to_kind(task_target);
+
   ASSERT_EQ(actual_processor_kind, expected_processor_kind);
 }
 
@@ -173,6 +199,7 @@ TEST_P(VariantCodeToProcessorTest, VariantCodeToProcessorKind)
 {
   const auto [variant_code, expected_processor_kind] = GetParam();
   const auto actual_processor_kind = legate::mapping::detail::to_kind(variant_code);
+
   ASSERT_EQ(actual_processor_kind, expected_processor_kind);
 }
 
@@ -181,6 +208,7 @@ TEST_P(StoreTargetToMemoryTest, StoreTargetToMemoryKind)
 {
   const auto [store_target, expected_memory_kind] = GetParam();
   const auto actual_memory_kind                   = legate::mapping::detail::to_kind(store_target);
+
   ASSERT_EQ(actual_memory_kind, expected_memory_kind);
 }
 
@@ -189,6 +217,7 @@ TEST_P(TaskTargetToVariantCodeTest, TaskTargetToVariantCode)
 {
   const auto [task_target, expected_variant_code] = GetParam();
   const auto actual_variant_code = legate::mapping::detail::to_variant_code(task_target);
+
   ASSERT_EQ(actual_variant_code, expected_variant_code);
 }
 
@@ -197,6 +226,7 @@ TEST_P(ProcessorToVariantCodeTest, ProcessorKindToVariantCode)
 {
   const auto [processor_kind, expected_variant_code] = GetParam();
   const auto actual_variant_code = legate::mapping::detail::to_variant_code(processor_kind);
+
   ASSERT_EQ(actual_variant_code, expected_variant_code);
 }
 
@@ -209,6 +239,7 @@ TEST_F(MappingCommonTest, RoundTripTaskTargetConversions)
                            legate::mapping::TaskTarget::CPU}) {
     auto processor_kind         = legate::mapping::detail::to_kind(task_target);
     auto round_trip_task_target = legate::mapping::detail::to_target(processor_kind);
+
     ASSERT_EQ(task_target, round_trip_task_target);
   }
 }
@@ -221,6 +252,7 @@ TEST_F(MappingCommonTest, RoundTripVariantCodeConversions)
     auto processor_kind          = legate::mapping::detail::to_kind(variant_code);
     auto task_target             = legate::mapping::detail::to_target(processor_kind);
     auto round_trip_variant_code = legate::mapping::detail::to_variant_code(task_target);
+
     ASSERT_EQ(variant_code, round_trip_variant_code);
   }
 }
@@ -234,6 +266,7 @@ TEST_F(MappingCommonTest, RoundTripStoreTargetConversions)
                             legate::mapping::StoreTarget::SOCKETMEM}) {
     auto memory_kind             = legate::mapping::detail::to_kind(store_target);
     auto round_trip_store_target = legate::mapping::detail::to_target(memory_kind);
+
     ASSERT_EQ(store_target, round_trip_store_target);
   }
 }

@@ -250,6 +250,7 @@ set(
   unit/mapping/dim_ordering.cc
   unit/mapping/instance_manager.cc
   unit/mapping/instance_mapping_policy.cc
+  unit/mapping/operation.cc
   unit/mapping/store/api_test.cc
   unit/mapping/store/colocate.cc
   unit/mapping/store/domain.cc

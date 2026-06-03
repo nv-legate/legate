@@ -20,6 +20,11 @@ namespace {
 
 using StoreMappingTest = DefaultFixture;
 
+class MockMapperRuntime : public Legion::Mapping::MapperRuntime {
+ public:
+  MockMapperRuntime() : MapperRuntime{nullptr} {}
+};
+
 // Helper class to manage Store lifetime
 class TestStoreHolder {
  public:
@@ -119,6 +124,7 @@ TEST_F(StoreMappingTest, CreateMappingWithStore)
 
   ASSERT_EQ(mapping.policy().target, legate::mapping::StoreTarget::FBMEM);
   ASSERT_EQ(mapping.policy().exact, false);
+  ASSERT_EQ(mapping.store().impl(), test_store.impl());
   ASSERT_EQ(mapping.stores().size(), 1);
 }
 
@@ -133,6 +139,29 @@ TEST_F(StoreMappingTest, CreateMappingWithStores)
   ASSERT_EQ(mapping.policy().target, legate::mapping::StoreTarget::FBMEM);
   ASSERT_EQ(mapping.policy().exact, false);
   ASSERT_EQ(mapping.stores().size(), 2);
+}
+
+TEST_F(StoreMappingTest, MoveAssignmentTransfersMapping)
+{
+  auto source_holder = TestStoreHolder{};
+  auto target_holder = TestStoreHolder{};
+  auto source_store  = source_holder.get_store();
+  auto target_store  = target_holder.get_store();
+  auto source_policy = legate::mapping::InstanceMappingPolicy{}
+                         .with_target(legate::mapping::StoreTarget::FBMEM)
+                         .with_exact(true);
+  auto target_policy =
+    legate::mapping::InstanceMappingPolicy{}.with_target(legate::mapping::StoreTarget::SYSMEM);
+  auto source_mapping =
+    legate::mapping::StoreMapping::create(source_store, std::move(source_policy));
+  auto target_mapping =
+    legate::mapping::StoreMapping::create(target_store, std::move(target_policy));
+
+  target_mapping = std::move(source_mapping);
+
+  ASSERT_EQ(target_mapping.store().impl(), source_store.impl());
+  ASSERT_EQ(target_mapping.policy().target, legate::mapping::StoreTarget::FBMEM);
+  ASSERT_TRUE(target_mapping.policy().exact);
 }
 
 TEST_F(StoreMappingTest, CreateMappingWithStoresNegative)
@@ -286,6 +315,34 @@ TEST_F(StoreMappingTest, RequirementsWithMultipleFutureStores)
   auto requirements = detail_mapping->requirements();
 
   ASSERT_TRUE(requirements.empty());
+}
+
+TEST_F(StoreMappingTest, RequirementsSkipsStoreWithoutRegion)
+{
+  MockMapperRuntime runtime;
+  const Legion::RegionRequirement region_requirement{};
+  auto type =
+    legate::make_internal_shared<legate::detail::PrimitiveType>(legate::Type::Code::INT64);
+  constexpr std::int32_t store_dim   = 1;
+  constexpr Legion::FieldID field_id = 1;
+  const auto region_field            = legate::mapping::detail::RegionField{
+    region_requirement, store_dim, /*idx=*/0, field_id, /*unbound=*/false};
+  auto store =
+    legate::make_internal_shared<legate::mapping::detail::Store>(runtime,
+                                                                 Legion::Mapping::MapperContext{},
+                                                                 store_dim,
+                                                                 std::move(type),
+                                                                 legate::GlobalRedopID{0},
+                                                                 region_field);
+  std::vector<legate::InternalSharedPtr<legate::mapping::detail::Store>> store_ptrs = {store};
+  auto policy               = legate::mapping::InstanceMappingPolicy{};
+  const auto detail_mapping = legate::mapping::detail::StoreMapping{
+    std::move(policy),
+    legate::Span<const legate::InternalSharedPtr<legate::mapping::detail::Store>>{store_ptrs}};
+
+  ASSERT_FALSE(store->is_future());
+  ASSERT_FALSE(region_requirement.region.exists());
+  ASSERT_TRUE(detail_mapping.requirements().empty());
 }
 
 }  // namespace store_mapping_unit

@@ -78,4 +78,33 @@ TEST_F(InstanceMappingPolicyTest, SetMultipleProperties)
               .with_exact(true));
 }
 
+TEST_F(InstanceMappingPolicyTest, EqualityComparesAllFields)
+{
+  constexpr auto target       = legate::mapping::StoreTarget::FBMEM;
+  constexpr auto allocation   = legate::mapping::AllocPolicy::MUST_ALLOC;
+  constexpr auto exact        = true;
+  constexpr auto redundant    = true;
+  const auto fortran_order    = legate::mapping::DimOrdering::fortran_order();
+  const auto c_order          = legate::mapping::DimOrdering::c_order();
+  const auto base             = legate::mapping::InstanceMappingPolicy{}
+                                  .with_target(target)
+                                  .with_allocation_policy(allocation)
+                                  .with_ordering(fortran_order)
+                                  .with_exact(exact)
+                                  .with_redundant(redundant);
+  const auto without_ordering = legate::mapping::InstanceMappingPolicy{}
+                                  .with_target(target)
+                                  .with_allocation_policy(allocation)
+                                  .with_exact(exact)
+                                  .with_redundant(redundant);
+
+  ASSERT_EQ(base, base);
+  ASSERT_NE(base, base.with_target(legate::mapping::StoreTarget::SYSMEM));
+  ASSERT_NE(base, base.with_allocation_policy(legate::mapping::AllocPolicy::MAY_ALLOC));
+  ASSERT_NE(base, base.with_exact(false));
+  ASSERT_NE(base, base.with_redundant(false));
+  ASSERT_NE(base, base.with_ordering(c_order));
+  ASSERT_NE(base, without_ordering);
+}
+
 }  // namespace instance_mapping_policy_unit
