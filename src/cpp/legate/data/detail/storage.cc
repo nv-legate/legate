@@ -212,6 +212,30 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
                                                    *domain);
 }
 
+InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-member-function-const)
+  legate::mapping::StoreTarget /*target*/,
+  InternalSharedPtr<Type> type,
+  const InternalSharedPtr<Shape>& shape,
+  InternalSharedPtr<TransformStack> transform,
+  const Domain& domain)
+{
+  if (unbound()) {
+    throw TracedException<std::invalid_argument>{"Unbound storages cannot be inlined mapped"};
+  }
+
+  auto root = get_root();
+
+  LEGATE_CHECK(root == this);
+
+  return make_internal_shared<InlinePhysicalStore>(shape->ndim(),
+                                                   std::move(type),
+                                                   GlobalRedopID{-1},
+                                                   transform,
+                                                   LEGION_READ_WRITE,
+                                                   storage_data_,
+                                                   domain);
+}
+
 // Unmapping is a logically non-const operation
 void Storage::unmap()  // NOLINT(readability-make-member-function-const)
 {

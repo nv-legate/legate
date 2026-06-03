@@ -36,6 +36,7 @@ namespace legate::detail {
 
 class LogicalStorePartition;
 class TransformStack;
+class Partition;
 class PhysicalStore;
 class TaskReturnLayoutForUnpack;
 class Strategy;
@@ -136,6 +137,8 @@ class LogicalStore {
     std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape);
 
  public:
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> get_sharded_physical_store(
+    const Partition* partition, const Domain& launch_domain, const DomainPoint& color);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 

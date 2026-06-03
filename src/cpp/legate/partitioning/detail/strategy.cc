@@ -9,8 +9,10 @@
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/linearize.h>
 
 #include <fmt/format.h>
 
@@ -22,6 +24,17 @@
 #include <utility>
 
 namespace legate::detail {
+
+DomainPoint Strategy::task_index() const
+{
+  if (!launch_domain().is_valid()) {
+    return {};
+  }
+
+  const auto node_id = Runtime::get_runtime().local_machine().node_id;
+
+  return delinearize(launch_domain().lo(), launch_domain().hi(), node_id);
+}
 
 void Strategy::insert(const Variable& partition_symbol, InternalSharedPtr<Partition> partition)
 {
@@ -102,22 +115,22 @@ void Strategy::record_key_partition(PrivateKey, const Variable& partition_symbol
   }
 }
 
-Legion::ProjectionID Strategy::find_store_projection(const Variable& partition_symbol) const
+SymbolicPoint Strategy::find_store_projection(const Variable& partition_symbol) const
 {
-  auto finder = projection_ids_.find(partition_symbol);
+  auto finder = projections_.find(partition_symbol);
 
-  if (finder == projection_ids_.end()) {
-    return Legion::ProjectionID{0};
+  if (finder == projections_.end()) {
+    return {};
   }
 
   return finder->second;
 }
 
-Legion::ProjectionID Strategy::find_key_store_projection() const
+SymbolicPoint Strategy::find_key_store_projection() const
 {
   if (!key_partition_.has_value()) {
     // If no key partition exists, use the identity function (of ID 0)
-    return 0;
+    return {};
   }
 
   return find_store_projection(*key_partition_);

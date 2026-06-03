@@ -1971,19 +1971,15 @@ Processor Runtime::get_executing_processor() const
 {
   // Inline task-launching never sets the Legion context, so we need to use runtime
   // information from Legate to determine the currently executing processor.
-  if (config().enable_inline_task_launch() && executing_inline_task()) {
-    const auto task_target = mapping::detail::to_target(inline_task_variant_code_.top());
+  const auto task_target = mapping::detail::to_target(inline_task_variant_code_.top());
 
-    if (auto&& range = local_machine().procs(task_target); !range.empty()) {
-      return range.front();
-    }
-
-    LEGATE_ABORT("No processor found for inline task ", to_underlying(task_target));
+  if (auto&& range = local_machine().procs(task_target); !range.empty()) {
+    return range.front();
   }
 
-  // Cannot use member legion_context_ here since we may be calling this function from within a
-  // task, where the context will have changed.
-  return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
+  LEGATE_ABORT("No processor found for inline task ", to_underlying(task_target));
+
+  return {};
 }
 
 bool Runtime::executing_inline_task() const noexcept { return !inline_task_variant_code_.empty(); }

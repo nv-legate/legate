@@ -15,6 +15,7 @@
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/task.h>
 #include <legate/operation/detail/task_store_arg.h>
+#include <legate/partitioning/detail/strategy.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/task.h>
@@ -41,6 +42,8 @@ namespace {
 class InlineTaskContext final : public TaskContext {
  public:
   InlineTaskContext(VariantCode variant_code,
+                    const Domain& launch_domain,
+                    const DomainPoint& task_index,
                     SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
                     SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
                     SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
@@ -57,6 +60,8 @@ class InlineTaskContext final : public TaskContext {
  private:
   [[nodiscard]] const TaskBase& task_() const;
 
+  const Domain launch_domain_{};
+  const DomainPoint task_index_{};
   const TaskBase* op_task_{};
 };
 
@@ -67,6 +72,8 @@ const TaskBase& InlineTaskContext::task_() const { return *op_task_; }
 // ==========================================================================================
 
 InlineTaskContext::InlineTaskContext(VariantCode variant_code,
+                                     const Domain& launch_domain,
+                                     const DomainPoint& task_index,
                                      SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
                                      SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
                                      SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
@@ -80,6 +87,8 @@ InlineTaskContext::InlineTaskContext(VariantCode variant_code,
                  std::move(reductions),
                  std::move(scalars),
                  SmallVector<legate::comm::Communicator>{}}},
+    launch_domain_{launch_domain},
+    task_index_{task_index},
     op_task_{task}
 {
 }
@@ -91,21 +100,11 @@ GlobalTaskID InlineTaskContext::task_id() const noexcept
   return task.library().get_task_id(task.local_task_id());
 }
 
-bool InlineTaskContext::is_single_task() const noexcept { return true; }
+bool InlineTaskContext::is_single_task() const noexcept { return !launch_domain_.is_valid(); }
 
-const DomainPoint& InlineTaskContext::get_task_index() const noexcept
-{
-  static const DomainPoint p{};
+const DomainPoint& InlineTaskContext::get_task_index() const noexcept { return task_index_; }
 
-  return p;
-}
-
-const Domain& InlineTaskContext::get_launch_domain() const noexcept
-{
-  static const auto launch_domain = Domain{DomainPoint{0}, DomainPoint{0}};
-
-  return launch_domain;
-}
+const Domain& InlineTaskContext::get_launch_domain() const noexcept { return launch_domain_; }
 
 std::string_view InlineTaskContext::get_provenance() const noexcept
 {
@@ -131,8 +130,10 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
  */
 [[nodiscard]] InternalSharedPtr<PhysicalStore> extract_physical_store(
   const TaskStoreArg& elem,
+  const Partition* partition,
   const mapping::InstanceMappingPolicy& policy,
-  bool ignore_future_mutability)
+  const Domain& launch_domain,
+  const DomainPoint& task_index)
 {
   if (policy.exact) {
     // See discussion in https://github.com/nv-legate/legate.internal/issues/3539 for why this
@@ -149,8 +150,10 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   }
 
   return std::visit(Overload{[&](const InternalSharedPtr<LogicalStore>& st) {
-                               return st->get_physical_store(policy.target,
-                                                             ignore_future_mutability);
+                               // TODO(wonchanl): Need to handle store projections here
+                               //                 Assume identity projection for now
+                               return st->get_sharded_physical_store(
+                                 partition, launch_domain, task_index);
                              },
                              [&](const InternalSharedPtr<PhysicalStore>& st) {
                                LEGATE_CHECK(st->target() == policy.target);
@@ -163,14 +166,18 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   Span<const TaskStoreArg> src,
   Span<const mapping::InstanceMappingPolicy> mapping_policies,
   bool ignore_future_mutability,
-  SmallVector<Legion::UntypedDeferredValue>* deferred_buffers)
+  SmallVector<Legion::UntypedDeferredValue>* deferred_buffers,
+  const Strategy& strategy,
+  const Domain& launch_domain,
+  const DomainPoint& task_index)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> dest;
 
   dest.reserve(src.size());
   for (auto&& [elem, policy] : zip_equal(src, mapping_policies)) {
-    auto&& phys_store =
-      dest.emplace_back(extract_physical_store(elem, policy, ignore_future_mutability));
+    auto&& partition  = strategy[*elem.variable];
+    auto&& phys_store = dest.emplace_back(
+      extract_physical_store(elem, partition.get(), policy, launch_domain, task_index));
 
     if (!ignore_future_mutability) {
       continue;
@@ -257,15 +264,21 @@ struct TaskStoreMappingPolicies {
 }
 
 [[nodiscard]] std::pair<InlineTaskContext, SmallVector<Legion::UntypedDeferredValue>>
-make_inline_task_context(const TaskBase& task, VariantCode variant_code)
+make_inline_task_context(const TaskBase& task, VariantCode variant_code, const Strategy& strategy)
 {
+  auto launch_domain    = strategy.launch_domain();
+  const auto task_index = strategy.task_index();
+
   const auto mapping_policies = make_store_mapping_policies(task, variant_code);
   auto deferred_buffers       = SmallVector<Legion::UntypedDeferredValue>{};
 
   auto inputs = fill_vector(task.inputs(),
                             mapping_policies.input_policies,
                             /* ignore_future_mutability */ false,
-                            &deferred_buffers);
+                            &deferred_buffers,
+                            strategy,
+                            launch_domain,
+                            task_index);
   // None of the inputs should ever create an output buffer
   LEGATE_CHECK(deferred_buffers.empty());
   // We do these here instead of inline in the function arguments because the order in which
@@ -304,13 +317,21 @@ make_inline_task_context(const TaskBase& task, VariantCode variant_code)
   auto outputs    = fill_vector(task.outputs(),
                                 mapping_policies.output_policies,
                                 /* ignore_future_mutability */ true,
-                                &deferred_buffers);
+                                &deferred_buffers,
+                                strategy,
+                                launch_domain,
+                                task_index);
   auto reductions = fill_vector(task.reductions(),
                                 mapping_policies.reduction_policies,
                                 /* ignore_future_mutability */ true,
-                                &deferred_buffers);
+                                &deferred_buffers,
+                                strategy,
+                                launch_domain,
+                                task_index);
 
   return {InlineTaskContext{variant_code,
+                            launch_domain,
+                            task_index,
                             std::move(inputs),
                             std::move(outputs),
                             std::move(reductions),
@@ -324,9 +345,10 @@ template <typename F>
 execute_task(const TaskBase& task,
              VariantCode variant_code,
              VariantImpl variant_impl,
-             F&& get_task_name)
+             F&& get_task_name,
+             const Strategy& strategy)
 {
-  auto [ctx, deferred_buffers] = make_inline_task_context(task, variant_code);
+  auto [ctx, deferred_buffers] = make_inline_task_context(task, variant_code, strategy);
   auto exn =
     task_detail::task_body(legate::TaskContext{&ctx}, variant_impl, std::forward<F>(get_task_name));
 
@@ -397,7 +419,10 @@ void handle_return_values(const TaskBase& task,
 
 }  // namespace
 
-void inline_task_body(const TaskBase& task, VariantCode variant_code, VariantImpl variant_impl)
+void inline_task_body(const TaskBase& task,
+                      VariantCode variant_code,
+                      VariantImpl variant_impl,
+                      const Strategy& strategy)
 {
   const auto _ = [variant_code] {
     Runtime::get_runtime().inline_task_start(variant_code);
@@ -411,9 +436,11 @@ void inline_task_body(const TaskBase& task, VariantCode variant_code, VariantImp
   show_progress({}, get_task_name(), task.provenance().as_string_view());
 
   auto [exception, deferred_buffers] =
-    execute_task(task, variant_code, variant_impl, get_task_name);
+    execute_task(task, variant_code, variant_impl, get_task_name, strategy);
 
-  handle_return_values(task, deferred_buffers);
+  if (!deferred_buffers.empty()) {
+    handle_return_values(task, deferred_buffers);
+  }
 
   if (exception.has_value()) {
     detail::Runtime::get_runtime().record_pending_exception(*std::move(exception));

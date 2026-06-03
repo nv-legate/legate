@@ -19,9 +19,9 @@ inline void Strategy::set_launch_domain(const Domain& launch_domain)
 
 inline void Strategy::insert_store_projection(PrivateKey,
                                               const Variable& partition_symbol,
-                                              Legion::ProjectionID projection_id)
+                                              SymbolicPoint projection)
 {
-  projection_ids_.insert({partition_symbol, projection_id});
+  projections_.insert({partition_symbol, std::move(projection)});
 }
 
 }  // namespace legate::detail

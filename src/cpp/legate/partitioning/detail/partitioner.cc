@@ -9,6 +9,7 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/transform/transform_stack.h>
 #include <legate/operation/detail/operation.h>
+#include <legate/operation/projection.h>
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/launch_domain_resolver.h>
 #include <legate/partitioning/detail/partition.h>
@@ -33,37 +34,15 @@ namespace {
  * the IndexSpace, launch domain etc after the task using the unbounded store
  * is submitted to Legion in post_process_unbounded_store.
  */
+// TODO(wonchanl): Need a v2 implementation
 std::vector<const Variable*> create_fields_for_unbound_stores(const ConstraintSolver& solver,
-                                                              Strategy* strategy)
+                                                              Strategy*)
 {
-  auto&& runtime = Runtime::get_runtime();
-  auto ret       = std::vector<const Variable*>{};
+  auto partition_symbols = solver.partition_symbols();
+  auto ret               = std::vector<const Variable*>{};
 
-  ret.reserve(solver.partition_symbols().size());
-
-  for (auto&& equiv_class : solver.equivalence_classes()) {
-    auto&& partition_symbols = equiv_class.partition_symbols;
-
-    if (!equiv_class.IS_UNBOUND) {
-      std::copy(partition_symbols.begin(), partition_symbols.end(), std::back_inserter(ret));
-      continue;
-    }
-
-    auto field_space   = runtime.create_field_space();
-    auto next_field_id = RegionManager::FIELD_ID_BASE;
-
-    for (const auto* symb : partition_symbols) {
-      if (next_field_id - RegionManager::FIELD_ID_BASE >= RegionManager::MAX_NUM_FIELDS) {
-        field_space   = runtime.create_field_space();
-        next_field_id = RegionManager::FIELD_ID_BASE;
-      }
-
-      const auto field_id =
-        runtime.allocate_field(field_space, next_field_id++, symb->store()->type()->size());
-
-      strategy->insert(*symb, field_space, field_id);
-    }
-  }
+  ret.reserve(partition_symbols.size());
+  std::copy(partition_symbols.begin(), partition_symbols.end(), std::back_inserter(ret));
 
   return ret;
 }
@@ -144,18 +123,7 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
 
   for (auto&& equiv_class : solver.equivalence_classes()) {
     if (equiv_class.IS_UNBOUND) {
-      if (equiv_class.has_restrictions) {
-        const auto color_space = Runtime::get_runtime().find_or_create_index_space(
-          equiv_class.restrictions.embed(launch_domain));
-        const auto proj_id = Runtime::get_runtime().get_affine_projection(
-          launch_domain.dim, equiv_class.restrictions.to_projection());
-
-        for (auto&& part_symb : equiv_class.partition_symbols) {
-          strategy->insert_color_space(*part_symb, color_space);
-          strategy->insert_store_projection(Strategy::PrivateKey{}, *part_symb, proj_id);
-        }
-      }
-      continue;
+      LEGATE_ABORT("Unbound stores are not supported yet");
     }
 
     const auto& partition = (*strategy)[*equiv_class.partition_symbols.front()];
@@ -177,10 +145,7 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
         // When the launch domain has more than one dimension, store projections can never be
         // delinearizing projections
         strategy->insert_store_projection(
-          Strategy::PrivateKey{},
-          *part_symb,
-          Runtime::get_runtime().get_affine_projection(launch_domain.dim,
-                                                       store->transform()->invert(projection)));
+          Strategy::PrivateKey{}, *part_symb, store->transform()->invert(projection));
         continue;
       }
 
@@ -240,7 +205,7 @@ Strategy Partitioner::partition_stores(Operation* op)
   return strategy;
 }
 
-Legion::ProjectionID Partitioner::infer_store_projection(
+SymbolicPoint Partitioner::infer_store_projection(
   const Domain& launch_domain,
   Span<const std::uint64_t> color_shape,
   const InternalSharedPtr<TransformStack>& transform)
@@ -249,9 +214,8 @@ Legion::ProjectionID Partitioner::infer_store_projection(
 
   // Easy case where the store and launch domain have the same number of dimensions
   if (static_cast<std::size_t>(launch_domain.dim) == ndim) {
-    return transform->identity() ? 0
-                                 : Runtime::get_runtime().get_affine_projection(
-                                     ndim, transform->invert(proj::create_symbolic_point(ndim)));
+    return transform->identity() ? SymbolicPoint{}
+                                 : transform->invert(proj::create_symbolic_point(ndim));
   }
 
   // If we're here, it means the launch domain has to be 1D due to mixed store dimensionalities
@@ -274,15 +238,12 @@ Legion::ProjectionID Partitioner::infer_store_projection(
       embedding.append_inplace(ext != 1 ? dimension(0) : constant(0));
     }
 
-    return Runtime::get_runtime().get_affine_projection(launch_domain.dim,
-                                                        transform->invert(std::move(embedding)));
+    return transform->invert(std::move(embedding));
   }
 
-  // When the store wasn't transformed, we could simply return the top-level delinearizing functor
-  return transform->identity()
-           ? Runtime::get_runtime().get_delinearizing_projection(color_shape)
-           : Runtime::get_runtime().get_compound_projection(
-               color_shape, transform->invert(proj::create_symbolic_point(ndim)));
+  LEGATE_ABORT("Not supported yet");
+
+  return {};
 }
 
 }  // namespace legate::detail

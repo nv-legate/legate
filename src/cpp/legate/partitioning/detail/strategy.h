@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/operation/projection.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/utilities/hash.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -35,6 +36,7 @@ class Strategy {
   [[nodiscard]] bool parallel() const;
   [[nodiscard]] const Domain& launch_domain() const;
   void set_launch_domain(const Domain& launch_domain);
+  [[nodiscard]] DomainPoint task_index() const;
 
   void insert(const Variable& partition_symbol, InternalSharedPtr<Partition> partition);
   void insert(const Variable& partition_symbol,
@@ -59,9 +61,9 @@ class Strategy {
   void record_key_partition(PrivateKey, const Variable& partition_symbol);
   void insert_store_projection(PrivateKey,
                                const Variable& partition_symbol,
-                               Legion::ProjectionID projection_id);
-  [[nodiscard]] Legion::ProjectionID find_store_projection(const Variable& partition_symbol) const;
-  [[nodiscard]] Legion::ProjectionID find_key_store_projection() const;
+                               SymbolicPoint projection);
+  [[nodiscard]] SymbolicPoint find_store_projection(const Variable& partition_symbol) const;
+  [[nodiscard]] SymbolicPoint find_key_store_projection() const;
 
   [[nodiscard]] Legion::IndexSpace find_color_space_for_unbound_store(
     const Variable& partition_symbol) const;
@@ -73,7 +75,7 @@ class Strategy {
   std::unordered_map<Variable, std::pair<Legion::FieldSpace, Legion::FieldID>>
     fields_for_unbound_stores_{};
   std::unordered_map<Variable, Legion::IndexSpace> color_spaces_for_unbound_stores_{};
-  std::unordered_map<Variable, Legion::ProjectionID> projection_ids_{};
+  std::unordered_map<Variable, SymbolicPoint> projections_{};
   std::optional<Variable> key_partition_{};
 };
 

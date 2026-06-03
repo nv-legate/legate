@@ -153,12 +153,9 @@ void Operation::record_partition_(
   }
 }
 
-StoreProjection Operation::create_store_projection_(const Strategy& strategy,
-                                                    const Domain&,
-                                                    const StoreArg& arg)
+StoreProjection Operation::create_store_projection_(const Strategy&, const Domain&, const StoreArg&)
 {
-  return StoreProjection{Legion::LogicalPartition::NO_PART,
-                         strategy.find_store_projection(*arg.variable)};
+  return StoreProjection{Legion::LogicalPartition::NO_PART, 0};
 }
 
 }  // namespace legate::detail

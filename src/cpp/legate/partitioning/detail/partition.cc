@@ -10,6 +10,12 @@
 
 namespace legate::detail {
 
+Domain Partition::shard(const Domain&, const DomainPoint&) const
+{
+  LEGATE_ABORT("Sharding not implemented for this partition type");
+  return {};
+}
+
 std::ostream& operator<<(std::ostream& out, const Partition& partition)
 {
   out << partition.to_string();

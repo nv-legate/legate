@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/operation/projection.h>
 #include <legate/partitioning/detail/strategy.h>
 #include <legate/utilities/span.h>
 
@@ -20,7 +21,7 @@ class Partitioner {
  public:
   [[nodiscard]] static Strategy partition_stores(Operation* op);
 
-  [[nodiscard]] static Legion::ProjectionID infer_store_projection(
+  [[nodiscard]] static SymbolicPoint infer_store_projection(
     const Domain& launch_domain,
     Span<const std::uint64_t> color_shape,
     const InternalSharedPtr<TransformStack>& transform);

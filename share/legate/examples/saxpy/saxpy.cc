@@ -138,10 +138,6 @@ void run_example()
   auto y_store = runtime->create_store(shape, legate::int32());
   auto result  = runtime->create_store(shape, legate::int32());
 
-  static_cast<void>(x_store.get_physical_store());
-  static_cast<void>(y_store.get_physical_store());
-  static_cast<void>(result.get_physical_store());
-
   // Fill input arrays
   auto init_x_task = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
   init_x_task.add_output(x_store);

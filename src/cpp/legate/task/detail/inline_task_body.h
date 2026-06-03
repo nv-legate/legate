@@ -11,6 +11,11 @@
 
 namespace legate::detail {
 
-void inline_task_body(const TaskBase& task, VariantCode variant_code, VariantImpl variant_impl);
+class Strategy;
+
+void inline_task_body(const TaskBase& task,
+                      VariantCode variant_code,
+                      VariantImpl variant_impl,
+                      const Strategy& strategy);
 
 }  // namespace legate::detail

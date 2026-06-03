@@ -148,6 +148,12 @@ class Storage {
     bool ignore_future_mutability,
     const std::optional<Domain>& domain = std::nullopt);
 
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> map(legate::mapping::StoreTarget target,
+                                                     InternalSharedPtr<Type> type,
+                                                     const InternalSharedPtr<Shape>& shape,
+                                                     InternalSharedPtr<TransformStack> transform,
+                                                     const Domain& domain);
+
   void unmap();
   void allow_out_of_order_destruction();
   void free_early();

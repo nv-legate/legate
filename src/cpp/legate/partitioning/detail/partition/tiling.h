@@ -170,6 +170,8 @@ class Tiling final : public Partition {
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const override;
 
+  [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
+
   /**
    * @brief Return the offset of the first tile in each dimension.
    *
@@ -247,6 +249,7 @@ class Tiling final : public Partition {
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
+  DomainPoint tile_shape_dp_{};
 };
 
 [[nodiscard]] InternalSharedPtr<Tiling> create_tiling(

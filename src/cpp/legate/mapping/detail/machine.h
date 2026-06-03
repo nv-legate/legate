@@ -268,8 +268,8 @@ class LocalMachine {
    */
   [[nodiscard]] ProcessorSpan slice_with_fallback(const Machine& machine) const;
 
-  std::uint32_t node_id{};
-  std::uint32_t total_nodes{};
+  const std::uint32_t node_id{};
+  const std::uint32_t total_nodes{};
 
  private:
   /**

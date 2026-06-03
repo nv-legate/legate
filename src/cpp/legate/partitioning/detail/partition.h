@@ -159,6 +159,8 @@ class Partition {
   [[nodiscard]] virtual InternalSharedPtr<Partition> invert(
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const = 0;
+
+  [[nodiscard]] virtual Domain shard(const Domain& domain, const DomainPoint& color) const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);

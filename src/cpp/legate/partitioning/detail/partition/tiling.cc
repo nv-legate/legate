@@ -39,7 +39,8 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   : tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
     offsets_{std::move(offsets)},
-    strides_{tile_shape_}
+    strides_{tile_shape_},
+    tile_shape_dp_{to_domain_point(tile_shape_)}
 {
   if (offsets_.empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
@@ -56,7 +57,8 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
     tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
     offsets_{std::move(offsets)},
-    strides_{std::move(strides)}
+    strides_{std::move(strides)},
+    tile_shape_dp_{to_domain_point(tile_shape_)}
 {
   if (this->offsets().empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
@@ -229,6 +231,21 @@ InternalSharedPtr<Partition> Tiling::invert(
     transform->invert_color_shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape()}),
     transform->invert_point(SmallVector<std::int64_t, LEGATE_MAX_DIM>{offsets()}),
     transform->invert_extents(strides_));
+}
+
+Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
+{
+  const auto lo = domain.lo();
+  const auto hi = domain.hi();
+
+  const auto new_lo = lo + color * tile_shape_dp_;
+  auto new_hi       = new_lo + tile_shape_dp_;
+
+  for (std::int32_t dim = 0; dim < hi.dim; ++dim) {
+    new_hi[dim] = std::min(new_hi[dim] - 1, hi[dim]);
+  }
+
+  return {new_lo, new_hi};
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Tiling::get_child_extents(

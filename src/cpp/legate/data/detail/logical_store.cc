@@ -434,6 +434,27 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   return create_partition_(self, std::move(partition), /* complete */ true);
 }
 
+InternalSharedPtr<PhysicalStore> LogicalStore::get_sharded_physical_store(
+  const Partition* partition, const Domain& launch_domain, const DomainPoint& color)
+{
+  // TODO(wonchanl): Need to check if the storage is right for the input partition
+  if (mapped_.has_value()) {
+    return *mapped_;
+  }
+
+  const auto domain = launch_domain.is_valid() ? partition->shard(*domain_, color) : *domain_;
+
+  LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
+  LEGATE_CHECK(!transformed());
+
+  auto result =
+    get_storage()->map(legate::mapping::StoreTarget::SYSMEM, type(), shape(), transform_, domain);
+
+  mapped_.emplace(result);
+
+  return result;
+}
+
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability)
 {
