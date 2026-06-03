@@ -1703,6 +1703,8 @@ std::int32_t Runtime::finish()
 
     api->stream_synchronize(current_stream_);
     api->stream_destroy(&current_stream_);
+    api->device_primary_ctx_release(current_device_);
+    current_device_ = -1;
   }
 
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
@@ -1856,6 +1858,10 @@ extern void register_exception_reduction_op(const Library& context);
     auto count              = api->device_get_count();
     auto ordinal            = runtime.local_machine().node_id % count;
     runtime.current_device_ = api->device_get(ordinal);
+
+    static_cast<void>(api->device_primary_ctx_retain(runtime.current_device_));
+
+    log_legate().print() << "Rank " << runtime.local_machine().node_id << " gets GPU " << ordinal;
 
     {
       const cuda::detail::AutoPrimaryContext ctx{runtime.get_current_cuda_device()};
