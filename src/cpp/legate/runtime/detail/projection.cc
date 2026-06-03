@@ -262,7 +262,7 @@ class LegateProjectionFunctor : public Legion::ProjectionFunctor {
 
   [[nodiscard]] bool is_exclusive() const override { return true; }
 
-  [[nodiscard]] bool is_invertible() const override { return functor_->is_invertible(); }
+  [[nodiscard]] bool is_invertible() const override { return false; }
 
   [[nodiscard]] unsigned get_depth() const override { return 0; }
 
