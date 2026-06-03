@@ -123,7 +123,6 @@ class Storage {
    */
   [[nodiscard]] bool equal(const Storage& other) const;
   [[nodiscard]] std::int32_t level() const;
-  [[nodiscard]] std::size_t scalar_offset() const;
   [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] bool is_mapped() const;
   [[nodiscard]] bool has_scalar_storage() const;
@@ -180,14 +179,13 @@ class Storage {
   bool unbound_{};
   bool destroyed_out_of_order_{};  // only relevant on the root Storage
   InternalSharedPtr<Shape> shape_{};
+  std::uint32_t field_size_{};
   std::string_view provenance_{};  // only relevant on the root Storage
 
   std::int32_t level_{};
   std::optional<InternalSharedPtr<StoragePartition>> parent_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_{};
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
-
-  std::size_t scalar_offset_{};
 
   InternalSharedPtr<InlineStorage> storage_data_{};
 

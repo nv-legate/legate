@@ -47,16 +47,10 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     unbound_{shape->unbound()},
     shape_{std::move(shape)},
+    field_size_{field_size},
     provenance_{std::move(provenance)},
     offsets_{tags::size_tag, dim(), 0}
 {
-  // No alignment guarantee for the pointer provided by Scalar,
-  // so we need to create a new allocation and copy the data over.
-  const Domain domain = to_domain(this->shape()->extents());
-
-  storage_data_ =
-    make_internal_shared<InlineStorage>(domain, field_size, mapping::StoreTarget::SYSMEM);
-
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
@@ -65,6 +59,13 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
 Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::string_view provenance)
   : Storage{shape, static_cast<std::uint32_t>(scalar.size()), provenance}
 {
+  // No alignment guarantee for the pointer provided by Scalar,
+  // so we need to create a new allocation and copy the data over.
+  const Domain domain = to_domain(this->shape()->extents());
+
+  storage_data_ =
+    make_internal_shared<InlineStorage>(domain, field_size_, mapping::StoreTarget::SYSMEM);
+
   std::memcpy(storage_data_->data(), scalar.data(), scalar.size());
 }
 
@@ -226,6 +227,11 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
   auto root = get_root();
 
   LEGATE_CHECK(root == this);
+
+  if (!storage_data_) {
+    storage_data_ =
+      make_internal_shared<InlineStorage>(domain, field_size_, mapping::StoreTarget::SYSMEM);
+  }
 
   return make_internal_shared<InlinePhysicalStore>(shape->ndim(),
                                                    std::move(type),

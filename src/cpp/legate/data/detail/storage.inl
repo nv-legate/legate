@@ -29,8 +29,6 @@ inline std::uint32_t Storage::dim() const { return shape()->ndim(); }
 
 inline std::int32_t Storage::level() const { return level_; }
 
-inline std::size_t Storage::scalar_offset() const { return scalar_offset_; }
-
 inline std::string_view Storage::provenance() const { return provenance_; }
 
 }  // namespace legate::detail
