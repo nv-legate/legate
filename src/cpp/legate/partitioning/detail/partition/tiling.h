@@ -117,12 +117,6 @@ class Tiling final : public Partition {
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   /**
-   * @copydoc Partition::construct()
-   */
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                                   bool complete) const override;
-
-  /**
    * @copydoc Partition::has_launch_domain()
    *
    * Always has a launch domain.

@@ -15,8 +15,6 @@
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partition/opaque.h>
-#include <legate/runtime/detail/projection.h>
-#include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
 
 #include <algorithm>
@@ -205,6 +203,21 @@ Strategy Partitioner::partition_stores(Operation* op)
   return strategy;
 }
 
+namespace {
+
+SymbolicPoint create_symbolic_point(std::uint32_t ndim)
+{
+  std::vector<SymbolicExpr> exprs;
+
+  exprs.reserve(ndim);
+  for (std::uint32_t dim = 0; dim < ndim; ++dim) {
+    exprs.emplace_back(dim);
+  }
+  return SymbolicPoint{std::move(exprs)};
+}
+
+}  // namespace
+
 SymbolicPoint Partitioner::infer_store_projection(
   const Domain& launch_domain,
   Span<const std::uint64_t> color_shape,
@@ -214,8 +227,7 @@ SymbolicPoint Partitioner::infer_store_projection(
 
   // Easy case where the store and launch domain have the same number of dimensions
   if (static_cast<std::size_t>(launch_domain.dim) == ndim) {
-    return transform->identity() ? SymbolicPoint{}
-                                 : transform->invert(proj::create_symbolic_point(ndim));
+    return transform->identity() ? SymbolicPoint{} : transform->invert(create_symbolic_point(ndim));
   }
 
   // If we're here, it means the launch domain has to be 1D due to mixed store dimensionalities

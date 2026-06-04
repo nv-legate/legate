@@ -60,12 +60,6 @@ InternalSharedPtr<Partition> Image::bloat(Span<const std::uint64_t> /*low_offsts
   throw TracedException<std::runtime_error>{"Not implemented"};
 }
 
-Legion::LogicalPartition Image::construct(Legion::LogicalRegion /*region*/, bool /*complete*/) const
-{
-  // TODO(wonchanl): Need a v2 implementation
-  return {};
-}
-
 bool Image::has_launch_domain() const { return func_partition_->has_launch_domain(); }
 
 Domain Image::launch_domain() const { return func_partition_->launch_domain(); }

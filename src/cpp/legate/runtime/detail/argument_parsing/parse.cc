@@ -6,7 +6,6 @@
 
 #include <legate/runtime/detail/argument_parsing/parse.h>
 
-#include <legate/mapping/detail/base_mapper.h>
 #include <legate/runtime/detail/argument_parsing/argument.h>
 #include <legate/runtime/detail/argument_parsing/flags/logging.h>
 #include <legate/runtime/detail/argument_parsing/util.h>
@@ -843,10 +842,6 @@ ParsedArgs parse_args(std::vector<std::string> args)
     lvls += '=';
     lvls += level;
   };
-
-  if (LEGATE_LOG_MAPPING.get().value_or(false)) {
-    add_logger(mapping::detail::BaseMapper::LOGGER_NAME);
-  }
 
   if (LEGATE_LOG_PARTITIONING.get().value_or(false)) {
     add_logger(log_legate_partitioner().get_name(), "debug");

@@ -113,32 +113,8 @@ class VariantHelper<T, SELECTOR, true> {
     constexpr auto variant_kind = SELECTOR<T>::id;
     constexpr auto* options     = SELECTOR<T>::options;
 
-    if constexpr (std::is_convertible_v<decltype(variant_impl), VariantImpl>) {
-      constexpr auto entry = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
-
-      task_info->add_variant_(legate::TaskInfo::AddVariantKey{},
-                              lib,
-                              variant_kind,
-                              variant_impl,
-                              entry,
-                              options,
-                              all_options);
-    } else {
-      using RET            = std::invoke_result_t<decltype(variant_impl),
-                                                  const Legion::Task*,
-                                                  const std::vector<Legion::PhysicalRegion>&,
-                                                  Legion::Context,
-                                                  Legion::Runtime*>;
-      constexpr auto entry = T::BASE::template task_wrapper_<RET, variant_impl, variant_kind>;
-
-      task_info->add_variant_(legate::TaskInfo::AddVariantKey{},
-                              lib,
-                              variant_kind,
-                              variant_impl,
-                              entry,
-                              options,
-                              all_options);
-    }
+    task_info->add_variant_(
+      legate::TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, options, all_options);
   }
 };
 

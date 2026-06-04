@@ -34,9 +34,7 @@ class Shape {
   [[nodiscard]] std::uint32_t ndim() const;
   [[nodiscard]] std::size_t volume();
   [[nodiscard]] Span<const std::uint64_t> extents();
-  [[nodiscard]] const Legion::IndexSpace& index_space();
 
-  void set_index_space(const Legion::IndexSpace& index_space);
   void copy_extents_from(const Shape& other);
 
   [[nodiscard]] std::string to_string() const;
@@ -50,7 +48,6 @@ class Shape {
   State state_{State::UNBOUND};
   std::uint32_t dim_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents_{};
-  Legion::IndexSpace index_space_{};
 };
 
 }  // namespace legate::detail

@@ -10,8 +10,6 @@
 
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/physical_stores/future_physical_store.h>
-#include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/detail/transform/delinearize.h>
 #include <legate/data/detail/transform/dim_broadcast.h>
@@ -22,7 +20,6 @@
 #include <legate/data/detail/transform/transpose.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/operation.h>
-#include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/image.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
@@ -503,12 +500,7 @@ void LogicalStore::detach()
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicalStore::allow_out_of_order_destruction()
-{
-  if (Runtime::get_runtime().consensus_match_required()) {
-    get_storage()->allow_out_of_order_destruction();
-  }
-}
+void LogicalStore::allow_out_of_order_destruction() {}
 
 Restrictions LogicalStore::compute_restrictions(bool is_output) const
 {

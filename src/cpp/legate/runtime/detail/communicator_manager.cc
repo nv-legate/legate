@@ -78,11 +78,11 @@ Legion::FutureMap CommunicatorFactory::find_or_create_(const mapping::TaskTarget
   return communicator;
 }
 
-Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap& communicator,
-                                                  const Domain& launch_domain,
-                                                  Legion::ProjectionID proj_id)
+Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap&,
+                                                  const Domain&,
+                                                  Legion::ProjectionID)
 {
-  return Runtime::get_runtime().delinearize_future_map(communicator, launch_domain, proj_id);
+  return {};
 }
 
 // ==========================================================================================

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/storage.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/small_vector.h>

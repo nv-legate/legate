@@ -12,43 +12,6 @@
 namespace legate::detail::store_detail {
 
 template <typename ACC, typename T, std::int32_t N>
-class RegionFieldTransAccessorFn {
- public:
-  template <std::int32_t M>
-  [[nodiscard]] ACC operator()(const Legion::PhysicalRegion& pr,
-                               Legion::FieldID fid,
-                               const Legion::AffineTransform<M, N>& transform,
-                               const Rect<N>& bounds) const
-  {
-    return {pr,
-            fid,
-            transform,
-            bounds,
-            sizeof(T) /* = actual_field_size */,
-            false /* = check_field_size */};
-  }
-
-  template <std::int32_t M>
-  [[nodiscard]] ACC operator()(const Legion::PhysicalRegion& pr,
-                               Legion::FieldID fid,
-                               GlobalRedopID redop_id,
-                               const Legion::AffineTransform<M, N>& transform,
-                               const Rect<N>& bounds) const
-  {
-    return {pr,
-            fid,
-            static_cast<Legion::ReductionOpID>(redop_id),
-            transform,
-            bounds,
-            false /* = silence_warnings */,
-            nullptr /* = warning_string */,
-            0 /* = subfield_offset */,
-            sizeof(T) /* = actual_field_size */,
-            false /* = check_field_size */};
-  }
-};
-
-template <typename ACC, typename T, std::int32_t N>
 class RegionInstanceTransAccessorFn {
  public:
   template <std::int32_t M>
@@ -208,23 +171,7 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
 
   check_accessor_store_backing_();
 
-  if (is_future()) {
-    if (is_read_only_future_()) {
-      return {get_future_(),
-              bounds,
-              Memory::Kind::NO_MEMKIND,
-              sizeof(T),
-              false,
-              false,
-              nullptr,
-              get_field_offset_()};
-    }
-    return {get_buffer_(), bounds, sizeof(T), false};
-  }
-  if (is_inline_storage_()) {
-    return create_region_instance_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
-  }
-  return create_field_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
+  return create_region_instance_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
@@ -239,13 +186,7 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
   check_accessor_store_backing_();
   check_write_access_();
 
-  if (is_future()) {
-    return {get_buffer_(), bounds, sizeof(T), false};
-  }
-  if (is_inline_storage_()) {
-    return create_region_instance_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
-  }
-  return create_field_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
+  return create_region_instance_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
@@ -260,14 +201,7 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) c
   check_accessor_store_backing_();
   check_write_access_();
 
-  if (is_future()) {
-    return {get_buffer_(), bounds, sizeof(T), false};
-  }
-  if (is_inline_storage_()) {
-    return create_region_instance_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
-  }
-
-  return create_field_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
+  return create_region_instance_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
@@ -283,33 +217,14 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
   check_accessor_store_backing_();
   check_reduction_access_();
 
-  if (is_future()) {
-    return {get_buffer_(), bounds, false, nullptr, 0, sizeof(T), false};
-  }
-  if (is_inline_storage_()) {
-    return create_region_instance_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(
-      bounds, VALIDATE_TYPE);
-  }
-
-  return create_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
+  return create_region_instance_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(
+    bounds, VALIDATE_TYPE);
 }
 
 template <typename T, std::int32_t DIM>
-Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
-                                                   bool bind_buffer /*= false*/) const
+Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>&, bool) const
 {
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  check_unbound_store_();
-  check_valid_binding_(bind_buffer);
-  check_buffer_dimension_(DIM);
-
-  auto [out, fid] = get_output_field_();
-
-  auto result = out.create_buffer<T, DIM>(extents, fid, nullptr, bind_buffer);
-
-  set_bound_(bind_buffer);
-
-  return result;
+  return {};
 }
 
 template <typename TYPE_CODE>
@@ -334,28 +249,14 @@ Rect<DIM> PhysicalStore::shape() const
 template <typename VAL>
 VAL PhysicalStore::scalar() const
 {
-  check_scalar_store_();
-  if (is_read_only_future_()) {
-    // get_untyped_pointer_from_future_ is guaranteed to return an aligned pointer when T is the
-    // right value type
-    return *static_cast<const VAL*>(get_untyped_pointer_from_future_());
-  }
-
-  return get_buffer_().operator Legion::DeferredValue<VAL>().read();
+  LEGATE_ABORT("Not supported");
+  return {};
 }
 
 template <typename T, std::int32_t DIM>
-void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
+void PhysicalStore::bind_data(Buffer<T, DIM>&, const Point<DIM>&) const
 {
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  check_unbound_store_();
-  check_valid_binding_(true);
-  check_buffer_dimension_(DIM);
-
-  auto [out, fid] = get_output_field_();
-
-  out.return_data(extents, fid, buffer);
-  set_bound_(true);
+  LEGATE_ABORT("Not supported");
 }
 
 template <typename T>
@@ -406,53 +307,6 @@ ACC PhysicalStore::create_region_instance_reduction_accessor_(const Rect<DIM>& b
   }
   return {pr,
           fid,
-          bounds,
-          /* silence_warnings */ false,
-          /* warning_string */ nullptr,
-          /* subfield_offset */ 0,
-          /* actual_field_size */ sizeof(T),
-          /* check_field_size */ validate_type};
-}
-
-template <typename ACC, typename T, std::int32_t DIM>
-ACC PhysicalStore::create_field_accessor_(const Rect<DIM>& bounds, bool validate_type) const
-{
-  static_assert(DIM <= LEGATE_MAX_DIM);
-
-  auto [pr, fid] = get_region_field_();
-
-  if (transformed()) {
-    auto transform = get_inverse_transform_();
-    return dim_dispatch(transform.transform.m,
-                        detail::store_detail::RegionFieldTransAccessorFn<ACC, T, DIM>{},
-                        std::move(pr),
-                        fid,
-                        transform,
-                        bounds);
-  }
-  return {std::move(pr), fid, bounds, /* actual_field_size */ sizeof(T), validate_type};
-}
-
-template <typename ACC, typename T, std::int32_t DIM>
-ACC PhysicalStore::create_reduction_accessor_(const Rect<DIM>& bounds, bool validate_type) const
-{
-  static_assert(DIM <= LEGATE_MAX_DIM);
-
-  auto [pr, fid] = get_region_field_();
-
-  if (transformed()) {
-    auto transform = get_inverse_transform_();
-    return dim_dispatch(transform.transform.m,
-                        detail::store_detail::RegionFieldTransAccessorFn<ACC, T, DIM>{},
-                        std::move(pr),
-                        fid,
-                        get_redop_id_(),
-                        transform,
-                        bounds);
-  }
-  return {std::move(pr),
-          fid,
-          static_cast<Legion::ReductionOpID>(get_redop_id_()),
           bounds,
           /* silence_warnings */ false,
           /* warning_string */ nullptr,

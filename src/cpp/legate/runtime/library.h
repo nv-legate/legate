@@ -75,15 +75,6 @@ class LEGATE_EXPORT Library {
    */
   [[nodiscard]] std::string_view get_task_name(LocalTaskID local_task_id) const;
   /**
-   * @brief Retrieves a tunable parameter
-   *
-   * @param tunable_id ID of the tunable parameter
-   * @param type Type of the tunable value
-   *
-   * @return The value of tunable parameter in a `Scalar`
-   */
-  [[nodiscard]] Scalar get_tunable(std::int64_t tunable_id, const Type& type);
-  /**
    * @brief Registers a library specific reduction operator.
    *
    * The type parameter `REDOP` points to a class that implements a reduction operator.

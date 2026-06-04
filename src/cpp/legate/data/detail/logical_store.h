@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/storage.h>
 #include <legate/data/detail/storage_partition.h>
 #include <legate/data/slice.h>
 #include <legate/mapping/mapping.h>
-#include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/small_vector.h>

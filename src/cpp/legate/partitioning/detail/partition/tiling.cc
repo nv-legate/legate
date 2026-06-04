@@ -156,44 +156,6 @@ InternalSharedPtr<Partition> Tiling::bloat(Span<const std::uint64_t> low_offsets
                        SmallVector<std::uint64_t, LEGATE_MAX_DIM>{this->tile_shape()});
 }
 
-Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
-{
-  auto&& index_space   = region.get_index_space();
-  auto&& runtime       = detail::Runtime::get_runtime();
-  auto&& part_mgr      = runtime.partition_manager();
-  auto index_partition = part_mgr.find_index_partition(index_space, *this);
-
-  if (index_partition != Legion::IndexPartition::NO_PART) {
-    return runtime.create_logical_partition(region, index_partition);
-  }
-
-  const auto ndim = static_cast<std::int32_t>(tile_shape_.size());
-  Legion::DomainTransform transform;
-
-  transform.m = ndim;
-  transform.n = ndim;
-  for (std::int32_t idx = 0; idx < ndim * ndim; ++idx) {
-    transform.matrix[idx] = 0;
-  }
-  for (std::int32_t idx = 0; idx < ndim; ++idx) {
-    transform.matrix[(ndim * idx) + idx] = static_cast<Legion::coord_t>(strides_[idx]);
-  }
-
-  auto extent = detail::to_domain(tile_shape_);
-  for (std::int32_t idx = 0; idx < ndim; ++idx) {
-    extent.rect_data[idx] += offsets_[idx];
-    extent.rect_data[idx + ndim] += offsets_[idx];
-  }
-
-  auto&& color_space = runtime.find_or_create_index_space(color_shape_);
-  const auto kind    = complete ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_DISJOINT_KIND;
-
-  index_partition =
-    runtime.create_restricted_partition(index_space, color_space, kind, transform, extent);
-  part_mgr.record_index_partition(index_space, *this, index_partition);
-  return runtime.create_logical_partition(region, index_partition);
-}
-
 Legion::Domain Tiling::launch_domain() const { return detail::to_domain(color_shape_); }
 
 std::string Tiling::to_string() const

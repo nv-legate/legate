@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/data/scalar.h>
-#include <legate/mapping/store.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
@@ -25,9 +24,7 @@ namespace legate::mapping {
 
 namespace detail {
 
-class BaseMapper;
 class DimOrdering;
-class StoreMapping;
 
 }  // namespace detail
 
@@ -338,112 +335,6 @@ class LEGATE_EXPORT InstanceMappingPolicy {
 };
 
 /**
- * @brief A mapping policy for stores
- */
-class LEGATE_EXPORT StoreMapping {
- public:
-  /**
-   * @brief Deleted default constructor.
-   *
-   * The default constructor is deleted to prevent creating a `StoreMapping` object without
-   * specifying a target store.
-   */
-  StoreMapping() noexcept = LEGATE_DEFAULT_WHEN_CYTHON;
-  StoreMapping(StoreMapping&&) noexcept;
-  StoreMapping& operator=(StoreMapping&&) noexcept;
-  ~StoreMapping();
-
-  explicit StoreMapping(std::unique_ptr<detail::StoreMapping> impl);
-
-  /**
-   * @brief Creates a mapping policy for the given store following the default mapping policy
-   *
-   * @param store Target store
-   * @param target Kind of the memory to which the store should be mapped
-   * @param exact Indicates whether the instance should be exact
-   * @param ordering Optionally specifies a desirable dimension ordering. If unspecified, the mapped
-   * instance is allowed to have any dimension ordering. (See `InstanceMappingPolicy::ordering`.)
-   *
-   * @return A store mapping
-   */
-  [[nodiscard]] static StoreMapping default_mapping(
-    const Store& store,
-    StoreTarget target,
-    bool exact                          = false,
-    std::optional<DimOrdering> ordering = std::nullopt);
-  /**
-   * @brief Creates a mapping policy for the given store using the instance mapping policy
-   *
-   * @param store Target store for the mapping policy
-   * @param policy Instance mapping policy to apply
-   *
-   * @return A store mapping
-   */
-  [[nodiscard]] static StoreMapping create(const Store& store, InstanceMappingPolicy&& policy);
-
-  /**
-   * @brief Creates a mapping policy for the given set of stores using the instance mapping policy
-   *
-   * @param stores Target stores for the mapping policy
-   * @param policy Instance mapping policy to apply
-   *
-   * @return A store mapping
-   */
-  [[nodiscard]] static StoreMapping create(const std::vector<Store>& stores,
-                                           InstanceMappingPolicy&& policy);
-
-  /**
-   * @brief Returns the instance mapping policy of this `StoreMapping` object
-   *
-   * @return A reference to the `InstanceMappingPolicy` object
-   */
-  [[nodiscard]] InstanceMappingPolicy& policy();
-  /**
-   * @brief Returns the instance mapping policy of this `StoreMapping` object
-   *
-   * @return A reference to the `InstanceMappingPolicy` object
-   */
-  [[nodiscard]] const InstanceMappingPolicy& policy() const;
-
-  /**
-   * @brief Returns the store for which this `StoreMapping` object describes a mapping policy.
-   *
-   * If the policy is for multiple stores, the first store added to this policy will be returned;
-   *
-   * @return A `Store` object
-   */
-  [[nodiscard]] Store store() const;
-  /**
-   * @brief Returns all the stores for which this `StoreMapping` object describes a mapping policy
-   *
-   * @return A vector of `Store` objects
-   */
-  [[nodiscard]] std::vector<Store> stores() const;
-
-  /**
-   * @brief Adds a store to this `StoreMapping` object
-   *
-   * @param store Store to add
-   */
-  void add_store(const Store& store);
-
-  [[nodiscard]] const detail::StoreMapping* impl() const noexcept;
-
-  class ReleaseKey {
-    ReleaseKey() = default;
-
-    friend class detail::BaseMapper;
-    friend class StoreMapping;
-  };
-
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  [[nodiscard]] detail::StoreMapping* release_(ReleaseKey) noexcept;
-
- private:
-  std::unique_ptr<detail::StoreMapping> impl_{};
-};
-
-/**
  * @brief An abstract class that defines machine query APIs
  */
 class LEGATE_EXPORT MachineQueryInterface {
@@ -474,6 +365,12 @@ class LEGATE_EXPORT MachineQueryInterface {
    */
   [[nodiscard]] virtual std::uint32_t total_nodes() const = 0;
 };
+
+struct Task {};
+
+struct Store {};
+
+struct StoreMapping {};
 
 /**
  * @brief An abstract class that defines Legate mapping APIs

@@ -89,17 +89,6 @@ class Partition {
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const = 0;
 
   /**
-   * @brief Constructs a Legion logical partition from this partition description.
-   *
-   * @param region   The parent logical region.
-   * @param complete Whether Legion should consider this partition complete.
-   * @return The created LogicalPartition.
-   */
-  // NOLINTNEXTLINE(google-default-arguments)
-  [[nodiscard]] virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                                           bool complete = false) const = 0;
-
-  /**
    * @brief Returns whether this partition defines a launch domain.
    *
    * @return True if a launch domain exists.

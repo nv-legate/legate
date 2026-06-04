@@ -77,10 +77,25 @@ TEST_F(TransformShiftUnit, ShiftInvertRestrictions)
   ASSERT_THAT(result, restrictions);
 }
 
+namespace {
+
+legate::SymbolicPoint create_symbolic_point(std::uint32_t ndim)
+{
+  std::vector<legate::SymbolicExpr> exprs;
+
+  exprs.reserve(ndim);
+  for (std::uint32_t dim = 0; dim < ndim; ++dim) {
+    exprs.emplace_back(dim);
+  }
+  return legate::SymbolicPoint{std::move(exprs)};
+}
+
+}  // namespace
+
 TEST_F(TransformShiftUnit, ShiftInvertSymbolicPoint)
 {
   auto transform = legate::make_internal_shared<legate::detail::Shift>(2, 5);
-  auto point     = legate::proj::create_symbolic_point(LEGATE_MAX_DIM);
+  auto point     = create_symbolic_point(LEGATE_MAX_DIM);
   auto result    = transform->invert(point);
 
   ASSERT_THAT(result, ::testing::ContainerEq(point));

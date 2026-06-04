@@ -106,7 +106,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `point` with the `dim_`-th expression updated to `legate::constant(0)`.
    */
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+  [[nodiscard]] SymbolicPoint invert(SymbolicPoint point) const override;
   /**
    * @brief Invert `Restrictions`.
    *

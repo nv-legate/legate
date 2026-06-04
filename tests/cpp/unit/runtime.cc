@@ -27,22 +27,4 @@ TEST_F(Runtime, CreateUnbound)
                std::invalid_argument);
 }
 
-TEST_F(Runtime, IndexSpaceTooManyDims)
-{
-  auto runtime      = legate::Runtime::get_runtime();
-  auto runtime_impl = runtime->impl();
-  auto data         = std::array<std::uint64_t, LEGATE_MAX_DIM + 1>{};
-
-  data.fill(1);
-
-  const auto span = legate::Span<const std::uint64_t>{data};
-
-  ASSERT_THAT(
-    [&] { static_cast<void>(runtime_impl->find_or_create_index_space(span)); },
-    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr(fmt::format(
-      "Legate is configured with the maximum number of dimensions set to {}, but got a {}-D shape",
-      LEGATE_MAX_DIM,
-      data.size()))));
-}
-
 }  // namespace test_runtime

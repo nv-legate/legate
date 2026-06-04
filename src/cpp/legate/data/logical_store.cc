@@ -211,14 +211,6 @@ LogicalStore LogicalStorePartition::get_child_store(Span<const std::uint64_t> co
     impl()->get_child_store(detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color})};
 }
 
-PartitionPlacementInfo LogicalStorePartition::get_placement_info() const
-{
-  auto detail_mapping = impl()->get_placement_info();
-  auto detail_ptr     = make_internal_shared<detail::PartitionPlacementInfo>(detail_mapping);
-
-  return PartitionPlacementInfo{std::move(detail_ptr)};
-}
-
 const SharedPtr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const
 {
   return impl_->impl();

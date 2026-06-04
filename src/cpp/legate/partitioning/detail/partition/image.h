@@ -130,19 +130,6 @@ class Image final : public Partition {
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   /**
-   * @brief Construct a Legion logical partition for the target region.
-   *
-   * @param region The logical region covering this partition.
-   * @param complete Whether the partition should be complete.
-   *
-   * If the function partition has no launch domain, returns
-   * ``Legion::LogicalPartition::NO_PART``. Otherwise, constructs a logical partition according
-   * to the function store, partition, and hint.
-   */
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                                   bool complete) const override;
-
-  /**
    * @copydoc Partition::has_launch_domain().
    *
    * Delegates to the function partition.

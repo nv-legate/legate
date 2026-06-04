@@ -18,12 +18,6 @@ inline bool NoPartition::is_invertible() const { return true; }
 
 inline bool NoPartition::has_color_shape() const { return false; }
 
-inline Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion /*region*/,
-                                                       bool /*complete*/) const
-{
-  return Legion::LogicalPartition::NO_PART;
-}
-
 inline bool NoPartition::has_launch_domain() const { return false; }
 
 }  // namespace legate::detail

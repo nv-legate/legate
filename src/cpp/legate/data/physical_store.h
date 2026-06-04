@@ -791,16 +791,12 @@ class LEGATE_EXPORT PhysicalStore {
  private:
   void check_accessor_dimension_(std::int32_t dim) const;
   void check_accessor_store_backing_() const;
-  void check_buffer_dimension_(std::int32_t dim) const;
   void check_shape_dimension_(std::int32_t dim) const;
-  void check_valid_binding_(bool bind_buffer) const;
   void check_write_access_() const;
   void check_reduction_access_() const;
   template <typename T>
   void check_accessor_type_() const;
   void check_accessor_type_(Type::Code code, std::size_t size_of_T) const;
-  void check_scalar_store_() const;
-  void check_unbound_store_() const;
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
   [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field_() const;
@@ -900,12 +896,6 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] ACC create_region_instance_reduction_accessor_(const Rect<DIM>& bounds,
                                                                bool validate_type) const;
 
-  [[nodiscard]] bool is_read_only_future_() const;
-  [[nodiscard]] std::size_t get_field_offset_() const;
-  [[nodiscard]] const void* get_untyped_pointer_from_future_() const;
-  [[nodiscard]] const Legion::Future& get_future_() const;
-  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer_() const;
-
   /**
    * @brief Indicates whether the store is an InlinePhysicalStore.
    *
@@ -920,18 +910,6 @@ class LEGATE_EXPORT PhysicalStore {
    * @return Pair of the region instance and field ID wrapping the underlying memory allocation.
    */
   [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> get_region_instance_() const;
-
-  [[nodiscard]] std::pair<Legion::OutputRegion, Legion::FieldID> get_output_field_() const;
-  /*
-   * @brief Indicate that a buffer has been assigned to a physical store.
-   *
-   * A physical store is considered bound if and only if a buffer has been assigned to it
-   * and this function `set_bound_(true)` has been called. Binding can only be done once
-   * for unbounded stores, duplicate binding throws an error.
-   *
-   * @param bound Indicating if a buffer is assigned or not.
-   */
-  void set_bound_(bool bound) const;
 
   SharedPtr<detail::PhysicalStore> impl_{};
   // This member exists purely to solve the temporary store problem. It is illegal for Physical

@@ -7,8 +7,7 @@
 #include <legate/mapping/detail/proxy_store_mapping.h>
 
 #include <legate/mapping/detail/mapping.h>
-#include <legate/mapping/detail/operation.h>
-#include <legate/mapping/detail/store.h>
+#include <legate/mapping/mapping.h>
 #include <legate/operation/detail/task.h>
 #include <legate/utilities/abort.h>
 #include <legate/utilities/detail/type_traits.h>
@@ -31,117 +30,18 @@ ProxyStoreMapping::ProxyStoreMapping(std::variant<ProxyArrayArgument,
 {
 }
 
-namespace {
-
-void populate_store_mappings(const InstanceMappingPolicy& policy,
-                             Span<const InternalSharedPtr<Store>> stores,
-                             std::vector<mapping::StoreMapping>* store_mappings)
+void ProxyStoreMapping::apply_legion(const Task&,
+                                     Span<const StoreTarget>,
+                                     std::vector<mapping::StoreMapping>*) const
 {
-  for (auto&& store : stores) {
-    store_mappings->emplace_back(std::make_unique<StoreMapping>(policy, store.get()));
-  }
 }
 
-}  // namespace
-
-void ProxyStoreMapping::apply_legion(const Task& task,
-                                     Span<const StoreTarget> options,
-                                     std::vector<mapping::StoreMapping>* store_mappings) const
+void ProxyStoreMapping::apply_inline(const legate::detail::TaskBase&,
+                                     Span<const StoreTarget>,
+                                     legate::detail::SmallVector<InstanceMappingPolicy>*,
+                                     legate::detail::SmallVector<InstanceMappingPolicy>*,
+                                     legate::detail::SmallVector<InstanceMappingPolicy>*) const
 {
-  const auto concrete_policy = [&] {
-    auto&& p = policy();
-
-    // Do not use the factory functions for this constructor (e.g. `with_ordering()`,
-    // `with_exact()`). We want to be notified (at compile time) if InstanceMappingPolicy adds,
-    // removes, or reorders any members because ProxyInstanceMappingPolicy will have to do the
-    // same. By using the aggregate constructor we ensure that such changes will cause compiler
-    // errors below.
-    return InstanceMappingPolicy{
-      p.target.value_or(options.front()), p.allocation, p.ordering, p.exact, p.redundant};
-  }();
-
-  std::visit(
-    legate::detail::Overload{
-      [&](const ProxyInputArguments&) {
-        populate_store_mappings(concrete_policy, task.inputs(), store_mappings);
-      },
-      [&](const ProxyOutputArguments&) {
-        populate_store_mappings(concrete_policy, task.outputs(), store_mappings);
-      },
-      [&](const ProxyReductionArguments&) {
-        populate_store_mappings(concrete_policy, task.reductions(), store_mappings);
-      },
-      [&](const ProxyArrayArgument& arg) {
-        const auto kind  = arg.kind;
-        const auto index = arg.index;
-
-        switch (kind) {
-          case ProxyArrayArgument::Kind::INPUT:
-            populate_store_mappings(concrete_policy, {&task.inputs()[index], 1}, store_mappings);
-            return;
-          case ProxyArrayArgument::Kind::OUTPUT:
-            populate_store_mappings(concrete_policy, {&task.outputs()[index], 1}, store_mappings);
-            return;
-          case ProxyArrayArgument::Kind::REDUCTION:
-            populate_store_mappings(
-              concrete_policy, {&task.reductions()[index], 1}, store_mappings);
-            return;
-        }
-        LEGATE_ABORT("Unhandled argument kind", legate::detail::to_underlying(kind));
-      }},
-    stores());
-}
-
-void ProxyStoreMapping::apply_inline(
-  const legate::detail::TaskBase& task,
-  Span<const StoreTarget> options,
-  legate::detail::SmallVector<InstanceMappingPolicy>* input_policies,
-  legate::detail::SmallVector<InstanceMappingPolicy>* output_policies,
-  legate::detail::SmallVector<InstanceMappingPolicy>* reduction_policies) const
-{
-  auto concrete_policy = [&] {
-    auto&& p = policy();
-
-    // Do not use the factory functions for this constructor (e.g. `with_ordering()`,
-    // `with_exact()`). We want to be notified (at compile time) if InstanceMappingPolicy adds,
-    // removes, or reorders any members because ProxyInstanceMappingPolicy will have to do the
-    // same. By using the aggregate constructor we ensure that such changes will cause compiler
-    // errors below.
-    return InstanceMappingPolicy{
-      p.target.value_or(options.front()), p.allocation, p.ordering, p.exact, p.redundant};
-  }();
-
-  std::visit(legate::detail::Overload{
-               [&](const ProxyInputArguments&) {
-                 LEGATE_ASSERT(task.inputs().size() == input_policies->size());
-                 std::fill(input_policies->begin(), input_policies->end(), concrete_policy);
-               },
-               [&](const ProxyOutputArguments&) {
-                 LEGATE_ASSERT(task.outputs().size() == output_policies->size());
-                 std::fill(output_policies->begin(), output_policies->end(), concrete_policy);
-               },
-               [&](const ProxyReductionArguments&) {
-                 LEGATE_ASSERT(task.reductions().size() == reduction_policies->size());
-                 std::fill(reduction_policies->begin(), reduction_policies->end(), concrete_policy);
-               },
-               [&](const ProxyArrayArgument& arg) {
-                 const auto kind  = arg.kind;
-                 const auto index = arg.index;
-
-                 switch (kind) {
-                   case ProxyArrayArgument::Kind::INPUT:
-                     input_policies->at(index) = std::move(concrete_policy);
-                     return;
-                   case ProxyArrayArgument::Kind::OUTPUT:
-                     output_policies->at(index) = std::move(concrete_policy);
-                     return;
-                   case ProxyArrayArgument::Kind::REDUCTION:
-                     reduction_policies->at(index) = std::move(concrete_policy);
-                     return;
-                 }
-                 LEGATE_ABORT("Unhandled argument kind", legate::detail::to_underlying(kind));
-               }},
-             stores());
 }
 
 bool operator==(const ProxyStoreMapping& lhs, const ProxyStoreMapping& rhs)

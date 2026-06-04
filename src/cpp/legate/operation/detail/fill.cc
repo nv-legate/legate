@@ -9,7 +9,6 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/physical_store.h>
-#include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/utilities/detail/traced_exception.h>

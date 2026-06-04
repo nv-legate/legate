@@ -42,17 +42,9 @@ struct Tester : public legate::LegateTask<Tester> {
 class LibraryMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    auto mappings = std::vector<legate::mapping::StoreMapping>{};
-    for (auto&& input : task.inputs()) {
-      auto mapping =
-        legate::mapping::StoreMapping::default_mapping(input, options.front(), /*exact=*/true);
-      mapping.policy().redundant = true;
-      mappings.push_back(std::move(mapping));
-    }
-    return mappings;
+    return {};
   }
 
   legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override

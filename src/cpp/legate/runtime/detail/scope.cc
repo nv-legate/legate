@@ -110,7 +110,6 @@ void Scope::trigger_exchange_side_effects(const ParallelPolicy& new_policy,
       // waits on existing matches. This results in breaking the streaming window. We issue
       // a match at the end of a streaming scope in case there are outstanding matches
       // that might have triggered inside the scope.
-      rt.issue_field_match();
     }
     rt.flush_scheduling_window(/*streaming_scope_change=*/true);
   }

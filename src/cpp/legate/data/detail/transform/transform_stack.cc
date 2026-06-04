@@ -69,7 +69,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_extents(
     std::move(extents));
 }
 
-proj::SymbolicPoint TransformStack::invert(proj::SymbolicPoint point) const
+SymbolicPoint TransformStack::invert(SymbolicPoint point) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {

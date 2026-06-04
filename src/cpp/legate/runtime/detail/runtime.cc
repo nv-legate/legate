@@ -10,39 +10,28 @@
 #include <legate/comm/detail/comm.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/data/detail/external_allocation.h>
-#include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/experimental/io/detail/task.h>
 #include <legate/mapping/detail/core_mapper.h>
 #include <legate/mapping/detail/default_mapper.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/mapping.h>
-#include <legate/operation/detail/attach.h>
-#include <legate/operation/detail/discard.h>
 #include <legate/operation/detail/execution_fence.h>
-#include <legate/operation/detail/extract_scalar.h>
 #include <legate/operation/detail/fill.h>
-#include <legate/operation/detail/index_attach.h>
 #include <legate/operation/detail/mapping_fence.h>
 #include <legate/operation/detail/offload.h>
-#include <legate/operation/detail/release_region_field.h>
 #include <legate/operation/detail/task.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
-#include <legate/partitioning/detail/partitioning_tasks.h>
 #include <legate/redop/detail/register.h>
 #include <legate/runtime/detail/argument_parsing/legate_args.h>
 #include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/runtime/detail/config.h>
-#include <legate/runtime/detail/field_manager.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/mpi_detection.h>
-#include <legate/runtime/detail/projection.h>
-#include <legate/runtime/detail/shard.h>
 #include <legate/runtime/detail/streaming/analysis.h>
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
@@ -115,11 +104,7 @@ constexpr const char* const TOPLEVEL_NAME    = "Toplevel Task";
 
 }  // namespace
 
-Runtime::Runtime(Config config)
-  : legion_runtime_{Legion::Runtime::get_runtime()},
-    config_{std::move(config)},
-    scope_{this->config()},
-    field_reuse_size_{local_machine().calculate_field_reuse_size(this->config().field_reuse_frac())}
+Runtime::Runtime(Config config) : config_{std::move(config)}, scope_{this->config()}
 {
   static_cast<void>(scope_.exchange_scheduling_window_size(this->config().window_size()));
 }
@@ -692,441 +677,7 @@ void Runtime::record_pending_exception(ReturnedException pending_exception)
   }
 }
 
-InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(InternalSharedPtr<Shape> shape,
-                                                                   std::uint32_t field_size)
-{
-  return field_manager().allocate_field(std::move(shape), field_size);
-}
-
-InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(InternalSharedPtr<Shape> shape,
-                                                                   Legion::LogicalRegion region,
-                                                                   Legion::FieldID field_id,
-                                                                   std::uint32_t field_size)
-{
-  return field_manager().import_field(std::move(shape), field_size, std::move(region), field_id);
-}
-
-void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
-                                // string_view is OK here because we pass the size along with it
-                                std::string_view provenance)
-{
-  // It's safe to just attach the info to the FieldSpace+FieldID, since FieldSpaces are not shared
-  // across RegionFields.
-  if (provenance.empty()) {
-    return;
-  }
-
-  get_legion_runtime()->attach_semantic_information(
-    rf->region().get_field_space(),
-    rf->field_id(),
-    static_cast<Legion::SemanticTag>(CoreSemanticTag::ALLOC_INFO),
-    provenance.data(),
-    provenance.size(),
-    /*is_mutable=*/true);
-}
-
-Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
-                                                 Legion::FieldID field_id,
-                                                 legate::mapping::StoreTarget target)
-{
-  Legion::RegionRequirement req{region, LEGION_READ_WRITE, LEGION_EXCLUSIVE, region};
-
-  req.add_field(field_id);
-  // Legion extract the bits using bit-wise ANDs here (but clang-tidy is right that Legion shouldn't
-  // have taken this as an enum)
-  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange)
-  req.flags =
-    static_cast<Legion::RegionFlags>(LEGION_SUPPRESS_WARNINGS_FLAG | LEGION_NO_ACCESS_FLAG);
-  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange)
-
-  // TODO(wonchanl): We need to pass the metadata about logical store
-  Legion::InlineLauncher launcher{req, mapper_id(), static_cast<Legion::MappingTagID>(target)};
-
-  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
-                "Don't use to_string() below");
-  launcher.provenance = get_provenance().to_string();
-  return get_legion_runtime()->map_region(get_legion_context(), launcher);
-}
-
-void Runtime::remap_physical_region(Legion::PhysicalRegion pr)
-{
-  get_legion_runtime()->remap_region(
-    get_legion_context(),
-    std::move(pr),
-    get_provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
-  );
-  static_assert(std::is_same_v<decltype(get_provenance()), ZStringView>);
-}
-
-void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    std::vector<Legion::FieldID> fields;
-    pr.get_fields(fields);
-    LEGATE_CHECK(fields.size() == 1);
-  }
-  get_legion_runtime()->unmap_region(get_legion_context(), std::move(pr));
-}
-
-Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
-                               bool flush,
-                               bool unordered)
-{
-  LEGATE_CHECK(physical_region.exists() && !physical_region.is_mapped());
-  return get_legion_runtime()->detach_external_resource(
-    get_legion_context(),
-    physical_region,
-    flush,
-    unordered,
-    get_provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
-  );
-  static_assert(std::is_same_v<decltype(get_provenance()), ZStringView>);
-}
-
-Legion::Future Runtime::detach(const Legion::ExternalResources& external_resources,
-                               bool flush,
-                               bool unordered)
-{
-  LEGATE_CHECK(external_resources.exists());
-  return get_legion_runtime()->detach_external_resources(
-    get_legion_context(),
-    external_resources,
-    flush,
-    unordered,
-    get_provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
-  );
-  static_assert(std::is_same_v<decltype(get_provenance()), ZStringView>);
-}
-
-bool Runtime::consensus_match_required() const
-{
-  return config().consensus() || Legion::Machine::get_machine().get_address_space_count() > 1;
-}
-
-void Runtime::progress_unordered_operations()
-{
-  get_legion_runtime()->progress_unordered_operations(get_legion_context());
-}
-
-RegionManager& Runtime::find_or_create_region_manager(const Legion::IndexSpace& index_space)
-{
-  return region_managers_.try_emplace(index_space, index_space).first->second;
-}
-
-const Legion::IndexSpace& Runtime::find_or_create_index_space(Span<const std::uint64_t> extents)
-{
-  if (extents.size() > LEGATE_MAX_DIM) {
-    throw TracedException<std::out_of_range>{fmt::format(
-      "Legate is configured with the maximum number of dimensions set to {}, but got a {}-D shape",
-      LEGATE_MAX_DIM,
-      extents.size())};
-  }
-  return find_or_create_index_space(to_domain(extents));
-}
-
-const Legion::IndexSpace& Runtime::find_or_create_index_space(const Domain& domain)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  auto finder = cached_index_spaces_.find(domain);
-  if (finder != cached_index_spaces_.end()) {
-    return finder->second;
-  }
-
-  // GCC 14 uninitialized warning from Legion
-  //
-  // Sample error:
-  // In member function 'bool Legion::Domain::operator==(const Legion::Domain&) const',
-  // ...
-  //    inlined from 'const Legion::IndexSpace& legate::detail::Runtime::find_or_create_index_space
-  //    (const Legion::Domain&)'
-  //    at /path/to/legate/work/src/cpp/legate/runtime/detail/runtime.cc:1138:46:
-  // /path/to/legate/work/arch-conda/skbuild_core/_deps/legion-src/runtime/legion/
-  // legion_domain.inl:844:23:
-  // error: '*(const Legion::Domain*)((char*)<unknown> + 8).Legion::Domain::rect_data[12]'
-  // may be used uninitialized [-Werror=maybe-uninitialized]
-  //      844 |       if(rect_data[i*2] != rhs.rect_data[i*2]) return false;
-  //          |          ~~~~~~~~~~~~~^
-  LEGATE_PRAGMA_PUSH();
-  LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized");
-  auto [it, _] = cached_index_spaces_.emplace(
-    domain, get_legion_runtime()->create_index_space(get_legion_context(), domain));
-  LEGATE_PRAGMA_POP();
-  return it->second;
-}
-
-Legion::IndexPartition Runtime::create_restricted_partition(
-  const Legion::IndexSpace& index_space,
-  const Legion::IndexSpace& color_space,
-  Legion::PartitionKind kind,
-  const Legion::DomainTransform& transform,
-  const Domain& extent)
-{
-  return get_legion_runtime()->create_partition_by_restriction(
-    get_legion_context(), index_space, color_space, transform, extent, kind);
-}
-
-Legion::IndexPartition Runtime::create_weighted_partition(const Legion::IndexSpace& index_space,
-                                                          const Legion::IndexSpace& color_space,
-                                                          const Legion::FutureMap& weights)
-{
-  return get_legion_runtime()->create_partition_by_weights(
-    get_legion_context(), index_space, weights, color_space);
-}
-
-Legion::IndexPartition Runtime::create_intersection_partition(
-  const Legion::IndexSpace& parent, const Legion::IndexPartition& ipartition)
-{
-  return get_legion_runtime()->create_partition_by_intersection(get_legion_context(),
-                                                                parent,
-                                                                ipartition,
-                                                                LEGION_COMPUTE_KIND,
-                                                                LEGION_AUTO_GENERATE_ID,
-                                                                /* dominates */ true);
-}
-
-Legion::IndexPartition Runtime::create_image_partition(
-  const Legion::IndexSpace& index_space,
-  const Legion::IndexSpace& color_space,
-  const Legion::LogicalRegion& func_region,
-  const Legion::LogicalPartition& func_partition,
-  Legion::FieldID func_field_id,
-  bool is_range,
-  const mapping::detail::Machine& machine)
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Create image partition {index_space: " << index_space
-                         << ", func_partition: " << func_partition
-                         << ", func_field_id: " << func_field_id << ", is_range: " << is_range
-                         << "}";
-  }
-
-  BufferBuilder buffer;
-
-  buffer.pack<StreamingGeneration>(std::nullopt);
-  machine.pack(buffer);
-  buffer.pack<std::uint32_t>(get_sharding(machine, /*proj_id=*/0));
-  buffer.pack<std::int32_t>(scope().priority());
-
-  if (is_range) {
-    return get_legion_runtime()->create_partition_by_image_range(get_legion_context(),
-                                                                 index_space,
-                                                                 func_partition,
-                                                                 func_region,
-                                                                 func_field_id,
-                                                                 color_space,
-                                                                 LEGION_COMPUTE_KIND,
-                                                                 LEGION_AUTO_GENERATE_ID,
-                                                                 mapper_id(),
-                                                                 0,
-                                                                 buffer.to_legion_buffer());
-  }
-  return get_legion_runtime()->create_partition_by_image(get_legion_context(),
-                                                         index_space,
-                                                         func_partition,
-                                                         func_region,
-                                                         func_field_id,
-                                                         color_space,
-                                                         LEGION_COMPUTE_KIND,
-                                                         LEGION_AUTO_GENERATE_ID,
-                                                         mapper_id(),
-                                                         0,
-                                                         buffer.to_legion_buffer());
-}
-
-Legion::IndexPartition Runtime::create_approximate_image_partition(
-  const InternalSharedPtr<LogicalStore>& /*store*/,
-  const InternalSharedPtr<Partition>& /*partition*/,
-  const Legion::IndexSpace& /*index_space*/,
-  bool /*sorted*/)
-{
-  // TODO(wonchanl): Need a v2 implementation
-  return {};
-}
-
-Legion::FieldSpace Runtime::create_field_space()
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  return get_legion_runtime()->create_field_space(get_legion_context());
-}
-
-Legion::LogicalRegion Runtime::create_region(const Legion::IndexSpace& index_space,
-                                             const Legion::FieldSpace& field_space)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  return get_legion_runtime()->create_logical_region(
-    get_legion_context(), index_space, field_space);
-}
-
-void Runtime::destroy_region(const Legion::LogicalRegion& logical_region, bool unordered)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  get_legion_runtime()->destroy_logical_region(get_legion_context(), logical_region, unordered);
-}
-
-Legion::LogicalPartition Runtime::create_logical_partition(
-  const Legion::LogicalRegion& logical_region, const Legion::IndexPartition& index_partition)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  return get_legion_runtime()->get_logical_partition(
-    get_legion_context(), logical_region, index_partition);
-}
-
-Legion::LogicalRegion Runtime::get_subregion(const Legion::LogicalPartition& partition,
-                                             const Legion::DomainPoint& color)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  return get_legion_runtime()->get_logical_subregion_by_color(
-    get_legion_context(), partition, color);
-}
-
-Legion::LogicalRegion Runtime::find_parent_region(const Legion::LogicalRegion& region)
-{
-  auto* const legion_runtime = get_legion_runtime();
-  const auto legion_ctx      = get_legion_context();
-  auto result                = region;
-
-  while (legion_runtime->has_parent_logical_partition(legion_ctx, result)) {
-    auto partition = legion_runtime->get_parent_logical_partition(legion_ctx, result);
-
-    result = legion_runtime->get_parent_logical_region(legion_ctx, std::move(partition));
-  }
-  return result;
-}
-
-Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space,
-                                        Legion::FieldID field_id,
-                                        std::size_t field_size)
-{
-  LEGATE_CHECK(nullptr != get_legion_context());
-  auto allocator = get_legion_runtime()->create_field_allocator(get_legion_context(), field_space);
-  return allocator.allocate_field(field_size, field_id);
-}
-
-Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space)
-{
-  return get_legion_runtime()->get_index_space_domain(get_legion_context(), index_space);
-}
-
-namespace {
-
-[[nodiscard]] Legion::DomainPoint reshape_future_map_impl(const DomainPoint& point,
-                                                          const Domain& domain,
-                                                          const Domain& range)
-{
-  // TODO(wonchanl): This reshaping preserves the mapping of tasks if both the producer and consumer
-  // point tasks are linearized in the same way in the mapper, which is the case now.
-  // If in the future we make the mapping from points in the launch domain to GPUs customizable,
-  // we need to take that into account here as well.
-  return delinearize(range.lo(), range.hi(), linearize(domain.lo(), domain.hi(), point));
-}
-
-}  // namespace
-
-Legion::FutureMap Runtime::delinearize_future_map(const Legion::FutureMap& future_map,
-                                                  const Domain& new_domain,
-                                                  Legion::ProjectionID proj_id)
-{
-  auto* const proj_fn = find_projection_function(proj_id);
-
-  return get_legion_runtime()->transform_future_map(
-    get_legion_context(),
-    future_map,
-    find_or_create_index_space(new_domain),
-    [proj_fn](const DomainPoint& point, const Domain& domain, const Domain& range) {
-      LEGATE_CHECK(range.dim == 1);
-      DomainPoint result;
-      // Communicator slots must follow the same projected point order that the
-      // mapper uses for placement, but only when that projection preserves a
-      // 1:1 mapping between launch points and slots.
-      result.dim         = 1;
-      const auto proj_lo = proj_fn->project_point(domain.lo());
-      const auto proj_hi = proj_fn->project_point(domain.hi());
-      const auto proj_p  = proj_fn->project_point(point);
-      result[0]          = static_cast<coord_t>(linearize(proj_lo, proj_hi, proj_p));
-      return result;
-    });
-}
-
-Legion::FutureMap Runtime::reshape_future_map(const Legion::FutureMap& future_map,
-                                              const Legion::Domain& new_domain)
-{
-  return get_legion_runtime()->transform_future_map(get_legion_context(),
-                                                    future_map,
-                                                    find_or_create_index_space(new_domain),
-                                                    reshape_future_map_impl);
-}
-
-std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> Runtime::create_barriers(
-  std::size_t num_tasks)
-{
-  auto arrival_barrier =
-    get_legion_runtime()->create_phase_barrier(get_legion_context(), num_tasks);
-  auto wait_barrier =
-    get_legion_runtime()->advance_phase_barrier(get_legion_context(), arrival_barrier);
-  return {arrival_barrier, wait_barrier};
-}
-
-void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
-{
-  get_legion_runtime()->destroy_phase_barrier(get_legion_context(), std::move(barrier));
-}
-
-Legion::Future Runtime::get_tunable(const Library& library, std::int64_t tunable_id)
-{
-  auto launcher =
-    Legion::TunableLauncher{static_cast<Legion::TunableID>(tunable_id), mapper_id(), 0};
-  const auto* mapper = &library.get_mapper();
-
-  launcher.arg = Legion::UntypedBuffer{
-    mapper,
-    sizeof(mapper)  // NOLINT(bugprone-sizeof-expression)
-  };
-  return get_legion_runtime()->select_tunable_value(get_legion_context(), launcher);
-}
-
-Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
-                                          GlobalRedopID reduction_op,
-                                          const Legion::Future& init_value)
-{
-  return get_legion_runtime()->reduce_future_map(get_legion_context(),
-                                                 future_map,
-                                                 static_cast<Legion::ReductionOpID>(reduction_op),
-                                                 false /*deterministic*/,
-                                                 mapper_id(),
-                                                 0 /*tag*/,
-                                                 nullptr /*provenance*/,
-                                                 init_value);
-}
-
-Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map)
-{
-  const auto reduction_op =
-    core_library().get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
-
-  return get_legion_runtime()->reduce_future_map(
-    get_legion_context(),
-    future_map,
-    static_cast<Legion::ReductionOpID>(reduction_op),
-    false /*deterministic*/,
-    mapper_id(),
-    static_cast<Legion::MappingTagID>(CoreMappingTag::JOIN_EXCEPTION));
-}
-
-void Runtime::issue_release_region_field(
-  InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unordered)
-{
-  submit(
-    make_internal_shared<ReleaseRegionField>(new_op_id(), std::move(physical_state), unordered));
-}
-
-void Runtime::issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)
-{
-  submit(make_internal_shared<Discard>(new_op_id(), region, field_id));
-}
-
 void Runtime::issue_mapping_fence() { submit(make_internal_shared<MappingFence>(new_op_id())); }
-
-void Runtime::issue_field_match() { field_manager_->issue_field_match(); }
 
 void Runtime::issue_execution_fence(bool block /*=false*/)
 {
@@ -1140,18 +691,6 @@ InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precisi
   auto timestamp = create_store(empty_shape, int64(), /*optimize_scalar=*/true);
   submit(make_internal_shared<Timing>(new_op_id(), precision, timestamp));
   return timestamp;
-}
-
-void Runtime::begin_trace(std::uint32_t trace_id)
-{
-  flush_scheduling_window();
-  get_legion_runtime()->begin_trace(get_legion_context(), trace_id);
-}
-
-void Runtime::end_trace(std::uint32_t trace_id)
-{
-  flush_scheduling_window();
-  get_legion_runtime()->end_trace(get_legion_context(), trace_id);
 }
 
 InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
@@ -1175,142 +714,6 @@ InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
 const mapping::detail::Machine& Runtime::get_machine() const { return *scope().machine(); }
 
 ZStringView Runtime::get_provenance() const { return scope().provenance(); }
-
-Legion::ProjectionID Runtime::get_affine_projection(std::uint32_t src_ndim,
-                                                    const proj::SymbolicPoint& point)
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Query affine projection {src_ndim: " << src_ndim
-                         << ", point: " << point << "}";
-  }
-
-  if (proj::is_identity(src_ndim, point)) {
-    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      log_legate().debug() << "Identity projection {src_ndim: " << src_ndim << ", point: " << point
-                           << "}";
-    }
-    return 0;
-  }
-
-  auto key    = AffineProjectionDesc{src_ndim, point};
-  auto finder = affine_projections_.find(key);
-  if (affine_projections_.end() != finder) {
-    return finder->second;
-  }
-
-  auto proj_id = core_library().get_projection_id(next_projection_id_++);
-
-  register_affine_projection_functor(src_ndim, point, proj_id);
-  affine_projections_[key] = proj_id;
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Register affine projection " << proj_id << " {src_ndim: " << src_ndim
-                         << ", point: " << point << "}";
-  }
-
-  return proj_id;
-}
-
-Legion::ProjectionID Runtime::get_delinearizing_projection(Span<const std::uint64_t> color_shape)
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << fmt::format("Query delinearizing projection {{color_shape: {}}}",
-                                        color_shape);
-  }
-
-  LEGATE_CPP_VERSION_TODO(20,
-                          "Use heterogeneous lookup in unordered_map instead of making this copy");
-  const auto color_shape_copy = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape};
-
-  auto finder = delinearizing_projections_.find(color_shape_copy);
-  if (delinearizing_projections_.end() != finder) {
-    return finder->second;
-  }
-
-  auto proj_id = core_library().get_projection_id(next_projection_id_++);
-
-  register_delinearizing_projection_functor(color_shape_copy, proj_id);
-  delinearizing_projections_[color_shape_copy] = proj_id;
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << fmt::format(
-      "Register delinearizing projection {} {{color_shape: {}}}", proj_id, color_shape);
-  }
-
-  return proj_id;
-}
-
-Legion::ProjectionID Runtime::get_compound_projection(Span<const std::uint64_t> color_shape,
-                                                      const proj::SymbolicPoint& point)
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << fmt::format("Query compound projection {{color_shape: {}, point: {}}}",
-                                        color_shape,
-                                        fmt::streamed(point));
-  }
-
-  LEGATE_CPP_VERSION_TODO(20,
-                          "Use heterogeneous lookup in unordered_map instead of making this copy");
-  const auto color_shape_copy = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape};
-
-  auto key    = CompoundProjectionDesc{color_shape_copy, point};
-  auto finder = compound_projections_.find(key);
-  if (compound_projections_.end() != finder) {
-    return finder->second;
-  }
-
-  auto proj_id = core_library().get_projection_id(next_projection_id_++);
-
-  register_compound_projection_functor(color_shape_copy, point, proj_id);
-  compound_projections_[key] = proj_id;
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << fmt::format(
-      "Register compound projection {} {{color_shape: {}, point: {}}}",
-      proj_id,
-      color_shape_copy,
-      fmt::streamed(point));
-  }
-
-  return proj_id;
-}
-
-Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine,
-                                         Legion::ProjectionID proj_id)
-{
-  // If we're running on a single node, we don't need to generate sharding functors
-  if (Realm::Network::max_node_id == 0) {
-    return 0;
-  }
-
-  auto& proc_range = machine.processor_range();
-  ShardingDesc key{proj_id, proc_range};
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Query sharding {proj_id: " << proj_id
-                         << ", processor range: " << proc_range
-                         << ", processor type: " << machine.preferred_target() << "}";
-  }
-
-  auto finder = registered_shardings_.find(key);
-  if (finder != registered_shardings_.end()) {
-    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      log_legate().debug() << "Found sharding " << finder->second;
-    }
-    return finder->second;
-  }
-
-  auto sharding_id = core_library().get_sharding_id(next_sharding_id_++);
-  registered_shardings_.insert({std::move(key), sharding_id});
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Create sharding " << sharding_id;
-  }
-
-  create_sharding_functor_using_projection(sharding_id, proj_id, proc_range);
-
-  return sharding_id;
-}
 
 namespace {
 
@@ -1529,8 +932,6 @@ void set_env_vars()
       fmt::format("Legion Runtime failed to start, error code: {}", result)};
   }
 
-  auto& runtime = Runtime::get_runtime();
-
   if (is_worker) {
     // All Legate programs are control-replicated, meaning that the code after start() is
     // Legate application code. Under single controller execution mode, workers reaching
@@ -1540,15 +941,6 @@ void set_env_vars()
     // and have their own method of connecting to the runtime should be considered.
     std::exit(EXIT_SUCCESS);
   }
-
-  auto&& ctx = Legion::Runtime::get_runtime()->begin_implicit_task(
-    CoreTask::TOPLEVEL,
-    runtime.mapper_id(),
-    Processor::LOC_PROC,
-    TOPLEVEL_NAME,
-    !single_controller_mode /*control replicable*/);
-
-  runtime.legion_context_ = ctx;
 }
 
 void Runtime::start_profiling_range()
@@ -1687,17 +1079,6 @@ std::int32_t Runtime::finish()
   // Destroy all communicators. This will likely launch some tasks for the clean-up.
   communicator_manager().destroy();
 
-  // Destroy all Legion handles used by Legate
-  for (auto&& [_, region_manager] : region_managers_) {
-    region_manager.destroy(true /*unordered*/);
-  }
-
-  for (auto&& [_, index_space] : cached_index_spaces_) {
-    get_legion_runtime()->destroy_index_space(
-      get_legion_context(), index_space, true /*unordered*/);
-  }
-  cached_index_spaces_.clear();
-
   if (config().need_cuda()) {
     auto&& api = cuda::detail::get_cuda_driver_api();
 
@@ -1713,14 +1094,6 @@ std::int32_t Runtime::finish()
   // Any STL containers holding Legion handles need to be cleared here, otherwise they cause
   // trouble when they get destroyed in the Legate runtime's destructor
 
-  // We finally deallocate managers
-  region_managers_.clear();
-  // Drain the field manager's cached fields before destroying it. Deallocating attachments
-  // during destruction can cascade back into field_manager_ while it is mid-destruction.
-  // Draining first processes all cached fields while the manager is still fully alive.
-  field_manager_->drain();
-  field_manager_.reset();
-
   communicator_manager_.reset();
   partition_manager_.reset();
   scope_ = Scope{config()};
@@ -1728,7 +1101,6 @@ std::int32_t Runtime::finish()
   // Mappers get raw pointers to Libraries, so just in case any of the above launched residual
   // cleanup tasks, we issue another fence here before we clear the Libraries.
   issue_execution_fence(true);
-  mapper_manager_.reset();
   libraries_.clear();
   core_library_.reset();
   // Reset this here and now (instead of waiting to destroy it when Runtime gets destroyed)
@@ -1740,9 +1112,6 @@ std::int32_t Runtime::finish()
   pending_exceptions_.clear();
   initialized_ = false;
 
-  // Mark that we are done executing the top-level task
-  // After this call the context is no longer valid
-  get_legion_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
   // Legion may shut down as soon as wait_for_shutdown() observes that all
   // processes are done. Make the shutdown state visible to Realm worker
   // threads before that point so late Legate object destruction can avoid
@@ -1809,9 +1178,7 @@ void register_legate_core_tasks(Library& core_lib)
 {
   const auto pub_core_lib = legate::Library{&core_lib};
 
-  ExtractScalar::register_variants(pub_core_lib);
   prefetch_task::PrefetchBloatedInstances::register_variants(pub_core_lib);
-  register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
   legate::experimental::io::detail::register_tasks();
   OffloadTo::register_variants(pub_core_lib);
@@ -1846,7 +1213,6 @@ extern void register_exception_reduction_op(const Library& context);
   // Order is deliberate. core_library_() must be set here, because the core mapper and mapper
   // manager expect to call get_runtime()->core_library().
   runtime.core_library_ = core_lib;
-  runtime.mapper_manager_.emplace();
 
   // These must occur here in case the task registration routines below need to access the CUDA
   // driver API
@@ -1870,9 +1236,6 @@ extern void register_exception_reduction_op(const Library& context);
     }
   }
   comm::coll::init();
-  runtime.field_manager_ = runtime.consensus_match_required()
-                             ? std::make_unique<ConsensusMatchingFieldManager>()
-                             : std::make_unique<FieldManager>();
   runtime.communicator_manager_.emplace();
   runtime.partition_manager_.emplace();
   static_cast<void>(runtime.scope_.exchange_machine(runtime.create_toplevel_machine()));
@@ -1884,8 +1247,6 @@ extern void register_exception_reduction_op(const Library& context);
   register_builtin_reduction_ops();
 
   register_exception_reduction_op(core_lib);
-
-  register_legate_core_sharding_functors(core_lib);
 
   runtime.initialized_ = true;
 }
@@ -1905,18 +1266,6 @@ cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
   }
 
   return cu_mod_manager_.value();
-}
-
-const MapperManager& Runtime::get_mapper_manager_() const
-{
-  // We want this to throw in debug mode
-  // NOLINTBEGIN(bugprone-unchecked-optional-access)
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return mapper_manager_.value();
-  }
-
-  return *mapper_manager_;
-  // NOLINTEND(bugprone-unchecked-optional-access)
 }
 
 Processor Runtime::get_executing_processor() const
@@ -1946,8 +1295,6 @@ void Runtime::inline_task_end()  // NOLINT(readability-make-member-function-cons
   LEGATE_ASSERT(executing_inline_task());
   inline_task_variant_code_.pop();
 }
-
-Legion::MapperID Runtime::mapper_id() const { return get_mapper_manager_().mapper_id(); }
 
 bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }
 

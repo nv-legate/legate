@@ -6,10 +6,7 @@
 
 #include <legate/data/detail/physical_store.h>
 
-#include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/inline_physical_store.h>
-#include <legate/data/detail/physical_stores/region_physical_store.h>
-#include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
@@ -22,36 +19,6 @@
 namespace legate::detail {
 
 bool PhysicalStore::transformed() const { return !transform_->identity(); }
-
-RegionPhysicalStore& PhysicalStore::as_region_store()
-{
-  return dynamic_cast<RegionPhysicalStore&>(*this);
-}
-
-const RegionPhysicalStore& PhysicalStore::as_region_store() const
-{
-  return dynamic_cast<const RegionPhysicalStore&>(*this);
-}
-
-UnboundPhysicalStore& PhysicalStore::as_unbound_store()
-{
-  return dynamic_cast<UnboundPhysicalStore&>(*this);
-}
-
-const UnboundPhysicalStore& PhysicalStore::as_unbound_store() const
-{
-  return dynamic_cast<const UnboundPhysicalStore&>(*this);
-}
-
-FuturePhysicalStore& PhysicalStore::as_future_store()
-{
-  return dynamic_cast<FuturePhysicalStore&>(*this);
-}
-
-const FuturePhysicalStore& PhysicalStore::as_future_store() const
-{
-  return dynamic_cast<const FuturePhysicalStore&>(*this);
-}
 
 InlinePhysicalStore& PhysicalStore::as_inline_store()
 {
@@ -100,13 +67,7 @@ void PhysicalStore::check_accessor_dimension(std::int32_t dim) const
   }
 }
 
-void PhysicalStore::check_accessor_store_backing() const
-{
-  if (dynamic_cast<const UnboundPhysicalStore*>(this)) {
-    throw detail::TracedException<std::invalid_argument>{
-      "Invalid to create an accessor on an unbound store"};
-  }
-}
+void PhysicalStore::check_accessor_store_backing() const {}
 
 void PhysicalStore::check_write_access() const
 {
@@ -122,30 +83,9 @@ void PhysicalStore::check_reduction_access() const
   }
 }
 
-void PhysicalStore::check_scalar_store() const
-{
-  if (!dynamic_cast<const FuturePhysicalStore*>(this)) {
-    throw detail::TracedException<std::invalid_argument>{"Store isn't a scalar store"};
-  }
-}
-
-void PhysicalStore::check_unbound_store() const
-{
-  if (!dynamic_cast<const UnboundPhysicalStore*>(this)) {
-    throw detail::TracedException<std::invalid_argument>{"Store isn't an unbound store"};
-  }
-}
-
 Legion::DomainAffineTransform PhysicalStore::get_inverse_transform() const
 {
   return transform_->inverse_transform(dim());
 }
-
-std::optional<Legion::LogicalRegion> PhysicalStore::get_logical_region() const
-{
-  return std::nullopt;
-}
-
-std::optional<Legion::FieldID> PhysicalStore::get_field_id() const { return std::nullopt; }
 
 }  // namespace legate::detail

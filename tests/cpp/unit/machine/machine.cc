@@ -10,7 +10,6 @@
 
 #include <legate/mapping/machine.h>
 #include <legate/utilities/detail/buffer_builder.h>
-#include <legate/utilities/detail/deserializer.h>
 
 #include <gtest/gtest.h>
 
@@ -338,37 +337,6 @@ TEST_F(MachineTest, ToString)
   ss << machine;
   ASSERT_EQ(ss.str(), machine_str);
   ASSERT_EQ(machine.to_string(), machine_str);
-}
-
-namespace {
-
-class MachineUnitTestDeserializer
-  : public legate::detail::BaseDeserializer<MachineUnitTestDeserializer> {
- public:
-  MachineUnitTestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer{args, arglen}
-  {
-  }
-
-  using BaseDeserializer::unpack_impl;
-};
-
-}  // namespace
-
-TEST_F(MachineTest, Pack)
-{
-  legate::detail::BufferBuilder buf;
-  const legate::mapping::detail::Machine machine{
-    {{legate::mapping::TaskTarget::CPU, CPU_RANGE}, {legate::mapping::TaskTarget::GPU, GPU_RANGE}}};
-  // Copy is intentional because the const object may also be changed in mutable functions
-  // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
-  const auto orig_machine_copy = machine;
-  machine.pack(buf);
-  auto legion_buffer = buf.to_legion_buffer();
-  MachineUnitTestDeserializer dez{legion_buffer.get_ptr(), legion_buffer.get_size()};
-
-  auto machine_unpack = dez.unpack<legate::mapping::detail::Machine>();
-
-  ASSERT_EQ(machine_unpack, orig_machine_copy);
 }
 
 // NOLINTEND(readability-magic-numbers)

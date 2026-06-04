@@ -8,7 +8,6 @@
 
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/cuda/detail/module_manager.h>
-#include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/machine.h>
@@ -19,8 +18,6 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/mapper_manager.h>
 #include <legate/runtime/detail/partition_manager.h>
-#include <legate/runtime/detail/projection.h>
-#include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/scope.h>
 #include <legate/task/detail/returned_exception.h>
 #include <legate/task/variant_options.h>
@@ -75,7 +72,6 @@ class ManualTask;
 class LogicalStore;
 class LogicalStorePartition;
 class Operation;
-class FieldManager;
 class Shape;
 
 class Runtime {
@@ -212,34 +208,6 @@ class Runtime {
   [[nodiscard]] std::uint64_t get_unique_store_id();
   [[nodiscard]] std::uint64_t get_unique_storage_id();
 
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_region_field(
-    InternalSharedPtr<Shape> shape, std::uint32_t field_size);
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_region_field(
-    InternalSharedPtr<Shape> shape,
-    Legion::LogicalRegion region,
-    Legion::FieldID field_id,
-    std::uint32_t field_size);
-  void attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
-                         std::string_view provenance);
-  [[nodiscard]] Legion::PhysicalRegion map_region_field(Legion::LogicalRegion region,
-                                                        Legion::FieldID field_id,
-                                                        legate::mapping::StoreTarget target);
-  void remap_physical_region(Legion::PhysicalRegion pr);
-  void unmap_physical_region(Legion::PhysicalRegion pr);
-  [[nodiscard]] Legion::Future detach(const Legion::PhysicalRegion& physical_region,
-                                      bool flush,
-                                      bool unordered);
-  [[nodiscard]] Legion::Future detach(const Legion::ExternalResources& external_resources,
-                                      bool flush,
-                                      bool unordered);
-  [[nodiscard]] std::uint32_t field_reuse_freq() const;
-  [[nodiscard]] std::size_t field_reuse_size() const;
-  [[nodiscard]] bool consensus_match_required() const;
-  void progress_unordered_operations();
-
-  [[nodiscard]] RegionManager& find_or_create_region_manager(const Legion::IndexSpace& index_space);
-  [[nodiscard]] FieldManager& field_manager();
-
   [[nodiscard]] CommunicatorManager& communicator_manager();
   [[nodiscard]] const CommunicatorManager& communicator_manager() const;
   [[nodiscard]] PartitionManager& partition_manager();
@@ -247,98 +215,9 @@ class Runtime {
   [[nodiscard]] Scope& scope();
   [[nodiscard]] const Scope& scope() const;
 
-  [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(
-    Span<const std::uint64_t> extents);
-  [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(const Domain& domain);
-  [[nodiscard]] Legion::IndexPartition create_restricted_partition(
-    const Legion::IndexSpace& index_space,
-    const Legion::IndexSpace& color_space,
-    Legion::PartitionKind kind,
-    const Legion::DomainTransform& transform,
-    const Legion::Domain& extent);
-  [[nodiscard]] Legion::IndexPartition create_weighted_partition(
-    const Legion::IndexSpace& index_space,
-    const Legion::IndexSpace& color_space,
-    const Legion::FutureMap& weights);
-  /*
-   * @brief Create a partition by intersection.
-   *
-   * Intersect an existing partition with a parent index space in order to generate a new partition
-   * where each subregion is the intersection of the parent with the corresponding subregion in the
-   * original partition.
-   *
-   * @param parent The parent Index Space.
-   * @param ipartition The existing Partition.
-   *
-   * @return The new Partition.
-   */
-  [[nodiscard]] Legion::IndexPartition create_intersection_partition(
-    const Legion::IndexSpace& parent, const Legion::IndexPartition& ipartition);
-  [[nodiscard]] Legion::IndexPartition create_image_partition(
-    const Legion::IndexSpace& index_space,
-    const Legion::IndexSpace& color_space,
-    const Legion::LogicalRegion& func_region,
-    const Legion::LogicalPartition& func_partition,
-    Legion::FieldID func_field_id,
-    bool is_range,
-    const mapping::detail::Machine& machine);
-  [[nodiscard]] Legion::IndexPartition create_approximate_image_partition(
-    const InternalSharedPtr<LogicalStore>& store,
-    const InternalSharedPtr<Partition>& partition,
-    const Legion::IndexSpace& index_space,
-    bool sorted);
-  [[nodiscard]] Legion::FieldSpace create_field_space();
-  [[nodiscard]] Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
-                                                    const Legion::FieldSpace& field_space);
-  void destroy_region(const Legion::LogicalRegion& logical_region, bool unordered = false);
-  [[nodiscard]] Legion::LogicalPartition create_logical_partition(
-    const Legion::LogicalRegion& logical_region, const Legion::IndexPartition& index_partition);
-  [[nodiscard]] Legion::LogicalRegion get_subregion(const Legion::LogicalPartition& partition,
-                                                    const Legion::DomainPoint& color);
-  [[nodiscard]] Legion::LogicalRegion find_parent_region(const Legion::LogicalRegion& region);
-  [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
-                                               Legion::FieldID field_id,
-                                               std::size_t field_size);
-  [[nodiscard]] Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space);
-  [[nodiscard]] Legion::FutureMap delinearize_future_map(const Legion::FutureMap& future_map,
-                                                         const Domain& new_domain,
-                                                         Legion::ProjectionID proj_id = 0);
-  [[nodiscard]] Legion::FutureMap reshape_future_map(const Legion::FutureMap& future_map,
-                                                     const Domain& new_domain);
-
-  [[nodiscard]] std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> create_barriers(
-    std::size_t num_tasks);
-  void destroy_barrier(Legion::PhaseBarrier barrier);
-
-  [[nodiscard]] Legion::Future get_tunable(const Library& library, std::int64_t tunable_id);
-
-  [[nodiscard]] Legion::Future reduce_future_map(
-    const Legion::FutureMap& future_map,
-    GlobalRedopID reduction_op,
-    const Legion::Future& init_value = Legion::Future{});
-  [[nodiscard]] Legion::Future reduce_exception_future_map(const Legion::FutureMap& future_map);
-
-  void issue_release_region_field(
-    InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unordered);
-  void issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
-  void discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void issue_mapping_fence();
-  /**
-   * @brief Process outstanding field match results and issue matches for locally freed fields with
-   * multiple ranks. No-op in single-rank execution.
-   */
-  void issue_field_match();
   void issue_execution_fence(bool block = false);
   [[nodiscard]] InternalSharedPtr<LogicalStore> get_timestamp(Timing::Precision precision);
-  /**
-   * @brief Issue a consensus match for given values. The type of the values must have no padding
-   * (otherwise the compiler will complain).
-   */
-  template <typename T>
-  [[nodiscard]] ConsensusMatchResult<T> issue_consensus_match(std::vector<T>&& input);
-
-  void begin_trace(std::uint32_t trace_id);
-  void end_trace(std::uint32_t trace_id);
 
   [[nodiscard]] InternalSharedPtr<mapping::detail::Machine> create_toplevel_machine();
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
@@ -347,18 +226,7 @@ class Runtime {
   [[nodiscard]] std::uint32_t node_count() const;
   [[nodiscard]] std::uint32_t node_id() const;
 
-  [[nodiscard]] Legion::ProjectionID get_affine_projection(std::uint32_t src_ndim,
-                                                           const proj::SymbolicPoint& point);
-  [[nodiscard]] Legion::ProjectionID get_delinearizing_projection(
-    Span<const std::uint64_t> color_shape);
-  [[nodiscard]] Legion::ProjectionID get_compound_projection(Span<const std::uint64_t> color_shape,
-                                                             const proj::SymbolicPoint& point);
-  [[nodiscard]] Legion::ShardingID get_sharding(const mapping::detail::Machine& machine,
-                                                Legion::ProjectionID proj_id);
-
   [[nodiscard]] Processor get_executing_processor() const;
-
-  [[nodiscard]] Legion::MapperID mapper_id() const;
 
   [[nodiscard]] bool executing_inline_task() const noexcept;
 
@@ -423,11 +291,7 @@ class Runtime {
    */
   static void initialize_core_library_callback_(const Legion::RegistrationCallbackArgs& args);
 
-  [[nodiscard]] const MapperManager& get_mapper_manager_() const;
-
   bool initialized_{};
-  Legion::Runtime* legion_runtime_{};
-  Legion::Context legion_context_{};
   Config config_{};
   std::optional<std::reference_wrapper<Library>> core_library_{};
   std::list<ShutdownCallback> callbacks_{};
@@ -435,34 +299,9 @@ class Runtime {
   CUdevice current_device_{};
   CUstream current_stream_{};
 
-  std::unique_ptr<FieldManager> field_manager_{};
-  using RegionManagerKey = Legion::IndexSpace;
-  std::unordered_map<RegionManagerKey, RegionManager> region_managers_{};
   std::optional<CommunicatorManager> communicator_manager_{};
   std::optional<PartitionManager> partition_manager_{};
   Scope scope_;
-
-  std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
-
-  using AffineProjectionDesc = std::pair<std::uint32_t, proj::SymbolicPoint>;
-  using CompoundProjectionDesc =
-    std::pair<SmallVector<std::uint64_t, LEGATE_MAX_DIM>, proj::SymbolicPoint>;
-  std::int64_t next_projection_id_{
-    static_cast<std::int64_t>(CoreProjectionOp::FIRST_DYNAMIC_FUNCTOR)};
-  std::unordered_map<AffineProjectionDesc, Legion::ProjectionID, hasher<AffineProjectionDesc>>
-    affine_projections_{};
-  std::unordered_map<SmallVector<std::uint64_t, LEGATE_MAX_DIM>,
-                     Legion::ProjectionID,
-                     hasher<SmallVector<std::uint64_t, LEGATE_MAX_DIM>>>
-    delinearizing_projections_{};
-  std::unordered_map<CompoundProjectionDesc, Legion::ProjectionID, hasher<CompoundProjectionDesc>>
-    compound_projections_{};
-
-  using ShardingDesc = std::pair<Legion::ProjectionID, mapping::ProcessorRange>;
-  std::int64_t next_sharding_id_{
-    static_cast<std::int64_t>(CoreProjectionOp::FIRST_DYNAMIC_FUNCTOR)};
-  std::unordered_map<ShardingDesc, Legion::ShardingID, hasher<ShardingDesc>>
-    registered_shardings_{};
 
   std::deque<InternalSharedPtr<Operation>> operations_{};
   std::atomic<std::uint64_t> cur_op_id_{};
@@ -499,8 +338,6 @@ class Runtime {
   //
   // This is almost certainly a bug in the compiler.
   static thread_local std::stack<VariantCode, SmallVector<VariantCode>> inline_task_variant_code_;
-
-  std::optional<MapperManager> mapper_manager_{};
 
   std::optional<cuda::detail::CUDAModuleManager> cu_mod_manager_{};
 };

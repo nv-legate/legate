@@ -10,7 +10,6 @@
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/access_mode.h>
-#include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -190,11 +189,6 @@ class Operation {
   void record_partition_(const Variable* variable,
                          InternalSharedPtr<LogicalStore> store,
                          AccessMode access_mode);
-
-  // Helper methods
-  [[nodiscard]] static StoreProjection create_store_projection_(const Strategy& strategy,
-                                                                const Domain& launch_domain,
-                                                                const StoreArg& arg);
 
   std::uint64_t unique_id_{};
   std::int32_t next_part_id_{};

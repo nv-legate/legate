@@ -110,7 +110,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_extents(
   return extents;
 }
 
-proj::SymbolicPoint Promote::invert(proj::SymbolicPoint point) const
+SymbolicPoint Promote::invert(SymbolicPoint point) const
 {
   point.remove_inplace(extra_dim_);
   return point;

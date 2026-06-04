@@ -152,11 +152,6 @@ void Operation::record_partition_(
   }
 }
 
-StoreProjection Operation::create_store_projection_(const Strategy&, const Domain&, const StoreArg&)
-{
-  return StoreProjection{Legion::LogicalPartition::NO_PART, 0};
-}
-
 }  // namespace legate::detail
 
 namespace fmt {

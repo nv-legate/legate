@@ -21,21 +21,9 @@ constexpr std::string_view LIBRARY_NAME = "test_inout";
 class TesterMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    std::vector<legate::mapping::StoreMapping> mappings;
-    auto inputs  = task.inputs();
-    auto outputs = task.outputs();
-
-    mappings.reserve(inputs.size() + outputs.size());
-    for (auto& input : inputs) {
-      mappings.push_back(legate::mapping::StoreMapping::default_mapping(input, options.front()));
-    }
-    for (auto& output : outputs) {
-      mappings.push_back(legate::mapping::StoreMapping::default_mapping(output, options.front()));
-    }
-    return mappings;
+    return {};
   }
 
   legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override

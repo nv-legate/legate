@@ -10,10 +10,7 @@
 
 #include <legate/data/detail/buffer.h>
 #include <legate/data/detail/external_allocation.h>
-#include <legate/data/detail/future_wrapper.h>
-#include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/inline_physical_store.h>
-#include <legate/data/detail/physical_stores/region_physical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/detail/storage_partition.h>
 #include <legate/data/external_allocation.h>

@@ -295,21 +295,13 @@ target_sources(
     legate/data/detail/allocation_cache.cc
     legate/data/detail/attachment.cc
     legate/data/detail/external_allocation.cc
-    legate/data/detail/logical_region_field.cc
-    legate/data/partition_placement.cc
-    legate/data/partition_placement_info.cc
-    legate/data/detail/partition_placement_info.cc
     legate/data/detail/logical_store.cc
     legate/data/detail/logical_store_partition.cc
     legate/data/detail/storage.cc
     legate/data/detail/storage_partition.cc
     legate/data/detail/scalar.cc
     legate/data/detail/physical_store.cc
-    legate/data/detail/physical_stores/future_physical_store.cc
     legate/data/detail/physical_stores/inline_physical_store.cc
-    legate/data/detail/physical_stores/region_physical_store.cc
-    legate/data/detail/physical_stores/unbound_physical_store.cc
-    legate/data/detail/physical_stores/unbound_region_field.cc
     legate/data/detail/shape.cc
     legate/data/detail/transform/delinearize.cc
     legate/data/detail/transform/dim_broadcast.cc
@@ -320,44 +312,28 @@ target_sources(
     legate/data/detail/transform/transform.cc
     legate/data/detail/transform/transform_stack.cc
     legate/data/detail/transform/transpose.cc
-    legate/data/detail/future_wrapper.cc
-    legate/data/detail/region_field.cc
     legate/data/detail/user_storage_tracker.cc
     legate/data/detail/buffer.cc
     legate/data/detail/inline_storage.cc
-    legate/experimental/trace.cc
     legate/mapping/machine.cc
     legate/mapping/mapping.cc
-    legate/mapping/operation.cc
-    legate/mapping/store.cc
     legate/mapping/proxy_store_mapping.cc
     legate/mapping/proxy_instance_mapping_policy.cc
-    legate/mapping/detail/base_mapper.cc
     legate/mapping/detail/core_mapper.cc
-    legate/mapping/detail/instance_manager.cc
     legate/mapping/detail/machine.cc
     legate/mapping/detail/local_machine_selector.cc
     legate/mapping/detail/global_machine.cc
     legate/mapping/detail/mapping.cc
-    legate/mapping/detail/operation.cc
-    legate/mapping/detail/store.cc
     legate/mapping/detail/proxy_store_mapping.cc
     legate/operation/projection.cc
     legate/operation/task.cc
-    legate/operation/detail/attach.cc
-    legate/operation/detail/discard.cc
     legate/operation/detail/execution_fence.cc
     legate/operation/detail/fill.cc
-    legate/operation/detail/index_attach.cc
     legate/operation/detail/mapping_fence.cc
     legate/operation/detail/operation.cc
-    legate/operation/detail/store_projection.cc
-    legate/operation/detail/release_region_field.cc
-    legate/operation/detail/store_analyzer.cc
     legate/operation/detail/task.cc
     legate/operation/detail/task_store_arg.cc
     legate/operation/detail/timing.cc
-    legate/operation/detail/extract_scalar.cc
     legate/partitioning/constraint.cc
     legate/partitioning/proxy.cc
     legate/partitioning/detail/constraint.cc
@@ -369,7 +345,6 @@ target_sources(
     legate/partitioning/detail/partition/tiling.cc
     legate/partitioning/detail/partition/opaque.cc
     legate/partitioning/detail/partitioner.cc
-    legate/partitioning/detail/partitioning_tasks.cc
     legate/partitioning/detail/restriction.cc
     legate/partitioning/detail/strategy.cc
     legate/partitioning/detail/proxy/align.cc
@@ -385,14 +360,9 @@ target_sources(
     legate/runtime/library.cc
     legate/runtime/runtime.cc
     legate/runtime/detail/communicator_manager.cc
-    legate/runtime/detail/field_manager.cc
     legate/runtime/detail/library.cc
     legate/runtime/detail/partition_manager.cc
-    legate/runtime/detail/projection.cc
-    legate/runtime/detail/region_manager.cc
     legate/runtime/detail/runtime.cc
-    legate/runtime/detail/shard.cc
-    legate/runtime/detail/mapper_manager.cc
     legate/runtime/detail/argument_parsing/util.cc
     legate/runtime/detail/scope.cc
     legate/runtime/detail/argument_parsing/parse.cc
@@ -417,7 +387,6 @@ target_sources(
     legate/runtime/detail/streaming/launch_domain_equality_checker.cc
     legate/runtime/detail/streaming/util.cc
     legate/task/registrar.cc
-    legate/task/task.cc
     legate/task/task_context.cc
     legate/task/task_info.cc
     legate/task/variant_options.cc
@@ -430,10 +399,7 @@ target_sources(
     legate/task/detail/returned_python_exception.cc
     legate/task/detail/task_context.cc
     legate/task/detail/inline_task_body.cc
-    legate/task/detail/legion_task_body.cc
     legate/task/detail/task.cc
-    legate/task/detail/task_return.cc
-    legate/task/detail/task_return_layout.cc
     legate/task/detail/variant_info.cc
     legate/task/detail/task_info.cc
     legate/tuning/parallel_policy.cc
@@ -453,7 +419,6 @@ target_sources(
     legate/utilities/detail/buffer_builder.cc
     legate/utilities/detail/env.cc
     legate/utilities/detail/tuple.cc
-    legate/utilities/detail/deserializer.cc
     legate/utilities/detail/formatters.cc
     legate/utilities/detail/traced_exception.cc
     legate/utilities/detail/zip.cc
@@ -534,24 +499,17 @@ if(legate_USE_UCX)
   )
 endif()
 
-if(Legion_USE_OpenMP)
-  target_sources(legate_obj PRIVATE legate/partitioning/detail/partitioning_tasks_omp.cc)
-endif()
-
 if(legate_USE_NCCL)
   target_sources(legate_obj PRIVATE legate/comm/detail/comm_nccl.cc)
 endif()
 
 if(legate_USE_CUDA)
-  target_sources(legate_obj PRIVATE legate/partitioning/detail/partitioning_tasks_cuda.cc)
-
   include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
 
   legate_generate_fatbin_modules(
     DEST_DIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/fatbin"
     GENERATED_SOURCES_VAR fatbin_src
     SOURCES
-      legate/partitioning/detail/partitioning_tasks_fatbin.cu
       legate/redop/detail/redop_half_fatbin.cu
       legate/redop/detail/redop_complex_fatbin.cu
     EXTRA_FLAGS ${legate_CUDA_FLAGS}
@@ -841,8 +799,6 @@ install(
     legate/data/external_allocation.inl
     legate/data/inline_allocation.h
     legate/data/logical_store.h
-    legate/data/partition_placement.h
-    legate/data/partition_placement_info.h
     legate/data/physical_store.h
     legate/data/physical_store.inl
     legate/data/scalar.h

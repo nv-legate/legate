@@ -7,7 +7,6 @@
 #include <legate/runtime/detail/streaming/analysis.h>
 
 #include <legate/data/detail/logical_store.h>
-#include <legate/operation/detail/discard.h>
 #include <legate/operation/detail/mapping_fence.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/operation/detail/task.h>
@@ -462,18 +461,6 @@ void process_streaming_run(std::deque<InternalSharedPtr<Operation>>* ops)
       }
 
       case Operation::Kind::DISCARD: {
-        const auto& discard = static_cast<const Discard&>(*op);
-
-        discard_regions.emplace(std::make_pair(discard.field_id(), discard.region()),
-                                std::distance(ops.begin(), std::next(it).base()));
-        // We don't append to discard_ops here, because we only want to remove the discards that
-        // this streaming run directly handles. I.e. if the streaming run is:
-        //
-        // - discard(A)
-        // - foo(B, C)
-        // - discard(B)
-        //
-        // Then we only want to remove discard(B) and leave discard(A) untouched.
         continue;
       }
 
@@ -508,7 +495,6 @@ void prune_handled_discard_ops(SmallVector<std::uint32_t> discard_ops,
     const auto it = std::next(ops->begin(), to_remove_idx);
 
     LEGATE_ASSERT(it < ops->end());
-    LEGATE_ASSERT(dynamic_cast<Discard*>(it->get()) != nullptr);
     ops->erase(it);
   }
 }

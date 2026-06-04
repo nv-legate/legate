@@ -10,14 +10,6 @@
 
 namespace legate::detail {
 
-void ExecutionFence::launch()
-{
-  const auto future =
-    Legion::Runtime::get_runtime()->issue_execution_fence(Legion::Runtime::get_context());
-
-  if (block_) {
-    future.wait();
-  }
-}
+void ExecutionFence::launch() {}
 
 }  // namespace legate::detail

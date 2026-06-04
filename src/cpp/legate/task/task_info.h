@@ -43,7 +43,6 @@ void cytaskinfo_add_variant(legate::TaskInfo* handle,
                             const legate::Library&,
                             legate::VariantCode variant_kind,
                             legate::VariantImpl cy_entry,
-                            legate::Processor::TaskFuncPtr py_entry,
                             const legate::TaskConfig& config);
 
 }  // namespace legate::detail::cython
@@ -102,7 +101,6 @@ class LEGATE_EXPORT TaskInfo {
                                                                const legate::Library&,
                                                                legate::VariantCode,
                                                                legate::VariantImpl,
-                                                               legate::Processor::TaskFuncPtr,
                                                                const legate::TaskConfig&);
     template <typename T, template <typename...> typename SELECTOR, bool valid>
     friend class detail::VariantHelper;
@@ -125,7 +123,6 @@ class LEGATE_EXPORT TaskInfo {
                     const Library& library,
                     VariantCode vid,
                     VariantImpl body,
-                    Processor::TaskFuncPtr entry,
                     const VariantOptions* decl_options,
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
 
@@ -146,7 +143,6 @@ class LEGATE_EXPORT TaskInfo {
                     const Library& library,
                     VariantCode vid,
                     LegionVariantImpl<T> body,
-                    Processor::TaskFuncPtr entry,
                     const VariantOptions* decl_options,
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
 

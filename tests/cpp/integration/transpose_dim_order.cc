@@ -81,19 +81,9 @@ class TestTaskBase :  // NOLINT (bugprone-crtp-constructor-accessibility)
 class LibraryMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    const auto fortran_order = task.scalar(0).value<bool>();
-    auto output              = task.output(0);
-    auto dim_ordering        = fortran_order ? legate::mapping::DimOrdering::fortran_order()
-                                             : legate::mapping::DimOrdering::c_order();
-
-    std::vector<legate::mapping::StoreMapping> mappings{};
-
-    mappings.push_back(legate::mapping::StoreMapping::default_mapping(
-      output, options.front(), /*exact*/ true, std::move(dim_ordering)));
-    return mappings;
+    return {};
   }
 
   legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override

@@ -79,11 +79,6 @@ std::string_view Library::get_task_name(LocalTaskID local_task_id) const
   return impl()->get_task_name(local_task_id);
 }
 
-Scalar Library::get_tunable(std::int64_t tunable_id, const Type& type)
-{
-  return Scalar{impl()->get_tunable(tunable_id, type.impl())};
-}
-
 void Library::register_task(LocalTaskID local_task_id, const TaskInfo& task_info)
 {
   impl()->register_task(local_task_id, task_info.impl());

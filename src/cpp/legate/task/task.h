@@ -169,13 +169,6 @@ class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
     const Library& lib,
     const TaskConfig& task_config,
     const std::map<VariantCode, VariantOptions>& all_options);
-
-  template <VariantImpl variant_fn, VariantCode variant_kind>
-  static void task_wrapper_(const void* args,
-                            std::size_t arglen,
-                            const void* userdata,
-                            std::size_t userlen,
-                            Legion::Processor p);
 };
 
 /** @} */

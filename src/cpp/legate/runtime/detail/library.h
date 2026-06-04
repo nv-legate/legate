@@ -102,8 +102,6 @@ class Library {
   [[nodiscard]] LocalTaskID get_new_task_id();
 
   [[nodiscard]] std::string_view get_task_name(LocalTaskID local_task_id) const;
-  [[nodiscard]] std::unique_ptr<Scalar> get_tunable(std::int64_t tunable_id,
-                                                    InternalSharedPtr<Type> type) const;
 
   void register_task(LocalTaskID local_task_id, InternalSharedPtr<TaskInfo> task_info);
   [[nodiscard]] const InternalSharedPtr<TaskInfo>& find_task(LocalTaskID local_task_id) const;

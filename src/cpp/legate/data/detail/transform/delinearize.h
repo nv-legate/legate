@@ -37,7 +37,7 @@ class Delinearize final : public StoreTransform {
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+  [[nodiscard]] SymbolicPoint invert(SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(

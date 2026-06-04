@@ -8,8 +8,6 @@
 
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/mapping.h>
-#include <legate/mapping/detail/operation.h>
-#include <legate/mapping/operation.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/align.h>
@@ -39,23 +37,8 @@ class CoreMapper final : public Mapper {  // NOLINT(misc-use-internal-linkage)
 };
 
 std::vector<legate::mapping::StoreMapping> CoreMapper::store_mappings(
-  const legate::mapping::Task& task, const std::vector<StoreTarget>& /*options*/)
+  const legate::mapping::Task&, const std::vector<StoreTarget>& /*options*/)
 {
-  if (task.task_id() == legate::LocalTaskID{legate::detail::CoreTask::OFFLOAD_TO}) {
-    const auto mem_target = task.scalar(0).value<StoreTarget>();
-    std::vector<mapping::StoreMapping> mappings;
-    LEGATE_ASSERT(task.num_inputs() > 0);
-    LEGATE_ASSERT(task.num_inputs() == task.num_outputs());
-    // Offload task has the same inputs as outputs so mapping
-    // just the inputs should be sufficient
-    mappings.reserve(task.num_inputs());
-    for (std::size_t i = 0; i < task.num_inputs(); ++i) {
-      mappings.emplace_back(mapping::StoreMapping::default_mapping(task.input(i), mem_target));
-    }
-    LEGATE_ASSERT(!mappings.empty());
-    return mappings;
-  }
-
   return {};
 }
 
@@ -85,49 +68,9 @@ class AlignOfPointType {
 
 }  // namespace
 
-std::optional<std::size_t> CoreMapper::allocation_pool_size(
-  const legate::mapping::Task& task, legate::mapping::StoreTarget memory_kind)
+std::optional<std::size_t> CoreMapper::allocation_pool_size(const legate::mapping::Task&,
+                                                            legate::mapping::StoreTarget)
 {
-  const auto task_id = legate::detail::to_underlying(task.task_id());
-
-  // Python task workaround for allocatable tasks
-  if (task_id >= legate::detail::CoreTask::FIRST_DYNAMIC_TASK) {
-    return std::nullopt;
-  }
-
-  switch (task_id) {
-    case legate::detail::CoreTask::EXTRACT_SCALAR: {
-      // Extract scalar task doesn't use the framebuffer
-      if (memory_kind == legate::mapping::StoreTarget::FBMEM) {
-        return 0;
-      }
-      // The pool should be big enough to hold the source future and the extracted value
-      const auto value_size  = task.scalar(1).value<std::size_t>();
-      const auto future_size = task.scalar(2).value<std::size_t>();
-      return legate::detail::round_up_to_multiple(future_size + value_size, EXTRA_SCALAR_ALIGNMENT);
-    }
-    case legate::detail::CoreTask::INIT_NCCL: {
-      if (!legate::detail::Runtime::get_runtime().config().warmup_nccl()) {
-        return 0;
-      }
-      const auto num_ranks = task.get_launch_domain().get_volume();
-
-      return NCCL_WARMUP_BUFFER_SIZE_PER_RANK * num_ranks;
-    }
-    case legate::detail::CoreTask::FIND_BOUNDING_BOX: [[fallthrough]];
-    case legate::detail::CoreTask::FIND_BOUNDING_BOX_SORTED: {
-      if (memory_kind != legate::mapping::StoreTarget::FBMEM) {
-        return 0;
-      }
-      auto&& type = task.input(0).type();
-      const auto ndim =
-        legate::is_rect_type(type) ? legate::ndim_rect_type(type) : legate::ndim_point_type(type);
-      return legate::dim_dispatch(ndim, AlignOfPointType{}) * 2;
-    }
-    default: break;  // legate-lint: no-switch-default
-  }
-
-  LEGATE_ABORT(fmt::format("unhandled core task id: {}", task_id));
   return std::nullopt;
 }
 

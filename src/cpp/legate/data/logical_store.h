@@ -8,8 +8,6 @@
 
 #include <legate_defines.h>
 
-#include <legate/data/partition_placement.h>
-#include <legate/data/partition_placement_info.h>
 #include <legate/data/shape.h>
 #include <legate/data/slice.h>
 #include <legate/mapping/mapping.h>
@@ -621,15 +619,6 @@ class LEGATE_EXPORT LogicalStorePartition {
   [[nodiscard]] LogicalStore store() const;
   [[nodiscard]] tuple<std::uint64_t> color_shape() const;
   [[nodiscard]] LogicalStore get_child_store(Span<const std::uint64_t> color) const;
-
-  /**
-   * @brief Gets the partition placement info for this partition
-   *
-   * The partition placement info contains the device mappings for this partition.
-   *
-   * @return The partition placement info for this partition.
-   */
-  [[nodiscard]] PartitionPlacementInfo get_placement_info() const;
 
   [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& impl() const;
 

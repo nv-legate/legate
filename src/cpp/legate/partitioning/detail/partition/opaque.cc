@@ -63,24 +63,6 @@ InternalSharedPtr<Partition> Opaque::bloat(Span<const std::uint64_t> /*low_offst
   return {};
 }
 
-Legion::LogicalPartition Opaque::construct(Legion::LogicalRegion region, bool) const
-{
-  auto&& runtime     = detail::Runtime::get_runtime();
-  const auto& target = region.get_index_space();
-  if (target == ispace_) {
-    return runtime.create_logical_partition(region, ipartition_);
-  }
-
-  auto&& part_mgr   = runtime.partition_manager();
-  auto intersection = part_mgr.find_intersection_partition(target, ipartition_);
-
-  if (intersection == Legion::IndexPartition::NO_PART) {
-    intersection = runtime.create_intersection_partition(target, ipartition_);
-    part_mgr.record_intersection_partition(target, ipartition_, intersection);
-  }
-  return runtime.create_logical_partition(region, intersection);
-}
-
 std::string Opaque::to_string() const
 {
   return fmt::format(

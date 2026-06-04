@@ -10,9 +10,6 @@
 
 namespace legate::detail {
 
-void MappingFence::launch()
-{
-  Legion::Runtime::get_runtime()->issue_mapping_fence(Legion::Runtime::get_context());
-}
+void MappingFence::launch() {}
 
 }  // namespace legate::detail

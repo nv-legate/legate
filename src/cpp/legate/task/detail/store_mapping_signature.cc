@@ -6,10 +6,8 @@
 
 #include <legate/task/detail/store_mapping_signature.h>
 
-#include <legate/mapping/detail/operation.h>
 #include <legate/mapping/detail/proxy_store_mapping.h>
 #include <legate/mapping/mapping.h>
-#include <legate/mapping/operation.h>
 #include <legate/mapping/proxy_store_mapping.h>
 #include <legate/utilities/detail/zip.h>
 
@@ -20,27 +18,18 @@
 namespace legate::detail {
 
 std::vector<mapping::StoreMapping> StoreMappingSignature::apply(
-  const mapping::detail::Task& task, Span<const mapping::StoreTarget> options) const
+  const mapping::detail::Task&, Span<const mapping::StoreTarget>) const
 {
-  auto ret = std::vector<mapping::StoreMapping>{};
-
-  ret.reserve(store_mappings().size());
-  for (auto&& proxy : store_mappings()) {
-    proxy->apply_legion(task, options, &ret);
-  }
-  return ret;
+  return {};
 }
 
 void StoreMappingSignature::apply_inline(
-  const TaskBase& task,
-  Span<const mapping::StoreTarget> options,
-  legate::detail::SmallVector<mapping::InstanceMappingPolicy>* input_policies,
-  legate::detail::SmallVector<mapping::InstanceMappingPolicy>* output_policies,
-  legate::detail::SmallVector<mapping::InstanceMappingPolicy>* reduction_policies) const
+  const TaskBase&,
+  Span<const mapping::StoreTarget>,
+  legate::detail::SmallVector<mapping::InstanceMappingPolicy>*,
+  legate::detail::SmallVector<mapping::InstanceMappingPolicy>*,
+  legate::detail::SmallVector<mapping::InstanceMappingPolicy>*) const
 {
-  for (auto&& proxy : store_mappings()) {
-    proxy->apply_inline(task, options, input_policies, output_policies, reduction_policies);
-  }
 }
 
 bool operator==(const StoreMappingSignature& lhs, const StoreMappingSignature& rhs)

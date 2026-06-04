@@ -133,7 +133,6 @@ set(
   with_runtime_SRC
   # bug
   bug/alias_via_promote.cc
-  bug/aligned_unpack.cc
   bug/key_partition_invalidation.cc
   bug/interfering_requirements.cc
   bug/logical_store_transform.cc
@@ -153,7 +152,6 @@ set(
   integration/bloat_constraints.cc
   integration/broadcast_constraints.cc
   integration/child_store.cc
-  integration/consensus_match.cc
   integration/core_mapper.cc
   integration/delinearize.cc
   integration/exception.cc
@@ -167,17 +165,16 @@ set(
   integration/machine_scope.cc
   integration/manual_task.cc
   integration/manual_task_proj.cc
-  integration/mapping.cc
   integration/min_extent_constraints.cc
   integration/mixed_dim.cc
   integration/multi_scalar_out.cc
+  integration/opaque.cc
   integration/parallel_policy.cc
   integration/partitioner.cc
   integration/projection.cc
   integration/proc_local_storage.cc
   integration/provenance.cc
   integration/redundant.cc
-  integration/region_manager.cc
   integration/register_variants.cc
   integration/replicated_write.cc
   integration/req_analyzer.cc
@@ -194,14 +191,11 @@ set(
   integration/task_store/manual_task_tests.cc
   integration/task_store/physical_task_nested_tests.cc
   integration/transpose_dim_order.cc
-  integration/tunable.cc
   integration/variant_options_precedence.cc
-  integration/opaque.cc
   # unit
   unit/attachment.cc
   unit/constraint.cc
   unit/data/allocation_cache.cc
-  unit/data/partition_placement_info.cc
   unit/dispatch.cc
   unit/formatter.cc
   unit/library.cc
@@ -232,23 +226,9 @@ set(
   unit/machine/global_machine.cc
   unit/machine/local_machine.cc
   unit/machine/local_machine_selector.cc
-  unit/mapping/base_mapper.cc
-  unit/mapping/common_api.cc
-  unit/mapping/dim_ordering.cc
-  unit/mapping/instance_mapping_policy.cc
-  unit/mapping/store/api_test.cc
-  unit/mapping/store/colocate.cc
-  unit/mapping/store/domain.cc
-  unit/mapping/store/properties.cc
-  unit/mapping/store/transform.cc
-  unit/mapping/store_mapping.cc
   unit/partition/image.cc
   unit/partition/nopartition.cc
   unit/partition/tiling.cc
-  unit/partition/opaque.cc
-  unit/physical_store/create_bound_store.cc
-  unit/physical_store/create_future_store.cc
-  unit/physical_store/create_unbound_store.cc
   unit/physical_store/inline_allocation.cc
   unit/physical_store/inline_storage_gpu.cc
   unit/physical_store/read_accessor.cc
@@ -265,7 +245,6 @@ set(
   unit/scalar/create_struct_scalar.cc
   unit/scalar/create_vector_scalar.cc
   unit/scalar/negative.cc
-  unit/scalar/pack.cc
   unit/transform/broadcast.cc
   unit/transform/delinearize.cc
   unit/transform/project.cc
@@ -305,7 +284,6 @@ set(
   experimental/stl/transform.cc
   experimental/stl/transform_reduce.cc
   experimental/stl/views.cc
-  experimental/tracing.cc
 )
 
 if(legate_USE_HDF5)
@@ -384,7 +362,6 @@ set(
   non_reentrant/oom_message.cc
   non_reentrant/runtime.cc
   non_reentrant/shutdown_callback.cc
-  non_reentrant/sharding.cc
 )
 
 set(

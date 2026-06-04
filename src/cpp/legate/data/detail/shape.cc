@@ -34,10 +34,6 @@ Span<const std::uint64_t> Shape::extents()
       [[fallthrough]];
     }
     case State::BOUND: {
-      auto&& runtime = Runtime::get_runtime();
-      auto domain    = runtime.get_index_space_domain(index_space_);
-      extents_       = from_domain(domain);
-      state_         = State::READY;
       break;
     }
     case State::READY: {
@@ -49,28 +45,10 @@ Span<const std::uint64_t> Shape::extents()
 
 std::size_t Shape::volume() { return array_volume(extents()); }
 
-const Legion::IndexSpace& Shape::index_space()
-{
-  ensure_binding_();
-  if (!index_space_.exists()) {
-    LEGATE_CHECK(State::READY == state_);
-    index_space_ = Runtime::get_runtime().find_or_create_index_space(extents_);
-  }
-  return index_space_;
-}
-
-void Shape::set_index_space(const Legion::IndexSpace& index_space)
-{
-  LEGATE_CHECK(State::UNBOUND == state_);
-  index_space_ = index_space;
-  state_       = State::BOUND;
-}
-
 void Shape::copy_extents_from(const Shape& other)
 {
   LEGATE_CHECK(State::BOUND == state_);
   LEGATE_ASSERT(dim_ == other.dim_);
-  LEGATE_ASSERT(index_space_ == other.index_space_);
   state_   = State::READY;
   extents_ = other.extents_;
 }
@@ -105,8 +83,7 @@ bool Shape::operator==(Shape& other)
   }
   // If both shapes are in the bound state and their index spaces are the same, we can elide the
   // blocking equivalence check
-  if (State::BOUND == state_ && State::BOUND == other.state_ &&
-      index_space_ == other.index_space_) {
+  if (State::BOUND == state_ && State::BOUND == other.state_) {
     return true;
   }
   // Otherwise, we have no choice but block waiting on the exact extents

@@ -143,22 +143,6 @@ std::string_view Library::get_task_name(LocalTaskID local_task_id) const
   return find_task(local_task_id)->name().as_string_view();
 }
 
-std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
-                                             InternalSharedPtr<Type> type) const
-{
-  if (type->variable_size()) {
-    throw TracedException<std::invalid_argument>{"Tunable variables must have fixed-size types"};
-  }
-  auto result         = Runtime::get_runtime().get_tunable(*this, tunable_id);
-  std::size_t extents = 0;
-  const void* buffer  = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
-  if (extents != type->size()) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Size mismatch: expected {} bytes but got {} bytes", type->size(), extents)};
-  }
-  return std::make_unique<Scalar>(std::move(type), buffer, true);
-}
-
 void Library::register_task(
   LocalTaskID local_task_id,
   // try_emplace() doesn't unconditionally move, so clang-tidy thinks this is copied.
@@ -188,13 +172,6 @@ void Library::register_task(
   if (!inserted) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Task {} already exists in library {}", local_task_id, get_library_name())};
-  }
-
-  try {
-    it->second->register_task(task_id);
-  } catch (...) {
-    tasks_.erase(it);
-    throw;
   }
 }
 

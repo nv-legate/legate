@@ -70,14 +70,6 @@ class NoPartition final : public Partition {
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   /**
-   * @copydoc Partition::construct()
-   *
-   * Constructs a degenerate Legion partition that simply wraps the entire region.
-   */
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion /*region*/,
-                                                   bool /*complete*/) const override;
-
-  /**
    * @copydoc Partition::has_launch_domain()
    *
    * Always false; a `NoPartition` has no launch domain.

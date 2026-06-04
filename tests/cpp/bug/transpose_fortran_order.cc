@@ -32,16 +32,9 @@ class Tester : public legate::LegateTask<Tester> {
 class LibraryMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    std::vector<legate::mapping::StoreMapping> mappings;
-
-    mappings.push_back(legate::mapping::StoreMapping::default_mapping(
-      task.output(0), options.front(), /*exact*/ true));
-    mappings.back().policy().set_ordering(legate::mapping::DimOrdering::fortran_order());
-
-    return mappings;
+    return {};
   }
 
   legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override

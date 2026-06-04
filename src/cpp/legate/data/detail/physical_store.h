@@ -69,13 +69,6 @@ class PhysicalStore {
 
   [[nodiscard]] virtual bool is_partitioned() const = 0;
 
-  // Cast to underlying implementations as abstraction is leaky
-  [[nodiscard]] RegionPhysicalStore& as_region_store();
-  [[nodiscard]] const RegionPhysicalStore& as_region_store() const;
-  [[nodiscard]] UnboundPhysicalStore& as_unbound_store();
-  [[nodiscard]] const UnboundPhysicalStore& as_unbound_store() const;
-  [[nodiscard]] FuturePhysicalStore& as_future_store();
-  [[nodiscard]] const FuturePhysicalStore& as_future_store() const;
   /**
    * @brief Cast to the underlying implementation as an inline storage store.
    *
@@ -100,20 +93,6 @@ class PhysicalStore {
   void check_accessor_store_backing() const;
   void check_write_access() const;
   void check_reduction_access() const;
-  void check_scalar_store() const;
-  void check_unbound_store() const;
-
-  /**
-   * @brief Get the logical region if this is a region-backed store.
-   * @return The logical region, or std::nullopt for non-region stores.
-   */
-  [[nodiscard]] virtual std::optional<Legion::LogicalRegion> get_logical_region() const;
-
-  /**
-   * @brief Get the field ID if this is a region-backed store.
-   * @return The field ID, or std::nullopt for non-region stores.
-   */
-  [[nodiscard]] virtual std::optional<Legion::FieldID> get_field_id() const;
 
   /**
    * @brief Creates a LogicalStore wrapping this PhysicalStore.

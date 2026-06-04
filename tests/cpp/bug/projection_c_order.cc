@@ -61,22 +61,9 @@ constexpr std::string_view LIBRARY_NAME = "test_projection_c_order";
 class LibraryMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    if (task.task_id() != Tester2::TASK_CONFIG.task_id()) {
-      return {};
-    }
-
-    std::vector<legate::mapping::StoreMapping> mappings;
-
-    mappings.push_back(
-      legate::mapping::StoreMapping::default_mapping(task.output(0),
-                                                     options.front(),
-                                                     /*exact*/ true,
-                                                     legate::mapping::DimOrdering::c_order()));
-
-    return mappings;
+    return {};
   }
 
   legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override

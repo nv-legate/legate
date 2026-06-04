@@ -24,7 +24,6 @@ void TaskInfo::add_variant_(AddVariantKey,
                             const Library& library,
                             VariantCode vid,
                             VariantImpl body,
-                            Processor::TaskFuncPtr entry,
                             const VariantOptions* decl_options,
                             const std::map<VariantCode, VariantOptions>& registration_options)
 {
@@ -63,7 +62,7 @@ void TaskInfo::add_variant_(AddVariantKey,
     signature.emplace(*sig);
   }
 
-  impl()->add_variant(vid, body, Legion::CodeDescriptor{entry}, options, std::move(signature));
+  impl()->add_variant(vid, body, options, std::move(signature));
 }
 
 // ==========================================================================================

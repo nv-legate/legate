@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/partitioning/detail/restriction.h>
-#include <legate/runtime/detail/projection.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/typedefs.h>
 
@@ -38,8 +37,8 @@ class Transform {
   [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
 
-  [[nodiscard]] virtual proj::SymbolicPoint invert(proj::SymbolicPoint point) const = 0;
-  [[nodiscard]] virtual Restrictions invert(Restrictions restrictions) const        = 0;
+  [[nodiscard]] virtual SymbolicPoint invert(SymbolicPoint point) const      = 0;
+  [[nodiscard]] virtual Restrictions invert(Restrictions restrictions) const = 0;
 
   [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const = 0;

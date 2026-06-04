@@ -14,28 +14,6 @@ namespace store_colocation_test {
 
 namespace {
 
-[[nodiscard]] std::vector<legate::mapping::StoreMapping> create_default_mappings_for_task(
-  const legate::mapping::Task& task, const std::vector<legate::mapping::StoreTarget>& options)
-{
-  std::vector<legate::mapping::StoreMapping> mappings;
-
-  mappings.reserve(task.inputs().size() + task.outputs().size() + task.reductions().size());
-
-  for (auto& input : task.inputs()) {
-    mappings.push_back(legate::mapping::StoreMapping::default_mapping(input, options.front()));
-  }
-
-  for (auto& output : task.outputs()) {
-    mappings.push_back(legate::mapping::StoreMapping::default_mapping(output, options.front()));
-  }
-
-  for (auto& reduction : task.reductions()) {
-    mappings.push_back(legate::mapping::StoreMapping::default_mapping(reduction, options.front()));
-  }
-
-  return mappings;
-}
-
 class ColocationTestTask : public legate::LegateTask<ColocationTestTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -80,24 +58,9 @@ class ReductionTestTask : public legate::LegateTask<ReductionTestTask> {
 class UnboundColocationMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    auto outputs = task.outputs();
-
-    // Two unbound stores cannot colocate
-    if (outputs.size() >= 2) {
-      auto store1 = outputs[0];
-      auto store2 = outputs[1];
-
-      EXPECT_TRUE(store1.unbound());
-      EXPECT_TRUE(store2.unbound());
-
-      const bool can_colocate = store1.can_colocate_with(store2);
-      EXPECT_FALSE(can_colocate);
-    }
-
-    return create_default_mappings_for_task(task, options);
+    return {};
   }
 
   std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task& /*task*/,
@@ -116,26 +79,9 @@ class UnboundColocationMapper : public legate::mapping::Mapper {
 class BoundColocationMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    auto outputs = task.outputs();
-
-    if (outputs.size() >= 2) {
-      auto store1 = outputs[0];
-      auto store2 = outputs[1];
-
-      // Bound store cannot colocate with unbound store
-      if (!store1.unbound() && store2.unbound()) {
-        const bool can_colocate = store1.can_colocate_with(store2);
-        EXPECT_FALSE(can_colocate);
-
-        const bool can_colocate_reverse = store2.can_colocate_with(store1);
-        EXPECT_FALSE(can_colocate_reverse);
-      }
-    }
-
-    return create_default_mappings_for_task(task, options);
+    return {};
   }
 
   std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task& /*task*/,
@@ -154,37 +100,9 @@ class BoundColocationMapper : public legate::mapping::Mapper {
 class ReductionColocationMapper : public legate::mapping::Mapper {
  public:
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task&, const std::vector<legate::mapping::StoreTarget>&) override
   {
-    auto outputs    = task.outputs();
-    auto reductions = task.reductions();
-
-    // Test 1: Reduction stores with same redop but different regions
-    if (reductions.size() >= 2) {
-      auto red1 = reductions[0];
-      auto red2 = reductions[1];
-
-      if (red1.is_reduction() && red2.is_reduction()) {
-        const bool can_colocate = red1.can_colocate_with(red2);
-        // Same redop but different regions -> cannot colocate
-        EXPECT_FALSE(can_colocate);
-      }
-    }
-
-    // Test 2: Normal store with reduction store from different regions
-    if (!outputs.empty() && !reductions.empty()) {
-      auto normal_store    = outputs[0];
-      auto reduction_store = reductions[0];
-
-      if (!normal_store.is_reduction() && reduction_store.is_reduction()) {
-        const bool can_colocate = normal_store.can_colocate_with(reduction_store);
-        // Different regions -> cannot colocate
-        EXPECT_FALSE(can_colocate);
-      }
-    }
-
-    return create_default_mappings_for_task(task, options);
+    return {};
   }
 
   std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task& /*task*/,

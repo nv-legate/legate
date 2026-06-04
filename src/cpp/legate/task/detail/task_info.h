@@ -47,7 +47,6 @@ class TaskInfo {
    */
   void add_variant(VariantCode vid,
                    VariantImpl body,
-                   Legion::CodeDescriptor&& code_desc,
                    const VariantOptions& options,
                    std::optional<InternalSharedPtr<TaskSignature>> signature);
 
@@ -62,15 +61,6 @@ class TaskInfo {
    */
   [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
     VariantCode vid) const;
-
-  /**
-   * @brief Register the task with Legion.
-   *
-   * @param task_id The global Legion task ID to register the task with.
-   *
-   * After this call,
-   */
-  void register_task(GlobalTaskID task_id) const;
 
   /**
    * @return A human-readable representation of the Task.

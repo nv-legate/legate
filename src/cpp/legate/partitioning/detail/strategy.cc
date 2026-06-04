@@ -31,7 +31,7 @@ DomainPoint Strategy::task_index() const
     return {};
   }
 
-  const auto node_id = Runtime::get_runtime().local_machine().node_id;
+  const auto node_id = Runtime::get_runtime().node_id();
 
   return delinearize(launch_domain().lo(), launch_domain().hi(), node_id);
 }

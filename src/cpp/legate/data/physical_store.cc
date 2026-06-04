@@ -7,10 +7,7 @@
 #include <legate/data/physical_store.h>
 
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/physical_stores/inline_physical_store.h>
-#include <legate/data/detail/physical_stores/region_physical_store.h>
-#include <legate/data/detail/physical_stores/unbound_physical_store.h>
 #include <legate/data/logical_store.h>
 #include <legate/utilities/detail/dlpack/to_dlpack.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -46,17 +43,13 @@ class CreateBuffer {
 
 }  // namespace
 
-TaskLocalBuffer PhysicalStore::create_output_buffer(const DomainPoint& extents,
-                                                    bool bind_buffer) const
+TaskLocalBuffer PhysicalStore::create_output_buffer(const DomainPoint&, bool) const
 {
-  auto&& ty = type();
-
-  return double_dispatch(
-    extents.get_dim(), ty.code(), CreateBuffer{}, *this, ty, extents, bind_buffer);
+  return TaskLocalBuffer{nullptr};
 }
 
 void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
-                              const DomainPoint& extents,
+                              const DomainPoint&,
                               bool check_type) const
 {
   if (check_type && (buffer.type() != type())) {
@@ -69,16 +62,14 @@ void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
     throw detail::TracedException<std::invalid_argument>{
       "Data can only be bound to unbound stores"};
   }
-  impl()->as_unbound_store().bind_data(buffer.impl(), extents);
 }
 
-void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const Point<1>& extents) const
+void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>&, const Point<1>&) const
 {
   if (!is_unbound_store()) {
     throw detail::TracedException<std::invalid_argument>{
       "Untyped data can only be bound to unbound stores"};
   }
-  impl()->as_unbound_store().bind_untyped_data(buffer, extents);
 }
 
 void PhysicalStore::bind_empty_data() const
@@ -87,7 +78,6 @@ void PhysicalStore::bind_empty_data() const
     throw detail::TracedException<std::invalid_argument>{
       "Empty data can only be bound to unbound stores"};
   }
-  impl()->as_unbound_store().bind_empty_data();
 }
 
 std::int32_t PhysicalStore::dim() const { return impl()->dim(); }
@@ -95,16 +85,6 @@ std::int32_t PhysicalStore::dim() const { return impl()->dim(); }
 Type PhysicalStore::type() const { return Type{impl()->type()}; }
 
 Domain PhysicalStore::domain() const { return impl()->domain(); }
-
-std::optional<Legion::LogicalRegion> PhysicalStore::get_logical_region() const
-{
-  return impl()->get_logical_region();
-}
-
-std::optional<Legion::FieldID> PhysicalStore::get_field_id() const
-{
-  return impl()->get_field_id();
-}
 
 LogicalStore PhysicalStore::to_logical_store() const
 {
@@ -126,15 +106,9 @@ bool PhysicalStore::valid() const { return impl() != nullptr && impl()->valid();
 
 bool PhysicalStore::transformed() const { return impl()->transformed(); }
 
-bool PhysicalStore::is_future() const
-{
-  return dynamic_cast<const detail::FuturePhysicalStore*>(impl().get());
-}
+bool PhysicalStore::is_future() const { return false; }
 
-bool PhysicalStore::is_unbound_store() const
-{
-  return dynamic_cast<const detail::UnboundPhysicalStore*>(impl().get());
-}
+bool PhysicalStore::is_unbound_store() const { return false; }
 
 bool PhysicalStore::is_partitioned() const { return impl()->is_partitioned(); }
 
@@ -166,72 +140,21 @@ void PhysicalStore::check_shape_dimension_(std::int32_t dim) const
   impl()->check_shape_dimension(dim);
 }
 
-void PhysicalStore::check_valid_binding_(bool bind_buffer) const
-{
-  impl()->as_unbound_store().check_valid_binding(bind_buffer);
-}
-
-void PhysicalStore::check_buffer_dimension_(std::int32_t dim) const
-{
-  impl()->as_unbound_store().check_buffer_dimension(dim);
-}
-
 void PhysicalStore::check_write_access_() const { impl()->check_write_access(); }
 
 void PhysicalStore::check_reduction_access_() const { impl()->check_reduction_access(); }
-
-void PhysicalStore::check_scalar_store_() const { impl()->check_scalar_store(); }
-
-void PhysicalStore::check_unbound_store_() const { impl()->check_unbound_store(); }
 
 Legion::DomainAffineTransform PhysicalStore::get_inverse_transform_() const
 {
   return impl()->get_inverse_transform();
 }
 
-bool PhysicalStore::is_read_only_future_() const
-{
-  return impl()->as_future_store().is_read_only_future();
-}
-
-std::size_t PhysicalStore::get_field_offset_() const
-{
-  return impl()->as_future_store().get_field_offset();
-}
-
-const void* PhysicalStore::get_untyped_pointer_from_future_() const
-{
-  return impl()->as_future_store().get_untyped_pointer_from_future();
-}
-
-std::pair<Legion::PhysicalRegion, Legion::FieldID> PhysicalStore::get_region_field_() const
-{
-  return impl()->as_region_store().get_region_field();
-}
-
 GlobalRedopID PhysicalStore::get_redop_id_() const { return impl()->get_redop_id(); }
-
-const Legion::Future& PhysicalStore::get_future_() const
-{
-  return impl()->as_future_store().get_future();
-}
-
-const Legion::UntypedDeferredValue& PhysicalStore::get_buffer_() const
-{
-  return impl()->as_future_store().get_buffer();
-}
-
-std::pair<Legion::OutputRegion, Legion::FieldID> PhysicalStore::get_output_field_() const
-{
-  return impl()->as_unbound_store().get_output_field();
-}
 
 std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_instance_() const
 {
   return impl()->as_inline_store().get_region_instance();
 }
-
-void PhysicalStore::set_bound_(bool bound) const { impl()->as_unbound_store().set_bound(bound); }
 
 bool PhysicalStore::is_inline_storage_() const
 {

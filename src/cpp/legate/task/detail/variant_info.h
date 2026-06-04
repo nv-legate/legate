@@ -35,7 +35,6 @@ class VariantInfo {
    * @param options_ The variant options set by the user.
    */
   VariantInfo(VariantImpl body_,
-              const Legion::CodeDescriptor& code_desc_,
               VariantOptions options_,
               std::optional<InternalSharedPtr<TaskSignature>> signature_);
 
@@ -48,11 +47,6 @@ class VariantInfo {
    * @brief The task body
    */
   VariantImpl body{};
-
-  /**
-   * @brief The code descriptor to be registered.
-   */
-  Legion::CodeDescriptor code_desc{};
 
   /**
    * @brief The variant options.

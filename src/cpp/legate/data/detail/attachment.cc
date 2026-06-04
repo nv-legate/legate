@@ -62,23 +62,7 @@ Attachment::~Attachment() noexcept
   }
 }
 
-void Attachment::detach(bool unordered)
-{
-  if (!exists()) {
-    return;
-  }
-
-  can_dealloc_.emplace(std::visit(
-    Overload{[&](const Legion::PhysicalRegion& region) {
-               LEGATE_ASSERT(allocations_.size() == 1);
-               return Runtime::get_runtime().detach(
-                 region, !allocations_.front()->read_only(), unordered);
-             },
-             [&](const Legion::ExternalResources& resources) {
-               return Runtime::get_runtime().detach(resources, /*flush=*/false, unordered);
-             }},
-    handle_));
-}
+void Attachment::detach(bool) {}
 
 void Attachment::maybe_deallocate(bool wait_on_detach) noexcept
 {

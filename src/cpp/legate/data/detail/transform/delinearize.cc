@@ -161,9 +161,9 @@ SmallVector<std::int64_t, LEGATE_MAX_DIM> Delinearize::convert_point(
   throw TracedException<NonInvertibleTransformation>{};
 }
 
-proj::SymbolicPoint Delinearize::invert(proj::SymbolicPoint point) const
+SymbolicPoint Delinearize::invert(SymbolicPoint point) const
 {
-  proj::SymbolicPoint exprs;
+  SymbolicPoint exprs;
 
   exprs.reserve(point.size() - (sizes_.size() - 1));
   for (std::int32_t dim = 0; dim < dim_ + 1; ++dim) {

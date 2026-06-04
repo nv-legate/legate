@@ -89,12 +89,6 @@ TEST_F(NoPartitionTest, Bloat)
               ::testing::WhenDynamicCastTo<legate::detail::NoPartition*>(::testing::_));
 }
 
-TEST_F(NoPartitionTest, Construct)
-{
-  auto constructed = nopartition->construct(Legion::LogicalRegion{}, /*complete=*/false);
-  ASSERT_EQ(constructed, Legion::LogicalPartition::NO_PART);
-}
-
 TEST_F(NoPartitionTest, Convert)
 {
   auto nopartion1     = nopartition->convert(nopartition, nullptr);

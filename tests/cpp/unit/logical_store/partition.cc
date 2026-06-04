@@ -171,19 +171,6 @@ TEST_F(LogicalStorePartitionUnit, ScalarStore)
   ASSERT_EQ(partition.color_shape().data(), std::vector<std::uint64_t>{1});
 }
 
-TEST_F(LogicalStorePartitionUnit, GetPlacementInfo)
-{
-  auto runtime   = legate::Runtime::get_runtime();
-  auto store     = runtime->create_store(legate::Shape{8, 8}, legate::int64());
-  auto partition = store.partition_by_tiling({2, 2});
-
-  // Call get_placement_info to cover the interface
-  auto placement_info = partition.get_placement_info();
-
-  // Verify placements is not empty
-  ASSERT_GT(placement_info.placements().size(), 0);
-}
-
 TEST_P(NegativePartitionSizeTest, BoundStore)
 {
   auto runtime = legate::Runtime::get_runtime();

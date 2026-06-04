@@ -11,7 +11,6 @@
 #include <legate/cuda/detail/cuda_util.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/physical_stores/future_physical_store.h>
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/task.h>

@@ -82,14 +82,6 @@ class Opaque final : public Partition {
   [[nodiscard]] InternalSharedPtr<Partition> bloat(
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
   /**
-   * @brief Construct a Legion logical partition for a given Legion logical region.
-   *
-   * @param region The region we're trying to partition.
-   * @param complete To indicate if the partition is complete or not.
-   */
-  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                                   bool complete) const override;
-  /**
    * @brief Indicate if the partition's color shape can be converted into a launch domain.
    * Always return true.
    */

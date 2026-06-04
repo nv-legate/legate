@@ -77,7 +77,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::convert_extents(
   return extents;
 }
 
-proj::SymbolicPoint DimBroadcast::invert(proj::SymbolicPoint point) const
+SymbolicPoint DimBroadcast::invert(SymbolicPoint point) const
 {
   point.at(dim_) = constant(0);
   return point;

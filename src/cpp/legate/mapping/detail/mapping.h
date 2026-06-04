@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/mapping/detail/store.h>
 #include <legate/mapping/mapping.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/span.h>
@@ -62,51 +61,8 @@ class DimOrdering {
    */
   [[nodiscard]] std::vector<Legion::DimensionKind> generate_legion_dims(std::uint32_t ndim) const;
 
-  /**
-   * @brief Generates a vector of Legion dimensions for a given Store
-   *
-   * @param store The store for which the Legion dimensions is created
-   *
-   * @returns a vector of Legion dimensions.
-   */
-  [[nodiscard]] std::vector<Legion::DimensionKind> generate_legion_dims(const Store& store) const;
-
   Kind kind{};
   std::vector<std::int32_t> dims{};
-};
-
-class StoreMapping {
- public:
-  StoreMapping() = default;
-  StoreMapping(InstanceMappingPolicy policy, const Store* store);
-  StoreMapping(InstanceMappingPolicy policy, Span<const Store* const> stores);
-  StoreMapping(InstanceMappingPolicy policy, Span<const InternalSharedPtr<Store>> stores);
-
-  [[nodiscard]] Span<const Store* const> stores() const;
-  [[nodiscard]] InstanceMappingPolicy& policy();
-  [[nodiscard]] const InstanceMappingPolicy& policy() const;
-
-  void add_store(const Store* store);
-
-  [[nodiscard]] bool for_future() const;
-  [[nodiscard]] bool for_unbound_store() const;
-  [[nodiscard]] const Store* store() const;
-
-  [[nodiscard]] std::uint32_t requirement_index() const;
-  [[nodiscard]] std::set<std::uint32_t> requirement_indices() const;
-  [[nodiscard]] std::set<const Legion::RegionRequirement*> requirements() const;
-
-  void populate_layout_constraints(Legion::LayoutConstraintSet& layout_constraints) const;
-
-  [[nodiscard]] static std::unique_ptr<StoreMapping> default_mapping(const Store* store,
-                                                                     StoreTarget target,
-                                                                     bool exact = false);
-  [[nodiscard]] static std::unique_ptr<StoreMapping> create(const Store* store,
-                                                            InstanceMappingPolicy&& policy);
-
- private:
-  InstanceMappingPolicy policy_{};
-  legate::detail::SmallVector<const Store*> stores_{};
 };
 
 }  // namespace legate::mapping::detail

@@ -8,7 +8,6 @@
 
 #include <legate/data/scalar.h>
 #include <legate/mapping/mapping.h>
-#include <legate/mapping/operation.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstddef>

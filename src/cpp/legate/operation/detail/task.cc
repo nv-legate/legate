@@ -8,7 +8,6 @@
 
 #include <legate_defines.h>
 
-#include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/mapping/detail/mapping.h>
@@ -19,14 +18,11 @@
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/communicator_manager.h>
 #include <legate/runtime/detail/library.h>
-#include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/inline_task_body.h>
 #include <legate/task/detail/returned_exception.h>
 #include <legate/task/detail/task_info.h>
-#include <legate/task/detail/task_return.h>
-#include <legate/task/detail/task_return_layout.h>
 #include <legate/task/detail/variant_info.h>
 #include <legate/task/task_context.h>
 #include <legate/utilities/assert.h>
@@ -546,17 +542,7 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
     return;
   }
 
-  auto&& runtime   = detail::Runtime::get_runtime();
-  auto field_space = runtime.create_field_space();
-  const auto field_id =
-    runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
-
-  // Create placeholder Opaque partition
-  const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
-
-  strategy_->insert(*partition_symbol, std::move(field_space), field_id);
-
-  store->set_key_partition(this->machine(), this->parallel_policy(), opaque_partition);
+  LEGATE_ABORT("Unbound stores are not supported yet");
 }
 
 void ManualTask::launch() { launch_task_(strategy_.get()); }

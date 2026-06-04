@@ -234,16 +234,6 @@ void Runtime::synchronize_cuda_stream(
 
 const detail::Config& Runtime::config() const { return impl()->config(); }
 
-void Runtime::begin_trace(std::uint32_t trace_id)  // NOLINT(readability-make-member-function-const)
-{
-  impl()->begin_trace(trace_id);
-}
-
-void Runtime::end_trace(std::uint32_t trace_id)  // NOLINT(readability-make-member-function-const)
-{
-  impl()->end_trace(trace_id);
-}
-
 namespace {
 
 std::optional<Runtime> the_public_runtime{};

@@ -221,31 +221,4 @@ TEST_F(ShapeUnit, OperatorEqualUnboundResolvesAfterFlush)
   ASSERT_TRUE(shape1 == shape2);
 }
 
-TEST_F(ShapeUnit, CopyExtentsFromBound)
-{
-  auto runtime      = legate::Runtime::get_runtime();
-  auto runtime_impl = runtime->impl();
-  std::array<std::uint64_t, 2> extents{2, 3};
-  const auto span        = legate::Span<const std::uint64_t>{extents};
-  const auto index_space = runtime_impl->find_or_create_index_space(span);
-
-  legate::detail::Shape source{2};
-  source.set_index_space(index_space);
-  const auto source_extents = source.extents();
-
-  ASSERT_EQ(source_extents.size(), 2);
-  ASSERT_EQ(source_extents[0], 2);
-  ASSERT_EQ(source_extents[1], 3);
-
-  legate::detail::Shape target{2};
-  target.set_index_space(index_space);
-  target.copy_extents_from(source);
-  ASSERT_TRUE(target.ready());
-  const auto target_extents = target.extents();
-
-  ASSERT_EQ(target_extents.size(), 2);
-  ASSERT_EQ(target_extents[0], 2);
-  ASSERT_EQ(target_extents[1], 3);
-}
-
 }  // namespace shape_test

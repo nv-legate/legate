@@ -120,7 +120,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_extents(
   return array_map(extents, axes_);
 }
 
-proj::SymbolicPoint Transpose::invert(proj::SymbolicPoint point) const
+SymbolicPoint Transpose::invert(SymbolicPoint point) const
 {
   // No in-place available
   return point.map(inverse_);

@@ -13,7 +13,7 @@ namespace legate::detail {
 inline Shift::Shift(std::int32_t dim, std::int64_t offset) : dim_{dim}, offset_{offset} {}
 
 // the shift transform makes no change on the store's dimensions
-inline proj::SymbolicPoint Shift::invert(proj::SymbolicPoint point) const { return point; }
+inline SymbolicPoint Shift::invert(SymbolicPoint point) const { return point; }
 
 inline Restrictions Shift::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {

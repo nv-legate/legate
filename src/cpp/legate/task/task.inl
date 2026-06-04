@@ -99,22 +99,4 @@ template <typename T>
   return result;
 }
 
-template <typename T>
-template <VariantImpl variant_fn, VariantCode variant_kind>
-/*static*/ void LegateTask<T>::task_wrapper_(const void* args,
-                                             std::size_t arglen,
-                                             const void* userdata,
-                                             std::size_t userlen,
-                                             Legion::Processor p)
-{
-  detail::task_wrapper(variant_fn,
-                       variant_kind,
-                       task_name_().as_string_view(),
-                       args,
-                       arglen,
-                       userdata,
-                       userlen,
-                       std::move(p));
-}
-
 }  // namespace legate

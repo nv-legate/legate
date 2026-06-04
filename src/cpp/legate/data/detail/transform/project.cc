@@ -109,9 +109,9 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_extents(
   return extents;
 }
 
-proj::SymbolicPoint Project::invert(proj::SymbolicPoint point) const
+SymbolicPoint Project::invert(SymbolicPoint point) const
 {
-  point.insert_inplace(dim_, proj::SymbolicExpr{});
+  point.insert_inplace(dim_, SymbolicExpr{});
   return point;
 }
 
