@@ -14,9 +14,7 @@
 #include <legate/operation/detail/timing.h>
 #include <legate/runtime/detail/communicator_manager.h>
 #include <legate/runtime/detail/config.h>
-#include <legate/runtime/detail/consensus_match_result.h>
 #include <legate/runtime/detail/library.h>
-#include <legate/runtime/detail/mapper_manager.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/scope.h>
 #include <legate/task/detail/returned_exception.h>

@@ -55,27 +55,8 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
             _Library, _LocalTaskID, const _tuple[uint64_t]&
         ) except+
         _ManualTask create_task(_Library, _LocalTaskID, const _Domain&) except+
-        void issue_copy(_LogicalStore, _LogicalStore) except+
-        void issue_copy(_LogicalStore, _LogicalStore, int32_t) except+
-        void issue_gather(_LogicalStore, _LogicalStore, _LogicalStore) except+
-        void issue_gather(
-            _LogicalStore, _LogicalStore, _LogicalStore, int32_t
-        ) except+
-        void issue_scatter(_LogicalStore, _LogicalStore, _LogicalStore) except+
-        void issue_scatter(
-            _LogicalStore, _LogicalStore, _LogicalStore, int32_t
-        ) except+
-        void issue_scatter_gather(
-            _LogicalStore, _LogicalStore, _LogicalStore, _LogicalStore,
-        ) except+
-        void issue_scatter_gather(
-            _LogicalStore, _LogicalStore, _LogicalStore, _LogicalStore, int32_t
-        ) except+
         void issue_fill(_LogicalStore&, _LogicalStore) except+
         void issue_fill(_LogicalStore&, _Scalar) except+
-        _LogicalStore tree_reduce(
-            _Library, _LocalTaskID, _LogicalStore, int64_t
-        ) except+
         void submit(_AutoTask) except +handle_legate_exception
         void submit(_ManualTask) except +handle_legate_exception
         _LogicalStore create_store(const _Type&, uint32_t) except+
@@ -114,8 +95,6 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         void* get_cuda_stream() except+
         int32_t get_current_cuda_device() except+
         void synchronize_cuda_stream(void*) except+
-        void begin_trace(uint32_t) except+
-        void end_trace(uint32_t) except+
         const _Config& config() except+
 
         @staticmethod
@@ -159,42 +138,7 @@ cdef class Runtime(Unconstructable):
         object launch_shape,
         object lower_bounds = *,
     )
-    cpdef void issue_copy(
-        self,
-        LogicalStore target,
-        LogicalStore source,
-        object redop = *,
-    )
-    cpdef void issue_gather(
-        self,
-        LogicalStore target,
-        LogicalStore source,
-        LogicalStore source_indirect,
-        object redop = *,
-    )
-    cpdef void issue_scatter(
-        self,
-        LogicalStore target,
-        LogicalStore target_indirect,
-        LogicalStore source,
-        object redop = *,
-    )
-    cpdef void issue_scatter_gather(
-        self,
-        LogicalStore target,
-        LogicalStore target_indirect,
-        LogicalStore source,
-        LogicalStore source_indirect,
-        object redop = *,
-    )
     cpdef void issue_fill(self, LogicalStore store, object value)
-    cpdef LogicalStore tree_reduce(
-        self,
-        Library library,
-        _LocalTaskID task_id,
-        LogicalStore store,
-        int64_t radix = *,
-    )
     cpdef void submit(self, object op)
     cpdef LogicalStore create_store(
         self,
@@ -239,8 +183,6 @@ cdef class Runtime(Unconstructable):
     cdef void* get_cuda_stream(self)
     cdef int32_t get_current_cuda_device(self)
     cdef void synchronize_cuda_stream(self, void* stream)
-    cdef void begin_trace(self, uint32_t)
-    cdef void end_trace(self, uint32_t)
     cpdef Config config(self)
     cpdef RealmConfig realm_config(self)
 

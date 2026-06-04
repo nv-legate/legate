@@ -140,15 +140,9 @@ def write_array(
     zarr_ary = zarr.open_array(dirpath, mode="r+")
 
     # TODO: minimize the copy needed when padding
-    shape, padded = _get_padded_shape(zarr_ary)
+    _, padded = _get_padded_shape(zarr_ary)
     if padded:
-        padded_st = runtime.create_store(
-            Type.from_numpy_dtype(zarr_ary.dtype), shape
-        )
-        padded_st.fill(0)
-        sliced = padded_st[tuple(map(slice, zarr_ary.shape))]
-        runtime.issue_copy(sliced, store)
-        store = padded_st
+        raise NotImplementedError
     tile.to_tiles(path=dirpath, store=store, tile_shape=zarr_ary.chunks)
 
 

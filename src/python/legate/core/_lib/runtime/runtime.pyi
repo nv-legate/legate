@@ -48,44 +48,7 @@ class Runtime(Unconstructable):
         launch_shape: Collection[int],
         lower_bounds: Collection[int] | None = None,
     ) -> ManualTask: ...
-    def issue_copy(
-        self,
-        target: LogicalStore,
-        source: LogicalStore,
-        redop: int | None = None,
-    ) -> None: ...
-    def issue_gather(
-        self,
-        target: LogicalStore,
-        source: LogicalStore,
-        source_indirect: LogicalStore,
-        redop: int | None = None,
-    ) -> None: ...
-    def issue_scatter(
-        self,
-        target: LogicalStore,
-        target_indirect: LogicalStore,
-        source: LogicalStore,
-        redop: int | None = None,
-    ) -> None: ...
-    def issue_scatter_gather(
-        self,
-        target: LogicalStore,
-        target_indirect: LogicalStore,
-        source: LogicalStore,
-        source_indirect: LogicalStore,
-        redop: int | None = None,
-    ) -> None: ...
     def issue_fill(self, lhs: LogicalStore, value: Any) -> None: ...
-    # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
-    # but we allow int as a type-checking convenience to users
-    def tree_reduce(
-        self,
-        library: Library,
-        task_id: LocalTaskID | int,
-        store: LogicalStore,
-        radix: int = 4,
-    ) -> LogicalStore: ...
     def submit(self, task: AutoTask | ManualTask) -> None: ...
     def create_store(
         self,

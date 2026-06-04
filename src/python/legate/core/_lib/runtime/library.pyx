@@ -2,10 +2,8 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from libc.stdint cimport int64_t, uintptr_t
+from libc.stdint cimport uintptr_t
 
-from ..data.scalar cimport Scalar
-from ..type.types cimport Type
 from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 
@@ -75,28 +73,6 @@ cdef class Library(Unconstructable):
             The global redop ID.
         """
         return self._handle.get_reduction_op_id(local_redop_id)
-
-    cpdef Scalar get_tunable(self, int64_t tunable_id, Type dtype):
-        r"""
-        Get a tunable value.
-
-        Parameters
-        ----------
-        tunable_id : int
-            The ID of the tunable value to get.
-        dtype : Type
-            The type of the tunable value to get.
-
-        Returns
-        -------
-        Scalar
-            The tunable.
-        """
-        return Scalar.from_handle(  # pragma: no cover
-            self._handle.get_tunable(  # pragma: no cover
-                tunable_id, dtype._handle  # pragma: no cover
-            )
-        )
 
     cpdef _GlobalTaskID register_task(self, TaskInfo task_info):
         r"""

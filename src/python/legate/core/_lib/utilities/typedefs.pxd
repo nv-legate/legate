@@ -56,9 +56,6 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
 # note missing nogil!
 cdef extern from "legate/utilities/typedefs.h" namespace "legate":
     ctypedef void (*VariantImpl)(_TaskContext) except+
-    ctypedef void (*TaskFuncPtr "legate::Processor::TaskFuncPtr")(
-        const void *, size_t, const void *, size_t, _Processor
-    ) except+
 
 
 # Need to _t these because in the .pyx we also need to define

@@ -86,18 +86,12 @@ class Library {
 
   [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
   [[nodiscard]] GlobalRedopID get_reduction_op_id(LocalRedopID local_redop_id) const;
-  [[nodiscard]] Legion::ProjectionID get_projection_id(std::int64_t local_proj_id) const;
-  [[nodiscard]] Legion::ShardingID get_sharding_id(std::int64_t local_shard_id) const;
 
   [[nodiscard]] LocalTaskID get_local_task_id(GlobalTaskID task_id) const;
   [[nodiscard]] LocalRedopID get_local_reduction_op_id(GlobalRedopID redop_id) const;
-  [[nodiscard]] std::int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
-  [[nodiscard]] std::int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
 
   [[nodiscard]] bool valid_task_id(GlobalTaskID task_id) const;
   [[nodiscard]] bool valid_reduction_op_id(GlobalRedopID redop_id) const;
-  [[nodiscard]] bool valid_projection_id(Legion::ProjectionID proj_id) const;
-  [[nodiscard]] bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
   [[nodiscard]] LocalTaskID get_new_task_id();
 
@@ -121,8 +115,6 @@ class Library {
   std::string library_name_{};
   ResourceIdScope task_scope_{};
   ResourceIdScope redop_scope_{};
-  ResourceIdScope proj_scope_{};
-  ResourceIdScope shard_scope_{};
 
   std::unique_ptr<mapping::Mapper> mapper_{};
   std::map<VariantCode, VariantOptions> default_options_{};

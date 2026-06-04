@@ -42,22 +42,6 @@ void Strategy::insert(const Variable& partition_symbol, InternalSharedPtr<Partit
   assignments_.insert({partition_symbol, std::move(partition)});
 }
 
-void Strategy::insert(const Variable& partition_symbol,
-                      Legion::FieldSpace field_space,
-                      Legion::FieldID field_id)
-{
-  LEGATE_ASSERT(fields_for_unbound_stores_.find(partition_symbol) ==
-                fields_for_unbound_stores_.end());
-  fields_for_unbound_stores_.insert({partition_symbol, {field_space, field_id}});
-}
-
-void Strategy::insert_color_space(const Variable& partition_symbol, Legion::IndexSpace color_space)
-{
-  LEGATE_ASSERT(color_spaces_for_unbound_stores_.find(partition_symbol) ==
-                color_spaces_for_unbound_stores_.end());
-  color_spaces_for_unbound_stores_.insert({partition_symbol, std::move(color_space)});
-}
-
 bool Strategy::has_assignment(const Variable& partition_symbol) const
 {
   return assignments_.find(partition_symbol) != assignments_.end();
@@ -69,15 +53,6 @@ const InternalSharedPtr<Partition>& Strategy::operator[](const Variable& partiti
 
   LEGATE_ASSERT(it != assignments_.end());
   return it->second;
-}
-
-const std::pair<Legion::FieldSpace, Legion::FieldID>& Strategy::find_field_for_unbound_store(
-  const Variable& partition_symbol) const
-{
-  const auto finder = fields_for_unbound_stores_.find(partition_symbol);
-
-  LEGATE_ASSERT(finder != fields_for_unbound_stores_.end());
-  return finder->second;
 }
 
 void Strategy::dump() const
@@ -95,15 +70,6 @@ void Strategy::dump() const
   }
   for (const auto& [symbol, part] : assignments_) {
     log_legate_partitioner().debug() << symbol.to_string() << ": " << part->to_string();
-  }
-  for (const auto& [symbol, field] : fields_for_unbound_stores_) {
-    const auto& [field_space, field_id] = field;
-
-    log_legate_partitioner().debug()
-      << symbol.to_string() << ": (" << field_space << "," << field_id << ")";
-  }
-  for (const auto& [symbol, color_space] : color_spaces_for_unbound_stores_) {
-    log_legate_partitioner().debug() << symbol.to_string() << ": " << color_space;
   }
   log_legate_partitioner().debug() << "====================";
 }
@@ -134,18 +100,6 @@ SymbolicPoint Strategy::find_key_store_projection() const
   }
 
   return find_store_projection(*key_partition_);
-}
-
-Legion::IndexSpace Strategy::find_color_space_for_unbound_store(
-  const Variable& partition_symbol) const
-{
-  auto finder = color_spaces_for_unbound_stores_.find(partition_symbol);
-
-  if (finder == color_spaces_for_unbound_stores_.end()) {
-    return Legion::IndexSpace::NO_SPACE;
-  }
-
-  return finder->second;
 }
 
 }  // namespace legate::detail

@@ -445,10 +445,18 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(
     mapped_.reset();
   }
 
-  const auto domain = launch_domain.is_valid() ? partition->shard(*domain_, color) : *domain_;
+  auto domain =
+    launch_domain.is_valid() && domain_->is_valid() ? partition->shard(*domain_, color) : *domain_;
 
   LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
-  LEGATE_CHECK(!transformed());
+  if (transformed()) {
+    domain = transform_->transform(domain);
+  }
+  if (domain.dim == 0) {
+    domain.dim          = 1;
+    domain.rect_data[0] = 0;
+    domain.rect_data[1] = 0;
+  }
 
   auto result = get_storage()->map(policy.target, type(), shape(), transform_, domain);
 

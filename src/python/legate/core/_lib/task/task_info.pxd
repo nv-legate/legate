@@ -8,7 +8,6 @@ from libcpp.string cimport string as std_string
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..utilities.typedefs cimport (
-    TaskFuncPtr,
     VariantCode,
     VariantImpl,
     _GlobalTaskID,
@@ -31,16 +30,6 @@ cdef extern from "legate/task/task_info.h" namespace "legate" nogil:
         std_optional[_VariantInfo] find_variant(VariantCode) except+
         std_string_view name() except+
         _TaskConfig task_config() except+
-        # add_variant's final argument is defaulted in C++, this is the only
-        # way I knew how to do the same in Cython. = {}, = (), or
-        # = std_map[...]() all did not work...
-        void add_variant(VariantCode, VariantImpl, TaskFuncPtr) except+
-        void add_variant(
-            VariantCode,
-            VariantImpl,
-            TaskFuncPtr,
-            const std_map[VariantCode, _VariantOptions]&
-        ) except +
         const _SharedPtr[_TaskInfoImpl]& impl() except+
 
 cdef class TaskInfo(Unconstructable):

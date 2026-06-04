@@ -2,7 +2,7 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
+from libc.stdint cimport int32_t, uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.pair cimport pair as std_pair
 from libcpp.utility cimport move as std_move
@@ -506,198 +506,6 @@ cdef class Runtime(Unconstructable):
                 )
         return ManualTask.from_handle(handle)
 
-    cpdef void issue_copy(
-        self,
-        LogicalStore target,
-        LogicalStore source,
-        object redop = None,
-    ):
-        r"""
-        Issue a copy between two stores.
-
-        `source` and `target` must have the same shape.
-
-        Parameters
-        ----------
-        target : LogicalStore
-            The target.
-        source : LogicalStore
-            The source.
-        redop : int (optional)
-            The reduction operator to use. If none is given, no reductions take
-            place. The stores type must support the operator.
-
-        Raises
-        ------
-        ValueError
-            If the store's type doesn't support `redop`.
-        """
-        cdef int32_t _redop
-
-        if redop is None:
-            with nogil:
-                self._handle.issue_copy(target._handle, source._handle)
-        else:
-            _redop = <int32_t> redop
-
-            with nogil:
-                self._handle.issue_copy(target._handle, source._handle, _redop)
-
-    cpdef void issue_gather(
-        self,
-        LogicalStore target,
-        LogicalStore source,
-        LogicalStore source_indirect,
-        object redop = None,
-    ):
-        r"""
-        Issue a gather copy between stores.
-
-        `source_indirect` and the `target` must have the same shape.
-
-        Parameters
-        ----------
-        target : LogicalStore
-            The target store.
-        source : LogicalStore
-            The source store.
-        source_indirect : LogicalStore
-            The source indirection store.
-        redop : int (optional)
-            ID of the reduction operator to use (optional). If none is given,
-            no reductions take place. The store's type must support the
-            operator.
-
-        Raises
-        ------
-        ValueError
-            If the store's type doesn't support `redop`.
-        """
-        cdef int32_t _redop
-
-        if redop is None:
-            with nogil:
-                self._handle.issue_gather(
-                    target._handle,
-                    source._handle,
-                    source_indirect._handle,
-                )
-        else:
-            _redop = <int32_t> redop
-
-            with nogil:
-                self._handle.issue_gather(
-                    target._handle,
-                    source._handle,
-                    source_indirect._handle,
-                    _redop,
-                )
-
-    cpdef void issue_scatter(
-        self,
-        LogicalStore target,
-        LogicalStore target_indirect,
-        LogicalStore source,
-        object redop = None,
-    ):
-        r"""
-        Issue a scatter copy between stores.
-
-        `target_indirect` and the `source` must have the same shape.
-
-        Parameters
-        ----------
-        target : LogicalStore
-            The target store.
-        target_indirect : LogicalStore
-            The target indirection store.
-        source : LogicalStore
-            The source store.
-        redop : int (optional)
-            ID of the reduction operator to use (optional). If none is given,
-            no reductions take place. The store's type must support the
-            operator.
-
-        Raises
-        ------
-        ValueError
-            If the store's type doesn't support `redop`.
-        """
-        cdef int32_t _redop
-
-        if redop is None:
-            with nogil:
-                self._handle.issue_scatter(
-                    target._handle,
-                    target_indirect._handle,
-                    source._handle,
-                )
-        else:
-            _redop = <int32_t> redop
-
-            with nogil:
-                self._handle.issue_scatter(
-                    target._handle,
-                    target_indirect._handle,
-                    source._handle,
-                    _redop,
-                )
-
-    cpdef void issue_scatter_gather(
-        self,
-        LogicalStore target,
-        LogicalStore target_indirect,
-        LogicalStore source,
-        LogicalStore source_indirect,
-        object redop = None,
-    ):
-        r"""
-        Issue a scatter-gather copy between stores.
-
-        `target_indirect` and the `source_indirect` must have the same shape.
-
-        Parameters
-        ----------
-        target : LogicalStore
-            The target store.
-        target_indirect : LogicalStore
-            The target indirection store.
-        source : LogicalStore
-            The source store.
-        source_indirect : LogicalStore
-            The source indirection store.
-        redop : int (optional)
-            ID of the reduction operator to use (optional). If none is given,
-            no reductions take place. The store's type must support the
-            operator.
-
-        Raises
-        ------
-        ValueError
-            If the store's type doesn't support `redop`.
-        """
-        cdef int32_t _redop
-
-        if redop is None:
-            with nogil:
-                self._handle.issue_scatter_gather(
-                    target._handle,
-                    target_indirect._handle,
-                    source._handle,
-                    source_indirect._handle,
-                )
-        else:
-            _redop = <int32_t> redop
-
-            with nogil:
-                self._handle.issue_scatter_gather(
-                    target._handle,
-                    target_indirect._handle,
-                    source._handle,
-                    source_indirect._handle,
-                    _redop,
-                )
-
     cpdef void issue_fill(self, LogicalStore store, object value):
         r"""
         Fills the store with a constant value.
@@ -740,47 +548,6 @@ cdef class Runtime(Unconstructable):
             with nogil:
                 self._handle.issue_fill(store._handle, fill_value._handle)
 
-    cpdef LogicalStore tree_reduce(
-        self,
-        Library library,
-        _LocalTaskID task_id,
-        LogicalStore store,
-        int64_t radix = 4,
-    ):
-        r"""
-        Performs a user-defined reduction by building a tree of reduction
-        tasks. At each step, the reducer task gets up to ``radix`` input stores
-        and is supposed to produce outputs in a single unbound store.
-
-        Parameters
-        ----------
-        library: Library
-            Library to which the task id belongs
-
-        task_id : LocalTaskID
-            Id of the reducer task
-
-        store : LogicalStore
-            LogicalStore to perform reductions on
-
-        radix : int
-            Fan-in of each reducer task. If the store is partitioned into
-            :math:`N` sub-stores by the runtime, then the first level of
-            reduction tree has :math:`\\ceil{N / \\mathtt{radix}}` reducer
-            tasks.
-
-        Returns
-        -------
-        LogicalStore
-            LogicalStore that contains reduction results
-        """
-        cdef _LogicalStore _handle
-        with nogil:
-            _handle = self._handle.tree_reduce(
-                library._handle, task_id, store._handle, radix
-            )
-        return LogicalStore.from_handle(_handle)
-
     cpdef void submit(self, object op):
         r"""
         Submit a task for execution.
@@ -811,19 +578,13 @@ cdef class Runtime(Unconstructable):
             If the operation is neither an `AutoTask` or `ManualTask`
         """
         if isinstance(op, AutoTask):
-            try:
-                with nogil:
-                    self._handle.submit(std_move((<AutoTask> op)._handle))
-                return
-            except Exception as e:
-                _maybe_reraise_legate_exception(e, op.exception_types)
+            with nogil:
+                self._handle.submit(std_move((<AutoTask> op)._handle))
+            return
         elif isinstance(op, ManualTask):
-            try:
-                with nogil:
-                    self._handle.submit(std_move((<ManualTask> op)._handle))
-                return
-            except Exception as e:
-                _maybe_reraise_legate_exception(e, op.exception_types)
+            with nogil:
+                self._handle.submit(std_move((<ManualTask> op)._handle))
+            return
 
         raise TypeError(f"Unknown type of operation: {type(op)}")
 
@@ -1330,12 +1091,6 @@ cdef class Runtime(Unconstructable):
 
     cdef void synchronize_cuda_stream(self, void* stream):
         self._handle.synchronize_cuda_stream(stream)
-
-    cdef void begin_trace(self, uint32_t trace_id):
-        self._handle.begin_trace(trace_id)
-
-    cdef void end_trace(self, uint32_t trace_id):
-        self._handle.end_trace(trace_id)
 
     cpdef Config config(self):
         r"""

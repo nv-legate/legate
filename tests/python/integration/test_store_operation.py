@@ -164,23 +164,6 @@ class TestLogicalStoreOperation:
         assert expanded_arr.ndim == promoted_arr.ndim
         assert promoted_arr.shape[0] == 1
 
-    def test_numpy_ops(self) -> None:
-        arr_shape = (1, 1, 2, 4)
-        runtime = get_legate_runtime()
-        arr = np.random.rand(*arr_shape)
-        store = runtime.create_store_from_buffer(
-            ty.float64, arr.shape, arr, False
-        )
-        store_arr = np.asarray(store.get_physical_store())
-        store_arr.sort()
-        # copy the store to double-check consistency between
-        # store and interface
-        new_store = runtime.create_store(ty.float64, shape=arr_shape)
-        runtime.issue_copy(new_store, store)
-        assert not new_store.equal_storage(store)
-        new_arr = np.asarray(new_store.get_physical_store())
-        np.testing.assert_allclose(new_arr, np.sort(arr))
-
     @pytest.mark.parametrize(
         ("arr_shape", "axes"),
         [

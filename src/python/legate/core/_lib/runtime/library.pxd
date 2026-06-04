@@ -25,7 +25,6 @@ cdef extern from "legate/runtime/library.h" namespace "legate" nogil:
         _LocalTaskID get_new_task_id() except+
         _GlobalTaskID get_task_id(_LocalTaskID) except+
         _GlobalRedopID get_reduction_op_id(_LocalRedopID) except+
-        _Scalar get_tunable(int64_t, _Type) except+
         void register_task(_LocalTaskID, const _TaskInfo&) except+
 
 
@@ -40,5 +39,4 @@ cdef class Library(Unconstructable):
     cpdef _GlobalRedopID get_reduction_op_id(
         self, _LocalRedopID local_redop_id
     )
-    cpdef Scalar get_tunable(self, int64_t tunable_id, Type dtype)
     cpdef _GlobalTaskID register_task(self, TaskInfo task_info)

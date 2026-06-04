@@ -811,20 +811,11 @@ install(
 )
 
 install(
-  FILES legate/experimental/trace.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental
-)
-
-install(
   FILES
     legate/mapping/machine.h
     legate/mapping/machine.inl
     legate/mapping/mapping.h
     legate/mapping/mapping.inl
-    legate/mapping/operation.h
-    legate/mapping/operation.inl
-    legate/mapping/store.h
-    legate/mapping/store.inl
     legate/mapping/proxy_store_mapping.h
     legate/mapping/proxy_store_mapping.inl
     legate/mapping/proxy_instance_mapping_policy.h

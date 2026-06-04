@@ -4,12 +4,11 @@
 
 from libcpp cimport bool
 from libcpp.string cimport string as std_string
-from libcpp.unordered_map cimport unordered_map as std_unordered_map
 
 from ..._lib.task.task_context cimport _TaskContext, TaskContext
 from ..._lib.task.task_info cimport _TaskInfo
 from ..._lib.runtime.library cimport _Library
-from ..._lib.utilities.typedefs cimport TaskFuncPtr, VariantImpl
+from ..._lib.utilities.typedefs cimport VariantImpl
 from ..._lib.utilities.abort cimport LEGATE_ABORT
 
 import gc
@@ -363,39 +362,6 @@ cdef extern from "legate/task/task_context.h":
         _TaskContext ctx
     ) noexcept nogil
 
-cdef extern from "legate/task/variant_helper.h" nogil:
-    r"""
-    namespace {
-
-    std::unordered_map<legate::VariantCode, legate::Processor::TaskFuncPtr>
-    init_vmap()
-    {
-      return {
-        {
-          legate::VariantCode::CPU,
-          legate::detail::task_wrapper_dyn_name<legate_python_task_entry,
-                                                legate::VariantCode::CPU>
-        },
-        {
-          legate::VariantCode::GPU,
-          legate::detail::task_wrapper_dyn_name<legate_python_task_entry,
-                                                legate::VariantCode::GPU>
-        },
-        {
-          legate::VariantCode::OMP,
-          legate::detail::task_wrapper_dyn_name<legate_python_task_entry,
-                                                legate::VariantCode::OMP>
-        }
-      };
-    }
-
-    } // namespace
-    """
-    std_unordered_map[VariantCode, TaskFuncPtr] init_vmap()
-
-cdef std_unordered_map[VariantCode, TaskFuncPtr] _variant_to_callback = \
-    init_vmap()
-
 
 # Need to put this in a separate function because:
 #
@@ -415,15 +381,13 @@ cdef extern from "legate/task/task_info.h" nogil:
       legate::TaskInfo *handle,
       const legate::Library &core_lib,
       legate::VariantCode variant_kind,
-      legate::VariantImpl cy_entry,
-      legate::Processor::TaskFuncPtr py_entry)
+      legate::VariantImpl cy_entry)
     {
       handle->add_variant_(
         legate::TaskInfo::AddVariantKey{},
         core_lib,
         variant_kind,
         cy_entry,
-        py_entry,
         /* decl_options */ nullptr
       );
     }
@@ -436,26 +400,16 @@ cdef extern from "legate/task/task_info.h" nogil:
             const _Library&,
             VariantCode,
             VariantImpl,
-            TaskFuncPtr
         ) except+
 
 
 cdef void finalize_variant_registration(
     TaskInfo task_info, Library library, VariantCode code
 ):
-    cdef TaskFuncPtr entry
-
-    try:
-        entry = _variant_to_callback[code]
-    except KeyError as ke:  # pragma: no cover
-        m = f"Unknown variant '{code}'"  # pragma: no cover
-        raise ValueError(m) from ke  # pragma: no cover
-
     with nogil:
         cytaskinfo_add_variant(
             &task_info._handle,
             library._handle,
             code,
             legate_python_task_entry,
-            entry
         )

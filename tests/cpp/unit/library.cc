@@ -149,49 +149,6 @@ TEST_F(Library, TaskID)
   ASSERT_FALSE(lib.valid_task_id(task_id_negative));
 }
 
-TEST_F(Library, ProjectID)
-{
-  constexpr std::string_view LIBNAME = "test_library.libH";
-
-  legate::ResourceConfig config;
-  config.max_projections = 2;
-
-  auto* runtime = legate::Runtime::get_runtime();
-  auto lib      = runtime->create_library(LIBNAME, config);
-
-  auto local_proj_id_1 = 0;
-  auto proj_id_1       = lib.get_projection_id(local_proj_id_1);
-  ASSERT_EQ(proj_id_1, 0);
-  ASSERT_FALSE(lib.valid_projection_id(proj_id_1));
-
-  auto local_proj_id_2 = 1;
-  auto proj_id_2       = lib.get_projection_id(local_proj_id_2);
-  ASSERT_TRUE(lib.valid_projection_id(proj_id_2));
-  ASSERT_EQ(lib.get_local_projection_id(proj_id_2), local_proj_id_2);
-
-  auto proj_id_negative = proj_id_1 + 2;
-  ASSERT_FALSE(lib.valid_projection_id(proj_id_negative));
-}
-
-TEST_F(Library, ShardingID)
-{
-  constexpr std::string_view LIBNAME = "test_library.libI";
-
-  legate::ResourceConfig config;
-  config.max_shardings = 1;
-
-  auto* runtime = legate::Runtime::get_runtime();
-  auto lib      = runtime->create_library(LIBNAME, config);
-
-  auto local_sharding_id = 0;
-  auto sharding_id       = lib.get_sharding_id(local_sharding_id);
-  ASSERT_TRUE(lib.valid_sharding_id(sharding_id));
-  ASSERT_EQ(lib.get_local_sharding_id(sharding_id), local_sharding_id);
-
-  auto sharding_id_negative = sharding_id + 1;
-  ASSERT_FALSE(lib.valid_sharding_id(sharding_id_negative));
-}
-
 TEST_F(Library, ResourceIdScopeNegative)
 {
   if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {

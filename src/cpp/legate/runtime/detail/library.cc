@@ -33,12 +33,6 @@ Library::Library(std::string library_name,
     redop_scope_{
       runtime->generate_library_reduction_ids(library_name_.c_str(), config.max_reduction_ops),
       config.max_reduction_ops},
-    proj_scope_{
-      runtime->generate_library_projection_ids(library_name_.c_str(), config.max_projections),
-      config.max_projections},
-    shard_scope_{
-      runtime->generate_library_sharding_ids(library_name_.c_str(), config.max_shardings),
-      config.max_shardings},
     mapper_{std::move(mapper)},
     default_options_{std::move(default_options)}
 {
@@ -82,19 +76,6 @@ GlobalRedopID Library::get_reduction_op_id(LocalRedopID local_redop_id) const
     redop_scope_.translate(static_cast<std::int64_t>(local_redop_id)));
 }
 
-Legion::ProjectionID Library::get_projection_id(std::int64_t local_proj_id) const
-{
-  if (local_proj_id == 0) {
-    return 0;
-  }
-  return static_cast<Legion::ProjectionID>(proj_scope_.translate(local_proj_id));
-}
-
-Legion::ShardingID Library::get_sharding_id(std::int64_t local_shard_id) const
-{
-  return static_cast<Legion::ShardingID>(shard_scope_.translate(local_shard_id));
-}
-
 LocalTaskID Library::get_local_task_id(GlobalTaskID task_id) const
 {
   return static_cast<LocalTaskID>(task_scope_.invert(static_cast<std::int64_t>(task_id)));
@@ -105,19 +86,6 @@ LocalRedopID Library::get_local_reduction_op_id(GlobalRedopID redop_id) const
   return static_cast<LocalRedopID>(redop_scope_.invert(static_cast<std::int64_t>(redop_id)));
 }
 
-std::int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) const
-{
-  if (proj_id == 0) {
-    return 0;
-  }
-  return proj_scope_.invert(proj_id);
-}
-
-std::int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
-{
-  return shard_scope_.invert(shard_id);
-}
-
 bool Library::valid_task_id(GlobalTaskID task_id) const
 {
   return task_scope_.in_scope(static_cast<std::int64_t>(task_id));
@@ -126,16 +94,6 @@ bool Library::valid_task_id(GlobalTaskID task_id) const
 bool Library::valid_reduction_op_id(GlobalRedopID redop_id) const
 {
   return redop_scope_.in_scope(static_cast<std::int64_t>(redop_id));
-}
-
-bool Library::valid_projection_id(Legion::ProjectionID proj_id) const
-{
-  return proj_scope_.in_scope(proj_id);
-}
-
-bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
-{
-  return shard_scope_.in_scope(shard_id);
 }
 
 std::string_view Library::get_task_name(LocalTaskID local_task_id) const
