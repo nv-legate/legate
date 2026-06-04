@@ -298,11 +298,6 @@ void inline_task_body(const TaskBase& task,
     strategy.task_index(), get_task_name(), variant_code, task.provenance().as_string_view());
 
   execute_task(task, variant_code, variant_impl, get_task_name, strategy);
-
-  if (variant_code == VariantCode::GPU) {
-    auto&& api = cuda::detail::get_cuda_driver_api();
-    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
-  }
 }
 
 }  // namespace legate::detail

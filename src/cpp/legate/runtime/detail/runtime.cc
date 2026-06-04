@@ -679,9 +679,13 @@ void Runtime::record_pending_exception(ReturnedException pending_exception)
 
 void Runtime::issue_mapping_fence() { submit(make_internal_shared<MappingFence>(new_op_id())); }
 
-void Runtime::issue_execution_fence(bool block /*=false*/)
+void Runtime::issue_execution_fence(bool)
 {
-  submit(make_internal_shared<ExecutionFence>(new_op_id(), block));
+  if (config().need_cuda()) {
+    auto&& api = cuda::detail::get_cuda_driver_api();
+
+    api->stream_synchronize(current_stream_);
+  }
 }
 
 InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precision)

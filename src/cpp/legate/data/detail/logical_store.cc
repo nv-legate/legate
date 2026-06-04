@@ -466,7 +466,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
-  std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability)
+  std::optional<legate::mapping::StoreTarget> target, bool)
 {
   auto&& storage = get_storage();
 
@@ -491,8 +491,15 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime().flush_scheduling_window();
 
-  auto result =
-    storage->map(effective_target, type(), shape(), transform_, ignore_future_mutability, domain_);
+  auto domain = *domain_;
+
+  if (domain.dim == 0) {
+    domain.dim          = 1;
+    domain.rect_data[0] = 0;
+    domain.rect_data[1] = 0;
+  }
+
+  auto result = storage->map(effective_target, type(), shape(), transform_, domain);
 
   mapped_.emplace(result);
 
