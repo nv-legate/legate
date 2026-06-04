@@ -226,22 +226,6 @@ class Runtime {
 
   [[nodiscard]] Processor get_executing_processor() const;
 
-  [[nodiscard]] bool executing_inline_task() const noexcept;
-
-  /**
-   * @brief Mark the start of an inline task for the given variant.
-   *
-   * @param variant_code The variant being executed inline.
-   */
-  void inline_task_start(VariantCode variant_code);
-
-  /**
-   * @brief Mark the end of the current inline task.
-   *
-   * Must be called after `inline_task_start()`.
-   */
-  void inline_task_end();
-
   [[nodiscard]] static Runtime& get_runtime();
   static void start();
   [[nodiscard]] bool initialized() const;
@@ -318,24 +302,6 @@ class Runtime {
     reduction_ops_{};
 
   std::vector<std::variant<Legion::Future, ReturnedException>> pending_exceptions_{};
-
-  // `inline_taks_variant_code_.top()` holds the variant code of the currently executing
-  // inline task. Since inline tasks may now launch inline tasks themselves, this needs to be a
-  // stack.
-  //
-  // This must be thread-local because multiple Legion tasks can run in parallel,
-  // each potentially launching PhysicalTasks inline on different threads.
-  //
-  // This should be static inline, but Apple clang ends up with linker errors:
-  //
-  // duplicate symbol 'thread-local initialization routine for
-  // legate::detail::Runtime::inline_task_variant_code_' in:
-  //    /path/to/CMakeFiles/legate_obj.dir/legate/runtime/runtime.cc.o
-  //    /path/to/CMakeFiles/legate_obj.dir/legate/task/detail/inline_task_body.cc.o
-  //    /path/to/CMakeFiles/legate_obj.dir/legate/runtime/detail/runtime.cc.o
-  //
-  // This is almost certainly a bug in the compiler.
-  static thread_local std::stack<VariantCode, SmallVector<VariantCode>> inline_task_variant_code_;
 
   std::optional<cuda::detail::CUDAModuleManager> cu_mod_manager_{};
 };

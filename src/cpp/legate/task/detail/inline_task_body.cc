@@ -285,14 +285,7 @@ void inline_task_body(const TaskBase& task,
                       VariantImpl variant_impl,
                       const Strategy& strategy)
 {
-  const auto _ = [variant_code] {
-    Runtime::get_runtime().inline_task_start(variant_code);
-    return legate::make_scope_guard([&]() noexcept { Runtime::get_runtime().inline_task_end(); });
-  }();
   const auto get_task_name = [&] { return task.library().get_task_name(task.local_task_id()); };
-  const auto _1 =
-    task_detail::make_nvtx_range(get_task_name, [&] { return task.provenance().as_string_view(); });
-  static_cast<void>(_1);
 
   show_progress(
     strategy.task_index(), get_task_name(), variant_code, task.provenance().as_string_view());

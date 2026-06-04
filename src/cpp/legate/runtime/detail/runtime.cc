@@ -77,10 +77,6 @@ LEGATE_PRAGMA_POP();
 
 namespace legate::detail {
 
-thread_local std::stack<VariantCode, SmallVector<VariantCode>>
-  // NOLINTNEXTLINE(cert-err58-cpp, bugprone-throwing-static-initialization)
-  Runtime::inline_task_variant_code_{};
-
 Logger& log_legate()
 {
   static Logger log{"legate"};
@@ -1274,30 +1270,9 @@ cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
 
 Processor Runtime::get_executing_processor() const
 {
-  // Inline task-launching never sets the Legion context, so we need to use runtime
-  // information from Legate to determine the currently executing processor.
-  const auto task_target = mapping::detail::to_target(inline_task_variant_code_.top());
-
-  if (auto&& range = local_machine().procs(task_target); !range.empty()) {
-    return range.front();
-  }
-
-  LEGATE_ABORT("No processor found for inline task ", to_underlying(task_target));
+  LEGATE_ABORT("Not supported yet");
 
   return {};
-}
-
-bool Runtime::executing_inline_task() const noexcept { return !inline_task_variant_code_.empty(); }
-
-void Runtime::inline_task_start(VariantCode code) { inline_task_variant_code_.push(code); }
-
-// clang-tidy bug, apparently it doesn't consider thread_local's to affect
-// const-correctness. Making this const would be a compile error because std::stack::pop() is
-// not const.
-void Runtime::inline_task_end()  // NOLINT(readability-make-member-function-const)
-{
-  LEGATE_ASSERT(executing_inline_task());
-  inline_task_variant_code_.pop();
 }
 
 bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }
