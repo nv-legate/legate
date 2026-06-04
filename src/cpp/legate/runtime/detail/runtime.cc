@@ -340,44 +340,7 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
   }
 }
 
-void Runtime::flush_scheduling_window(bool streaming_scope_change)
-{
-  // whenever the parallel policy changes due to scope change, we flush the
-  // scheduling window, so if current scope is streaming, all the tasks in it have
-  // their parallel policy with streaming set.
-  if (const auto pp = scope().parallel_policy(); pp.streaming()) {
-    if (pp.streaming_mode() == StreamingMode::STRICT && !streaming_scope_change) {
-      clear_scheduling_window(PrivateKey{});
-      throw TracedException<std::invalid_argument>{
-        "flush_scheduling_window called from inside a streaming scope"};
-    }
-
-    // we propagate and prune discards on the entire scope because in relaxed mode,
-    // the scope may be split into multiple prefixes, which prevents from discards
-    // being propagated and pruned.
-    forward_propagate_and_prune_discards(&operations_);
-
-    while (!operations_.empty()) {
-      std::deque<InternalSharedPtr<Operation>> streamable_ops{};
-
-      try {
-        streamable_ops = extract_streamable_prefix(&operations_);
-      } catch (const std::exception& e) {
-        clear_scheduling_window(PrivateKey{});
-        throw;
-      }
-
-      LEGATE_CHECK(!streamable_ops.empty());
-
-      schedule_(&streamable_ops);
-
-      LEGATE_ASSERT(streamable_ops.empty());
-    }
-
-  } else {
-    schedule_(&operations_);
-  }
-}
+void Runtime::flush_scheduling_window(bool) {}
 
 void Runtime::schedule_(std::deque<InternalSharedPtr<Operation>>* window)
 {
@@ -425,24 +388,16 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   // operations_.
   op->validate();
 
-  const auto& submitted = operations_.emplace_back(std::move(op));
-
-  // Ignore window size when inside a streaming scope because we want to analyze
-  // and stream the entire streaming scope if it's bigger than window size
-  const auto win_too_big = !scope().parallel_policy().streaming() &&
-                           (operations_.size() >= scope().scheduling_window_size());
-
-  if (submitted->needs_flush() || win_too_big) {
-    flush_scheduling_window();
+  if (!op->needs_partitioning()) {
+    op->launch();
+    return;
   }
-}
 
-/*static*/ void Runtime::launch_immediately(const InternalSharedPtr<Operation>& op)
-{
-  // This function shouldn't be called if the operation needs to go through the full pipeline
-  LEGATE_ASSERT(!op->needs_partitioning());
+  // TODO(wonchanl): We need the side effect from the launch calls to get key partitions set
+  // correctly. In the future, the partitioner should manage key partitions.
+  auto strategy = Partitioner::partition_stores(op.get());
 
-  op->launch();
+  op->launch(&strategy);
 }
 
 namespace {

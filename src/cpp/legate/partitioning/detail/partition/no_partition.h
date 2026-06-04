@@ -119,7 +119,7 @@ class NoPartition final : public Partition {
     const InternalSharedPtr<TransformStack>& transform) const override;
 };
 
-[[nodiscard]] InternalSharedPtr<NoPartition> create_no_partition();
+[[nodiscard]] const InternalSharedPtr<Partition>& create_no_partition();
 
 }  // namespace legate::detail
 

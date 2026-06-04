@@ -260,19 +260,17 @@ class LEGATE_EXPORT AutoTask {
   ~AutoTask() noexcept;
 
   // Purposefully not documented, it is only exposed for the tests
-  [[nodiscard]] const SharedPtr<detail::AutoTask>& impl_()  // NOLINT(readability-identifier-naming)
+  [[nodiscard]] const InternalSharedPtr<detail::AutoTask>&
+  impl_()  // NOLINT(readability-identifier-naming)
     const;
 
  private:
   friend class Runtime;
   explicit AutoTask(InternalSharedPtr<detail::AutoTask> impl);
 
-  [[nodiscard]] SharedPtr<detail::AutoTask> release_();
   [[nodiscard]] InternalSharedPtr<detail::LogicalStore> record_user_ref_(LogicalStore store);
-  void clear_user_refs_();
 
-  class Impl;
-  InternalSharedPtr<Impl> pimpl_{};
+  InternalSharedPtr<detail::AutoTask> pimpl_{};
 };
 
 /**
@@ -438,15 +436,12 @@ class LEGATE_EXPORT ManualTask {
 
   explicit ManualTask(InternalSharedPtr<detail::ManualTask> impl);
 
-  [[nodiscard]] const SharedPtr<detail::ManualTask>& impl_() const;
-  [[nodiscard]] SharedPtr<detail::ManualTask> release_();
+  [[nodiscard]] const InternalSharedPtr<detail::ManualTask>& impl_() const;
   [[nodiscard]] InternalSharedPtr<detail::LogicalStore> record_user_ref_(LogicalStore store);
   [[nodiscard]] InternalSharedPtr<detail::LogicalStorePartition> record_user_ref_(
     LogicalStorePartition store_partition);
-  void clear_user_refs_();
 
-  class Impl;
-  InternalSharedPtr<Impl> pimpl_{};
+  InternalSharedPtr<detail::ManualTask> pimpl_{};
 };
 
 /** @} */

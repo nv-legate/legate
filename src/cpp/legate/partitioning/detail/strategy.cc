@@ -9,6 +9,7 @@
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/formatters.h>
@@ -51,7 +52,10 @@ const InternalSharedPtr<Partition>& Strategy::operator[](const Variable& partiti
 {
   const auto it = assignments_.find(partition_symbol);
 
-  LEGATE_ASSERT(it != assignments_.end());
+  if (it == assignments_.end()) {
+    return create_no_partition();
+  }
+
   return it->second;
 }
 

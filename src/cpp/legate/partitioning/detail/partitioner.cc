@@ -177,6 +177,10 @@ void create_placeholder_partitions_for_unbound_stores(const Operation* op,
 
 Strategy Partitioner::partition_stores(Operation* op)
 {
+  if (Runtime::get_runtime().single_process()) {
+    return Strategy{op};
+  }
+
   ConstraintSolver solver;
 
   op->add_to_solver(solver);

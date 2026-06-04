@@ -26,7 +26,7 @@ class NoPartitionTest : public DefaultFixture {
   }
 
  public:
-  legate::InternalSharedPtr<legate::detail::NoPartition> nopartition;
+  legate::InternalSharedPtr<legate::detail::Partition> nopartition;
 };
 
 }  // namespace

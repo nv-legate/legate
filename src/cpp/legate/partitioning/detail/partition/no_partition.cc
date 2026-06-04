@@ -61,9 +61,10 @@ InternalSharedPtr<Partition> NoPartition::invert(
 
 // ==========================================================================================
 
-InternalSharedPtr<NoPartition> create_no_partition()
+const InternalSharedPtr<Partition>& create_no_partition()
 {
-  static const auto result = make_internal_shared<NoPartition>();
+  static const auto result =
+    static_pointer_cast<Partition, NoPartition>(make_internal_shared<NoPartition>());
 
   return result;
 }

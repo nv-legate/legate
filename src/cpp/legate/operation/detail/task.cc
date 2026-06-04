@@ -121,17 +121,6 @@ bool TaskBase::needs_flush() const
          std::any_of(reductions_.begin(), reductions_.end(), needs_flush);
 }
 
-// NOLINTNEXTLINE(performance-unnecessary-value-param)
-void TaskBase::add_constraint(InternalSharedPtr<Constraint>, bool)
-{
-  throw TracedException<std::runtime_error>{"add_constraint not supported for this task type"};
-}
-
-void TaskBase::add_communicator(std::string_view, bool)
-{
-  throw TracedException<std::runtime_error>{"add_communicator not supported for this task type"};
-}
-
 ////////////////////////////////////////////////////
 // legate::LogicalTask
 ////////////////////////////////////////////////////
@@ -375,18 +364,16 @@ ManualTask::ManualTask(const Library& library,
 
 const Domain& ManualTask::launch_domain() const { return strategy_->launch_domain(); }
 
-const Variable* ManualTask::add_input(InternalSharedPtr<LogicalStore> store)
+void ManualTask::add_input(InternalSharedPtr<LogicalStore> store)
 {
   if (store->unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used as input"};
   }
 
   add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY, inputs_, store, create_no_partition());
-
-  return nullptr;
 }
 
-const Variable* ManualTask::add_output(InternalSharedPtr<LogicalStore> store)
+void ManualTask::add_output(InternalSharedPtr<LogicalStore> store)
 {
   add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
 
@@ -399,12 +386,9 @@ const Variable* ManualTask::add_output(InternalSharedPtr<LogicalStore> store)
   if (store->unbound()) {
     record_unbound_output(store);
   }
-
-  return nullptr;
 }
 
-const Variable* ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store,
-                                          std::int32_t redop_kind)
+void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store, std::int32_t redop_kind)
 {
   if (store->unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reduction"};
@@ -418,23 +402,6 @@ const Variable* ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store,
   if (store->has_scalar_storage()) {
     record_scalar_reduction(store, legion_redop_id);
   }
-
-  return nullptr;
-}
-
-void ManualTask::add_input(InternalSharedPtr<LogicalStore>, const Variable*)
-{
-  throw TracedException<std::runtime_error>{"Not supported for ManualTask"};
-}
-
-void ManualTask::add_output(InternalSharedPtr<LogicalStore>, const Variable*)
-{
-  throw TracedException<std::runtime_error>{"Not supported for ManualTask"};
-}
-
-void ManualTask::add_reduction(InternalSharedPtr<LogicalStore>, std::int32_t, const Variable*)
-{
-  throw TracedException<std::runtime_error>{"Not supported for ManualTask"};
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,

@@ -134,7 +134,6 @@ class Runtime {
    */
   void flush_scheduling_window(bool streaming_scope_change = false);
   void submit(InternalSharedPtr<Operation> op);
-  static void launch_immediately(const InternalSharedPtr<Operation>& op);
 
   /**
    * @brief Give access to certain methods via this class.
@@ -223,6 +222,7 @@ class Runtime {
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
   [[nodiscard]] std::uint32_t node_count() const;
   [[nodiscard]] std::uint32_t node_id() const;
+  [[nodiscard]] bool single_process() const;
 
   [[nodiscard]] Processor get_executing_processor() const;
 
@@ -285,7 +285,8 @@ class Runtime {
   std::optional<PartitionManager> partition_manager_{};
   Scope scope_;
 
-  std::deque<InternalSharedPtr<Operation>> operations_{};
+  std::mutex operations_lock_{};
+  std::list<InternalSharedPtr<Operation>> operations_{};
   std::atomic<std::uint64_t> cur_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;

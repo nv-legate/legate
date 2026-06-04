@@ -71,4 +71,6 @@ inline std::uint32_t Runtime::node_count() const { return local_machine().total_
 
 inline std::uint32_t Runtime::node_id() const { return local_machine().node_id; }
 
+inline bool Runtime::single_process() const { return local_machine().total_nodes == 1; }
+
 }  // namespace legate::detail

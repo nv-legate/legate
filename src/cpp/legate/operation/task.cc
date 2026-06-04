@@ -20,74 +20,16 @@ namespace legate {
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-class AutoTask::Impl {
- public:
-  explicit Impl(InternalSharedPtr<detail::AutoTask> impl) : task_{std::move(impl)} {}
-
-  [[nodiscard]] const SharedPtr<detail::LogicalStore>& add_ref(LogicalStore store)
-  {
-    auto&& inserted = refs_.emplace_back(std::move(store));
-    return inserted.impl();
-  }
-
-  void clear_refs() { refs_.clear(); }
-
-  [[nodiscard]] const InternalSharedPtr<detail::TaskBase>& task() const
-  {
-    if (!task_) {
-      throw detail::TracedException<std::runtime_error>{
-        "Illegal to reuse task descriptors that are already submitted"};
-    }
-    return task_;
-  }
-
-  [[nodiscard]] InternalSharedPtr<detail::TaskBase>& task() { return task_; }
-
-  [[nodiscard]] SharedPtr<detail::AutoTask> release_auto_task()
-  {
-    auto result = dynamic_pointer_cast<detail::AutoTask>(std::move(task_));
-    if (!result) {
-      throw detail::TracedException<std::runtime_error>{
-        "Cannot release AutoTask from PhysicalTask"};
-    }
-    return SharedPtr<detail::AutoTask>{std::move(result)};
-  }
-
-  [[nodiscard]] const SharedPtr<detail::AutoTask>& auto_task_for_test() const
-  {
-    cached_auto_ = dynamic_pointer_cast<detail::AutoTask>(task_);
-    return cached_auto_;
-  }
-
- private:
-  InternalSharedPtr<detail::TaskBase> task_{};
-  mutable SharedPtr<detail::AutoTask> cached_auto_{};
-  std::vector<LogicalStore> refs_{};
-};
-
-// ==========================================================================================
-
-SharedPtr<detail::AutoTask> AutoTask::release_() { return pimpl_->release_auto_task(); }
-
-const SharedPtr<detail::AutoTask>& AutoTask::impl_() const { return pimpl_->auto_task_for_test(); }
-
-InternalSharedPtr<detail::LogicalStore> AutoTask::record_user_ref_(LogicalStore store)
-{
-  return pimpl_->add_ref(std::move(store));
-}
-
-void AutoTask::clear_user_refs_() { pimpl_->clear_refs(); }
-
-// ==========================================================================================
+const InternalSharedPtr<detail::AutoTask>& AutoTask::impl_() const { return pimpl_; }
 
 Variable AutoTask::add_input(LogicalStore store)
 {
-  return Variable{impl_()->add_input(record_user_ref_(std::move(store)))};
+  return Variable{impl_()->add_input(std::move(store).impl())};
 }
 
 Variable AutoTask::add_output(LogicalStore store)
 {
-  return Variable{impl_()->add_output(record_user_ref_(std::move(store)))};
+  return Variable{impl_()->add_output(std::move(store).impl())};
 }
 
 Variable AutoTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
@@ -97,18 +39,18 @@ Variable AutoTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
 
 Variable AutoTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
 {
-  return Variable{impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind)};
+  return Variable{impl_()->add_reduction(std::move(store).impl(), redop_kind)};
 }
 
 Variable AutoTask::add_input(LogicalStore store, Variable partition_symbol)
 {
-  impl_()->add_input(record_user_ref_(std::move(store)), partition_symbol.impl());
+  impl_()->add_input(std::move(store).impl(), partition_symbol.impl());
   return partition_symbol;
 }
 
 Variable AutoTask::add_output(LogicalStore store, Variable partition_symbol)
 {
-  impl_()->add_output(record_user_ref_(std::move(store)), partition_symbol.impl());
+  impl_()->add_output(std::move(store).impl(), partition_symbol.impl());
   return partition_symbol;
 }
 
@@ -124,7 +66,7 @@ Variable AutoTask::add_reduction(LogicalStore store,
                                  std::int32_t redop_kind,
                                  Variable partition_symbol)
 {
-  impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind, partition_symbol.impl());
+  impl_()->add_reduction(std::move(store).impl(), redop_kind, partition_symbol.impl());
   return partition_symbol;
 }
 
@@ -183,10 +125,7 @@ void AutoTask::add_communicator(  // NOLINT(readability-make-member-function-con
   impl_()->add_communicator(name, /*bypass_signature_check=*/false);
 }
 
-AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl)
-  : pimpl_{make_internal_shared<Impl>(std::move(impl))}
-{
-}
+AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl) : pimpl_{std::move(impl)} {}
 
 AutoTask::~AutoTask() noexcept = default;
 
@@ -194,94 +133,27 @@ AutoTask::~AutoTask() noexcept = default;
 // legate::ManualTask
 ////////////////////////////////////////////////////
 
-class ManualTask::Impl {
- public:
-  explicit Impl(InternalSharedPtr<detail::ManualTask> impl) : impl_{std::move(impl)} {}
-
-  [[nodiscard]] const SharedPtr<detail::LogicalStore>& add_ref(LogicalStore store)
-  {
-    return store_refs_.emplace_back(std::move(store)).impl();
-  }
-
-  [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& add_ref(
-    LogicalStorePartition store_partition)
-  {
-    return part_refs_.emplace_back(std::move(store_partition)).impl();
-  }
-
-  void clear_refs()
-  {
-    store_refs_.clear();
-    part_refs_.clear();
-  }
-
-  [[nodiscard]] const SharedPtr<detail::ManualTask>& impl() const noexcept { return impl_; }
-
-  [[nodiscard]] SharedPtr<detail::ManualTask>& impl() noexcept { return impl_; }
-
- private:
-  SharedPtr<detail::ManualTask> impl_{};
-  std::vector<LogicalStore> store_refs_{};
-  std::vector<LogicalStorePartition> part_refs_{};
-};
-
-// ==========================================================================================
-
-const SharedPtr<detail::ManualTask>& ManualTask::impl_() const
-{
-  auto&& result = pimpl_->impl();
-  if (!result) {
-    throw detail::TracedException<std::runtime_error>{
-      "Illegal to reuse task descriptors that are already submitted"};
-  }
-  return result;
-}
-
-SharedPtr<detail::ManualTask> ManualTask::release_()
-{
-  auto&& result = std::move(pimpl_->impl());
-  return result;
-}
-
-InternalSharedPtr<detail::LogicalStore> ManualTask::record_user_ref_(LogicalStore store)
-{
-  return pimpl_->add_ref(std::move(store));
-}
-
-InternalSharedPtr<detail::LogicalStorePartition> ManualTask::record_user_ref_(
-  LogicalStorePartition store_partition)
-{
-  return pimpl_->add_ref(std::move(store_partition));
-}
-
-void ManualTask::clear_user_refs_() { pimpl_->clear_refs(); }
-
-// ==========================================================================================
+const InternalSharedPtr<detail::ManualTask>& ManualTask::impl_() const { return pimpl_; }
 
 void ManualTask::add_input(LogicalStore store)
 {
-  static_cast<void>(impl_()->add_input(record_user_ref_(std::move(store))));
+  static_cast<void>(impl_()->add_input(std::move(store).impl()));
 }
 
 void ManualTask::add_input(LogicalStorePartition store_partition,
                            std::optional<SymbolicPoint> projection,
                            bool is_key_partition)
 {
-  impl_()->add_input(
-    record_user_ref_(std::move(store_partition)), std::move(projection), is_key_partition);
+  impl_()->add_input(std::move(store_partition).impl(), std::move(projection), is_key_partition);
 }
 
-void ManualTask::add_output(LogicalStore store)
-{
-  static_cast<void>(impl_()->add_output(record_user_ref_(std::move(store))));
-}
+void ManualTask::add_output(LogicalStore store) { impl_()->add_output(std::move(store).impl()); }
 
 void ManualTask::add_output(LogicalStorePartition store_partition,
                             std::optional<SymbolicPoint> projection,
                             bool is_key_partition)
 {
-  impl_()->add_output(
-    record_user_ref_(std::move(store_partition)), std::move(projection), is_key_partition);
+  impl_()->add_output(std::move(store_partition).impl(), std::move(projection), is_key_partition);
 }
 
 void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
@@ -291,7 +163,7 @@ void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
 
 void ManualTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
 {
-  static_cast<void>(impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind));
+  impl_()->add_reduction(std::move(store).impl(), redop_kind);
 }
 
 void ManualTask::add_reduction(LogicalStorePartition store_partition,
@@ -310,10 +182,8 @@ void ManualTask::add_reduction(LogicalStorePartition store_partition,
                                std::optional<SymbolicPoint> projection,
                                bool is_key_partition)
 {
-  impl_()->add_reduction(record_user_ref_(std::move(store_partition)),
-                         redop_kind,
-                         std::move(projection),
-                         is_key_partition);
+  impl_()->add_reduction(
+    std::move(store_partition).impl(), redop_kind, std::move(projection), is_key_partition);
 }
 
 void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_()->add_scalar_arg(scalar.impl()); }
@@ -337,10 +207,7 @@ void ManualTask::add_communicator(std::string_view name)
   impl_()->add_communicator(name, /*bypass_signature_check=*/false);
 }
 
-ManualTask::ManualTask(InternalSharedPtr<detail::ManualTask> impl)
-  : pimpl_{make_internal_shared<Impl>(std::move(impl))}
-{
-}
+ManualTask::ManualTask(InternalSharedPtr<detail::ManualTask> impl) : pimpl_{std::move(impl)} {}
 
 ManualTask::~ManualTask() noexcept = default;
 

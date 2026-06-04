@@ -83,78 +83,6 @@ class TaskBase : public Operation {
   [[nodiscard]] const Library& library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
-  /**
-   * @brief Add an input store to the task, auto-assigning a partition symbol.
-   *
-   * @param store The store to add as input.
-   * @return The auto-assigned partition symbol for the store.
-   */
-  [[nodiscard]] virtual const Variable* add_input(InternalSharedPtr<LogicalStore> store) = 0;
-
-  /**
-   * @brief Add an output store to the task, auto-assigning a partition symbol.
-   *
-   * @param store The store to add as output.
-   * @return The auto-assigned partition symbol for the store.
-   */
-  [[nodiscard]] virtual const Variable* add_output(InternalSharedPtr<LogicalStore> store) = 0;
-
-  /**
-   * @brief Add a reduction store to the task, auto-assigning a partition symbol.
-   *
-   * @param store The store to add for reductions.
-   * @param redop_kind The reduction operator kind.
-   * @return The auto-assigned partition symbol for the store.
-   */
-  [[nodiscard]] virtual const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
-                                                      std::int32_t redop_kind) = 0;
-
-  /**
-   * @brief Add an input store with a caller-provided partition symbol.
-   *
-   * @param store The store to add as input.
-   * @param partition_symbol The partition symbol to bind to the store.
-   */
-  virtual void add_input(InternalSharedPtr<LogicalStore> store,
-                         const Variable* partition_symbol) = 0;
-
-  /**
-   * @brief Add an output store with a caller-provided partition symbol.
-   *
-   * @param store The store to add as output.
-   * @param partition_symbol The partition symbol to bind to the store.
-   */
-  virtual void add_output(InternalSharedPtr<LogicalStore> store,
-                          const Variable* partition_symbol) = 0;
-
-  /**
-   * @brief Add a reduction store with a caller-provided partition symbol.
-   *
-   * @param store The store to add for reductions.
-   * @param redop_kind The reduction operator kind.
-   * @param partition_symbol The partition symbol to bind to the store.
-   */
-  virtual void add_reduction(InternalSharedPtr<LogicalStore> store,
-                             std::int32_t redop_kind,
-                             const Variable* partition_symbol) = 0;
-
-  /**
-   * @brief Add a partitioning constraint to the task.
-   *
-   * @param constraint The constraint to add.
-   * @param bypass_signature_check If true, skip signature validation.
-   */
-  virtual void add_constraint(InternalSharedPtr<Constraint> constraint,
-                              bool bypass_signature_check);
-
-  /**
-   * @brief Add a communicator to the task.
-   *
-   * @param name Name of the communicator.
-   * @param bypass_signature_check If true, skip signature validation.
-   */
-  virtual void add_communicator(std::string_view name, bool bypass_signature_check);
-
  protected:
   [[nodiscard]] const VariantInfo& variant_info_() const;
 
@@ -201,7 +129,7 @@ class LogicalTask : public TaskBase {
    * @param streaming_gen The streaming generation.
    */
   void set_streaming_generation(std::optional<StreamingGeneration> streaming_gen);
-  void add_communicator(std::string_view name, bool bypass_signature_check) override;
+  void add_communicator(std::string_view name, bool bypass_signature_check);
 
   /**
    * @return The streaming generation if the task is a streaming task, `std::nullopt` otherwise.
@@ -233,19 +161,18 @@ class AutoTask final : public LogicalTask {
            std::int32_t priority,
            mapping::detail::Machine machine);
 
-  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalStore> store) override;
-  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalStore> store) override;
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalStore> store);
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalStore> store);
   [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
-                                              std::int32_t redop_kind) override;
+                                              std::int32_t redop_kind);
 
-  void add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
-  void add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
+  void add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol);
+  void add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol);
   void add_reduction(InternalSharedPtr<LogicalStore> store,
                      std::int32_t redop_kind,
-                     const Variable* partition_symbol) override;
+                     const Variable* partition_symbol);
 
-  void add_constraint(InternalSharedPtr<Constraint> constraint,
-                      bool bypass_signature_check) override;
+  void add_constraint(InternalSharedPtr<Constraint> constraint, bool bypass_signature_check);
   void add_to_solver(ConstraintSolver& solver) override;
 
   void validate() override;
@@ -273,16 +200,9 @@ class ManualTask final : public LogicalTask {
              std::int32_t priority,
              mapping::detail::Machine machine);
 
-  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalStore> store) override;
-  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalStore> store) override;
-  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
-                                              std::int32_t redop_kind) override;
-  void add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
-  void add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol) override;
-  void add_reduction(InternalSharedPtr<LogicalStore> store,
-                     std::int32_t redop_kind,
-                     const Variable* partition_symbol) override;
-
+  void add_input(InternalSharedPtr<LogicalStore> store);
+  void add_output(InternalSharedPtr<LogicalStore> store);
+  void add_reduction(InternalSharedPtr<LogicalStore> store, std::int32_t redop_kind);
   void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                  std::optional<SymbolicPoint> projection,
                  bool is_key_partition);
