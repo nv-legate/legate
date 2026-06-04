@@ -1,0 +1,55 @@
+From 4df6535cc5f0aa6a00f5376359cf93bc1ce727ff Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <catkins@nvidia.com>
+Date: Thu, 28 May 2026 15:51:10 -0400
+Subject: [PATCH 1/2] Remove unused driver dependency
+
+---
+ src/CMakeLists.txt |  1 -
+ src/H5FDgds.c      | 13 -------------
+ 2 files changed, 14 deletions(-)
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index bdbf61d..fa7d9a4 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -49,7 +49,6 @@ target_link_libraries(hdf5_vfd_gds
+   PRIVATE
+   "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cudart>"
+   "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuFile>"
+-  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuda_driver>"
+   )
+ hdf5_vfd_gds_set_lib_options(hdf5_vfd_gds "hdf5_vfd_gds" ${HDF5_VFD_GDS_LIBTYPE})
+ if(HDF5_VFD_GDS_ENABLE_COVERAGE)
+diff --git a/src/H5FDgds.c b/src/H5FDgds.c
+index c553f58..ca65353 100644
+--- a/src/H5FDgds.c
++++ b/src/H5FDgds.c
+@@ -32,7 +32,6 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+
+-#include <cuda.h>
+ #include <cuda_runtime.h>
+ #include <cufile.h>
+
+@@ -157,18 +156,6 @@ typedef struct H5FD_gds_t {
+     (ADDR_OVERFLOW(A) || SIZE_OVERFLOW(Z) || HADDR_UNDEF == (A) + (Z) || (off_t)((A) + (Z)) < (off_t)(A))
+
+
+-#define check_cudadrivercall(fn)                                                                             \
+-    {                                                                                                        \
+-        CUresult res = fn;                                                                                   \
+-        if (res != CUDA_SUCCESS) {                                                                           \
+-            const char *str = nullptr;                                                                       \
+-            cuGetErrorName(res, &str);                                                                       \
+-            fprintf(stderr, "cuda driver api call failed %d, %d : %s\n", fn, __LINE__, str);                 \
+-            fprintf(stderr, "EXITING program!!!\n");                                                         \
+-            exit(1);                                                                                         \
+-        }                                                                                                    \
+-    }
+-
+ #define check_cudaruntimecall(fn)                                                                            \
+     {                                                                                                        \
+         cudaError_t res = fn;                                                                                \
+--
+2.43.0

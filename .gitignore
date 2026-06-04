@@ -25,6 +25,7 @@
 *.dylib
 install_info.py
 /dist
+/final-dist
 /build*/
 /legion
 /install*

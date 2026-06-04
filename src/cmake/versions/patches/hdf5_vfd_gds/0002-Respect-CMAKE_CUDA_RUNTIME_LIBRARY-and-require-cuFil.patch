@@ -1,0 +1,54 @@
+From f1d2fc7a2b35e4b8006482a95bafcb07ce98ec82 Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <catkins@nvidia.com>
+Date: Thu, 28 May 2026 16:18:03 -0400
+Subject: [PATCH 2/2] Respect CMAKE_CUDA_RUNTIME_LIBRARY and require cuFile at
+ configure
+
+---
+ CMakeLists.txt     | 15 +++++++++++++++
+ src/CMakeLists.txt |  4 ++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1c072d7..29c77f6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -73,6 +73,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${HDF5_VFD_GDS_CMAKE_MODULE_PATH})
+ # Try to locate cufile library
+ find_package(CUDAToolkit REQUIRED)
+
++# Ensure the right components are found since FindCUDAToolkit doesn't support
++# components
++if(NOT TARGET CUDA::cuFile)
++  message(FATAL_ERROR "Could not find CUDA::cuFile")
++endif()
++
++set(cudart_name "cudart")
++string(TOLOWER "${CMAKE_CUDA_RUNTIME_LIBRARY}" cudart_type)
++if(cudart_type STREQUAL "static")
++  set(cudart_name "cudart_static")
++endif()
++if(NOT TARGET CUDA::${cudart_name})
++  message(FATAL_ERROR "Could not find CUDA::${cudart_name}")
++endif()
++
+ set(HDF5_VFD_GDS_EXT_INCLUDE_DEPENDENCIES
+   ${HDF5_VFD_GDS_EXT_INCLUDE_DEPENDENCIES}
+   ${CUDAToolkit_INCLUDE_DIRS}
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index fa7d9a4..7b5c906 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -47,8 +47,8 @@ target_link_libraries(hdf5_vfd_gds
+   ${HDF5_VFD_GDS_EXT_LIB_DEPENDENCIES}
+   ${HDF5_VFD_GDS_EXT_PKG_DEPENDENCIES}
+   PRIVATE
+-  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cudart>"
+-  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuFile>"
++    CUDA::${cudart_name}
++    CUDA::cuFile
+   )
+ hdf5_vfd_gds_set_lib_options(hdf5_vfd_gds "hdf5_vfd_gds" ${HDF5_VFD_GDS_LIBTYPE})
+ if(HDF5_VFD_GDS_ENABLE_COVERAGE)
+--
+2.43.0

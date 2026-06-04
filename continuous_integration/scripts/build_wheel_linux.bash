@@ -43,46 +43,61 @@ if [[ "${CUDA_MAJOR_VER}" == "12" ]]; then
 fi
 package_dir="${LEGATE_DIR}/scripts/build/python/legate${package_suffix}"
 package_name="legate${package_suffix}"
+cd "${LEGATE_DIR}"
 
 rapids-logger "Installing build requirements"
 rapids-pip-retry install -v --prefer-binary \
   -r "continuous_integration/requirements-build-common.txt" \
   -r "continuous_integration/requirements-build${package_suffix}.txt"
 
-cd "${package_dir}"
-
-rapids-logger "Building HDF5 and installing into prefix"
-"${LEGATE_DIR}/continuous_integration/scripts/build_hdf5.sh"
-
-# build with '--no-build-isolation', for better sccache hit rate
-# 0 really means "add --no-build-isolation" (ref: https://github.com/pypa/pip/issues/5735)
-export PIP_NO_BUILD_ISOLATION=0
-
-rapids-logger "Building ${package_name}"
-if [[ ! -d "prefix" ]]; then
-  rapids-logger "No prefix, HDF5 may not have built where we thought!"
-  exit 1
+hdf5_base_dir="build/hdf5"
+hdf5_install_dir="${hdf5_base_dir}/install"
+hdf5_install_cmake="${hdf5_install_dir}/cmake/hdf5-config.cmake"
+if [[ -f "${hdf5_install_cmake}" ]]; then
+  rapids-logger "Using existing HDF5 install in ${hdf5_install_dir}"
+else
+  rapids-logger "Building HDF5 and installing into ${hdf5_install_dir}"
+  "continuous_integration/scripts/build_hdf5.sh" "${hdf5_base_dir}"
+  if [[ ! -f "${hdf5_install_cmake}" ]]; then
+    rapids-logger "No ${hdf5_install_cmake}, HDF5 may not have built where we thought!"
+    exit 1
+  fi
 fi
 
-pip_nvidia_prefix="$(python -c 'from pathlib import Path; import os, site; print(next((Path(d) for d in site.getsitepackages() if Path(f"{d}/nvidia").is_dir()))/"nvidia")')"
+rapids-logger "Building ${package_name}"
 
-CMAKE_ARGS=(
-  -DHDF5_ROOT:PATH="${PWD}/prefix"
-  -DNCCL_ROOT:PATH="${pip_nvidia_prefix}/nccl"
-  -DNCCL_LIBRARY:FILEPATH="${pip_nvidia_prefix}/nccl/lib/libnccl.so.2"
+site_packages_dir="$(python -c 'import site; print(site.getsitepackages()[0])')"
+pip_nvidia_dir="${site_packages_dir}/nvidia"
+nccl_dir="${pip_nvidia_dir}/nccl"
+nccl_lib="${nccl_dir}/lib/libnccl.so.2"
+
+if [[ "${CUDA_MAJOR_VER}" == "12" ]]; then
+  pip_nvidia_cmake="${pip_nvidia_dir}/cufile"
+else
+  pip_nvidia_cmake="${pip_nvidia_dir}"
+fi
+
+cmake_defines=(
+  CMAKE_PREFIX_PATH:STRING="${pip_nvidia_cmake}"
+  legate_USE_HDF5:BOOL=ON
+  legate_USE_HDF5_VFD_GDS:BOOL=ON
+  HDF5_DIR:PATH="$(dirname "${LEGATE_DIR}/${hdf5_install_cmake}")"
+  NCCL_ROOT:PATH="${nccl_dir}"
+  NCCL_LIBRARY:FILEPATH="${nccl_lib}"
 )
-SKBUILD_CMAKE_ARGS="$(IFS=';'; echo "${CMAKE_ARGS[*]}")"
-export SKBUILD_CMAKE_ARGS
-rapids-logger "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
+rapids-logger "cmake_defines=(" "${cmake_defines[@]/#/  }" ")"
 
 sccache --zero-stats
 
+# build with '--no-build-isolation', for better sccache hit rate
 python -m pip wheel \
   -w "${LEGATE_DIR}/dist" \
   -v \
+  --no-build-isolation \
   --no-deps \
   --disable-pip-version-check \
-  .
+  "${cmake_defines[@]/#/--config-settings=cmake.define.}" \
+  "${package_dir}"
 
 sccache --show-adv-stats
 
@@ -92,26 +107,27 @@ ls -lh "${LEGATE_DIR}/dist"
 
 rapids-logger "Repairing the wheel"
 mkdir -p "${LEGATE_DIR}/final-dist"
+
 # Needed to help auditwheel find the HDF5 library we built.
-export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/${package_name}/prefix/lib"
+export AUDITWHEEL_LD_LIBRARY_PATH="${LEGATE_DIR}/${hdf5_install_dir}/lib"
+
+auditwheel_excludes=(
+  libcrypto.so.*
+  libcuda.so.*
+  libcufile.so.*
+  libevent*.so.*
+  libhwloc.so.*
+  libmpi*.so.*
+  libnccl.so.*
+  libopen-*.so.*
+  libuc?.so.*
+)
+
+# whitespace splitting is intentional here
+# shellcheck disable=SC2048,SC2086
 python -m auditwheel repair \
-  --exclude libcrypto.so.* \
-  --exclude libcuda.so.* \
-  --exclude libcudart.so.* \
-  --exclude libevent_core.so.* \
-  --exclude libevent_pthreads-2.so.* \
-  --exclude libhwloc.so.* \
-  --exclude libmpi.so.* \
-  --exclude libmpi_cxx.so.* \
-  --exclude libmpicxx.so.* \
-  --exclude libnccl.so.* \
-  --exclude libopen-*.so.* \
-  --exclude libucc.so.* \
-  --exclude libucs.so.* \
-  --exclude libuct.so.* \
-  --exclude libucm.so.* \
-  --exclude libucp.so.* \
   -w "${LEGATE_DIR}/final-dist" \
+  ${auditwheel_excludes[*]/#/--exclude } \
   "${LEGATE_DIR}"/dist/*.whl
 
 rapids-logger "Wheel has been repaired. Contents:"

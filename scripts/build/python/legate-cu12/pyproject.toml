@@ -29,6 +29,7 @@ dependencies = [
     "numpy>=1.22,!=2.1.0",
     "h5py",
     "rich",
+    "nvidia-cufile-cu12; sys_platform == 'linux'",
     "nvidia-nccl-cu12>=2.28,<2.30; sys_platform == 'linux'",
 ]
 dynamic = ["version"]
@@ -64,6 +65,7 @@ legate = "legate"
 
 [tool.scikit-build.cmake]
 version = ">=3.26.4"
+args = ["--log-level=VERBOSE", "--log-context"]
 
 [tool.scikit-build.metadata.version]
 provider = "scikit_build_core.metadata.setuptools_scm"
@@ -90,7 +92,7 @@ install-dir = "legate"
 
 [tool.scikit-build]
 ninja.version = ">=1.11"
-build-dir = "build/{wheel_tag}"
+build-dir = "../../../../build/{wheel_tag}"
 
 [tool.scikit-build.wheel.packages]
 "legate" = "../../../../src/python/legate"

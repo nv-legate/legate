@@ -131,8 +131,20 @@ function(legate_populate_cython_dependency_rpaths)
         "${CMAKE_INSTALL_LIBDIR}"
         "${CMAKE_INSTALL_LIBDIR}/legate/deps"
       )
+
+      if(legate_USE_CUDA)
+        # Add the runtime path to the nvidia-cufile* PyPi packages
+        # Note: cufile is added regardless of whether or not hdf5_vfd_gds is enabled
+        # since it's an optional runtime dep of kvikio
+        if(CUDAToolkit_VERSION_MAJOR LESS 13)
+          list(APPEND legate_cython_rpaths "../nvidia/cufile/lib")
+        else()
+          list(APPEND legate_cython_rpaths "../nvidia/cu${CUDAToolkit_VERSION_MAJOR}/lib")
+        endif()
+      endif()
+
+      # Add the runtime path to the nvidia-nccl-cu* PyPi packages
       if(legate_USE_NCCL)
-        # Add the runtime path to the nvidia-nccl-cu* PyPi packages
         list(APPEND legate_cython_rpaths "../nvidia/nccl/lib")
       endif()
     endif()

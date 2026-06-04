@@ -7,31 +7,42 @@ set -euo pipefail
 
 export RAPIDS_SCRIPT_NAME='build_hdf5.sh'
 
+base_dir="${1:-build/hdf5}"
+mkdir -p "${base_dir}"
+
 # The HDF5 package doesn't support building against build trees seamlessly.
 # Build and install the library to a prefix that can then be found and used.
 hdf5_version="1.14.6"
 
-wget "https://github.com/HDFGroup/hdf5/releases/download/hdf5_${hdf5_version}/hdf5-${hdf5_version}.tar.gz" -O hdf5.tgz
-mkdir -p hdf5-build
-tar zvxf hdf5.tgz -C hdf5-build --strip-components=2
-cd hdf5-build
+archive_file="hdf5-${hdf5_version}.tar.gz"
+download_file="${base_dir}/${archive_file}"
+source_dir="${base_dir}/source"
+build_dir="${base_dir}/build"
+install_dir="${base_dir}/install"
 
-install_prefix="$(pwd)/../prefix"
+wget "https://github.com/HDFGroup/hdf5/releases/download/hdf5_${hdf5_version}/${archive_file}" -O "${download_file}"
+mkdir -p "${source_dir}"
+tar zxf "${download_file}" -C "${source_dir}" --strip-components=2
+
+cmake_options=(
+  CMAKE_INSTALL_PREFIX="$(realpath -Lms "${install_dir}")"
+  HDF5_LIB_INFIX="-legate"
+  BUILD_SHARED_LIBS=ON
+  BUILD_STATIC_LIBS=OFF
+  BUILD_TESTING=OFF
+  HDF5_BUILD_EXAMPLES=OFF
+  HDF5_BUILD_HL_LIB=OFF
+  HDF5_BUILD_CPP_LIB=OFF
+  HDF5_BUILD_TOOLS=OFF
+  HDF5_BUILD_UTILS=OFF
+  HDF5_ENABLE_ALL_WARNINGS=OFF
+  HDF5_ENABLE_PARALLEL=OFF
+)
 
 cmake \
-  -DBUILD_TESTING=OFF \
-  -DEXAMPLES_EXTERNALLY_CONFIGURED=OFF \
-  -DH5EX_BUILD_EXAMPLES=OFF \
-  -DH5EX_BUILD_HL_LIB=OFF \
-  -DH5EX_BUILD_TESTING=OFF \
-  -DHDF5_BUILD_EXAMPLES=OFF \
-  -DHDF5_BUILD_HL_LIB=OFF \
-  -DBUILD_SHARED_LIBS=ON \
-  -DDBUILD_STATIC_LIBS=OFF \
-  -DHDF5_BUILD_TOOLS=ON \
-  -DHDF_BUILD_UTILS=ON \
-  -DHDF5_ENABLE_ALL_WARNINGS=OFF \
-  -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
-  -B build -S .
-cmake --build build
-cmake --build build --target install
+  -S "${source_dir}" \
+  -B "${build_dir}" \
+  "${cmake_options[@]/#/-D}"
+
+cmake --build "${build_dir}"
+cmake --build "${build_dir}" --target install

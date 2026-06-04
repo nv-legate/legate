@@ -19,7 +19,6 @@ path = [
     "src/python/legate/legate_jupyter.json",
     "src/cmake/presets/*.json",
     "src/CMakePresets.json",
-    "src/cmake/versions/patches/add_region_instance_accessors.diff"
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"
@@ -28,7 +27,7 @@ SPDX-License-Identifier = "Apache-2.0"
 [[annotations]]
 path = [
     "conda/gasnet_wrapper/patches/**",
-    "src/cmake/patches/**"
+    "src/cmake/versions/patches/**"
 ]
 SPDX-FileCopyrightText = "Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved."
 SPDX-License-Identifier = "Apache-2.0"

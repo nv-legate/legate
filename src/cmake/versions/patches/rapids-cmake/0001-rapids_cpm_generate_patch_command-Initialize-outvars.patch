@@ -1,0 +1,32 @@
+From 9de2e8e9b52d293b416723df59ea18ff4cdd306b Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <catkins@nvidia.com>
+Date: Fri, 29 May 2026 14:52:49 -0400
+Subject: [PATCH] rapids_cpm_generate_patch_command: Initialize outvars as
+ empty
+
+The existing behavior of not initializing output variables to empty has
+a failure mode when called repeatedly, causing the output vars to retain
+values from previous packages if no patches exist or if exiting early
+from error. Initializing the output vars to empty in the caller ensures
+that no previous values are retained.
+---
+ rapids-cmake/cpm/detail/generate_patch_command.cmake | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/rapids-cmake/cpm/detail/generate_patch_command.cmake b/rapids-cmake/cpm/detail/generate_patch_command.cmake
+index 79b7d30..fe5f3ef 100644
+--- a/rapids-cmake/cpm/detail/generate_patch_command.cmake
++++ b/rapids-cmake/cpm/detail/generate_patch_command.cmake
+@@ -32,6 +32,10 @@ Applies any relevant patches to the provided CPM package
+ function(rapids_cpm_generate_patch_command package_name version patch_command build_patch_only)
+   list(APPEND CMAKE_MESSAGE_CONTEXT "rapids.cpm.generate_patch_command")
+
++  # Initialize output as empty to clear any previous values
++  set(${patch_command} PARENT_SCOPE)
++  set(${build_patch_only} PARENT_SCOPE)
++
+   include("${rapids-cmake-dir}/cpm/detail/load_preset_versions.cmake")
+   rapids_cpm_load_preset_versions()
+
+--
+2.43.0

@@ -6,7 +6,7 @@
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
             "patches": [
                 {
-                    "file": "${current_json_dir}/patches/add_region_instance_accessors.diff",
+                    "file": "${current_json_dir}/patches/legion/add_region_instance_accessors.diff",
                     "issue": "Add constructors for Legion accessors from Realm region instances",
                     "required": true
                 }

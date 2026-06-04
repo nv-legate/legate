@@ -5,6 +5,11 @@
 
 cmake_minimum_required(VERSION 3.26.4)
 
+# Quiet FetchContent noise
+if(POLICY CMP0169)
+  cmake_policy(SET CMP0169 OLD)
+endif()
+
 list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
 
 cmake_path(SET LEGATE_CMAKE_DIR NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/cmake")

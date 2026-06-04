@@ -27,7 +27,7 @@ function(find_or_configure_hdf5_vfd_gds)
       SYSTEM TRUE
       GIT_TAG "${git_tag}"
       EXCLUDE_FROM_ALL ${exclude_from_all}
-      OPTIONS "BUILD_TESTING OFF" "BUILD_EXAMPLES OFF" "BUILD_DOCUMENTATION OFF"
+      OPTIONS "BUILD_TESTING OFF" "BUILD_EXAMPLES OFF"
   )
 
   if(exclude_from_all)

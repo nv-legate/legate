@@ -67,6 +67,43 @@ function(_legate_download_rapids DEST_PATH)
   message(FATAL_ERROR "Error (${code}) when downloading ${file_name}: ${reason}")
 endfunction()
 
+# The RAPIDS.cmake file does not provide a mechanism to apply patches so we manually
+# stuff a PATCH_COMMAND into the FetchContent_Declare if needed
+function(_legate_rapids_cmake_maybe_patch rapids_cmake_file)
+  # First check if we have any patch files
+  file(
+    GLOB patch_files
+    LIST_DIRECTORIES false
+    "${LEGATE_CMAKE_DIR}/versions/patches/rapids-cmake/*.patch"
+  )
+  if(NOT patch_files)
+    return()
+  endif()
+  list(SORT patch_files COMPARE NATURAL)
+
+  find_package(Git REQUIRED)
+
+  # Use a null git-dir since rapids-cmake is usually downloaded as a zip
+  set(patch_command "${GIT_EXECUTABLE}" --git-dir=/dev/null apply ${patch_files})
+
+  file(READ "${rapids_cmake_file}" rapids_cmake_file_contents)
+  string(
+    REPLACE "FetchContent_Declare(rapids-cmake "
+    "FetchContent_Declare(rapids-cmake PATCH_COMMAND ${patch_command} "
+    rapids_cmake_file_contents_patched
+    "${rapids_cmake_file_contents}"
+  )
+  if(rapids_cmake_file_contents_patched STREQUAL rapids_cmake_file_contents)
+    message(
+      FATAL_ERROR
+      "Could not inject PATCH_COMMAND into RAPIDS.cmake: "
+      "the expected 'FetchContent_Declare(rapids-cmake ' anchor was not found. "
+      "The upstream RAPIDS.cmake format may have changed."
+    )
+  endif()
+  file(WRITE "${rapids_cmake_file}" "${rapids_cmake_file_contents_patched}")
+endfunction()
+
 macro(legate_include_rapids)
   list(APPEND CMAKE_MESSAGE_CONTEXT "include_rapids")
 
@@ -74,6 +111,7 @@ macro(legate_include_rapids)
     set(legate_rapids_file "${CMAKE_CURRENT_BINARY_DIR}/LEGATE_RAPIDS.cmake")
 
     _legate_download_rapids("${legate_rapids_file}")
+    _legate_rapids_cmake_maybe_patch("${legate_rapids_file}")
     include("${legate_rapids_file}")
 
     unset(legate_rapids_file)
