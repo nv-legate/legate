@@ -36,7 +36,7 @@ jobs:
   build-profiler:
     name: Profiler Build (optional)
     env:
-      PY_VER: "3.13"
+      PY_VER: "3.14"
       WHEEL_DIR: /tmp/profiler_out
     runs-on: mac-arm64-llr
     steps:
