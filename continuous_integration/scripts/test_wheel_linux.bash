@@ -31,7 +31,7 @@ python -c "from legate.issue import main; main()"
 # Attempt to run the tests...
 # Temporary workaround for CuPy 14.0.0 regression; see
 # https://github.com/nv-legate/legate.internal/issues/3579.
-rapids-pip-retry install psutil pytest pytest-mock ipython jupyter_client "cupy!=14.0.0" openmpi h5py
+rapids-pip-retry install psutil pytest pytest-mock ipython jupyter_client "cupy!=14.0.0" openmpi h5py "zarr>=2,<4"
 
 # pytest doesn't truncate output if "CI" is defined in the env:
 # https://doc.pytest.org/en/latest/explanation/ci.html

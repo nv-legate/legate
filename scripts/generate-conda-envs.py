@@ -218,7 +218,6 @@ class RuntimeConfig(SectionConfig):
             "libhwloc=*=*default*",
             "hdf5",
             "h5py",
-            "zarr<3",
         )
         if self.sanitizers:
             pkgs += ("libsanitizer",)
@@ -247,6 +246,7 @@ class TestsConfig(SectionConfig):
             "rich",
             "tifffile",
             "types-docutils",
+            "zarr>=2,<4",
         )
 
     @property

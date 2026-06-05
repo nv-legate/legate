@@ -88,7 +88,7 @@ run_test_or_analysis() {
                                -c conda-forge \
                                psutil pytest pytest-mock ipython jupyter_client "cupy!=14.0.0" "${test_libs[@]}"
 
-            hdf5_libs=(h5py)
+            hdf5_libs=(h5py "zarr>=2,<4")
             # shellcheck disable=SC2154
             rapids-conda-retry install \
                                -y \
