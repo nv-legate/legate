@@ -741,18 +741,6 @@ class LEGATE_EXPORT PhysicalStore {
    * @return `true` if the store is an unbound store, `false` otherwise
    */
   [[nodiscard]] bool is_unbound_store() const;
-  /**
-   * @brief Indicates whether the store is partitioned.
-   *
-   * Tasks sometimes need to know whether a given `PhysicalStore` is partitioned, i.e., corresponds
-   * to a subset of the (global) `LogicalStore` passed at the launch site. Unless the task
-   * explicitly requests broadcasting on the `LogicalStore`, the partitioning decision on the store
-   * is at the whim of the runtime. In this case, the task can use the `is_partitioned()` function
-   * to retrieve that information.
-   *
-   * @return `true` if the store is partitioned, `false` otherwise
-   */
-  [[nodiscard]] bool is_partitioned() const;
 
   /**
    * @brief Export this store into the DLPack format.
@@ -896,12 +884,6 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] ACC create_region_instance_reduction_accessor_(const Rect<DIM>& bounds,
                                                                bool validate_type) const;
 
-  /**
-   * @brief Indicates whether the store is an InlinePhysicalStore.
-   *
-   * @return `true` if the store is an inline storage, `false` otherwise.
-   */
-  [[nodiscard]] bool is_inline_storage_() const;
   /**
    * @brief Returns the region instance and field ID that backs the underlying physical store.
    *

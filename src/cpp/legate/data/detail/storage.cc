@@ -10,7 +10,7 @@
 
 #include <legate/data/detail/buffer.h>
 #include <legate/data/detail/external_allocation.h>
-#include <legate/data/detail/physical_stores/inline_physical_store.h>
+#include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/detail/storage_partition.h>
 #include <legate/data/external_allocation.h>
@@ -205,13 +205,13 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
 
   storage_data_->remap_to(target);
 
-  return make_internal_shared<InlinePhysicalStore>(shape->ndim(),
-                                                   std::move(type),
-                                                   GlobalRedopID{-1},
-                                                   transform,
-                                                   LEGION_READ_WRITE,
-                                                   storage_data_,
-                                                   domain);
+  return make_internal_shared<PhysicalStore>(shape->ndim(),
+                                             std::move(type),
+                                             GlobalRedopID{-1},
+                                             transform,
+                                             LEGION_READ_WRITE,
+                                             storage_data_,
+                                             domain);
 }
 
 // Unmapping is a logically non-const operation

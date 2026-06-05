@@ -301,7 +301,6 @@ target_sources(
     legate/data/detail/storage_partition.cc
     legate/data/detail/scalar.cc
     legate/data/detail/physical_store.cc
-    legate/data/detail/physical_stores/inline_physical_store.cc
     legate/data/detail/shape.cc
     legate/data/detail/transform/delinearize.cc
     legate/data/detail/transform/dim_broadcast.cc

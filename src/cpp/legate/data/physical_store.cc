@@ -7,7 +7,6 @@
 #include <legate/data/physical_store.h>
 
 #include <legate/data/detail/physical_store.h>
-#include <legate/data/detail/physical_stores/inline_physical_store.h>
 #include <legate/data/logical_store.h>
 #include <legate/utilities/detail/dlpack/to_dlpack.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -110,8 +109,6 @@ bool PhysicalStore::is_future() const { return false; }
 
 bool PhysicalStore::is_unbound_store() const { return false; }
 
-bool PhysicalStore::is_partitioned() const { return impl()->is_partitioned(); }
-
 mapping::StoreTarget PhysicalStore::target() const { return impl()->target(); }
 
 std::unique_ptr<DLManagedTensorVersioned, void (*)(DLManagedTensorVersioned*)>
@@ -153,12 +150,7 @@ GlobalRedopID PhysicalStore::get_redop_id_() const { return impl()->get_redop_id
 
 std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_instance_() const
 {
-  return impl()->as_inline_store().get_region_instance();
-}
-
-bool PhysicalStore::is_inline_storage_() const
-{
-  return dynamic_cast<const detail::InlinePhysicalStore*>(impl().get());
+  return impl()->get_region_instance();
 }
 
 }  // namespace legate

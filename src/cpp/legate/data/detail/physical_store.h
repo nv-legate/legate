@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/data/detail/inline_storage.h>
 #include <legate/data/detail/transform/transform_stack.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/type/detail/types.h>
@@ -25,10 +26,6 @@ enum class StoreTarget : std::uint8_t;
 namespace legate::detail {
 
 class LogicalStore;
-class RegionPhysicalStore;
-class UnboundPhysicalStore;
-class FuturePhysicalStore;
-class InlinePhysicalStore;
 
 class PhysicalStore {
  public:
@@ -36,9 +33,9 @@ class PhysicalStore {
                 InternalSharedPtr<Type> type,
                 GlobalRedopID redop_id,
                 InternalSharedPtr<detail::TransformStack> transform,
-                bool readable,
-                bool writable,
-                bool reducible);
+                Legion::PrivilegeMode priv,
+                InternalSharedPtr<InlineStorage> storage,
+                const Domain& domain);
 
   PhysicalStore(PhysicalStore&& other) noexcept            = default;
   PhysicalStore& operator=(PhysicalStore&& other) noexcept = default;
@@ -46,9 +43,9 @@ class PhysicalStore {
   PhysicalStore(const PhysicalStore& other)            = delete;
   PhysicalStore& operator=(const PhysicalStore& other) = delete;
 
-  virtual ~PhysicalStore() = default;
+  ~PhysicalStore() = default;
 
-  [[nodiscard]] virtual bool valid() const = 0;
+  [[nodiscard]] bool valid() const;
   [[nodiscard]] bool transformed() const;
 
   [[nodiscard]] std::int32_t dim() const;
@@ -59,31 +56,14 @@ class PhysicalStore {
    *
    * @return Store's domain as a Rect<DIM>
    */
-  [[nodiscard]] virtual Domain domain() const                                     = 0;
-  [[nodiscard]] virtual InlineAllocation get_inline_allocation() const            = 0;
-  [[nodiscard]] virtual mapping::StoreTarget target() const                       = 0;
-  [[nodiscard]] virtual bool is_accessible(mapping::TaskTarget task_target) const = 0;
+  [[nodiscard]] Domain domain() const;
+  [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  [[nodiscard]] mapping::StoreTarget target() const;
+  [[nodiscard]] bool is_accessible(mapping::TaskTarget task_target) const;
 
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;
   [[nodiscard]] bool is_reducible() const;
-
-  [[nodiscard]] virtual bool is_partitioned() const = 0;
-
-  /**
-   * @brief Cast to the underlying implementation as an inline storage store.
-   *
-   * @throw std::bad_cast If the underlying implementation is not an inline storage store.
-   * @return The underlying implementation as an inline storage store.
-   */
-  [[nodiscard]] InlinePhysicalStore& as_inline_store();
-  /**
-   * @brief Cast to the underlying implementation as a const inline storage store.
-   *
-   * @throw std::bad_cast If the underlying implementation is not an inline storage store.
-   * @return The underlying implementation as a const inline storage store.
-   */
-  [[nodiscard]] const InlinePhysicalStore& as_inline_store() const;
 
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
   [[nodiscard]] GlobalRedopID get_redop_id() const;
@@ -101,20 +81,38 @@ class PhysicalStore {
    * @return LogicalStore wrapping the same backing storage.
    * @throws std::runtime_error if not supported for this store type.
    */
-  [[nodiscard]] virtual InternalSharedPtr<LogicalStore> to_logical_store(
-    const InternalSharedPtr<PhysicalStore>& self) const = 0;
+  [[nodiscard]] InternalSharedPtr<LogicalStore> to_logical_store(
+    const InternalSharedPtr<PhysicalStore>& self) const;
+
+  /**
+   * @brief Returns the region instance and field ID wrapping the underlying memory allocation.
+   *
+   * This is useful for information such as constructing Legion accessors for interaction
+   * with the underlying memory.
+   *
+   * @return std::pair holding the region instance and field ID wrapping wrapped memory allocation.
+   */
+  [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> get_region_instance() const;
 
  protected:
   InternalSharedPtr<detail::TransformStack> transform_{};
   InternalSharedPtr<Type> type_{};
 
  private:
+  [[nodiscard]] const InternalSharedPtr<InlineStorage>& storage_() const;
+
   std::int32_t dim_{-1};
   GlobalRedopID redop_id_{-1};
 
   bool readable_{};
   bool writable_{};
   bool reducible_{};
+
+  // The inline storage that holds the manually-managed memory of the store.
+  InternalSharedPtr<InlineStorage> inline_storage_{};
+
+  // The domain over inline_storage_ that this store spans.
+  Domain domain_{};
 };
 
 }  // namespace legate::detail

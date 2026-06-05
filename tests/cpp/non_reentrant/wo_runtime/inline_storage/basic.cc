@@ -54,7 +54,6 @@ TEST_F(InlineStorageUnit, Basic)
   const auto phys = store.get_physical_store();
 
   ASSERT_TRUE(phys.valid());
-  ASSERT_FALSE(phys.is_partitioned());
 
   const auto mdspan = phys.span_read_accessor<std::int32_t, DIM>();
 
