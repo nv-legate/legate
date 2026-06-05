@@ -37,6 +37,11 @@ function(set_cpu_arch_flags_impl NAME flags_out_var success_var)
     message(FATAL_ERROR "The flag ${flag} is not supported by the compiler")
   endif()
   set_parent_scope(${success_var})
+
+  if(${success_var})
+    list(APPEND ${flags_out_var} "${flag}")
+    set_parent_scope(${flags_out_var})
+  endif()
 endfunction()
 
 function(set_cpu_arch_flags out_var)
