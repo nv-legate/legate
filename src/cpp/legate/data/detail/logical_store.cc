@@ -20,6 +20,7 @@
 #include <legate/data/detail/transform/transpose.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/operation.h>
+#include <legate/operation/projection.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/image.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
@@ -403,9 +404,26 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   return create_partition_(self, std::move(partition), /* complete */ true);
 }
 
+namespace {
+
+DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoint& task_index)
+{
+  DomainPoint result{};
+
+  result.dim = static_cast<std::int32_t>(store_projection.size());
+  for (auto&& [dim, expr] : enumerate(store_projection)) {
+    result[dim] = expr.compute_coordinate(task_index);
+  }
+
+  return result;
+}
+
+}  // namespace
+
 InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
+                                                   const SymbolicPoint& store_projection,
                                                    const Domain& launch_domain,
-                                                   const DomainPoint& color,
+                                                   const DomainPoint& task_index,
                                                    const legate::mapping::detail::Machine& machine)
 {
   // TODO(wonchanl): Need to check if the storage is right for the input partition and the policy
@@ -416,6 +434,9 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
     mapped_.reset();
   }
 
+  const auto color = (launch_domain.is_valid() && !store_projection.empty())
+                       ? compute_color(store_projection, task_index)
+                       : task_index;
   auto domain =
     launch_domain.is_valid() && domain_.is_valid() ? partition->shard(domain_, color) : domain_;
 

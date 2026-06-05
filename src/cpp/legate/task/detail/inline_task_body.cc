@@ -128,9 +128,12 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
 
   result.reserve(store_args.size());
-  for (auto&& store_arg : store_args) {
-    result.emplace_back(store_arg.store->map(
-      strategy[*store_arg.variable].get(), launch_domain, task_index, machine));
+  for (auto&& [_, store, variable] : store_args) {
+    result.emplace_back(store->map(strategy[*variable].get(),
+                                   strategy.find_store_projection(*variable),
+                                   launch_domain,
+                                   task_index,
+                                   machine));
   }
   return result;
 }

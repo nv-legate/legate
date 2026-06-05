@@ -85,22 +85,26 @@ void Strategy::record_key_partition(PrivateKey, const Variable& partition_symbol
   }
 }
 
-SymbolicPoint Strategy::find_store_projection(const Variable& partition_symbol) const
+const SymbolicPoint& Strategy::find_store_projection(const Variable& partition_symbol) const
 {
   auto finder = projections_.find(partition_symbol);
 
   if (finder == projections_.end()) {
-    return {};
+    static const auto empty_projection = SymbolicPoint{};
+
+    return empty_projection;
   }
 
   return finder->second;
 }
 
-SymbolicPoint Strategy::find_key_store_projection() const
+const SymbolicPoint& Strategy::find_key_store_projection() const
 {
   if (!key_partition_.has_value()) {
+    static const auto empty_projection = SymbolicPoint{};
+
     // If no key partition exists, use the identity function (of ID 0)
-    return {};
+    return empty_projection;
   }
 
   return find_store_projection(*key_partition_);

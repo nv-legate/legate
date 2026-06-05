@@ -56,8 +56,8 @@ class Strategy {
   void insert_store_projection(PrivateKey,
                                const Variable& partition_symbol,
                                SymbolicPoint projection);
-  [[nodiscard]] SymbolicPoint find_store_projection(const Variable& partition_symbol) const;
-  [[nodiscard]] SymbolicPoint find_key_store_projection() const;
+  [[nodiscard]] const SymbolicPoint& find_store_projection(const Variable& partition_symbol) const;
+  [[nodiscard]] const SymbolicPoint& find_key_store_projection() const;
 
   [[nodiscard]] Legion::IndexSpace find_color_space_for_unbound_store(
     const Variable& partition_symbol) const;

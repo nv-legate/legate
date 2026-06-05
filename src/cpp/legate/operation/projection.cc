@@ -12,6 +12,14 @@
 
 namespace legate {
 
+std::int64_t SymbolicExpr::compute_coordinate(const DomainPoint& point) const
+{
+  if (dim() == UNSET) {
+    return offset();
+  }
+  return point[dim()] * weight() + offset();
+}
+
 std::string SymbolicExpr::to_string() const
 {
   std::string result;
