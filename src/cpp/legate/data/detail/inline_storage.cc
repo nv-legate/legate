@@ -273,16 +273,13 @@ void InlineStorage::remap_to(mapping::StoreTarget new_target)
     auto&& api = cuda::detail::get_cuda_driver_api();
 
     api->mem_cpy_async(tmp.data(), data(), num_bytes, Runtime::get_runtime().get_cuda_stream());
-
-    // Wait so that copy is done prior to host memory being potentially freed.
-    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
   } else {
     std::memcpy(tmp.data(), data(), num_bytes);
   }
 
-  // detail::ExternalAllocation isn't properly RAII and won't delete the pointer on its own, so we
-  // have to do it manually.
-  alloc_().impl()->maybe_deallocate();
+  // FIXME(wonchanl): We're leaking allocations here and we should fix it without synchronizing the
+  // stream in the toplevel
+  // alloc_().impl()->maybe_deallocate();
   *this = std::move(tmp);
 }
 
