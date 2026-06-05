@@ -41,7 +41,7 @@ jobs:
   build-profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.48
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.49
     with:
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
@@ -66,7 +66,7 @@ jobs:
     needs: build-profiler
     name: Upload Legate Profiler
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.48
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.49
     with:
       build-mode: release
       build-type: profiler
@@ -90,7 +90,7 @@ jobs:
   build-legate:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.48
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.49
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
@@ -182,7 +182,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.48
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.49
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
@@ -219,7 +219,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.48
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.49
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
