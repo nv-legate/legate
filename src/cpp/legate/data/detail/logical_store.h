@@ -140,7 +140,7 @@ class LogicalStore {
     const Partition* partition,
     const Domain& launch_domain,
     const DomainPoint& color,
-    const legate::mapping::InstanceMappingPolicy& policy);
+    const legate::mapping::detail::Machine& machine);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 

@@ -12,6 +12,15 @@ namespace legate::mapping::detail {
 
 inline TaskTarget Machine::preferred_target() const { return preferred_target_; }
 
+inline VariantCode Machine::preferred_variant() const { return preferred_variant_; }
+
+inline StoreTarget Machine::preferred_store_target() const { return preferred_store_target_; }
+
+inline StoreTarget Machine::preferred_scalar_store_target() const
+{
+  return preferred_scalar_store_target_;
+}
+
 inline const std::map<TaskTarget, ProcessorRange>& Machine::processor_ranges() const
 {
   return processor_ranges_;

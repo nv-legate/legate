@@ -104,6 +104,7 @@ class InlineStorage {
 
   Domain domain_{};
   legate::ExternalAllocation allocation_{};
+  std::optional<legate::ExternalAllocation> stale_{};
   Realm::RegionInstance region_instance_{};
 };
 

@@ -12,6 +12,8 @@ struct CUevent_st;
 struct CUfunc_st;
 struct CUlib_st;
 struct CUkern_st;
+struct CUmemPoolHandle_st;
+struct CUmemLocation_st;
 
 namespace legate {
 
@@ -24,17 +26,21 @@ using CUdeviceptr = unsigned int;
 #endif
 static_assert(sizeof(CUdeviceptr) == sizeof(void*));
 
-using CUresult   = int;
-using CUdevice   = int;
-using CUcontext  = ::CUctx_st*;
-using CUstream   = ::CUstream_st*;
-using CUevent    = ::CUevent_st*;
-using CUfunction = ::CUfunc_st*;
-using CUlibrary  = ::CUlib_st*;
-using CUkernel   = ::CUkern_st*;
+using CUresult      = int;
+using CUdevice      = int;
+using CUcontext     = ::CUctx_st*;
+using CUstream      = ::CUstream_st*;
+using CUevent       = ::CUevent_st*;
+using CUfunction    = ::CUfunc_st*;
+using CUlibrary     = ::CUlib_st*;
+using CUkernel      = ::CUkern_st*;
+using CUmemoryPool  = ::CUmemPoolHandle_st*;
+using CUmemLocation = ::CUmemLocation_st;
 
 enum CUlibraryOption : int;
 enum CUjit_option : int;
+enum CUmemAllocationType : int;
+enum CUmemPool_attribute : int;
 
 enum CUmemAttach_flags : int {
   CU_MEM_ATTACH_GLOBAL = 0x1,

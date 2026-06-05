@@ -59,9 +59,10 @@ class PhysicalStore {
    *
    * @return Store's domain as a Rect<DIM>
    */
-  [[nodiscard]] virtual Domain domain() const                          = 0;
-  [[nodiscard]] virtual InlineAllocation get_inline_allocation() const = 0;
-  [[nodiscard]] virtual mapping::StoreTarget target() const            = 0;
+  [[nodiscard]] virtual Domain domain() const                                     = 0;
+  [[nodiscard]] virtual InlineAllocation get_inline_allocation() const            = 0;
+  [[nodiscard]] virtual mapping::StoreTarget target() const                       = 0;
+  [[nodiscard]] virtual bool is_accessible(mapping::TaskTarget task_target) const = 0;
 
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;

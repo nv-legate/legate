@@ -36,11 +36,13 @@ Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges) : processor_ranges
       break;
     }
   }
+  cache_preferred_targets_();
 }
 
 Machine::Machine(TaskTarget preferred_target, std::map<TaskTarget, ProcessorRange> ranges)
   : preferred_target_{preferred_target}, processor_ranges_{std::move(ranges)}
 {
+  cache_preferred_targets_();
 }
 
 const ProcessorRange& Machine::processor_range() const
@@ -212,7 +214,17 @@ bool Machine::empty() const
   });
 }
 
-VariantCode Machine::preferred_variant() const { return to_variant_code(preferred_target()); }
+void Machine::cache_preferred_targets_()
+{
+  preferred_variant_      = to_variant_code(preferred_target());
+  preferred_store_target_ = [&] {
+    if (preferred_target_ == TaskTarget::GPU) {
+      return StoreTarget::FBMEM;
+    }
+    return StoreTarget::SYSMEM;
+  }();
+  preferred_scalar_store_target_ = StoreTarget::SYSMEM;
+}
 
 std::ostream& operator<<(std::ostream& os, const Machine& machine)
 {

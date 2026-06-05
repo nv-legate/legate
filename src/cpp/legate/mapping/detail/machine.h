@@ -72,10 +72,17 @@ class Machine {
 
   [[nodiscard]] TaskTarget preferred_target() const;
   [[nodiscard]] VariantCode preferred_variant() const;
+  [[nodiscard]] StoreTarget preferred_store_target() const;
+  [[nodiscard]] StoreTarget preferred_scalar_store_target() const;
   [[nodiscard]] const std::map<TaskTarget, ProcessorRange>& processor_ranges() const;
 
  private:
+  void cache_preferred_targets_();
+
   TaskTarget preferred_target_{TaskTarget::CPU};
+  VariantCode preferred_variant_{VariantCode::CPU};
+  StoreTarget preferred_store_target_{StoreTarget::SYSMEM};
+  StoreTarget preferred_scalar_store_target_{StoreTarget::SYSMEM};
   std::map<TaskTarget, ProcessorRange> processor_ranges_{};
   mutable std::optional<legate::detail::SmallVector<TaskTarget, NUM_TASK_TARGETS>> valid_targets_{};
 };

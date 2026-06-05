@@ -118,126 +118,21 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
 // ==========================================================================================
 
-/**
- * @brief Extract the physical store from the task store argument
- *
- * @param elem The param to extract from
- * @param policy The instance mapping policy to use to get the right store location.
- * @param ignore_future_mutability If the store is future-backed, and has write privileges, we
- * need to ignore the normal immutability checks for futures.
- *
- * @return The physical store.
- */
-[[nodiscard]] InternalSharedPtr<PhysicalStore> map_store(
-  const TaskStoreArg& elem,
-  const Partition* partition,
-  const mapping::InstanceMappingPolicy& policy,
-  const Domain& launch_domain,
-  const DomainPoint& task_index)
-{
-  if (policy.exact) {
-    // See discussion in https://github.com/nv-legate/legate.internal/issues/3539 for why this
-    // isn't supported right now
-    throw TracedException<std::runtime_error>{
-      "InstanceMappingPolicy::exact not yet supported in inline execution."};
-  }
-
-  if (policy.ordering.has_value() && policy.ordering->kind() != mapping::DimOrdering::Kind::C) {
-    // See discussion in https://github.com/nv-legate/legate.internal/issues/3539 for why this
-    // isn't supported right now
-    throw TracedException<std::runtime_error>{
-      "Dimension orderings other than C (or unspecified) not yet supported in inline execution."};
-  }
-
-  return elem.store->map(partition, launch_domain, task_index, policy);
-}
-
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
-  Span<const TaskStoreArg> src,
-  Span<const mapping::InstanceMappingPolicy> mapping_policies,
+  Span<const TaskStoreArg> store_args,
+  const legate::mapping::detail::Machine& machine,
   const Strategy& strategy,
   const Domain& launch_domain,
   const DomainPoint& task_index)
 {
-  SmallVector<InternalSharedPtr<PhysicalStore>> dest;
+  SmallVector<InternalSharedPtr<PhysicalStore>> result;
 
-  dest.reserve(src.size());
-  for (auto&& [elem, policy] : zip_equal(src, mapping_policies)) {
-    dest.emplace_back(
-      map_store(elem, strategy[*elem.variable].get(), policy, launch_domain, task_index));
+  result.reserve(store_args.size());
+  for (auto&& store_arg : store_args) {
+    result.emplace_back(store_arg.store->map(
+      strategy[*store_arg.variable].get(), launch_domain, task_index, machine));
   }
-  return dest;
-}
-
-struct TaskStoreMappingPolicies {
-  SmallVector<mapping::InstanceMappingPolicy> input_policies{};
-  SmallVector<mapping::InstanceMappingPolicy> output_policies{};
-  SmallVector<mapping::InstanceMappingPolicy> reduction_policies{};
-};
-
-/**
- * @brief Get the default store target options for each variant.
- *
- * @param variant_code The variant to get the options for.
- *
- * @return The default options.
- */
-[[nodiscard]] Span<const mapping::StoreTarget> get_default_target_options(VariantCode variant_code)
-{
-  switch (variant_code) {
-    case VariantCode::CPU: {
-      static constexpr auto opts = std::array{mapping::StoreTarget::SYSMEM};
-
-      return opts;
-    }
-    case VariantCode::GPU: {
-      static constexpr auto opts =
-        std::array{mapping::StoreTarget::FBMEM, mapping::StoreTarget::ZCMEM};
-
-      return opts;
-    }
-    case VariantCode::OMP: {
-      static constexpr auto opts =
-        std::array{mapping::StoreTarget::SOCKETMEM, mapping::StoreTarget::SYSMEM};
-
-      return opts;
-    }
-  }
-  LEGATE_ABORT("Unhandled variant code: ", to_underlying(variant_code));
-}
-
-/**
- * @brief Create the store mapping policies for input, output, and reduction arguments for a task.
- *
- * If the user does not fully cover every store argument with their mapping policies, then any
- * unspecified arguments will receive a default mapping policy.
- *
- * @param task The task to generate the policies for.
- * @param variant_code The variant.
- *
- * @return The store mapping policies
- */
-[[nodiscard]] TaskStoreMappingPolicies make_store_mapping_policies(const TaskBase& task,
-                                                                   VariantCode variant_code)
-{
-  const auto target_options = get_default_target_options(variant_code);
-  auto ret                  = [&] {
-    const auto default_policy =
-      mapping::InstanceMappingPolicy{}.with_target(target_options.front());
-
-    return TaskStoreMappingPolicies{
-      /* input_policies */ {tags::size_tag, task.inputs().size(), default_policy},
-      /* output_policies */ {tags::size_tag, task.outputs().size(), default_policy},
-      /* reduction_policies */ {tags::size_tag, task.reductions().size(), default_policy},
-    };
-  }();
-
-  if (auto&& sm = task.library().find_task(task.local_task_id())->task_config()->store_mappings();
-      sm.has_value()) {
-    sm->apply_inline(
-      task, target_options, &ret.input_policies, &ret.output_policies, &ret.reduction_policies);
-  }
-  return ret;
+  return result;
 }
 
 [[nodiscard]] InlineTaskContext make_inline_task_context(const TaskBase& task,
@@ -247,14 +142,10 @@ struct TaskStoreMappingPolicies {
   auto launch_domain    = strategy.launch_domain();
   const auto task_index = strategy.task_index();
 
-  const auto mapping_policies = make_store_mapping_policies(task, variant_code);
-
-  auto inputs =
-    map_stores(task.inputs(), mapping_policies.input_policies, strategy, launch_domain, task_index);
-  auto outputs = map_stores(
-    task.outputs(), mapping_policies.output_policies, strategy, launch_domain, task_index);
-  auto reductions = map_stores(
-    task.reductions(), mapping_policies.reduction_policies, strategy, launch_domain, task_index);
+  auto inputs  = map_stores(task.inputs(), task.machine(), strategy, launch_domain, task_index);
+  auto outputs = map_stores(task.outputs(), task.machine(), strategy, launch_domain, task_index);
+  auto reductions =
+    map_stores(task.reductions(), task.machine(), strategy, launch_domain, task_index);
 
   return InlineTaskContext{variant_code,
                            launch_domain,

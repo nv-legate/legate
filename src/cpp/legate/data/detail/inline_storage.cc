@@ -109,7 +109,8 @@ namespace {
         size,
         /*read_only=*/false,
         [api](void* ptr) {
-          const cuda::detail::AutoPrimaryContext free_ctx{0};
+          const cuda::detail::AutoPrimaryContext free_ctx{
+            has_finished() ? 0 : Runtime::get_runtime().get_current_cuda_device()};
 
           // Use null stream if the runtime has already finished.
           auto&& stream = has_finished() ? nullptr : Runtime::get_runtime().get_cuda_stream();
@@ -129,7 +130,8 @@ namespace {
         size,
         /*read_only=*/false,
         [api](void* ptr) {
-          const cuda::detail::AutoPrimaryContext free_ctx{0};
+          const cuda::detail::AutoPrimaryContext free_ctx{
+            has_finished() ? 0 : Runtime::get_runtime().get_current_cuda_device()};
 
           api->mem_free_host(&ptr);
         });
@@ -215,6 +217,9 @@ InlineStorage::~InlineStorage()
   if (alloc_().impl()) {
     alloc_().impl()->maybe_deallocate();
   }
+  if (stale_.has_value() && stale_->impl()) {
+    stale_->impl()->maybe_deallocate();
+  }
 }
 
 mapping::StoreTarget InlineStorage::target() const { return alloc_().target(); }
@@ -265,11 +270,12 @@ void InlineStorage::remap_to(mapping::StoreTarget new_target)
     // Either source or destination is on device. This will handle either case transparently.
     const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
 
-    cuda::detail::get_cuda_driver_api()->mem_cpy_async(
-      tmp.data(), data(), num_bytes, Runtime::get_runtime().get_cuda_stream());
+    auto&& api = cuda::detail::get_cuda_driver_api();
+
+    api->mem_cpy_async(tmp.data(), data(), num_bytes, Runtime::get_runtime().get_cuda_stream());
 
     // Wait so that copy is done prior to host memory being potentially freed.
-    cuda::detail::stream_synchronize_minimal(Runtime::get_runtime().get_cuda_stream());
+    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
   } else {
     std::memcpy(tmp.data(), data(), num_bytes);
   }

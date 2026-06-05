@@ -101,6 +101,15 @@ InlineAllocation InlinePhysicalStore::get_inline_allocation() const
   return dim_dispatch(subdim, GetInlineAllocationPtr{}, instance, fid, sub_domain, target());
 }
 
+bool InlinePhysicalStore::is_accessible(mapping::TaskTarget task_target) const
+{
+  if (task_target == mapping::TaskTarget::CPU) {
+    return target() == mapping::StoreTarget::SYSMEM;
+  }
+
+  return target() == mapping::StoreTarget::FBMEM || target() == mapping::StoreTarget::ZCMEM;
+}
+
 Domain InlinePhysicalStore::domain() const
 {
   // Reference the domain over the root storage as inline storages do not use

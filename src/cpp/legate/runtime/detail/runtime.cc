@@ -1188,6 +1188,7 @@ extern void register_exception_reduction_op(const Library& context);
       const cuda::detail::AutoPrimaryContext ctx{runtime.get_current_cuda_device()};
 
       runtime.current_stream_ = api->stream_create(0x01 /*CU_STREAM_NON_BLOCKING*/);
+      api->mem_set_default_pool_release_threshold(ordinal, UINT64_MAX);
     }
   }
   comm::coll::init();

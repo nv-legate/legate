@@ -71,6 +71,8 @@ class InlinePhysicalStore final : public PhysicalStore {
    */
   [[nodiscard]] mapping::StoreTarget target() const override;
 
+  [[nodiscard]] bool is_accessible(mapping::TaskTarget task_target) const override;
+
   /**
    * @brief Returns whether the inline physical store is partitioned.
    */

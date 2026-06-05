@@ -431,15 +431,14 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   return create_partition_(self, std::move(partition), /* complete */ true);
 }
 
-InternalSharedPtr<PhysicalStore> LogicalStore::map(
-  const Partition* partition,
-  const Domain& launch_domain,
-  const DomainPoint& color,
-  const legate::mapping::InstanceMappingPolicy& policy)
+InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
+                                                   const Domain& launch_domain,
+                                                   const DomainPoint& color,
+                                                   const legate::mapping::detail::Machine& machine)
 {
   // TODO(wonchanl): Need to check if the storage is right for the input partition and the policy
   if (mapped_.has_value()) {
-    if ((*mapped_)->target() == policy.target) {
+    if ((*mapped_)->is_accessible(machine.preferred_target())) {
       return *mapped_;
     }
     mapped_.reset();
@@ -457,8 +456,8 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(
     domain.rect_data[0] = 0;
     domain.rect_data[1] = 0;
   }
-
-  auto result = get_storage()->map(policy.target, type(), shape(), transform_, domain);
+  auto result =
+    get_storage()->map(machine.preferred_store_target(), type(), shape(), transform_, domain);
 
   mapped_.emplace(result);
 
