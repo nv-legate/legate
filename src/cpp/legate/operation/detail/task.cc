@@ -20,8 +20,9 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
-#include <legate/task/detail/inline_task_body.h>
 #include <legate/task/detail/returned_exception.h>
+#include <legate/task/detail/task.h>
+#include <legate/task/detail/task_context.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/detail/variant_info.h>
 #include <legate/task/task_context.h>
@@ -35,6 +36,7 @@
 #include <legate/utilities/detail/zip.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/machine.h>
+#include <legate/utilities/typedefs.h>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -190,9 +192,64 @@ void LogicalTask::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
 
+namespace {
+
+[[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
+  Span<const TaskStoreArg> store_args,
+  const legate::mapping::detail::Machine& machine,
+  const Strategy& strategy,
+  const Domain& launch_domain,
+  const DomainPoint& task_index)
+{
+  SmallVector<InternalSharedPtr<PhysicalStore>> result;
+
+  result.reserve(store_args.size());
+  for (auto&& [_, store, variable] : store_args) {
+    result.emplace_back(store->map(strategy[*variable].get(),
+                                   strategy.find_store_projection(*variable),
+                                   launch_domain,
+                                   task_index,
+                                   machine));
+  }
+  return result;
+}
+
+[[nodiscard]] TaskContext make_inline_task_context(const TaskBase* task,
+                                                   VariantCode variant_code,
+                                                   const Strategy& strategy)
+{
+  auto launch_domain    = strategy.launch_domain();
+  const auto task_index = strategy.task_index();
+
+  auto inputs  = map_stores(task->inputs(), task->machine(), strategy, launch_domain, task_index);
+  auto outputs = map_stores(task->outputs(), task->machine(), strategy, launch_domain, task_index);
+  auto reductions =
+    map_stores(task->reductions(), task->machine(), strategy, launch_domain, task_index);
+
+  return TaskContext{variant_code,
+                     launch_domain,
+                     task_index,
+                     task,
+                     std::move(inputs),
+                     std::move(outputs),
+                     std::move(reductions),
+                     SmallVector<InternalSharedPtr<Scalar>>{task->scalars()}};
+}
+
+}  // namespace
+
 void LogicalTask::launch_task_(Strategy* strategy)
 {
-  inline_task_body(*this, machine().preferred_variant(), variant_info_().body, *strategy);
+  const auto get_task_name = [&] { return library().get_task_name(local_task_id()); };
+  const auto variant_code  = machine().preferred_variant();
+
+  show_progress(
+    strategy->task_index(), get_task_name(), variant_code, provenance().as_string_view());
+
+  auto ctx = make_inline_task_context(this, variant_code, *strategy);
+
+  std::ignore =
+    task_detail::task_body(legate::TaskContext{&ctx}, variant_info_().body, get_task_name);
 }
 
 ////////////////////////////////////////////////////

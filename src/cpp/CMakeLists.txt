@@ -397,7 +397,6 @@ target_sources(
     legate/task/detail/returned_cpp_exception.cc
     legate/task/detail/returned_python_exception.cc
     legate/task/detail/task_context.cc
-    legate/task/detail/inline_task_body.cc
     legate/task/detail/task.cc
     legate/task/detail/variant_info.cc
     legate/task/detail/task_info.cc
