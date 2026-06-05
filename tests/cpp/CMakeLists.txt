@@ -151,7 +151,6 @@ set(
   integration/auto_task_error.cc
   integration/bloat_constraints.cc
   integration/broadcast_constraints.cc
-  integration/child_store.cc
   integration/core_mapper.cc
   integration/delinearize.cc
   integration/exception.cc

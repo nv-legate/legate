@@ -41,8 +41,6 @@ class LogicalStorePartition {
   [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
   [[nodiscard]] const InternalSharedPtr<StoragePartition>& storage_partition() const;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
-  [[nodiscard]] InternalSharedPtr<LogicalStore> get_child_store(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const;
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] Span<const std::uint64_t> color_shape() const;
 

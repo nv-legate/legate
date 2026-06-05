@@ -205,12 +205,6 @@ tuple<std::uint64_t> LogicalStorePartition::color_shape() const
   return tuple<std::uint64_t>{std::move(vec)};
 }
 
-LogicalStore LogicalStorePartition::get_child_store(Span<const std::uint64_t> color) const
-{
-  return LogicalStore{
-    impl()->get_child_store(detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color})};
-}
-
 const SharedPtr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const
 {
   return impl_->impl();

@@ -33,39 +33,6 @@
 
 namespace legate::detail {
 
-InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
-{
-  const auto* const tiling = dynamic_cast<const Tiling*>(partition_.get());
-
-  if (!tiling) {
-    throw TracedException<std::runtime_error>{
-      "Child stores can be retrieved only from tile partitions"};
-  }
-
-  if (!tiling->has_color(color)) {
-    throw TracedException<std::out_of_range>{
-      fmt::format("Color {} is invalid for partition of color shape {}", color, color_shape())};
-  }
-
-  auto transform      = store_->transform();
-  auto inverted_color = transform->invert_color(std::move(color));
-  auto child_storage  = storage_partition_->get_child_storage(storage_partition_, inverted_color);
-
-  auto child_extents = tiling->get_child_extents(store_->extents(), inverted_color);
-  auto child_offsets = tiling->get_child_offsets(inverted_color);
-
-  for (auto&& [dim, coff] : legate::detail::enumerate(child_offsets)) {
-    if (coff != 0) {
-      transform = make_internal_shared<TransformStack>(std::make_unique<Shift>(dim, -coff),
-                                                       std::move(transform));
-    }
-  }
-
-  return make_internal_shared<LogicalStore>(
-    std::move(child_extents), std::move(child_storage), store_->type(), std::move(transform));
-}
-
 bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const
 {
   return storage_partition_->is_disjoint_for(launch_domain);

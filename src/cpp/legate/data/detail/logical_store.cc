@@ -89,36 +89,18 @@ LogicalStore::LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
                            InternalSharedPtr<Storage> storage,
                            InternalSharedPtr<Type> type,
                            InternalSharedPtr<TransformStack> transform,
-                           std::optional<Domain> domain)
+                           Domain domain)
   : store_id_{Runtime::get_runtime().get_unique_store_id()},
     type_{std::move(type)},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     storage_{std::move(storage)},
     transform_{std::move(transform)},
-    domain_{std::move(domain)}
+    domain_{domain}
 {
   assert_fixed_storage_size(this->type());
   LEGATE_ASSERT(transform_ != nullptr);
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
-  }
-}
-
-LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage,
-                           InternalSharedPtr<Type> type,
-                           InternalSharedPtr<PhysicalStore> physical_store)
-  : store_id_{Runtime::get_runtime().get_unique_store_id()},
-    type_{std::move(type)},
-    shape_{storage->shape()},
-    storage_{std::move(storage)},
-    transform_{make_internal_shared<TransformStack>()},
-    mapped_{std::move(physical_store)},
-    non_transformable_{true},
-    non_owning_{true}
-{
-  assert_fixed_storage_size(this->type());
-  if (log_legate().want_debug()) {
-    log_legate().debug() << "Create non-owning " << to_string();
   }
 }
 
@@ -191,14 +173,9 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
                       transform->invert_point({tags::size_tag, new_extents.size(), 0}));
 
   // New domain over Storage simply restricts to the single dimension in the projection.
-  const auto projected_domain = [&]() -> std::optional<Domain> {
-    if (!domain_.has_value()) {
-      return std::nullopt;
-    }
-    LEGATE_ASSERT(Runtime::get_runtime().config().enable_inline_task_launch());
-
-    DomainPoint lo = domain_->lo();
-    DomainPoint hi = domain_->hi();
+  const auto projected_domain = [&] {
+    DomainPoint lo = domain_.lo();
+    DomainPoint hi = domain_.hi();
 
     lo[d] = index;
     hi[d] = index;
@@ -295,14 +272,9 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   // Compute the new domain of the root storage that this LogicalStore covers.
   const auto sstart                     = static_cast<std::int64_t>(start);
   const auto extent_dim                 = static_cast<std::int64_t>(exts[dim]);
-  const auto sliced_root_storage_domain = [&]() -> std::optional<Domain> {
-    if (!domain_.has_value()) {
-      return std::nullopt;
-    }
-    LEGATE_ASSERT(runtime.config().enable_inline_task_launch());
-
-    DomainPoint lo = domain_->lo();
-    DomainPoint hi = domain_->hi();
+  const auto sliced_root_storage_domain = [&] {
+    DomainPoint lo = domain_.lo();
+    DomainPoint hi = domain_.hi();
 
     lo[dim] += sstart;
     hi[dim] = lo[dim] + extent_dim - 1;
@@ -445,7 +417,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
   }
 
   auto domain =
-    launch_domain.is_valid() && domain_->is_valid() ? partition->shard(*domain_, color) : *domain_;
+    launch_domain.is_valid() && domain_.is_valid() ? partition->shard(domain_, color) : domain_;
 
   LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
   if (transformed()) {
@@ -490,7 +462,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime().flush_scheduling_window();
 
-  auto domain = *domain_;
+  auto domain = domain_;
 
   if (domain.dim == 0) {
     domain.dim          = 1;

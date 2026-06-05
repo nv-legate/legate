@@ -618,7 +618,6 @@ class LEGATE_EXPORT LogicalStorePartition {
 
   [[nodiscard]] LogicalStore store() const;
   [[nodiscard]] tuple<std::uint64_t> color_shape() const;
-  [[nodiscard]] LogicalStore get_child_store(Span<const std::uint64_t> color) const;
 
   [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& impl() const;
 

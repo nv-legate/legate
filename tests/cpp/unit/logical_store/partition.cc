@@ -266,45 +266,6 @@ TEST_P(UnboundStorePartitionTest, Basic)
                 ::testing::HasSubstr("Illegal to access an uninitialized unbound store")));
 }
 
-TEST_P(ChildStoreTest, Basic)
-{
-  const auto [shape, tile_shape, params] = GetParam();
-  const auto [color, color_shape]        = params;
-  auto runtime                           = legate::Runtime::get_runtime();
-  auto store                             = runtime->create_store(shape, legate::int64());
-  auto partition                         = store.partition_by_tiling(tile_shape);
-
-  ASSERT_EQ(partition.store().shape(), store.shape());
-  ASSERT_EQ(partition.get_child_store(color).shape(), color_shape);
-}
-
-TEST_P(ForcedColorChildStoreTest, Basic)
-{
-  const auto [shape, tile_shape, forced_color, params] = GetParam();
-  const auto [color, color_shape]                      = params;
-  auto runtime                                         = legate::Runtime::get_runtime();
-  auto store     = runtime->create_store(shape, legate::int64());
-  auto partition = store.partition_by_tiling(tile_shape, forced_color);
-
-  ASSERT_EQ(partition.color_shape().data(), forced_color);
-  ASSERT_EQ(partition.store().shape(), store.shape());
-  ASSERT_EQ(partition.get_child_store(color).shape(), color_shape);
-}
-
-TEST_P(NegativeColorTest, Basic)
-{
-  const auto& param      = GetParam();
-  const auto& shape      = std::get<0>(param);
-  const auto& test_color = std::get<1>(param);
-  auto runtime           = legate::Runtime::get_runtime();
-  auto store             = runtime->create_store(shape, legate::int64());
-  auto partition         = store.partition_by_tiling({1, 4});
-
-  ASSERT_THAT([&]() { static_cast<void>(partition.get_child_store(test_color)); },
-              testing::ThrowsMessage<std::out_of_range>(
-                ::testing::HasSubstr("is invalid for partition of color shape")));
-}
-
 TEST_F(LogicalStorePartitionUnit, UnboundStoreCreatePartition)
 {
   auto runtime               = legate::Runtime::get_runtime();
@@ -318,22 +279,6 @@ TEST_F(LogicalStorePartitionUnit, UnboundStoreCreatePartition)
     },
     testing::ThrowsMessage<std::invalid_argument>(
       ::testing::HasSubstr("Unbound store cannot be manually partitioned")));
-}
-
-TEST_F(LogicalStorePartitionUnit, GetChildStoreFromNonTilingPartition)
-{
-  auto runtime               = legate::Runtime::get_runtime();
-  auto store                 = runtime->create_store(legate::Shape{4, 4}, legate::int64());
-  auto no_partition          = legate::detail::create_no_partition();
-  const auto& internal_store = store.impl();
-
-  // Create a LogicalStorePartition with NoPartition (not Tiling)
-  auto store_partition = legate::detail::create_store_partition(internal_store, no_partition);
-
-  // get_child_store only supports Tiling partitions
-  ASSERT_THAT([&] { static_cast<void>(store_partition->get_child_store({0, 0})); },
-              testing::ThrowsMessage<std::runtime_error>(
-                ::testing::HasSubstr("Child stores can be retrieved only from tile partitions")));
 }
 
 }  // namespace logical_store_partition_test

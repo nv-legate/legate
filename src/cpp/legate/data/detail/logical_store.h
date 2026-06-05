@@ -64,21 +64,7 @@ class LogicalStore {
                InternalSharedPtr<Storage> storage,
                InternalSharedPtr<Type> type,
                InternalSharedPtr<TransformStack> transform,
-               std::optional<Domain> domain = std::nullopt);
-  /**
-   * @brief Construct a non-owning LogicalStore from an existing PhysicalStore.
-   *
-   * This constructor creates a LogicalStore that wraps an already-mapped PhysicalStore,
-   * typically used in nested task contexts. The resulting store is non-transformable
-   * since transforms would invalidate the existing physical mapping.
-   *
-   * @param storage The backing storage
-   * @param type The element type
-   * @param physical_store The pre-existing PhysicalStore to wrap
-   */
-  LogicalStore(InternalSharedPtr<Storage> storage,
-               InternalSharedPtr<Type> type,
-               InternalSharedPtr<PhysicalStore> physical_store);
+               Domain domain);
 
   LogicalStore(LogicalStore&& other) noexcept            = default;
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
@@ -230,12 +216,7 @@ class LogicalStore {
   InternalSharedPtr<Storage> storage_{};
   InternalSharedPtr<TransformStack> transform_{};
 
-  // The (sub)domain over the root storage that this LogicalStore covers.
-  // Note: this is not the domain/shape of the root storage, but a
-  // possible subset of it. Used for tracking domain information when
-  // avoiding sub-storages such as in inline physical stores to allow for
-  // correct accessors.
-  std::optional<Domain> domain_{};
+  Domain domain_{};
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};

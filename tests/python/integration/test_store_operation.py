@@ -55,35 +55,6 @@ class TestLogicalStoreOperation:
         np.testing.assert_allclose(delin_arr, reshaped)
 
     @pytest.mark.parametrize(
-        "shape", [(2, 4, 6, 8), (7, 4, 3, 9), (500, 2, 2, 2)], ids=str
-    )
-    def test_partition_by_tiling(self, shape: tuple[int, ...]) -> None:
-        runtime = get_legate_runtime()
-        # test might crash when there are still running tasks, block until done
-        # [error 397] LEGION ERROR: Attempted an external attach operation on
-        # region (d80,3a,3a) that conflicts with previous inline mapping in
-        # task Legate Core Toplevel Task (ID 1) that would ultimately result in
-        # deadlock. Instead you receive this error message. Try unmapping the
-        # region before invoking 'attach_external_resource'.
-        runtime.issue_execution_fence(block=True)
-        arr = np.random.rand(*shape)
-        store = runtime.create_store_from_buffer(
-            ty.float64, arr.shape, arr, False
-        )
-        partition = store.partition_by_tiling((2, 2, 2, 2))
-        assert store.equal_storage(partition.store())
-        child_store = partition.get_child_store(
-            *[idx - 1 if idx > 0 else 0 for idx in partition.color_shape]
-        )
-        assert not child_store.equal_storage(store)
-        child_store_arr = np.asarray(child_store.get_physical_store())
-        arr_index = [idx % 2 - 2 for idx in shape]
-        arr_p = arr[
-            arr_index[0] :, arr_index[1] :, arr_index[2] :, arr_index[3] :
-        ]
-        np.testing.assert_allclose(child_store_arr, arr_p)
-
-    @pytest.mark.parametrize(
         ("arr_shape", "dim", "index"),
         [
             ((2, 2), 1, 0),
@@ -394,37 +365,6 @@ class TestLogicalStoreOperationErrors:
         msg = f"Expected an iterable but got {type(color_shape)}"
         with pytest.raises(ValueError, match=msg):
             store.partition_by_tiling((2, 2, 2), color_shape)  #  type: ignore[arg-type]
-
-    def test_child_store_invalid_color_size(self) -> None:
-        runtime = get_legate_runtime()
-        store = runtime.create_store(ty.int16, (2, 2, 2))
-        partition = store.partition_by_tiling((1, 1, 1))
-        msg = re.escape(
-            "Color [1] is invalid for partition of color shape [2, 2, 2]"
-        )
-        with pytest.raises(IndexError, match=msg):
-            partition.get_child_store(1)
-
-    def test_get_child_store_invalid_index(self) -> None:
-        runtime = get_legate_runtime()
-        store = runtime.create_store(ty.int16, (4, 6, 8))
-        partition = store.partition_by_tiling((2, 2, 2))
-        msg = "invalid for partition of color shape"
-        with pytest.raises(IndexError, match=msg):
-            partition.get_child_store(3, 4, 5)
-
-    def test_partition_invalid_color(self) -> None:
-        runtime = get_legate_runtime()
-        arr = np.random.rand(*range(4))
-        store = runtime.create_store_from_buffer(
-            ty.float64, arr.shape, arr, False
-        )
-        partition = store.partition_by_tiling((2, 2, 2, 2))
-        msg = "Color .* is invalid for partition of color shape"
-        with pytest.raises(IndexError, match=msg):
-            partition.get_child_store(
-                *[idx - 1 if idx > 0 else 0 for idx in partition.color_shape]
-            )
 
     def test_detach_no_attachment(self) -> None:
         store = get_legate_runtime().create_store(ty.int32, (1, 2, 3))

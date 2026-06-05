@@ -54,7 +54,6 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition(const _LogicalStorePartition&) except+
         _LogicalStore store() except+
         _tuple[uint64_t] color_shape() except+
-        _LogicalStore get_child_store(const _tuple[uint64_t]&) except+
 
 
 cdef class LogicalStore(Unconstructable):

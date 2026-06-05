@@ -886,29 +886,3 @@ cdef class LogicalStorePartition:
         with nogil:
             shape = self._handle.color_shape()
         return tuple(shape.data())
-
-    def get_child_store(self, *color) -> LogicalStore:
-        r"""
-        Get a child store from this partition.
-
-        Parameters
-        ----------
-        *color : int
-            The colors of the child stores to get.
-
-        Returns
-        -------
-        LogicalStore
-            The `LogicalStore` comprising the selected children.
-        """
-        cdef _tuple[uint64_t] cpp_color
-
-        cpp_color.reserve(len(color))
-        for coord in color:
-            cpp_color.append_inplace(<uint64_t> coord)
-
-        cdef _LogicalStore handle
-
-        with nogil:
-            handle = self._handle.get_child_store(std_move(cpp_color))
-        return LogicalStore.from_handle(std_move(handle))
