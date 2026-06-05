@@ -9,6 +9,7 @@
 #include <legate_defines.h>
 
 #include <legate/data/detail/physical_store.h>
+#include <legate/operation/detail/task.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/macros.h>
 
@@ -28,15 +29,22 @@
 
 namespace legate::detail {
 
-TaskContext::TaskContext(CtorArgs&& args)
-  : variant_kind_{args.variant_kind},
-    inputs_{std::move(args.inputs)},
-    outputs_{std::move(args.outputs)},
-    reductions_{std::move(args.reductions)},
-    scalars_{std::move(args.scalars)},
-    comms_{std::move(args.comms)},
-    can_raise_exception_{args.can_raise_exception},
-    can_elide_device_ctx_sync_{args.can_elide_device_ctx_sync}
+TaskContext::TaskContext(VariantCode variant_code,
+                         const Domain& launch_domain,
+                         const DomainPoint& task_index,
+                         const TaskBase* task,
+                         SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
+                         SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
+                         SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
+                         SmallVector<InternalSharedPtr<Scalar>> scalars)
+  : variant_kind_{variant_code},
+    launch_domain_{launch_domain},
+    task_index_{task_index},
+    op_task_{task},
+    inputs_{std::move(inputs)},
+    outputs_{std::move(outputs)},
+    reductions_{std::move(reductions)},
+    scalars_{std::move(scalars)}
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
     if (variant_kind_ == VariantCode::OMP) {
@@ -45,6 +53,27 @@ TaskContext::TaskContext(CtorArgs&& args)
       omp_set_num_threads(static_cast<std::int32_t>(n));
     }
   }
+}
+
+GlobalTaskID TaskContext::task_id() const noexcept
+{
+  return op_task_->library().get_task_id(op_task_->local_task_id());
+}
+
+bool TaskContext::is_single_task() const noexcept { return !launch_domain_.is_valid(); }
+
+const DomainPoint& TaskContext::get_task_index() const noexcept { return task_index_; }
+
+const Domain& TaskContext::get_launch_domain() const noexcept { return launch_domain_; }
+
+std::string_view TaskContext::get_provenance() const noexcept
+{
+  return op_task_->provenance().as_string_view();
+}
+
+const mapping::detail::Machine& TaskContext::machine() const noexcept
+{
+  return op_task_->machine();
 }
 
 void TaskContext::make_all_unbound_stores_empty() {}

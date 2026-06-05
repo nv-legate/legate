@@ -39,85 +39,6 @@ namespace legate::detail {
 
 namespace {
 
-class InlineTaskContext final : public TaskContext {
- public:
-  InlineTaskContext(VariantCode variant_code,
-                    const Domain& launch_domain,
-                    const DomainPoint& task_index,
-                    SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
-                    SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
-                    SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
-                    SmallVector<InternalSharedPtr<Scalar>> scalars,
-                    const TaskBase* task);
-
-  [[nodiscard]] GlobalTaskID task_id() const noexcept override;
-  [[nodiscard]] bool is_single_task() const noexcept override;
-  [[nodiscard]] const DomainPoint& get_task_index() const noexcept override;
-  [[nodiscard]] const Domain& get_launch_domain() const noexcept override;
-  [[nodiscard]] std::string_view get_provenance() const noexcept override;
-  [[nodiscard]] const mapping::detail::Machine& machine() const noexcept override;
-
- private:
-  [[nodiscard]] const TaskBase& task_() const;
-
-  const Domain launch_domain_{};
-  const DomainPoint task_index_{};
-  const TaskBase* op_task_{};
-};
-
-// ==========================================================================================
-
-const TaskBase& InlineTaskContext::task_() const { return *op_task_; }
-
-// ==========================================================================================
-
-InlineTaskContext::InlineTaskContext(VariantCode variant_code,
-                                     const Domain& launch_domain,
-                                     const DomainPoint& task_index,
-                                     SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
-                                     SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
-                                     SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
-                                     SmallVector<InternalSharedPtr<Scalar>> scalars,
-                                     const TaskBase* task)
-  : TaskContext{{variant_code,
-                 task->can_throw_exception(),
-                 task->can_elide_device_ctx_sync(),
-                 std::move(inputs),
-                 std::move(outputs),
-                 std::move(reductions),
-                 std::move(scalars),
-                 SmallVector<legate::comm::Communicator>{}}},
-    launch_domain_{launch_domain},
-    task_index_{task_index},
-    op_task_{task}
-{
-}
-
-GlobalTaskID InlineTaskContext::task_id() const noexcept
-{
-  const auto& task = task_();
-
-  return task.library().get_task_id(task.local_task_id());
-}
-
-bool InlineTaskContext::is_single_task() const noexcept { return !launch_domain_.is_valid(); }
-
-const DomainPoint& InlineTaskContext::get_task_index() const noexcept { return task_index_; }
-
-const Domain& InlineTaskContext::get_launch_domain() const noexcept { return launch_domain_; }
-
-std::string_view InlineTaskContext::get_provenance() const noexcept
-{
-  return task_().provenance().as_string_view();
-}
-
-const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
-{
-  return task_().machine();
-}
-
-// ==========================================================================================
-
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
   Span<const TaskStoreArg> store_args,
   const legate::mapping::detail::Machine& machine,
@@ -138,9 +59,9 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   return result;
 }
 
-[[nodiscard]] InlineTaskContext make_inline_task_context(const TaskBase& task,
-                                                         VariantCode variant_code,
-                                                         const Strategy& strategy)
+[[nodiscard]] TaskContext make_inline_task_context(const TaskBase& task,
+                                                   VariantCode variant_code,
+                                                   const Strategy& strategy)
 {
   auto launch_domain    = strategy.launch_domain();
   const auto task_index = strategy.task_index();
@@ -150,14 +71,14 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
   auto reductions =
     map_stores(task.reductions(), task.machine(), strategy, launch_domain, task_index);
 
-  return InlineTaskContext{variant_code,
-                           launch_domain,
-                           task_index,
-                           std::move(inputs),
-                           std::move(outputs),
-                           std::move(reductions),
-                           SmallVector<InternalSharedPtr<Scalar>>{task.scalars()},
-                           &task};
+  return TaskContext{variant_code,
+                     launch_domain,
+                     task_index,
+                     &task,
+                     std::move(inputs),
+                     std::move(outputs),
+                     std::move(reductions),
+                     SmallVector<InternalSharedPtr<Scalar>>{task.scalars()}};
 }
 
 template <typename F>

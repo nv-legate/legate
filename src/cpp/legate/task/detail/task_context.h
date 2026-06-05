@@ -21,23 +21,18 @@
 namespace legate::detail {
 
 class PhysicalStore;
+class TaskBase;
 
 class TaskContext {
  public:
-  struct CtorArgs {
-    VariantCode variant_kind;
-    bool can_raise_exception{};
-    bool can_elide_device_ctx_sync{};
-    SmallVector<InternalSharedPtr<PhysicalStore>> inputs{};
-    SmallVector<InternalSharedPtr<PhysicalStore>> outputs{};
-    SmallVector<InternalSharedPtr<PhysicalStore>> reductions{};
-    SmallVector<InternalSharedPtr<Scalar>> scalars{};
-    SmallVector<legate::comm::Communicator> comms{};
-
-    [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> get_outputs() const noexcept;
-  };
-
-  explicit TaskContext(CtorArgs&& args);
+  TaskContext(VariantCode variant_code,
+              const Domain& launch_domain,
+              const DomainPoint& task_index,
+              const TaskBase* task,
+              SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
+              SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
+              SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
+              SmallVector<InternalSharedPtr<Scalar>> scalars);
 
   [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> inputs() const noexcept;
   [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> outputs() const noexcept;
@@ -45,12 +40,12 @@ class TaskContext {
   [[nodiscard]] Span<const InternalSharedPtr<Scalar>> scalars() const noexcept;
   [[nodiscard]] Span<const legate::comm::Communicator> communicators() const noexcept;
 
-  [[nodiscard]] virtual GlobalTaskID task_id() const noexcept                    = 0;
-  [[nodiscard]] virtual bool is_single_task() const noexcept                     = 0;
-  [[nodiscard]] virtual const DomainPoint& get_task_index() const noexcept       = 0;
-  [[nodiscard]] virtual const Domain& get_launch_domain() const noexcept         = 0;
-  [[nodiscard]] virtual std::string_view get_provenance() const                  = 0;
-  [[nodiscard]] virtual const mapping::detail::Machine& machine() const noexcept = 0;
+  [[nodiscard]] GlobalTaskID task_id() const noexcept;
+  [[nodiscard]] bool is_single_task() const noexcept;
+  [[nodiscard]] const DomainPoint& get_task_index() const noexcept;
+  [[nodiscard]] const Domain& get_launch_domain() const noexcept;
+  [[nodiscard]] std::string_view get_provenance() const noexcept;
+  [[nodiscard]] const mapping::detail::Machine& machine() const noexcept;
 
   [[nodiscard]] VariantCode variant_kind() const noexcept;
   [[nodiscard]] bool can_raise_exception() const noexcept;
@@ -58,7 +53,7 @@ class TaskContext {
   [[nodiscard]] bool can_elide_device_ctx_sync() const noexcept;
 
   void set_exception(ReturnedException what);
-  [[nodiscard]] std::optional<ReturnedException>& get_exception() noexcept;
+  [[nodiscard]] std::optional<ReturnedException> get_exception() noexcept;
 
   /**
    * @brief Makes all of unbound output stores of this task empty
@@ -72,7 +67,10 @@ class TaskContext {
   [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> get_scalar_stores_() const noexcept;
 
  private:
-  VariantCode variant_kind_;
+  const VariantCode variant_kind_{};
+  const Domain launch_domain_{};
+  const DomainPoint task_index_{};
+  const TaskBase* op_task_{};
   SmallVector<InternalSharedPtr<PhysicalStore>> inputs_{};
   SmallVector<InternalSharedPtr<PhysicalStore>> outputs_{};
   SmallVector<InternalSharedPtr<PhysicalStore>> reductions_{};
@@ -80,9 +78,6 @@ class TaskContext {
   SmallVector<InternalSharedPtr<PhysicalStore>> scalar_stores_{};
   SmallVector<InternalSharedPtr<Scalar>> scalars_{};
   SmallVector<legate::comm::Communicator> comms_{};
-  bool can_raise_exception_{};
-  bool can_elide_device_ctx_sync_{};
-  std::optional<ReturnedException> excn_{std::nullopt};
 };
 
 }  // namespace legate::detail

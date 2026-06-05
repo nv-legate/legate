@@ -39,16 +39,16 @@ inline Span<const legate::comm::Communicator> TaskContext::communicators() const
 
 inline VariantCode TaskContext::variant_kind() const noexcept { return variant_kind_; }
 
-inline bool TaskContext::can_raise_exception() const noexcept { return can_raise_exception_; }
+inline bool TaskContext::can_raise_exception() const noexcept { return false; }
 
-inline bool TaskContext::can_elide_device_ctx_sync() const noexcept
+inline bool TaskContext::can_elide_device_ctx_sync() const noexcept { return true; }
+
+inline void TaskContext::set_exception(ReturnedException) {}
+
+inline std::optional<ReturnedException> TaskContext::get_exception() noexcept
 {
-  return can_elide_device_ctx_sync_;
+  return std::nullopt;
 }
-
-inline void TaskContext::set_exception(ReturnedException what) { excn_ = std::move(what); }
-
-inline std::optional<ReturnedException>& TaskContext::get_exception() noexcept { return excn_; }
 
 // ===========================================================================================
 
