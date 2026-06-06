@@ -33,7 +33,6 @@ class Machine;
 
 namespace legate::detail {
 
-class StoragePartition;
 class Type;
 class Shape;
 class Partition;
@@ -67,19 +66,6 @@ class Storage {
    * @param provenance The provenance of the storage.
    */
   Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::string_view provenance);
-  /**
-   * @brief Construct a Storage object representing a sub-storage of a partitioned storage.
-   *
-   * @param extents The extents of the sub-storage.
-   * @param parent The parent storage partition.
-   * @param color The color of the sub-storage (i.e. the index of the sub-storage in the parent
-   * storage partition).
-   * @param offsets The offsets of the sub-storage in the partitioned storage.
-   */
-  Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
-          InternalSharedPtr<StoragePartition> parent,
-          SmallVector<std::uint64_t, LEGATE_MAX_DIM> color,
-          SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
   /**
    * @brief Construct a Storage object from an existing external allocation.
    *
@@ -130,11 +116,6 @@ class Storage {
     const InternalSharedPtr<Storage>& self,
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
     SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
-  [[nodiscard]] const Storage* get_root() const;
-  [[nodiscard]] Storage* get_root();
-  [[nodiscard]] InternalSharedPtr<const Storage> get_root(
-    const InternalSharedPtr<const Storage>& self) const;
-  [[nodiscard]] InternalSharedPtr<Storage> get_root(const InternalSharedPtr<Storage>& self);
 
   void set_bound(bool bound);
 
@@ -165,11 +146,6 @@ class Storage {
                          InternalSharedPtr<Partition> key_partition);
   void reset_key_partition() noexcept;
 
-  [[nodiscard]] InternalSharedPtr<StoragePartition> create_partition(
-    const InternalSharedPtr<Storage>& self,
-    InternalSharedPtr<Partition> partition,
-    std::optional<bool> complete = std::nullopt);
-
   [[nodiscard]] std::string to_string() const;
 
  private:
@@ -182,7 +158,6 @@ class Storage {
   std::string_view provenance_{};  // only relevant on the root Storage
 
   std::int32_t level_{};
-  std::optional<InternalSharedPtr<StoragePartition>> parent_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_{};
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
 
@@ -196,11 +171,6 @@ class Storage {
   const InternalSharedPtr<Storage>& self,
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
-
-[[nodiscard]] InternalSharedPtr<StoragePartition> create_storage_partition(
-  const InternalSharedPtr<Storage>& self,
-  InternalSharedPtr<Partition> partition,
-  std::optional<bool> complete);
 
 }  // namespace legate::detail
 

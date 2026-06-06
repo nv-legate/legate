@@ -119,8 +119,7 @@ bool DependencyChecker::have_equal_partitioning_(const InternalSharedPtr<Logical
 std::optional<DependencyChecker::AccessInfo>& DependencyChecker::get_last_access_(
   const InternalSharedPtr<LogicalStore>& store)
 {
-  const auto& root_storage = store->get_storage()->get_root();
-  return per_store_accesses_[root_storage->id()];
+  return per_store_accesses_[store->get_storage()->id()];
 }
 
 bool DependencyChecker::fail_with_msg_(const InternalSharedPtr<LogicalStore>& store,

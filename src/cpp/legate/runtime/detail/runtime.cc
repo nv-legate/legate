@@ -805,7 +805,7 @@ void set_env_vars()
                                                                  /* overwrite */ false);
   }
 
-  EnvironmentVariable<bool>{"REALM_BACKTRACE"}.set(/*value=*/true, /* overwrite */ false);
+  EnvironmentVariable<bool>{"REALM_BACKTRACE"}.set(/*value=*/false, /* overwrite */ false);
 }
 
 }  // namespace

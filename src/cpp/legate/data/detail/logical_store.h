@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/data/detail/storage.h>
-#include <legate/data/detail/storage_partition.h>
 #include <legate/data/slice.h>
 #include <legate/mapping/mapping.h>
 #include <legate/partitioning/detail/restriction.h>

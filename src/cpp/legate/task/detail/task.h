@@ -16,11 +16,6 @@
 
 namespace legate::detail {
 
-void show_progress(const DomainPoint& task_index,
-                   std::string_view task_name,
-                   VariantCode variant_code,
-                   std::string_view provenance);
-
 void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
 
 void show_progress(const DomainPoint& index_point,
@@ -29,18 +24,4 @@ void show_progress(const DomainPoint& index_point,
                    Legion::Context ctx      = Legion::Runtime::get_context(),
                    Legion::Runtime* runtime = Legion::Runtime::get_runtime());
 
-namespace task_detail {
-
-template <typename F>
-[[nodiscard]] std::optional<ReturnedException> task_body(legate::TaskContext ctx,
-                                                         VariantImpl variant_impl,
-                                                         F&& get_task_name);
-
-template <typename T, typename U>
-[[nodiscard]] nvtx3::scoped_range make_nvtx_range(T&& get_task_name, U&& get_provenance);
-
-}  // namespace task_detail
-
 }  // namespace legate::detail
-
-#include <legate/task/detail/task.inl>

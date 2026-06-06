@@ -7,46 +7,27 @@
 #pragma once
 
 #include <legate/data/detail/logical_store.h>
-#include <legate/data/detail/storage.h>
-#include <legate/data/detail/storage_partition.h>
-#include <legate/data/slice.h>
-#include <legate/partitioning/detail/restriction.h>
-#include <legate/utilities/detail/small_vector.h>
+#include <legate/partitioning/detail/partition.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
-#include <optional>
-
-namespace legate {
-
-class ParallelPolicy;
-
-}  // namespace legate
-
-namespace legate::mapping::detail {
-
-class Machine;
-
-}  // namespace legate::mapping::detail
 
 namespace legate::detail {
 
 class LogicalStorePartition {
  public:
   LogicalStorePartition(InternalSharedPtr<Partition> partition,
-                        InternalSharedPtr<StoragePartition> storage_partition,
                         InternalSharedPtr<LogicalStore> store);
 
   [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
-  [[nodiscard]] const InternalSharedPtr<StoragePartition>& storage_partition() const;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] Span<const std::uint64_t> color_shape() const;
 
  private:
   InternalSharedPtr<Partition> partition_{};
-  InternalSharedPtr<StoragePartition> storage_partition_{};
   InternalSharedPtr<LogicalStore> store_{};
 };
 

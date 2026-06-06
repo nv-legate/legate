@@ -298,7 +298,6 @@ target_sources(
     legate/data/detail/logical_store.cc
     legate/data/detail/logical_store_partition.cc
     legate/data/detail/storage.cc
-    legate/data/detail/storage_partition.cc
     legate/data/detail/scalar.cc
     legate/data/detail/physical_store.cc
     legate/data/detail/shape.cc

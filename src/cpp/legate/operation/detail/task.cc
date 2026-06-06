@@ -194,6 +194,29 @@ void LogicalTask::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
 
 namespace {
 
+void show_progress(const DomainPoint& task_index,
+                   std::string_view task_name,
+                   VariantCode variant_code,
+                   std::string_view provenance)
+{
+  if (!Runtime::get_runtime().config().show_progress_requested()) {
+    return;
+  }
+
+  const auto variant_str = [&]() -> std::string_view {
+    switch (variant_code) {
+      case VariantCode::CPU: return "CPU";
+      case VariantCode::GPU: return "GPU";
+      case VariantCode::OMP: return "OpenMP";
+    }
+    LEGATE_ABORT("Unknown variant code: " + std::to_string(to_underlying(variant_code)));
+    return "";
+  }();
+
+  log_legate().print() << task_name << ' ' << variant_str << " task [" << provenance
+                       << "], pt = " << task_index;
+}
+
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
   Span<const TaskStoreArg> store_args,
   const legate::mapping::detail::Machine& machine,
@@ -214,9 +237,9 @@ namespace {
   return result;
 }
 
-[[nodiscard]] TaskContext make_inline_task_context(const TaskBase* task,
-                                                   VariantCode variant_code,
-                                                   const Strategy& strategy)
+[[nodiscard]] TaskContext make_task_context(const TaskBase* task,
+                                            VariantCode variant_code,
+                                            const Strategy& strategy)
 {
   auto launch_domain    = strategy.launch_domain();
   const auto task_index = strategy.task_index();
@@ -246,10 +269,9 @@ void LogicalTask::launch_task_(Strategy* strategy)
   show_progress(
     strategy->task_index(), get_task_name(), variant_code, provenance().as_string_view());
 
-  auto ctx = make_inline_task_context(this, variant_code, *strategy);
+  auto ctx = make_task_context(this, variant_code, *strategy);
 
-  std::ignore =
-    task_detail::task_body(legate::TaskContext{&ctx}, variant_info_().body, get_task_name);
+  variant_info_().body(legate::TaskContext{&ctx});
 }
 
 ////////////////////////////////////////////////////

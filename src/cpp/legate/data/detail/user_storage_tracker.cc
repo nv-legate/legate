@@ -13,7 +13,7 @@ namespace legate::detail {
 UserStorageTracker::UserStorageTracker(const InternalSharedPtr<LogicalStore>& store)
   : storage_{[&] {
       auto&& storage = store->get_storage();
-      return storage->get_root(storage).as_user_ptr();
+      return storage.as_user_ptr();
     }()}
 {
 }

@@ -89,11 +89,8 @@ std::optional<LogicalStorePartition> LogicalStore::get_partition() const
     return std::nullopt;
   }
 
-  auto storage_partition =
-    create_storage_partition(impl()->get_storage(), *key_partition, /* complete */ std::nullopt);
-
-  return LogicalStorePartition{legate::make_internal_shared<detail::LogicalStorePartition>(
-    *key_partition, std::move(storage_partition), impl())};
+  return LogicalStorePartition{
+    legate::make_internal_shared<detail::LogicalStorePartition>(*key_partition, impl())};
 }
 
 LogicalStorePartition LogicalStore::partition_by_tiling(

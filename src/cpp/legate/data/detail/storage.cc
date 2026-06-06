@@ -12,7 +12,6 @@
 #include <legate/data/detail/external_allocation.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/shape.h>
-#include <legate/data/detail/storage_partition.h>
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/detail/partition.h>
@@ -66,22 +65,6 @@ Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::stri
   std::memcpy(storage_data_->data(), scalar.data(), scalar.size());
 }
 
-Storage::Storage(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
-                 InternalSharedPtr<StoragePartition> parent,
-                 SmallVector<std::uint64_t, LEGATE_MAX_DIM> color,
-                 SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
-  : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
-    shape_{make_internal_shared<Shape>(std::move(extents))},
-    level_{parent->level() + 1},
-    parent_{std::move(parent)},
-    color_{std::move(color)},
-    offsets_{std::move(offsets)},
-    storage_data_{}
-{
-  // TODO(wonchanl): Need a v2 implementation
-  LEGATE_ABORT("Sub-storage has not been implemented");
-}
-
 Storage::Storage(InternalSharedPtr<Shape> shape,
                  const InternalSharedPtr<Type>& type,
                  InternalSharedPtr<ExternalAllocation> allocation,
@@ -108,33 +91,7 @@ bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
   const auto* lhs = this;
   const auto* rhs = other.get();
 
-  if (lhs == rhs) {
-    return true;
-  }
-
-  if (lhs->get_root() != rhs->get_root()) {
-    return false;
-  }
-
-  if (lhs->volume() == 0 || rhs->volume() == 0) {
-    return false;
-  }
-
-  auto&& lexts = lhs->extents();
-  auto&& rexts = rhs->extents();
-
-  for (std::uint32_t idx = 0; idx < dim(); ++idx) {
-    auto lext = static_cast<std::int64_t>(lexts[idx]);
-    auto rext = static_cast<std::int64_t>(rexts[idx]);
-    auto loff = lhs->offsets_[idx];
-    auto roff = rhs->offsets_[idx];
-
-    if (loff <= roff ? roff < loff + lext : loff < roff + rext) {
-      continue;
-    }
-    return false;
-  }
-  return true;
+  return lhs == rhs;
 }
 
 bool Storage::equal(const Storage& other) const
@@ -162,26 +119,6 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& /*se
   return nullptr;
 }
 
-const Storage* Storage::get_root() const
-{
-  return parent_.has_value() ? (*parent_)->get_root() : this;
-}
-
-Storage* Storage::get_root() { return parent_.has_value() ? (*parent_)->get_root() : this; }
-
-InternalSharedPtr<const Storage> Storage::get_root(
-  const InternalSharedPtr<const Storage>& self) const
-{
-  LEGATE_ASSERT(self.get() == this);
-  return parent_.has_value() ? (*parent_)->get_root(*parent_) : self;
-}
-
-InternalSharedPtr<Storage> Storage::get_root(const InternalSharedPtr<Storage>& self)
-{
-  LEGATE_ASSERT(self.get() == this);
-  return parent_.has_value() ? (*parent_)->get_root(*parent_) : self;
-}
-
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
 InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-member-function-const)
@@ -194,10 +131,6 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
   if (unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound storages cannot be inlined mapped"};
   }
-
-  auto root = get_root();
-
-  LEGATE_CHECK(root == this);
 
   if (!storage_data_) {
     storage_data_ = make_internal_shared<InlineStorage>(domain, field_size_, target);
@@ -239,9 +172,6 @@ std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
       restrictions.are_satisfied_by(**key_partition_, shape())) {
     return key_partition_;
   }
-  if (parent_.has_value()) {
-    return (*parent_)->find_key_partition(machine, parallel_policy, restrictions);
-  }
   return std::nullopt;
 }
 
@@ -254,18 +184,6 @@ void Storage::set_key_partition(const mapping::detail::Machine& machine,
 
 void Storage::reset_key_partition() noexcept { key_partition_.reset(); }
 
-InternalSharedPtr<StoragePartition> Storage::create_partition(
-  const InternalSharedPtr<Storage>& self,
-  InternalSharedPtr<Partition> partition,
-  std::optional<bool> complete)
-{
-  LEGATE_ASSERT(self.get() == this);
-  if (!complete.has_value()) {
-    complete = partition->is_complete_for(*this);
-  }
-  return make_internal_shared<StoragePartition>(self, std::move(partition), *complete);
-}
-
 std::string Storage::to_string() const
 {
   return fmt::format("Storage(id: {}, level: {})", id(), level());
@@ -276,13 +194,6 @@ InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
                                          SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
 {
   return self->slice(self, std::move(tile_shape), std::move(offsets));
-}
-
-InternalSharedPtr<StoragePartition> create_storage_partition(const InternalSharedPtr<Storage>& self,
-                                                             InternalSharedPtr<Partition> partition,
-                                                             std::optional<bool> complete)
-{
-  return self->create_partition(self, std::move(partition), std::move(complete));
 }
 
 }  // namespace legate::detail

@@ -603,16 +603,13 @@ void LogicalStore::maybe_reset_key_partition_(const Partition* to_match) noexcep
 InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
   const InternalSharedPtr<LogicalStore>& self,
   InternalSharedPtr<Partition> partition,
-  std::optional<bool> complete)
+  std::optional<bool>)
 {
   LEGATE_ASSERT(self.get() == this);
   if (unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound store cannot be manually partitioned"};
   }
-  auto storage_partition = create_storage_partition(
-    get_storage(), partition->invert(partition, transform()), std::move(complete));
-  return make_internal_shared<LogicalStorePartition>(
-    std::move(partition), std::move(storage_partition), self);
+  return make_internal_shared<LogicalStorePartition>(std::move(partition), self);
 }
 
 std::string LogicalStore::to_string() const
