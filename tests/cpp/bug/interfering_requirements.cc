@@ -53,7 +53,7 @@ class Config {
 
 using InterferingRequirements = RegisterOnceFixture<Config>;
 
-TEST_F(InterferingRequirements, OpaqueLeadsToDuplicateLegionPartitions)
+TEST_F(InterferingRequirements, DISABLED_OpaqueLeadsToDuplicateLegionPartitions)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);

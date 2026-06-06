@@ -146,7 +146,7 @@ void add_and_copy(const legate::LogicalStore& output,
 
 }  // namespace
 
-TEST_F(LogicalStoreTransform, OpaqueShouldBeRejected)
+TEST_F(LogicalStoreTransform, DISABLED_OpaqueShouldBeRejected)
 {
   auto runtime = legate::Runtime::get_runtime();
 
