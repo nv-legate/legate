@@ -36,9 +36,6 @@ class LogicalStorePartition;
 class TransformStack;
 class Partition;
 class PhysicalStore;
-class TaskReturnLayoutForUnpack;
-class Strategy;
-class RegionPhysicalStore;
 
 class LogicalStore {
  public:

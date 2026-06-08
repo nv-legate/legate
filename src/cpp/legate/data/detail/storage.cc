@@ -94,10 +94,7 @@ bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
   return lhs == rhs;
 }
 
-bool Storage::equal(const Storage& other) const
-{
-  return (this == &other) || (storage_data_ == other.storage_data_);
-}
+bool Storage::equal(const Storage& other) const { return this == &other; }
 
 bool Storage::is_mapped() const
 {
