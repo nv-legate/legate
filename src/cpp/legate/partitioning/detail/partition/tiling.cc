@@ -183,63 +183,7 @@ Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
   return {new_lo, new_hi};
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Tiling::get_child_extents(
-  Span<const std::uint64_t> extents, Span<const std::uint64_t> color) const
-{
-  if (!has_color(color)) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Color {} is out of bounds, each entry must be strictly less than the "
-                  "corresponding entry in {}",
-                  color,
-                  color_shape())};
-  }
-
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> ret;
-
-  ret.reserve(tile_shape().size());
-  for (auto&& [shape, clr, off, ext] : zip_equal(tile_shape(), color, offsets(), extents)) {
-    const auto lo = std::max(std::int64_t{0}, static_cast<std::int64_t>(shape * clr) + off);
-    const auto hi =
-      std::min(static_cast<std::int64_t>(ext), static_cast<std::int64_t>(shape * (clr + 1)) + off);
-
-    if (hi >= lo) {
-      ret.push_back(hi - lo);
-    } else {
-      ret.push_back(0);
-    }
-  }
-  return ret;
-}
-
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Tiling::get_child_offsets(
-  Span<const std::uint64_t> color) const
-{
-  if (!has_color(color)) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Color {} is out of bounds, each entry must be strictly less than the "
-                  "corresponding entry in {}",
-                  color,
-                  color_shape())};
-  }
-
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> ret;
-
-  ret.reserve(strides().size());
-  for (auto&& [stride, clr, off] : zip_equal(strides(), color, offsets())) {
-    const auto scaled_color = static_cast<std::int64_t>(stride * clr);
-
-    ret.push_back(scaled_color + off);
-  }
-  return ret;
-}
-
 std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
-
-bool Tiling::has_color(Span<const std::uint64_t> color) const
-{
-  return std::equal(
-    color.begin(), color.end(), color_shape().begin(), color_shape().end(), std::less<>{});
-}
 
 // ==========================================================================================
 
