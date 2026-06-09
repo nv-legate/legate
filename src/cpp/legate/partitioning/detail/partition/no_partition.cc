@@ -17,11 +17,6 @@
 
 namespace legate::detail {
 
-bool NoPartition::is_disjoint_for(const Domain& launch_domain) const
-{
-  return !launch_domain.is_valid() || launch_domain.get_volume() == 1;
-}
-
 InternalSharedPtr<Partition> NoPartition::scale(Span<const std::uint64_t> /*factors*/) const
 {
   return create_no_partition();

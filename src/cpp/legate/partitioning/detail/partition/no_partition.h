@@ -30,13 +30,6 @@ class TransformStack;
 class NoPartition final : public Partition {
  public:
   /**
-   * @copydoc Partition::is_disjoint_for()
-   *
-   * Always returns true, as there is only one subregion.
-   */
-  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
-
-  /**
    * @copydoc Partition::is_convertible()
    */
   [[nodiscard]] bool is_convertible() const override;
@@ -63,27 +56,6 @@ class NoPartition final : public Partition {
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   /**
-   * @copydoc Partition::has_launch_domain()
-   *
-   * Always false; a `NoPartition` has no launch domain.
-   */
-  [[nodiscard]] bool has_launch_domain() const override;
-
-  /**
-   * @copydoc Partition::launch_domain()
-   *
-   * Undefined for `NoPartition`, always throws the exception.
-   *
-   * @throws std::invalid_argument
-   */
-  [[nodiscard]] Domain launch_domain() const override;
-
-  /**
-   * @copydoc Partition::to_string()
-   */
-  [[nodiscard]] std::string to_string() const override;
-
-  /**
    * @copydoc Partition::has_color_shape().
    */
   [[nodiscard]] bool has_color_shape() const override;
@@ -96,6 +68,22 @@ class NoPartition final : public Partition {
    * @throws std::invalid_argument
    */
   [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
+
+  /**
+   * @copydoc Partition::launch_domain()
+   *
+   * Undefined for `NoPartition`, always throws the exception.
+   *
+   * @throws std::invalid_argument
+   */
+  [[nodiscard]] Domain launch_domain() const override;
+
+  [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const;
+
+  /**
+   * @copydoc Partition::to_string()
+   */
+  [[nodiscard]] std::string to_string() const override;
 
   /**
    * @copydoc Partition::convert()

@@ -45,7 +45,7 @@ TEST_F(NoPartitionTest, SatisfiesRestrictions)
 
 TEST_F(NoPartitionTest, LaunchDomain)
 {
-  ASSERT_FALSE(nopartition->has_launch_domain());
+  ASSERT_FALSE(nopartition->has_color_shape());
   ASSERT_THROW(static_cast<void>(nopartition->launch_domain()), std::invalid_argument);
 }
 
@@ -93,18 +93,6 @@ TEST_F(NoPartitionTest, Invert)
   auto nopartion1_raw = nopartion1.get();
   auto nopartion_raw  = nopartition.get();
   ASSERT_EQ(nopartion1_raw, nopartion_raw);
-}
-
-TEST_F(NoPartitionTest, IsDisjointFor)
-{
-  auto domain1 = Legion::Domain::NO_DOMAIN;
-  ASSERT_TRUE(nopartition->is_disjoint_for(domain1));
-
-  auto domain2 = Legion::Domain{Legion::Rect<1>{0, 0}};
-  ASSERT_TRUE(nopartition->is_disjoint_for(domain2));
-
-  auto domain3 = Legion::Domain{Legion::Rect<1>{0, 1}};
-  ASSERT_FALSE(nopartition->is_disjoint_for(domain3));
 }
 
 TEST_F(NoPartitionTest, ColorShape)

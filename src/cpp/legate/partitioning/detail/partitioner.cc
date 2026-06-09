@@ -99,7 +99,7 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
       // can allow unbound stores to have different numbers of dimensions from bound stores.
       domain_resolver.record_unbound_store(store->dim() -
                                            equiv_class.restrictions.count_restricted());
-    } else if (auto&& partition = (*strategy)[*part_symb]; partition->has_launch_domain()) {
+    } else if (auto&& partition = (*strategy)[*part_symb]; partition->has_color_shape()) {
       domain_resolver.record_launch_domain(
         equiv_class.has_restrictions
           ? equiv_class.restrictions.prune_dimensions(partition->launch_domain())

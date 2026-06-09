@@ -23,7 +23,6 @@ class LogicalStorePartition {
 
   [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
-  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] Span<const std::uint64_t> color_shape() const;
 
  private:

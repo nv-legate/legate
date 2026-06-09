@@ -13,11 +13,6 @@
 
 namespace legate::detail {
 
-bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const
-{
-  return partition_->is_disjoint_for(launch_domain);
-}
-
 Span<const std::uint64_t> LogicalStorePartition::color_shape() const
 {
   return partition_->color_shape();

@@ -83,7 +83,7 @@ TEST_F(TilingTest, IsConvertible) { ASSERT_TRUE(tiling->is_convertible()); }
 
 TEST_F(TilingTest, LaunchDomain)
 {
-  ASSERT_TRUE(tiling->has_launch_domain());
+  ASSERT_TRUE(tiling->has_color_shape());
   auto domain = Legion::Domain{Legion::Rect<2>{{0, 0}, {1, 1}}};
   ASSERT_EQ(tiling->launch_domain(), domain);
 }
@@ -120,23 +120,6 @@ TEST_F(TilingTest, SatisfiesRestrictionsNegative)
     legate::detail::Restrictions{legate::detail::SmallVector{legate::detail::Restriction::ALLOW}};
   ASSERT_THROW(static_cast<void>(restrictions2.are_satisfied_by(*tiling, nullptr)),
                std::invalid_argument);
-}
-
-TEST_F(TilingTest, IsDisjointFor)
-{
-  // Test none-overlapping case
-  auto domain1 = Legion::Domain::NO_DOMAIN;
-  ASSERT_TRUE(tiling->is_disjoint_for(domain1));
-
-  auto domain2 = Legion::Domain{Legion::Rect<2>{{0, 0}, {1, 1}}};
-  ASSERT_TRUE(tiling->is_disjoint_for(domain2));
-
-  auto domain3 = Legion::Domain{Legion::Rect<2>{{0, 0}, {2, 2}}};
-  ASSERT_FALSE(tiling->is_disjoint_for(domain3));
-
-  // Test overlapping case
-  auto tiling_overlapped = create_overlapped_tiling();
-  ASSERT_FALSE(tiling_overlapped->is_disjoint_for(domain1));
 }
 
 TEST_F(TilingTest, Scale)

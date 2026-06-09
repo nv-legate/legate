@@ -73,14 +73,6 @@ bool Tiling::operator==(const Tiling& other) const
          offsets_ == other.offsets_ && strides_ == other.strides_;
 }
 
-bool Tiling::is_disjoint_for(const Domain& launch_domain) const
-{
-  // TODO(wonchanl): The check really should be that every two points from the launch domain are
-  // mapped to two different colors
-  return !overlapped_ &&
-         (!launch_domain.is_valid() || launch_domain.get_volume() <= array_volume(color_shape_));
-}
-
 InternalSharedPtr<Partition> Tiling::scale(Span<const std::uint64_t> factors) const
 {
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> new_tile_shape;

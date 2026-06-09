@@ -14,8 +14,6 @@ inline bool Tiling::is_convertible() const { return true; }
 
 inline bool Tiling::is_invertible() const { return true; }
 
-inline bool Tiling::has_launch_domain() const { return true; }
-
 inline Span<const std::uint64_t> Tiling::tile_shape() const { return tile_shape_; }
 
 inline bool Tiling::has_color_shape() const { return true; }

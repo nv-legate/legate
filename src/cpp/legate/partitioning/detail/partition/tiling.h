@@ -81,13 +81,6 @@ class Tiling final : public Partition {
   bool operator==(const Tiling& other) const;
 
   /**
-   * @copydoc Partition::is_disjoint_for()
-   *
-   * A tiling is disjoint unless tiles overlap due to offsets or strides.
-   */
-  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
-
-  /**
    * @copydoc Partition::is_convertible()
    */
   [[nodiscard]] bool is_convertible() const override;
@@ -110,11 +103,14 @@ class Tiling final : public Partition {
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;
 
   /**
-   * @copydoc Partition::has_launch_domain()
-   *
-   * Always has a launch domain.
+   * @copydoc Partition::has_color_shape().
    */
-  [[nodiscard]] bool has_launch_domain() const override;
+  [[nodiscard]] bool has_color_shape() const override;
+
+  /**
+   * @copydoc Partition::color_shape()
+   */
+  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
 
   /**
    * @copydoc Partition::launch_domain()
@@ -132,16 +128,6 @@ class Tiling final : public Partition {
    * @return A span describing the tile size per dimension.
    */
   [[nodiscard]] Span<const std::uint64_t> tile_shape() const;
-
-  /**
-   * @copydoc Partition::has_color_shape().
-   */
-  [[nodiscard]] bool has_color_shape() const override;
-
-  /**
-   * @copydoc Partition::color_shape()
-   */
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
 
   /**
    * @copydoc Partition::convert()

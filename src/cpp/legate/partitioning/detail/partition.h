@@ -38,14 +38,6 @@ class Partition {
   Partition& operator=(Partition&&) noexcept = default;
 
   /**
-   * @brief Checks whether this partition is disjoint for the given launch domain.
-   *
-   * @param launch_domain The domain of tasks or points launched.
-   * @return True if all subregions are disjoint within the provided domain.
-   */
-  [[nodiscard]] virtual bool is_disjoint_for(const Domain& launch_domain) const = 0;
-
-  /**
    * @brief Indicates whether this partition can be converted (via transform).
    *
    * @return True if the partition supports conversion.
@@ -81,29 +73,6 @@ class Partition {
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const = 0;
 
   /**
-   * @brief Returns whether this partition defines a launch domain.
-   *
-   * @return True if a launch domain exists.
-   */
-  [[nodiscard]] virtual bool has_launch_domain() const = 0;
-
-  /**
-   * @brief Returns the launch domain associated with this partition.
-   *
-   * @return The launch domain.
-   *
-   * @note Only valid if has_launch_domain() is true.
-   */
-  [[nodiscard]] virtual Domain launch_domain() const = 0;
-
-  /**
-   * @brief Returns a human-readable string describing the partition.
-   *
-   * @return A string representation.
-   */
-  [[nodiscard]] virtual std::string to_string() const = 0;
-
-  /**
    * @brief Returns whether this partition defines a color space. In effect, this determines
    * whether a call to `color_shape()` is well-formed. The overwhelming majority of partitions
    * are expected to have a color shape.
@@ -118,6 +87,24 @@ class Partition {
    * @return A span of dimension sizes.
    */
   [[nodiscard]] virtual Span<const std::uint64_t> color_shape() const = 0;
+
+  /**
+   * @brief Returns the launch domain associated with this partition.
+   *
+   * @return The launch domain.
+   *
+   * @note Only valid if has_launch_domain() is true.
+   */
+  [[nodiscard]] virtual Domain launch_domain() const = 0;
+
+  [[nodiscard]] virtual Domain shard(const Domain& domain, const DomainPoint& color) const = 0;
+
+  /**
+   * @brief Returns a human-readable string describing the partition.
+   *
+   * @return A string representation.
+   */
+  [[nodiscard]] virtual std::string to_string() const = 0;
 
   /**
    * @brief Converts this partition using the given transform stack.
@@ -140,8 +127,6 @@ class Partition {
   [[nodiscard]] virtual InternalSharedPtr<Partition> invert(
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const = 0;
-
-  [[nodiscard]] virtual Domain shard(const Domain& domain, const DomainPoint& color) const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);

@@ -16,6 +16,6 @@ inline bool NoPartition::is_invertible() const { return true; }
 
 inline bool NoPartition::has_color_shape() const { return false; }
 
-inline bool NoPartition::has_launch_domain() const { return false; }
+inline Domain NoPartition::shard(const Domain& domain, const DomainPoint&) const { return domain; }
 
 }  // namespace legate::detail
