@@ -174,54 +174,6 @@ class Tiling final : public Partition {
   [[nodiscard]] Span<const std::uint64_t> strides() const;
 
   /**
-   * @brief Check whether this tiling contains a given color coordinate.
-   *
-   * @param color A multi-dimensional index into the color grid.
-   * @return True if the color is within the tiling's color shape.
-   */
-  [[nodiscard]] bool has_color(Span<const std::uint64_t> color) const;
-
-  /**
-   * @brief Apply the tiling to the extents of a parent Store and retrieve the extents of a
-   * particular child Store.
-   *
-   * If `extents` is smaller than, or not otherwise compatible with the parent extents for
-   * which this `Tiling` was constructed, then the resultant child extents are "clipped" (size
-   * 0).
-   *
-   * For example, given the example detailed in the constructor (a size 13 parent), suppose we
-   * map this to a 6-element substore. There is no way to split 6 elements into 4 sets of 3
-   * elements. In that case the children would have extents 3, 2, 0 and 0.
-   *
-   * `color` specifies the `i, (j, k, ...)`-th color within the tiling, corresponding to a
-   * particular child. So, for example for a tiling which produces:
-   *
-   * @code
-   * A B
-   * C D
-   * @endcode
-   *
-   * passing `color = (1, 1)` gives you `D`.
-   *
-   * @param extents The extents of the region on which to apply the tiling.
-   * @param color The color corresponding to the child Store to retrieve.
-   *
-   * @return The sub-region of `extents` corresponding to `color`.
-   */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> get_child_extents(
-    Span<const std::uint64_t> extents, Span<const std::uint64_t> color) const;
-
-  /**
-   * @brief Compute the offset origin of a child tile within the parent.
-   *
-   * @param color The tile color.
-   *
-   * @return The per-dimension offset of the tile.
-   */
-  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> get_child_offsets(
-    Span<const std::uint64_t> color) const;
-
-  /**
    * @brief Compute a hash value for this tiling configuration.
    *
    * Useful for caching or map-based structures that key on tilings.

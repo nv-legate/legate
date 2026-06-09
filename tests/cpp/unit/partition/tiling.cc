@@ -257,59 +257,6 @@ TEST_F(TilingTest, ToString)
       R"(Tiling\(tile: \[4, 4\], colors: \[2, 2\], offset: \[1, 1\], strides: \[4, 4\]\))"));
 }
 
-TEST_F(TilingTest, ChildExtents)
-{
-  auto extents = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-
-  // Input extents are within the selected tile
-  auto color1            = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
-  auto child_extents1    = tiling->get_child_extents(extents, color1);
-  auto expected_extents1 = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
-  ASSERT_EQ(child_extents1, expected_extents1);
-
-  // Input extents are out of the selected tile
-  auto color2            = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
-  auto child_extents2    = tiling->get_child_extents(extents, color2);
-  auto expected_extents2 = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
-  ASSERT_EQ(child_extents2, expected_extents2);
-}
-
-TEST_F(TilingTest, ChildExtentsNegative)
-{
-  auto extents = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-  auto color   = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-  ASSERT_THROW(static_cast<void>(tiling->get_child_extents(extents, color)), std::invalid_argument);
-}
-
-TEST_F(TilingTest, ChildOffsets)
-{
-  auto color            = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
-  auto child_offsets    = tiling->get_child_offsets(color);
-  auto expected_offsets = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{5, 5};
-  ASSERT_EQ(child_offsets, expected_offsets);
-}
-
-TEST_F(TilingTest, ChildOffsetsNegative)
-{
-  auto color = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-  ASSERT_THROW(static_cast<void>(tiling->get_child_offsets(color)), std::invalid_argument);
-}
-
-TEST_F(TilingTest, HasColor)
-{
-  auto color1     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
-  auto has_color1 = tiling->has_color(color1);
-  ASSERT_TRUE(has_color1);
-
-  auto color2     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
-  auto has_color2 = tiling->has_color(color2);
-  ASSERT_TRUE(has_color2);
-
-  auto color3     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-  auto has_color3 = tiling->has_color(color3);
-  ASSERT_FALSE(has_color3);
-}
-
 TEST_F(TilingTest, Hash)
 {
   auto tiling1 = create_tiling();
