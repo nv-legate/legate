@@ -22,7 +22,6 @@
 #include <legate/operation/detail/operation.h>
 #include <legate/operation/projection.h>
 #include <legate/partitioning/detail/partition.h>
-#include <legate/partitioning/detail/partition/image.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/partition_manager.h>

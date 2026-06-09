@@ -8,7 +8,6 @@
 
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/detail/partition.h>
-#include <legate/partitioning/detail/partition/image.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -145,15 +144,9 @@ std::string ImageConstraint::to_string() const
   return fmt::format("ImageConstraint({}, {})", *var_function(), *var_range());
 }
 
-InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
+InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy&) const
 {
-  const auto* src = var_function();
-  auto&& src_part = strategy[*src];
-  if (src_part->has_launch_domain()) {
-    auto* op = src->operation();
-    return create_image(
-      op->find_store(src).as_user_ptr(), src_part.as_user_ptr(), op->machine(), hint_);
-  }
+  // TODO(wonchanl): Need a v2 implementation
   return create_no_partition();
 }
 

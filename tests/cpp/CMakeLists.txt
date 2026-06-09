@@ -225,7 +225,6 @@ set(
   unit/machine/global_machine.cc
   unit/machine/local_machine.cc
   unit/machine/local_machine_selector.cc
-  unit/partition/image.cc
   unit/partition/nopartition.cc
   unit/partition/tiling.cc
   unit/physical_store/inline_allocation.cc

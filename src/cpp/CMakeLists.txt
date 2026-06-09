@@ -338,10 +338,8 @@ target_sources(
     legate/partitioning/detail/constraint_solver.cc
     legate/partitioning/detail/launch_domain_resolver.cc
     legate/partitioning/detail/partition.cc
-    legate/partitioning/detail/partition/image.cc
     legate/partitioning/detail/partition/no_partition.cc
     legate/partitioning/detail/partition/tiling.cc
-    legate/partitioning/detail/partition/opaque.cc
     legate/partitioning/detail/partitioner.cc
     legate/partitioning/detail/restriction.cc
     legate/partitioning/detail/strategy.cc

@@ -14,7 +14,6 @@
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
-#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/communicator_manager.h>
 #include <legate/runtime/detail/library.h>

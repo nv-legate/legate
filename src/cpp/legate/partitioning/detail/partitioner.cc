@@ -14,7 +14,6 @@
 #include <legate/partitioning/detail/launch_domain_resolver.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
-#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/runtime/detail/runtime.h>
 
 #include <algorithm>
@@ -155,7 +154,7 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
   }
 }
 
-void create_placeholder_partitions_for_unbound_stores(const Operation* op,
+void create_placeholder_partitions_for_unbound_stores(const Operation*,
                                                       const ConstraintSolver& solver)
 {
   for (auto&& equiv_class : solver.equivalence_classes()) {
@@ -163,13 +162,7 @@ void create_placeholder_partitions_for_unbound_stores(const Operation* op,
       continue;
     }
 
-    // Create placeholder Opaque partition
-    const InternalSharedPtr<Opaque> opaque_partition = create_opaque();
-
-    for (const auto* part_symb : equiv_class.partition_symbols) {
-      op->find_store(part_symb)->set_key_partition(
-        op->machine(), op->parallel_policy(), opaque_partition);
-    }
+    LEGATE_ABORT("Unbound stores are not supported yet");
   }
 }
 
