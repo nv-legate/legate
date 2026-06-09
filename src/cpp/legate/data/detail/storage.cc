@@ -44,8 +44,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     unbound_{shape->unbound()},
     shape_{std::move(shape)},
     field_size_{field_size},
-    provenance_{std::move(provenance)},
-    offsets_{tags::size_tag, dim(), 0}
+    provenance_{std::move(provenance)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -71,19 +70,12 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
                  std::string_view provenance)
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{std::move(shape)},
-    provenance_{std::move(provenance)},
-    offsets_{tags::size_tag, dim(), 0}
+    provenance_{std::move(provenance)}
 {
   storage_data_ =
     make_internal_shared<InlineStorage>(to_domain(this->shape()->extents()),
                                         type->size(),
                                         legate::ExternalAllocation{std::move(allocation)});
-}
-
-Span<const std::int64_t> Storage::offsets() const
-{
-  LEGATE_ASSERT(!unbound_);
-  return offsets_;
 }
 
 bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
@@ -149,8 +141,6 @@ void Storage::unmap()  // NOLINT(readability-make-member-function-const)
 {
 }
 
-void Storage::allow_out_of_order_destruction() {}
-
 void Storage::free_early()
 {
   // TODO(wonchanl): Need a v2 implementation
@@ -181,10 +171,7 @@ void Storage::set_key_partition(const mapping::detail::Machine& machine,
 
 void Storage::reset_key_partition() noexcept { key_partition_.reset(); }
 
-std::string Storage::to_string() const
-{
-  return fmt::format("Storage(id: {}, level: {})", id(), level());
-}
+std::string Storage::to_string() const { return fmt::format("Storage(id: {})", id()); }
 
 InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
                                          SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,

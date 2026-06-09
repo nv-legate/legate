@@ -92,11 +92,6 @@ class Image final : public Partition {
   bool operator==(const Image& other) const;
 
   /**
-   * @copydoc Partition::is_complete_for()
-   */
-  [[nodiscard]] bool is_complete_for(const detail::Storage& storage) const override;
-
-  /**
    * @copydoc Partition::is_disjoint_for()
    *
    * Image partitions are generally *not* disjoint.

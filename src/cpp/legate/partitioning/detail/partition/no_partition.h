@@ -30,13 +30,6 @@ class TransformStack;
 class NoPartition final : public Partition {
  public:
   /**
-   * @copydoc Partition::is_complete_for()
-   *
-   * Always returns true, since the entire store belongs to a single partition.
-   */
-  [[nodiscard]] bool is_complete_for(const detail::Storage& /*storage*/) const override;
-
-  /**
    * @copydoc Partition::is_disjoint_for()
    *
    * Always returns true, as there is only one subregion.

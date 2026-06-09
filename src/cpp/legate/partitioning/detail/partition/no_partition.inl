@@ -10,8 +10,6 @@
 
 namespace legate::detail {
 
-inline bool NoPartition::is_complete_for(const detail::Storage& /*storage*/) const { return true; }
-
 inline bool NoPartition::is_convertible() const { return true; }
 
 inline bool NoPartition::is_invertible() const { return true; }

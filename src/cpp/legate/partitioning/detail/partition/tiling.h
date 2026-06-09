@@ -81,13 +81,6 @@ class Tiling final : public Partition {
   bool operator==(const Tiling& other) const;
 
   /**
-   * @copydoc Partition::is_complete_for()
-   *
-   * A tiling is complete only if its tiles collectively cover the given storage exactly.
-   */
-  [[nodiscard]] bool is_complete_for(const detail::Storage& storage) const override;
-
-  /**
    * @copydoc Partition::is_disjoint_for()
    *
    * A tiling is disjoint unless tiles overlap due to offsets or strides.

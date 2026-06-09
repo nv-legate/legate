@@ -13,8 +13,6 @@ namespace legate::detail {
 
 inline std::uint64_t Storage::id() const { return storage_id_; }
 
-inline bool Storage::replicated() const { return replicated_; }
-
 inline bool Storage::unbound() const { return unbound_; }
 
 inline bool Storage::deferred_bound() const { return !unbound_ && shape()->unbound(); }
@@ -26,8 +24,6 @@ inline Span<const std::uint64_t> Storage::extents() const { return shape()->exte
 inline std::size_t Storage::volume() const { return shape()->volume(); }
 
 inline std::uint32_t Storage::dim() const { return shape()->ndim(); }
-
-inline std::int32_t Storage::level() const { return level_; }
 
 inline std::string_view Storage::provenance() const { return provenance_; }
 

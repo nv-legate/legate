@@ -31,16 +31,6 @@ class NoPartitionTest : public DefaultFixture {
 
 }  // namespace
 
-TEST_F(NoPartitionTest, IsCompleteFor)
-{
-  // This store itself does not actually matter, we just need to create one in order to get a
-  // `Storage` reference.
-  const auto store =
-    legate::Runtime::get_runtime()->create_store(legate::Shape{1}, legate::int32());
-
-  ASSERT_TRUE(nopartition->is_complete_for(*store.impl()->get_storage()));
-}
-
 TEST_F(NoPartitionTest, IsConvertible) { ASSERT_TRUE(nopartition->is_convertible()); }
 
 TEST_F(NoPartitionTest, SatisfiesRestrictions)

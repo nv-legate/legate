@@ -67,11 +67,6 @@ class Opaque final : public Partition {
    */
   [[nodiscard]] bool is_invertible() const override;
   /**
-   * @brief Indicate if the partition covers a given storage. Always return true, as Opaque
-   * partitions are created only for unbound stores and thus are complete by construction.
-   */
-  [[nodiscard]] bool is_complete_for(const detail::Storage& /*storage*/) const override;
-  /**
    * @brief Scale the partition by given factors. Not implemented.
    */
   [[nodiscard]] InternalSharedPtr<Partition> scale(

@@ -38,14 +38,6 @@ class Partition {
   Partition& operator=(Partition&&) noexcept = default;
 
   /**
-   * @brief Checks whether this partition fully covers the given storage.
-   *
-   * @param storage The storage to check completeness against.
-   * @return True if the partition completely covers the storage.
-   */
-  [[nodiscard]] virtual bool is_complete_for(const detail::Storage& storage) const = 0;
-
-  /**
    * @brief Checks whether this partition is disjoint for the given launch domain.
    *
    * @param launch_domain The domain of tasks or points launched.

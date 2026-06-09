@@ -87,12 +87,10 @@ class Storage {
   Storage& operator=(Storage&&) noexcept = default;
 
   [[nodiscard]] std::uint64_t id() const;
-  [[nodiscard]] bool replicated() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] bool deferred_bound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
   [[nodiscard]] Span<const std::uint64_t> extents() const;
-  [[nodiscard]] Span<const std::int64_t> offsets() const;
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;
@@ -107,7 +105,6 @@ class Storage {
    * @return `true` if two stores cover the same underlying memory region, `false` otherwise.
    */
   [[nodiscard]] bool equal(const Storage& other) const;
-  [[nodiscard]] std::int32_t level() const;
   [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] bool is_mapped() const;
   [[nodiscard]] bool has_scalar_storage() const;
@@ -150,16 +147,10 @@ class Storage {
 
  private:
   std::uint64_t storage_id_{};
-  bool replicated_{};
   bool unbound_{};
-  bool destroyed_out_of_order_{};  // only relevant on the root Storage
   InternalSharedPtr<Shape> shape_{};
   std::uint32_t field_size_{};
   std::string_view provenance_{};  // only relevant on the root Storage
-
-  std::int32_t level_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_{};
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
 
   InternalSharedPtr<InlineStorage> storage_data_{};
 
