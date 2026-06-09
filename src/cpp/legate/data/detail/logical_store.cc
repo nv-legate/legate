@@ -265,28 +265,20 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
 
   auto transform =
     (start == 0) ? transform_ : stack(transform_, std::make_unique<Shift>(dim, -start));
-  auto substorage = runtime.config().enable_inline_task_launch() || volume() == 0
-                      ? storage_
-                      : slice_storage(storage_,
-                                      transform->invert_extents(exts),
-                                      transform->invert_point({tags::size_tag, exts.size(), 0}));
   // Compute the new domain of the root storage that this LogicalStore covers.
-  const auto sstart                     = static_cast<std::int64_t>(start);
-  const auto extent_dim                 = static_cast<std::int64_t>(exts[dim]);
-  const auto sliced_root_storage_domain = [&] {
+  const auto sstart     = static_cast<std::int64_t>(start);
+  const auto extent_dim = static_cast<std::int64_t>(exts[dim]);
+  const auto subdomain  = [&] {
     DomainPoint lo = domain_.lo();
     DomainPoint hi = domain_.hi();
 
     lo[dim] += sstart;
-    hi[dim] = lo[dim] + extent_dim - 1;
+    hi[dim] = std::min(lo[dim] + extent_dim - 1, hi[dim]);
     return Domain{lo, hi};
   }();
 
-  return make_internal_shared<LogicalStore>(std::move(exts),
-                                            std::move(substorage),
-                                            type(),
-                                            std::move(transform),
-                                            sliced_root_storage_domain);
+  return make_internal_shared<LogicalStore>(
+    std::move(exts), storage_, type(), std::move(transform), subdomain);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::transpose(
@@ -426,14 +418,6 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
                                                    const DomainPoint& task_index,
                                                    const legate::mapping::detail::Machine& machine)
 {
-  // TODO(wonchanl): Need to check if the storage is right for the input partition and the policy
-  if (mapped_.has_value()) {
-    if ((*mapped_)->is_accessible(machine.preferred_target())) {
-      return *mapped_;
-    }
-    mapped_.reset();
-  }
-
   const auto color = (launch_domain.is_valid() && !store_projection.empty())
                        ? compute_color(store_projection, task_index)
                        : task_index;
@@ -441,38 +425,14 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
     launch_domain.is_valid() && domain_.is_valid() ? partition->shard(domain_, color) : domain_;
 
   LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
-  if (transformed()) {
-    domain = transform_->transform(domain);
-  }
-  if (domain.dim == 0) {
-    domain.dim          = 1;
-    domain.rect_data[0] = 0;
-    domain.rect_data[1] = 0;
-  }
-  auto result =
-    get_storage()->map(machine.preferred_store_target(), type(), shape(), transform_, domain);
 
-  mapped_.emplace(result);
-
-  return result;
+  return get_storage()->map(machine.preferred_store_target(), type(), shape(), transform_, domain);
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   std::optional<legate::mapping::StoreTarget> target, bool)
 {
   auto&& storage = get_storage();
-
-  if (mapped_.has_value()) {
-    if (!target.has_value() || (*mapped_)->target() == *target) {
-      return *mapped_;
-    }
-    if (non_owning_) {
-      throw TracedException<std::invalid_argument>{fmt::format(
-        "Cannot remap a non-owning store from {} to {}", (*mapped_)->target(), *target)};
-    }
-    storage->unmap();
-    mapped_.reset();
-  }
 
   const auto effective_target =
     target.value_or(Runtime::get_runtime().local_machine().has_socket_memory()
@@ -492,8 +452,6 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   }
 
   auto result = storage->map(effective_target, type(), shape(), transform_, domain);
-
-  mapped_.emplace(result);
 
   return result;
 }
