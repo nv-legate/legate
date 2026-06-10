@@ -14,18 +14,16 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <utilities/mock_mapper.h>
 #include <utilities/utilities.h>
 
 namespace dim_ordering_unit {
 
 namespace {
 
-using DimOrderingTest = DefaultFixture;
+using legate::test::MockMapperRuntime;
 
-class MockMapperRuntime : public Legion::Mapping::MapperRuntime {
- public:
-  MockMapperRuntime() : MapperRuntime{nullptr} {}
-};
+using DimOrderingTest = DefaultFixture;
 
 void check_dim_ordering(const legate::mapping::DimOrdering& order,
                         legate::mapping::DimOrdering::Kind kind,

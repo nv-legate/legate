@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include <utilities/mock_mapper.h>
 #include <utilities/utilities.h>
 
 namespace mapping_store_test {
@@ -22,13 +23,9 @@ using legate::mapping::detail::Store;
 namespace {
 
 using MappingStoreColocateTest = DefaultFixture;
+using legate::test::MockMapperRuntime;
 
 constexpr auto REGION_STORE_DIM = std::int32_t{1};
-
-class MockMapperRuntime : public Legion::Mapping::MapperRuntime {
- public:
-  MockMapperRuntime() : MapperRuntime{nullptr} {}
-};
 
 [[nodiscard]] Legion::RegionRequirement make_region_requirement(const Legion::LogicalRegion& region,
                                                                 Legion::FieldID field_id)

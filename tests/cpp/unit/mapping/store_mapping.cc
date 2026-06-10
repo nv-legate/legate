@@ -12,18 +12,16 @@
 
 #include <gtest/gtest.h>
 
+#include <utilities/mock_mapper.h>
 #include <utilities/utilities.h>
 
 namespace store_mapping_unit {
 
 namespace {
 
-using StoreMappingTest = DefaultFixture;
+using legate::test::MockMapperRuntime;
 
-class MockMapperRuntime : public Legion::Mapping::MapperRuntime {
- public:
-  MockMapperRuntime() : MapperRuntime{nullptr} {}
-};
+using StoreMappingTest = DefaultFixture;
 
 // Helper class to manage Store lifetime
 class TestStoreHolder {
