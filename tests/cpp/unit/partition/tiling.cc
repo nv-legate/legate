@@ -9,7 +9,6 @@
 #include <legate.h>
 
 #include <legate/data/detail/logical_store.h>
-#include <legate/data/detail/transform/delinearize.h>
 #include <legate/data/detail/transform/promote.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -184,43 +183,6 @@ TEST_F(TilingTest, Convert)
     legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling->offsets()});
   auto expected_strides = transform2->convert_extents(
     legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->strides()});
-
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->tile_shape()}),
-            expected_tile_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->color_shape()}),
-            expected_color_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling2->offsets()}),
-            expected_offsets);
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->strides()}),
-            expected_strides);
-}
-
-TEST_F(TilingTest, Invert)
-{
-  // Test identity transformation
-  auto transform1  = legate::make_internal_shared<legate::detail::TransformStack>();
-  auto tiling1     = tiling->invert(tiling, transform1);
-  auto tiling1_raw = tiling1.get();
-  auto tiling_raw  = tiling.get();
-  ASSERT_EQ(tiling1_raw, tiling_raw);
-
-  // Test non-identity transformation
-  auto dim        = 1;
-  auto sizes      = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
-  auto transform2 = legate::make_internal_shared<legate::detail::TransformStack>(
-    std::make_unique<legate::detail::Delinearize>(dim, std::move(sizes)), std::move(transform1));
-
-  auto expected_tile_shape = transform2->invert_extents(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->tile_shape()});
-  auto expected_color_shape = transform2->invert_color_shape(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->color_shape()});
-  auto expected_offsets = transform2->invert_point(
-    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling->offsets()});
-  auto expected_strides = transform2->invert_extents(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->strides()});
-
-  auto partition2 = tiling->invert(tiling, transform2);
-  auto tiling2    = dynamic_cast<legate::detail::Tiling*>(partition2.get());
 
   ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->tile_shape()}),
             expected_tile_shape);

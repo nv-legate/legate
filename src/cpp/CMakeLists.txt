@@ -301,9 +301,7 @@ target_sources(
     legate/data/detail/scalar.cc
     legate/data/detail/physical_store.cc
     legate/data/detail/shape.cc
-    legate/data/detail/transform/delinearize.cc
     legate/data/detail/transform/dim_broadcast.cc
-    legate/data/detail/transform/non_invertible_transformation.cc
     legate/data/detail/transform/project.cc
     legate/data/detail/transform/promote.cc
     legate/data/detail/transform/shift.cc

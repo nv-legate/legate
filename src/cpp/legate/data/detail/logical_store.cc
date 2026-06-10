@@ -11,7 +11,6 @@
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/shape.h>
-#include <legate/data/detail/transform/delinearize.h>
 #include <legate/data/detail/transform/dim_broadcast.h>
 #include <legate/data/detail/transform/project.h>
 #include <legate/data/detail/transform/promote.h>
@@ -310,44 +309,11 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
-  std::int32_t dim, SmallVector<std::uint64_t, LEGATE_MAX_DIM> sizes)
+  std::int32_t, SmallVector<std::uint64_t, LEGATE_MAX_DIM>)
 {
-  if (non_transformable_) {
-    throw TracedException<std::runtime_error>{
-      "Cannot delinearize LogicalStore created from PhysicalStore in nested task"};
-  }
-  if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Invalid delinearization on dimension {} for a {}-D store", dim, this->dim())};
-  }
-
-  auto&& old_extents = extents();
-
-  auto delinearizable = [](auto&& to_match, const auto& new_dim_extents) {
-    auto begin = new_dim_extents.begin();
-    auto end   = new_dim_extents.end();
-    return std::reduce(begin, end, std::size_t{1}, std::multiplies<>{}) == to_match &&
-           std::all_of(begin, end, [&to_match](auto size) { return size <= to_match; });
-  };
-
-  if (!delinearizable(old_extents[dim], sizes)) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Dimension of size {} cannot be delinearized into {}", old_extents[dim], sizes)};
-  }
-
-  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
-
-  new_extents.reserve(old_extents.size() + sizes.size());
-  std::copy_n(old_extents.begin(), dim, std::back_inserter(new_extents));
-  std::copy(sizes.begin(), sizes.end(), std::back_inserter(new_extents));
-  if (static_cast<std::uint32_t>(dim + 1) < old_extents.size()) {
-    std::copy(old_extents.begin() + dim + 1, old_extents.end(), std::back_inserter(new_extents));
-  }
-
-  auto transform = stack(transform_, std::make_unique<Delinearize>(dim, std::move(sizes)));
-
-  return make_internal_shared<LogicalStore>(
-    std::move(new_extents), storage_, type(), std::move(transform), domain_);
+  // TODO(wonchanl): V2 needs to subsume reshaping
+  LEGATE_ABORT("No support for delinearization");
+  return nullptr;
 }
 
 InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(

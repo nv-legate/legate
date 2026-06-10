@@ -152,7 +152,6 @@ set(
   integration/bloat_constraints.cc
   integration/broadcast_constraints.cc
   integration/core_mapper.cc
-  integration/delinearize.cc
   integration/exception.cc
   integration/fill.cc
   integration/find_memory_kind.cc
@@ -209,7 +208,6 @@ set(
   unit/buffer/task_local_buffer.cc
   unit/logical_store/broadcast.cc
   unit/logical_store/create_store.cc
-  unit/logical_store/delinearize.cc
   unit/logical_store/equal_storage.cc
   unit/logical_store/overlaps.cc
   unit/logical_store/partition.cc
@@ -244,7 +242,6 @@ set(
   unit/scalar/create_vector_scalar.cc
   unit/scalar/negative.cc
   unit/transform/broadcast.cc
-  unit/transform/delinearize.cc
   unit/transform/project.cc
   unit/transform/promote.cc
   unit/transform/shift.cc
@@ -301,7 +298,6 @@ set(
   noinit/buffer_builder.cc
   noinit/config.cc
   noinit/cuda_driver_api.cc
-  noinit/delinearize.cc
   noinit/enable_shared_from_this.cc
   noinit/enumerate.cc
   noinit/environment_variable.cc
