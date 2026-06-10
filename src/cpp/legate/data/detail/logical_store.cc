@@ -420,6 +420,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
   const auto color = (launch_domain.is_valid() && !store_projection.empty())
                        ? compute_color(store_projection, task_index)
                        : task_index;
+
   auto domain =
     launch_domain.is_valid() && domain_.is_valid() ? partition->shard(domain_, color) : domain_;
 
@@ -538,21 +539,8 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
   key_partition_ = std::move(partition);
 }
 
-void LogicalStore::reset_key_partition(bool flush)
+void LogicalStore::reset_key_partition()
 {
-  // Flush the scheduling window only if this was a request from the user code
-  if (flush) {
-    Runtime::get_runtime().flush_scheduling_window();
-  }
-  key_partition_.reset();
-  get_storage()->reset_key_partition();
-}
-
-void LogicalStore::maybe_reset_key_partition_(const Partition* to_match) noexcept
-{
-  if (!key_partition_.has_value() || key_partition_->get() != to_match) {
-    return;
-  }
   key_partition_.reset();
   get_storage()->reset_key_partition();
 }

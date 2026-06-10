@@ -26,15 +26,16 @@
 
 namespace legate::detail {
 
-DomainPoint Strategy::task_index() const
+std::optional<DomainPoint> Strategy::task_index() const
 {
   if (!launch_domain().is_valid()) {
-    return {};
+    return std::make_optional<DomainPoint>();
   }
 
   const auto node_id = Runtime::get_runtime().node_id();
 
-  return delinearize(launch_domain().lo(), launch_domain().hi(), node_id);
+  return std::make_optional<DomainPoint>(
+    delinearize(launch_domain().lo(), launch_domain().hi(), node_id));
 }
 
 void Strategy::insert(const Variable& partition_symbol, InternalSharedPtr<Partition> partition)

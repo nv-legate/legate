@@ -193,7 +193,7 @@ void LogicalTask::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
 
 namespace {
 
-void show_progress(const DomainPoint& task_index,
+void show_progress(const Strategy& strategy,
                    std::string_view task_name,
                    VariantCode variant_code,
                    std::string_view provenance)
@@ -212,13 +212,21 @@ void show_progress(const DomainPoint& task_index,
     return "";
   }();
 
+  auto task_index = strategy.task_index();
+
+  if (!task_index.has_value()) {
+    return;
+  }
+
   log_legate().print() << task_name << ' ' << variant_str << " task [" << provenance
-                       << "], pt = " << task_index;
+                       << "], pt = " << *task_index;
 }
 
+template <bool WRITE>
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
   Span<const TaskStoreArg> store_args,
   const legate::mapping::detail::Machine& machine,
+  const ParallelPolicy& parallel_policy,
   const Strategy& strategy,
   const Domain& launch_domain,
   const DomainPoint& task_index)
@@ -227,50 +235,68 @@ void show_progress(const DomainPoint& task_index,
 
   result.reserve(store_args.size());
   for (auto&& [_, store, variable] : store_args) {
-    result.emplace_back(store->map(strategy[*variable].get(),
+    auto&& partition = strategy[*variable];
+    result.emplace_back(store->map(partition.get(),
                                    strategy.find_store_projection(*variable),
                                    launch_domain,
                                    task_index,
                                    machine));
+    if constexpr (WRITE) {
+      store->set_key_partition(machine, parallel_policy, partition);
+    }
   }
   return result;
 }
 
-[[nodiscard]] TaskContext make_task_context(const TaskBase* task,
-                                            VariantCode variant_code,
-                                            const Strategy& strategy)
+[[nodiscard]] std::optional<TaskContext> make_task_context(const TaskBase* task,
+                                                           VariantCode variant_code,
+                                                           const Strategy& strategy)
 {
-  auto launch_domain    = strategy.launch_domain();
-  const auto task_index = strategy.task_index();
+  auto launch_domain          = strategy.launch_domain();
+  const auto maybe_task_index = strategy.task_index();
 
-  auto inputs  = map_stores(task->inputs(), task->machine(), strategy, launch_domain, task_index);
-  auto outputs = map_stores(task->outputs(), task->machine(), strategy, launch_domain, task_index);
-  auto reductions =
-    map_stores(task->reductions(), task->machine(), strategy, launch_domain, task_index);
+  if (!maybe_task_index.has_value()) {
+    return std::nullopt;
+  }
 
-  return TaskContext{variant_code,
-                     launch_domain,
-                     task_index,
-                     task,
-                     std::move(inputs),
-                     std::move(outputs),
-                     std::move(reductions),
-                     SmallVector<InternalSharedPtr<Scalar>>{task->scalars()}};
+  auto&& task_index = *maybe_task_index;
+  auto inputs       = map_stores<false>(
+    task->inputs(), task->machine(), task->parallel_policy(), strategy, launch_domain, task_index);
+  auto outputs = map_stores<true>(
+    task->outputs(), task->machine(), task->parallel_policy(), strategy, launch_domain, task_index);
+  auto reductions = map_stores<false>(task->reductions(),
+                                      task->machine(),
+                                      task->parallel_policy(),
+                                      strategy,
+                                      launch_domain,
+                                      task_index);
+
+  return std::make_optional<TaskContext>(variant_code,
+                                         launch_domain,
+                                         task_index,
+                                         task,
+                                         std::move(inputs),
+                                         std::move(outputs),
+                                         std::move(reductions),
+                                         SmallVector<InternalSharedPtr<Scalar>>{task->scalars()});
 }
 
 }  // namespace
 
-void LogicalTask::launch_task_(Strategy* strategy)
+void LogicalTask::launch_task_(Strategy* p_strategy)
 {
   const auto get_task_name = [&] { return library().get_task_name(local_task_id()); };
   const auto variant_code  = machine().preferred_variant();
 
-  show_progress(
-    strategy->task_index(), get_task_name(), variant_code, provenance().as_string_view());
+  show_progress(*p_strategy, get_task_name(), variant_code, provenance().as_string_view());
 
-  auto ctx = make_task_context(this, variant_code, *strategy);
+  auto maybe_ctx = make_task_context(this, variant_code, *p_strategy);
 
-  variant_info_().body(legate::TaskContext{&ctx});
+  if (!maybe_ctx.has_value()) {
+    return;
+  }
+
+  variant_info_().body(legate::TaskContext{&*maybe_ctx});
 }
 
 ////////////////////////////////////////////////////

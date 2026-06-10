@@ -36,7 +36,7 @@ class Strategy {
   [[nodiscard]] bool parallel() const;
   [[nodiscard]] const Domain& launch_domain() const;
   void set_launch_domain(const Domain& launch_domain);
-  [[nodiscard]] DomainPoint task_index() const;
+  [[nodiscard]] std::optional<DomainPoint> task_index() const;
 
   void insert(const Variable& partition_symbol, InternalSharedPtr<Partition> partition);
   [[nodiscard]] bool has_assignment(const Variable& partition_symbol) const;

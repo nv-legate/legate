@@ -130,7 +130,7 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
   return make_internal_shared<PhysicalStore>(shape->ndim(),
                                              std::move(type),
                                              GlobalRedopID{-1},
-                                             transform,
+                                             std::move(transform),
                                              LEGION_READ_WRITE,
                                              storage_data_,
                                              domain);
