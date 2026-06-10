@@ -62,7 +62,8 @@ StoreTarget to_target(Memory::Kind kind)
 {
   switch (kind) {
     case Memory::Kind::SYSTEM_MEM: return StoreTarget::SYSMEM;
-    case Memory::Kind::GPU_FB_MEM: return StoreTarget::FBMEM;
+    case Memory::Kind::GPU_FB_MEM: [[fallthrough]];
+    case Memory::Kind::GPU_DYNAMIC_MEM: return StoreTarget::FBMEM;
     case Memory::Kind::Z_COPY_MEM: return StoreTarget::ZCMEM;
     case Memory::Kind::SOCKET_MEM: return StoreTarget::SOCKETMEM;
     case Memory::Kind::NO_MEMKIND: [[fallthrough]];
@@ -74,10 +75,9 @@ StoreTarget to_target(Memory::Kind kind)
     case Memory::Kind::LEVEL3_CACHE: [[fallthrough]];
     case Memory::Kind::LEVEL2_CACHE: [[fallthrough]];
     case Memory::Kind::LEVEL1_CACHE: [[fallthrough]];
-    case Memory::Kind::GPU_MANAGED_MEM: [[fallthrough]];
-    case Memory::Kind::GPU_DYNAMIC_MEM: break;
+    case Memory::Kind::GPU_MANAGED_MEM: break;
   }
-  LEGATE_ABORT("Unhandled Processor::Kind ", legate::detail::to_underlying(kind));
+  LEGATE_ABORT("Unhandled Memory::Kind ", legate::detail::to_underlying(kind));
 }
 
 Processor::Kind to_kind(TaskTarget target)
