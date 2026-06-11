@@ -691,7 +691,7 @@ cdef class VariantInvoker:
         return inspect.signature(func, eval_str=True)
 
     cpdef bool valid_signature(self, func: UserFunction):
-        r"""Whether the given function's signature  matches the configured
+        r"""Whether the given function's signature matches the configured
         function signature.
 
         Parameters

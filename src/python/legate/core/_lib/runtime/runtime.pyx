@@ -619,7 +619,7 @@ cdef class Runtime(Unconstructable):
         r"""
         Create a store from a `Scalar`.
 
-        If `shape` is not `None`, its volume bust be `1`. The call does not
+        If `shape` is not `None`, its volume must be `1`. The call does not
         block on the shape.
 
         Parameters

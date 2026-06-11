@@ -162,12 +162,12 @@ cdef class Shape:
 
     def __iter__(self) -> Iterator[int]:
         r"""
-        Return an iterator to the shapes extents.
+        Return an iterator to the shape's extents.
 
         Returns
         -------
         Iterator[int]
-            An iterator to the shapes extents.
+            An iterator to the shape's extents.
         """
         return iter(self.extents)
 

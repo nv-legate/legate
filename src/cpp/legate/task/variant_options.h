@@ -123,7 +123,7 @@ class LEGATE_EXPORT VariantOptions {
 
   /**
    * @brief Indicate whether a task has side effects outside of the runtime's tracking that
-   * forbid it from replicated a task.
+   * forbid it from replicating a task.
    *
    * When a task only takes scalar stores, it gets replicated by default on all the ranks, as
    * that's more efficient than having only one of the ranks run it and broadcast the results.

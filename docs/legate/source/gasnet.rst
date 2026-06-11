@@ -37,11 +37,11 @@ package.  Thus, a GASNet package installation requires three components:
 The installation of the MPI wrapper is discussed in more detail in
 :ref:`Installation<installation_of_mpi_wrapper>` and :ref:`MPI wrapper
 FAQ<mpi_wrapper_faq>`.  In summary, the idea is to provide an API wrapper around
-MPI that can be plugged into Leagate at start time.  The GASNet wrapper has a
+MPI that can be plugged into Legate at start time.  The GASNet wrapper has a
 similar purpose, but plugs into the underlying Realm networking module.  To make
 this process easier, instead of building the wrappers from source, we
-provide an MPI wrapper and a GASNet wrapper conda packages that install scripts
-for building of the wrappers, and automate their use by setting the necessary
+provide MPI wrapper and GASNet wrapper conda packages that install scripts
+for building the wrappers, and automate their use by setting the necessary
 environment variables.
 
 .. _how-do-i-install-legate_with_wrappers:
@@ -49,7 +49,7 @@ environment variables.
 How Do I Install Legate with the MPI and GASNet wrappers
 --------------------------------------------------------
 
-The basics of the installation of Leagate are covered in :ref:`How Do I Install
+The basics of the installation of Legate are covered in :ref:`How Do I Install
 Legate<how-do-i-install-legate>`.  Here, we discuss the differences from the
 non-wrapper packages.
 

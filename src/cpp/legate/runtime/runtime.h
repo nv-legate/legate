@@ -59,10 +59,10 @@ class Config;
 /**
  * @brief Class that implements the Legate runtime
  *
- * The legate runtime provides common services, including as library registration,
+ * The legate runtime provides common services, including library registration,
  * store creation, operator creation and submission, resource management and scoping,
  * and communicator management. Legate libraries are free of all these details about
- * distribute programming and can focus on their domain logics.
+ * distributed programming and can focus on their domain logic.
  */
 class LEGATE_EXPORT Runtime {
  public:
@@ -301,7 +301,7 @@ class LEGATE_EXPORT Runtime {
    * @param tile_shape Shape of tiles.
    * @param type Element type.
    * @param allocations Pairs of external allocation descriptors and sub-store colors.
-   * @param ordering In what order the elements are laid out in the passed allocatios.
+   * @param ordering In what order the elements are laid out in the passed allocations.
    *
    * @return A pair of a logical store and its partition.
    *

@@ -7,7 +7,7 @@
 ParallelPolicy
 ==============
 
-``ParallelPolicy`` allows users to to control the parallelization policy for tasks in a given scope.
+``ParallelPolicy`` allows users to control the parallelization policy for tasks in a given scope.
 
 .. autosummary::
    :toctree: generated/

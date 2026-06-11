@@ -205,8 +205,8 @@ class LEGATE_EXPORT Scalar {
    * @throw std::invalid_argument If one of the following cases is encountered:
    *
    * 1) size of the scalar does not match with size of `VAL`,
-   * 2) the scalar holds a string but `VAL` isn't `std:string` or `std:string_view`, or
-   * 3) the inverse; i.e.,  `VAL` is `std:string` or `std:string_view` but the scalar's type
+   * 2) the scalar holds a string but `VAL` isn't `std::string` or `std::string_view`, or
+   * 3) the inverse; i.e.,  `VAL` is `std::string` or `std::string_view` but the scalar's type
    * isn't string
    */
   template <typename VAL>

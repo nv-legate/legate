@@ -53,8 +53,8 @@ enum class ReductionOpKind : std::int32_t {
   MAX = LEGION_REDOP_KIND_MAX,  /*!< Binary maximum operator */
   MIN = LEGION_REDOP_KIND_MIN,  /*!< Binary minimum operator */
   OR  = LEGION_REDOP_KIND_OR,   /*!< Bitwise OR */
-  AND = LEGION_REDOP_KIND_AND,  /*!< Bitwse AND */
-  XOR = LEGION_REDOP_KIND_XOR,  /*!< Bitwas XOR */
+  AND = LEGION_REDOP_KIND_AND,  /*!< Bitwise AND */
+  XOR = LEGION_REDOP_KIND_XOR,  /*!< Bitwise XOR */
 };
 
 // NOLINTEND(performance-enum-size)

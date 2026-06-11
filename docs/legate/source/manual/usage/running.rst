@@ -445,7 +445,7 @@ performance bottlenecks:
 - Frequent and long operations in Channel might indicate data movement bottlenecks
 - Long IO operations suggest you are waiting on Python code to be executed first
 - Gaps between tasks on the same processor may reveal synchronization issues
-- It can also reveal that your program has a dependency on long copies, a utilility thread that is too busy, or other issues.
+- It can also reveal that your program has a dependency on long copies, a utility thread that is too busy, or other issues.
 
 If you want to understand why a specific box on the profile timeline didn't start executing earlier, you can look at the "Critical Path" field on the pop-up box for more information.
 

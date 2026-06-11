@@ -14,7 +14,7 @@ While seemingly trivial at first, a unified code style helps to significantly in
 readability of a code-base. If all code is written in a similar style and flow, then a
 reader may begin to form implicit assumptions (which should hold), and does not need to
 adapt to new forms. In short, the point of a common style is not to enforce one that is
-"pretty" or "elegant". It is first and foremost to improve the understand-ability of the
+"pretty" or "elegant". It is first and foremost to improve the understandability of the
 code.
 
 However, there are some areas where automatic enforcement is not yet sufficient, or not
@@ -145,7 +145,7 @@ Classes
    ``public`` accessor functions to them. This serves to encapsulate the resource and
    provide clear ownership semantics.
 
-   This also aides in debugging. When tracking when a member's variables are changed, it
+   This also aids in debugging. When tracking when a member's variables are changed, it
    is much easier to place a breakpoint on a function than it is to place a watchpoint on
    a particular member variable's address (which may change due to serdez).
 

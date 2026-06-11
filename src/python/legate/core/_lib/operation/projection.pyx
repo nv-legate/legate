@@ -105,12 +105,12 @@ cdef class SymbolicExpr(Unconstructable):
 
     def __add__(self, int32_t other) -> SymbolicExpr:
         r"""
-        Shift an expression by a scaling factor.
+        Shift an expression by an offset.
 
         Parameters
         ----------
         other : int
-            The scaling factor.
+            The offset.
 
         Returns
         -------

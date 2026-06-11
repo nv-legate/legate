@@ -76,7 +76,7 @@ class LEGATE_EXPORT InvalidDataSetError : public std::invalid_argument {
  * @return LogicalStore The loaded store.
  *
  * @throws std::system_error If file_path does not exist.
- * @throws UnusupportedHDF5DataType If the data type cannot be converted to a Type.
+ * @throws UnsupportedHDF5DataTypeError If the data type cannot be converted to a Type.
  * @throws InvalidDataSetError If the dataset is invalid, or is not found.
  */
 [[nodiscard]] LEGATE_EXPORT LogicalStore from_file(const std::filesystem::path& file_path,

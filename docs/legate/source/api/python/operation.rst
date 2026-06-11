@@ -55,7 +55,7 @@ In some occasions, tasks are unnatural or even impossible to write in the
 auto-parallelized style. For those occasions, Legate provides explicit control
 on how tasks are parallelized via ``ManualTask``. Each manual task requires the
 caller to provide a `launch domain` that determines the degree of parallelism
-and also names task instances initiaed by the task. Direct store arguments to a
+and also names task instances initiated by the task. Direct store arguments to a
 manual task are assumed to be replicated across task instances, and it's the
 developer's responsibility to partition stores. Mapping between points in the
 launch domain and colors in the color space of a store partition is assumed to

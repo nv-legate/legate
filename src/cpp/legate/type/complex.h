@@ -26,7 +26,7 @@ namespace legate {
  * type such as `float` or `double`.
  *
  * See
- * [cuda::std::complex](https://nvidia.github.io/cccl/libcudacxx/standard_api/numerics_library/complex.html)
+ * [cuda::std::complex](https://nvidia.github.io/cccl/unstable/libcudacxx/standard_api/numerics_library/complex.html)
  * for a full description of the class and its members.
  */
 template <typename T>

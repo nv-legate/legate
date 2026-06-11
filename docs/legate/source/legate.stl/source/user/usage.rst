@@ -310,7 +310,7 @@ Creating views
 Legate.STL provides sequence algorithms like ``transform`` and ``reduce`` that,
 like their counterparts in the C++20 STL, operate on ranges of elements. There
 are many ways to view a store as a range of elements. For example, you may want
-to operate to operate on a flattened view of a store, or on a slice of a store.
+to operate on a flattened view of a store, or on a slice of a store.
 You may want the elements of the range to be rows or columns or some other
 subdimension of the store. For each of these cases, Legate.STL provides a
 range adaptor that presents the store as a range of elements.
