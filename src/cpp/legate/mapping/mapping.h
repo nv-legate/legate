@@ -123,12 +123,12 @@ class LEGATE_EXPORT DimOrdering {
    */
   enum class Kind : std::uint8_t {
     /**
-     * @brief Indicates the instance have C layout (i.e., the last dimension is the leading
+     * @brief Indicates the instance has C layout (i.e., the last dimension is the leading
      * dimension in the instance)
      */
     C,
     /**
-     * @brief Indicates the instance have Fortran layout (i.e., the first dimension is the leading
+     * @brief Indicates the instance has Fortran layout (i.e., the first dimension is the leading
      * dimension instance)
      */
     FORTRAN,

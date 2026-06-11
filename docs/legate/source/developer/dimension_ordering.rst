@@ -15,7 +15,7 @@ Definition
 ==========
 
 A dimension ordering is a tuple of dimension indices, listed from the most rapidly changing
-dimension to the least rapidingly changing one. For example, if we have a 3D store, the dimension
+dimension to the least rapidly changing one. For example, if we have a 3D store, the dimension
 ordering ``(1, 0, 2)`` means that the second dimension of the store is the most rapidly changing one.
 
 Oftentimes, we use the term "Fortran ordering", which corresponds to a dimension ordering where

@@ -42,7 +42,7 @@ C++
 
 .. rubric:: Reduction Operators
 
-- Move definition of reduction operators from ``legate/utilities/tyepdefs.h`` to
+- Move definition of reduction operators from ``legate/utilities/typedefs.h`` to
   ``legate/redop/redop.h``.
 
 .. rubric:: Tasks

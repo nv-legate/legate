@@ -12,7 +12,7 @@
 namespace legate::detail {
 
 /**
- * @brief A specialized accessor policy for `std::mspan` that models a Legion reduction
+ * @brief A specialized accessor policy for `std::mdspan` that models a Legion reduction
  * accessor.
  *
  * @tparam Redop The Legion reduction operation.

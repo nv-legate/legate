@@ -12,8 +12,8 @@ This document outlines the enablement of GPUDirect Storage(GDS in short) to perf
 between the GPU memory and the underlying storage device specifically for HDF5 files in an
 efficient manner.
 
-GPUDirect Storage enables a direct path between local or remote storage and GPU memory
-avoiding an extra copies through a bounce buffer in the CPU's memory and enables a direct
+GPUDirect Storage enables a direct path between local or remote storage and GPU memory,
+avoiding extra copies through a bounce buffer in the CPU's memory, and enables a direct
 memory access (DMA) engine near the NIC or storage to move data on a direct path into or
 out of GPU memory, all without burdening the CPU or GPU.
 

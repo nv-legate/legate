@@ -199,7 +199,7 @@ cdef class TaskContext(Unconstructable):
         r"""
         Returns the current machine this task is executing on.
 
-        :returns: The tasks machine.
+        :returns: The task's machine.
         :rtype: Machine
         """
         cdef _Machine machine = self._handle.machine()
@@ -211,7 +211,7 @@ cdef class TaskContext(Unconstructable):
         r"""
         Returns the provenance string for the task
 
-        :returns: The tasks provenance.
+        :returns: The task's provenance.
         :rtype: str
         """
         cdef std_string_view sv = self._handle.get_provenance()

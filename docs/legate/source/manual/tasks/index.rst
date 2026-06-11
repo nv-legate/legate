@@ -104,7 +104,7 @@ supports GPU, OpenMP, and CPU tasks, and the following scope:
 
    const auto machine = legate::get_machine();
    const auto scope = legate::Scope{
-     machine.only({legate::TaskTarget::OMP, leate::TaskTarget::CPU})
+     machine.only({legate::TaskTarget::OMP, legate::TaskTarget::CPU})
    };
 
    // create some tasks and submit them...
@@ -139,7 +139,7 @@ Legate tasks are declared by defining a C++ task, which publicly inherits from t
 
    class MyTask : public legate::LegateTask<MyTask> {
    public:
-     static inline const auto TASK_CONFIG = legate:TaskConfig{
+     static inline const auto TASK_CONFIG = legate::TaskConfig{
        legate::LocalTaskID{0}
      };
 
@@ -174,7 +174,7 @@ of the expected task signature:
 
    class MyTask : public legate::LegateTask<MyTask> {
    public:
-     static inline const auto TASK_CONFIG = legate:TaskConfig{
+     static inline const auto TASK_CONFIG = legate::TaskConfig{
        legate::LocalTaskID{0}
      }.with_signature(
        legate::TaskSignature{}

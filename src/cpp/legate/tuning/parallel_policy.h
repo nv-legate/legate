@@ -38,7 +38,7 @@ namespace legate {
  */
 
 /**
- * @brief Streaming modes for ParllelPolicy
+ * @brief Streaming modes for ParallelPolicy
  */
 enum class StreamingMode : std::uint8_t {
   /**
@@ -82,7 +82,7 @@ enum class StreamingMode : std::uint8_t {
  *   - `streaming(StreamingMode)` (default: `OFF`): When the `streaming()` is not `OFF` in a scope,
  * the runtime executes the tasks in a streaming fashion. For example, if there are two tasks `T1`
  * and `T2` in the scope, the normal execution would run all parallel instances of `T1` before it
- * would move on to `T2`'s, whereas the streaming execution would alternative between `T1` and `T2`,
+ * would move on to `T2`'s, whereas the streaming execution would alternate between `T1` and `T2`,
  *   launching a subset of parallel instances at a time that would fit to the memory. The
  *   granularity of tasks can be configured by the `overdecompose_factor()` (see below), and if the
  *   `overdecompose_factor()` is `1`, no streaming would happen even if the `streaming()` is `true`.
@@ -148,7 +148,7 @@ class LEGATE_EXPORT ParallelPolicy {
   [[nodiscard]] std::uint32_t overdecompose_factor() const;
 
   /**
-   * @brief Read the partitioning threshold for a give TaskTarget.
+   * @brief Read the partitioning threshold for a given TaskTarget.
    *
    * @param target The target processor kind.
    *

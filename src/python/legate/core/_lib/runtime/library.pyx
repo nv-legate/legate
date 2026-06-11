@@ -44,7 +44,7 @@ cdef class Library(Unconstructable):
 
     cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id):
         r"""
-        Convert a global task ID to a local task ID.
+        Convert a local task ID to a global task ID.
 
         Parameters
         ----------

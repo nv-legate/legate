@@ -258,7 +258,7 @@ class LEGATE_EXPORT Machine {
    * @param target Processor type to slice
    * @param keep_others Optional flag to keep unsliced ranges in the returned machine descriptor
    *
-   * @return Machine descriptor with the chosen procssor range sliced
+   * @return Machine descriptor with the chosen processor range sliced
    */
   [[nodiscard]] Machine slice(std::uint32_t from,
                               std::uint32_t to,

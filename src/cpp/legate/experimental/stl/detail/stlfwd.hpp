@@ -302,7 +302,7 @@ static_assert(!std::is_same_v<int, std::int64_t>);
 /**
  * @concept logical_store_like
  *
- * @brief A type `StoreLike` satisfied `logical_store_like` when it exposes a
+ * @brief A type `StoreLike` satisfies `logical_store_like` when it exposes a
  * `legate::LogicalStore` via the `get_logical_store` customization point.
  *
  * @code{.cpp}
