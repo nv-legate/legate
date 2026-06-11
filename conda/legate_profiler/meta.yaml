@@ -79,7 +79,7 @@ requirements:
     - cuda-version ={{ cuda_version }}
     {% endif %}
   host:
-    - openssl
+    - openssl >=3,<4
 
   run:
     - legate ={{ legate_version }}
