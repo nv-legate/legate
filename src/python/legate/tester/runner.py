@@ -176,11 +176,19 @@ class LegateRunner(Runner):
         cov_args = self.cov_args(config)
         file_args = self.file_args(test_spec.path, config)
 
-        # If both Python and Realm signal handlers are active, we may not get
-        # good backtraces on crashes at the C++ level. We are typically more
-        # interested in seeing the backtrace of the crashing C++ thread, not
-        # the python code, so we ask pytest to omit the python fault handler.
-        pytest_args = ["-p", "no:faulthandler"]
+        pytest_args = []
+        if "tests" in test_spec.path.parts:
+            # If both Python and Realm signal handlers are active, we may not
+            # get good backtraces on crashes at the C++ level. We are typically
+            # more interested in seeing the backtrace of the crashing C++
+            # thread, not the python code, so we ask pytest to omit the python
+            # fault handler.
+
+            # We only do this for tests in a tests/ directory, because we do
+            # not assume other files use pytest.  A file that uses pytest and
+            # is not in a tests/ directory will have to modify the arguments
+            # passed to pytest.main() to get this behavior.
+            pytest_args = ["-p", "no:faulthandler"]
 
         cmd = [
             sys.executable,
