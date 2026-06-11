@@ -200,7 +200,7 @@ cdef class Type:
     @property
     def alignment(self) -> uint32_t:
         r"""
-        Get the alignmenent (in bytes) of the data type.
+        Get the alignment (in bytes) of the data type.
 
         :returns: The alignment of the data type.
         :rtype: int
@@ -247,7 +247,7 @@ cdef class Type:
         Get whether a type is "primitive".
 
         Primitive types are generally those that are "built in", such as
-        `int32_t`, `uin64_t`, `float`, `double`, `int`, etc. Struct types, list
+        `int32_t`, `uint64_t`, `float`, `double`, `int`, etc. Struct types, list
         types, and other such compound types are not primitive.
 
         :returns: `True` if the type is primitive, `False` otherwise.
@@ -360,7 +360,7 @@ cdef class Type:
 
     def __eq__(self, object other) -> bool:
         r"""
-        Compate this type against another.
+        Compare this type against another.
 
         Parameters
         ----------

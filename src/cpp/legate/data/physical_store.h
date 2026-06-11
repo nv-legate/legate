@@ -74,7 +74,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
@@ -116,7 +116,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
@@ -146,7 +146,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
@@ -176,7 +176,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
@@ -210,7 +210,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
@@ -260,7 +260,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
@@ -295,7 +295,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).
@@ -330,7 +330,7 @@ class LEGATE_EXPORT PhysicalStore {
    * `elem_size` should not normally need to be passed. It is, however, necessary for
    * type-punning when the size of the stored type and viewed type differ. For example, a store
    * might refer to binary data where each element is of size 10, but we wish to view it as an
-   * mspan of `std::byte`s (which would have size = 1). In this case:
+   * mdspan of `std::byte`s (which would have size = 1). In this case:
    *
    * #. Pass the viewed type (e.g. `std::byte`) as the template parameter `T`.
    * #. Pass `VALIDATE_TYPE = false` (to avoid warnings about type mismatch).

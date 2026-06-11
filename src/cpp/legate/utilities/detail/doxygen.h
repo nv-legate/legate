@@ -41,7 +41,7 @@
  *
  * All accessors have a `ptr` method that returns a raw pointer to the underlying allocation.
  * The caller can optionally pass an array to query strides of dimensions, necessary for correct
- * accesse. Unlike the accesses mediated by accessors, raw pointer accesses are not protected by
+ * access. Unlike the accesses mediated by accessors, raw pointer accesses are not protected by
  * Legate, and thus the developer should make sure of safety of the accesses.
  *
  * The most common mistake with raw pointers from reduction accessors are that the code overwrites
@@ -49,7 +49,7 @@
  * the values must be reduced to the elements in the store. So, any client code that uses a raw
  * pointer to a reduction store should make sure that it makes updates to the effect of reducing
  * its contributions to the original elements. Not abiding by this contract can lead to
- * non-deterministic conrrectness issues.
+ * non-deterministic correctness issues.
  */
 
 /**

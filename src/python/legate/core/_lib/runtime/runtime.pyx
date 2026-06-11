@@ -525,7 +525,7 @@ cdef class Runtime(Unconstructable):
             The source.
         redop : int (optional)
             The reduction operator to use. If none is given, no reductions take
-            place. The stores type must support the operator.
+            place. The store's type must support the operator.
 
         Raises
         ------
@@ -891,7 +891,7 @@ cdef class Runtime(Unconstructable):
         r"""
         Create a store from a `Scalar`.
 
-        If `shape` is not `None`, its volume bust be `1`. The call does not
+        If `shape` is not `None`, its volume must be `1`. The call does not
         block on the shape.
 
         Parameters
@@ -1133,7 +1133,7 @@ cdef class Runtime(Unconstructable):
         A[5] included in the first slice A[1:6], the mapper needs to create a
         new instance for A[:6] that encompasses both of the slices, leading to
         an extra copy.  In this case, if the code calls `prefetch(A, (0,),
-        (1,))` to pre-alloate instances that contain one extra element on the
+        (1,))` to pre-allocate instances that contain one extra element on the
         right before it uses A, the extra copy can be avoided.
 
         A couple of notes about the API:

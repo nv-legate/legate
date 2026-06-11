@@ -7,7 +7,7 @@
 StoreTarget
 ===========
 
-``StoreTarget`` allows users to to control where objects are offloaded to.
+``StoreTarget`` allows users to control where objects are offloaded to.
 
 .. autosummary::
    :toctree: generated/

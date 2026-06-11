@@ -151,7 +151,7 @@ cdef class ProcessorRange:
         r"""
         Indicates if the processor range is empty
 
-        :returns: ``True`` if the machine is empty, ``False`` otherwise.
+        :returns: ``True`` if the processor range is empty, ``False`` otherwise.
         :rtype: bool
         """
         return self._handle.empty()

@@ -53,7 +53,7 @@ cdef class LogicalStore(Unconstructable):
     @property
     def shape(self) -> Shape:
         r"""
-        Get the stores shape.
+        Get the store's shape.
 
         :returns: The shape of the store.
         :rtype: Shape
@@ -321,7 +321,7 @@ cdef class LogicalStore(Unconstructable):
         Raises
         ------
         ValueError
-            If ``extra_dim`` is not a valid dimension name
+            If ``extra_dim`` is not a valid dimension index
         """
         if extra_dim < 0:
             extra_dim += self.ndim
@@ -358,7 +358,7 @@ cdef class LogicalStore(Unconstructable):
         Raises
         ------
         ValueError
-            If ``dim`` is not a valid dimension name or ``index`` is
+            If ``dim`` is not a valid dimension index or ``index`` is
             out of bounds
         """
         if dim < 0:

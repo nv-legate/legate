@@ -117,7 +117,7 @@ class LEGATE_EXPORT Task {
   /**
    * @brief Returns the number of task's reductions
    *
-   * @return Number of redeuction stores
+   * @return Number of reduction stores
    */
   [[nodiscard]] std::size_t num_reductions() const;
   /**

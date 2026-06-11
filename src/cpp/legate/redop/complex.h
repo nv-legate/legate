@@ -136,7 +136,7 @@ class LEGATE_EXPORT ProdReduction<Complex<float>>
 // ==========================================================================================
 
 /**
- * @brief Sum reduction specialization for `Complex<Half>`.
+ * @brief Sum reduction specialization for `Complex<double>`.
  */
 template <>
 class LEGATE_EXPORT SumReduction<Complex<double>>

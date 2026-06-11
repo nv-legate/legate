@@ -59,10 +59,10 @@ class Config;
 /**
  * @brief Class that implements the Legate runtime
  *
- * The legate runtime provides common services, including as library registration,
+ * The legate runtime provides common services, including library registration,
  * store creation, operator creation and submission, resource management and scoping,
  * and communicator management. Legate libraries are free of all these details about
- * distribute programming and can focus on their domain logics.
+ * distributed programming and can focus on their domain logic.
  */
 class LEGATE_EXPORT Runtime {
  public:
@@ -455,7 +455,7 @@ class LEGATE_EXPORT Runtime {
    * @param tile_shape Shape of tiles.
    * @param type Element type.
    * @param allocations Pairs of external allocation descriptors and sub-store colors.
-   * @param ordering In what order the elements are laid out in the passed allocatios.
+   * @param ordering In what order the elements are laid out in the passed allocations.
    *
    * @return A pair of a logical store and its partition.
    *
@@ -485,7 +485,7 @@ class LEGATE_EXPORT Runtime {
    * task running on the second GPU gets A[6:] and A[5:9]. Since the original instance on the first
    * GPU does not cover the element A[5] included in the first slice A[1:6], the mapper needs to
    * create a new instance for A[:6] that encompasses both of the slices, leading to an extra copy.
-   * In this case, if the code calls `prefetch(A, {0}, {1})` to pre-alloate instances that contain
+   * In this case, if the code calls `prefetch(A, {0}, {1})` to pre-allocate instances that contain
    * one extra element on the right before it uses A, the extra copy can be avoided.
    *
    * A couple of notes about the API:

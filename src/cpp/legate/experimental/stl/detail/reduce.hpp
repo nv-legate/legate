@@ -311,7 +311,7 @@ using as_reduction_t = decltype(stl::as_reduction<ValueType>(std::declval<Fun>()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @brief Reduces the elements of the input range using the given reduction
- * operation operation.
+ * operation.
  *
  * @param input The input range to reduce.
  * @param init The initial value of the reduction.

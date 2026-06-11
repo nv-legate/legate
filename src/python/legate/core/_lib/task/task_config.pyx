@@ -65,7 +65,7 @@ cdef class TaskConfig:
         Get the task ID.
 
         :returns: The task ID
-        :rtype: LocalTasKID
+        :rtype: LocalTaskID
         """
         cdef _LocalTaskID id
 

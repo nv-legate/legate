@@ -75,7 +75,7 @@ Installing PyPI Packages
 ========================
 
 Legate is also available as a `Python wheel <https://pypi.org/project/legate>`_.
-To install the Legate wheel, use the the ``pip`` package manager:
+To install the Legate wheel, use the ``pip`` package manager:
 
 .. code-block:: bash
 

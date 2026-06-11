@@ -134,7 +134,7 @@ class LEGATE_EXPORT Library {
    * reference atomically when the `EXCLUSIVE` is `false`.
    *
    * @warning Because the runtime can capture the reduction operator and wrap it with CUDA
-   * boilerplates only at compile time, the registration call should be made in a .cu file that
+   * boilerplate only at compile time, the registration call should be made in a .cu file that
    * would be compiled by NVCC. Otherwise, the runtime would register the reduction operator in
    * CPU-only mode, which can degrade the performance when the program performs reductions on
    * non-scalar stores.
