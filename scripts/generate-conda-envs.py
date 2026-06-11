@@ -180,6 +180,8 @@ class BuildConfig(SectionConfig):
             pkgs += ("openmpi<6",)
         if self.ucx:
             pkgs += ("ucx>=1.16", "ucc")
+        if self.cupynumeric:
+            pkgs += ("nanobind>=2.0.0",)
         if self.sanitizers:
             pkgs += ("libsanitizer",)
         if self.os == "linux":
