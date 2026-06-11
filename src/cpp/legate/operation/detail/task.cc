@@ -236,11 +236,8 @@ template <bool WRITE>
   result.reserve(store_args.size());
   for (auto&& [_, store, variable] : store_args) {
     auto&& partition = strategy[*variable];
-    result.emplace_back(store->map(partition.get(),
-                                   strategy.find_store_projection(*variable),
-                                   launch_domain,
-                                   task_index,
-                                   machine));
+    result.emplace_back(store->map(
+      partition, strategy.find_store_projection(*variable), launch_domain, task_index, machine));
     if constexpr (WRITE) {
       store->set_key_partition(machine, parallel_policy, partition);
     }

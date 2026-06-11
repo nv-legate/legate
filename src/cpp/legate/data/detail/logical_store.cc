@@ -377,7 +377,7 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
 
 }  // namespace
 
-InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
+InternalSharedPtr<PhysicalStore> LogicalStore::map(const InternalSharedPtr<Partition>& partition,
                                                    const SymbolicPoint& store_projection,
                                                    const Domain& launch_domain,
                                                    const DomainPoint& task_index,
@@ -387,8 +387,9 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const Partition* partition,
                        ? compute_color(store_projection, task_index)
                        : task_index;
 
+  auto inverted = partition->invert(partition, transform_);
   auto domain =
-    launch_domain.is_valid() && domain_.is_valid() ? partition->shard(domain_, color) : domain_;
+    launch_domain.is_valid() && domain_.is_valid() ? inverted->shard(domain_, color) : domain_;
 
   LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
 

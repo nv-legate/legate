@@ -57,6 +57,18 @@ DomainPoint to_domain_point(Span<const std::uint64_t> shape)
   return point;
 }
 
+DomainPoint to_domain_point(Span<const std::int64_t> shape)
+{
+  const auto ndim = static_cast<std::uint32_t>(shape.size());
+  DomainPoint point;
+
+  point.dim = static_cast<int>(ndim);
+  for (std::uint32_t idx = 0; idx < ndim; ++idx) {
+    point[idx] = static_cast<coord_t>(shape[idx]);
+  }
+  return point;
+}
+
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Domain& domain)
 {
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> result;

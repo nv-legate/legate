@@ -119,7 +119,7 @@ class LogicalStore {
 
  public:
   [[nodiscard]] InternalSharedPtr<PhysicalStore> map(
-    const Partition* partition,
+    const InternalSharedPtr<Partition>& partition,
     const SymbolicPoint& store_projection,
     const Domain& launch_domain,
     const DomainPoint& task_index,

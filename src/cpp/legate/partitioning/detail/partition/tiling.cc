@@ -45,6 +45,7 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   if (offsets_.empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
   }
+  offsets_dp_ = to_domain_point(offsets_);
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
@@ -63,6 +64,7 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   if (this->offsets().empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
   }
+  offsets_dp_ = to_domain_point(offsets_);
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
@@ -162,14 +164,12 @@ InternalSharedPtr<Partition> Tiling::invert(
 
 Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
 {
-  const auto lo = domain.lo();
-  const auto hi = domain.hi();
+  auto new_lo = color * tile_shape_dp_ + offsets_dp_;
+  auto new_hi = new_lo + tile_shape_dp_;
 
-  const auto new_lo = lo + color * tile_shape_dp_;
-  auto new_hi       = new_lo + tile_shape_dp_;
-
-  for (std::int32_t dim = 0; dim < hi.dim; ++dim) {
-    new_hi[dim] = std::min(new_hi[dim] - 1, hi[dim]);
+  for (std::int32_t dim = 0; dim < new_hi.dim; ++dim) {
+    new_lo[dim] = std::max(domain.rect_data[dim], new_lo[dim]);
+    new_hi[dim] = std::min(new_hi[dim] - 1, domain.rect_data[dim + domain.dim]);
   }
 
   return {new_lo, new_hi};

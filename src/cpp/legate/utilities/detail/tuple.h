@@ -41,6 +41,8 @@ namespace legate::detail {
 
 [[nodiscard]] LEGATE_PYTHON_EXPORT DomainPoint to_domain_point(Span<const std::uint64_t> shape);
 
+[[nodiscard]] DomainPoint to_domain_point(Span<const std::int64_t> shape);
+
 [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Domain& domain);
 
 // These are forward declared in tuple.h to avoid including this header
