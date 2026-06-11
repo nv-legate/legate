@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tuning &#8212; NVIDIA legate (26.07.00.dev24+g360eb404d)</title>
+    <title>tuning &#8212; NVIDIA legate (26.07.00.dev29+g4f9857aea)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=065afc0f"></script>
+    <script src="../../../../_static/documentation_options.js?v=308a39ad"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a>
 
@@ -723,7 +723,7 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp enum-class">
 <dt class="sig sig-object cpp" id="_CPPv413StreamingMode">
 <span id="_CPPv313StreamingMode"></span><span id="_CPPv213StreamingMode"></span><span class="target" id="group__tuning_1ga6de0ae1305b045b90d6c1a137ee3e7c8"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">StreamingMode</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><a class="headerlink" href="#_CPPv413StreamingMode" title="Link to this definition">#</a><br /></dt>
-<dd><p>Streaming modes for ParllelPolicy. </p>
+<dd><p>Streaming modes for <a class="reference internal" href="#classlegate_1_1ParallelPolicy"><span class="std std-ref">ParallelPolicy</span></a>. </p>
 <p><em>Values:</em></p>
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N13StreamingMode3OFFE">
@@ -757,7 +757,7 @@ SPDX-License-Identifier: Apache-2.0
 <p>A helper class that describes parallelization policies for tasks. </p>
 <p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy"><span class="std std-ref"><span class="pre">ParallelPolicy</span></span></a></code> consists of knobs to control the parallelization policy for tasks in a given scope. To change the parallelization policy of the scope, a new <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref"><span class="pre">Scope</span></span></a></code> must be created with a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy"><span class="std std-ref"><span class="pre">ParallelPolicy</span></span></a></code>. Currently, the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy"><span class="std std-ref"><span class="pre">ParallelPolicy</span></span></a></code> class provides the following parameters:</p>
 <p><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">streaming(StreamingMode)</span></code> (default: <code class="docutils literal notranslate"><span class="pre">OFF</span></code>): When the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is not <code class="docutils literal notranslate"><span class="pre">OFF</span></code> in a scope, the runtime executes the tasks in a streaming fashion. For example, if there are two tasks <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code> in the scope, the normal execution would run all parallel instances of <code class="docutils literal notranslate"><span class="pre">T1</span></code> before it would move on to <code class="docutils literal notranslate"><span class="pre">T2</span></code>’s, whereas the streaming execution would alternative between <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code>, launching a subset of parallel instances at a time that would fit to the memory. The granularity of tasks can be configured by the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> (see below), and if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, no streaming would happen even if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">streaming(StreamingMode)</span></code> (default: <code class="docutils literal notranslate"><span class="pre">OFF</span></code>): When the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is not <code class="docutils literal notranslate"><span class="pre">OFF</span></code> in a scope, the runtime executes the tasks in a streaming fashion. For example, if there are two tasks <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code> in the scope, the normal execution would run all parallel instances of <code class="docutils literal notranslate"><span class="pre">T1</span></code> before it would move on to <code class="docutils literal notranslate"><span class="pre">T2</span></code>’s, whereas the streaming execution would alternate between <code class="docutils literal notranslate"><span class="pre">T1</span></code> and <code class="docutils literal notranslate"><span class="pre">T2</span></code>, launching a subset of parallel instances at a time that would fit to the memory. The granularity of tasks can be configured by the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> (see below), and if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, no streaming would happen even if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ad36b694010018dfde87e97478301f241"><span class="std std-ref"><span class="pre">streaming()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> (default: <code class="docutils literal notranslate"><span class="pre">1</span></code>): When the value is greater than <code class="docutils literal notranslate"><span class="pre">1</span></code>, the auto-partitioner will over-decompose the stores when partitioning them; by default, the auto-partitioner creates <code class="docutils literal notranslate"><span class="pre">N</span></code> chunks in a store partition when there are <code class="docutils literal notranslate"><span class="pre">N</span></code> processors, but if the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ParallelPolicy_1ac445e81373231e67a35a8d87366762e4"><span class="std std-ref"><span class="pre">overdecompose_factor()</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">k</span></code> in the scope, it would create <code class="docutils literal notranslate"><span class="pre">kN</span></code> chunks in the partition. </p></li>
 </ul>
 </p>
@@ -868,7 +868,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Read the partitioning threshold for a give TaskTarget. </p>
+<dd><p>Read the partitioning threshold for a given TaskTarget. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>target</strong> – The target processor kind.</p>

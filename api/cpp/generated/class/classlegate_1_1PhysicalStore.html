@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::PhysicalStore &#8212; NVIDIA legate (26.07.00.dev24+g360eb404d)</title>
+    <title>legate::PhysicalStore &#8212; NVIDIA legate (26.07.00.dev29+g4f9857aea)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=065afc0f"></script>
+    <script src="../../../../_static/documentation_options.js?v=308a39ad"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a>
 
@@ -730,7 +730,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore18span_read_accessorE11mdspan_typeIK1T3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a read-only mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><span class="pre">span_read_accessor&lt;T,</span> <span class="pre">DIM&gt;(shape&lt;DIM&gt;())</span></code>. </p>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -772,7 +772,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">acc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="c1">// OK, value will be 42.0</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -805,7 +805,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE_bEN6legate13PhysicalStore24span_read_write_accessorE11mdspan_typeI1T3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a read-write mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><span class="pre">span_read_write_accessor&lt;T,</span> <span class="pre">DIM&gt;(shape&lt;DIM&gt;())</span></code>. </p>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -838,7 +838,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_b_NSt7int32_tE_bEN6legate13PhysicalStore20span_reduce_accessorE11mdspan_typeIN5Redop3LHSE3DIMN6detail17ReductionAccessorI5Redop9EXCLUSIVEEEENSt6size_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a reduction mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><span class="pre">span_reduce_accessor&lt;Redop,</span> <span class="pre">EXCLUSIVE,</span> <span class="pre">DIM&gt;(shape&lt;DIM&gt;())</span></code>. </p>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -873,7 +873,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore18span_read_accessorE11mdspan_typeIK1T3DIMERK4RectI3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a read-only mdspan to the store over the selected domain. </p>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -923,7 +923,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">acc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="c1">// OK, value will be 42.0</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -964,7 +964,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE_bEN6legate13PhysicalStore24span_read_write_accessorE11mdspan_typeI1T3DIMERK4RectI3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a read-write mdspan to the store over the selected domain. </p>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1005,7 +1005,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_b_NSt7int32_tE_bEN6legate13PhysicalStore20span_reduce_accessorE11mdspan_typeIN5Redop3LHSE3DIMN6detail17ReductionAccessorI5Redop9EXCLUSIVEEEERK4RectI3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a reduction mdspan to the store over the selected domain. </p>
-<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
+<p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>

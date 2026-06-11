@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>accessor &#8212; NVIDIA legate (26.07.00.dev24+g360eb404d)</title>
+    <title>accessor &#8212; NVIDIA legate (26.07.00.dev29+g4f9857aea)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=065afc0f"></script>
+    <script src="../../../../_static/documentation_options.js?v=308a39ad"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a>
 
@@ -718,8 +718,8 @@ SPDX-License-Identifier: Apache-2.0
 <dt class="sig sig-object cpp">
 <span class="target" id="group__accessor"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">Accessor</span> <span class="pre">types</span></span></dt>
 <dd><p>Accessors provide an interface to access values in stores. Access modes are encoded in the accessor types so that the compiler can catch invalid accesses. Accessors also provide bounds checks (which can be turned on with a compile flag).</p>
-<p>All accessors have a <code class="docutils literal notranslate"><span class="pre">ptr</span></code> method that returns a raw pointer to the underlying allocation. The caller can optionally pass an array to query strides of dimensions, necessary for correct accesse. Unlike the accesses mediated by accessors, raw pointer accesses are not protected by Legate, and thus the developer should make sure of safety of the accesses.</p>
-<p>The most common mistake with raw pointers from reduction accessors are that the code overwrites values to the elements, instead of reducing them. The key contract with reduction is that the values must be reduced to the elements in the store. So, any client code that uses a raw pointer to a reduction store should make sure that it makes updates to the effect of reducing its contributions to the original elements. Not abiding by this contract can lead to non-deterministic conrrectness issues.</p>
+<p>All accessors have a <code class="docutils literal notranslate"><span class="pre">ptr</span></code> method that returns a raw pointer to the underlying allocation. The caller can optionally pass an array to query strides of dimensions, necessary for correct access. Unlike the accesses mediated by accessors, raw pointer accesses are not protected by Legate, and thus the developer should make sure of safety of the accesses.</p>
+<p>The most common mistake with raw pointers from reduction accessors are that the code overwrites values to the elements, instead of reducing them. The key contract with reduction is that the values must be reduced to the elements in the store. So, any client code that uses a raw pointer to a reduction store should make sure that it makes updates to the effect of reducing its contributions to the original elements. Not abiding by this contract can lead to non-deterministic correctness issues.</p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
 <dl class="cpp type">

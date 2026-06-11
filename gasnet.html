@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>GASNet-based Installation &#8212; NVIDIA legate (26.07.00.dev24+g360eb404d)</title>
+    <title>GASNet-based Installation &#8212; NVIDIA legate (26.07.00.dev29+g4f9857aea)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="_static/documentation_options.js?v=065afc0f"></script>
+    <script src="_static/documentation_options.js?v=308a39ad"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a>
 
@@ -731,16 +731,16 @@ package.  Thus, a GASNet package installation requires three components:</p>
 <p>The installation of the MPI wrapper is discussed in more detail in
 <a class="reference internal" href="mpi-wrapper.html#installation-of-mpi-wrapper"><span class="std std-ref">Installation</span></a> and <a class="reference internal" href="faq.html#mpi-wrapper-faq"><span class="std std-ref">MPI wrapper
 FAQ</span></a>.  In summary, the idea is to provide an API wrapper around
-MPI that can be plugged into Leagate at start time.  The GASNet wrapper has a
+MPI that can be plugged into Legate at start time.  The GASNet wrapper has a
 similar purpose, but plugs into the underlying Realm networking module.  To make
 this process easier, instead of building the wrappers from source, we
-provide an MPI wrapper and a GASNet wrapper conda packages that install scripts
-for building of the wrappers, and automate their use by setting the necessary
+provide MPI wrapper and GASNet wrapper conda packages that install scripts
+for building the wrappers, and automate their use by setting the necessary
 environment variables.</p>
 </section>
 <section id="how-do-i-install-legate-with-the-mpi-and-gasnet-wrappers">
 <span id="how-do-i-install-legate-with-wrappers"></span><h2>How Do I Install Legate with the MPI and GASNet wrappers<a class="headerlink" href="#how-do-i-install-legate-with-the-mpi-and-gasnet-wrappers" title="Link to this heading">#</a></h2>
-<p>The basics of the installation of Leagate are covered in <a class="reference internal" href="installation.html#how-do-i-install-legate"><span class="std std-ref">How Do I Install
+<p>The basics of the installation of Legate are covered in <a class="reference internal" href="installation.html#how-do-i-install-legate"><span class="std std-ref">How Do I Install
 Legate</span></a>.  Here, we discuss the differences from the
 non-wrapper packages.</p>
 <p>First, the GASNet wrapper Legate packages live under a different label in the

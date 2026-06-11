@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tasks &#8212; NVIDIA legate (26.07.00.dev24+g360eb404d)</title>
+    <title>Tasks &#8212; NVIDIA legate (26.07.00.dev29+g4f9857aea)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../_static/documentation_options.js?v=065afc0f"></script>
+    <script src="../../_static/documentation_options.js?v=308a39ad"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a>
 
@@ -785,7 +785,7 @@ supports GPU, OpenMP, and CPU tasks, and the following scope:</p>
 
 <span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">machine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">get_machine</span><span class="p">();</span>
 <span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Scope</span><span class="p">{</span>
-<span class="w">  </span><span class="n">machine</span><span class="p">.</span><span class="n">only</span><span class="p">({</span><span class="n">legate</span><span class="o">::</span><span class="n">TaskTarget</span><span class="o">::</span><span class="n">OMP</span><span class="p">,</span><span class="w"> </span><span class="n">leate</span><span class="o">::</span><span class="n">TaskTarget</span><span class="o">::</span><span class="n">CPU</span><span class="p">})</span>
+<span class="w">  </span><span class="n">machine</span><span class="p">.</span><span class="n">only</span><span class="p">({</span><span class="n">legate</span><span class="o">::</span><span class="n">TaskTarget</span><span class="o">::</span><span class="n">OMP</span><span class="p">,</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">TaskTarget</span><span class="o">::</span><span class="n">CPU</span><span class="p">})</span>
 <span class="p">};</span>
 
 <span class="c1">// create some tasks and submit them...</span>
@@ -811,7 +811,7 @@ restriction using <code class="docutils literal notranslate"><span class="pre">l
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyTask</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LegateTask</span><span class="o">&lt;</span><span class="n">MyTask</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">:</span><span class="n">TaskConfig</span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">TaskConfig</span><span class="p">{</span>
 <span class="w">    </span><span class="n">legate</span><span class="o">::</span><span class="n">LocalTaskID</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
 <span class="w">  </span><span class="p">};</span>
 
@@ -842,7 +842,7 @@ of the expected task signature:</p>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyTask</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LegateTask</span><span class="o">&lt;</span><span class="n">MyTask</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">:</span><span class="n">TaskConfig</span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">TaskConfig</span><span class="p">{</span>
 <span class="w">    </span><span class="n">legate</span><span class="o">::</span><span class="n">LocalTaskID</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
 <span class="w">  </span><span class="p">}.</span><span class="n">with_signature</span><span class="p">(</span>
 <span class="w">    </span><span class="n">legate</span><span class="o">::</span><span class="n">TaskSignature</span><span class="p">{}</span>

@@ -33,7 +33,7 @@ Michael Bauer & Wonchan Lee & Manolis Papadakis & Marcin Zalewski & Michael Garl
 
 Manolis Papadakis, *Legate: High Productivity High Performance Computing* (NERSC Data Seminar, 2021-08-03)
 `Video <https://www.youtube.com/watch?v=rpfun5SPFQs>`__
-`Slides <https://nv-legate.github.io/legate.core/nersc_data_seminar_2021.pdf>`__
+.. `Slides <https://nv-legate.github.io/legate.core/nersc_data_seminar_2021.pdf>`__
 
 Michael Bauer & Michael McCarty, *Legate: Scaling the Python Ecosystem* (GTC'21, 2021-11-09)
 `Video <https://www.nvidia.com/en-us/on-demand/session/gtcfall21-a31168/>`__
@@ -45,7 +45,7 @@ Rohan Yadav, *Legate Sparse: Distributed and Accelerated Sparse Computing in Pyt
 
 Manolis Papadakis, *Implementing Quantitative Use Cases with Accelerated Computing for Faster Time-to-Insight* (GTC Spring 2023, 2023-03-21)
 `Video <https://www.nvidia.com/en-us/on-demand/session/gtcspring23-se52195/>`__
-`Slides <https://nv-legate.github.io/legate.core/gtc_2023.pdf>`__
+.. `Slides <https://nv-legate.github.io/legate.core/gtc_2023.pdf>`__
 
 Wonchan Lee, *cuNumeric and Legate: How to Create a Distributed GPU Accelerated Library* (GTC Spring 2023, 2023-03-23)
 `Video <https://www.nvidia.com/en-us/on-demand/session/gtcspring23-s51789/>`__
@@ -57,7 +57,7 @@ Seshu Yamajala, *Scaling NumPy Applications from 1 CPU to Thousands of GPUs* (UC
 `Slides <http://helper.ipam.ucla.edu/publications/nmews3/nmews3_19477.pdf>`__
 
 Elliott Slaughter, *Task-Based Runtimes and Applications* (Stanford CME 213, 2023-06-07)
-`Slides <https://nv-legate.github.io/legate.core/cme213_2023.pdf>`__
+.. `Slides <https://nv-legate.github.io/legate.core/cme213_2023.pdf>`__
 
 Rohan Yadav, *Distributed and Accelerated Sparse Computing in Python* (MIT CSAIL Fast Code Seminar, 2023-10-17)
 `Video <https://www.dropbox.com/scl/fi/j155jok490maryfkmwgxi/MIT-CSAIL-FastCodeSeminar-RohanYadav-10-17-23.mp4?rlkey=6x1yl180s8i5m3qet25fe12i6&e=1&dl=0>`__

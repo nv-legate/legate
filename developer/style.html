@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Style &#8212; NVIDIA legate (26.07.00.dev24+g360eb404d)</title>
+    <title>Code Style &#8212; NVIDIA legate (26.07.00.dev29+g4f9857aea)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../_static/documentation_options.js?v=065afc0f"></script>
+    <script src="../_static/documentation_options.js?v=308a39ad"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev24+g360eb404d) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev24+g360eb404d)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
   
 </a>
 
@@ -714,7 +714,7 @@ SPDX-License-Identifier: Apache-2.0
 readability of a code-base. If all code is written in a similar style and flow, then a
 reader may begin to form implicit assumptions (which should hold), and does not need to
 adapt to new forms. In short, the point of a common style is not to enforce one that is
-“pretty” or “elegant”. It is first and foremost to improve the understand-ability of the
+“pretty” or “elegant”. It is first and foremost to improve the understandability of the
 code.</p>
 <p>However, there are some areas where automatic enforcement is not yet sufficient, or not
 yet possible. These are discussed below. In all other cases the following rules apply:</p>
@@ -834,7 +834,7 @@ functions as public methods with private “keys”:</p>
 <li><p>Do not expose your members directly. Instead, make them <code class="docutils literal notranslate"><span class="pre">private</span></code> and provide
 <code class="docutils literal notranslate"><span class="pre">public</span></code> accessor functions to them. This serves to encapsulate the resource and
 provide clear ownership semantics.</p>
-<p>This also aides in debugging. When tracking when a member’s variables are changed, it
+<p>This also aids in debugging. When tracking when a member’s variables are changed, it
 is much easier to place a breakpoint on a function than it is to place a watchpoint on
 a particular member variable’s address (which may change due to serdez).</p>
 </li>
