@@ -99,22 +99,49 @@ bool Storage::is_mapped() const
 
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
-InternalSharedPtr<InlineStorage> Storage::map(  // NOLINT(readability-make-member-function-const)
-  Domain domain,
+std::pair<InternalSharedPtr<InlineStorage>, Domain>
+Storage::map(  // NOLINT(readability-make-member-function-const)
+  const Domain& domain,
+  const InternalSharedPtr<Partition>& partition,
+  const DomainPoint& color,
   legate::mapping::StoreTarget target)
 {
   LEGATE_CHECK(!unbound());
 
-  if (domain.dim == 0) {
-    domain.dim = 1;
-  }
-  if (!storage_data_) {
-    storage_data_ = make_internal_shared<InlineStorage>(domain, field_size_, target);
+  // TODO(wonchanl): Better way to check invalid colors
+  auto sub_domain = color.dim == 0 ? partition->shard(domain, color) : domain;
+
+  // TODO(wonchanl): I hate we have to deal with 0D cases differently
+  if (sub_domain.dim == 0) {
+    sub_domain.dim = 1;
   }
 
-  storage_data_->remap_to(target);
+  // If no data needs to be moved to serve the requested partition, return the current storage
+  // immediately
+  //
+  // TODO(wonchanl): Since NoPartition will always return true, the current policy will keep the
+  // initial replicated storage even when the entire storage gets written with a disjoint partition
+  // by a downstream writer. There should be a way for users to reset the distribution in this case.
+  if (key_partition_.has_value() && (*key_partition_)->subsumes(domain, partition)) {
+    LEGATE_ASSERT(storage_data_);
 
-  return storage_data_;
+    // TODO(wonchanl): GPU-to-CPU copies must be temporary copy-outs, not permanent remapping
+    storage_data_->remap_to(target);
+
+    return {storage_data_, sub_domain};
+  }
+
+  // Otherwise, we need to allocate a new storage
+
+  auto data = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
+
+  // TODO(wonchanl): Need to handle copy-ins and -outs.
+  LEGATE_CHECK(!storage_data_);
+  // LEGATE_CHECK(partition->is_complete_for(domain));
+
+  storage_data_ = data;
+
+  return {data, sub_domain};
 }
 
 // Unmapping is a logically non-const operation
@@ -130,23 +157,16 @@ void Storage::free_early()
 Restrictions Storage::compute_restrictions() const { return Restrictions{dim()}; }
 
 std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
-  const mapping::detail::Machine& machine,
-  const ParallelPolicy& parallel_policy,
   const Restrictions& restrictions) const
 {
-  const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
-
-  if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
-      restrictions.are_satisfied_by(**key_partition_, shape())) {
+  if (key_partition_.has_value() && restrictions.are_satisfied_by(**key_partition_, shape())) {
     return key_partition_;
   }
   return std::nullopt;
 }
 
-void Storage::set_key_partition(std::uint32_t num_pieces,
-                                InternalSharedPtr<Partition> key_partition)
+void Storage::set_key_partition(InternalSharedPtr<Partition> key_partition)
 {
-  num_pieces_    = num_pieces;
   key_partition_ = std::move(key_partition);
 }
 

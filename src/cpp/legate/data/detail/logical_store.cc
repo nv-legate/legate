@@ -342,6 +342,10 @@ namespace {
 
 DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoint& task_index)
 {
+  if (store_projection.empty() || task_index.dim == 0) {
+    return task_index;
+  }
+
   DomainPoint result{};
 
   result.dim = static_cast<std::int32_t>(store_projection.size());
@@ -360,20 +364,17 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const InternalSharedPtr<Parti
                                                    const DomainPoint& task_index,
                                                    const legate::mapping::detail::Machine& machine)
 {
-  const auto color = (launch_domain.is_valid() && !store_projection.empty())
-                       ? compute_color(store_projection, task_index)
-                       : task_index;
+  const auto color = compute_color(store_projection, task_index);
 
   auto inverted = partition->invert(partition, transform_);
-  auto domain =
-    launch_domain.is_valid() && domain_.is_valid() ? inverted->shard(domain_, color) : domain_;
 
   LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
 
-  auto allocation = get_storage()->map(domain, machine.preferred_store_target());
+  auto&& [allocation, subdomain] =
+    get_storage()->map(domain_, inverted, color, machine.preferred_store_target());
 
   return make_internal_shared<PhysicalStore>(
-    shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), domain);
+    shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain);
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
@@ -390,18 +391,11 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime().flush_scheduling_window();
 
-  auto domain = domain_;
-
-  if (domain.dim == 0) {
-    domain.dim          = 1;
-    domain.rect_data[0] = 0;
-    domain.rect_data[1] = 0;
-  }
-
-  auto allocation = storage->map(domain, effective_target);
+  auto&& [allocation, subdomain] =
+    storage->map(domain_, create_no_partition(), {}, effective_target);
 
   return make_internal_shared<PhysicalStore>(
-    shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), domain);
+    shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain);
 }
 
 // Just because all the member functions used are const, doesn't mean this function
@@ -436,8 +430,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
     return create_no_partition();
   }
 
-  auto storage_part =
-    get_storage()->find_key_partition(machine, parallel_policy, transform_->invert(restrictions));
+  auto storage_part = get_storage()->find_key_partition(transform_->invert(restrictions));
 
   if (storage_part.has_value() && (transform_->identity() || (*storage_part)->is_convertible())) {
     return (*storage_part)->convert(*storage_part, transform());
@@ -466,9 +459,7 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
       restrictions.are_satisfied_by(**key_partition_, shape())) {
     return true;
   }
-  return get_storage()
-    ->find_key_partition(machine, parallel_policy, transform_->invert(restrictions))
-    .has_value();
+  return get_storage()->find_key_partition(transform_->invert(restrictions)).has_value();
 }
 
 void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
@@ -477,7 +468,7 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
 {
   LEGATE_ASSERT(!transformed());
   num_pieces_ = machine.count() * parallel_policy.overdecompose_factor();
-  get_storage()->set_key_partition(num_pieces_, partition);
+  get_storage()->set_key_partition(partition);
   key_partition_ = std::move(partition);
 }
 

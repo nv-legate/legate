@@ -164,6 +164,11 @@ InternalSharedPtr<Partition> Tiling::invert(
 
 Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
 {
+  if (!domain.is_valid()) {
+    LEGATE_ASSERT(tile_shape().empty());
+    return domain;
+  }
+
   auto new_lo = color * tile_shape_dp_ + offsets_dp_;
   auto new_hi = new_lo + tile_shape_dp_;
 
@@ -173,6 +178,22 @@ Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
   }
 
   return {new_lo, new_hi};
+}
+
+bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) const
+{
+  const auto* other_tiling = dynamic_cast<const Tiling*>(other.get());
+
+  if (!other_tiling) {
+    return false;
+  }
+
+  // TODO(wonchanl): Tilings with different tile shapes can be congruent for a given domain and we
+  // need to relax this check to avoid unnecessary copies.
+  return std::equal(tile_shape().begin(), tile_shape().end(), other_tiling->tile_shape().begin()) &&
+         std::equal(
+           color_shape().begin(), color_shape().end(), other_tiling->color_shape().begin()) &&
+         std::equal(offsets().begin(), offsets().end(), other_tiling->offsets().begin());
 }
 
 std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }

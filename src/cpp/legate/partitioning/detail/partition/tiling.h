@@ -145,6 +145,9 @@ class Tiling final : public Partition {
 
   [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
 
+  [[nodiscard]] bool subsumes(const Domain& domain,
+                              const InternalSharedPtr<Partition>& other) const override;
+
   /**
    * @brief Return the offset of the first tile in each dimension.
    *

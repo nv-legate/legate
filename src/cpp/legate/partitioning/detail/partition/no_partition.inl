@@ -18,4 +18,9 @@ inline bool NoPartition::has_color_shape() const { return false; }
 
 inline Domain NoPartition::shard(const Domain& domain, const DomainPoint&) const { return domain; }
 
+inline bool NoPartition::subsumes(const Domain&, const InternalSharedPtr<Partition>&) const
+{
+  return true;
+}
+
 }  // namespace legate::detail

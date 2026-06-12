@@ -78,7 +78,10 @@ class NoPartition final : public Partition {
    */
   [[nodiscard]] Domain launch_domain() const override;
 
-  [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const;
+  [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
+
+  [[nodiscard]] bool subsumes(const Domain& domain,
+                              const InternalSharedPtr<Partition>& other) const override;
 
   /**
    * @copydoc Partition::to_string()

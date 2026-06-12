@@ -99,6 +99,9 @@ class Partition {
 
   [[nodiscard]] virtual Domain shard(const Domain& domain, const DomainPoint& color) const = 0;
 
+  [[nodiscard]] virtual bool subsumes(const Domain& domain,
+                                      const InternalSharedPtr<Partition>& other) const = 0;
+
   /**
    * @brief Returns a human-readable string describing the partition.
    *

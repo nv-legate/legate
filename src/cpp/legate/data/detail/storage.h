@@ -109,18 +109,19 @@ class Storage {
 
   void set_bound(bool bound);
 
-  [[nodiscard]] InternalSharedPtr<InlineStorage> map(Domain domain,
-                                                     legate::mapping::StoreTarget target);
+  [[nodiscard]] std::pair<InternalSharedPtr<InlineStorage>, Domain> map(
+    const Domain& domain,
+    const InternalSharedPtr<Partition>& partition,
+    const DomainPoint& color,
+    legate::mapping::StoreTarget target);
 
   void unmap();
   void free_early();
 
   [[nodiscard]] Restrictions compute_restrictions() const;
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
-    const mapping::detail::Machine& machine,
-    const ParallelPolicy& parallel_policy,
     const Restrictions& restrictions) const;
-  void set_key_partition(std::uint32_t num_pieces, InternalSharedPtr<Partition> key_partition);
+  void set_key_partition(InternalSharedPtr<Partition> key_partition);
   void reset_key_partition() noexcept;
 
   [[nodiscard]] std::string to_string() const;
@@ -134,7 +135,6 @@ class Storage {
 
   InternalSharedPtr<InlineStorage> storage_data_{};
 
-  std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
 };
 
