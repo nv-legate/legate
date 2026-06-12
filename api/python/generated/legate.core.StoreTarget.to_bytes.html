@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.StoreTarget.to_bytes &#8212; NVIDIA legate (26.07.00.dev29+g4f9857aea)</title>
+    <title>legate.core.StoreTarget.to_bytes &#8212; NVIDIA legate (26.07.00.dev30+g31b7bd346)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=308a39ad"></script>
+    <script src="../../../_static/documentation_options.js?v=5afaa02d"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev30+g31b7bd346) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev30+g31b7bd346) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev30+g31b7bd346)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev29+g4f9857aea) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev30+g31b7bd346) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev30+g31b7bd346) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev29+g4f9857aea)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev30+g31b7bd346)</p>
   
 </a>
 
@@ -725,19 +725,20 @@ SPDX-License-Identifier: Apache-2.0
 <span class="sig-prename descclassname"><span class="pre">StoreTarget.</span></span><span class="sig-name descname"><span class="pre">to_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">byteorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'big'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#legate.core.StoreTarget.to_bytes" title="Link to this definition">#</a></dt>
 <dd><p>Return an array of bytes representing an integer.</p>
 <dl class="simple">
-<dt>length</dt><dd><p>Length of bytes object to use.  An OverflowError is raised if the
-integer is not representable with the given number of bytes.  Default
-is length 1.</p>
+<dt>length</dt><dd><p>Length of bytes object to use.  An OverflowError is raised if
+the integer is not representable with the given number of bytes.
+Default is length 1.</p>
 </dd>
-<dt>byteorder</dt><dd><p>The byte order used to represent the integer.  If byteorder is ‘big’,
-the most significant byte is at the beginning of the byte array.  If
-byteorder is ‘little’, the most significant byte is at the end of the
-byte array.  To request the native byte order of the host system, use
-sys.byteorder as the byte order value.  Default is to use ‘big’.</p>
+<dt>byteorder</dt><dd><p>The byte order used to represent the integer.  If byteorder is
+‘big’, the most significant byte is at the beginning of the byte
+array.  If byteorder is ‘little’, the most significant byte is at
+the end of the byte array.  To request the native byte order of
+the host system, use sys.byteorder as the byte order value.
+Default is to use ‘big’.</p>
 </dd>
-<dt>signed</dt><dd><p>Determines whether two’s complement is used to represent the integer.
-If signed is False and a negative integer is given, an OverflowError
-is raised.</p>
+<dt>signed</dt><dd><p>Determines whether two’s complement is used to represent the
+integer.  If signed is False and a negative integer is given,
+an OverflowError is raised.</p>
 </dd>
 </dl>
 </dd></dl>
