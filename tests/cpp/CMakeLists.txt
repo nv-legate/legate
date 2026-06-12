@@ -227,6 +227,8 @@ set(
   unit/physical_store/read_write_accessor.cc
   unit/physical_store/reduce_accessor.cc
   unit/physical_store/write_accessor.cc
+  unit/operation/task.cc
+  unit/projection.cc
   unit/redop/apply.cc
   unit/redop/complex.cc
   unit/redop/fold.cc
