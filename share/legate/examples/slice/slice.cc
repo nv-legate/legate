@@ -50,6 +50,20 @@ void AddTask::cpu_variant(legate::TaskContext context)
   }
 }
 
+void CopyTask::cpu_variant(legate::TaskContext context)
+{
+  constexpr std::int32_t DIM = 2;
+  const auto input           = context.input(0);
+  const auto output          = context.output(0);
+  const auto shape           = input.shape<DIM>();
+  const auto in_acc          = input.read_accessor<std::int32_t, DIM>();
+  auto out_acc               = output.write_accessor<std::int32_t, DIM>();
+
+  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+    out_acc[*it] = in_acc[*it];
+  }
+}
+
 void CheckTask::cpu_variant(legate::TaskContext context)
 {
   constexpr std::int32_t DIM = 2;
@@ -70,7 +84,8 @@ void CheckTask::cpu_variant(legate::TaskContext context)
   }
 
   if (all_correct) {
-    std::cout << "All " << shape.volume() << " values correct in 2D array!\n";
+    std::cout << "Task " << context.get_task_index() << ": All " << shape.volume()
+              << " values correct in 2D array!\n";
   }
 }
 
@@ -84,10 +99,11 @@ void run_example()
   // it's important to separate their task registration logic.
   InitTask::register_variants(library);
   AddTask::register_variants(library);
+  CopyTask::register_variants(library);
   CheckTask::register_variants(library);
 
   // Create 2D arrays
-  auto shape   = legate::Shape{2048, 32};
+  auto shape   = legate::Shape{2048, 2048};
   auto x_store = runtime->create_store(shape, legate::int32());
   auto y_store = runtime->create_store(shape, legate::int32());
   auto result  = runtime->create_store(shape, legate::int32());
@@ -104,15 +120,26 @@ void run_example()
   runtime->submit(std::move(init_y_task));
 
   // Create and submit saxpy task
-  auto saxpy_task = runtime->create_task(library, AddTask::TASK_CONFIG.task_id());
-  saxpy_task.add_input(x_store);
-  saxpy_task.add_input(y_store);
-  saxpy_task.add_output(result);
+  auto saxpy_task     = runtime->create_task(library, AddTask::TASK_CONFIG.task_id());
+  auto saxpy_x_part   = saxpy_task.add_input(x_store);
+  auto saxpy_y_part   = saxpy_task.add_input(y_store);
+  auto saxpy_res_part = saxpy_task.add_output(result);
+  saxpy_task.add_constraint(legate::align(saxpy_x_part, saxpy_y_part));
+  saxpy_task.add_constraint(legate::align(saxpy_x_part, saxpy_res_part));
   // When runtime->submit is called, the task is enqueued
   // into the runtime's task execution queue. Legate will
   // analyze data dependencies between all submitted tasks and
   // schedule them asynchronously whenever possible.
   runtime->submit(std::move(saxpy_task));
+
+  auto slice = result.slice(0, legate::Slice{768, 1280}).slice(1, legate::Slice{768, 1280});
+  auto copy  = runtime->create_store(slice.shape(), legate::int32());
+
+  auto copy_task     = runtime->create_task(library, CopyTask::TASK_CONFIG.task_id());
+  auto copy_in_part  = copy_task.add_input(slice);
+  auto copy_out_part = copy_task.add_output(copy);
+  copy_task.add_constraint(legate::align(copy_in_part, copy_out_part));
+  runtime->submit(std::move(copy_task));
 
   // Since check_task receives result as one of its inputs,
   // it has a data dependency on the output of saxpy_task.
@@ -121,9 +148,9 @@ void run_example()
 
   // Create and submit verification task
   auto check_task = runtime->create_task(library, CheckTask::TASK_CONFIG.task_id());
-  check_task.add_input(result.slice(0, legate::Slice{128, 1920}));
+  check_task.add_input(copy);
   check_task.add_scalar_arg(legate::Scalar{3});    // Expected sum
-  check_task.add_scalar_arg(legate::Scalar{128});  // Offset
+  check_task.add_scalar_arg(legate::Scalar{768});  // Offset
   runtime->submit(std::move(check_task));
 }
 

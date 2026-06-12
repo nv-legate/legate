@@ -33,10 +33,20 @@ class AddTask : public legate::LegateTask<AddTask> {
 };
 
 // verification task
+class CopyTask : public legate::LegateTask<CopyTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{3}}.with_signature(
+      legate::TaskSignature{}.inputs(1).outputs(1));
+
+  static void cpu_variant(legate::TaskContext context);
+};
+
+// verification task
 class CheckTask : public legate::LegateTask<CheckTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{3}}.with_signature(legate::TaskSignature{}.inputs(1));
+    legate::TaskConfig{legate::LocalTaskID{4}}.with_signature(legate::TaskSignature{}.inputs(1));
 
   static void cpu_variant(legate::TaskContext context);
 };
