@@ -97,8 +97,6 @@ bool Storage::is_mapped() const
   return false;
 }
 
-bool Storage::has_scalar_storage() const { return false; }
-
 InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& /*self*/,
                                           SmallVector<std::uint64_t, LEGATE_MAX_DIM> /*tile_shape*/,
                                           SmallVector<std::int64_t, LEGATE_MAX_DIM> /*offsets*/)

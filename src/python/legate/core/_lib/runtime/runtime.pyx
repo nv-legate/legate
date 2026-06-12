@@ -592,7 +592,6 @@ cdef class Runtime(Unconstructable):
         self,
         Type dtype,
         shape: Shape | Collection[int] | None = None,
-        bool optimize_scalar = False,
         object ndim = None,
     ):
         r"""
@@ -609,8 +608,6 @@ cdef class Runtime(Unconstructable):
             The element type of the store.
         shape : Shape | Collection[int] | None (optional)
             The shape of the store.
-        optimize_scalar : bool (`False`)
-            Whether to optimize the store for scalar storage.
         ndim : int | None (optional, `1`)
             The number of dimensions for the store.
 
@@ -639,7 +636,7 @@ cdef class Runtime(Unconstructable):
             _shape = Shape.from_shape_like(shape)
             with nogil:
                 _handle = self._handle.create_store(
-                    _shape, dtype._handle, optimize_scalar
+                    _shape, dtype._handle
                 )
 
         return LogicalStore.from_handle(_handle)

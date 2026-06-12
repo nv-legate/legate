@@ -163,8 +163,6 @@ void PhysicalStore::check_accessor_dimension(std::int32_t dim) const
   }
 }
 
-void PhysicalStore::check_accessor_store_backing() const {}
-
 void PhysicalStore::check_write_access() const
 {
   if (!is_writable()) {
@@ -177,13 +175,6 @@ void PhysicalStore::check_reduction_access() const
   if (!(is_writable() || is_reducible())) {
     throw detail::TracedException<std::invalid_argument>{"Store isn't reducible"};
   }
-}
-
-InternalSharedPtr<LogicalStore> PhysicalStore::to_logical_store(
-  const InternalSharedPtr<PhysicalStore>& /*self*/) const
-{
-  throw TracedException<std::runtime_error>{
-    "InlinePhysicalStore does not support to_logical_store()"};
 }
 
 }  // namespace legate::detail

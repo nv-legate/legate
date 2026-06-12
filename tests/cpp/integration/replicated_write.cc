@@ -114,8 +114,7 @@ std::vector<legate::LogicalStore> perform_replicate_writes(
 
   std::vector<legate::LogicalStore> out_stores;
   for (std::uint32_t idx = 0; idx < num_out_stores; ++idx) {
-    auto& out_store = out_stores.emplace_back(
-      runtime->create_store(extents, legate::int64(), /*optimize_scalar=*/true));
+    auto& out_store = out_stores.emplace_back(runtime->create_store(extents, legate::int64()));
     task.add_output(out_store);
   }
   runtime->submit(std::move(task));
@@ -198,9 +197,8 @@ void test_auto_task(legate::Library library,
 
   std::vector<legate::LogicalStore> out_stores;
   for (std::uint32_t idx = 0; idx < num_out_stores; ++idx) {
-    auto& out_store = out_stores.emplace_back(
-      runtime->create_store(extents, legate::int64(), /*optimize_scalar=*/true));
-    auto part = task.add_output(out_store);
+    auto& out_store = out_stores.emplace_back(runtime->create_store(extents, legate::int64()));
+    auto part       = task.add_output(out_store);
     task.add_constraint(legate::broadcast(part));
   }
   runtime->submit(std::move(task));

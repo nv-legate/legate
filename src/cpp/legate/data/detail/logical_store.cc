@@ -251,8 +251,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   auto&& runtime = Runtime::get_runtime();
 
   if (0 == exts[dim]) {
-    return runtime.create_store(
-      make_internal_shared<Shape>(std::move(exts)), type(), /*optimize_scalar=*/false);
+    return runtime.create_store(make_internal_shared<Shape>(std::move(exts)), type());
   }
 
   auto transform =
@@ -452,7 +451,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
     return *key_partition_;
   }
 
-  if (has_scalar_storage() || dim() == 0 || volume() == 0) {
+  if (dim() == 0 || volume() <= 1) {
     return create_no_partition();
   }
 

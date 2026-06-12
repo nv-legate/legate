@@ -168,7 +168,7 @@ legate::LogicalStore wrap_fill_value(const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto result  = runtime->create_store(legate::Shape{1}, value.type(), /*optimize_scalar=*/true);
+  auto result  = runtime->create_store(legate::Shape{1}, value.type());
 
   auto task = runtime->create_task(context, legate::LocalTaskID{WRAP_FILL_VAL_TASK});
   task.add_output(result);
@@ -182,10 +182,9 @@ void test_fill_index(std::int32_t dim, std::uint64_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
 
-  auto lhs = runtime->create_store(legate::full(static_cast<std::uint64_t>(dim), size),
-                                   legate::int64(),
-                                   /*optimize_scalar=*/true);
-  auto v   = legate::Scalar{int64_t{10}};
+  auto lhs =
+    runtime->create_store(legate::full(static_cast<std::uint64_t>(dim), size), legate::int64());
+  auto v = legate::Scalar{int64_t{10}};
 
   // fill input store with some values
   runtime->issue_fill(lhs, v);

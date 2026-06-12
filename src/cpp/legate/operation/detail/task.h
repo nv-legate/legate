@@ -110,11 +110,6 @@ class LogicalTask : public TaskBase {
               mapping::detail::Machine machine);
 
  public:
-  // LogicalTask-specific scalar methods (non-virtual)
-  [[nodiscard]] Span<const InternalSharedPtr<LogicalStore>> scalar_outputs() const;
-  [[nodiscard]] Span<const std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>
-  scalar_reductions() const;
-
   /**
    * @brief Set the streaming generation for this task.
    *
@@ -136,18 +131,10 @@ class LogicalTask : public TaskBase {
    */
   [[nodiscard]] const std::optional<StreamingGeneration>& streaming_generation() const;
 
-  void record_scalar_output(InternalSharedPtr<LogicalStore> store);
-  void record_unbound_output(InternalSharedPtr<LogicalStore> store);
-  void record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
-                               GlobalRedopID legion_redop_id);
-
  protected:
   void launch_task_(Strategy* strategy);
 
  private:
-  SmallVector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
-  SmallVector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
-  SmallVector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
   SmallVector<std::reference_wrapper<CommunicatorFactory>> communicator_factories_{};
   std::optional<StreamingGeneration> streaming_gen_{};
 };

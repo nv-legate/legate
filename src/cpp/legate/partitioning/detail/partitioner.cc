@@ -135,9 +135,6 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
     for (auto&& part_symb : equiv_class.partition_symbols) {
       auto&& store = operation->find_store(part_symb);
 
-      if (store->has_scalar_storage()) {
-        continue;
-      }
       if (equiv_class.has_restrictions && launch_domain.dim > 1) {
         // When the launch domain has more than one dimension, store projections can never be
         // delinearizing projections

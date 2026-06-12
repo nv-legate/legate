@@ -74,7 +74,6 @@ class LogicalStore {
   [[nodiscard]] std::size_t storage_size() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<LogicalStore>& other) const;
-  [[nodiscard]] bool has_scalar_storage() const;
   [[nodiscard]] const InternalSharedPtr<Type>& type() const;
   [[nodiscard]] const InternalSharedPtr<TransformStack>& transform() const;
   [[nodiscard]] bool transformed() const;

@@ -49,7 +49,7 @@ void test_scalar_out()
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   const legate::Shape extents{16};
-  auto input  = runtime->create_store(extents, legate::int64(), /*optimize_scalar=*/false);
+  auto input  = runtime->create_store(extents, legate::int64());
   auto output = runtime->create_store(legate::Scalar{int64_t{0}});
 
   runtime->issue_fill(input, legate::Scalar{int64_t{123}});

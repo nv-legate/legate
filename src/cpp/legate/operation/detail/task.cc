@@ -174,23 +174,6 @@ void LogicalTask::add_communicator(std::string_view name, bool bypass_signature_
   }
 }
 
-void LogicalTask::record_scalar_output(InternalSharedPtr<LogicalStore> store)
-{
-  scalar_outputs_.push_back(std::move(store));
-}
-
-void LogicalTask::record_unbound_output(InternalSharedPtr<LogicalStore> store)
-{
-  store->get_storage()->set_bound(true /* bound */);
-  unbound_outputs_.push_back(std::move(store));
-}
-
-void LogicalTask::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
-                                          GlobalRedopID legion_redop_id)
-{
-  scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
-}
-
 namespace {
 
 void show_progress(const Strategy& strategy,
@@ -346,13 +329,6 @@ void AutoTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable* 
 
 void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol)
 {
-  if (store->has_scalar_storage()) {
-    record_scalar_output(store);
-  }
-  if (store->unbound()) {
-    record_unbound_output(store);
-  }
-
   auto& arg = outputs_.emplace_back(
     Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(store), partition_symbol);
 
@@ -371,9 +347,6 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
 
   auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
 
-  if (store->has_scalar_storage()) {
-    record_scalar_reduction(store, legion_redop_id);
-  }
   reduction_ops_.push_back(legion_redop_id);
 
   auto& arg = reductions_.emplace_back(
@@ -413,9 +386,6 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
   }
   for (auto&& output : outputs_) {
     solver.add_partition_symbol(output.variable, AccessMode::WRITE);
-    if (output.store->has_scalar_storage()) {
-      solver.add_constraint(broadcast(output.variable));
-    }
   }
   for (auto&& input : inputs_) {
     solver.add_partition_symbol(input.variable, AccessMode::READ);
@@ -477,16 +447,6 @@ void ManualTask::add_input(InternalSharedPtr<LogicalStore> store)
 void ManualTask::add_output(InternalSharedPtr<LogicalStore> store)
 {
   add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
-
-  if (store->has_scalar_storage()) {
-    record_scalar_output(store);
-  }
-  // It's important that we toggle the store's state to deferred bound only after we finish adding
-  // it to the task. Otherwise, it's ambiguous whether the store was made deferred bound by this
-  // task or an earlier task in the scheduling window.
-  if (store->unbound()) {
-    record_unbound_output(store);
-  }
 }
 
 void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store, std::int32_t redop_kind)
@@ -500,9 +460,6 @@ void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store, std::int32
   auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
 
   reduction_ops_.push_back(legion_redop_id);
-  if (store->has_scalar_storage()) {
-    record_scalar_reduction(store, legion_redop_id);
-  }
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -529,9 +486,6 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
              store_partition->partition(),
              std::move(projection),
              is_key_partition);
-  if (store_partition->store()->has_scalar_storage()) {
-    record_scalar_output(store_partition->store());
-  }
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -548,9 +502,6 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
 
   auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop_kind);
 
-  if (store_partition->store()->has_scalar_storage()) {
-    record_scalar_reduction(store_partition->store(), legion_redop_id);
-  }
   reduction_ops_.push_back(legion_redop_id);
 }
 

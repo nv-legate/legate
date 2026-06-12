@@ -40,17 +40,6 @@ inline const std::optional<StreamingGeneration>& LogicalTask::streaming_generati
   return streaming_gen_;
 }
 
-inline Span<const InternalSharedPtr<LogicalStore>> LogicalTask::scalar_outputs() const
-{
-  return scalar_outputs_;
-}
-
-inline Span<const std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>
-LogicalTask::scalar_reductions() const
-{
-  return scalar_reductions_;
-}
-
 // ==========================================================================================
 
 inline Operation::Kind AutoTask::kind() const { return Kind::AUTO_TASK; }

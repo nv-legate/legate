@@ -108,14 +108,10 @@ void Runtime::submit(ManualTask&& task) { impl_->submit(task.impl_()); }
 
 LogicalStore Runtime::create_store(const Type& type, std::uint32_t dim)
 {
-  return LogicalStore{impl_->create_store(make_internal_shared<detail::Shape>(dim),
-                                          type.impl(),
-                                          /*optimize_scalar=*/false)};
+  return LogicalStore{impl_->create_store(make_internal_shared<detail::Shape>(dim), type.impl())};
 }
 
-LogicalStore Runtime::create_store(const Shape& shape,
-                                   const Type& type,
-                                   bool optimize_scalar /*=false*/)
+LogicalStore Runtime::create_store(const Shape& shape, const Type& type)
 {
   auto shape_impl = shape.impl();
   // We shouldn't allow users to create unbound store out of the same shape that hasn't be bound
@@ -125,7 +121,7 @@ LogicalStore Runtime::create_store(const Shape& shape,
       "Shape of an unbound array or store cannot be used to create another store "
       "until the array or store is initialized by a task"};
   }
-  return LogicalStore{impl_->create_store(std::move(shape_impl), type.impl(), optimize_scalar)};
+  return LogicalStore{impl_->create_store(std::move(shape_impl), type.impl())};
 }
 
 LogicalStore Runtime::create_store(const Scalar& scalar, const Shape& shape)

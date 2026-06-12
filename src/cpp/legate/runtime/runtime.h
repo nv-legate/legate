@@ -235,14 +235,10 @@ class LEGATE_EXPORT Runtime {
    *
    * @param shape Shape of the store. The call does not block on this shape.
    * @param type Element type
-   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
-   * scalars
    *
    * @return Logical store
    */
-  [[nodiscard]] LogicalStore create_store(const Shape& shape,
-                                          const Type& type,
-                                          bool optimize_scalar = false);
+  [[nodiscard]] LogicalStore create_store(const Shape& shape, const Type& type);
   /**
    * @brief Creates a normal store out of a `Scalar` object
    *

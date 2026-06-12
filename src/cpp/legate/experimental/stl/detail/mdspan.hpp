@@ -60,8 +60,6 @@ class DefaultAccessor {
     const PhysicalStore& store) noexcept
   {
     if constexpr (Dim == 0) {
-      // 0-dimensional legate stores are backed by read-only futures
-      LEGATE_ASSERT(store.is_future());
       return store.read_accessor<const ElementType, 1>();
     } else if constexpr (std::is_const_v<ElementType>) {
       return store.read_accessor<ElementType, Dim>();
@@ -94,8 +92,6 @@ class ReductionAccessor {
     const PhysicalStore& store) noexcept
   {
     if constexpr (Dim == 0) {
-      // 0-dimensional legate stores are backed by read-only futures
-      LEGATE_ASSERT(store.is_future());
       return store.read_accessor<const ElementType, 1>();
     } else {
       return store.reduce_accessor<Op, Exclusive, Dim>();

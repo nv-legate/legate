@@ -107,8 +107,7 @@ TEST_F(ProjectionCOrder, AliasSharingInstance)
   auto runtime    = legate::Runtime::get_runtime();
   auto shape      = legate::Shape{X, Y, Z};
   auto store1     = runtime->create_store(shape, legate::int64());
-  auto store2     = runtime->create_store(
-    {1}, legate::binary_type(sizeof(std::int64_t*)), /*optimize_scalar=*/true);
+  auto store2     = runtime->create_store({1}, legate::binary_type(sizeof(std::int64_t*)));
 
   auto library = runtime->find_library(LIBRARY_NAME);
   {

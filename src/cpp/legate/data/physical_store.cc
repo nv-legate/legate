@@ -85,11 +85,6 @@ Type PhysicalStore::type() const { return Type{impl()->type()}; }
 
 Domain PhysicalStore::domain() const { return impl()->domain(); }
 
-LogicalStore PhysicalStore::to_logical_store() const
-{
-  return LogicalStore{impl_->to_logical_store(impl_)};
-}
-
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
   return impl()->get_inline_allocation();
@@ -104,8 +99,6 @@ bool PhysicalStore::is_reducible() const { return impl()->is_reducible(); }
 bool PhysicalStore::valid() const { return impl() != nullptr && impl()->valid(); }
 
 bool PhysicalStore::transformed() const { return impl()->transformed(); }
-
-bool PhysicalStore::is_future() const { return false; }
 
 bool PhysicalStore::is_unbound_store() const { return false; }
 
@@ -125,11 +118,6 @@ void PhysicalStore::check_accessor_type_(Type::Code code, std::size_t size_of_T)
 void PhysicalStore::check_accessor_dimension_(std::int32_t dim) const
 {
   impl()->check_accessor_dimension(dim);
-}
-
-void PhysicalStore::check_accessor_store_backing_() const
-{
-  impl()->check_accessor_store_backing();
 }
 
 void PhysicalStore::check_shape_dimension_(std::int32_t dim) const

@@ -187,7 +187,6 @@ set(
   integration/tasks/task_simple.cc
   integration/task_store/auto_task_tests.cc
   integration/task_store/manual_task_tests.cc
-  integration/task_store/physical_task_nested_tests.cc
   integration/transpose_dim_order.cc
   integration/variant_options_precedence.cc
   # unit

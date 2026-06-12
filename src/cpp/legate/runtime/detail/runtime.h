@@ -162,11 +162,9 @@ class Runtime {
 
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Type> type,
-                                                             std::uint32_t dim,
-                                                             bool optimize_scalar = false);
+                                                             std::uint32_t dim);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Shape> shape,
-                                                             InternalSharedPtr<Type> type,
-                                                             bool optimize_scalar);
+                                                             InternalSharedPtr<Type> type);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const Scalar& scalar,
                                                              InternalSharedPtr<Shape> shape);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(

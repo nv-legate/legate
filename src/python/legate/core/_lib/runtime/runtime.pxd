@@ -60,7 +60,7 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         void submit(_AutoTask) except +handle_legate_exception
         void submit(_ManualTask) except +handle_legate_exception
         _LogicalStore create_store(const _Type&, uint32_t) except+
-        _LogicalStore create_store(const _Shape&, const _Type&, bool) except+
+        _LogicalStore create_store(const _Shape&, const _Type&) except+
         _LogicalStore create_store(const _Scalar&) except+
         _LogicalStore create_store(const _Scalar&, const _Shape&) except+
         _LogicalStore create_store(
@@ -144,7 +144,6 @@ cdef class Runtime(Unconstructable):
         self,
         Type dtype,
         object shape = *,
-        bool optimize_scalar = *,
         object ndim = *,
     )
     cpdef LogicalStore create_store_from_scalar(

@@ -649,29 +649,6 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] Domain domain() const;
 
   /**
-   * @brief Returns the LogicalRegion backing this store (if region-backed)
-   *
-   * @return Optional LogicalRegion if this store is backed by a Legion region
-   */
-  [[nodiscard]] std::optional<Legion::LogicalRegion> get_logical_region() const;
-
-  /**
-   * @brief Returns the FieldID of this store (if region-backed)
-   *
-   * @return Optional FieldID if this store is backed by a Legion region
-   */
-  [[nodiscard]] std::optional<Legion::FieldID> get_field_id() const;
-
-  /**
-   * @brief Creates a LogicalStore wrapping this PhysicalStore.
-   *
-   * @return LogicalStore wrapping the same backing storage.
-   *
-   * @throws std::runtime_error if the conversion is not supported.
-   */
-  [[nodiscard]] LogicalStore to_logical_store() const;
-
-  /**
    * @brief Returns a raw pointer and strides to the allocation
    *
    * @return An `InlineAllocation` object holding a raw pointer and strides
@@ -726,13 +703,6 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] bool transformed() const;
 
   /**
-   * @brief Indicates whether the store is backed by a future
-   * (i.e., a container for scalar value)
-   *
-   * @return `true` if the store is backed by a future, `false` otherwise
-   */
-  [[nodiscard]] bool is_future() const;
-  /**
    * @brief Indicates whether the store is an unbound store.
    *
    * The value DOES NOT indicate that the store has already assigned to a buffer; i.e., the store
@@ -778,7 +748,6 @@ class LEGATE_EXPORT PhysicalStore {
 
  private:
   void check_accessor_dimension_(std::int32_t dim) const;
-  void check_accessor_store_backing_() const;
   void check_shape_dimension_(std::int32_t dim) const;
   void check_write_access_() const;
   void check_reduction_access_() const;

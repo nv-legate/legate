@@ -278,9 +278,8 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<
   if (lhs->unbound()) {
     throw TracedException<std::invalid_argument>{"Fill lhs cannot be an unbound store"};
   }
-  if (!value->has_scalar_storage()) {
-    throw TracedException<std::invalid_argument>{
-      "Fill value should be a Future-backed scalar store"};
+  if (value->volume() != 1) {
+    throw TracedException<std::invalid_argument>{"Fill value should have only one element"};
   }
 
   submit(make_internal_shared<Fill>(
@@ -420,8 +419,7 @@ void validate_store_shape(const InternalSharedPtr<Shape>& shape,
 // Reserving the right to make this non-const in the future
 // NOLINTNEXTLINE(readability-make-member-function-const)
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> type,
-                                                      std::uint32_t dim,
-                                                      bool /*optimize_scalar*/)
+                                                      std::uint32_t dim)
 {
   check_dimensionality_(dim);
   auto storage = make_internal_shared<detail::Storage>(
@@ -434,8 +432,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
 // Reserving the right to make this non-const in the future
 // NOLINTNEXTLINE(readability-make-member-function-const)
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> shape,
-                                                      InternalSharedPtr<Type> type,
-                                                      bool /*optimize_scalar*/)
+                                                      InternalSharedPtr<Type> type)
 {
   if (type->variable_size()) {
     throw TracedException<std::invalid_argument>{"Store must have a fixed-size type"};
@@ -486,7 +483,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
     return make_internal_shared<detail::LogicalStore>(std::move(storage), std::move(type));
   }
 
-  auto store = create_store(shape, std::move(type), /*optimize_scalar=*/false);
+  auto store = create_store(shape, std::move(type));
 
   // TODO(wonchanl): Need a v2 implementation
 
@@ -507,7 +504,7 @@ Runtime::IndexAttachResult Runtime::create_store(
 
   validate_store_shape(shape, type);
 
-  auto store     = create_store(shape, std::move(type), /*optimize_scalar=*/false);
+  auto store     = create_store(shape, std::move(type));
   auto partition = partition_store_by_tiling(store, tile_shape);
 
   // TODO(wonchanl): Need a v2 implementation
@@ -643,7 +640,7 @@ InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precisi
 {
   static auto empty_shape =
     make_internal_shared<Shape>(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{});
-  auto timestamp = create_store(empty_shape, int64(), /*optimize_scalar=*/true);
+  auto timestamp = create_store(empty_shape, int64());
   submit(make_internal_shared<Timing>(new_op_id(), precision, timestamp));
   return timestamp;
 }

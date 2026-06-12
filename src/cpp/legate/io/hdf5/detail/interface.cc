@@ -134,7 +134,7 @@ namespace {
 
   // Safe to call volume here. We constructed the shape ourselves, so it is always ready and
   // volume() will never block.
-  return rt->create_store(shape, store_type, /* optimize_for_scalar */ shape.volume() <= 1);
+  return rt->create_store(shape, store_type);
 }
 
 /**

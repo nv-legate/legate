@@ -69,18 +69,8 @@ class PhysicalStore {
   void check_shape_dimension(std::int32_t dim) const;
   void check_accessor_type(Type::Code code, std::size_t size_of_T) const;
   void check_accessor_dimension(std::int32_t dim) const;
-  void check_accessor_store_backing() const;
   void check_write_access() const;
   void check_reduction_access() const;
-
-  /**
-   * @brief Creates a LogicalStore wrapping this PhysicalStore.
-   * @param self Shared pointer to this store.
-   * @return LogicalStore wrapping the same backing storage.
-   * @throws std::runtime_error if not supported for this store type.
-   */
-  [[nodiscard]] InternalSharedPtr<LogicalStore> to_logical_store(
-    const InternalSharedPtr<PhysicalStore>& self) const;
 
   /**
    * @brief Returns the region instance and field ID wrapping the underlying memory allocation.

@@ -111,14 +111,6 @@ class LEGATE_EXPORT LogicalStore {
   [[nodiscard]] std::uint32_t dim() const;
 
   /**
-   * @brief Indicates whether the store's storage is optimized for scalars
-   *
-   * @return true The store is backed by a scalar storage
-   * @return false The store is a backed by a normal region storage
-   */
-  [[nodiscard]] bool has_scalar_storage() const;
-
-  /**
    * @brief Indicates whether this store overlaps with a given store
    *
    * @return true The stores overlap

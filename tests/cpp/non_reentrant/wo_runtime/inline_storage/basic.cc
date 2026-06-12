@@ -308,22 +308,6 @@ TEST_F(InlineStorageUnit, GetInlineAllocationTransformed)
   ASSERT_EQ(alloc.strides.size(), static_cast<std::size_t>(promoted.dim()));
 }
 
-TEST_F(InlineStorageUnit, ToLogicalStoreThrows)
-{
-  constexpr auto DIM   = 2;
-  constexpr auto VALUE = std::int32_t{11};
-  auto* const runtime  = legate::Runtime::get_runtime();
-  const auto store     = runtime->create_store(legate::Shape{DIM, DIM}, legate::int32());
-
-  runtime->issue_fill(store, legate::Scalar{VALUE});
-
-  const auto phys = store.get_physical_store();
-
-  ASSERT_THAT([&] { static_cast<void>(phys.to_logical_store()); },
-              ::testing::ThrowsMessage<std::runtime_error>(
-                ::testing::HasSubstr("does not support to_logical_store()")));
-}
-
 TEST_F(InlineStorageUnit, TransformedReadAccessor)
 {
   auto* const runtime  = legate::Runtime::get_runtime();

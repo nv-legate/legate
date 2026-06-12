@@ -169,8 +169,6 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
     check_accessor_type_<T>();
   }
 
-  check_accessor_store_backing_();
-
   return create_region_instance_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
@@ -183,7 +181,6 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
     check_accessor_type_<T>();
   }
 
-  check_accessor_store_backing_();
   check_write_access_();
 
   return create_region_instance_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
@@ -198,7 +195,6 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) c
     check_accessor_type_<T>();
   }
 
-  check_accessor_store_backing_();
   check_write_access_();
 
   return create_region_instance_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
@@ -214,7 +210,6 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
     check_accessor_type_<T>();
   }
 
-  check_accessor_store_backing_();
   check_reduction_access_();
 
   return create_region_instance_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(

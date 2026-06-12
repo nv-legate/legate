@@ -23,7 +23,6 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore() except+
         _LogicalStore(const _LogicalStore&) except+
         int32_t dim() except+
-        bool has_scalar_storage() except+
         bool overlaps(const _LogicalStore&) except+
         _Type type() except+
         _Shape shape() except+

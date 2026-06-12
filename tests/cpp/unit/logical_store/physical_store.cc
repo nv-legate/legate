@@ -21,7 +21,6 @@ TEST_F(LogicalStorePhysicalUnit, BoundStore)
   auto physical_store = store.get_physical_store();
 
   ASSERT_FALSE(physical_store.is_unbound_store());
-  ASSERT_FALSE(physical_store.is_future());
 
   constexpr std::uint32_t DIM = 2;
 
@@ -38,7 +37,6 @@ TEST_F(LogicalStorePhysicalUnit, EmptyShapeBoundStore)
   auto physical_store = store.get_physical_store();
 
   ASSERT_FALSE(physical_store.is_unbound_store());
-  ASSERT_FALSE(physical_store.is_future());
   ASSERT_EQ(physical_store.dim(), 0);
 
   constexpr std::uint32_t DIM = 1;
@@ -65,7 +63,6 @@ TEST_F(LogicalStorePhysicalUnit, ScalarStore)
   auto physical_store                 = store.get_physical_store();
 
   ASSERT_FALSE(physical_store.is_unbound_store());
-  ASSERT_TRUE(physical_store.is_future());
 
   static constexpr std::uint32_t DIM = 1;
 

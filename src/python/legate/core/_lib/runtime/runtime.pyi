@@ -54,7 +54,6 @@ class Runtime(Unconstructable):
         self,
         dtype: Type,
         shape: Shape | Collection[int] | None = None,
-        optimize_scalar: bool = False,
         ndim: int | None = None,
     ) -> LogicalStore: ...
     def create_store_from_scalar(

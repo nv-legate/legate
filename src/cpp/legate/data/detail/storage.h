@@ -106,7 +106,6 @@ class Storage {
   [[nodiscard]] bool equal(const Storage& other) const;
   [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] bool is_mapped() const;
-  [[nodiscard]] bool has_scalar_storage() const;
 
   [[nodiscard]] InternalSharedPtr<Storage> slice(
     const InternalSharedPtr<Storage>& self,

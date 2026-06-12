@@ -48,10 +48,9 @@ TEST_F(LogicalStoreOverlapsUnit, OverlapsSelf)
 
 TEST_F(LogicalStoreOverlapsUnit, OverlapsOptimizeScalar)
 {
-  auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Shape{3}, legate::int32());
-  auto optimized =
-    runtime->create_store(legate::Shape{3}, legate::int32(), /*optimize_scalar=*/true);
+  auto runtime   = legate::Runtime::get_runtime();
+  auto store     = runtime->create_store(legate::Shape{3}, legate::int32());
+  auto optimized = runtime->create_store(legate::Shape{3}, legate::int32());
 
   ASSERT_FALSE(store.overlaps(optimized));
 }
@@ -68,10 +67,9 @@ TEST_F(LogicalStoreOverlapsUnit, OverlapsSameRoot)
 
 TEST_F(LogicalStoreOverlapsUnit, OverlapsDifferentRoot)
 {
-  auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Shape{3}, legate::int32());
-  auto optimized =
-    runtime->create_store(legate::Shape{3}, legate::int32(), /*optimize_scalar=*/true);
+  auto runtime          = legate::Runtime::get_runtime();
+  auto store            = runtime->create_store(legate::Shape{3}, legate::int32());
+  auto optimized        = runtime->create_store(legate::Shape{3}, legate::int32());
   auto store_multi_dims = runtime->create_store(multi_dim_shape(), legate::int32());
   auto sliced           = store_multi_dims.slice(/*dim=*/1, legate::Slice{1, 2});
 

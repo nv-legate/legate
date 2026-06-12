@@ -31,7 +31,6 @@ class TestStoreCreation:
         arr_np = np.array(val, dtype=dtype.to_numpy_dtype())
         scalar = Scalar(arr_np, dtype)
         store = runtime.create_store_from_scalar(scalar)
-        assert store.has_scalar_storage
         assert store.ndim == 1
         arr_store = np.asarray(
             store.get_physical_store().get_inline_allocation()

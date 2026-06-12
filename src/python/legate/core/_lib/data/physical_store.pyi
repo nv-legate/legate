@@ -13,7 +13,6 @@ from ..utilities.typedefs import Domain
 from ..utilities.unconstructable import Unconstructable
 from .buffer import TaskLocalBuffer
 from .inline_allocation import InlineAllocation
-from .logical_store import LogicalStore
 
 class PhysicalStore(Unconstructable):
     @property
@@ -31,7 +30,6 @@ class PhysicalStore(Unconstructable):
         self, buffer: TaskLocalBuffer, extent: None | Sequence[int] = None
     ) -> None: ...
     def get_inline_allocation(self) -> InlineAllocation: ...
-    def to_logical_store(self) -> LogicalStore: ...
     @property
     def __array_interface__(self) -> dict[str, Any]: ...
     @property

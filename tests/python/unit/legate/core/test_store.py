@@ -52,13 +52,6 @@ class Test_store_creation:
         assert store.type == ty.int64
         assert not store.transformed
 
-    def test_optimize_scalar(self) -> None:
-        runtime = get_legate_runtime()
-        store = runtime.create_store(
-            ty.int64, shape=(1,), optimize_scalar=True
-        )
-        assert store.has_scalar_storage
-
     def test_create_store_from_scalar(self) -> None:
         runtime = get_legate_runtime()
         store = runtime.create_store_from_scalar(Scalar(123, ty.int64))

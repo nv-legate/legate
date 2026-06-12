@@ -51,8 +51,6 @@ bool LogicalStore::unbound() const { return impl()->unbound(); }
 
 bool LogicalStore::transformed() const { return impl()->transformed(); }
 
-bool LogicalStore::has_scalar_storage() const { return impl()->has_scalar_storage(); }
-
 bool LogicalStore::overlaps(const LogicalStore& other) const
 {
   return impl()->overlaps(other.impl());

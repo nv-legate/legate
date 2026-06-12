@@ -128,7 +128,6 @@ TEST_P(CreateStoreTest, UnboundStore)
   ASSERT_THROW(static_cast<void>(store.volume()), std::invalid_argument);
   ASSERT_EQ(store.type().code(), type.code());
   ASSERT_FALSE(store.transformed());
-  ASSERT_FALSE(store.has_scalar_storage());
 }
 
 TEST_P(NegativeStoreDimTest, UnboundStore)
@@ -161,7 +160,6 @@ TEST_P(CreateStoreTest, BoundStore)
   ASSERT_EQ(store.volume(), store.extents().volume());
   ASSERT_EQ(store.type().code(), type.code());
   ASSERT_FALSE(store.transformed());
-  ASSERT_FALSE(store.has_scalar_storage());
 }
 
 TEST_P(NegativeStoreDimTest, BoundStore)
@@ -179,26 +177,6 @@ TEST_P(NegativeStoreTypeTest, BoundStore)
 
   // create with variable size type
   ASSERT_THROW(static_cast<void>(runtime->create_store(shape, GetParam())), std::invalid_argument);
-}
-
-TEST_F(LogicalStoreCreateUnit, OptimizeScalar)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto store1  = runtime->create_store(legate::Shape{1}, legate::int64(), /*optimize_scalar=*/true);
-
-  ASSERT_TRUE(store1.get_physical_store().is_future());
-  ASSERT_TRUE(store1.has_scalar_storage());
-
-  auto store2 =
-    runtime->create_store(legate::Shape{1, 2}, legate::int64(), /*optimize_scalar=*/true);
-
-  ASSERT_FALSE(store2.get_physical_store().is_future());
-  ASSERT_FALSE(store2.has_scalar_storage());
-
-  auto store3 = runtime->create_store(legate::Shape{1}, legate::int64(), /*optimize_scalar=*/false);
-
-  ASSERT_FALSE(store3.get_physical_store().is_future());
-  ASSERT_FALSE(store3.has_scalar_storage());
 }
 
 TEST_F(LogicalStoreCreateUnit, EmptyShapeCreation)
@@ -222,7 +200,6 @@ TEST_P(CreateScalarStoreTest, Basic)
   ASSERT_EQ(store.volume(), 1);
   ASSERT_EQ(store.type().code(), type.code());
   ASSERT_FALSE(store.transformed());
-  ASSERT_TRUE(store.has_scalar_storage());
 }
 
 TEST_P(CreateScalarStoreWithExtentsTest, Basic)
@@ -237,7 +214,6 @@ TEST_P(CreateScalarStoreWithExtentsTest, Basic)
   ASSERT_EQ(store.volume(), 1);
   ASSERT_EQ(store.type().code(), legate::Type::Code::INT32);
   ASSERT_FALSE(store.transformed());
-  ASSERT_TRUE(store.has_scalar_storage());
 }
 
 TEST_F(LogicalStoreCreateUnit, InvalidScalarStoreCreation)

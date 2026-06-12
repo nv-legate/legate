@@ -75,7 +75,6 @@ TEST_F(LogicalStoreEqualStorageUnit, Future)
   const auto store    = runtime->create_store(legate::Scalar{SCALAR_VALUE});
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/5);
 
-  ASSERT_TRUE(promoted.get_physical_store().is_future());
   ASSERT_TRUE(promoted.equal_storage(store));
   ASSERT_TRUE(store.equal_storage(promoted));
 }

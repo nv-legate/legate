@@ -78,21 +78,6 @@ cdef class LogicalStore(Unconstructable):
             ret = self._handle.dim()
         return ret
 
-    @property
-    def has_scalar_storage(self) -> bool:
-        r"""
-        Get whether this store has been optimized for scalars.
-
-        :returns: `True` if this store is backed by scalar storage, `False`
-                 otherwise.
-        :rtype: bool
-        """
-        cdef bool ret
-
-        with nogil:
-            ret = self._handle.has_scalar_storage()
-        return ret
-
     cpdef bool overlaps(self, LogicalStore other):
         r"""
         Compute whether this store overlaps with another.

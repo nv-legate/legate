@@ -42,8 +42,6 @@ inline bool LogicalStore::overlaps(const InternalSharedPtr<LogicalStore>& other)
   return get_storage()->overlaps(other->storage_);
 }
 
-inline bool LogicalStore::has_scalar_storage() const { return get_storage()->has_scalar_storage(); }
-
 inline const InternalSharedPtr<Type>& LogicalStore::type() const { return type_; }
 
 inline bool LogicalStore::transformed() const { return !transform_->identity(); }

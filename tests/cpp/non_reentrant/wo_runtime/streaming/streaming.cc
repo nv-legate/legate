@@ -508,9 +508,7 @@ TEST_F(StreamingUnit, SumAfterPointwise)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto input    = runtime->create_store(legate::Shape{EXT, EXT}, legate::int64());
-  const auto output   = runtime->create_store(legate::Shape{1},
-                                              legate::int64(),
-                                              /*optimize_scalar=*/true);
+  const auto output   = runtime->create_store(legate::Shape{1}, legate::int64());
 
   runtime->issue_fill(input, legate::Scalar{MAGIC});
   runtime->issue_fill(output, legate::Scalar{std::int64_t{0}});
@@ -534,9 +532,7 @@ TEST_F(StreamingUnit, SumAfterPointwise)
 TEST_F(StreamingUnit, DISABLED_SumForTemporary)
 {
   auto* const runtime = legate::Runtime::get_runtime();
-  const auto output   = runtime->create_store(legate::Shape{1},
-                                              legate::int64(),
-                                              /*optimize_scalar=*/true);
+  const auto output   = runtime->create_store(legate::Shape{1}, legate::int64());
 
   runtime->issue_fill(output, legate::Scalar{std::int64_t{0}});
 
