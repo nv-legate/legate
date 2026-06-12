@@ -22,8 +22,9 @@ std::string SymbolicExpr::to_string() const
     }
     fmt::format_to(std::back_inserter(result), "COORD{}", dim());
   }
-  if (offset() != 0) {
-    fmt::format_to(std::back_inserter(result), "{}{}", offset() > 0 ? "+" : "-", offset());
+  if (offset() != 0 || result.empty()) {
+    fmt::format_to(
+      std::back_inserter(result), "{}{}", !result.empty() && offset() > 0 ? "+" : "", offset());
   }
   return result;
 }

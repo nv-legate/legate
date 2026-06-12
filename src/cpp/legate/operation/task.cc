@@ -356,8 +356,12 @@ const SharedPtr<detail::ManualTask>& ManualTask::impl_() const
 
 SharedPtr<detail::ManualTask> ManualTask::release_()
 {
-  auto&& result = std::move(pimpl_->impl());
-  return result;
+  auto& result = pimpl_->impl();
+  if (!result) {
+    throw detail::TracedException<std::runtime_error>{
+      "Illegal to reuse task descriptors that are already submitted"};
+  }
+  return std::move(result);
 }
 
 InternalSharedPtr<detail::LogicalStore> ManualTask::record_user_ref_(LogicalStore store)
