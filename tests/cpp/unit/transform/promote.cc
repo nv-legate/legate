@@ -30,7 +30,6 @@ TEST_F(TransformPromoteUnit, PromoteConvertColor)
 
   ASSERT_EQ(color, expected);
   ASSERT_EQ(transform->target_ndim(1), 0);
-  ASSERT_TRUE(transform->is_convertible());
 }
 
 TEST_F(TransformPromoteUnit, PromoteConvertColorNegative)

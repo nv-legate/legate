@@ -56,7 +56,6 @@ class TransformStack final : public Transform {
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
-  [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
 
@@ -94,7 +93,6 @@ class TransformStack final : public Transform {
 
   std::unique_ptr<StoreTransform> transform_{};
   InternalSharedPtr<TransformStack> parent_{};
-  bool convertible_{true};
 };
 
 }  // namespace legate::detail

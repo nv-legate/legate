@@ -49,7 +49,6 @@ class Transpose final : public StoreTransform {
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
-  [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
 

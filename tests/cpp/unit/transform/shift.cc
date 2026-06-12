@@ -32,7 +32,6 @@ TEST_F(TransformShiftUnit, ShiftConvert)
 
   ASSERT_EQ(result, restrictions);
   ASSERT_EQ(transform->target_ndim(0), 0);
-  ASSERT_TRUE(transform->is_convertible());
 
   auto dims = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0};
 

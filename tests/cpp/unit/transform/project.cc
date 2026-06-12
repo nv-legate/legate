@@ -29,7 +29,6 @@ TEST_F(TransformProjectUnit, ProjectConvertColor)
 
   ASSERT_THAT(color, ::testing::ElementsAre(3));
   ASSERT_EQ(transform->target_ndim(0), 1);
-  ASSERT_TRUE(transform->is_convertible());
 }
 
 TEST_F(TransformProjectUnit, ProjectConvertColorNegative)

@@ -15,9 +15,7 @@ namespace legate::detail {
 inline TransformStack::TransformStack(private_tag,
                                       std::unique_ptr<StoreTransform>&& transform,
                                       InternalSharedPtr<TransformStack> parent)
-  : transform_{std::move(transform)},
-    parent_{std::move(parent)},
-    convertible_{transform_->is_convertible() && parent_->is_convertible()}
+  : transform_{std::move(transform)}, parent_{std::move(parent)}
 {
 }
 
@@ -32,8 +30,6 @@ inline TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transfor
   : TransformStack{private_tag{}, std::move(transform), std::move(parent)}
 {
 }
-
-inline bool TransformStack::is_convertible() const { return convertible_; }
 
 inline bool TransformStack::identity() const { return nullptr == transform_; }
 

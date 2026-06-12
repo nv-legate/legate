@@ -62,6 +62,4 @@ inline std::int32_t Shift::target_ndim(std::int32_t source_ndim) const { return 
 
 inline void Shift::find_imaginary_dims(SmallVector<std::int32_t, LEGATE_MAX_DIM>&) const {}
 
-inline bool Shift::is_convertible() const { return true; }
-
 }  // namespace legate::detail

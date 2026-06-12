@@ -457,10 +457,8 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 
   std::optional<InternalSharedPtr<Partition>> storage_part{};
 
-  if (transform_->is_convertible()) {
-    storage_part =
-      get_storage()->find_key_partition(machine, parallel_policy, transform_->invert(restrictions));
-  }
+  storage_part =
+    get_storage()->find_key_partition(machine, parallel_policy, transform_->invert(restrictions));
 
   if (!storage_part.has_value() ||
       (!transform_->identity() && !(*storage_part)->is_convertible())) {
@@ -488,10 +486,9 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
       restrictions.are_satisfied_by(**key_partition_, shape())) {
     return true;
   }
-  return transform_->is_convertible() &&
-         get_storage()
-           ->find_key_partition(machine, parallel_policy, transform_->invert(restrictions))
-           .has_value();
+  return get_storage()
+    ->find_key_partition(machine, parallel_policy, transform_->invert(restrictions))
+    .has_value();
 }
 
 void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,

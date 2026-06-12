@@ -12,6 +12,4 @@ namespace legate::detail {
 
 inline std::int32_t Transpose::target_ndim(std::int32_t source_ndim) const { return source_ndim; }
 
-inline bool Transpose::is_convertible() const { return true; }
-
 }  // namespace legate::detail

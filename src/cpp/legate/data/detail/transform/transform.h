@@ -49,9 +49,8 @@ class Transform {
   [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
 
-  [[nodiscard]] virtual bool is_convertible() const = 0;
-  virtual void pack(BufferBuilder& buffer) const    = 0;
-  virtual void print(std::ostream& out) const       = 0;
+  virtual void pack(BufferBuilder& buffer) const = 0;
+  virtual void print(std::ostream& out) const    = 0;
 
   /**
    * @brief Applies the inverse transform (based on the derived class) to a tuple of

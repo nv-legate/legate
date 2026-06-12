@@ -153,10 +153,6 @@ class DimBroadcast final : public StoreTransform {
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
 
   /**
-   * @brief Always return true, as `DimBroadcast` is convertible.
-   */
-  [[nodiscard]] bool is_convertible() const override;
-  /**
    * @brief Serialize this `DimBroadcast` into the passed `buffer`.
    */
   void pack(BufferBuilder& buffer) const override;

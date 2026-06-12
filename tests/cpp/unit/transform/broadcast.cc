@@ -83,7 +83,6 @@ TEST_F(TransformBroadcastUnit, BroadcastConvertColor)
 
   ASSERT_EQ(color, expected);
   ASSERT_EQ(transform->target_ndim(1), 1);
-  ASSERT_TRUE(transform->is_convertible());
 
   // Also test invert_dims
   auto dims          = legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{0, 1};

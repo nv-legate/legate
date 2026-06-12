@@ -127,10 +127,8 @@ TEST_F(TransformStackUnit, Pop)
   auto result = transform->pop();
 
   ASSERT_NE(result, nullptr);
-  ASSERT_TRUE(result->is_convertible());
   ASSERT_EQ(result->target_ndim(1), 0);
   ASSERT_TRUE(transform->identity());
-  ASSERT_TRUE(transform->is_convertible());
 }
 
 TEST_F(TransformStackUnit, PopNested)

@@ -35,8 +35,6 @@ inline SmallVector<std::int64_t, LEGATE_MAX_DIM> DimBroadcast::convert_point(
 
 inline Restrictions DimBroadcast::invert(Restrictions restrictions) const { return restrictions; }
 
-inline bool DimBroadcast::is_convertible() const { return true; }
-
 inline std::int32_t DimBroadcast::target_ndim(std::int32_t source_ndim) const
 {
   return source_ndim;
