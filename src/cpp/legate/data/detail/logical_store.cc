@@ -439,25 +439,24 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
     return create_no_partition();
   }
 
-  std::optional<InternalSharedPtr<Partition>> storage_part{};
-
-  storage_part =
+  auto storage_part =
     get_storage()->find_key_partition(machine, parallel_policy, transform_->invert(restrictions));
 
-  if (!storage_part.has_value() ||
-      (!transform_->identity() && !(*storage_part)->is_convertible())) {
-    auto&& exts       = extents();
-    auto&& part_mgr   = Runtime::get_runtime().partition_manager();
-    auto launch_shape = part_mgr.compute_launch_shape(machine, parallel_policy, restrictions, exts);
-
-    if (launch_shape.empty()) {
-      return create_no_partition();
-    }
-    auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
-
-    return create_tiling(std::move(tile_shape), std::move(launch_shape));
+  if (storage_part.has_value() && (transform_->identity() || (*storage_part)->is_convertible())) {
+    return (*storage_part)->convert(*storage_part, transform());
   }
-  return (*storage_part)->convert(*storage_part, transform());
+
+  auto&& exts       = extents();
+  auto&& part_mgr   = Runtime::get_runtime().partition_manager();
+  auto launch_shape = part_mgr.compute_launch_shape(machine, parallel_policy, restrictions, exts);
+
+  if (launch_shape.empty()) {
+    return create_no_partition();
+  }
+
+  auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
+
+  return create_tiling(std::move(tile_shape), std::move(launch_shape));
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
@@ -479,8 +478,9 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
                                      const ParallelPolicy& parallel_policy,
                                      InternalSharedPtr<Partition> partition)
 {
+  LEGATE_ASSERT(!transformed());
   num_pieces_ = machine.count() * parallel_policy.overdecompose_factor();
-  get_storage()->set_key_partition(machine, partition->invert(partition, transform()));
+  get_storage()->set_key_partition(num_pieces_, partition);
   key_partition_ = std::move(partition);
 }
 

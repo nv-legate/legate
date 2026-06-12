@@ -151,10 +151,10 @@ std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
   return std::nullopt;
 }
 
-void Storage::set_key_partition(const mapping::detail::Machine& machine,
+void Storage::set_key_partition(std::uint32_t num_pieces,
                                 InternalSharedPtr<Partition> key_partition)
 {
-  num_pieces_    = machine.count();
+  num_pieces_    = num_pieces;
   key_partition_ = std::move(key_partition);
 }
 

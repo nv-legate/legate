@@ -126,8 +126,7 @@ class Storage {
     const mapping::detail::Machine& machine,
     const ParallelPolicy& parallel_policy,
     const Restrictions& restrictions) const;
-  void set_key_partition(const mapping::detail::Machine& machine,
-                         InternalSharedPtr<Partition> key_partition);
+  void set_key_partition(std::uint32_t num_pieces, InternalSharedPtr<Partition> key_partition);
   void reset_key_partition() noexcept;
 
   [[nodiscard]] std::string to_string() const;

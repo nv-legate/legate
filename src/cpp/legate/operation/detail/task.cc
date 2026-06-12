@@ -222,6 +222,8 @@ template <bool WRITE>
     result.emplace_back(store->map(
       partition, strategy.find_store_projection(*variable), launch_domain, task_index, machine));
     if constexpr (WRITE) {
+      // TODO(wonchanl): write accesses with slices are not supported yet
+      LEGATE_CHECK(!store->transformed());
       store->set_key_partition(machine, parallel_policy, partition);
     }
   }
