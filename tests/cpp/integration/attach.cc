@@ -172,7 +172,7 @@ void check_buffer(std::int64_t* buffer, std::int32_t dim, bool fortran, std::int
 }
 
 void test_body(
-  std::int32_t dim, bool fortran, bool unordered, bool read_only, bool use_tasks, bool use_inline)
+  std::int32_t dim, bool fortran, bool, bool read_only, bool use_tasks, bool use_inline)
 {
   auto runtime         = legate::Runtime::get_runtime();
   auto context         = runtime->find_library(Config::LIBRARY_NAME);
@@ -184,9 +184,6 @@ void test_body(
                                        read_only,
                                        fortran ? legate::mapping::DimOrdering::fortran_order()
                                                : legate::mapping::DimOrdering::c_order());
-  if (unordered) {
-    l_store.impl()->allow_out_of_order_destruction();
-  }
   if (read_only) {
     check_buffer(buffer, dim, fortran, counter);
   }

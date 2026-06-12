@@ -113,7 +113,6 @@ class Storage {
                                                      legate::mapping::StoreTarget target);
 
   void unmap();
-  void allow_out_of_order_destruction();
   void free_early();
 
   [[nodiscard]] Restrictions compute_restrictions() const;

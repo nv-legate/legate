@@ -412,9 +412,6 @@ void LogicalStore::detach()
   // TODO(wonchanl): Need a v2 implementation
 }
 
-// NOLINTNEXTLINE(readability-make-member-function-const)
-void LogicalStore::allow_out_of_order_destruction() {}
-
 Restrictions LogicalStore::compute_restrictions(bool is_output) const
 {
   auto result = transform_->convert(get_storage()->compute_restrictions(), is_output);

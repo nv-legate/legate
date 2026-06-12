@@ -46,7 +46,6 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         void offload_to(StoreTarget) except+
         std_string to_string() except+
         bool equal_storage(const _LogicalStore&) except+
-        void allow_out_of_order_destruction() except+
 
     cdef cppclass _LogicalStorePartition "legate::LogicalStorePartition":
         _LogicalStorePartition() except+

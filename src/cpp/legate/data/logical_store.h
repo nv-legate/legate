@@ -595,9 +595,6 @@ class LEGATE_EXPORT LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
   ~LogicalStore() noexcept;
 
-  // Purposefully not documented, it is only exposed for Python
-  LEGATE_PYTHON_EXPORT void allow_out_of_order_destruction();
-
  private:
   class Impl;
 

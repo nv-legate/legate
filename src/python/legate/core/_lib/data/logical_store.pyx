@@ -45,9 +45,6 @@ cdef class LogicalStore(Unconstructable):
     cdef LogicalStore from_handle(_LogicalStore handle):
         cdef LogicalStore result = LogicalStore.__new__(LogicalStore)
         result._handle = std_move(handle)
-        # Enable out-of-order destruction, as we're in a GC language
-        with nogil:
-            result._handle.allow_out_of_order_destruction()
         return result
 
     @property

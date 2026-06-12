@@ -157,12 +157,6 @@ void LogicalStore::offload_to(mapping::StoreTarget target_mem) const
 
 LogicalStore::~LogicalStore() noexcept = default;
 
-void LogicalStore::
-  allow_out_of_order_destruction()  // NOLINT(readability-make-member-function-const)
-{
-  impl()->allow_out_of_order_destruction();
-}
-
 // ==========================================================================================
 
 class LogicalStorePartition::Impl {

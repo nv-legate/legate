@@ -142,20 +142,6 @@ class LogicalStore {
 
   [[nodiscard]] bool needs_flush() const;
   void detach();
-  // Informs the runtime that references to this store may be removed in non-deterministic order
-  // (e.g. by an asynchronous garbage collector).
-  //
-  // Normally the top-level code must perform all Legate operations in a deterministic order (at
-  // least when running on multiple ranks/nodes). This includes destruction of objects managing
-  // Legate state, like stores. Passing a reference to such an object to a garbage-collected
-  // language violates this assumption, because (in general) garbage collection can occur at
-  // indeterminate points during the execution, and thus the point when the object's reference count
-  // drops to 0 (which triggers object destruction) is not deterministic.
-  //
-  // Before passing a store to a garbage collected language, it must first be marked using this
-  // function, so that the runtime knows to work around the potentially non-deterministic removal of
-  // references.
-  void allow_out_of_order_destruction();
 
   [[nodiscard]] Restrictions compute_restrictions(bool is_output) const;
   [[nodiscard]] InternalSharedPtr<Partition> find_or_create_key_partition(
