@@ -114,7 +114,7 @@ class Storage {
 
   void set_bound(bool bound);
 
-  [[nodiscard]] InternalSharedPtr<InlineStorage> map(const Domain& domain,
+  [[nodiscard]] InternalSharedPtr<InlineStorage> map(Domain domain,
                                                      legate::mapping::StoreTarget target);
 
   void unmap();

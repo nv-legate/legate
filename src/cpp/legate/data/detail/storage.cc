@@ -108,11 +108,14 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& /*se
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
 InternalSharedPtr<InlineStorage> Storage::map(  // NOLINT(readability-make-member-function-const)
-  const Domain& domain,
+  Domain domain,
   legate::mapping::StoreTarget target)
 {
   LEGATE_CHECK(!unbound());
 
+  if (domain.dim == 0) {
+    domain.dim = 1;
+  }
   if (!storage_data_) {
     storage_data_ = make_internal_shared<InlineStorage>(domain, field_size_, target);
   }
