@@ -208,8 +208,6 @@ class LogicalStore {
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
   std::optional<InternalSharedPtr<PhysicalStore>> mapped_{};
-  bool non_transformable_{false};
-  bool non_owning_{false};
 };
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(
