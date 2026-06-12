@@ -97,14 +97,6 @@ bool Storage::is_mapped() const
   return false;
 }
 
-InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& /*self*/,
-                                          SmallVector<std::uint64_t, LEGATE_MAX_DIM> /*tile_shape*/,
-                                          SmallVector<std::int64_t, LEGATE_MAX_DIM> /*offsets*/)
-{
-  // TODO(wonchanl): Need a v2 implementation
-  return nullptr;
-}
-
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
 InternalSharedPtr<InlineStorage> Storage::map(  // NOLINT(readability-make-member-function-const)

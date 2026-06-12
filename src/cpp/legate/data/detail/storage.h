@@ -107,11 +107,6 @@ class Storage {
   [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] bool is_mapped() const;
 
-  [[nodiscard]] InternalSharedPtr<Storage> slice(
-    const InternalSharedPtr<Storage>& self,
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
-
   void set_bound(bool bound);
 
   [[nodiscard]] InternalSharedPtr<InlineStorage> map(Domain domain,
