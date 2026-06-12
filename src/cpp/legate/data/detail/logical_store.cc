@@ -164,12 +164,6 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
   new_extents.erase(new_extents.begin() + d);
 
   auto transform = stack(transform_, std::make_unique<Project>(d, index));
-  auto substorage =
-    Runtime::get_runtime().config().enable_inline_task_launch() || volume() == 0
-      ? storage_
-      : slice_storage(storage_,
-                      transform->invert_extents(new_extents),
-                      transform->invert_point({tags::size_tag, new_extents.size(), 0}));
 
   // New domain over Storage simply restricts to the single dimension in the projection.
   const auto projected_domain = [&] {
@@ -182,7 +176,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
   }();
 
   return make_internal_shared<LogicalStore>(
-    std::move(new_extents), std::move(substorage), type(), std::move(transform), projected_domain);
+    std::move(new_extents), storage_, type(), std::move(transform), projected_domain);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::broadcast(std::int32_t bcast_dim,
@@ -393,7 +387,10 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const InternalSharedPtr<Parti
 
   LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
 
-  return get_storage()->map(machine.preferred_store_target(), type(), shape(), transform_, domain);
+  auto allocation = get_storage()->map(domain, machine.preferred_store_target());
+
+  return make_internal_shared<PhysicalStore>(
+    shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), domain);
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
@@ -418,9 +415,10 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
     domain.rect_data[1] = 0;
   }
 
-  auto result = storage->map(effective_target, type(), shape(), transform_, domain);
+  auto allocation = storage->map(domain, effective_target);
 
-  return result;
+  return make_internal_shared<PhysicalStore>(
+    shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), domain);
 }
 
 // Just because all the member functions used are const, doesn't mean this function

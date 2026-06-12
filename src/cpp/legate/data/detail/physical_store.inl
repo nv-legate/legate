@@ -15,7 +15,6 @@ namespace legate::detail {
 
 inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    GlobalRedopID redop_id,
                                     InternalSharedPtr<detail::TransformStack> transform,
                                     Legion::PrivilegeMode priv,
                                     InternalSharedPtr<InlineStorage> storage,
@@ -23,7 +22,6 @@ inline PhysicalStore::PhysicalStore(std::int32_t dim,
   : transform_{std::move(transform)},
     type_{std::move(type)},
     dim_{dim},
-    redop_id_{redop_id},
     readable_{has_privilege(priv, LEGION_READ_PRIV)},
     writable_{has_privilege(priv, LEGION_WRITE_PRIV)},
     reducible_{has_privilege(priv, LEGION_REDUCE_PRIV)},
@@ -47,8 +45,6 @@ inline bool PhysicalStore::is_readable() const { return readable_; }
 inline bool PhysicalStore::is_writable() const { return writable_; }
 
 inline bool PhysicalStore::is_reducible() const { return reducible_; }
-
-inline GlobalRedopID PhysicalStore::get_redop_id() const { return redop_id_; }
 
 inline std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_instance() const
 {

@@ -31,7 +31,6 @@ class PhysicalStore {
  public:
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                GlobalRedopID redop_id,
                 InternalSharedPtr<detail::TransformStack> transform,
                 Legion::PrivilegeMode priv,
                 InternalSharedPtr<InlineStorage> storage,
@@ -66,7 +65,6 @@ class PhysicalStore {
   [[nodiscard]] bool is_reducible() const;
 
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
-  [[nodiscard]] GlobalRedopID get_redop_id() const;
 
   void check_shape_dimension(std::int32_t dim) const;
   void check_accessor_type(Type::Code code, std::size_t size_of_T) const;
@@ -102,7 +100,6 @@ class PhysicalStore {
   [[nodiscard]] const InternalSharedPtr<InlineStorage>& storage_() const;
 
   std::int32_t dim_{-1};
-  GlobalRedopID redop_id_{-1};
 
   bool readable_{};
   bool writable_{};

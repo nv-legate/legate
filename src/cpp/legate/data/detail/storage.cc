@@ -10,7 +10,6 @@
 
 #include <legate/data/detail/buffer.h>
 #include <legate/data/detail/external_allocation.h>
-#include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/detail/machine.h>
@@ -110,16 +109,11 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& /*se
 
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
-InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-member-function-const)
-  legate::mapping::StoreTarget target,
-  InternalSharedPtr<Type> type,
-  const InternalSharedPtr<Shape>& shape,
-  InternalSharedPtr<TransformStack> transform,
-  const Domain& domain)
+InternalSharedPtr<InlineStorage> Storage::map(  // NOLINT(readability-make-member-function-const)
+  const Domain& domain,
+  legate::mapping::StoreTarget target)
 {
-  if (unbound()) {
-    throw TracedException<std::invalid_argument>{"Unbound storages cannot be inlined mapped"};
-  }
+  LEGATE_CHECK(!unbound());
 
   if (!storage_data_) {
     storage_data_ = make_internal_shared<InlineStorage>(domain, field_size_, target);
@@ -127,13 +121,7 @@ InternalSharedPtr<PhysicalStore> Storage::map(  // NOLINT(readability-make-membe
 
   storage_data_->remap_to(target);
 
-  return make_internal_shared<PhysicalStore>(shape->ndim(),
-                                             std::move(type),
-                                             GlobalRedopID{-1},
-                                             std::move(transform),
-                                             LEGION_READ_WRITE,
-                                             storage_data_,
-                                             domain);
+  return storage_data_;
 }
 
 // Unmapping is a logically non-const operation
@@ -172,12 +160,5 @@ void Storage::set_key_partition(const mapping::detail::Machine& machine,
 void Storage::reset_key_partition() noexcept { key_partition_.reset(); }
 
 std::string Storage::to_string() const { return fmt::format("Storage(id: {})", id()); }
-
-InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
-                                         SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-                                         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets)
-{
-  return self->slice(self, std::move(tile_shape), std::move(offsets));
-}
 
 }  // namespace legate::detail

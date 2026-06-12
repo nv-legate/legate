@@ -146,8 +146,6 @@ Legion::DomainAffineTransform PhysicalStore::get_inverse_transform_() const
   return impl()->get_inverse_transform();
 }
 
-GlobalRedopID PhysicalStore::get_redop_id_() const { return impl()->get_redop_id(); }
-
 std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_instance_() const
 {
   return impl()->get_region_instance();

@@ -788,7 +788,6 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
   [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field_() const;
-  [[nodiscard]] GlobalRedopID get_redop_id_() const;
 
   /**
    * @brief Create a standard read/read-write/write-only field accessor over the underlying

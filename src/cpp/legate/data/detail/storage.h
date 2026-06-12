@@ -36,7 +36,6 @@ namespace legate::detail {
 class Type;
 class Shape;
 class Partition;
-class PhysicalStore;
 class TransformStack;
 class ExternalAllocation;
 
@@ -116,19 +115,8 @@ class Storage {
 
   void set_bound(bool bound);
 
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> map(
-    legate::mapping::StoreTarget target,
-    InternalSharedPtr<Type> type,
-    const InternalSharedPtr<Shape>& shape,
-    InternalSharedPtr<TransformStack> transform,
-    bool ignore_future_mutability,
-    const std::optional<Domain>& domain = std::nullopt);
-
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> map(legate::mapping::StoreTarget target,
-                                                     InternalSharedPtr<Type> type,
-                                                     const InternalSharedPtr<Shape>& shape,
-                                                     InternalSharedPtr<TransformStack> transform,
-                                                     const Domain& domain);
+  [[nodiscard]] InternalSharedPtr<InlineStorage> map(const Domain& domain,
+                                                     legate::mapping::StoreTarget target);
 
   void unmap();
   void allow_out_of_order_destruction();
@@ -157,11 +145,6 @@ class Storage {
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
 };
-
-[[nodiscard]] InternalSharedPtr<Storage> slice_storage(
-  const InternalSharedPtr<Storage>& self,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
 
 }  // namespace legate::detail
 
