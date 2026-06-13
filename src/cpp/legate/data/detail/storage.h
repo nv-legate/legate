@@ -17,6 +17,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <variant>
 
 namespace legate {
@@ -114,6 +115,12 @@ class Storage {
     const InternalSharedPtr<Partition>& partition,
     const DomainPoint& color,
     legate::mapping::StoreTarget target);
+  [[nodiscard]] std::
+    tuple<InternalSharedPtr<InlineStorage>, InternalSharedPtr<InlineStorage>, Domain>
+    map_reduction(const Domain& domain,
+                  const InternalSharedPtr<Partition>& partition,
+                  const DomainPoint& color,
+                  legate::mapping::StoreTarget target);
 
   void unmap();
   void free_early();

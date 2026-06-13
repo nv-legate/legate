@@ -294,6 +294,7 @@ target_sources(
     legate/data/physical_store.cc
     legate/data/detail/allocation_cache.cc
     legate/data/detail/attachment.cc
+    legate/data/detail/copy_request.cc
     legate/data/detail/external_allocation.cc
     legate/data/detail/logical_store.cc
     legate/data/detail/logical_store_partition.cc

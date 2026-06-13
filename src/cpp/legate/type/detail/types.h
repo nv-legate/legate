@@ -40,7 +40,7 @@ class Type {
   [[nodiscard]] virtual bool operator==(const Type& other) const;
   [[nodiscard]] bool operator!=(const Type& other) const;
 
-  Code code;
+  const Code code;
 };
 
 class PrimitiveType final : public Type {

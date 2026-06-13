@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <slice.h>
-
 #include <legate.h>
 
 #include <cstdint>
 #include <iostream>
+#include <reduction.h>
 #include <string_view>
 
 void InitTask::cpu_variant(legate::TaskContext context)

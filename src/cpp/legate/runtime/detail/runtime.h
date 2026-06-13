@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/comm/coll_comm.h>
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/cuda/detail/module_manager.h>
 #include <legate/data/detail/scalar.h>
@@ -250,6 +251,7 @@ class Runtime {
    */
   [[nodiscard]] CUdevice get_current_cuda_device() const;
   [[nodiscard]] cuda::detail::CUDAModuleManager& get_cuda_module_manager();
+  [[nodiscard]] legate::comm::coll::CollComm get_cpu_comm() const;
 
   [[nodiscard]] Legion::Runtime* get_legion_runtime();
   [[nodiscard]] Legion::Context get_legion_context();
@@ -276,8 +278,9 @@ class Runtime {
   std::optional<std::reference_wrapper<Library>> core_library_{};
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
-  CUdevice current_device_{};
   CUstream current_stream_{};
+  CUdevice current_device_{};
+  std::unique_ptr<legate::comm::coll::Coll_Comm> cpu_communicator_{};
 
   std::optional<CommunicatorManager> communicator_manager_{};
   std::optional<PartitionManager> partition_manager_{};

@@ -6,6 +6,7 @@
 
 #include <legate/runtime/detail/runtime.h>
 
+#include <legate/comm/detail/backend_network.h>
 #include <legate/comm/detail/coll.h>
 #include <legate/comm/detail/comm.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
@@ -1046,6 +1047,11 @@ std::int32_t Runtime::finish()
   // Any STL containers holding Legion handles need to be cleared here, otherwise they cause
   // trouble when they get destroyed in the Legate runtime's destructor
 
+  {
+    comm::coll::BackendNetwork::get_network()->comm_destroy(cpu_communicator_.get());
+    cpu_communicator_.reset();
+  }
+
   communicator_manager_.reset();
   partition_manager_.reset();
   scope_ = Scope{config()};
@@ -1193,6 +1199,29 @@ extern void register_exception_reduction_op(const Library& context);
   runtime.partition_manager_.emplace();
   static_cast<void>(runtime.scope_.exchange_machine(runtime.create_toplevel_machine()));
 
+  // TODO(wonchanl): the cpu communicator assumes rank-per-processor
+  {
+    auto&& network       = comm::coll::BackendNetwork::get_network();
+    auto&& local_machine = runtime.local_machine();
+
+    auto communicator = std::make_unique<legate::comm::coll::Coll_Comm>();
+
+    std::vector<int> mapping_table;
+
+    mapping_table.reserve(local_machine.total_nodes);
+    for (std::uint32_t node_id = 0; node_id < local_machine.total_nodes; ++node_id) {
+      mapping_table.push_back(node_id);
+    }
+
+    network->comm_create(communicator.get(),
+                         local_machine.total_nodes,
+                         local_machine.node_id,
+                         network->init_comm(),
+                         mapping_table.data());
+
+    runtime.cpu_communicator_ = std::move(communicator);
+  }
+
   comm::register_builtin_communicator_factories(runtime.core_library());
 
   register_legate_core_tasks(core_lib);
@@ -1207,6 +1236,8 @@ extern void register_exception_reduction_op(const Library& context);
 CUstream Runtime::get_cuda_stream() const { return current_stream_; }
 
 CUdevice Runtime::get_current_cuda_device() const { return current_device_; }
+
+legate::comm::coll::CollComm Runtime::get_cpu_comm() const { return cpu_communicator_.get(); }
 
 cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
 {

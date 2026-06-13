@@ -360,7 +360,7 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
 
 InternalSharedPtr<PhysicalStore> LogicalStore::map(const InternalSharedPtr<Partition>& partition,
                                                    const SymbolicPoint& store_projection,
-                                                   const Domain& launch_domain,
+                                                   const Domain&,
                                                    const DomainPoint& task_index,
                                                    const legate::mapping::detail::Machine& machine)
 {
@@ -368,13 +368,31 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map(const InternalSharedPtr<Parti
 
   auto inverted = partition->invert(partition, transform_);
 
-  LEGATE_ASSERT(!launch_domain.is_valid() || partition->launch_domain() == launch_domain);
-
   auto&& [allocation, subdomain] =
     get_storage()->map(domain_, inverted, color, machine.preferred_store_target());
 
   return make_internal_shared<PhysicalStore>(
     shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain);
+}
+
+std::pair<InternalSharedPtr<PhysicalStore>, ReductionRequest> LogicalStore::map_reduction(
+  const InternalSharedPtr<Partition>& partition,
+  const SymbolicPoint& store_projection,
+  const Domain&,
+  const DomainPoint& task_index,
+  ReductionOpKind op_kind,
+  const legate::mapping::detail::Machine& machine)
+{
+  const auto color = compute_color(store_projection, task_index);
+
+  auto inverted = partition->invert(partition, transform_);
+
+  auto&& [source, target, subdomain] =
+    get_storage()->map_reduction(domain_, inverted, color, machine.preferred_store_target());
+
+  return {make_internal_shared<PhysicalStore>(
+            shape()->ndim(), type(), transform_, LEGION_READ_WRITE, source, subdomain),
+          ReductionRequest{std::move(source), std::move(target), type_, op_kind}};
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(

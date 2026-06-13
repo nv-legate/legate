@@ -53,6 +53,8 @@ void SAXPYTask::cpu_variant(legate::TaskContext context)
   const auto y_shape      = y_input_store.shape<DIM>();
   const auto output_shape = output_store.shape<DIM>();
 
+  std::cerr << "SAXPY " << x_shape << "\n";
+
   // Assert that all shapes are equal
   LEGATE_CHECK(x_shape == y_shape && y_shape == output_shape);
 
@@ -75,6 +77,8 @@ void CheckTask::cpu_variant(legate::TaskContext context)
   const auto expected        = context.scalar(0).value<std::int32_t>();
   const auto shape           = result.shape<DIM>();
   auto acc                   = result.read_accessor<std::int32_t, DIM>();
+
+  std::cerr << "Check " << shape << "\n";
 
   bool all_correct = true;
   for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {

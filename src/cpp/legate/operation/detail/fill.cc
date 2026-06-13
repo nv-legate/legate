@@ -10,6 +10,7 @@
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/physical_store.h>
 #include <legate/partitioning/detail/constraint_solver.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/type_traits.h>
@@ -108,6 +109,8 @@ void Fill::launch(Strategy* /*strategy*/)
                   InlineFill{},
                   Span<const std::byte>{buf, fut_size},
                   &pub_phys_store);
+
+  lhs_->set_key_partition(machine(), parallel_policy(), create_no_partition());
 }
 
 void Fill::add_to_solver(ConstraintSolver& solver)

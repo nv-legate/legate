@@ -13,7 +13,7 @@ namespace legate::detail {
 
 // ==========================================================================================
 
-inline bool TaskBase::supports_replicated_write() const { return true; }
+inline bool TaskBase::supports_replicated_write() const { return false; }
 
 inline bool TaskBase::can_throw_exception() const { return can_throw_exception_; }
 
@@ -30,6 +30,8 @@ inline Span<const TaskStoreArg> TaskBase::inputs() const { return inputs_; }
 inline Span<const TaskStoreArg> TaskBase::outputs() const { return outputs_; }
 
 inline Span<const TaskStoreArg> TaskBase::reductions() const { return reductions_; }
+
+inline Span<const ReductionOpKind> TaskBase::reduction_ops() const { return reduction_ops_; }
 
 inline const VariantInfo& TaskBase::variant_info_() const { return vinfo_; }
 

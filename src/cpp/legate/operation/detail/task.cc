@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/mapping/detail/mapping.h>
@@ -230,15 +231,45 @@ template <bool WRITE>
   return result;
 }
 
-[[nodiscard]] std::optional<TaskContext> make_task_context(const TaskBase* task,
-                                                           VariantCode variant_code,
-                                                           const Strategy& strategy)
+[[nodiscard]] std::pair<SmallVector<InternalSharedPtr<PhysicalStore>>,
+                        SmallVector<ReductionRequest>>
+map_reduction_stores(Span<const TaskStoreArg> store_args,
+                     Span<const ReductionOpKind> reduction_ops,
+                     const legate::mapping::detail::Machine& machine,
+                     const Strategy& strategy,
+                     const Domain& launch_domain,
+                     const DomainPoint& task_index)
+{
+  SmallVector<InternalSharedPtr<PhysicalStore>> result;
+  SmallVector<ReductionRequest> reduction_requests;
+
+  result.reserve(store_args.size());
+  reduction_requests.reserve(store_args.size());
+  for (auto&& [store_arg, op_kind] : zip_equal(store_args, reduction_ops)) {
+    auto&& [_, store, variable] = store_arg;
+    auto&& partition            = strategy[*variable];
+    auto&& [physical_store, reduction_request] =
+      store->map_reduction(partition,
+                           strategy.find_store_projection(*variable),
+                           launch_domain,
+                           task_index,
+                           op_kind,
+                           machine);
+
+    result.emplace_back(std::move(physical_store));
+    reduction_requests.emplace_back(std::move(reduction_request));
+  }
+  return {result, reduction_requests};
+}
+
+[[nodiscard]] std::pair<std::optional<TaskContext>, SmallVector<ReductionRequest>>
+make_task_context(const TaskBase* task, VariantCode variant_code, const Strategy& strategy)
 {
   auto launch_domain          = strategy.launch_domain();
   const auto maybe_task_index = strategy.task_index();
 
   if (!maybe_task_index.has_value()) {
-    return std::nullopt;
+    return {std::nullopt, {}};
   }
 
   auto&& task_index = *maybe_task_index;
@@ -246,21 +277,22 @@ template <bool WRITE>
     task->inputs(), task->machine(), task->parallel_policy(), strategy, launch_domain, task_index);
   auto outputs = map_stores<true>(
     task->outputs(), task->machine(), task->parallel_policy(), strategy, launch_domain, task_index);
-  auto reductions = map_stores<false>(task->reductions(),
-                                      task->machine(),
-                                      task->parallel_policy(),
-                                      strategy,
-                                      launch_domain,
-                                      task_index);
+  auto&& [reductions, requests] = map_reduction_stores(task->reductions(),
+                                                       task->reduction_ops(),
+                                                       task->machine(),
+                                                       strategy,
+                                                       launch_domain,
+                                                       task_index);
 
-  return std::make_optional<TaskContext>(variant_code,
-                                         launch_domain,
-                                         task_index,
-                                         task,
-                                         std::move(inputs),
-                                         std::move(outputs),
-                                         std::move(reductions),
-                                         SmallVector<InternalSharedPtr<Scalar>>{task->scalars()});
+  return {std::make_optional<TaskContext>(variant_code,
+                                          launch_domain,
+                                          task_index,
+                                          task,
+                                          std::move(inputs),
+                                          std::move(outputs),
+                                          std::move(reductions),
+                                          SmallVector<InternalSharedPtr<Scalar>>{task->scalars()}),
+          requests};
 }
 
 }  // namespace
@@ -272,13 +304,17 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
 
   show_progress(*p_strategy, get_task_name(), variant_code, provenance().as_string_view());
 
-  auto maybe_ctx = make_task_context(this, variant_code, *p_strategy);
+  auto&& [maybe_ctx, reduction_requests] = make_task_context(this, variant_code, *p_strategy);
 
   if (!maybe_ctx.has_value()) {
     return;
   }
 
   variant_info_().body(legate::TaskContext{&*maybe_ctx});
+
+  for (auto&& reduction_request : reduction_requests) {
+    reduction_request.perform(variant_code);
+  }
 }
 
 ////////////////////////////////////////////////////
@@ -347,9 +383,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
 
   LEGATE_ASSERT(!store->type()->variable_size());
 
-  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
-
-  reduction_ops_.push_back(legion_redop_id);
+  reduction_ops_.push_back(static_cast<ReductionOpKind>(redop_kind));
 
   auto& arg = reductions_.emplace_back(
     Legion::PrivilegeMode::LEGION_REDUCE, std::move(store), partition_symbol);
@@ -459,9 +493,7 @@ void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store, std::int32
 
   add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
 
-  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
-
-  reduction_ops_.push_back(legion_redop_id);
+  reduction_ops_.push_back(static_cast<ReductionOpKind>(redop_kind));
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -502,9 +534,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
              std::move(projection),
              is_key_partition);
 
-  auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop_kind);
-
-  reduction_ops_.push_back(legion_redop_id);
+  reduction_ops_.push_back(static_cast<ReductionOpKind>(redop_kind));
 }
 
 void ManualTask::add_store_(Legion::PrivilegeMode priv,

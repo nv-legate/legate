@@ -80,6 +80,11 @@ class TaskBase : public Operation {
    */
   [[nodiscard]] Span<const TaskStoreArg> reductions() const;
 
+  /**
+   * @return The reduction arguments for the task.
+   */
+  [[nodiscard]] Span<const ReductionOpKind> reduction_ops() const;
+
   [[nodiscard]] const Library& library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
@@ -97,7 +102,7 @@ class TaskBase : public Operation {
   SmallVector<TaskStoreArg> inputs_{};
   SmallVector<TaskStoreArg> outputs_{};
   SmallVector<TaskStoreArg> reductions_{};
-  SmallVector<GlobalRedopID> reduction_ops_{};
+  SmallVector<ReductionOpKind> reduction_ops_{};
 };
 
 class LogicalTask : public TaskBase {

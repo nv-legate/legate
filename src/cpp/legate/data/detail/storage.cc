@@ -14,6 +14,7 @@
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/formatters.h>
@@ -61,6 +62,8 @@ Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::stri
     domain, field_size_, Runtime::get_runtime().get_machine().preferred_scalar_store_target());
 
   std::memcpy(storage_data_->data(), scalar.data(), scalar.size());
+
+  set_key_partition(create_no_partition());
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
@@ -75,6 +78,8 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     make_internal_shared<InlineStorage>(to_domain(this->shape()->extents()),
                                         type->size(),
                                         legate::ExternalAllocation{std::move(allocation)});
+
+  set_key_partition(create_no_partition());
 }
 
 bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
@@ -109,7 +114,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   LEGATE_CHECK(!unbound());
 
   // TODO(wonchanl): Better way to check invalid colors
-  auto sub_domain = color.dim == 0 ? partition->shard(domain, color) : domain;
+  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
 
   // TODO(wonchanl): I hate we have to deal with 0D cases differently
   if (sub_domain.dim == 0) {
@@ -132,7 +137,6 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   }
 
   // Otherwise, we need to allocate a new storage
-
   auto data = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
 
   // TODO(wonchanl): Need to handle copy-ins and -outs.
@@ -142,6 +146,39 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   storage_data_ = data;
 
   return {data, sub_domain};
+}
+
+std::tuple<InternalSharedPtr<InlineStorage>, InternalSharedPtr<InlineStorage>, Domain>
+Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
+  const Domain& domain,
+  const InternalSharedPtr<Partition>& partition,
+  const DomainPoint& color,
+  legate::mapping::StoreTarget target)
+{
+  LEGATE_CHECK(!unbound());
+
+  // TODO(wonchanl): Better way to check invalid colors
+  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
+
+  // TODO(wonchanl): I hate we have to deal with 0D cases differently
+  if (sub_domain.dim == 0) {
+    sub_domain.dim = 1;
+  }
+
+  // No subsumption checks for reductions as we need to create a new storage anyway
+  //
+  // TODO(wonchanl): Put back the optimization that converts reductions to read-write accesses when
+  // the partition is disjoint
+  LEGATE_ASSERT(sub_domain.get_volume() == 1);
+
+  auto tmp = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
+  // TODO(wonchanl): We actually need to initialize this storage with the reduction identity
+  std::memset(tmp->data(), 0, field_size_);
+
+  // TODO(wonchanl): We need to raise an uninitialized access exception if this doesn't hold
+  LEGATE_CHECK(storage_data_);
+
+  return {std::move(tmp), storage_data_, sub_domain};
 }
 
 // Unmapping is a logically non-const operation

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/storage.h>
 #include <legate/data/slice.h>
 #include <legate/mapping/mapping.h>
@@ -122,6 +123,13 @@ class LogicalStore {
     const SymbolicPoint& store_projection,
     const Domain& launch_domain,
     const DomainPoint& task_index,
+    const legate::mapping::detail::Machine& machine);
+  [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, ReductionRequest> map_reduction(
+    const InternalSharedPtr<Partition>& partition,
+    const SymbolicPoint& store_projection,
+    const Domain& launch_domain,
+    const DomainPoint& task_index,
+    ReductionOpKind op_kind,
     const legate::mapping::detail::Machine& machine);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
