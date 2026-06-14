@@ -55,7 +55,8 @@ namespace {
 void ReductionRequest::perform(VariantCode variant_code) const
 {
   if (variant_code != VariantCode::CPU) {
-    throw TracedException<std::runtime_error>{"Not supported yet"};
+    source_->remap_to(mapping::StoreTarget::SYSMEM);
+    target_->remap_to(mapping::StoreTarget::SYSMEM);
   }
 
   collAllreduce(source_->data(),

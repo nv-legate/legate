@@ -113,14 +113,6 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
 {
   LEGATE_CHECK(!unbound());
 
-  // TODO(wonchanl): Better way to check invalid colors
-  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
-
-  // TODO(wonchanl): I hate we have to deal with 0D cases differently
-  if (sub_domain.dim == 0) {
-    sub_domain.dim = 1;
-  }
-
   // If no data needs to be moved to serve the requested partition, return the current storage
   // immediately
   //
@@ -133,7 +125,15 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     // TODO(wonchanl): GPU-to-CPU copies must be temporary copy-outs, not permanent remapping
     storage_data_->remap_to(target);
 
-    return {storage_data_, sub_domain};
+    return {storage_data_, storage_data_->domain()};
+  }
+
+  // TODO(wonchanl): Better way to check invalid colors
+  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
+
+  // TODO(wonchanl): I hate we have to deal with 0D cases differently
+  if (sub_domain.dim == 0) {
+    sub_domain.dim = 1;
   }
 
   // Otherwise, we need to allocate a new storage
@@ -172,8 +172,21 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   LEGATE_ASSERT(sub_domain.get_volume() == 1);
 
   auto tmp = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
+
   // TODO(wonchanl): We actually need to initialize this storage with the reduction identity
-  std::memset(tmp->data(), 0, field_size_);
+  if (target == legate::mapping::StoreTarget::FBMEM) {
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+
+    auto&& api = cuda::detail::get_cuda_driver_api();
+
+    std::vector<std::uint8_t> data(field_size_, 0);
+
+    api->mem_cpy_async(
+      tmp->data(), data.data(), field_size_, Runtime::get_runtime().get_cuda_stream());
+    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
+  } else {
+    std::memset(tmp->data(), 0, field_size_);
+  }
 
   // TODO(wonchanl): We need to raise an uninitialized access exception if this doesn't hold
   LEGATE_CHECK(storage_data_);

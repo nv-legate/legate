@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
@@ -310,11 +311,22 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
     return;
   }
 
-  variant_info_().body(legate::TaskContext{&*maybe_ctx});
+  auto execute_task = [&] {
+    variant_info_().body(legate::TaskContext{&*maybe_ctx});
 
-  for (auto&& reduction_request : reduction_requests) {
-    reduction_request.perform(variant_code);
+    for (auto&& reduction_request : reduction_requests) {
+      reduction_request.perform(variant_code);
+    }
+  };
+
+  if (variant_code != VariantCode::GPU) {
+    execute_task();
+    return;
   }
+
+  cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+
+  execute_task();
 }
 
 ////////////////////////////////////////////////////
