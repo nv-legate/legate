@@ -66,6 +66,7 @@
 #include <atomic>
 #include <cstdlib>
 #include <mappers/logging_wrapper.h>
+#include <nccl.h>
 // GCC 14 alloc-zero warning when using Conda installed compiler
 LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_GCC_IGNORE("-Walloc-zero");
@@ -1052,6 +1053,11 @@ std::int32_t Runtime::finish()
     cpu_communicator_.reset();
   }
 
+  if (config().need_cuda()) {
+    // TODO(wonchanl): Error checking
+    ncclCommDestroy(gpu_communicator_);
+  }
+
   communicator_manager_.reset();
   partition_manager_.reset();
   scope_ = Scope{config()};
@@ -1222,6 +1228,32 @@ extern void register_exception_reduction_op(const Library& context);
     runtime.cpu_communicator_ = std::move(communicator);
   }
 
+  if (runtime.config().need_cuda()) {
+    auto&& network       = comm::coll::BackendNetwork::get_network();
+    auto&& local_machine = runtime.local_machine();
+
+    std::vector<ncclUniqueId> comm_ids{};
+
+    comm_ids.resize(local_machine.total_nodes);
+
+    if (local_machine.node_id == 0) {
+      // TODO(wonchanl): Error checking
+      ncclGetUniqueId(&comm_ids[0]);
+    }
+
+    network->all_gather(&comm_ids[local_machine.node_id],
+                        comm_ids.data(),
+                        sizeof(ncclUniqueId),
+                        legate::comm::coll::CollDataType::CollInt8,
+                        runtime.cpu_communicator_.get());
+
+    const cuda::detail::AutoPrimaryContext ctx{runtime.get_current_cuda_device()};
+
+    // TODO(wonchanl): Error checking
+    ncclCommInitRank(
+      &runtime.gpu_communicator_, local_machine.total_nodes, comm_ids[0], local_machine.node_id);
+  }
+
   comm::register_builtin_communicator_factories(runtime.core_library());
 
   register_legate_core_tasks(core_lib);
@@ -1238,6 +1270,8 @@ CUstream Runtime::get_cuda_stream() const { return current_stream_; }
 CUdevice Runtime::get_current_cuda_device() const { return current_device_; }
 
 legate::comm::coll::CollComm Runtime::get_cpu_comm() const { return cpu_communicator_.get(); }
+
+ncclComm_t Runtime::get_gpu_comm() const { return gpu_communicator_; }
 
 cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
 {

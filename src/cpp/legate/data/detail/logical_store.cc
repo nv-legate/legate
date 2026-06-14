@@ -412,6 +412,8 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   auto&& [allocation, subdomain] =
     storage->map(domain_, create_no_partition(), {}, effective_target);
 
+  Runtime::get_runtime().issue_execution_fence(/*block=*/true);
+
   return make_internal_shared<PhysicalStore>(
     shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain);
 }

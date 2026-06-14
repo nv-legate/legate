@@ -324,7 +324,7 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
     return;
   }
 
-  cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+  const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
 
   execute_task();
 }

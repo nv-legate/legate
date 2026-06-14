@@ -33,6 +33,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <nccl.h>
 #include <optional>
 #include <stack>
 #include <string>
@@ -252,6 +253,7 @@ class Runtime {
   [[nodiscard]] CUdevice get_current_cuda_device() const;
   [[nodiscard]] cuda::detail::CUDAModuleManager& get_cuda_module_manager();
   [[nodiscard]] legate::comm::coll::CollComm get_cpu_comm() const;
+  [[nodiscard]] ncclComm_t get_gpu_comm() const;
 
   [[nodiscard]] Legion::Runtime* get_legion_runtime();
   [[nodiscard]] Legion::Context get_legion_context();
@@ -281,6 +283,7 @@ class Runtime {
   CUstream current_stream_{};
   CUdevice current_device_{};
   std::unique_ptr<legate::comm::coll::Coll_Comm> cpu_communicator_{};
+  ncclComm_t gpu_communicator_{};
 
   std::optional<CommunicatorManager> communicator_manager_{};
   std::optional<PartitionManager> partition_manager_{};
