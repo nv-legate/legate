@@ -113,6 +113,14 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
 {
   LEGATE_CHECK(!unbound());
 
+  // TODO(wonchanl): Better way to check invalid colors
+  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
+
+  // TODO(wonchanl): I hate we have to deal with 0D cases differently
+  if (sub_domain.dim == 0) {
+    sub_domain.dim = 1;
+  }
+
   // If no data needs to be moved to serve the requested partition, return the current storage
   // immediately
   //
@@ -125,15 +133,10 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     // TODO(wonchanl): GPU-to-CPU copies must be temporary copy-outs, not permanent remapping
     storage_data_->remap_to(target);
 
-    return {storage_data_, storage_data_->domain()};
-  }
+    LEGATE_ASSERT(storage_data_->domain().intersection(sub_domain) == sub_domain ||
+                  sub_domain.get_volume() == 0);
 
-  // TODO(wonchanl): Better way to check invalid colors
-  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
-
-  // TODO(wonchanl): I hate we have to deal with 0D cases differently
-  if (sub_domain.dim == 0) {
-    sub_domain.dim = 1;
+    return {storage_data_, sub_domain};
   }
 
   // Otherwise, we need to allocate a new storage
