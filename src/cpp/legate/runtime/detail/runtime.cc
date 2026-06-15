@@ -1033,15 +1033,6 @@ std::int32_t Runtime::finish()
   // Destroy all communicators. This will likely launch some tasks for the clean-up.
   communicator_manager().destroy();
 
-  if (config().need_cuda()) {
-    auto&& api = cuda::detail::get_cuda_driver_api();
-
-    api->stream_synchronize(current_stream_);
-    api->stream_destroy(&current_stream_);
-    api->device_primary_ctx_release(current_device_);
-    current_device_ = -1;
-  }
-
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
   issue_execution_fence(true);
 
@@ -1065,6 +1056,16 @@ std::int32_t Runtime::finish()
   // Mappers get raw pointers to Libraries, so just in case any of the above launched residual
   // cleanup tasks, we issue another fence here before we clear the Libraries.
   issue_execution_fence(true);
+
+  if (config().need_cuda()) {
+    auto&& api = cuda::detail::get_cuda_driver_api();
+
+    api->stream_synchronize(current_stream_);
+    api->stream_destroy(&current_stream_);
+    api->device_primary_ctx_release(current_device_);
+    current_device_ = -1;
+  }
+
   libraries_.clear();
   core_library_.reset();
   // Reset this here and now (instead of waiting to destroy it when Runtime gets destroyed)
