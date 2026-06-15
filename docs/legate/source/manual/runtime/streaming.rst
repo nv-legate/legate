@@ -68,7 +68,7 @@ Streaming inside the scope.
    from legate.core import ParallelPolicy, Scope
 
    pp = ParallelPolicy(streaming=True, over_decompose_factor=4)
-   with Scope(paralle_policy=pp):
+   with Scope(parallel_policy=pp):
        # submit task 1
        # submit task 2
        # ...
