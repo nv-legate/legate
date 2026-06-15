@@ -129,7 +129,7 @@ class LEGATE_EXPORT DimOrdering {
     C,
     /**
      * @brief Indicates the instance has Fortran layout (i.e., the first dimension is the leading
-     * dimension instance)
+     * dimension in the instance)
      */
     FORTRAN,
     /**

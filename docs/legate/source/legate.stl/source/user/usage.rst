@@ -36,8 +36,8 @@ Declaring and initializing a store
 ----------------------------------
 
 There are several ways to declare and initialize a store. The simplest is to
-construct an :cpp:class:`legate::experimental::stl::logical_store` object, specifying the element type and
-and the shape of the store:
+construct a :cpp:class:`legate::experimental::stl::logical_store` object, specifying the element type and
+the shape of the store:
 
 .. code-block:: c++
 

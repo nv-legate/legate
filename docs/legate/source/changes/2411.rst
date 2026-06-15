@@ -89,7 +89,7 @@ C++
 
 .. rubric:: Data
 
-- Improve ``ScopedAllocator::ScopeAllocator()`` alignment validation. The alignment is now
+- Improve ``ScopedAllocator::ScopedAllocator()`` alignment validation. The alignment is now
   required to be a strictly positive power of 2. This was technically always the case, but
   previous versions did not check this, leading to silent failures down the line. The
   constructor will now validate the alignment and throw an exception if it is improper.
@@ -122,7 +122,7 @@ C++
   task variant need not perform device context synchronization after task completion.
 - Add ``TaskContext::get_task_stream()`` to retrieve the current tasks' active CUDA stream.
 - Deprecate ``TaskRegistrar::record_task(std::int64_t std::unique_ptr<TaskInfo>)``. Users
-  should use ``LegateTask::Registrar`` combined with ``TaskRegistrar::record_all_task()``
+  should use ``LegateTask::Registrar`` combined with ``TaskRegistrar::register_all_tasks()``
   instead.
 - Change ``TaskRegistrar::register_all_tasks()`` to take a mutable reference to the
   ``library`` argument instead of by value.

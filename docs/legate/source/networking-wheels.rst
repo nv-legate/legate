@@ -118,7 +118,7 @@ variables only for the specific Legate application you are running.
    As discussed previously, Legate installs a basic configuration of UCX as a
    dependency.  Configurations that are known to work with Legate wheels include
    Ubuntu 20.x and above with Ubuntu-installed OpenMPI, and with CUDA toolkit
-   12.2 or higher.  The Legate wheel was also tested on Perlmutter with the
+   12.5 through 13.0.  The Legate wheel was also tested on Perlmutter with the
    ``cray-mpich-abi`` module and the ``mpich`` modules.
 
    However, because wheels are not as self contained as the Conda ecosystem, it is

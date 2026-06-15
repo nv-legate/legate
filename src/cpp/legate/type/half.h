@@ -57,10 +57,10 @@ namespace legate {
  * standard libraries, it is unspecified which operators and member functions exist on the
  * `Half` type, except:
  *
- * #. The type shall be constructible from and convertible to, `float`.
- * #. The type shall be assignable from `float`, i.e. `some_half = 1.0F` shall do what you
+ * 1. The type shall be constructible from and convertible to, `float`.
+ * 2. The type shall be assignable from `float`, i.e. `some_half = 1.0F` shall do what you
  *    expect.
- * #. When Legate is compiled with CUDA enabled, `Half` will be an alias to CUDA's native
+ * 3. When Legate is compiled with CUDA enabled, `Half` will be an alias to CUDA's native
  *    `__half` type.
  *
  * See

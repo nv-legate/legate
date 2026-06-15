@@ -67,7 +67,7 @@ following (with the desired CUDA version):
 
 .. code-block:: sh
 
-   $ CONDA_OVERRIDE_CUDA="12.2" \
+   $ CONDA_OVERRIDE_CUDA="12.5" \
        conda install -c conda-forge -c legate legate
 
 
@@ -149,7 +149,7 @@ our downloadable packages.
    * - GPU architecture
      - Volta and later
    * - CUDA toolkit
-     - 12.2 and later
+     - 12.5 through 13.0
    * - Python
      -
         * Linux: 3.11, 3.12, 3.13, 3.14
