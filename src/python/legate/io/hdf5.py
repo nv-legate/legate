@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 def from_file_batched(
     path: Pathlike, dataset_name: str, chunk_size: Sequence[int]
 ) -> Generator[tuple[LogicalArray, tuple[int, ...]], None, None]:
-    r"""Read a HDF5 file as a series of batches, yielding an array over each
+    r"""Read an HDF5 file as a series of batches, yielding an array over each
     batch.
 
     If the array to read does not evenly divide into batches of `chunk_size`,

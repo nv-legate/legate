@@ -709,7 +709,7 @@ cdef class VariantInvoker:
         -------
         bool
             ``True`` if the signature of ``func`` matches this
-            ``VariantInvoker``s signature, ``False`` otherwise.
+            ``VariantInvoker``'s signature, ``False`` otherwise.
         """
         return VariantInvoker._get_signature(func) == self.signature
 
