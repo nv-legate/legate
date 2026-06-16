@@ -27,7 +27,6 @@ class ReductionTask : public legate::LegateTask<ReductionTask> {
   static void cpu_variant(legate::TaskContext context);
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  // Defined in saxpy.cu.
   static void gpu_variant(legate::TaskContext context);
 #endif
 };

@@ -172,7 +172,9 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   //
   // TODO(wonchanl): Put back the optimization that converts reductions to read-write accesses when
   // the partition is disjoint
-  LEGATE_ASSERT(sub_domain.get_volume() == 1);
+
+  // TODO(wonchanl): No multi-dimensional reductions yet
+  LEGATE_ASSERT(sub_domain.dim == 1);
 
   auto tmp = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
 

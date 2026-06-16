@@ -14,8 +14,8 @@
 
 namespace legate::detail {
 
-// TODO(wonchanl): Only support scalar reductions, but need to support general multi-dimensional
-// reduce-scatters
+// TODO(wonchanl): Only support 1d reductions on unpartitioned stores, should be extended to other
+// cases.
 class ReductionRequest {
  public:
   ReductionRequest(InternalSharedPtr<InlineStorage> source,

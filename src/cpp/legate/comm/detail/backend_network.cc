@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/comm/detail/logger.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -58,11 +59,14 @@ std::unique_ptr<BackendNetwork> the_backend_network{};
   static const auto guessed_comm_type = [] {
     if (LEGATE_DEFINED(LEGATE_USE_MPI) && Runtime::get_runtime().config().need_network() &&
         !Runtime::get_runtime().config().disable_mpi()) {
+      logger().debug() << "guessed_comm_type: MPI";
       return legate::comm::coll::CollCommType::CollMPI;
     }
     if (LEGATE_DEFINED(LEGATE_USE_UCX) && Runtime::get_runtime().config().need_network()) {
+      logger().debug() << "guessed_comm_type: UCC";
       return legate::comm::coll::CollCommType::CollUCC;
     }
+    logger().debug() << "guessed_comm_type: Local";
     return legate::comm::coll::CollCommType::CollLocal;
   }();
 
