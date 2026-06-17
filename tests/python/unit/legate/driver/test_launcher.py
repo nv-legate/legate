@@ -713,7 +713,7 @@ class TestSRunLauncher:
         )
 
     @pytest.mark.parametrize(
-        "debugger", powerset_nonempty(("--gdb", "--cuda-gdb")), ids=str
+        "debugger", tuple(powerset_nonempty(("--gdb", "--cuda-gdb"))), ids=str
     )
     def test_single_rank_debugging(
         self, genconfig: GenConfig, debugger: str
@@ -788,7 +788,7 @@ class TestSRunLauncher:
 
     @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
     @pytest.mark.parametrize(
-        "debugger", powerset_nonempty(("--gdb", "--cuda-gdb")), ids=str
+        "debugger", tuple(powerset_nonempty(("--gdb", "--cuda-gdb"))), ids=str
     )
     def test_multi_rank_debugging(
         self,

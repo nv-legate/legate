@@ -161,7 +161,8 @@ class TestTask(BaseTest):
     # also don't issue a fence, and hence multiple tasks may execute together
     # and potentially cause memory errors (if they misbehave).
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
+        ("func", "func_args"),
+        tuple(zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)),
     )
     def test_executable_auto(
         self, func: TestFunction[_P, None], func_args: ArgDescr
@@ -174,7 +175,8 @@ class TestTask(BaseTest):
         task(*func_args.args())
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
+        ("func", "func_args"),
+        tuple(zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)),
     )
     def test_executable_prepare_call(
         self, func: TestFunction[_P, None], func_args: ArgDescr
@@ -248,7 +250,8 @@ class TestTask(BaseTest):
         task(d=d, c=c, b=b, a=a)
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
+        ("func", "func_args"),
+        tuple(zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)),
     )
     def test_invoke_unhandled_args(
         self, func: TestFunction[_P, None], func_args: ArgDescr
@@ -825,7 +828,8 @@ class TestVariantInvoker(BaseTest):
             VariantInvoker(single_input, constraints=[None])  # type: ignore[list-item]
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
+        ("func", "func_args"),
+        tuple(zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)),
     )
     def test_prepare_call_good(
         self,
@@ -936,7 +940,8 @@ class TestVariantInvoker(BaseTest):
             invoker.prepare_call(fake_auto_task, (make_input_store(),), {})
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
+        ("func", "func_args"),
+        tuple(zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)),
     )
     def test_invoke_auto(
         self, func: TestFunction[_P, None], func_args: ArgDescr
