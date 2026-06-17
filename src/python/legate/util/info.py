@@ -8,14 +8,21 @@ import re
 import sys
 import json
 import platform
+from contextlib import suppress
 from functools import cache
-from importlib import import_module
+from importlib import import_module, metadata as importlib_metadata
+from importlib.util import find_spec
+from pathlib import Path
 from subprocess import CalledProcessError, check_output
 from textwrap import indent
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
+from urllib.parse import unquote, urlparse
 
 from .. import install_info
 from .has_started import runtime_has_started
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 
 class BuildInfo(TypedDict):
@@ -31,11 +38,13 @@ class BuildInfo(TypedDict):
 
 __all__ = [
     "build_info",
+    "conda_package_dists",
     "info",
     "machine_info",
     "package_dists",
     "package_versions",
     "print_build_info",
+    "print_conda_package_details",
     "print_package_details",
     "print_package_versions",
     "print_system_info",
@@ -92,20 +101,6 @@ def _realm_version() -> str:
     if install_info.realm_git_branch:
         result += f" (commit: {install_info.realm_git_branch})"
     return result
-
-
-def _try_conda(package: str) -> str:
-    try:
-        if out := check_output(["conda", "list", package, "--json"]):
-            info = json.loads(out.decode("utf-8"))[0]
-            return f"{info['dist_name']} ({info['channel']})"
-
-    except (CalledProcessError, IndexError, KeyError):
-        return FAILED_TO_DETECT
-    except FileNotFoundError:
-        return "(conda missing)"
-    else:
-        return FAILED_TO_DETECT
 
 
 Devices = dict[str, str] | str
@@ -183,22 +178,151 @@ def package_versions() -> PackageVersions:
 
 
 PackageDists = dict[str, str]
+CondaPackageDists = dict[str, str]
+
+# Python details follow imports for the broader runtime ecosystem. Conda
+# details stay focused on packages that encode the Legate/CUDA environment.
+PYTHON_PACKAGES = ("legate", "cupynumeric", "numpy", "scipy", "numba")
+CONDA_PACKAGES = ("cuda-version", "legate", "cupynumeric")
+NO_CONDA_METADATA = "(no conda metadata in active Python prefix)"
 
 
-# _try_conda() is slow, and the result should be the same every time,
-# so we cache it
+def _module_path(module_name: str) -> str | None:
+    try:
+        spec = find_spec(module_name)
+    except (ImportError, ValueError):
+        return None
+
+    if spec is None or not spec.submodule_search_locations:
+        return None
+
+    return str(next(iter(spec.submodule_search_locations)))
+
+
+def _dist_owns_path(
+    dist: importlib_metadata.Distribution, active_path: Path
+) -> bool:
+    files = dist.files
+    if files is None:
+        return False
+
+    for file in files:
+        candidate = Path(str(dist.locate_file(file))).resolve(strict=False)
+        if candidate == active_path or active_path in candidate.parents:
+            return True
+
+    return False
+
+
+def _editable_root(dist: importlib_metadata.Distribution) -> Path | None:
+    direct_url = dist.read_text("direct_url.json")
+    if direct_url is None:
+        return None
+
+    with suppress(KeyError, TypeError, ValueError):
+        data = json.loads(direct_url)
+        if not data["dir_info"]["editable"]:
+            return None
+        url = urlparse(str(data["url"]))
+        if url.scheme == "file":
+            return Path(unquote(url.path)).resolve(strict=False)
+    return None
+
+
+def _distribution_details(
+    module_name: str, package_to_dists: Mapping[str, Sequence[str]]
+) -> str:
+    path = _module_path(module_name)
+    if path is None:
+        return FAILED_TO_DETECT
+
+    dist_names = package_to_dists.get(module_name)
+    if not dist_names:
+        return f"{FAILED_TO_DETECT} (path: {path})"
+
+    active_path = Path(path).resolve(strict=False)
+    for dist_name in sorted(dist_names):
+        with suppress(importlib_metadata.PackageNotFoundError):
+            dist = importlib_metadata.distribution(dist_name)
+            if _dist_owns_path(dist, active_path):
+                installer = (dist.read_text("INSTALLER") or "").strip()
+                installer_text = (
+                    f"installer: {installer}, " if installer else ""
+                )
+                return (
+                    f"{dist.name} {dist.version} "
+                    f"({installer_text}path: {path})"
+                )
+            root = _editable_root(dist)
+            if root is not None and (
+                active_path == root or root in active_path.parents
+            ):
+                return f"{dist.name} {dist.version} (editable, path: {path})"
+
+    return f"{FAILED_TO_DETECT} (path: {path})"
+
+
 @cache
 def _package_dists() -> PackageDists:
-    dist_info = {}
-    packages = ("cuda-version", "legate", "cupynumeric")
-    for pkg in packages:
-        dist_info[pkg] = f"{_try_conda(pkg)}"
-    return dist_info
+    package_to_dists = importlib_metadata.packages_distributions()
+    return {
+        pkg: _distribution_details(pkg, package_to_dists)
+        for pkg in PYTHON_PACKAGES
+    }
 
 
 def package_dists() -> PackageDists:
     """Get distribution information for packages in the legate ecosystem."""
     return _package_dists().copy()
+
+
+def _conda_package_detail(info: dict[str, Any]) -> str:
+    result = str(info["dist_name"])
+    if channel := info.get("channel"):
+        result += f" ({channel})"
+    return result
+
+
+def _conda_meta_packages(meta_dir: Path) -> dict[str, dict[str, Any]]:
+    packages = {}
+    for path in meta_dir.glob("*.json"):
+        with suppress(OSError, json.JSONDecodeError):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            name = data.get("name")
+            if name in CONDA_PACKAGES and "dist_name" in data:
+                packages[name] = data
+
+    return packages
+
+
+@cache
+def _conda_package_dists() -> CondaPackageDists:
+    # sys.prefix anchors this to the active Python environment. In a venv
+    # layered over conda, the Python package section remains authoritative and
+    # this section honestly reports that the venv has no conda metadata.
+    meta_dir = Path(sys.prefix) / "conda-meta"
+    result = {"prefix": sys.prefix}
+    if not meta_dir.is_dir():
+        result.update(dict.fromkeys(CONDA_PACKAGES, NO_CONDA_METADATA))
+        return result
+
+    conda_packages = _conda_meta_packages(meta_dir)
+    result.update(
+        {
+            pkg: (
+                _conda_package_detail(conda_packages[pkg])
+                if pkg in conda_packages
+                else FAILED_TO_DETECT
+            )
+            for pkg in CONDA_PACKAGES
+        }
+    )
+    return result
+
+
+def conda_package_dists() -> CondaPackageDists:
+    """Get conda package information from the active Python prefix."""
+    return _conda_package_dists().copy()
 
 
 MachineInfo = TypedDict(
@@ -259,6 +383,7 @@ Info = TypedDict(
         "System info": SystemInfo,
         "Package versions": PackageVersions,
         "Package details": PackageDists,
+        "Conda package details": CondaPackageDists,
         "Legate build configuration": BuildInfo,
     },
 )
@@ -290,6 +415,7 @@ def info(*, start_runtime: bool = True) -> Info:
         - ``"System info"``
         - ``"Package versions"``
         - ``"Package details"``
+        - ``"Conda package details"``
         - ``"Legate build configuration"``
 
         The ``Legate runtime configuration``, ``Realm runtime configuration``,
@@ -310,6 +436,7 @@ def info(*, start_runtime: bool = True) -> Info:
         "System info": system_info(),
         "Package versions": package_versions(),
         "Package details": package_dists(),
+        "Conda package details": conda_package_dists(),
         "Legate build configuration": build_info(),
     }
 
@@ -365,6 +492,17 @@ def print_package_details() -> None:  # noqa: D103
                 "Package details:",
                 *_nested_dict_pretty_print(package_dists(), 2),
             ]
+        )
+    )
+
+
+def print_conda_package_details() -> None:  # noqa: D103
+    details = conda_package_dists()
+    if all(details[pkg] == NO_CONDA_METADATA for pkg in CONDA_PACKAGES):
+        details = {"prefix": details["prefix"], "status": NO_CONDA_METADATA}
+    print(  # noqa: T201
+        "\n".join(
+            ["Conda package details:", *_nested_dict_pretty_print(details, 2)]
         )
     )
 
