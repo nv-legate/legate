@@ -161,7 +161,9 @@ class TestAutoTask:
         )
 
     @pytest.mark.parametrize(
-        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES, strict=True), ids=str
+        ("val", "dtype"),
+        tuple(zip(SCALAR_VALS, ARRAY_TYPES, strict=True)),
+        ids=str,
     )
     def test_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()

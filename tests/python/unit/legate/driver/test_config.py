@@ -367,7 +367,7 @@ class TestConfig:
     # ingest succeeds over a very wide range of command line combinations (one
     # option from most sub-configs)
     @pytest.mark.parametrize(
-        "args", powerset(("--gdb", "--profile", "--cprofile"))
+        "args", tuple(powerset(("--gdb", "--profile", "--cprofile")))
     )
     def test_user_opts(self, args: tuple[str, ...]) -> None:
         c = m.Config(["legate", *list(args), "foo.py", "-a", "1"])
