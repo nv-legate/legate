@@ -19,7 +19,9 @@ from .utils.data import ARRAY_TYPES, SCALAR_VALS
 
 class TestStoreOps:
     @pytest.mark.parametrize(
-        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
+        ("dtype", "val"),
+        tuple(zip(ARRAY_TYPES, SCALAR_VALS, strict=True)),
+        ids=str,
     )
     @pytest.mark.parametrize("create", [True, False])
     def test_issue_fill_scalar(
@@ -35,7 +37,9 @@ class TestStoreOps:
         assert (arr == val).all()
 
     @pytest.mark.parametrize(
-        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
+        ("dtype", "val"),
+        tuple(zip(ARRAY_TYPES, SCALAR_VALS, strict=True)),
+        ids=str,
     )
     def test_issue_fill_store(self, dtype: ty.Type, val: Any) -> None:
         runtime = get_legate_runtime()

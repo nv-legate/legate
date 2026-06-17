@@ -210,7 +210,9 @@ class TestPyTask:
         assert np.all(out_arr == val)
 
     @pytest.mark.parametrize(
-        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES, strict=True), ids=str
+        ("val", "dtype"),
+        tuple(zip(SCALAR_VALS, ARRAY_TYPES, strict=True)),
+        ids=str,
     )
     def test_legate_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -400,7 +402,9 @@ class TestPyTask:
 
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     @pytest.mark.parametrize(
-        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
+        ("dtype", "val"),
+        tuple(zip(ARRAY_TYPES, SCALAR_VALS, strict=True)),
+        ids=str,
     )
     def test_ndarray_scalar_arg(
         self, shape: tuple[int, ...], dtype: Type, val: Any
