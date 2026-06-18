@@ -22,10 +22,12 @@ system_config="${DEFAULT_SYSTEM_CONFIG}"
 cuda="${DEFAULT_CUDA}"
 threading="${DEFAULT_THREADING}"
 extra_linker_flags=""
+force_posix_realtime_timer="OFF"
+gasnet_configure_args=()
 
 # Help function to display usage
 gex_wrapper_help() {
-   echo "Usage: build-gex-wrapper [-h | --help] [-c conduit | --conduit conduit] [-s system_config | --system_config system_config] [-u ON/OFF | --use-cuda ON/OFF] [-f flags | --linker-flags \"<flags>\"]"
+   echo "Usage: build-gex-wrapper [OPTIONS]"
    echo "Build the Realm GASNet-EX wrapper in your conda environment."
    echo
    echo "Options:"
@@ -34,11 +36,15 @@ gex_wrapper_help() {
    echo "  -s, --system_config SYS   System-specific configuration (default '${DEFAULT_SYSTEM_CONFIG}')"
    echo "  -u, --use-cuda ON/OFF     Enable (ON) or disable (OFF) CUDA (default '${DEFAULT_CUDA}')"
    echo "  -f, --linker-flags STR    Extra linker flags to append (default '-lhugetlbfs' when conduit='ofi' and system='slingshot11')"
+   echo "      --force-posix-realtime-timer"
+   echo "                           Force GASNet to use POSIX realtime for TSC calibration"
    echo
 }
 
 # Parse command-line options (supporting both single-dash and double-dash)
-ARGS=$(getopt -o hc:s:u:f: -l help,conduit:,system_config:,use-cuda:,linker-flags: -- "$@") || {
+long_options="help,conduit:,system_config:,use-cuda:,linker-flags:"
+long_options+=",force-posix-realtime-timer"
+ARGS=$(getopt -o hc:s:u:f: -l "${long_options}" -- "$@") || {
   gex_wrapper_help
   exit 1
 }
@@ -69,6 +75,10 @@ while true; do
     -f | --linker-flags)
       extra_linker_flags="$2"
       shift 2
+      ;;
+    --force-posix-realtime-timer)
+      force_posix_realtime_timer="ON"
+      shift
       ;;
     --)
       shift
@@ -109,6 +119,7 @@ echo "  Installation directory: ${CONDA_PREFIX}/lib"
 echo "  Conduit: ${conduit}"
 echo "  System configuration: ${system_config}"
 echo "  CUDA enabled: ${cuda}"
+echo "  Force POSIX realtime timer: ${force_posix_realtime_timer}"
 
 # Proceed with the build process
 if [[ ! -d "${SCRIPT_DIR}" ]]; then
@@ -122,6 +133,7 @@ cd src/build || { echo "Error: Failed to navigate to build directory"; exit 1; }
 
 CMAKE_ARGS=(
   -DLEGION_SOURCE_DIR="${SCRIPT_DIR}"
+  -DREALM_SOURCE_DIR="${SCRIPT_DIR}"
   -DCMAKE_INSTALL_PREFIX="${SCRIPT_DIR}"
   -DGASNet_CONDUIT="${conduit}"
   -DGASNet_SYSTEM="${system_config}"
@@ -130,7 +142,39 @@ CMAKE_ARGS=(
 )
 
 if [[ "${cuda}" == "ON" ]]; then
-  CMAKE_ARGS+=(-DGASNet_CONFIGURE_ARGS="--enable-kind-cuda-uva")
+  # CI installs the minimal CUDA runtime/driver dev packages, not cuda-nvcc or
+  # cuda-toolkit. Those packages provide headers/libs under targets/*-linux but
+  # no activation hook, so fill GASNet configure vars while preserving user
+  # overrides.
+  cuda_target=""
+  if [[ -d "${CONDA_PREFIX}/targets" ]]; then
+    for target in "${CONDA_PREFIX}"/targets/*-linux; do
+      if [[ -f "${target}/include/cuda.h" ]]; then
+        cuda_target="${target}"
+        break
+      fi
+    done
+  fi
+  if [[ -n "${cuda_target}" ]]; then
+    export CUDA_HOME="${CUDA_HOME:-${cuda_target}}"
+    export CUDA_CFLAGS="${CUDA_CFLAGS:--I${cuda_target}/include}"
+    if [[ -d "${cuda_target}/lib/stubs" ]]; then
+      export CUDA_LDFLAGS="${CUDA_LDFLAGS:--L${cuda_target}/lib/stubs}"
+    else
+      export CUDA_LDFLAGS="${CUDA_LDFLAGS:--L${cuda_target}/lib}"
+    fi
+    export CUDA_LIBS="${CUDA_LIBS:--lcuda}"
+  fi
+
+  gasnet_configure_args+=("--enable-kind-cuda-uva")
+fi
+
+if [[ "${force_posix_realtime_timer}" == "ON" ]]; then
+  gasnet_configure_args+=("--enable-force-posix-realtime")
+fi
+
+if [[ "${#gasnet_configure_args[@]}" -gt 0 ]]; then
+  CMAKE_ARGS+=(-DGASNet_CONFIGURE_ARGS="${gasnet_configure_args[*]}")
 fi
 
 # Whole-archive embed of the conduit archive into the wrapper DSO.
@@ -147,7 +191,14 @@ fi
 
 CMAKE_ARGS+=(-DCMAKE_SHARED_LINKER_FLAGS="${LINK_FLAGS[*]}")
 
-cmake "${CMAKE_ARGS[@]}" ..
+if ! cmake "${CMAKE_ARGS[@]}" ..; then
+  gasnet_build_log="${SCRIPT_DIR}/src/build/embed-gasnet/build.log"
+  if [[ -f "${gasnet_build_log}" ]]; then
+    echo "GASNet build log:" >&2
+    cat "${gasnet_build_log}" >&2
+  fi
+  exit 1
+fi
 cmake --build .
 cmake --install .
 

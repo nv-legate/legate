@@ -22,6 +22,25 @@ else
   cp -rv "${SRC_DIR}/realm/src/realm/gasnetex/gasnetex_wrapper"/* "${PREFIX}/gex-wrapper/src"
 fi
 
+cmakelists="${PREFIX}/gex-wrapper/src/CMakeLists.txt"
+if grep -q "find_package(GASNet REQUIRED)" "${cmakelists}" && \
+   ! grep -q "include(FetchAndBuildGASNet)" "${cmakelists}"; then
+  tmp_cmakelists="$(mktemp)"
+  awk '
+    /find_package\(GASNet REQUIRED\)/ {
+      print "find_package(GASNet)"
+      print "if(NOT GASNet_FOUND)"
+      print "  set(GASNet_BUILD_SHARED TRUE)"
+      print "  include(FetchAndBuildGASNet)"
+      print "  find_package(GASNet REQUIRED)"
+      print "endif()"
+      next
+    }
+    { print }
+  ' "${cmakelists}" > "${tmp_cmakelists}"
+  mv "${tmp_cmakelists}" "${cmakelists}"
+fi
+
 # Copy the [de]activate scripts to ${PREFIX}/etc/conda/[de]activate.d.
 # This will allow them to be run on environment activation.
 for CHANGE in "activate" "deactivate"
