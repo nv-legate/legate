@@ -12,6 +12,7 @@
 #include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/reduction_request.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
@@ -207,6 +208,54 @@ void show_progress(const Strategy& strategy,
                        << "], pt = " << *task_index;
 }
 
+class DataRequests {
+ public:
+  void register_copy_in(CopyRequest&& copy_in);
+  void register_reduction(ReductionRequest&& reduction);
+
+  void reserve_copy_ins(std::size_t size);
+  void reserve_reduction_requests(std::size_t size);
+
+  void perform_copy_ins(VariantCode variant_code) const;
+  void perform_reductions(VariantCode variant_code) const;
+
+  bool empty() const;
+
+ private:
+  SmallVector<CopyRequest> copy_ins_{};
+  SmallVector<ReductionRequest> reductions_{};
+};
+
+void DataRequests::register_copy_in(CopyRequest&& copy_in)
+{
+  copy_ins_.emplace_back(std::move(copy_in));
+}
+
+void DataRequests::register_reduction(ReductionRequest&& reduction)
+{
+  reductions_.emplace_back(std::move(reduction));
+}
+
+void DataRequests::reserve_copy_ins(std::size_t size) { copy_ins_.reserve(size); }
+
+void DataRequests::reserve_reduction_requests(std::size_t size) { reductions_.reserve(size); }
+
+void DataRequests::perform_copy_ins(VariantCode variant_code) const
+{
+  for (auto&& copy_in : copy_ins_) {
+    copy_in.perform(variant_code);
+  }
+}
+
+void DataRequests::perform_reductions(VariantCode variant_code) const
+{
+  for (auto&& reduction : reductions_) {
+    reduction.perform(variant_code);
+  }
+}
+
+bool DataRequests::empty() const { return copy_ins_.empty() && reductions_.empty(); }
+
 template <bool WRITE>
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
   Span<const TaskStoreArg> store_args,
@@ -214,15 +263,25 @@ template <bool WRITE>
   const ParallelPolicy& parallel_policy,
   const Strategy& strategy,
   const Domain& launch_domain,
-  const DomainPoint& task_index)
+  const DomainPoint& task_index,
+  DataRequests* data_requests)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
 
   result.reserve(store_args.size());
+  data_requests->reserve_copy_ins(store_args.size());
   for (auto&& [_, store, variable] : store_args) {
-    auto&& partition = strategy[*variable];
-    result.emplace_back(store->map(
-      partition, strategy.find_store_projection(*variable), launch_domain, task_index, machine));
+    auto&& partition                       = strategy[*variable];
+    auto&& [physical_store, maybe_copy_in] = store->map(partition,
+                                                        strategy.find_store_projection(*variable),
+                                                        launch_domain,
+                                                        task_index,
+                                                        /*is_read=*/!WRITE,
+                                                        machine);
+    result.emplace_back(physical_store);
+    if (maybe_copy_in) {
+      data_requests->register_copy_in(std::move(*maybe_copy_in));
+    }
     if constexpr (WRITE) {
       // TODO(wonchanl): write accesses with slices are not supported yet
       LEGATE_CHECK(!store->transformed());
@@ -232,20 +291,19 @@ template <bool WRITE>
   return result;
 }
 
-[[nodiscard]] std::pair<SmallVector<InternalSharedPtr<PhysicalStore>>,
-                        SmallVector<ReductionRequest>>
-map_reduction_stores(Span<const TaskStoreArg> store_args,
-                     Span<const ReductionOpKind> reduction_ops,
-                     const legate::mapping::detail::Machine& machine,
-                     const Strategy& strategy,
-                     const Domain& launch_domain,
-                     const DomainPoint& task_index)
+[[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_reduction_stores(
+  Span<const TaskStoreArg> store_args,
+  Span<const ReductionOpKind> reduction_ops,
+  const legate::mapping::detail::Machine& machine,
+  const Strategy& strategy,
+  const Domain& launch_domain,
+  const DomainPoint& task_index,
+  DataRequests* data_requests)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
-  SmallVector<ReductionRequest> reduction_requests;
 
   result.reserve(store_args.size());
-  reduction_requests.reserve(store_args.size());
+  data_requests->reserve_reduction_requests(store_args.size());
   for (auto&& [store_arg, op_kind] : zip_equal(store_args, reduction_ops)) {
     auto&& [_, store, variable] = store_arg;
     auto&& partition            = strategy[*variable];
@@ -258,42 +316,54 @@ map_reduction_stores(Span<const TaskStoreArg> store_args,
                            machine);
 
     result.emplace_back(std::move(physical_store));
-    reduction_requests.emplace_back(std::move(reduction_request));
+    data_requests->register_reduction(std::move(reduction_request));
   }
-  return {result, reduction_requests};
+  return result;
 }
 
-[[nodiscard]] std::pair<std::optional<TaskContext>, SmallVector<ReductionRequest>>
-make_task_context(const TaskBase* task, VariantCode variant_code, const Strategy& strategy)
+[[nodiscard]] std::optional<TaskContext> make_task_context(const TaskBase* task,
+                                                           VariantCode variant_code,
+                                                           const Strategy& strategy,
+                                                           DataRequests* data_requests)
 {
   auto launch_domain          = strategy.launch_domain();
   const auto maybe_task_index = strategy.task_index();
 
   if (!maybe_task_index.has_value()) {
-    return {std::nullopt, {}};
+    return std::nullopt;
   }
 
   auto&& task_index = *maybe_task_index;
-  auto inputs       = map_stores<false>(
-    task->inputs(), task->machine(), task->parallel_policy(), strategy, launch_domain, task_index);
-  auto outputs = map_stores<true>(
-    task->outputs(), task->machine(), task->parallel_policy(), strategy, launch_domain, task_index);
-  auto&& [reductions, requests] = map_reduction_stores(task->reductions(),
-                                                       task->reduction_ops(),
-                                                       task->machine(),
-                                                       strategy,
-                                                       launch_domain,
-                                                       task_index);
+  auto inputs       = map_stores<false>(task->inputs(),
+                                        task->machine(),
+                                        task->parallel_policy(),
+                                        strategy,
+                                        launch_domain,
+                                        task_index,
+                                        data_requests);
+  auto outputs      = map_stores<true>(task->outputs(),
+                                       task->machine(),
+                                       task->parallel_policy(),
+                                       strategy,
+                                       launch_domain,
+                                       task_index,
+                                       data_requests);
+  auto&& reductions = map_reduction_stores(task->reductions(),
+                                           task->reduction_ops(),
+                                           task->machine(),
+                                           strategy,
+                                           launch_domain,
+                                           task_index,
+                                           data_requests);
 
-  return {std::make_optional<TaskContext>(variant_code,
-                                          launch_domain,
-                                          task_index,
-                                          task,
-                                          std::move(inputs),
-                                          std::move(outputs),
-                                          std::move(reductions),
-                                          SmallVector<InternalSharedPtr<Scalar>>{task->scalars()}),
-          requests};
+  return std::make_optional<TaskContext>(variant_code,
+                                         launch_domain,
+                                         task_index,
+                                         task,
+                                         std::move(inputs),
+                                         std::move(outputs),
+                                         std::move(reductions),
+                                         SmallVector<InternalSharedPtr<Scalar>>{task->scalars()});
 }
 
 }  // namespace
@@ -305,18 +375,22 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
 
   show_progress(*p_strategy, get_task_name(), variant_code, provenance().as_string_view());
 
-  auto&& [maybe_ctx, reduction_requests] = make_task_context(this, variant_code, *p_strategy);
+  DataRequests data_requests{};
 
-  if (!maybe_ctx.has_value()) {
+  auto maybe_ctx = make_task_context(this, variant_code, *p_strategy, &data_requests);
+
+  if (!maybe_ctx.has_value() && data_requests.empty()) {
+    // TODO(wonchanl): Ranks cannot exit early even when no tasks are assigned to them because they
+    // still need to participat in the transfers
     return;
   }
 
   auto execute_task = [&] {
+    data_requests.perform_copy_ins(variant_code);
+
     variant_info_().body(legate::TaskContext{&*maybe_ctx});
 
-    for (auto&& reduction_request : reduction_requests) {
-      reduction_request.perform(variant_code);
-    }
+    data_requests.perform_reductions(variant_code);
   };
 
   if (variant_code != VariantCode::GPU) {

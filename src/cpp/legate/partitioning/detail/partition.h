@@ -97,6 +97,8 @@ class Partition {
    */
   [[nodiscard]] virtual Domain launch_domain() const = 0;
 
+  [[nodiscard]] virtual DomainPoint compute_color(std::uint64_t device_id) const = 0;
+
   [[nodiscard]] virtual Domain shard(const Domain& domain, const DomainPoint& color) const = 0;
 
   [[nodiscard]] virtual bool subsumes(const Domain& domain,

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/data/detail/inline_storage.h>
+#include <legate/partitioning/detail/partition.h>
 #include <legate/type/detail/types.h>
 #include <legate/type/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -16,25 +17,31 @@ namespace legate::detail {
 
 // TODO(wonchanl): Only support 1d reductions on unpartitioned stores, should be extended to other
 // cases.
-class ReductionRequest {
+class CopyRequest {
  public:
-  ReductionRequest(InternalSharedPtr<InlineStorage> source,
-                   InternalSharedPtr<InlineStorage> target,
-                   InternalSharedPtr<Type> type,
-                   ReductionOpKind op_kind);
+  CopyRequest(InternalSharedPtr<InlineStorage> source,
+              InternalSharedPtr<InlineStorage> target,
+              InternalSharedPtr<Partition> source_partition,
+              InternalSharedPtr<Partition> target_partition,
+              const Domain& sub_domain,
+              std::uint32_t field_size);
   void perform(VariantCode variant_code) const;
 
-  ReductionRequest(const ReductionRequest&)            = default;
-  ReductionRequest& operator=(const ReductionRequest&) = default;
+  CopyRequest(const CopyRequest&)            = default;
+  CopyRequest& operator=(const CopyRequest&) = default;
 
-  ReductionRequest(ReductionRequest&&) noexcept            = default;
-  ReductionRequest& operator=(ReductionRequest&&) noexcept = default;
+  CopyRequest(CopyRequest&&) noexcept            = default;
+  CopyRequest& operator=(CopyRequest&&) noexcept = default;
 
  private:
+  void cpu_all_gather_() const;
+
   InternalSharedPtr<InlineStorage> source_{};
   InternalSharedPtr<InlineStorage> target_{};
-  InternalSharedPtr<Type> type_{};
-  ReductionOpKind op_kind_{};
+  InternalSharedPtr<Partition> source_partition_{};
+  InternalSharedPtr<Partition> target_partition_{};
+  Domain sub_domain_{};
+  std::uint32_t field_size_{};
 };
 
 }  // namespace legate::detail

@@ -24,4 +24,8 @@ inline Span<const std::int64_t> Tiling::offsets() const { return offsets_; }
 
 inline Span<const std::uint64_t> Tiling::strides() const { return strides_; }
 
+inline const DomainPoint& Tiling::tile_shape_dp() const { return tile_shape_dp_; }
+
+inline const DomainPoint& Tiling::color_shape_dp() const { return color_shape_dp_; }
+
 }  // namespace legate::detail

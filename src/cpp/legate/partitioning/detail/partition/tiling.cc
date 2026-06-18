@@ -11,6 +11,7 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/array_algorithms.h>
+#include <legate/utilities/detail/linearize.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
@@ -40,7 +41,8 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
     color_shape_{std::move(color_shape)},
     offsets_{std::move(offsets)},
     strides_{tile_shape_},
-    tile_shape_dp_{to_domain_point(tile_shape_)}
+    tile_shape_dp_{to_domain_point(tile_shape_)},
+    color_shape_dp_{to_domain_point(color_shape_)}
 {
   if (offsets_.empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
@@ -160,6 +162,15 @@ InternalSharedPtr<Partition> Tiling::invert(
     transform->invert_color_shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape()}),
     transform->invert_point(SmallVector<std::int64_t, LEGATE_MAX_DIM>{offsets()}),
     transform->invert_extents(strides_));
+}
+
+DomainPoint Tiling::compute_color(std::uint64_t device_id) const
+{
+  // TODO(wonchanl): Add device mesh
+  DomainPoint lo{};
+
+  lo.dim = color_shape_dp_.dim;
+  return delinearize(lo, color_shape_dp_, device_id);
 }
 
 Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const

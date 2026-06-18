@@ -9,6 +9,7 @@
 #include <legate_defines.h>
 
 #include <legate/data/detail/buffer.h>
+#include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/external_allocation.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/external_allocation.h>
@@ -104,12 +105,13 @@ bool Storage::is_mapped() const
 
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
-std::pair<InternalSharedPtr<InlineStorage>, Domain>
+std::tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<CopyRequest>>
 Storage::map(  // NOLINT(readability-make-member-function-const)
   const Domain& domain,
   const InternalSharedPtr<Partition>& partition,
   const DomainPoint& color,
-  legate::mapping::StoreTarget target)
+  legate::mapping::StoreTarget target,
+  bool is_read)
 {
   LEGATE_CHECK(!unbound());
 
@@ -136,19 +138,28 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     LEGATE_ASSERT(storage_data_->domain().intersection(sub_domain) == sub_domain ||
                   sub_domain.get_volume() == 0);
 
-    return {storage_data_, sub_domain};
+    return {storage_data_, sub_domain, std::nullopt};
   }
+
+  // LEGATE_CHECK(partition->is_complete_for(domain));
 
   // Otherwise, we need to allocate a new storage
   auto data = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
 
-  // TODO(wonchanl): Need to handle copy-ins and -outs.
-  LEGATE_CHECK(!storage_data_);
-  // LEGATE_CHECK(partition->is_complete_for(domain));
+  if (!storage_data_) {
+    storage_data_ = data;
 
-  storage_data_ = data;
+    return {data, sub_domain, std::nullopt};
+  }
 
-  return {data, sub_domain};
+  // TODO(wonchanl): Need to handle copy-outs
+  LEGATE_CHECK(is_read);
+  LEGATE_ASSERT(key_partition_);
+
+  return {data,
+          sub_domain,
+          std::make_optional<CopyRequest>(
+            storage_data_, data, *key_partition_, partition, sub_domain, field_size_)};
 }
 
 std::tuple<InternalSharedPtr<InlineStorage>, InternalSharedPtr<InlineStorage>, Domain>

@@ -129,6 +129,9 @@ class Tiling final : public Partition {
    */
   [[nodiscard]] Span<const std::uint64_t> tile_shape() const;
 
+  [[nodiscard]] const DomainPoint& tile_shape_dp() const;
+  [[nodiscard]] const DomainPoint& color_shape_dp() const;
+
   /**
    * @copydoc Partition::convert()
    */
@@ -142,6 +145,8 @@ class Tiling final : public Partition {
   [[nodiscard]] InternalSharedPtr<Partition> invert(
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const override;
+
+  [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
 
   [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
 
@@ -178,6 +183,7 @@ class Tiling final : public Partition {
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
   DomainPoint tile_shape_dp_{};
+  DomainPoint color_shape_dp_{};
   DomainPoint offsets_dp_{};
 };
 

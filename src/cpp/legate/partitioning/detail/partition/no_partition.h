@@ -78,6 +78,8 @@ class NoPartition final : public Partition {
    */
   [[nodiscard]] Domain launch_domain() const override;
 
+  [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
+
   [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
 
   [[nodiscard]] bool subsumes(const Domain& domain,

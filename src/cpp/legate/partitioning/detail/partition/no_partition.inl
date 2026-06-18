@@ -16,6 +16,8 @@ inline bool NoPartition::is_invertible() const { return true; }
 
 inline bool NoPartition::has_color_shape() const { return false; }
 
+inline DomainPoint NoPartition::compute_color(std::uint64_t) const { return {}; }
+
 inline Domain NoPartition::shard(const Domain& domain, const DomainPoint&) const { return domain; }
 
 inline bool NoPartition::subsumes(const Domain&, const InternalSharedPtr<Partition>&) const

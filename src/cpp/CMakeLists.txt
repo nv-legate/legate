@@ -295,6 +295,7 @@ target_sources(
     legate/data/detail/allocation_cache.cc
     legate/data/detail/attachment.cc
     legate/data/detail/copy_request.cc
+    legate/data/detail/copy_util.cc
     legate/data/detail/external_allocation.cc
     legate/data/detail/logical_store.cc
     legate/data/detail/logical_store_partition.cc
@@ -312,6 +313,7 @@ target_sources(
     legate/data/detail/user_storage_tracker.cc
     legate/data/detail/buffer.cc
     legate/data/detail/inline_storage.cc
+    legate/data/detail/reduction_request.cc
     legate/mapping/machine.cc
     legate/mapping/mapping.cc
     legate/mapping/proxy_store_mapping.cc

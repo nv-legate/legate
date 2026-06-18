@@ -10,14 +10,18 @@
 
 namespace legate::detail {
 
-inline ReductionRequest::ReductionRequest(InternalSharedPtr<InlineStorage> source,
-                                          InternalSharedPtr<InlineStorage> target,
-                                          InternalSharedPtr<Type> type,
-                                          ReductionOpKind op_kind)
+inline CopyRequest::CopyRequest(InternalSharedPtr<InlineStorage> source,
+                                InternalSharedPtr<InlineStorage> target,
+                                InternalSharedPtr<Partition> source_partition,
+                                InternalSharedPtr<Partition> target_partition,
+                                const Domain& sub_domain,
+                                std::uint32_t field_size)
   : source_{std::move(source)},
     target_{std::move(target)},
-    type_{std::move(type)},
-    op_kind_{op_kind}
+    source_partition_{std::move(source_partition)},
+    target_partition_{std::move(target_partition)},
+    sub_domain_{sub_domain},
+    field_size_{field_size}
 {
 }
 

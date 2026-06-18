@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/inline_storage.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -110,11 +111,12 @@ class Storage {
 
   void set_bound(bool bound);
 
-  [[nodiscard]] std::pair<InternalSharedPtr<InlineStorage>, Domain> map(
-    const Domain& domain,
-    const InternalSharedPtr<Partition>& partition,
-    const DomainPoint& color,
-    legate::mapping::StoreTarget target);
+  [[nodiscard]] std::tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<CopyRequest>>
+  map(const Domain& domain,
+      const InternalSharedPtr<Partition>& partition,
+      const DomainPoint& color,
+      legate::mapping::StoreTarget target,
+      bool is_read);
   [[nodiscard]] std::
     tuple<InternalSharedPtr<InlineStorage>, InternalSharedPtr<InlineStorage>, Domain>
     map_reduction(const Domain& domain,
