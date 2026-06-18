@@ -47,7 +47,13 @@ prepare_gex_wrappers() {
       "Building Realm GASNet-EX wrapper for GEX tests (conduit=smp, system=none, use-cuda=${gex_cuda})..."
     # CI exercises the smp conduit; deployments build their site-specific
     # conduit. Empty system_config disables the script's slingshot11 default.
-    "${gex_wrapper_script}" --conduit smp --system_config "" --use-cuda "${gex_cuda}"
+    # GitHub L4 runners can report >5 us wallclock resolution, which makes
+    # GASNet's default TSC calibration abort before tests start (#3825).
+    "${gex_wrapper_script}" \
+      --conduit smp \
+      --system_config "" \
+      --use-cuda "${gex_cuda}" \
+      --force-posix-realtime-timer
 
     # Re-activate so wrapper activation scripts export wrapper library paths.
     reactivate_gex_wrapper_env
