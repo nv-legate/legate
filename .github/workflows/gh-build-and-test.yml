@@ -47,16 +47,20 @@ on:
       cuda-version:
         required: false
         type: string
+      ci-verbose:
+        required: false
+        type: boolean
+        default: false
 
 defaults:
   run:
-    shell: bash --noprofile --norc -xeuo pipefail {0}
+    shell: bash --noprofile --norc -euo pipefail {0}
 
 jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.50
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
@@ -66,7 +70,7 @@ jobs:
       build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.49"
+      legate-gh-ci-tag: "v1.50"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -74,6 +78,7 @@ jobs:
       setup-python-proxy-cache: false
       timeout: 240
       cuda-version: ${{ inputs.cuda-version }}
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
   setup-test:
@@ -88,7 +93,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - id: set-matrix
-        shell: bash --noprofile --norc -xeuo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail {0}
         run: |
           MATRIX_JSON='{"include": ['
           RUNNERS=(
@@ -142,7 +147,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.50
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
@@ -154,7 +159,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.49"
+      legate-gh-ci-tag: "v1.50"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -163,6 +168,7 @@ jobs:
       supplemental-channel-artifact: ${{ inputs.supplemental-channel-artifact }}
       timeout: 90
       cuda-version: ${{ inputs.cuda-version }}
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
 
@@ -178,7 +184,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.50
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
@@ -190,7 +196,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.49"
+      legate-gh-ci-tag: "v1.50"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -199,6 +205,7 @@ jobs:
       supplemental-channel-artifact: ${{ inputs.supplemental-channel-artifact }}
       timeout: 90
       cuda-version: ${{ inputs.cuda-version }}
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
   upload:
@@ -209,7 +216,7 @@ jobs:
     if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.build-has-tests == false }}
     name: Upload package to Server
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.50
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
@@ -218,7 +225,7 @@ jobs:
       name: Upload to Anaconda
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.49"
+      legate-gh-ci-tag: "v1.50"
       build-mode: ${{ inputs.build-mode }}
       network: ${{ inputs.network }}
       upload-action: 'upload-package-Anaconda'
@@ -229,4 +236,5 @@ jobs:
       default-branch: ${{ inputs.default-branch }}
       timeout: 15
       cuda-version: ${{ inputs.cuda-version }}
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit

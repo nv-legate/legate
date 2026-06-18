@@ -139,10 +139,12 @@ jobs:
           path: artifacts
 
       - name: Untar build tree
-        run: tar -zxvf artifacts/build.tgz
+        run: tar -zxf artifacts/build.tgz
 
       - name: Inspect extracted files
-        run: ls -lhR build
+        run: |
+          du -sh build
+          ls -lh build
 
       - name: Install dependencies
         env:
@@ -161,11 +163,14 @@ jobs:
             )
           fi
 
-          rapids-retry dnf install -y "${packages[@]}"
+          rapids-retry dnf -q install -y "${packages[@]}"
 
           # Bootstrap CMake, rapids-pip-retry by default calls 'python -m pip', but
           # python3.11 above installs 'python3', so have to override the default command.
-          RAPIDS_PIP_EXE='python3 -m pip' rapids-pip-retry install cmake ninja
+          RAPIDS_PIP_EXE='python3 -m pip' rapids-pip-retry install \
+            --disable-pip-version-check \
+            --quiet \
+            cmake ninja
 
       - name: Run C++ unit tests
         run: ${{ inputs.script }}

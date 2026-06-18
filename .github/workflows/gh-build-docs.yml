@@ -25,6 +25,10 @@ on:
       cuda-version:
         type: string
         required: false
+      ci-verbose:
+        required: false
+        type: boolean
+        default: false
     secrets:
       NV_LEGATE_INTER_REPOS_ACCESS:
         required: true
@@ -33,7 +37,7 @@ jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.50
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
@@ -43,7 +47,7 @@ jobs:
       build-type: docs
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.48"
+      legate-gh-ci-tag: "v1.50"
       build-mode: ${{ inputs.build-mode }}
       network: "ucx"
       python-version: "3.14"
@@ -51,6 +55,7 @@ jobs:
       timeout: 60
       cuda-version: ${{ inputs.cuda-version }}
       docker-image: "condaforge/miniforge3:25.3.1-0"
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
   upload-docs-to-gh-pages:
@@ -60,7 +65,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Dump build-docs output variables
-        shell: bash --noprofile --norc -xeuo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail {0}
         run: |
           echo "${{ needs.build-docs.outputs.artifact-name }}"
           echo "${{ needs.build-docs.outputs.artifacts-dir }}"
@@ -71,14 +76,28 @@ jobs:
           name: ${{ needs.build-docs.outputs.artifact-name }}
           path: ${{ needs.build-docs.outputs.artifacts-dir }}
 
-      - name: Display structure of downloaded artifacts
-        shell: bash --noprofile --norc -xeuo pipefail {0}
+      - name: Summarize downloaded artifacts
+        shell: bash --noprofile --norc -euo pipefail {0}
         run: |
           pwd
-          ls -lahR ${{ needs.build-docs.outputs.artifacts-dir }}
+          files=$(mktemp)
+          find "${{ needs.build-docs.outputs.artifacts-dir }}" -type f | sort > "${files}"
+          file_count=$(wc -l < "${files}" | tr -d '[:space:]')
+          echo "Files: ${file_count}"
+          # This upload job does not check out legate-gh-ci, so use the
+          # workflow input directly instead of LEGATE_CI_VERBOSE.
+          if [[ "${{ inputs.ci-verbose }}" == "true" ]]; then
+            cat "${files}"
+          else
+            sed -n '1,200p' "${files}"
+            if (( file_count > 200 )); then
+              echo "... $((file_count - 200)) more files hidden (run with ci-verbose=true for full list)"
+            fi
+          fi
+          rm -f "${files}"
 
       - name: Find index.html's parent folder
-        shell: bash --noprofile --norc -xeuo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail {0}
         id: find_docs_dir
         run: |
           FILE_PATH="$(

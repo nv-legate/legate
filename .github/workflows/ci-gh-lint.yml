@@ -20,6 +20,13 @@ on:
       - "*branch-*"
       - "main"
   merge_group:
+  workflow_dispatch:
+    inputs:
+      ci-verbose:
+        description: 'Print full CI diagnostics'
+        required: false
+        type: boolean
+        default: false
 
 defaults:
   run:
@@ -71,6 +78,7 @@ jobs:
   tidy:
     env:
       LEGATE_ARCH: arch-ci-lint
+      LEGATE_CI_VERBOSE: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose && '1' || '0' }}
       LEGATE_DIR: ${{ github.workspace }}
     runs-on: 'linux-amd64-cpu16'
     timeout-minutes: 90
@@ -151,10 +159,12 @@ jobs:
             pybind11
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: List Conda packages and info
+      - name: Conda package diagnostics
         run: |
-          conda info
-          conda list
+          if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+            conda info
+            conda list
+          fi
 
       - name: List clang-tidy version
         run: |

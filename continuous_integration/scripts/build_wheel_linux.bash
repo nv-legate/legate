@@ -16,7 +16,7 @@ export CUDA_MAJOR_VER=${CUDA_MAJOR_VER:=13}
 
 if [[ "${CI:-false}" == "true" ]]; then
   rapids-logger "Installing extra system packages"
-  rapids-retry dnf install -y gcc-toolset-14-libatomic-devel
+  rapids-retry dnf -q install -y gcc-toolset-14-libatomic-devel
   # Enable gcc-toolset-11 environment
   source /opt/rh/gcc-toolset-14/enable
   # Verify compiler version
@@ -25,6 +25,11 @@ if [[ "${CI:-false}" == "true" ]]; then
 fi
 
 rapids-logger "PATH: ${PATH}"
+
+pip_verbose_flag=()
+if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+  pip_verbose_flag=(-v)
+fi
 
 if [[ "${LEGATE_DIR:-}" == "" ]]; then
   # If we are running in an action then GITHUB_WORKSPACE is set.
@@ -46,7 +51,10 @@ package_name="legate${package_suffix}"
 cd "${LEGATE_DIR}"
 
 rapids-logger "Installing build requirements"
-rapids-pip-retry install -v --prefer-binary \
+rapids-pip-retry install \
+  --disable-pip-version-check \
+  "${pip_verbose_flag[@]}" \
+  --prefer-binary \
   -r "continuous_integration/requirements-build-common.txt" \
   -r "continuous_integration/requirements-build${package_suffix}.txt"
 
@@ -92,7 +100,7 @@ sccache --zero-stats
 # build with '--no-build-isolation', for better sccache hit rate
 python -m pip wheel \
   -w "${LEGATE_DIR}/dist" \
-  -v \
+  "${pip_verbose_flag[@]}" \
   --no-build-isolation \
   --no-deps \
   --disable-pip-version-check \

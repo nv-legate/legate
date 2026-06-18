@@ -19,6 +19,12 @@ on:
   #   # Runs at 08:00 UTC every day
   #   - cron: '0 8 * * *'
   workflow_dispatch:
+    inputs:
+      ci-verbose:
+        description: 'Print full CI diagnostics and uncapped artifact summaries'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-and-test:
@@ -34,4 +40,5 @@ jobs:
       network: ucx
       refname: ${{ github.ref_name }}
       default-branch: ${{ github.event.repository.default_branch }}
+      ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit

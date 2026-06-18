@@ -12,8 +12,12 @@ LEGATE_CONFIG="--sysmem 4000 --fbmem 4000 --gpus 1 --auto-config 0"
 export LEGATE_CONFIG
 
 # Exclude the tests that did not run cleanly in the same process.
-ctest \
-  --test-dir build/cpp/tests \
-  -E "tests_non_reentrant_with_runtime|tests_non_reentrant_wo_runtime" \
-  --output-on-failure \
-  --verbose
+ctest_args=(
+  --test-dir build/cpp/tests
+  -E "tests_non_reentrant_with_runtime|tests_non_reentrant_wo_runtime"
+  --output-on-failure
+)
+if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+  ctest_args+=(--verbose)
+fi
+ctest "${ctest_args[@]}"

@@ -36,12 +36,16 @@ on:
       cuda-version:
         required: false
         type: string
+      ci-verbose:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.50
     with:
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
@@ -51,13 +55,14 @@ jobs:
       build-type: profiler
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.48"
+      legate-gh-ci-tag: "v1.50"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
       timeout: 25
       cuda-version: ${{ inputs.cuda-version }}
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
   upload-profiler:
@@ -66,14 +71,14 @@ jobs:
     needs: build-profiler
     name: Upload Legate Profiler
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.50
     with:
       build-mode: release
       build-type: profiler
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ inputs.ref-sha }}
       build-has-tests: false
-      legate-gh-ci-tag: "v1.48"
+      legate-gh-ci-tag: "v1.50"
       name: Upload package to Anaconda
       network: ${{ inputs.network }}
       pkgSubString: "legate-profiler"
@@ -85,12 +90,13 @@ jobs:
       refname: ${{ inputs.refname }}
       default-branch: ${{ inputs.default-branch }}
       timeout: 15
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
   build-legate:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.50
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
@@ -100,13 +106,14 @@ jobs:
       build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.48"
+      legate-gh-ci-tag: "v1.50"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
       timeout: 240
       cuda-version: ${{ inputs.cuda-version }}
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
   setup-profiler-test:
@@ -122,7 +129,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - id: set-matrix
-        shell: bash --noprofile --norc -xeuo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail {0}
         run: |
           MATRIX_JSON='{"include": ['
           RUNNERS=(
@@ -182,7 +189,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.50
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
@@ -194,7 +201,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.48"
+      legate-gh-ci-tag: "v1.50"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -203,6 +210,7 @@ jobs:
       profiler-artifact-name: ${{ needs.build-profiler.outputs.artifact-name }}
       output-build-type: "profiler-output-${{ matrix.runner.device }}"
       timeout: 90
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
 
 
@@ -219,7 +227,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.50
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
@@ -231,7 +239,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.48"
+      legate-gh-ci-tag: "v1.50"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -240,4 +248,5 @@ jobs:
       profiler-artifact-name: ${{ needs.build-profiler.outputs.artifact-name }}
       output-build-type: "profiler-output-${{ matrix.runner.device }}"
       timeout: 90
+      ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit

@@ -45,19 +45,28 @@ fi
 
 export CMAKE_PRESET=${CMAKE_PRESET:-ci_release_cuda_tests}
 
-run_command "Environment" env
+if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+  run_command "Environment" env
+fi
 # Need to cd into src, since that contains CMakePresets.json, because cmake requires it to
 # exist at cwd. There is currently no option to tell it to source the presets from another
 # directory.
 cd "${LEGATE_DIR}/src"
+
+cmake_log_args=()
+if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+  cmake_log_args+=(--log-context --log-level=DEBUG)
+fi
 run_command "CMake Configure" cmake \
             -G Ninja \
             -B "${LEGATE_DIR}/build" \
             -S . \
             --preset "${CMAKE_PRESET}" \
-            --log-context \
-            --log-level=DEBUG
+            "${cmake_log_args[@]}"
 
+cmake_build_args=(--build "${LEGATE_DIR}/build")
+if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+  cmake_build_args+=(-v)
+fi
 run_command "CMake Build" cmake \
-            --build "${LEGATE_DIR}/build" \
-            -v
+            "${cmake_build_args[@]}"

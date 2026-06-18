@@ -157,17 +157,11 @@ copy_release_artifacts() {
   rapids-logger Copying release artifacts
   cp -r /tmp/out          "${ARTIFACTS_DIR}"
   cp -r /tmp/conda-build  "${ARTIFACTS_DIR}"
-  echo "::group::Directory structure of the generated artifacts"
-  ls -lahR "${ARTIFACTS_DIR}"
-  echo "::endgroup::"
 }
 
 copy_profiler_artifacts() {
   rapids-logger Copying profiler artifacts
   cp -r /tmp/conda-build  "${ARTIFACTS_DIR}"
-  echo "::group::Profiler Directory Dump"
-  ls -lahR "${ARTIFACTS_DIR}"
-  echo "::endgroup::"
 }
 
 copy_docs_artifacts() {
@@ -181,12 +175,18 @@ build_docs() {
   cd "${LEGATE_DIR}"
   set +u
   run_command 'Activate Conda' conda activate legate
-  run_command 'List conda env' conda list
+  if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+    run_command 'List conda env' conda list
+  fi
   set -u
   run_command 'Dump configure.py' cat "./config/examples/${LEGATE_ARCH}.py"
   run_command 'Configure Legate' "./config/examples/${LEGATE_ARCH}.py"
+  local pip_verbose_flag=()
+  if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+    pip_verbose_flag=(-v)
+  fi
   # Install Legate Python bindings so the Python docs build works
-  run_command 'pip install Legate' rapids-pip-retry install . -v
+  run_command 'pip install Legate' rapids-pip-retry install --disable-pip-version-check "${pip_verbose_flag[@]}" .
   LEGATE_AUTO_CONFIG=0 run_command 'check installed Legate' python3 -c 'import legate.core'
   run_command 'Build Documentation' make docs
   run_command 'Copy Artifacts' copy_docs_artifacts
@@ -203,7 +203,6 @@ build_project() {
   git clone --depth 1 https://github.com/rapidsai/gha-tools.git -b main "${rapids_gha_tools_dir}"
 
   export PATH="${PATH}:${rapids_gha_tools_dir}/tools:${REPO_DIR}/continuous_integration/scripts/tools"
-
   run_command "Source setup-util" . setup-utils
 
   run_command "Init build environment" init_build_env "$@"

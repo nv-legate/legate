@@ -21,6 +21,11 @@ on:
         required: false
         default: false
         type: boolean
+      ci-verbose:
+        description: 'Print full CI diagnostics and uncapped artifact summaries'
+        required: false
+        default: false
+        type: boolean
     outputs:
       artifact-name:
         value: ${{ jobs.build_wrapper_packages.outputs.artifact-name }}
@@ -132,9 +137,22 @@ jobs:
         run: |
           find "${CONDA_OUTPUT}" -mindepth 1 -maxdepth 1 -type d ! -name noarch -exec rm -rf {} +
 
-      - name: Display output files
+      - name: Summarize output files
         run: |
-          ls -lAhR "${CONDA_OUTPUT}"
+          files=$(mktemp)
+          find "${CONDA_OUTPUT}" -type f | sort > "${files}"
+          file_count=$(wc -l < "${files}" | tr -d '[:space:]')
+          echo "Files: ${file_count}"
+
+          if [[ "${{ inputs.ci-verbose }}" == "true" ]]; then
+            cat "${files}"
+          else
+            sed -n '1,200p' "${files}"
+            if (( file_count > 200 )); then
+              echo "... $((file_count - 200)) more files hidden (run with ci-verbose=true for full list)"
+            fi
+          fi
+          rm -f "${files}"
 
       - name: Upload wrapper packages
         uses: actions/upload-artifact@v7

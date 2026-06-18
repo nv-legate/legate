@@ -31,6 +31,7 @@ prepare_gex_wrappers() {
     rapids-logger "Installing GEX wrapper build dependencies..."
     set +u
     rapids-conda-retry install \
+                       -q \
                        -y \
                        -n "${CONDA_ENV:?CONDA_ENV must be set}" \
                        -c conda-forge \
@@ -90,7 +91,9 @@ run_test_or_analysis() {
 
     prepare_gex_wrappers;
 
-    conda_info;
+    if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+      conda_info;
+    fi
 
     if command -v "legate-issue" &> /dev/null; then
       legate-issue
@@ -144,6 +147,7 @@ run_test_or_analysis() {
             # Temporary workaround for CuPy 14.0.0 regression; see
             # https://github.com/nv-legate/legate.internal/issues/3579.
             rapids-conda-retry install \
+                               -q \
                                -y \
                                -n "${CONDA_ENV}" \
                                -c conda-forge \
@@ -152,6 +156,7 @@ run_test_or_analysis() {
             hdf5_libs=(h5py "zarr>=2,<4")
             # shellcheck disable=SC2154
             rapids-conda-retry install \
+                               -q \
                                -y \
                                -n "${CONDA_ENV}" \
                                "${hdf5_libs[@]}"
@@ -244,6 +249,7 @@ run_test_or_analysis() {
         "cpp")
             rapids-logger "Running C++ unit tests..."
             rapids-conda-retry install \
+                               -q \
                                -y \
                                -n "${DEFAULT_CONDA_ENV:-legate}" \
                                -c conda-forge \
@@ -252,6 +258,7 @@ run_test_or_analysis() {
             set +u
             # Only test tooling here; runtime deps should come from the legate conda package.
             rapids-conda-retry install \
+                               -q \
                                -y \
                                -n "${CONDA_ENV}" \
                                openssh
@@ -278,15 +285,19 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              python3 "${LEGATE_DIR}/test.py" \
-                        --gtest-file "${gtest_file}" \
-                        --verbose \
-                        --debug \
-                        --color \
-                        --timeout 90 \
-                        --"${proc_type}" "${proc_count}" \
-                        --sysmem 100 \
-                        -j "${worker_count}"
+              local test_driver_args=(
+                --gtest-file "${gtest_file}"
+                --debug
+                --color
+                --timeout 90
+                --"${proc_type}" "${proc_count}"
+                --sysmem 100
+                -j "${worker_count}"
+              )
+              if [[ "${LEGATE_CI_VERBOSE:-0}" == "1" ]]; then
+                test_driver_args+=(--verbose)
+              fi
+              python3 "${LEGATE_DIR}/test.py" "${test_driver_args[@]}"
             }
 
             function run_sequential_tests()
@@ -373,6 +384,7 @@ run_test_or_analysis() {
               # attempt to package raw inputs below.
               # shellcheck disable=SC2154
               rapids-conda-retry install \
+                    -q \
                     -y \
                     -n "${CONDA_ENV}" \
                     -c "${PROFILER_DIR}/conda-build/legate-profiler" \
