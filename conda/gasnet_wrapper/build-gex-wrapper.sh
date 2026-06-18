@@ -22,10 +22,12 @@ system_config="${DEFAULT_SYSTEM_CONFIG}"
 cuda="${DEFAULT_CUDA}"
 threading="${DEFAULT_THREADING}"
 extra_linker_flags=""
+force_posix_realtime_timer="OFF"
+gasnet_configure_args=()
 
 # Help function to display usage
 gex_wrapper_help() {
-   echo "Usage: build-gex-wrapper [-h | --help] [-c conduit | --conduit conduit] [-s system_config | --system_config system_config] [-u ON/OFF | --use-cuda ON/OFF] [-f flags | --linker-flags \"<flags>\"]"
+   echo "Usage: build-gex-wrapper [OPTIONS]"
    echo "Build the Realm GASNet-EX wrapper in your conda environment."
    echo
    echo "Options:"
@@ -34,11 +36,15 @@ gex_wrapper_help() {
    echo "  -s, --system_config SYS   System-specific configuration (default '${DEFAULT_SYSTEM_CONFIG}')"
    echo "  -u, --use-cuda ON/OFF     Enable (ON) or disable (OFF) CUDA (default '${DEFAULT_CUDA}')"
    echo "  -f, --linker-flags STR    Extra linker flags to append (default '-lhugetlbfs' when conduit='ofi' and system='slingshot11')"
+   echo "      --force-posix-realtime-timer"
+   echo "                           Force GASNet to use POSIX realtime for TSC calibration"
    echo
 }
 
 # Parse command-line options (supporting both single-dash and double-dash)
-ARGS=$(getopt -o hc:s:u:f: -l help,conduit:,system_config:,use-cuda:,linker-flags: -- "$@") || {
+long_options="help,conduit:,system_config:,use-cuda:,linker-flags:"
+long_options+=",force-posix-realtime-timer"
+ARGS=$(getopt -o hc:s:u:f: -l "${long_options}" -- "$@") || {
   gex_wrapper_help
   exit 1
 }
@@ -69,6 +75,10 @@ while true; do
     -f | --linker-flags)
       extra_linker_flags="$2"
       shift 2
+      ;;
+    --force-posix-realtime-timer)
+      force_posix_realtime_timer="ON"
+      shift
       ;;
     --)
       shift
@@ -109,6 +119,7 @@ echo "  Installation directory: ${CONDA_PREFIX}/lib"
 echo "  Conduit: ${conduit}"
 echo "  System configuration: ${system_config}"
 echo "  CUDA enabled: ${cuda}"
+echo "  Force POSIX realtime timer: ${force_posix_realtime_timer}"
 
 # Proceed with the build process
 if [[ ! -d "${SCRIPT_DIR}" ]]; then
@@ -155,7 +166,15 @@ if [[ "${cuda}" == "ON" ]]; then
     export CUDA_LIBS="${CUDA_LIBS:--lcuda}"
   fi
 
-  CMAKE_ARGS+=(-DGASNet_CONFIGURE_ARGS="--enable-kind-cuda-uva")
+  gasnet_configure_args+=("--enable-kind-cuda-uva")
+fi
+
+if [[ "${force_posix_realtime_timer}" == "ON" ]]; then
+  gasnet_configure_args+=("--enable-force-posix-realtime")
+fi
+
+if [[ "${#gasnet_configure_args[@]}" -gt 0 ]]; then
+  CMAKE_ARGS+=(-DGASNet_CONFIGURE_ARGS="${gasnet_configure_args[*]}")
 fi
 
 # Whole-archive embed of the conduit archive into the wrapper DSO.
