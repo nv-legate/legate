@@ -71,23 +71,23 @@ void cpu_copy_to_send_buffer(InlineStorage& target,
                              const SmallVector<int>& counts,
                              const SmallVector<int>& offsets)
 {
-  const auto node_count  = Runtime::get_runtime().node_count();
-  const auto* source_ptr = static_cast<const VAL*>(source.data());
-  const auto source_lo   = source_domain.lo();
+  const auto node_count = Runtime::get_runtime().node_count();
+  const auto* source_ptr =
+    static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
 
   for (std::uint32_t idx = 0; idx < node_count; ++idx) {
     if (counts[idx] == 0) {
       continue;
     }
 
-    const auto& subdomain      = target_subdomains[idx];
-    const auto& target_strides = all_target_strides[idx];
-    auto* target_ptr           = static_cast<VAL*>(target.data()) + offsets[idx];
-    const auto target_lo       = subdomain.lo();
+    const auto& target_subdomain = target_subdomains[idx];
+    const auto& target_strides   = all_target_strides[idx];
+    auto* target_ptr             = static_cast<VAL*>(target.data()) + offsets[idx] -
+                                   inner_product(target_subdomain.lo(), target_strides);
 
-    for (Domain::DomainPointIterator it{subdomain}; it; ++it) {
-      target_ptr[inner_product(it.p - target_lo, target_strides)] =
-        source_ptr[inner_product(it.p - source_lo, source_strides)];
+    for (Domain::DomainPointIterator it{target_subdomain}; it; ++it) {
+      target_ptr[inner_product(it.p, target_strides)] =
+        source_ptr[inner_product(it.p, source_strides)];
     }
   }
 }
@@ -165,22 +165,22 @@ void cpu_copy_from_recv_buffer(InlineStorage& target,
 {
   const auto node_count = Runtime::get_runtime().node_count();
 
-  auto* target_ptr     = static_cast<VAL*>(target.data());
-  const auto target_lo = target_domain.lo();
+  auto* target_ptr =
+    static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
 
   for (std::uint32_t idx = 0; idx < node_count; ++idx) {
     if (counts[idx] == 0) {
       continue;
     }
 
-    const auto& subdomain      = source_subdomains[idx];
-    const auto& source_strides = all_source_strides[idx];
-    const auto* source_ptr     = static_cast<const VAL*>(source.data()) + offsets[idx];
-    const auto source_lo       = subdomain.lo();
+    const auto& source_subdomain = source_subdomains[idx];
+    const auto& source_strides   = all_source_strides[idx];
+    const auto* source_ptr       = static_cast<const VAL*>(source.data()) + offsets[idx] -
+                                   inner_product(source_subdomain.lo(), source_strides);
 
-    for (Domain::DomainPointIterator it{subdomain}; it; ++it) {
-      target_ptr[inner_product(it.p - target_lo, target_strides)] =
-        source_ptr[inner_product(it.p - source_lo, source_strides)];
+    for (Domain::DomainPointIterator it{source_subdomain}; it; ++it) {
+      target_ptr[inner_product(it.p, target_strides)] =
+        source_ptr[inner_product(it.p, source_strides)];
     }
   }
 }
