@@ -148,6 +148,8 @@ class Tiling final : public Partition {
 
   [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
 
+  [[nodiscard]] std::uint64_t compute_device_id(const DomainPoint& color) const;
+
   [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
 
   [[nodiscard]] bool subsumes(const Domain& domain,
@@ -184,6 +186,7 @@ class Tiling final : public Partition {
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
   DomainPoint tile_shape_dp_{};
   DomainPoint color_shape_dp_{};
+  DomainPoint color_strides_{};
   DomainPoint offsets_dp_{};
 };
 

@@ -159,7 +159,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   return {data,
           sub_domain,
           std::make_optional<CopyRequest>(
-            storage_data_, data, *key_partition_, partition, sub_domain, field_size_)};
+            storage_data_, data, *key_partition_, partition, domain, field_size_)};
 }
 
 std::tuple<InternalSharedPtr<InlineStorage>, InternalSharedPtr<InlineStorage>, Domain>

@@ -15,6 +15,8 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/array_algorithms.h>
+#include <legate/utilities/detail/geometry.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <nccl.h>
@@ -29,63 +31,12 @@ void CopyRequest::perform(VariantCode variant_code) const
 
   if (!target_partition_->has_color_shape()) {
     cpu_all_gather_();
-    return;
+  } else {
+    cpu_shuffle_();
   }
-
-  LEGATE_ABORT("Not implemented yet");
 }
 
 namespace {
-
-std::int64_t inner_product(const DomainPoint& rhs1, const DomainPoint& rhs2) noexcept
-{
-  LEGATE_ASSERT(rhs1.dim == rhs2.dim);
-
-  std::int64_t result = 0;
-
-  for (std::int32_t dim = 0; dim < rhs1.dim; ++dim) {
-    result += rhs1[dim] * rhs2[dim];
-  }
-
-  return result;
-}
-
-std::int64_t calculate_volume(const DomainPoint& shape) noexcept
-{
-  std::int64_t result = 1;
-
-  for (std::int32_t dim = 0; dim < shape.dim; ++dim) {
-    result *= shape[dim];
-  }
-
-  return result;
-}
-
-DomainPoint calculate_strides(const DomainPoint& shape) noexcept
-{
-  DomainPoint strides;
-
-  strides.dim = shape.dim;
-  // TODO(wonchanl): C order is assumed but the layout can be arbitrary
-  strides[strides.dim - 1] = 1;
-  for (std::int32_t dim = strides.dim - 2; dim >= 0; --dim) {
-    strides[dim] = strides[dim + 1] * shape[dim];
-  }
-
-  return strides;
-}
-
-DomainPoint to_shape(const Domain& domain) noexcept
-{
-  DomainPoint shape;
-
-  shape.dim = domain.dim;
-  for (std::int32_t dim = 0; dim < shape.dim; ++dim) {
-    shape[dim] = domain.rect_data[dim + domain.dim] - domain.rect_data[dim] + 1;
-  }
-
-  return shape;
-}
 
 template <typename VAL>
 void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, const Tiling* tiling)
@@ -107,6 +58,191 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
                             inner_product(it.p / tile_shape, color_strides) * tile_volume;
 
     target_ptr[target_idx] = source_ptr[source_idx];
+  }
+}
+
+template <typename VAL>
+void cpu_copy_to_send_buffer(InlineStorage& target,
+                             const InlineStorage& source,
+                             const Domain& source_domain,
+                             const DomainPoint& source_strides,
+                             const SmallVector<Domain>& target_subdomains,
+                             const SmallVector<DomainPoint>& all_target_strides,
+                             const SmallVector<int>& counts,
+                             const SmallVector<int>& offsets)
+{
+  const auto node_count  = Runtime::get_runtime().node_count();
+  const auto* source_ptr = static_cast<const VAL*>(source.data());
+  const auto source_lo   = source_domain.lo();
+
+  for (std::uint32_t idx = 0; idx < node_count; ++idx) {
+    if (counts[idx] == 0) {
+      continue;
+    }
+
+    const auto& subdomain      = target_subdomains[idx];
+    const auto& target_strides = all_target_strides[idx];
+    auto* target_ptr           = static_cast<VAL*>(target.data()) + offsets[idx];
+    const auto target_lo       = subdomain.lo();
+
+    for (Domain::DomainPointIterator it{subdomain}; it; ++it) {
+      target_ptr[inner_product(it.p - target_lo, target_strides)] =
+        source_ptr[inner_product(it.p - source_lo, source_strides)];
+    }
+  }
+}
+
+void cpu_copy_to_send_buffer(InlineStorage& target,
+                             const InlineStorage& source,
+                             const Domain& source_domain,
+                             const DomainPoint& source_strides,
+                             const SmallVector<Domain>& target_subdomains,
+                             const SmallVector<DomainPoint>& all_target_strides,
+                             const SmallVector<int>& counts,
+                             const SmallVector<int>& offsets,
+                             std::uint32_t field_size)
+{
+  switch (field_size) {
+    case 1: {
+      cpu_copy_to_send_buffer<std::uint8_t>(target,
+                                            source,
+                                            source_domain,
+                                            source_strides,
+                                            target_subdomains,
+                                            all_target_strides,
+                                            counts,
+                                            offsets);
+      break;
+    }
+    case 2: {
+      cpu_copy_to_send_buffer<std::uint16_t>(target,
+                                             source,
+                                             source_domain,
+                                             source_strides,
+                                             target_subdomains,
+                                             all_target_strides,
+                                             counts,
+                                             offsets);
+      break;
+    }
+    case 4: {
+      cpu_copy_to_send_buffer<std::uint32_t>(target,
+                                             source,
+                                             source_domain,
+                                             source_strides,
+                                             target_subdomains,
+                                             all_target_strides,
+                                             counts,
+                                             offsets);
+      break;
+    }
+    case 8: {
+      cpu_copy_to_send_buffer<std::uint64_t>(target,
+                                             source,
+                                             source_domain,
+                                             source_strides,
+                                             target_subdomains,
+                                             all_target_strides,
+                                             counts,
+                                             offsets);
+      break;
+    }
+    default: {  // legate-lint: no-switch-default
+      throw TracedException<std::runtime_error>{"Unsupported field size"};
+    }
+  }
+}
+
+template <typename VAL>
+void cpu_copy_from_recv_buffer(InlineStorage& target,
+                               const Domain& target_domain,
+                               const DomainPoint& target_strides,
+                               const InlineStorage& source,
+                               const SmallVector<Domain>& source_subdomains,
+                               const SmallVector<DomainPoint>& all_source_strides,
+                               const SmallVector<int>& counts,
+                               const SmallVector<int>& offsets)
+{
+  const auto node_count = Runtime::get_runtime().node_count();
+
+  auto* target_ptr     = static_cast<VAL*>(target.data());
+  const auto target_lo = target_domain.lo();
+
+  for (std::uint32_t idx = 0; idx < node_count; ++idx) {
+    if (counts[idx] == 0) {
+      continue;
+    }
+
+    const auto& subdomain      = source_subdomains[idx];
+    const auto& source_strides = all_source_strides[idx];
+    const auto* source_ptr     = static_cast<const VAL*>(source.data()) + offsets[idx];
+    const auto source_lo       = subdomain.lo();
+
+    for (Domain::DomainPointIterator it{subdomain}; it; ++it) {
+      target_ptr[inner_product(it.p - target_lo, target_strides)] =
+        source_ptr[inner_product(it.p - source_lo, source_strides)];
+    }
+  }
+}
+
+void cpu_copy_from_recv_buffer(InlineStorage& target,
+                               const Domain& target_domain,
+                               const DomainPoint& target_strides,
+                               const InlineStorage& source,
+                               const SmallVector<Domain>& source_subdomains,
+                               const SmallVector<DomainPoint>& all_source_strides,
+                               const SmallVector<int>& counts,
+                               const SmallVector<int>& offsets,
+                               std::uint32_t field_size)
+{
+  switch (field_size) {
+    case 1: {
+      cpu_copy_from_recv_buffer<std::uint8_t>(target,
+                                              target_domain,
+                                              target_strides,
+                                              source,
+                                              source_subdomains,
+                                              all_source_strides,
+                                              counts,
+                                              offsets);
+      break;
+    }
+    case 2: {
+      cpu_copy_from_recv_buffer<std::uint16_t>(target,
+                                               target_domain,
+                                               target_strides,
+                                               source,
+                                               source_subdomains,
+                                               all_source_strides,
+                                               counts,
+                                               offsets);
+      break;
+    }
+    case 4: {
+      cpu_copy_from_recv_buffer<std::uint32_t>(target,
+                                               target_domain,
+                                               target_strides,
+                                               source,
+                                               source_subdomains,
+                                               all_source_strides,
+                                               counts,
+                                               offsets);
+      break;
+    }
+    case 8: {
+      cpu_copy_from_recv_buffer<std::uint64_t>(target,
+                                               target_domain,
+                                               target_strides,
+                                               source,
+                                               source_subdomains,
+                                               all_source_strides,
+                                               counts,
+                                               offsets);
+      break;
+    }
+    default: {  // legate-lint: no-switch-default
+      throw TracedException<std::runtime_error>{"Unsupported field size"};
+    }
   }
 }
 
@@ -165,6 +301,106 @@ void CopyRequest::cpu_all_gather_() const
       throw TracedException<std::runtime_error>{"Unsupported field size"};
     }
   }
+}
+
+void CopyRequest::cpu_shuffle_() const
+{
+  // If the source_partition_ was a NoPartition, the subsumption check would have passed.
+  LEGATE_ASSERT(dynamic_cast<Tiling*>(source_partition_.get()));
+
+  const auto* source_tiling = static_cast<Tiling*>(source_partition_.get());
+  const auto* target_tiling = static_cast<Tiling*>(target_partition_.get());
+
+  const auto node_id = Runtime::get_runtime().node_id();
+
+  const auto target_subdomain =
+    target_tiling->shard(sub_domain_, target_tiling->compute_color(node_id));
+  const auto source_subdomain =
+    source_tiling->shard(sub_domain_, source_tiling->compute_color(node_id));
+
+  const auto& source_tile_shape = source_tiling->tile_shape_dp();
+  const auto source_colors =
+    Domain{target_subdomain.lo() / source_tile_shape, target_subdomain.hi() / source_tile_shape};
+
+  const auto& target_tile_shape = target_tiling->tile_shape_dp();
+  const auto target_colors =
+    Domain{source_subdomain.lo() / target_tile_shape, source_subdomain.hi() / target_tile_shape};
+
+  const auto node_count = Runtime::get_runtime().node_count();
+
+  SmallVector<Domain> recv_subdomains(tags::size_tag, node_count, {});
+  SmallVector<Domain> send_subdomains(tags::size_tag, node_count, {});
+
+  SmallVector<DomainPoint> recv_strides(tags::size_tag, node_count, {});
+  SmallVector<DomainPoint> send_strides(tags::size_tag, node_count, {});
+
+  SmallVector<int> recv_counts(tags::size_tag, node_count, 0);
+  SmallVector<int> send_counts(tags::size_tag, node_count, 0);
+
+  for (Domain::DomainPointIterator it{source_colors}; it; ++it) {
+    const auto source_device_id = source_tiling->compute_device_id(it.p);
+    const auto recv_subdomain   = source_tiling->shard(target_subdomain, it.p);
+
+    recv_subdomains[source_device_id] = recv_subdomain;
+    recv_strides[source_device_id]    = calculate_strides(recv_subdomain);
+    recv_counts[source_device_id]     = recv_subdomain.get_volume();
+  }
+
+  for (Domain::DomainPointIterator it{target_colors}; it; ++it) {
+    const auto target_device_id = target_tiling->compute_device_id(it.p);
+    const auto send_subdomain   = target_tiling->shard(source_subdomain, it.p);
+
+    send_subdomains[target_device_id] = send_subdomain;
+    send_strides[target_device_id]    = calculate_strides(send_subdomain);
+    send_counts[target_device_id]     = send_subdomain.get_volume();
+  }
+
+  InlineStorage send_buffer{source_subdomain, field_size_, source_->target()};
+  InlineStorage recv_buffer{target_subdomain, field_size_, target_->target()};
+
+  SmallVector<int> recv_offsets(tags::size_tag, node_count, 0);
+  SmallVector<int> send_offsets(tags::size_tag, node_count, 0);
+
+  for (std::uint32_t idx = 1; idx < node_count; ++idx) {
+    recv_offsets[idx] = recv_offsets[idx - 1] + recv_counts[idx - 1];
+    send_offsets[idx] = send_offsets[idx - 1] + send_counts[idx - 1];
+  }
+
+  LEGATE_ASSERT(
+    source_subdomain.get_volume() ==
+    static_cast<std::size_t>(send_offsets[node_count - 1] + send_counts[node_count - 1]));
+  LEGATE_ASSERT(
+    target_subdomain.get_volume() ==
+    static_cast<std::size_t>(recv_offsets[node_count - 1] + recv_counts[node_count - 1]));
+
+  cpu_copy_to_send_buffer(send_buffer,
+                          *source_,
+                          source_subdomain,
+                          calculate_strides(source_tile_shape),
+                          send_subdomains,
+                          send_strides,
+                          send_counts,
+                          send_offsets,
+                          field_size_);
+
+  collAlltoallv(send_buffer.data(),
+                send_counts.data(),
+                send_offsets.data(),
+                recv_buffer.data(),
+                recv_counts.data(),
+                recv_offsets.data(),
+                to_coll_data_type_(field_size_),
+                Runtime::get_runtime().get_cpu_comm());
+
+  cpu_copy_from_recv_buffer(*target_,
+                            target_subdomain,
+                            calculate_strides(target_tile_shape),
+                            recv_buffer,
+                            recv_subdomains,
+                            recv_strides,
+                            recv_counts,
+                            recv_offsets,
+                            field_size_);
 }
 
 }  // namespace legate::detail

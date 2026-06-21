@@ -11,7 +11,7 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/array_algorithms.h>
-#include <legate/utilities/detail/linearize.h>
+#include <legate/utilities/detail/geometry.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
@@ -42,7 +42,8 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
     offsets_{std::move(offsets)},
     strides_{tile_shape_},
     tile_shape_dp_{to_domain_point(tile_shape_)},
-    color_shape_dp_{to_domain_point(color_shape_)}
+    color_shape_dp_{to_domain_point(color_shape_)},
+    color_strides_{calculate_strides(color_shape_dp_)}
 {
   if (offsets_.empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
@@ -129,11 +130,12 @@ Legion::Domain Tiling::launch_domain() const { return detail::to_domain(color_sh
 
 std::string Tiling::to_string() const
 {
-  return fmt::format("Tiling(tile: {}, colors: {}, offset: {}, strides: {})",
+  return fmt::format("Tiling(tile: {}, colors: {}, offset: {}, strides: {}, color strides: {})",
                      tile_shape_,
                      color_shape_,
                      offsets_,
-                     strides_);
+                     strides_,
+                     color_strides_);
 }
 
 InternalSharedPtr<Partition> Tiling::convert(
@@ -167,10 +169,22 @@ InternalSharedPtr<Partition> Tiling::invert(
 DomainPoint Tiling::compute_color(std::uint64_t device_id) const
 {
   // TODO(wonchanl): Add device mesh
-  DomainPoint lo{};
+  DomainPoint result;
 
-  lo.dim = color_shape_dp_.dim;
-  return delinearize(lo, color_shape_dp_, device_id);
+  result.dim = color_shape_dp_.dim;
+  for (std::int32_t dim = result.dim - 1; dim > 0; --dim) {
+    result[dim] = device_id % color_shape_dp_[dim];
+    device_id /= color_shape_dp_[dim];
+  }
+  result[0] = device_id;
+
+  return result;
+}
+
+std::uint64_t Tiling::compute_device_id(const DomainPoint& color) const
+{
+  // TODO(wonchanl): Add device mesh
+  return inner_product(color_strides_, color);
 }
 
 Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const

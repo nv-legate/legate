@@ -416,6 +416,7 @@ target_sources(
     legate/utilities/detail/env.cc
     legate/utilities/detail/tuple.cc
     legate/utilities/detail/formatters.cc
+    legate/utilities/detail/geometry.cc
     legate/utilities/detail/traced_exception.cc
     legate/utilities/detail/zip.cc
     legate/utilities/detail/linearize.cc
