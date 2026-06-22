@@ -507,6 +507,7 @@ if(legate_USE_CUDA)
     DEST_DIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/fatbin"
     GENERATED_SOURCES_VAR fatbin_src
     SOURCES
+      legate/data/detail/copy_request_fatbin.cu
       legate/redop/detail/redop_half_fatbin.cu
       legate/redop/detail/redop_complex_fatbin.cu
     EXTRA_FLAGS ${legate_CUDA_FLAGS}

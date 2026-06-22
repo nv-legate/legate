@@ -283,6 +283,7 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamDestroy, &stream_destroy_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamWaitEvent, &stream_wait_event_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamSynchronize, &stream_synchronize_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuStreamGetDevice, &stream_get_device_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventCreate, &event_create_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuEventRecord, &event_record_);
@@ -477,6 +478,17 @@ void CUDADriverAPI::stream_wait_event(CUstream stream, CUevent event, unsigned i
 {
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(stream_wait_event_(stream, event, flags));
+}
+
+CUdevice CUDADriverAPI::stream_get_device(CUstream stream) const
+{
+  check_initialized_();
+
+  CUdevice device;
+
+  LEGATE_CHECK_CUDRIVER(stream_get_device_(stream, &device));
+
+  return device;
 }
 
 CUevent CUDADriverAPI::event_create(unsigned int flags) const

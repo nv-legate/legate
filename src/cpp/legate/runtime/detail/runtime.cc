@@ -1259,10 +1259,6 @@ extern void register_exception_reduction_op(const Library& context);
 
   register_legate_core_tasks(core_lib);
 
-  register_builtin_reduction_ops();
-
-  register_exception_reduction_op(core_lib);
-
   runtime.initialized_ = true;
 }
 

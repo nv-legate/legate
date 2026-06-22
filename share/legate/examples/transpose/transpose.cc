@@ -79,6 +79,7 @@ void run_example()
   auto library        = runtime->create_library("transpose");
 
   InitTask::register_variants(library);
+  DummyTask::register_variants(library);
   CopyTask::register_variants(library);
   CheckTask::register_variants(library);
 
@@ -87,10 +88,14 @@ void run_example()
   auto y_store = runtime->create_store(shape, legate::int32());
 
   auto init_x_task = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
-  /*auto part =*/init_x_task.add_output(x_store);
-  // init_x_task.add_constraint(legate::broadcast(part, {0}));
+  auto part        = init_x_task.add_output(x_store);
+  init_x_task.add_constraint(legate::broadcast(part, {0}));
   init_x_task.add_scalar_arg(legate::Scalar{42});
   runtime->submit(std::move(init_x_task));
+
+  auto dummy_task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
+  dummy_task.add_input(x_store);
+  runtime->submit(std::move(dummy_task));
 
   auto copy_task = runtime->create_task(library, CopyTask::TASK_CONFIG.task_id());
   auto part_x    = copy_task.add_input(x_store);

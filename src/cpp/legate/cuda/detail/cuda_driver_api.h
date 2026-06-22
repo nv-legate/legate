@@ -62,6 +62,7 @@ class CUDADriverAPI {
   void stream_destroy(CUstream* stream) const;
   void stream_wait_event(CUstream stream, CUevent event, unsigned int flags = 0) const;
   void stream_synchronize(CUstream stream) const;
+  [[nodiscard]] CUdevice stream_get_device(CUstream stream) const;
 
   [[nodiscard]] CUevent event_create(unsigned int flags = 0) const;
   void event_record(CUevent event, CUstream stream) const;
@@ -160,6 +161,7 @@ class CUDADriverAPI {
   CUresult (*stream_destroy_)(CUstream stream)                                       = nullptr;
   CUresult (*stream_wait_event_)(CUstream stream, CUevent event, unsigned int flags) = nullptr;
   CUresult (*stream_synchronize_)(CUstream stream)                                   = nullptr;
+  CUresult (*stream_get_device_)(CUstream stream, CUdevice* device)                  = nullptr;
 
   CUresult (*event_create_)(CUevent* event, unsigned int flags)          = nullptr;
   CUresult (*event_record_)(CUevent event, CUstream stream)              = nullptr;

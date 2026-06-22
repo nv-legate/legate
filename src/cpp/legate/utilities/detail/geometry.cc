@@ -36,6 +36,18 @@ std::int64_t calculate_volume(const DomainPoint& shape) noexcept
   return result;
 }
 
+DomainPoint calculate_extents(const Domain& domain) noexcept
+{
+  DomainPoint extents;
+
+  extents.dim = domain.dim;
+  for (std::int32_t dim = 0; dim < extents.dim; ++dim) {
+    extents[dim] = domain.rect_data[dim + domain.dim] - domain.rect_data[dim] + 1;
+  }
+
+  return extents;
+}
+
 DomainPoint calculate_strides(const Domain& domain) noexcept
 {
   DomainPoint strides;

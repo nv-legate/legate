@@ -16,6 +16,8 @@ namespace legate::detail {
 
 [[nodiscard]] std::int64_t calculate_volume(const DomainPoint& shape) noexcept;
 
+[[nodiscard]] DomainPoint calculate_extents(const Domain& domain) noexcept;
+
 [[nodiscard]] DomainPoint calculate_strides(const Domain& domain) noexcept;
 
 [[nodiscard]] DomainPoint calculate_strides(const DomainPoint& shape) noexcept;

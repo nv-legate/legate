@@ -36,6 +36,7 @@ class CopyRequest {
  private:
   void cpu_all_gather_() const;
   void cpu_shuffle_() const;
+  void shuffle_(VariantCode variant_code) const;
 
   InternalSharedPtr<InlineStorage> source_{};
   InternalSharedPtr<InlineStorage> target_{};
