@@ -137,15 +137,15 @@ struct CopyToSendBufferCPU {
   }
 };
 
-void cpu_copy_to_send_buffer(InlineStorage& target,
-                             const InlineStorage& source,
-                             const Domain& source_domain,
-                             const DomainPoint& source_strides,
-                             const SmallVector<Domain>& target_subdomains,
-                             const SmallVector<DomainPoint>& all_target_strides,
-                             const SmallVector<int>& counts,
-                             const SmallVector<int>& offsets,
-                             std::uint32_t field_size)
+void copy_to_send_buffer_cpu_(std::uint32_t field_size,
+                              InlineStorage& target,
+                              const InlineStorage& source,
+                              const Domain& source_domain,
+                              const DomainPoint& source_strides,
+                              const SmallVector<Domain>& target_subdomains,
+                              const SmallVector<DomainPoint>& all_target_strides,
+                              const SmallVector<int>& counts,
+                              const SmallVector<int>& offsets)
 {
   field_size_dispatch(field_size,
                       CopyToSendBufferCPU{},
@@ -193,15 +193,15 @@ struct CopyFromRecvBufferCPU {
   }
 };
 
-void cpu_copy_from_recv_buffer(InlineStorage& target,
-                               const Domain& target_domain,
-                               const DomainPoint& target_strides,
-                               const InlineStorage& source,
-                               const SmallVector<Domain>& source_subdomains,
-                               const SmallVector<DomainPoint>& all_source_strides,
-                               const SmallVector<int>& counts,
-                               const SmallVector<int>& offsets,
-                               std::uint32_t field_size)
+void copy_from_recv_buffer_cpu_(std::uint32_t field_size,
+                                InlineStorage& target,
+                                const Domain& target_domain,
+                                const DomainPoint& target_strides,
+                                const InlineStorage& source,
+                                const SmallVector<Domain>& source_subdomains,
+                                const SmallVector<DomainPoint>& all_source_strides,
+                                const SmallVector<int>& counts,
+                                const SmallVector<int>& offsets)
 {
   field_size_dispatch(field_size,
                       CopyFromRecvBufferCPU{},
@@ -215,113 +215,182 @@ void cpu_copy_from_recv_buffer(InlineStorage& target,
                       offsets);
 }
 
-void gpu_copy_to_send_buffer(SmallVector<InternalSharedPtr<InlineStorage>>& targets,
-                             const InlineStorage& source,
-                             const Domain& source_domain,
-                             DomainPoint& source_strides,
-                             const SmallVector<Domain>& target_subdomains,
-                             SmallVector<DomainPoint>& all_target_strides,
-                             const SmallVector<int>& counts,
-                             std::uint32_t,
-                             CUstream stream)
-{
-  using VAL = std::uint32_t;
+template <typename VAL>
+struct CopyToSendBufferKernelName;
 
-  const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+template <>
+struct CopyToSendBufferKernelName<std::uint8_t> {
+  static constexpr const char* value = "legate_copy_subdomain_8";
+};
 
-  auto&& api         = cuda::detail::get_cuda_driver_api();
-  auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
-  CUkernel kern =
-    mod_manager.load_kernel_from_fatbin(copy_request_fatbin, "legate_copy_subdomain_32");
+template <>
+struct CopyToSendBufferKernelName<std::uint16_t> {
+  static constexpr const char* value = "legate_copy_subdomain_16";
+};
 
-  const auto node_count = Runtime::get_runtime().node_count();
-  const auto* source_ptr =
-    static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
+template <>
+struct CopyToSendBufferKernelName<std::uint32_t> {
+  static constexpr const char* value = "legate_copy_subdomain_32";
+};
 
-  for (std::uint32_t idx = 0; idx < node_count; ++idx) {
-    if (counts[idx] == 0) {
-      continue;
+template <>
+struct CopyToSendBufferKernelName<std::uint64_t> {
+  static constexpr const char* value = "legate_copy_subdomain_64";
+};
+
+struct CopyToSendBufferGPU {
+  template <typename VAL>
+  void operator()(SmallVector<InternalSharedPtr<InlineStorage>>& targets,
+                  const InlineStorage& source,
+                  const Domain& source_domain,
+                  DomainPoint& source_strides,
+                  const SmallVector<Domain>& target_subdomains,
+                  SmallVector<DomainPoint>& all_target_strides,
+                  const SmallVector<int>& counts,
+                  CUstream stream)
+  {
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+
+    auto&& api         = cuda::detail::get_cuda_driver_api();
+    auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
+    CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
+                                                        CopyToSendBufferKernelName<VAL>::value);
+
+    const auto node_count = Runtime::get_runtime().node_count();
+    const auto* source_ptr =
+      static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
+
+    for (std::uint32_t idx = 0; idx < node_count; ++idx) {
+      if (counts[idx] == 0) {
+        continue;
+      }
+
+      const auto& target_subdomain = target_subdomains[idx];
+      auto& target_strides         = all_target_strides[idx];
+      auto target_lo               = target_subdomain.lo();
+      auto* target_ptr =
+        static_cast<VAL*>(targets[idx]->data()) - inner_product(target_lo, target_strides);
+
+      const auto num_blocks =
+        (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
+        LEGATE_THREADS_PER_BLOCK;
+      auto count          = counts[idx];
+      auto target_extents = calculate_extents(target_subdomain);
+
+      api->launch_kernel(kern,
+                         {num_blocks},
+                         {LEGATE_THREADS_PER_BLOCK},
+                         /*shared_mem_bytes=*/0,
+                         stream,
+                         static_cast<void*>(target_ptr),
+                         static_cast<const void*>(source_ptr),
+                         count,
+                         target_extents,
+                         target_lo,
+                         target_strides,
+                         source_strides);
     }
-
-    const auto& target_subdomain = target_subdomains[idx];
-    auto& target_strides         = all_target_strides[idx];
-    auto target_lo               = target_subdomain.lo();
-    auto* target_ptr =
-      static_cast<VAL*>(targets[idx]->data()) - inner_product(target_lo, target_strides);
-
-    const auto num_blocks = (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
-                            LEGATE_THREADS_PER_BLOCK;
-    auto count            = counts[idx];
-    auto target_extents   = calculate_extents(target_subdomain);
-
-    api->launch_kernel(kern,
-                       {num_blocks},
-                       {LEGATE_THREADS_PER_BLOCK},
-                       /*shared_mem_bytes=*/0,
-                       stream,
-                       static_cast<void*>(target_ptr),
-                       static_cast<const void*>(source_ptr),
-                       count,
-                       target_extents,
-                       target_lo,
-                       target_strides,
-                       source_strides);
   }
+};
+
+void copy_to_send_buffer_gpu_(std::uint32_t field_size,
+                              SmallVector<InternalSharedPtr<InlineStorage>>& targets,
+                              const InlineStorage& source,
+                              const Domain& source_domain,
+                              DomainPoint& source_strides,
+                              const SmallVector<Domain>& target_subdomains,
+                              SmallVector<DomainPoint>& all_target_strides,
+                              const SmallVector<int>& counts,
+                              CUstream stream)
+{
+  field_size_dispatch(field_size,
+                      CopyToSendBufferGPU{},
+                      targets,
+                      source,
+                      source_domain,
+                      source_strides,
+                      target_subdomains,
+                      all_target_strides,
+                      counts,
+                      stream);
 }
 
-void gpu_copy_from_recv_buffer(InlineStorage& target,
-                               const Domain& target_domain,
-                               DomainPoint& target_strides,
-                               const SmallVector<InternalSharedPtr<InlineStorage>>& sources,
-                               const SmallVector<Domain>& source_subdomains,
-                               SmallVector<DomainPoint>& all_source_strides,
-                               const SmallVector<int>& counts,
-                               std::uint32_t,
-                               CUstream stream)
-{
-  using VAL = std::uint32_t;
+struct CopyFromRecvBufferGPU {
+  template <typename VAL>
+  void operator()(InlineStorage& target,
+                  const Domain& target_domain,
+                  DomainPoint& target_strides,
+                  const SmallVector<InternalSharedPtr<InlineStorage>>& sources,
+                  const SmallVector<Domain>& source_subdomains,
+                  SmallVector<DomainPoint>& all_source_strides,
+                  const SmallVector<int>& counts,
+                  CUstream stream)
+  {
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
 
-  const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+    auto&& api         = cuda::detail::get_cuda_driver_api();
+    auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
+    CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
+                                                        CopyToSendBufferKernelName<VAL>::value);
 
-  auto&& api         = cuda::detail::get_cuda_driver_api();
-  auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
-  CUkernel kern =
-    mod_manager.load_kernel_from_fatbin(copy_request_fatbin, "legate_copy_subdomain_32");
+    const auto node_count = Runtime::get_runtime().node_count();
 
-  const auto node_count = Runtime::get_runtime().node_count();
+    auto* target_ptr =
+      static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
 
-  auto* target_ptr =
-    static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
+    for (std::uint32_t idx = 0; idx < node_count; ++idx) {
+      if (counts[idx] == 0) {
+        continue;
+      }
 
-  for (std::uint32_t idx = 0; idx < node_count; ++idx) {
-    if (counts[idx] == 0) {
-      continue;
+      const auto& source_subdomain = source_subdomains[idx];
+      auto& source_strides         = all_source_strides[idx];
+      auto source_lo               = source_subdomain.lo();
+      const auto* source_ptr =
+        static_cast<const VAL*>(sources[idx]->data()) - inner_product(source_lo, source_strides);
+
+      const auto num_blocks =
+        (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
+        LEGATE_THREADS_PER_BLOCK;
+      auto count          = counts[idx];
+      auto source_extents = calculate_extents(source_subdomain);
+
+      api->launch_kernel(kern,
+                         {num_blocks},
+                         {LEGATE_THREADS_PER_BLOCK},
+                         /*shared_mem_bytes=*/0,
+                         stream,
+                         static_cast<void*>(target_ptr),
+                         static_cast<const void*>(source_ptr),
+                         count,
+                         source_extents,
+                         source_lo,
+                         target_strides,
+                         source_strides);
     }
-
-    const auto& source_subdomain = source_subdomains[idx];
-    auto& source_strides         = all_source_strides[idx];
-    auto source_lo               = source_subdomain.lo();
-    const auto* source_ptr =
-      static_cast<const VAL*>(sources[idx]->data()) - inner_product(source_lo, source_strides);
-
-    const auto num_blocks = (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
-                            LEGATE_THREADS_PER_BLOCK;
-    auto count            = counts[idx];
-    auto source_extents   = calculate_extents(source_subdomain);
-
-    api->launch_kernel(kern,
-                       {num_blocks},
-                       {LEGATE_THREADS_PER_BLOCK},
-                       /*shared_mem_bytes=*/0,
-                       stream,
-                       static_cast<void*>(target_ptr),
-                       static_cast<const void*>(source_ptr),
-                       count,
-                       source_extents,
-                       source_lo,
-                       target_strides,
-                       source_strides);
   }
+};
+
+void copy_from_recv_buffer_gpu_(std::uint32_t field_size,
+                                InlineStorage& target,
+                                const Domain& target_domain,
+                                DomainPoint& target_strides,
+                                const SmallVector<InternalSharedPtr<InlineStorage>>& sources,
+                                const SmallVector<Domain>& source_subdomains,
+                                SmallVector<DomainPoint>& all_source_strides,
+                                const SmallVector<int>& counts,
+                                CUstream stream)
+{
+  field_size_dispatch(field_size,
+                      CopyFromRecvBufferGPU{},
+                      target,
+                      target_domain,
+                      target_strides,
+                      sources,
+                      source_subdomains,
+                      all_source_strides,
+                      counts,
+                      stream);
 }
 
 std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
@@ -476,15 +545,15 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
       target_subdomain.get_volume() ==
       static_cast<std::size_t>(recv_offsets[device_count - 1] + recv_counts[device_count - 1]));
 
-    cpu_copy_to_send_buffer(send_buffer,
-                            *source_,
-                            source_subdomain,
-                            calculate_strides(source_tiling->tile_shape_dp()),
-                            send_subdomains,
-                            send_strides,
-                            send_counts,
-                            send_offsets,
-                            field_size_);
+    copy_to_send_buffer_cpu_(field_size_,
+                             send_buffer,
+                             *source_,
+                             source_subdomain,
+                             calculate_strides(source_tiling->tile_shape_dp()),
+                             send_subdomains,
+                             send_strides,
+                             send_counts,
+                             send_offsets);
 
     collAlltoallv(send_buffer.data(),
                   send_counts.data(),
@@ -495,15 +564,15 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
                   to_coll_data_type_(field_size_),
                   Runtime::get_runtime().get_cpu_comm());
 
-    cpu_copy_from_recv_buffer(*target_,
-                              target_subdomain,
-                              calculate_strides(target_tiling->tile_shape_dp()),
-                              recv_buffer,
-                              recv_subdomains,
-                              recv_strides,
-                              recv_counts,
-                              recv_offsets,
-                              field_size_);
+    copy_from_recv_buffer_cpu_(field_size_,
+                               *target_,
+                               target_subdomain,
+                               calculate_strides(target_tiling->tile_shape_dp()),
+                               recv_buffer,
+                               recv_subdomains,
+                               recv_strides,
+                               recv_counts,
+                               recv_offsets);
 
     return;
   }
@@ -539,15 +608,15 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   auto source_strides = calculate_strides(source_tiling->tile_shape_dp());
   auto target_strides = calculate_strides(target_tiling->tile_shape_dp());
 
-  gpu_copy_to_send_buffer(send_buffers,
-                          *source_,
-                          source_subdomain,
-                          source_strides,
-                          send_subdomains,
-                          send_strides,
-                          send_counts,
-                          field_size_,
-                          stream);
+  copy_to_send_buffer_gpu_(field_size_,
+                           send_buffers,
+                           *source_,
+                           source_subdomain,
+                           source_strides,
+                           send_subdomains,
+                           send_strides,
+                           send_counts,
+                           stream);
 
   LEGATE_CHECK_NCCL(ncclGroupStart());
 
@@ -571,15 +640,15 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
   LEGATE_CHECK_NCCL(ncclGroupEnd());
 
-  gpu_copy_from_recv_buffer(*target_,
-                            target_subdomain,
-                            target_strides,
-                            recv_buffers,
-                            recv_subdomains,
-                            recv_strides,
-                            recv_counts,
-                            field_size_,
-                            stream);
+  copy_from_recv_buffer_gpu_(field_size_,
+                             *target_,
+                             target_subdomain,
+                             target_strides,
+                             recv_buffers,
+                             recv_subdomains,
+                             recv_strides,
+                             recv_counts,
+                             stream);
 }
 
 }  // namespace legate::detail
