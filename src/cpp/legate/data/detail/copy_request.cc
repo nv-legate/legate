@@ -31,6 +31,32 @@ namespace legate::detail {
 
 namespace {
 
+#define LEGATE_CHECK_NCCL(...)               \
+  do {                                       \
+    const ncclResult_t result = __VA_ARGS__; \
+    check_nccl(result, __FILE__, __LINE__);  \
+  } while (false)
+
+void check_nccl(ncclResult_t error, const char* file, int line)
+{
+  if (error != ncclSuccess) {
+    static_cast<void>(fprintf(stderr,
+                              "Internal NCCL failure with error %d (%s) in file %s at line %d\n",
+                              error,
+                              ncclGetErrorString(error),
+                              file,
+                              line));
+    std::exit(error);
+  }
+}
+
+Logger& log_copy()
+{
+  static Logger log{"legate.copy"};
+
+  return log;
+}
+
 template <typename Functor, typename... Fnargs>
 constexpr decltype(auto) field_size_dispatch(std::uint32_t field_size, Functor f, Fnargs&&... args)
 {
@@ -53,49 +79,6 @@ constexpr decltype(auto) field_size_dispatch(std::uint32_t field_size, Functor f
   }
   LEGATE_UNREACHABLE();
   return f.template operator()<std::uint8_t>(std::forward<Fnargs>(args)...);
-}
-
-}  // namespace
-
-Logger& log_debug()
-{
-  static Logger log{"legate.debug"};
-
-  return log;
-}
-
-void CopyRequest::perform(VariantCode variant_code) const
-{
-  LEGATE_CHECK(source_partition_->has_color_shape());
-
-  if (!target_partition_->has_color_shape()) {
-    LEGATE_CHECK(variant_code == VariantCode::CPU);
-
-    cpu_all_gather_();
-  } else {
-    shuffle_(variant_code);
-  }
-}
-
-namespace {
-
-#define LEGATE_CHECK_NCCL(...)               \
-  do {                                       \
-    const ncclResult_t result = __VA_ARGS__; \
-    check_nccl(result, __FILE__, __LINE__);  \
-  } while (false)
-
-void check_nccl(ncclResult_t error, const char* file, int line)
-{
-  if (error != ncclSuccess) {
-    static_cast<void>(fprintf(stderr,
-                              "Internal NCCL failure with error %d (%s) in file %s at line %d\n",
-                              error,
-                              ncclGetErrorString(error),
-                              file,
-                              line));
-    std::exit(error);
-  }
 }
 
 template <typename VAL>
@@ -341,7 +324,46 @@ void gpu_copy_from_recv_buffer(InlineStorage& target,
   }
 }
 
+std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
+find_all_intersections(const Tiling* from, const Tiling* to, const Domain& store_domain)
+{
+  const auto device_count = Runtime::get_runtime().node_count();
+  const auto my_device_id = Runtime::get_runtime().node_id();
+
+  const auto from_tile_domain    = from->shard(store_domain, from->compute_color(my_device_id));
+  const auto intersection_colors = Domain{from_tile_domain.lo() / to->tile_shape_dp(),
+                                          from_tile_domain.hi() / to->tile_shape_dp()};
+
+  auto intersection_subdomains = SmallVector<Domain>(tags::size_tag, device_count, {});
+  auto intersection_strides    = SmallVector<DomainPoint>(tags::size_tag, device_count, {});
+  auto intersection_counts     = SmallVector<int>(tags::size_tag, device_count, {});
+
+  for (Domain::DomainPointIterator it{intersection_colors}; it; ++it) {
+    const auto to_device_id = to->compute_device_id(it.p);
+    const auto subdomain    = to->shard(from_tile_domain, it.p);
+
+    intersection_subdomains[to_device_id] = subdomain;
+    intersection_strides[to_device_id]    = calculate_strides(subdomain);
+    intersection_counts[to_device_id]     = subdomain.get_volume();
+  }
+
+  return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};
+}
+
 }  // namespace
+
+void CopyRequest::perform(VariantCode variant_code) const
+{
+  LEGATE_CHECK(source_partition_->has_color_shape());
+
+  if (!target_partition_->has_color_shape()) {
+    LEGATE_CHECK(variant_code == VariantCode::CPU);
+
+    cpu_all_gather_();
+  } else {
+    shuffle_(variant_code);
+  }
+}
 
 void CopyRequest::cpu_all_gather_() const
 {
@@ -398,36 +420,6 @@ void CopyRequest::cpu_all_gather_() const
   }
 }
 
-namespace {
-
-std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
-find_all_intersections(const Tiling* from, const Tiling* to, const Domain& store_domain)
-{
-  const auto device_count = Runtime::get_runtime().node_count();
-  const auto my_device_id = Runtime::get_runtime().node_id();
-
-  const auto from_tile_domain    = from->shard(store_domain, from->compute_color(my_device_id));
-  const auto intersection_colors = Domain{from_tile_domain.lo() / to->tile_shape_dp(),
-                                          from_tile_domain.hi() / to->tile_shape_dp()};
-
-  auto intersection_subdomains = SmallVector<Domain>(tags::size_tag, device_count, {});
-  auto intersection_strides    = SmallVector<DomainPoint>(tags::size_tag, device_count, {});
-  auto intersection_counts     = SmallVector<int>(tags::size_tag, device_count, {});
-
-  for (Domain::DomainPointIterator it{intersection_colors}; it; ++it) {
-    const auto to_device_id = to->compute_device_id(it.p);
-    const auto subdomain    = to->shard(from_tile_domain, it.p);
-
-    intersection_subdomains[to_device_id] = subdomain;
-    intersection_strides[to_device_id]    = calculate_strides(subdomain);
-    intersection_counts[to_device_id]     = subdomain.get_volume();
-  }
-
-  return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};
-}
-
-}  // namespace
-
 void CopyRequest::shuffle_(VariantCode variant_code) const
 {
   // If the source_partition_ was a NoPartition, the subsumption check would have passed.
@@ -441,6 +433,28 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     find_all_intersections(source_tiling, target_tiling, sub_domain_);
   auto&& [target_subdomain, recv_subdomains, recv_strides, recv_counts] =
     find_all_intersections(target_tiling, source_tiling, sub_domain_);
+
+  // TODO(wonchanl): Add an option to toggle this behavior
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    std::stringstream ss{};
+
+    ss << "SHUFFLE\n  from: " << source_tiling->to_string()
+       << "\n  to: " << target_tiling->to_string() << "\n  store_domain: " << sub_domain_
+       << "\n  intersections:\n";
+    for (auto&& [to, send_domain] : enumerate(send_subdomains)) {
+      if (send_counts[to] == 0) {
+        continue;
+      }
+      ss << "    send to " << to << ": " << send_domain << "\n";
+    }
+    for (auto&& [from, recv_domain] : enumerate(recv_subdomains)) {
+      if (recv_counts[from] == 0) {
+        continue;
+      }
+      ss << "    recv from " << from << ": " << recv_domain << "\n";
+    }
+    log_copy().debug() << std::move(ss).str();
+  }
 
   if (variant_code == VariantCode::CPU) {
     // For CPU shuffle, we allocate contiguous transfer buffers to match the all-to-all API
