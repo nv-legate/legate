@@ -28,6 +28,34 @@
 
 namespace legate::detail {
 
+namespace {
+
+template <typename Functor, typename... Fnargs>
+constexpr decltype(auto) field_size_dispatch(std::uint32_t field_size, Functor f, Fnargs&&... args)
+{
+  switch (field_size) {
+    case 1: {
+      return f.template operator()<std::uint8_t>(std::forward<Fnargs>(args)...);
+    }
+    case 2: {
+      return f.template operator()<std::uint16_t>(std::forward<Fnargs>(args)...);
+    }
+    case 4: {
+      return f.template operator()<std::uint32_t>(std::forward<Fnargs>(args)...);
+    }
+    case 8: {
+      return f.template operator()<std::uint64_t>(std::forward<Fnargs>(args)...);
+    }
+    default: {  // legate-lint: no-switch-default
+      throw TracedException<std::runtime_error>{"Unsupported field size"};
+    }
+  }
+  LEGATE_UNREACHABLE();
+  return f.template operator()<std::uint8_t>(std::forward<Fnargs>(args)...);
+}
+
+}  // namespace
+
 Logger& log_debug()
 {
   static Logger log{"legate.debug"};
@@ -92,41 +120,38 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
   }
 }
 
-template <typename VAL>
-void cpu_copy_to_send_buffer(InlineStorage& target,
-                             const InlineStorage& source,
-                             const Domain& source_domain,
-                             const DomainPoint& source_strides,
-                             const SmallVector<Domain>& target_subdomains,
-                             const SmallVector<DomainPoint>& all_target_strides,
-                             const SmallVector<int>& counts,
-                             const SmallVector<int>& offsets)
-{
-  const auto node_count = Runtime::get_runtime().node_count();
-  const auto* source_ptr =
-    static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
+struct CopyToSendBufferCPU {
+  template <typename VAL>
+  void operator()(InlineStorage& target,
+                  const InlineStorage& source,
+                  const Domain& source_domain,
+                  const DomainPoint& source_strides,
+                  const SmallVector<Domain>& target_subdomains,
+                  const SmallVector<DomainPoint>& all_target_strides,
+                  const SmallVector<int>& counts,
+                  const SmallVector<int>& offsets)
+  {
+    const auto node_count = Runtime::get_runtime().node_count();
+    const auto* source_ptr =
+      static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
 
-  for (std::uint32_t idx = 0; idx < node_count; ++idx) {
-    if (counts[idx] == 0) {
-      continue;
-    }
+    for (std::uint32_t idx = 0; idx < node_count; ++idx) {
+      if (counts[idx] == 0) {
+        continue;
+      }
 
-    const auto& target_subdomain = target_subdomains[idx];
-    const auto& target_strides   = all_target_strides[idx];
-    auto* target_ptr             = static_cast<VAL*>(target.data()) + offsets[idx] -
-                                   inner_product(target_subdomain.lo(), target_strides);
+      const auto& target_subdomain = target_subdomains[idx];
+      const auto& target_strides   = all_target_strides[idx];
+      auto* target_ptr             = static_cast<VAL*>(target.data()) + offsets[idx] -
+                                     inner_product(target_subdomain.lo(), target_strides);
 
-    for (Domain::DomainPointIterator it{target_subdomain, false}; it; ++it) {
-      target_ptr[inner_product(it.p, target_strides)] =
-        source_ptr[inner_product(it.p, source_strides)];
-
-      log_debug().print() << "source_domain: " << source_domain
-                          << ", target_subdomain: " << target_subdomain
-                          << ", target_idx: " << inner_product(it.p, target_strides)
-                          << ", source_idx: " << inner_product(it.p, source_strides);
+      for (Domain::DomainPointIterator it{target_subdomain, false}; it; ++it) {
+        target_ptr[inner_product(it.p, target_strides)] =
+          source_ptr[inner_product(it.p, source_strides)];
+      }
     }
   }
-}
+};
 
 void cpu_copy_to_send_buffer(InlineStorage& target,
                              const InlineStorage& source,
@@ -138,88 +163,51 @@ void cpu_copy_to_send_buffer(InlineStorage& target,
                              const SmallVector<int>& offsets,
                              std::uint32_t field_size)
 {
-  switch (field_size) {
-    case 1: {
-      cpu_copy_to_send_buffer<std::uint8_t>(target,
-                                            source,
-                                            source_domain,
-                                            source_strides,
-                                            target_subdomains,
-                                            all_target_strides,
-                                            counts,
-                                            offsets);
-      break;
-    }
-    case 2: {
-      cpu_copy_to_send_buffer<std::uint16_t>(target,
-                                             source,
-                                             source_domain,
-                                             source_strides,
-                                             target_subdomains,
-                                             all_target_strides,
-                                             counts,
-                                             offsets);
-      break;
-    }
-    case 4: {
-      cpu_copy_to_send_buffer<std::uint32_t>(target,
-                                             source,
-                                             source_domain,
-                                             source_strides,
-                                             target_subdomains,
-                                             all_target_strides,
-                                             counts,
-                                             offsets);
-      break;
-    }
-    case 8: {
-      cpu_copy_to_send_buffer<std::uint64_t>(target,
-                                             source,
-                                             source_domain,
-                                             source_strides,
-                                             target_subdomains,
-                                             all_target_strides,
-                                             counts,
-                                             offsets);
-      break;
-    }
-    default: {  // legate-lint: no-switch-default
-      throw TracedException<std::runtime_error>{"Unsupported field size"};
-    }
-  }
+  field_size_dispatch(field_size,
+                      CopyToSendBufferCPU{},
+                      target,
+                      source,
+                      source_domain,
+                      source_strides,
+                      target_subdomains,
+                      all_target_strides,
+                      counts,
+                      offsets);
 }
 
-template <typename VAL>
-void cpu_copy_from_recv_buffer(InlineStorage& target,
-                               const Domain& target_domain,
-                               const DomainPoint& target_strides,
-                               const InlineStorage& source,
-                               const SmallVector<Domain>& source_subdomains,
-                               const SmallVector<DomainPoint>& all_source_strides,
-                               const SmallVector<int>& counts,
-                               const SmallVector<int>& offsets)
-{
-  const auto node_count = Runtime::get_runtime().node_count();
+struct CopyFromRecvBufferCPU {
+  template <typename VAL>
+  void operator()(InlineStorage& target,
+                  const Domain& target_domain,
+                  const DomainPoint& target_strides,
+                  const InlineStorage& source,
+                  const SmallVector<Domain>& source_subdomains,
+                  const SmallVector<DomainPoint>& all_source_strides,
+                  const SmallVector<int>& counts,
+                  const SmallVector<int>& offsets)
+  {
+    const auto node_count = Runtime::get_runtime().node_count();
 
-  auto* target_ptr =
-    static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
+    auto* target_ptr =
+      static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
 
-  for (std::uint32_t idx = 0; idx < node_count; ++idx) {
-    if (counts[idx] == 0) {
-      continue;
-    }
+    for (std::uint32_t idx = 0; idx < node_count; ++idx) {
+      if (counts[idx] == 0) {
+        continue;
+      }
 
-    const auto& source_subdomain = source_subdomains[idx];
-    const auto& source_strides   = all_source_strides[idx];
-    const auto* source_ptr       = static_cast<const VAL*>(source.data()) + offsets[idx] -
-                                   inner_product(source_subdomain.lo(), source_strides);
+      const auto& source_subdomain = source_subdomains[idx];
+      const auto& source_strides   = all_source_strides[idx];
+      const auto* source_ptr       = static_cast<const VAL*>(source.data()) + offsets[idx] -
+                                     inner_product(source_subdomain.lo(), source_strides);
 
-    for (Domain::DomainPointIterator it{source_subdomain}; it; ++it) {
-      target_ptr[inner_product(it.p, target_strides)] =
-        source_ptr[inner_product(it.p, source_strides)];
+      for (Domain::DomainPointIterator it{source_subdomain}; it; ++it) {
+        target_ptr[inner_product(it.p, target_strides)] =
+          source_ptr[inner_product(it.p, source_strides)];
+      }
     }
   }
-}
+};
 
 void cpu_copy_from_recv_buffer(InlineStorage& target,
                                const Domain& target_domain,
@@ -231,55 +219,16 @@ void cpu_copy_from_recv_buffer(InlineStorage& target,
                                const SmallVector<int>& offsets,
                                std::uint32_t field_size)
 {
-  switch (field_size) {
-    case 1: {
-      cpu_copy_from_recv_buffer<std::uint8_t>(target,
-                                              target_domain,
-                                              target_strides,
-                                              source,
-                                              source_subdomains,
-                                              all_source_strides,
-                                              counts,
-                                              offsets);
-      break;
-    }
-    case 2: {
-      cpu_copy_from_recv_buffer<std::uint16_t>(target,
-                                               target_domain,
-                                               target_strides,
-                                               source,
-                                               source_subdomains,
-                                               all_source_strides,
-                                               counts,
-                                               offsets);
-      break;
-    }
-    case 4: {
-      cpu_copy_from_recv_buffer<std::uint32_t>(target,
-                                               target_domain,
-                                               target_strides,
-                                               source,
-                                               source_subdomains,
-                                               all_source_strides,
-                                               counts,
-                                               offsets);
-      break;
-    }
-    case 8: {
-      cpu_copy_from_recv_buffer<std::uint64_t>(target,
-                                               target_domain,
-                                               target_strides,
-                                               source,
-                                               source_subdomains,
-                                               all_source_strides,
-                                               counts,
-                                               offsets);
-      break;
-    }
-    default: {  // legate-lint: no-switch-default
-      throw TracedException<std::runtime_error>{"Unsupported field size"};
-    }
-  }
+  field_size_dispatch(field_size,
+                      CopyFromRecvBufferCPU{},
+                      target,
+                      target_domain,
+                      target_strides,
+                      source,
+                      source_subdomains,
+                      all_source_strides,
+                      counts,
+                      offsets);
 }
 
 void gpu_copy_to_send_buffer(SmallVector<InternalSharedPtr<InlineStorage>>& targets,
