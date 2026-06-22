@@ -93,6 +93,9 @@ void run_example()
   init_x_task.add_scalar_arg(legate::Scalar{42});
   runtime->submit(std::move(init_x_task));
 
+  // Right now we can't do a direct allgather or reshuffling from CPUs to GPUs
+  // so we first launch a dummy task just to move the data to GPUs
+
   auto dummy_task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
   dummy_task.add_input(x_store);
   runtime->submit(std::move(dummy_task));

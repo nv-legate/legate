@@ -18,7 +18,6 @@ class InitTask : public legate::LegateTask<InitTask> {
   static void cpu_variant(legate::TaskContext context);
 };
 
-// verification task
 class DummyTask : public legate::LegateTask<DummyTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -31,7 +30,6 @@ class DummyTask : public legate::LegateTask<DummyTask> {
 #endif
 };
 
-// verification task
 class CopyTask : public legate::LegateTask<CopyTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)

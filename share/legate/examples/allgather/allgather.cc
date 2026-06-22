@@ -79,6 +79,7 @@ void run_example()
   auto library        = runtime->create_library("allgather");
 
   InitTask::register_variants(library);
+  DummyTask::register_variants(library);
   CopyTask::register_variants(library);
   CheckTask::register_variants(library);
 
@@ -90,6 +91,12 @@ void run_example()
   init_x_task.add_output(x_store);
   init_x_task.add_scalar_arg(legate::Scalar{42});
   runtime->submit(std::move(init_x_task));
+
+  // Right now we can't do a direct allgather or reshuffling from CPUs to GPUs
+  // so we first launch a dummy task just to move the data to GPUs
+  auto dummy_task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
+  dummy_task.add_input(x_store);
+  runtime->submit(std::move(dummy_task));
 
   auto copy_task = runtime->create_task(library, CopyTask::TASK_CONFIG.task_id());
   auto part_x    = copy_task.add_input(x_store);
