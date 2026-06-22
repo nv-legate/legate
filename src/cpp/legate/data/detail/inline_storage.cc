@@ -273,8 +273,6 @@ void InlineStorage::remap_to(mapping::StoreTarget new_target)
     auto&& api = cuda::detail::get_cuda_driver_api();
 
     api->mem_cpy_async(tmp.data(), data(), num_bytes, Runtime::get_runtime().get_cuda_stream());
-
-    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
   } else {
     std::memcpy(tmp.data(), data(), num_bytes);
   }
