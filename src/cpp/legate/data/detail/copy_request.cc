@@ -25,6 +25,7 @@
 
 #include <nccl.h>
 #include <stdexcept>
+#include <tuple>
 
 namespace legate::detail {
 
@@ -403,6 +404,36 @@ void CopyRequest::cpu_all_gather_() const
   }
 }
 
+namespace {
+
+std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
+find_all_intersections(const Tiling* from, const Tiling* to, const Domain& store_domain)
+{
+  const auto device_count = Runtime::get_runtime().node_count();
+  const auto my_device_id = Runtime::get_runtime().node_id();
+
+  const auto from_tile_domain    = from->shard(store_domain, from->compute_color(my_device_id));
+  const auto intersection_colors = Domain{from_tile_domain.lo() / to->tile_shape_dp(),
+                                          from_tile_domain.hi() / to->tile_shape_dp()};
+
+  auto intersection_subdomains = SmallVector<Domain>(tags::size_tag, device_count, {});
+  auto intersection_strides    = SmallVector<DomainPoint>(tags::size_tag, device_count, {});
+  auto intersection_counts     = SmallVector<int>(tags::size_tag, device_count, {});
+
+  for (Domain::DomainPointIterator it{intersection_colors}; it; ++it) {
+    const auto to_device_id = to->compute_device_id(it.p);
+    const auto subdomain    = to->shard(from_tile_domain, it.p);
+
+    intersection_subdomains[to_device_id] = subdomain;
+    intersection_strides[to_device_id]    = calculate_strides(subdomain);
+    intersection_counts[to_device_id]     = subdomain.get_volume();
+  }
+
+  return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};
+}
+
+}  // namespace
+
 void CopyRequest::cpu_shuffle_() const
 {
   // If the source_partition_ was a NoPartition, the subsumption check would have passed.
@@ -410,73 +441,35 @@ void CopyRequest::cpu_shuffle_() const
 
   const auto* source_tiling = static_cast<Tiling*>(source_partition_.get());
   const auto* target_tiling = static_cast<Tiling*>(target_partition_.get());
+  const auto device_count   = Runtime::get_runtime().node_count();
 
-  const auto node_id = Runtime::get_runtime().node_id();
-
-  const auto target_subdomain =
-    target_tiling->shard(sub_domain_, target_tiling->compute_color(node_id));
-  const auto source_subdomain =
-    source_tiling->shard(sub_domain_, source_tiling->compute_color(node_id));
-
-  const auto& source_tile_shape = source_tiling->tile_shape_dp();
-  const auto source_colors =
-    Domain{target_subdomain.lo() / source_tile_shape, target_subdomain.hi() / source_tile_shape};
-
-  const auto& target_tile_shape = target_tiling->tile_shape_dp();
-  const auto target_colors =
-    Domain{source_subdomain.lo() / target_tile_shape, source_subdomain.hi() / target_tile_shape};
-
-  const auto node_count = Runtime::get_runtime().node_count();
-
-  SmallVector<Domain> recv_subdomains(tags::size_tag, node_count, {});
-  SmallVector<Domain> send_subdomains(tags::size_tag, node_count, {});
-
-  SmallVector<DomainPoint> recv_strides(tags::size_tag, node_count, {});
-  SmallVector<DomainPoint> send_strides(tags::size_tag, node_count, {});
-
-  SmallVector<int> recv_counts(tags::size_tag, node_count, 0);
-  SmallVector<int> send_counts(tags::size_tag, node_count, 0);
-
-  for (Domain::DomainPointIterator it{source_colors}; it; ++it) {
-    const auto source_device_id = source_tiling->compute_device_id(it.p);
-    const auto recv_subdomain   = source_tiling->shard(target_subdomain, it.p);
-
-    recv_subdomains[source_device_id] = recv_subdomain;
-    recv_strides[source_device_id]    = calculate_strides(recv_subdomain);
-    recv_counts[source_device_id]     = recv_subdomain.get_volume();
-  }
-
-  for (Domain::DomainPointIterator it{target_colors}; it; ++it) {
-    const auto target_device_id = target_tiling->compute_device_id(it.p);
-    const auto send_subdomain   = target_tiling->shard(source_subdomain, it.p);
-
-    send_subdomains[target_device_id] = send_subdomain;
-    send_strides[target_device_id]    = calculate_strides(send_subdomain);
-    send_counts[target_device_id]     = send_subdomain.get_volume();
-  }
+  auto&& [source_subdomain, send_subdomains, send_strides, send_counts] =
+    find_all_intersections(source_tiling, target_tiling, sub_domain_);
+  auto&& [target_subdomain, recv_subdomains, recv_strides, recv_counts] =
+    find_all_intersections(target_tiling, source_tiling, sub_domain_);
 
   InlineStorage send_buffer{source_subdomain, field_size_, source_->target()};
   InlineStorage recv_buffer{target_subdomain, field_size_, target_->target()};
 
-  SmallVector<int> recv_offsets(tags::size_tag, node_count, 0);
-  SmallVector<int> send_offsets(tags::size_tag, node_count, 0);
+  SmallVector<int> recv_offsets(tags::size_tag, device_count, 0);
+  SmallVector<int> send_offsets(tags::size_tag, device_count, 0);
 
-  for (std::uint32_t idx = 1; idx < node_count; ++idx) {
+  for (std::uint32_t idx = 1; idx < device_count; ++idx) {
     recv_offsets[idx] = recv_offsets[idx - 1] + recv_counts[idx - 1];
     send_offsets[idx] = send_offsets[idx - 1] + send_counts[idx - 1];
   }
 
   LEGATE_ASSERT(
     source_subdomain.get_volume() ==
-    static_cast<std::size_t>(send_offsets[node_count - 1] + send_counts[node_count - 1]));
+    static_cast<std::size_t>(send_offsets[device_count - 1] + send_counts[device_count - 1]));
   LEGATE_ASSERT(
     target_subdomain.get_volume() ==
-    static_cast<std::size_t>(recv_offsets[node_count - 1] + recv_counts[node_count - 1]));
+    static_cast<std::size_t>(recv_offsets[device_count - 1] + recv_counts[device_count - 1]));
 
   cpu_copy_to_send_buffer(send_buffer,
                           *source_,
                           source_subdomain,
-                          calculate_strides(source_tile_shape),
+                          calculate_strides(source_tiling->tile_shape_dp()),
                           send_subdomains,
                           send_strides,
                           send_counts,
@@ -494,7 +487,7 @@ void CopyRequest::cpu_shuffle_() const
 
   cpu_copy_from_recv_buffer(*target_,
                             target_subdomain,
-                            calculate_strides(target_tile_shape),
+                            calculate_strides(target_tiling->tile_shape_dp()),
                             recv_buffer,
                             recv_subdomains,
                             recv_strides,
