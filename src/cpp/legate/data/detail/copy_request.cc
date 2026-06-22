@@ -220,22 +220,22 @@ struct CopyToSendBufferKernelName;
 
 template <>
 struct CopyToSendBufferKernelName<std::uint8_t> {
-  static constexpr const char* value = "legate_copy_subdomain_8";
+  static constexpr const char* value = "legate_copy_to_send_buffer_8";
 };
 
 template <>
 struct CopyToSendBufferKernelName<std::uint16_t> {
-  static constexpr const char* value = "legate_copy_subdomain_16";
+  static constexpr const char* value = "legate_copy_to_send_buffer_16";
 };
 
 template <>
 struct CopyToSendBufferKernelName<std::uint32_t> {
-  static constexpr const char* value = "legate_copy_subdomain_32";
+  static constexpr const char* value = "legate_copy_to_send_buffer_32";
 };
 
 template <>
 struct CopyToSendBufferKernelName<std::uint64_t> {
-  static constexpr const char* value = "legate_copy_subdomain_64";
+  static constexpr const char* value = "legate_copy_to_send_buffer_64";
 };
 
 struct CopyToSendBufferGPU {
@@ -245,7 +245,6 @@ struct CopyToSendBufferGPU {
                   const Domain& source_domain,
                   DomainPoint& source_strides,
                   const SmallVector<Domain>& target_subdomains,
-                  SmallVector<DomainPoint>& all_target_strides,
                   const SmallVector<int>& counts,
                   CUstream stream)
   {
@@ -266,10 +265,9 @@ struct CopyToSendBufferGPU {
       }
 
       const auto& target_subdomain = target_subdomains[idx];
-      auto& target_strides         = all_target_strides[idx];
-      auto target_lo               = target_subdomain.lo();
-      auto* target_ptr =
-        static_cast<VAL*>(targets[idx]->data()) - inner_product(target_lo, target_strides);
+      auto* target_ptr             = static_cast<VAL*>(targets[idx]->data());
+      const auto* source_ptr_shifted =
+        source_ptr + inner_product(target_subdomain.lo(), source_strides);
 
       const auto num_blocks =
         (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
@@ -283,11 +281,9 @@ struct CopyToSendBufferGPU {
                          /*shared_mem_bytes=*/0,
                          stream,
                          static_cast<void*>(target_ptr),
-                         static_cast<const void*>(source_ptr),
+                         static_cast<const void*>(source_ptr_shifted),
                          count,
                          target_extents,
-                         target_lo,
-                         target_strides,
                          source_strides);
     }
   }
@@ -299,7 +295,6 @@ void copy_to_send_buffer_gpu_(std::uint32_t field_size,
                               const Domain& source_domain,
                               DomainPoint& source_strides,
                               const SmallVector<Domain>& target_subdomains,
-                              SmallVector<DomainPoint>& all_target_strides,
                               const SmallVector<int>& counts,
                               CUstream stream)
 {
@@ -310,10 +305,32 @@ void copy_to_send_buffer_gpu_(std::uint32_t field_size,
                       source_domain,
                       source_strides,
                       target_subdomains,
-                      all_target_strides,
                       counts,
                       stream);
 }
+
+template <typename VAL>
+struct CopyFromRecvBufferKernelName;
+
+template <>
+struct CopyFromRecvBufferKernelName<std::uint8_t> {
+  static constexpr const char* value = "legate_copy_from_recv_buffer_8";
+};
+
+template <>
+struct CopyFromRecvBufferKernelName<std::uint16_t> {
+  static constexpr const char* value = "legate_copy_from_recv_buffer_16";
+};
+
+template <>
+struct CopyFromRecvBufferKernelName<std::uint32_t> {
+  static constexpr const char* value = "legate_copy_from_recv_buffer_32";
+};
+
+template <>
+struct CopyFromRecvBufferKernelName<std::uint64_t> {
+  static constexpr const char* value = "legate_copy_from_recv_buffer_64";
+};
 
 struct CopyFromRecvBufferGPU {
   template <typename VAL>
@@ -322,7 +339,6 @@ struct CopyFromRecvBufferGPU {
                   DomainPoint& target_strides,
                   const SmallVector<InternalSharedPtr<InlineStorage>>& sources,
                   const SmallVector<Domain>& source_subdomains,
-                  SmallVector<DomainPoint>& all_source_strides,
                   const SmallVector<int>& counts,
                   CUstream stream)
   {
@@ -331,7 +347,7 @@ struct CopyFromRecvBufferGPU {
     auto&& api         = cuda::detail::get_cuda_driver_api();
     auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
     CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
-                                                        CopyToSendBufferKernelName<VAL>::value);
+                                                        CopyFromRecvBufferKernelName<VAL>::value);
 
     const auto node_count = Runtime::get_runtime().node_count();
 
@@ -344,10 +360,8 @@ struct CopyFromRecvBufferGPU {
       }
 
       const auto& source_subdomain = source_subdomains[idx];
-      auto& source_strides         = all_source_strides[idx];
-      auto source_lo               = source_subdomain.lo();
-      const auto* source_ptr =
-        static_cast<const VAL*>(sources[idx]->data()) - inner_product(source_lo, source_strides);
+      auto* target_ptr_shifted = target_ptr + inner_product(source_subdomain.lo(), target_strides);
+      const auto* source_ptr   = static_cast<const VAL*>(sources[idx]->data());
 
       const auto num_blocks =
         (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
@@ -360,13 +374,11 @@ struct CopyFromRecvBufferGPU {
                          {LEGATE_THREADS_PER_BLOCK},
                          /*shared_mem_bytes=*/0,
                          stream,
-                         static_cast<void*>(target_ptr),
+                         static_cast<void*>(target_ptr_shifted),
                          static_cast<const void*>(source_ptr),
                          count,
                          source_extents,
-                         source_lo,
-                         target_strides,
-                         source_strides);
+                         target_strides);
     }
   }
 };
@@ -377,7 +389,6 @@ void copy_from_recv_buffer_gpu_(std::uint32_t field_size,
                                 DomainPoint& target_strides,
                                 const SmallVector<InternalSharedPtr<InlineStorage>>& sources,
                                 const SmallVector<Domain>& source_subdomains,
-                                SmallVector<DomainPoint>& all_source_strides,
                                 const SmallVector<int>& counts,
                                 CUstream stream)
 {
@@ -388,7 +399,6 @@ void copy_from_recv_buffer_gpu_(std::uint32_t field_size,
                       target_strides,
                       sources,
                       source_subdomains,
-                      all_source_strides,
                       counts,
                       stream);
 }
@@ -614,7 +624,6 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
                            source_subdomain,
                            source_strides,
                            send_subdomains,
-                           send_strides,
                            send_counts,
                            stream);
 
@@ -646,7 +655,6 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
                              target_strides,
                              recv_buffers,
                              recv_subdomains,
-                             recv_strides,
                              recv_counts,
                              stream);
 }
