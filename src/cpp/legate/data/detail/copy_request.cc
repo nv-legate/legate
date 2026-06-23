@@ -104,6 +104,22 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
   }
 }
 
+struct ReorderElementsCPU {
+  template <typename VAL>
+  void operator()(InlineStorage& target, const InlineStorage& source, const Tiling* tiling)
+  {
+    cpu_reorder_elements_<VAL>(target, source, tiling);
+  }
+};
+
+void reorder_elements_cpu_(std::uint32_t field_size,
+                           InlineStorage& target,
+                           const InlineStorage& source,
+                           const Tiling* tiling)
+{
+  field_size_dispatch(field_size, ReorderElementsCPU{}, target, source, tiling);
+}
+
 struct CopyToSendBufferCPU {
   template <typename VAL>
   void operator()(InlineStorage& target,
@@ -403,6 +419,83 @@ void copy_from_recv_buffer_gpu_(std::uint32_t field_size,
                       stream);
 }
 
+template <typename VAL>
+struct ReorderElementsKernelName;
+
+template <>
+struct ReorderElementsKernelName<std::uint8_t> {
+  static constexpr const char* value = "legate_reorder_elements_8";
+};
+
+template <>
+struct ReorderElementsKernelName<std::uint16_t> {
+  static constexpr const char* value = "legate_reorder_elements_16";
+};
+
+template <>
+struct ReorderElementsKernelName<std::uint32_t> {
+  static constexpr const char* value = "legate_reorder_elements_32";
+};
+
+template <>
+struct ReorderElementsKernelName<std::uint64_t> {
+  static constexpr const char* value = "legate_reorder_elements_64";
+};
+
+struct ReorderElementsGPU {
+  template <typename VAL>
+  void operator()(InlineStorage& target,
+                  const InlineStorage& source,
+                  const Tiling* tiling,
+                  CUstream stream)
+  {
+    const auto volume = target.domain().get_volume();
+    
+    if (volume == 0) {
+      return;
+    }
+
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+    auto&& api         = cuda::detail::get_cuda_driver_api();
+    auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
+    CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
+                                                        ReorderElementsKernelName<VAL>::value);
+
+    auto target_extents      = calculate_extents(target.domain());
+    auto tile_shape          = tiling->tile_shape_dp();
+    auto tile_strides        = calculate_strides(tile_shape);
+    auto color_strides       = calculate_strides(tiling->color_shape_dp());
+    std::int64_t tile_volume = calculate_volume(tile_shape);
+
+    const auto num_blocks =
+      (volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
+    auto element_count = volume;
+
+    api->launch_kernel(kern,
+                       {num_blocks},
+                       {LEGATE_THREADS_PER_BLOCK},
+                       /*shared_mem_bytes=*/0,
+                       stream,
+                       target.data(),
+                       source.data(),
+                       element_count,
+                       target_extents,
+                       tile_shape,
+                       tile_strides,
+                       color_strides,
+                       tile_volume);
+  }
+};
+
+void reorder_elements_gpu_(std::uint32_t field_size,
+                           InlineStorage& target,
+                           const InlineStorage& source,
+                           const Tiling* tiling,
+                           CUstream stream)
+{
+  field_size_dispatch(field_size, ReorderElementsGPU{}, target, source, tiling, stream);
+}
+
 std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
 find_all_intersections(const Tiling* from, const Tiling* to, const Domain& store_domain)
 {
@@ -436,66 +529,62 @@ void CopyRequest::perform(VariantCode variant_code) const
   LEGATE_CHECK(source_partition_->has_color_shape());
 
   if (!target_partition_->has_color_shape()) {
-    LEGATE_CHECK(variant_code == VariantCode::CPU);
-
-    cpu_all_gather_();
+    all_gather_(variant_code);
   } else {
     shuffle_(variant_code);
   }
 }
 
-void CopyRequest::cpu_all_gather_() const
+void CopyRequest::all_gather_(VariantCode variant_code) const
 {
   // TODO(wonchanl): The code below doesn't handle the case where there are smaller tiles
 
+  // All-gathers the source into `dest` using the collective backing the given variant.
+  const auto all_gather_fn = [&](InlineStorage& dest) {
+    if (variant_code == VariantCode::CPU) {
+      collAllgather(source_->data(),
+                    dest.data(),
+                    source_->domain().get_volume(),
+                    to_coll_data_type_(field_size_),
+                    Runtime::get_runtime().get_cpu_comm());
+    } else {
+      LEGATE_CHECK(variant_code == VariantCode::GPU);
+      LEGATE_CHECK_NCCL(ncclAllGather(source_->data(),
+                                      dest.data(),
+                                      source_->domain().get_volume(),
+                                      to_nccl_data_type(field_size_),
+                                      Runtime::get_runtime().get_gpu_comm(),
+                                      Runtime::get_runtime().get_cuda_stream()));
+    }
+  };
+
   // If the source partition is a "batch" partition, the source can be directly all-gathered into
-  // the target in the correct order
+  // the target in the correct order.
   //
-  // TODO(wonchanl): need to check if the device mesh has C order as well
+  // TODO(wonchan): need to check if the device mesh has C order as well
   if (source_partition_->color_shape().back() == 1) {
-    collAllgather(source_->data(),
-                  target_->data(),
-                  source_->domain().get_volume(),
-                  to_coll_data_type_(field_size_),
-                  Runtime::get_runtime().get_cpu_comm());
+    all_gather_fn(*target_);
+    return;
   }
 
-  // Otherwise, the all-gather result needs to be re-ordered into the target
-
+  // Otherwise, the all-gathered result is laid out tile-major and needs to be re-ordered into the
+  // target.
+  //
+  // FIXME(wonchan): source_->domain() may not be the tile shape if source_ isn't a tight
+  // allocation
   InlineStorage tmp{target_->domain(), field_size_, target_->target()};
 
-  collAllgather(source_->data(),
-                tmp.data(),
-                source_->domain().get_volume(),
-                to_coll_data_type_(field_size_),
-                Runtime::get_runtime().get_cpu_comm());
+  all_gather_fn(tmp);
 
   // If we're here, the target partition is NoPartition, so the source partition cannot be
   // NoPartition as well.
   const auto* tiling = static_cast<Tiling*>(source_partition_.get());
 
-  switch (field_size_) {
-    // FIXME(wonchanl): source_->domain() may not be the tile shape if source_ isn't a tight
-    // allocation
-    case 1: {
-      cpu_reorder_elements_<std::uint8_t>(*target_, tmp, tiling);
-      break;
-    }
-    case 2: {
-      cpu_reorder_elements_<std::uint16_t>(*target_, tmp, tiling);
-      break;
-    }
-    case 4: {
-      cpu_reorder_elements_<std::uint32_t>(*target_, tmp, tiling);
-      break;
-    }
-    case 8: {
-      cpu_reorder_elements_<std::uint64_t>(*target_, tmp, tiling);
-      break;
-    }
-    default: {  // legate-lint: no-switch-default
-      throw TracedException<std::runtime_error>{"Unsupported field size"};
-    }
+  if (variant_code == VariantCode::CPU) {
+    reorder_elements_cpu_(field_size_, *target_, tmp, tiling);
+  } else {
+    LEGATE_CHECK(variant_code == VariantCode::GPU);
+    reorder_elements_gpu_(field_size_, *target_, tmp, tiling, Runtime::get_runtime().get_cuda_stream());
   }
 }
 

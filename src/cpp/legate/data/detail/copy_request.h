@@ -34,7 +34,7 @@ class CopyRequest {
   CopyRequest& operator=(CopyRequest&&) noexcept = default;
 
  private:
-  void cpu_all_gather_() const;
+  void all_gather_(VariantCode variant_code) const;
   void shuffle_(VariantCode variant_code) const;
 
   InternalSharedPtr<InlineStorage> source_{};
