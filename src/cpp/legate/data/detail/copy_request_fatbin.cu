@@ -110,7 +110,7 @@ __device__ void legate_reorder_elements_(void* target_ptr,
 
   std::int64_t in_tile_offset = 0;
   std::int64_t color_offset   = 0;
-  
+
   for (std::int32_t dim = 0; dim < target_extents.dim; ++dim) {
     in_tile_offset += (point[dim] % tile_shape[dim]) * tile_strides[dim];
     color_offset += (point[dim] / tile_shape[dim]) * color_strides[dim];
@@ -210,8 +210,14 @@ extern "C" __global__ void legate_reorder_elements_8(void* target_ptr,
                                                      DomainPoint color_strides,
                                                      std::int64_t tile_volume)
 {
-  legate_reorder_elements_<std::uint8_t>(
-    target_ptr, source_ptr, volume, target_extents, tile_shape, tile_strides, color_strides, tile_volume);
+  legate_reorder_elements_<std::uint8_t>(target_ptr,
+                                         source_ptr,
+                                         volume,
+                                         target_extents,
+                                         tile_shape,
+                                         tile_strides,
+                                         color_strides,
+                                         tile_volume);
 }
 
 extern "C" __global__ void legate_reorder_elements_16(void* target_ptr,
@@ -223,8 +229,14 @@ extern "C" __global__ void legate_reorder_elements_16(void* target_ptr,
                                                       DomainPoint color_strides,
                                                       std::int64_t tile_volume)
 {
-  legate_reorder_elements_<std::uint16_t>(
-    target_ptr, source_ptr, volume, target_extents, tile_shape, tile_strides, color_strides, tile_volume);
+  legate_reorder_elements_<std::uint16_t>(target_ptr,
+                                          source_ptr,
+                                          volume,
+                                          target_extents,
+                                          tile_shape,
+                                          tile_strides,
+                                          color_strides,
+                                          tile_volume);
 }
 
 extern "C" __global__ void legate_reorder_elements_32(void* target_ptr,
@@ -236,8 +248,14 @@ extern "C" __global__ void legate_reorder_elements_32(void* target_ptr,
                                                       DomainPoint color_strides,
                                                       std::int64_t tile_volume)
 {
-  legate_reorder_elements_<std::uint32_t>(
-    target_ptr, source_ptr, volume, target_extents, tile_shape, tile_strides, color_strides, tile_volume);
+  legate_reorder_elements_<std::uint32_t>(target_ptr,
+                                          source_ptr,
+                                          volume,
+                                          target_extents,
+                                          tile_shape,
+                                          tile_strides,
+                                          color_strides,
+                                          tile_volume);
 }
 
 extern "C" __global__ void legate_reorder_elements_64(void* target_ptr,
@@ -249,8 +267,14 @@ extern "C" __global__ void legate_reorder_elements_64(void* target_ptr,
                                                       DomainPoint color_strides,
                                                       std::int64_t tile_volume)
 {
-  legate_reorder_elements_<std::uint64_t>(
-    target_ptr, source_ptr, volume, target_extents, tile_shape, tile_strides, color_strides, tile_volume);
+  legate_reorder_elements_<std::uint64_t>(target_ptr,
+                                          source_ptr,
+                                          volume,
+                                          target_extents,
+                                          tile_shape,
+                                          tile_strides,
+                                          color_strides,
+                                          tile_volume);
 }
 
 }  // namespace legate::detail

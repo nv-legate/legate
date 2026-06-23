@@ -449,7 +449,7 @@ struct ReorderElementsGPU {
                   const Tiling* tiling,
                   CUstream stream)
   {
-    const auto volume = target.domain().get_volume();
+    auto volume = target.domain().get_volume();
     
     if (volume == 0) {
       return;
@@ -469,7 +469,6 @@ struct ReorderElementsGPU {
 
     const auto num_blocks =
       (volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
-    auto element_count = volume;
 
     api->launch_kernel(kern,
                        {num_blocks},
@@ -478,7 +477,7 @@ struct ReorderElementsGPU {
                        stream,
                        target.data(),
                        source.data(),
-                       element_count,
+                       volume,
                        target_extents,
                        tile_shape,
                        tile_strides,
@@ -540,11 +539,11 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
   // TODO(wonchanl): The code below doesn't handle the case where there are smaller tiles
 
   // All-gathers the source into `dest` using the collective backing the given variant.
-  const auto all_gather_fn = [&](InlineStorage& dest) {
+  const auto all_gather_fn = [this, variant_code](InlineStorage& dest) {
     if (variant_code == VariantCode::CPU) {
       collAllgather(source_->data(),
                     dest.data(),
-                    source_->domain().get_volume(),
+                    static_cast<int>(source_->domain().get_volume()),
                     to_coll_data_type_(field_size_),
                     Runtime::get_runtime().get_cpu_comm());
     } else {
@@ -584,7 +583,8 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
     reorder_elements_cpu_(field_size_, *target_, tmp, tiling);
   } else {
     LEGATE_CHECK(variant_code == VariantCode::GPU);
-    reorder_elements_gpu_(field_size_, *target_, tmp, tiling, Runtime::get_runtime().get_cuda_stream());
+    reorder_elements_gpu_(
+      field_size_, *target_, tmp, tiling, Runtime::get_runtime().get_cuda_stream());
   }
 }
 
