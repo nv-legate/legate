@@ -189,8 +189,9 @@ def test_conda_package_dists_reads_active_python_prefix(
         json.dumps(
             {
                 "name": "legate",
-                "dist_name": "legate-26.06.00-py311_0",
-                "channel": "legate-nightly",
+                "version": "26.06.00",
+                "build": "py311_0",
+                "channel": "https://conda.anaconda.org/legate-nightly/linux-64",
             }
         ),
         encoding="utf-8",
@@ -200,7 +201,10 @@ def test_conda_package_dists_reads_active_python_prefix(
     details = info.conda_package_dists()
 
     assert details["prefix"] == str(prefix)
-    assert details["legate"] == "legate-26.06.00-py311_0 (legate-nightly)"
+    assert details["legate"] == (
+        "legate-26.06.00-py311_0 "
+        "(https://conda.anaconda.org/legate-nightly/linux-64)"
+    )
     assert details["cuda-version"] == info.FAILED_TO_DETECT
     assert details["cupynumeric"] == info.FAILED_TO_DETECT
 

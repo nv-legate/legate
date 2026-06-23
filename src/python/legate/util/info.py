@@ -276,8 +276,27 @@ def package_dists() -> PackageDists:
     return _package_dists().copy()
 
 
+def _conda_dist_name(info: Mapping[str, Any]) -> str | None:
+    name = info.get("name")
+    version = info.get("version")
+    build = info.get("build")
+    if (
+        isinstance(name, str)
+        and isinstance(version, str)
+        and isinstance(build, str)
+        and name
+        and version
+        and build
+    ):
+        return f"{name}-{version}-{build}"
+
+    return None
+
+
 def _conda_package_detail(info: dict[str, Any]) -> str:
-    result = str(info["dist_name"])
+    result = _conda_dist_name(info)
+    if result is None:
+        return FAILED_TO_DETECT
     if channel := info.get("channel"):
         result += f" ({channel})"
     return result
@@ -289,7 +308,7 @@ def _conda_meta_packages(meta_dir: Path) -> dict[str, dict[str, Any]]:
         with suppress(OSError, json.JSONDecodeError):
             data = json.loads(path.read_text(encoding="utf-8"))
             name = data.get("name")
-            if name in CONDA_PACKAGES and "dist_name" in data:
+            if name in CONDA_PACKAGES and _conda_dist_name(data) is not None:
                 packages[name] = data
 
     return packages
