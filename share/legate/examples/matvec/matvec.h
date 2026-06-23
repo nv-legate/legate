@@ -19,7 +19,18 @@ class InitTask : public legate::LegateTask<InitTask<DIM>> {
   static void cpu_variant(legate::TaskContext context);
 };
 
-// verification task
+class DummyTask : public legate::LegateTask<DummyTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{50}}.with_signature(legate::TaskSignature{}.inputs(1));
+
+  static void cpu_variant(legate::TaskContext) {}
+
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
+  static void gpu_variant(legate::TaskContext) {}
+#endif
+};
+
 class MatVecTask : public legate::LegateTask<MatVecTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)

@@ -74,6 +74,7 @@ void run_example()
 
   InitTask<1>::register_variants(library);
   InitTask<2>::register_variants(library);
+  DummyTask::register_variants(library);
   MatVecTask::register_variants(library);
   CheckTask::register_variants(library);
 
@@ -98,6 +99,10 @@ void run_example()
   init_lhs_task.add_output(lhs);
   init_lhs_task.add_scalar_arg(legate::Scalar{0});
   runtime->submit(std::move(init_lhs_task));
+
+  auto dummy_task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
+  dummy_task.add_input(lhs);
+  runtime->submit(std::move(dummy_task));
 
   auto matvec_task = runtime->create_task(library, MatVecTask::TASK_CONFIG.task_id());
   auto rhs1_part   = matvec_task.add_input(rhs1);
