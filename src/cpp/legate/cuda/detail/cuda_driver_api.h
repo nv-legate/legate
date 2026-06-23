@@ -56,6 +56,10 @@ class CUDADriverAPI {
                      std::size_t num_bytes,
                      CUstream stream) const;
   void mem_cpy_async(void* dst, const void* src, std::size_t num_bytes, CUstream stream) const;
+  void mem_set_d8_async(void* dst,
+                        std::uint8_t val,
+                        std::size_t num_elements,
+                        CUstream stream) const;
   void mem_set_default_pool_release_threshold(int ordinal, std::uint64_t threshold);
 
   [[nodiscard]] CUstream stream_create(unsigned int flags) const;
@@ -156,6 +160,10 @@ class CUDADriverAPI {
   CUresult (*mem_pool_set_attribute_)(CUmemoryPool pool,
                                       CUmemPool_attribute attr,
                                       void* value)                                        = nullptr;
+  CUresult (*mem_set_d8_async_)(CUdeviceptr dst,
+                                std::uint8_t val,
+                                std::size_t num_elements,
+                                CUstream stream)                                          = nullptr;
 
   CUresult (*stream_create_)(CUstream* stream, unsigned int flags)                   = nullptr;
   CUresult (*stream_destroy_)(CUstream stream)                                       = nullptr;

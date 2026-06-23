@@ -275,6 +275,7 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeAsync, &mem_free_async_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeHost, &mem_free_host_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemcpyAsync, &mem_cpy_async_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemsetD8Async, &mem_set_d8_async_);
 
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemGetDefaultMemPool, &mem_get_default_pool_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemPoolSetAttribute, &mem_pool_set_attribute_);
@@ -435,8 +436,19 @@ void CUDADriverAPI::mem_cpy_async(void* dst,
                                   std::size_t num_bytes,
                                   CUstream stream) const
 {
+  check_initialized_();
   mem_cpy_async(
     reinterpret_cast<CUdeviceptr>(dst), reinterpret_cast<CUdeviceptr>(src), num_bytes, stream);
+}
+
+void CUDADriverAPI::mem_set_d8_async(void* dst,
+                                     std::uint8_t val,
+                                     std::size_t num_elements,
+                                     CUstream stream) const
+{
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(
+    mem_set_d8_async_(reinterpret_cast<CUdeviceptr>(dst), val, num_elements, stream));
 }
 
 void CUDADriverAPI::mem_set_default_pool_release_threshold(int ordinal, std::uint64_t threshold)

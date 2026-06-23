@@ -360,7 +360,7 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
 
 }  // namespace
 
-std::pair<InternalSharedPtr<PhysicalStore>, std::optional<CopyRequest>> LogicalStore::map(
+std::tuple<InternalSharedPtr<PhysicalStore>, std::optional<CopyRequest>, bool> LogicalStore::map(
   const InternalSharedPtr<Partition>& partition,
   const SymbolicPoint& store_projection,
   const Domain&,
@@ -372,33 +372,40 @@ std::pair<InternalSharedPtr<PhysicalStore>, std::optional<CopyRequest>> LogicalS
 
   auto inverted = partition->invert(partition, transform_);
 
-  auto&& [allocation, subdomain, copy_request] =
+  auto&& [allocation, subdomain, copy_request, subsumed] =
     get_storage()->map(domain_, inverted, color, machine.preferred_store_target(), is_read);
 
   return {
     make_internal_shared<PhysicalStore>(
       shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain),
-    std::move(copy_request)};
+    std::move(copy_request),
+    subsumed};
 }
 
-std::pair<InternalSharedPtr<PhysicalStore>, ReductionRequest> LogicalStore::map_reduction(
-  const InternalSharedPtr<Partition>& partition,
-  const SymbolicPoint& store_projection,
-  const Domain&,
-  const DomainPoint& task_index,
-  ReductionOpKind op_kind,
-  const legate::mapping::detail::Machine& machine)
+std::pair<InternalSharedPtr<PhysicalStore>, std::optional<ReductionRequest>>
+LogicalStore::map_reduction(const InternalSharedPtr<Partition>& partition,
+                            const SymbolicPoint& store_projection,
+                            const Domain& launch_domain,
+                            const DomainPoint& task_index,
+                            ReductionOpKind op_kind,
+                            const legate::mapping::detail::Machine& machine)
 {
   const auto color = compute_color(store_projection, task_index);
 
   auto inverted = partition->invert(partition, transform_);
 
-  auto&& [source, target, subdomain] =
-    get_storage()->map_reduction(domain_, inverted, color, machine.preferred_store_target());
+  auto&& [allocation, subdomain, reduction_request] =
+    get_storage()->map_reduction(domain_,
+                                 inverted,
+                                 color,
+                                 machine.preferred_store_target(),
+                                 launch_domain.is_valid(),
+                                 type_,
+                                 op_kind);
 
   return {make_internal_shared<PhysicalStore>(
-            shape()->ndim(), type(), transform_, LEGION_READ_WRITE, source, subdomain),
-          ReductionRequest{std::move(source), std::move(target), type_, op_kind}};
+            shape()->ndim(), type(), transform_, LEGION_REDUCE, std::move(allocation), subdomain),
+          std::move(reduction_request)};
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
@@ -415,7 +422,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime().flush_scheduling_window();
 
-  auto&& [allocation, subdomain, copy_request] =
+  auto&& [allocation, subdomain, copy_request, _] =
     storage->map(domain_, create_no_partition(), {}, effective_target, /*is_read=*/true);
 
   // TODO(wonchanl): Handle the case when the target is FBMEM

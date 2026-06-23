@@ -1285,9 +1285,9 @@ cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
 
 Processor Runtime::get_executing_processor() const
 {
-  LEGATE_ABORT("Not supported yet");
+  auto& procs = local_machine().has_gpus() ? local_machine().gpus() : local_machine().cpus();
 
-  return {};
+  return procs[node_id() % procs.size()];
 }
 
 bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }

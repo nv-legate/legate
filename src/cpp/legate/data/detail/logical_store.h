@@ -119,20 +119,20 @@ class LogicalStore {
     std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape);
 
  public:
-  [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, std::optional<CopyRequest>> map(
+  [[nodiscard]] std::tuple<InternalSharedPtr<PhysicalStore>, std::optional<CopyRequest>, bool> map(
     const InternalSharedPtr<Partition>& partition,
     const SymbolicPoint& store_projection,
     const Domain& launch_domain,
     const DomainPoint& task_index,
     bool is_read,
     const legate::mapping::detail::Machine& machine);
-  [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, ReductionRequest> map_reduction(
-    const InternalSharedPtr<Partition>& partition,
-    const SymbolicPoint& store_projection,
-    const Domain& launch_domain,
-    const DomainPoint& task_index,
-    ReductionOpKind op_kind,
-    const legate::mapping::detail::Machine& machine);
+  [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, std::optional<ReductionRequest>>
+  map_reduction(const InternalSharedPtr<Partition>& partition,
+                const SymbolicPoint& store_projection,
+                const Domain& launch_domain,
+                const DomainPoint& task_index,
+                ReductionOpKind op_kind,
+                const legate::mapping::detail::Machine& machine);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 

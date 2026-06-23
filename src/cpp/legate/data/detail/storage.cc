@@ -11,6 +11,7 @@
 #include <legate/data/detail/buffer.h>
 #include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/external_allocation.h>
+#include <legate/data/detail/reduction_request.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/detail/machine.h>
@@ -105,7 +106,7 @@ bool Storage::is_mapped() const
 
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
-std::tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<CopyRequest>>
+std::tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<CopyRequest>, bool>
 Storage::map(  // NOLINT(readability-make-member-function-const)
   const Domain& domain,
   const InternalSharedPtr<Partition>& partition,
@@ -138,7 +139,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     LEGATE_ASSERT(storage_data_->domain().intersection(sub_domain) == sub_domain ||
                   sub_domain.get_volume() == 0);
 
-    return {storage_data_, sub_domain, std::nullopt};
+    return {storage_data_, sub_domain, std::nullopt, true};
   }
 
   // LEGATE_CHECK(partition->is_complete_for(domain));
@@ -149,7 +150,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   if (!storage_data_) {
     storage_data_ = data;
 
-    return {data, sub_domain, std::nullopt};
+    return {data, sub_domain, std::nullopt, false};
   }
 
   // TODO(wonchanl): Need to handle copy-outs
@@ -159,17 +160,21 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   return {data,
           sub_domain,
           std::make_optional<CopyRequest>(
-            storage_data_, data, *key_partition_, partition, domain, field_size_)};
+            storage_data_, data, *key_partition_, partition, domain, field_size_),
+          false};
 }
 
-std::tuple<InternalSharedPtr<InlineStorage>, InternalSharedPtr<InlineStorage>, Domain>
+std::tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<ReductionRequest>>
 Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   const Domain& domain,
   const InternalSharedPtr<Partition>& partition,
   const DomainPoint& color,
-  legate::mapping::StoreTarget target)
+  legate::mapping::StoreTarget target,
+  bool is_parallel,
+  const InternalSharedPtr<Type>& type,
+  ReductionOpKind op_kind)
 {
-  LEGATE_CHECK(!unbound());
+  LEGATE_ASSERT(!unbound());
 
   // TODO(wonchanl): Better way to check invalid colors
   auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
@@ -187,6 +192,10 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): No multi-dimensional reductions yet
   LEGATE_ASSERT(sub_domain.dim == 1);
 
+  if (!is_parallel && key_partition_.has_value() && !(*key_partition_)->has_color_shape()) {
+    return {storage_data_, sub_domain, std::nullopt};
+  }
+
   auto tmp = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
 
   // TODO(wonchanl): We actually need to initialize this storage with the reduction identity
@@ -195,19 +204,20 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
 
     auto&& api = cuda::detail::get_cuda_driver_api();
 
-    std::vector<std::uint8_t> data(field_size_, 0);
-
-    api->mem_cpy_async(
-      tmp->data(), data.data(), field_size_, Runtime::get_runtime().get_cuda_stream());
-    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
+    api->mem_set_d8_async(tmp->data(),
+                          0,
+                          field_size_ * sub_domain.get_volume(),
+                          Runtime::get_runtime().get_cuda_stream());
   } else {
-    std::memset(tmp->data(), 0, field_size_);
+    std::memset(tmp->data(), 0, field_size_ * sub_domain.get_volume());
   }
 
   // TODO(wonchanl): We need to raise an uninitialized access exception if this doesn't hold
   LEGATE_CHECK(storage_data_);
 
-  return {std::move(tmp), storage_data_, sub_domain};
+  auto reduction_request = std::make_optional<ReductionRequest>(tmp, storage_data_, type, op_kind);
+
+  return {std::move(tmp), sub_domain, std::move(reduction_request)};
 }
 
 // Unmapping is a logically non-const operation

@@ -271,21 +271,24 @@ template <bool WRITE>
   result.reserve(store_args.size());
   data_requests->reserve_copy_ins(store_args.size());
   for (auto&& [_, store, variable] : store_args) {
-    auto&& partition                       = strategy[*variable];
-    auto&& [physical_store, maybe_copy_in] = store->map(partition,
-                                                        strategy.find_store_projection(*variable),
-                                                        launch_domain,
-                                                        task_index,
-                                                        /*is_read=*/!WRITE,
-                                                        machine);
+    auto&& partition = strategy[*variable];
+    auto&& [physical_store, maybe_copy_in, subsumed] =
+      store->map(partition,
+                 strategy.find_store_projection(*variable),
+                 launch_domain,
+                 task_index,
+                 /*is_read=*/!WRITE,
+                 machine);
     result.emplace_back(physical_store);
     if (maybe_copy_in) {
       data_requests->register_copy_in(std::move(*maybe_copy_in));
     }
     if constexpr (WRITE) {
       // TODO(wonchanl): write accesses with slices are not supported yet
-      LEGATE_CHECK(!store->transformed());
-      store->set_key_partition(machine, parallel_policy, partition);
+      LEGATE_CHECK(!store->transformed() || subsumed);
+      if (!store->transformed()) {
+        store->set_key_partition(machine, parallel_policy, partition);
+      }
     }
   }
   return result;
@@ -316,7 +319,9 @@ template <bool WRITE>
                            machine);
 
     result.emplace_back(std::move(physical_store));
-    data_requests->register_reduction(std::move(reduction_request));
+    if (reduction_request.has_value()) {
+      data_requests->register_reduction(std::move(*reduction_request));
+    }
   }
   return result;
 }
