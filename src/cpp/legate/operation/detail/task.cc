@@ -10,6 +10,7 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/data/detail/copy_request.h>
+#include <legate/data/detail/data_movement_requests.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/detail/reduction_request.h>
@@ -208,54 +209,6 @@ void show_progress(const Strategy& strategy,
                        << "], pt = " << *task_index;
 }
 
-class DataRequests {
- public:
-  void register_copy_in(CopyRequest&& copy_in);
-  void register_reduction(ReductionRequest&& reduction);
-
-  void reserve_copy_ins(std::size_t size);
-  void reserve_reduction_requests(std::size_t size);
-
-  void perform_copy_ins(VariantCode variant_code) const;
-  void perform_reductions(VariantCode variant_code) const;
-
-  bool empty() const;
-
- private:
-  SmallVector<CopyRequest> copy_ins_{};
-  SmallVector<ReductionRequest> reductions_{};
-};
-
-void DataRequests::register_copy_in(CopyRequest&& copy_in)
-{
-  copy_ins_.emplace_back(std::move(copy_in));
-}
-
-void DataRequests::register_reduction(ReductionRequest&& reduction)
-{
-  reductions_.emplace_back(std::move(reduction));
-}
-
-void DataRequests::reserve_copy_ins(std::size_t size) { copy_ins_.reserve(size); }
-
-void DataRequests::reserve_reduction_requests(std::size_t size) { reductions_.reserve(size); }
-
-void DataRequests::perform_copy_ins(VariantCode variant_code) const
-{
-  for (auto&& copy_in : copy_ins_) {
-    copy_in.perform(variant_code);
-  }
-}
-
-void DataRequests::perform_reductions(VariantCode variant_code) const
-{
-  for (auto&& reduction : reductions_) {
-    reduction.perform(variant_code);
-  }
-}
-
-bool DataRequests::empty() const { return copy_ins_.empty() && reductions_.empty(); }
-
 template <bool WRITE>
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_stores(
   Span<const TaskStoreArg> store_args,
@@ -264,7 +217,7 @@ template <bool WRITE>
   const Strategy& strategy,
   const Domain& launch_domain,
   const DomainPoint& task_index,
-  DataRequests* data_requests)
+  DataMovementRequests* data_requests)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
 
@@ -301,7 +254,7 @@ template <bool WRITE>
   const Strategy& strategy,
   const Domain& launch_domain,
   const DomainPoint& task_index,
-  DataRequests* data_requests)
+  DataMovementRequests* data_requests)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
 
@@ -329,7 +282,7 @@ template <bool WRITE>
 [[nodiscard]] std::optional<TaskContext> make_task_context(const TaskBase* task,
                                                            VariantCode variant_code,
                                                            const Strategy& strategy,
-                                                           DataRequests* data_requests)
+                                                           DataMovementRequests* data_requests)
 {
   auto launch_domain          = strategy.launch_domain();
   const auto maybe_task_index = strategy.task_index();
@@ -380,7 +333,7 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
 
   show_progress(*p_strategy, get_task_name(), variant_code, provenance().as_string_view());
 
-  DataRequests data_requests{};
+  DataMovementRequests data_requests{};
 
   auto maybe_ctx = make_task_context(this, variant_code, *p_strategy, &data_requests);
 

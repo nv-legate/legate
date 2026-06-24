@@ -296,6 +296,7 @@ target_sources(
     legate/data/detail/attachment.cc
     legate/data/detail/copy_request.cc
     legate/data/detail/copy_util.cc
+    legate/data/detail/data_movement_requests.cc
     legate/data/detail/external_allocation.cc
     legate/data/detail/logical_store.cc
     legate/data/detail/logical_store_partition.cc
