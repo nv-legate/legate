@@ -147,6 +147,8 @@ class MakeRegionInstance {
                                                  std::uint32_t field_size,
                                                  const detail::ExternalAllocation& alloc) const
   {
+    const auto& dm = sanitize_0d_(domain);
+
     Realm::RegionInstance ret;
 
     // Later dimensions have smaller strides, following C-ordering.
@@ -156,7 +158,7 @@ class MakeRegionInstance {
     }
 
     auto* const layout = Realm::InstanceLayoutGeneric::choose_instance_layout<DIM, coord_t>(
-      Realm::IndexSpace<DIM, coord_t>{static_cast<Rect<DIM, coord_t>>(domain)},
+      Realm::IndexSpace<DIM, coord_t>{static_cast<Rect<DIM, coord_t>>(dm)},
       Realm::InstanceLayoutConstraints{{field_size}, /*block_size=*/0},
       dim_ordering.data());
 
@@ -186,6 +188,19 @@ class MakeRegionInstance {
 
     return ret;
   }
+
+ private:
+  static const Domain& sanitize_0d_(const Domain& domain)
+  {
+    static const Domain for_0d = []() noexcept {
+      Domain result;
+
+      result.dim = 1;
+      return result;
+    }();
+
+    return domain.dim == 0 ? for_0d : domain;
+  }
 };
 
 }  // namespace
@@ -194,9 +209,10 @@ InlineStorage::InlineStorage(const Domain& domain,
                              std::uint32_t field_size,
                              mapping::StoreTarget target)
   : domain_{domain},
-    allocation_{make_external_alloc(target, domain.get_volume() * field_size)},
-    region_instance_{
-      dim_dispatch(domain.get_dim(), MakeRegionInstance{}, domain, field_size, *alloc_().impl())}
+    allocation_{
+      make_external_alloc(target, std::max<>(domain.get_volume(), std::size_t{1}) * field_size)},
+    region_instance_{dim_dispatch(
+      std::max<>(1, domain.get_dim()), MakeRegionInstance{}, domain, field_size, *alloc_().impl())}
 {
 }
 
@@ -205,8 +221,8 @@ InlineStorage::InlineStorage(const Domain& domain,
                              const legate::ExternalAllocation& alloc)
   : domain_{domain},
     allocation_{alloc.impl()},
-    region_instance_{
-      dim_dispatch(domain.get_dim(), MakeRegionInstance{}, domain, field_size, *alloc_().impl())}
+    region_instance_{dim_dispatch(
+      std::max<>(1, domain.get_dim()), MakeRegionInstance{}, domain, field_size, *alloc_().impl())}
 {
 }
 
@@ -241,9 +257,7 @@ void InlineStorage::remap_to(mapping::StoreTarget new_target)
     return;
   }
 
-  const std::size_t volume = domain().get_volume();
-
-  LEGATE_ASSERT(volume > 0);
+  const std::size_t volume = std::max<>(std::size_t{1}, domain().get_volume());
 
   const auto num_bytes = alloc_().size();
   auto tmp = InlineStorage{domain(), static_cast<std::uint32_t>(num_bytes / volume), new_target};

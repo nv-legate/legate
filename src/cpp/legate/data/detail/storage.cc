@@ -119,11 +119,6 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): Better way to check invalid colors
   auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
 
-  // TODO(wonchanl): I hate we have to deal with 0D cases differently
-  if (sub_domain.dim == 0) {
-    sub_domain.dim = 1;
-  }
-
   // If no data needs to be moved to serve the requested partition, return the current storage
   // immediately
   //
@@ -136,8 +131,8 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     // TODO(wonchanl): GPU-to-CPU copies must be temporary copy-outs, not permanent remapping
     storage_data_->remap_to(target);
 
-    LEGATE_ASSERT(storage_data_->domain().intersection(sub_domain) == sub_domain ||
-                  sub_domain.get_volume() == 0);
+    LEGATE_ASSERT(sub_domain.dim == 0 || sub_domain.get_volume() == 0 ||
+                  storage_data_->domain().intersection(sub_domain) == sub_domain);
 
     return {storage_data_, sub_domain, std::nullopt, true};
   }
@@ -179,18 +174,13 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): Better way to check invalid colors
   auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
 
-  // TODO(wonchanl): I hate we have to deal with 0D cases differently
-  if (sub_domain.dim == 0) {
-    sub_domain.dim = 1;
-  }
-
   // No subsumption checks for reductions as we need to create a new storage anyway
   //
   // TODO(wonchanl): Put back the optimization that converts reductions to read-write accesses when
   // the partition is disjoint
 
   // TODO(wonchanl): No multi-dimensional reductions yet
-  LEGATE_ASSERT(sub_domain.dim == 1);
+  LEGATE_ASSERT(sub_domain.dim <= 1);
 
   if (!is_parallel && key_partition_.has_value() && !(*key_partition_)->has_color_shape()) {
     return {storage_data_, sub_domain, std::nullopt};
