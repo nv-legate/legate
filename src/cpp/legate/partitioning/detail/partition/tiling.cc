@@ -62,7 +62,9 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
     color_shape_{std::move(color_shape)},
     offsets_{std::move(offsets)},
     strides_{std::move(strides)},
-    tile_shape_dp_{to_domain_point(tile_shape_)}
+    tile_shape_dp_{to_domain_point(tile_shape_)},
+    color_shape_dp_{to_domain_point(color_shape_)},
+    color_strides_{calculate_strides(color_shape_dp_)}
 {
   if (this->offsets().empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
@@ -213,12 +215,36 @@ bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) 
     return false;
   }
 
-  // TODO(wonchanl): Tilings with different tile shapes can be congruent for a given domain and we
-  // need to relax this check to avoid unnecessary copies.
-  return std::equal(tile_shape().begin(), tile_shape().end(), other_tiling->tile_shape().begin()) &&
-         std::equal(
-           color_shape().begin(), color_shape().end(), other_tiling->color_shape().begin()) &&
-         std::equal(offsets().begin(), offsets().end(), other_tiling->offsets().begin());
+  if (this == other_tiling) {
+    return true;
+  }
+
+  // TODO(wonchanl): Isomorphism checks below can be further relaxed
+  if (!std::equal(
+        color_shape().begin(), color_shape().end(), other_tiling->color_shape().begin())) {
+    return false;
+  }
+
+  for (auto&& [my_tile_ext, color_ext, my_off, other_tile_ext, other_off] :
+       zip_equal(tile_shape(),
+                 color_shape(),
+                 offsets(),
+                 other_tiling->tile_shape(),
+                 other_tiling->offsets())) {
+    if (my_tile_ext == other_tile_ext) {
+      continue;
+    }
+    if (color_ext > 1) {
+      return false;
+    }
+    // If this dimension isn't partitioned and the tile extents don't match, we can at least check
+    // if the other tile is smaller than my tile for this dimension.
+    if (my_tile_ext + my_off < other_tile_ext + other_off) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
