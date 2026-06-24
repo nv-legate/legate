@@ -7,31 +7,28 @@ set -euo pipefail
 export MACOSX_DEPLOYMENT_TARGET=11.0
 export WHEEL_DIR=${WHEEL_DIR:-/tmp/profiler_out}
 export WHEEL_TEST_DIR=${WHEEL_TEST_DIR:-/tmp/wheel_test}
-export LEGATE_VERSION="${PROFILER_VERSION:-0.1.0}"
 
 get_legate_version() {
-  local default_env_var=""
-  local DESC GIT_DESCRIBE_TAG GIT_DESCRIBE_COUNT GIT_DESCRIBE_HASH version
-  DESC=$(git describe --tags --long 2>/dev/null || echo "")
-  if [[ -z "${DESC}" ]]; then
-    echo "0.0.0"
+  if [[ -n "${PROFILER_VERSION:-}" ]]; then
+    echo "${PROFILER_VERSION}"
     return
   fi
 
-  IFS='-' read -r GIT_DESCRIBE_TAG GIT_DESCRIBE_COUNT GIT_DESCRIBE_HASH <<< "${DESC}"
+  python - <<'PY'
+import os
+from pathlib import Path
 
-  local git_tag="${GIT_DESCRIBE_TAG:-${default_env_var}}"
-  local git_num="${GIT_DESCRIBE_COUNT:-${default_env_var}}"
-  local git_hash="${GIT_DESCRIBE_HASH:-${default_env_var}}"
+from setuptools_scm import get_version
 
-  if [[ "${git_num}" == "0" ]]; then
-    version="${git_tag}"
-  else
-    version="${git_tag}.${git_num}+${git_hash}"
-  fi
-  version="${version#v}"
-
-  echo "${version}"
+repo_dir = Path(os.environ.get("GITHUB_WORKSPACE", ".")).resolve()
+print(
+    get_version(
+        root=repo_dir,
+        version_scheme="guess-next-dev",
+        local_scheme="node-and-date",
+    )
+)
+PY
 }
 
 build_wheel_with_maturin() {
@@ -58,6 +55,8 @@ build_wheel_with_maturin() {
   mkdir -p "${WHEEL_DIR}"
   cp "${PKG_DIR}/pyproject.toml" "${PROF_RS_DIR}/pyproject.toml"
 
+  python -m pip install --upgrade pip maturin setuptools_scm
+
   # Replace existing legion version with legate version
   LEGATE_VERSION=$(get_legate_version)
   sed -E -i.bak 's/^version = "[^"]*"$/version = "'"${LEGATE_VERSION}"'"/' "${PROF_RS_DIR}/pyproject.toml"
@@ -66,7 +65,6 @@ build_wheel_with_maturin() {
   cat "${PROF_RS_DIR}/pyproject.toml"
 
   cd "${PROF_RS_DIR}"
-  python -m pip install --upgrade pip maturin
   maturin build \
     --manifest-path "${PROF_RS_DIR}/Cargo.toml" \
     --all-features \
