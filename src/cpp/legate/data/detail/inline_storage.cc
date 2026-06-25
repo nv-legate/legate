@@ -9,6 +9,7 @@
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/cuda_util.h>
 #include <legate/data/detail/allocation_cache.h>
+#include <legate/data/detail/data_movement_requests.h>
 #include <legate/data/detail/external_allocation.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
@@ -251,7 +252,7 @@ std::pair<Realm::RegionInstance, Realm::FieldID> InlineStorage::region_instance(
   return {region_instance_, fid};
 }
 
-void InlineStorage::remap_to(mapping::StoreTarget new_target)
+void InlineStorage::remap_to(mapping::StoreTarget new_target, DataMovementRequests* requests)
 {
   if (target() == new_target) {
     return;
@@ -288,15 +289,14 @@ void InlineStorage::remap_to(mapping::StoreTarget new_target)
 
     api->mem_cpy_async(tmp.data(), data(), num_bytes, Runtime::get_runtime().get_cuda_stream());
 
-    // TODO(wonchanl): Hoist this logic to the task premable
-    api->stream_synchronize(Runtime::get_runtime().get_cuda_stream());
+    if (new_target == mapping::StoreTarget::SYSMEM) {
+      requests->require_data_sync();
+    }
   } else {
     std::memcpy(tmp.data(), data(), num_bytes);
   }
 
-  // FIXME(wonchanl): We're leaking allocations here and we should fix it without synchronizing the
-  // stream in the toplevel
-  // alloc_().impl()->maybe_deallocate();
+  alloc_().impl()->maybe_deallocate();
   *this = std::move(tmp);
 }
 

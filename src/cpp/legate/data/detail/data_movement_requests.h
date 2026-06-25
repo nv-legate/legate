@@ -20,15 +20,19 @@ class DataMovementRequests {
   void register_copy_in(CopyRequest&& copy_in);
   void register_reduction(ReductionRequest&& reduction);
 
+  void require_data_sync();
+
   void reserve_copy_ins(std::size_t size);
   void reserve_reduction_requests(std::size_t size);
 
+  void perform_data_sync() const;
   void perform_copy_ins(VariantCode variant_code) const;
   void perform_reductions(VariantCode variant_code) const;
 
   bool empty() const;
 
  private:
+  bool data_sync_required_{};
   SmallVector<CopyRequest> copy_ins_{};
   SmallVector<ReductionRequest> reductions_{};
 };

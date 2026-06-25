@@ -224,18 +224,15 @@ template <bool WRITE>
   result.reserve(store_args.size());
   data_requests->reserve_copy_ins(store_args.size());
   for (auto&& [_, store, variable] : store_args) {
-    auto&& partition = strategy[*variable];
-    auto&& [physical_store, maybe_copy_in, subsumed] =
-      store->map(partition,
-                 strategy.find_store_projection(*variable),
-                 launch_domain,
-                 task_index,
-                 /*is_read=*/!WRITE,
-                 machine);
+    auto&& partition                  = strategy[*variable];
+    auto&& [physical_store, subsumed] = store->map(partition,
+                                                   strategy.find_store_projection(*variable),
+                                                   launch_domain,
+                                                   task_index,
+                                                   /*is_read=*/!WRITE,
+                                                   machine,
+                                                   data_requests);
     result.emplace_back(physical_store);
-    if (maybe_copy_in) {
-      data_requests->register_copy_in(std::move(*maybe_copy_in));
-    }
     if constexpr (WRITE) {
       // TODO(wonchanl): write accesses with slices are not supported yet
       LEGATE_CHECK(!store->transformed() || subsumed);
@@ -263,18 +260,13 @@ template <bool WRITE>
   for (auto&& [store_arg, op_kind] : zip_equal(store_args, reduction_ops)) {
     auto&& [_, store, variable] = store_arg;
     auto&& partition            = strategy[*variable];
-    auto&& [physical_store, reduction_request] =
-      store->map_reduction(partition,
-                           strategy.find_store_projection(*variable),
-                           launch_domain,
-                           task_index,
-                           op_kind,
-                           machine);
-
-    result.emplace_back(std::move(physical_store));
-    if (reduction_request.has_value()) {
-      data_requests->register_reduction(std::move(*reduction_request));
-    }
+    result.emplace_back(store->map_reduction(partition,
+                                             strategy.find_store_projection(*variable),
+                                             launch_domain,
+                                             task_index,
+                                             op_kind,
+                                             machine,
+                                             data_requests));
   }
   return result;
 }
@@ -345,6 +337,7 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
 
   auto execute_task = [&] {
     data_requests.perform_copy_ins(variant_code);
+    data_requests.perform_data_sync();
 
     variant_info_().body(legate::TaskContext{&*maybe_ctx});
 

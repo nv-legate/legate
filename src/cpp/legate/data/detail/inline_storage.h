@@ -23,6 +23,7 @@ enum class StoreTarget : std::uint8_t;
 
 namespace legate::detail {
 
+class DataMovementRequests;
 class Type;
 
 /**
@@ -97,7 +98,7 @@ class InlineStorage {
    *
    * @param new_target The new target memory kind to remap to.
    */
-  void remap_to(mapping::StoreTarget new_target);
+  void remap_to(mapping::StoreTarget new_target, DataMovementRequests* requests);
 
  private:
   [[nodiscard]] const legate::ExternalAllocation& alloc_() const;

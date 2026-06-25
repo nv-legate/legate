@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/inline_storage.h>
-#include <legate/data/detail/reduction_request.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -36,6 +34,7 @@ class Machine;
 
 namespace legate::detail {
 
+class DataMovementRequests;
 class Type;
 class Shape;
 class Partition;
@@ -112,22 +111,22 @@ class Storage {
 
   void set_bound(bool bound);
 
-  [[nodiscard]] std::
-    tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<CopyRequest>, bool>
-    map(const Domain& domain,
-        const InternalSharedPtr<Partition>& partition,
-        const DomainPoint& color,
-        legate::mapping::StoreTarget target,
-        bool is_read);
-  [[nodiscard]] std::
-    tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<ReductionRequest>>
-    map_reduction(const Domain& domain,
-                  const InternalSharedPtr<Partition>& partition,
-                  const DomainPoint& color,
-                  legate::mapping::StoreTarget target,
-                  bool is_parallel,
-                  const InternalSharedPtr<Type>& type,
-                  ReductionOpKind op_kind);
+  [[nodiscard]] std::tuple<InternalSharedPtr<InlineStorage>, Domain, bool> map(
+    const Domain& domain,
+    const InternalSharedPtr<Partition>& partition,
+    const DomainPoint& color,
+    legate::mapping::StoreTarget target,
+    bool is_read,
+    DataMovementRequests* requests);
+  [[nodiscard]] std::pair<InternalSharedPtr<InlineStorage>, Domain> map_reduction(
+    const Domain& domain,
+    const InternalSharedPtr<Partition>& partition,
+    const DomainPoint& color,
+    legate::mapping::StoreTarget target,
+    bool is_parallel,
+    const InternalSharedPtr<Type>& type,
+    ReductionOpKind op_kind,
+    DataMovementRequests* requests);
 
   void unmap();
   void free_early();

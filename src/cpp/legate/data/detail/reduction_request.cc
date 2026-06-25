@@ -32,10 +32,6 @@ void ReductionRequest::perform(VariantCode variant_code) const
                   to_nccl_red_op(op_kind_),
                   Runtime::get_runtime().get_gpu_comm(),
                   Runtime::get_runtime().get_cuda_stream());
-
-    // TODO(wonchanl): Hoist this logic to the task premable
-    cuda::detail::get_cuda_driver_api()->stream_synchronize(
-      Runtime::get_runtime().get_cuda_stream());
   } else {
     LEGATE_ASSERT(variant_code == VariantCode::CPU);
 

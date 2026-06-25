@@ -10,6 +10,7 @@
 
 #include <legate/data/detail/buffer.h>
 #include <legate/data/detail/copy_request.h>
+#include <legate/data/detail/data_movement_requests.h>
 #include <legate/data/detail/external_allocation.h>
 #include <legate/data/detail/reduction_request.h>
 #include <legate/data/detail/shape.h>
@@ -106,13 +107,14 @@ bool Storage::is_mapped() const
 
 void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
-std::tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<CopyRequest>, bool>
+std::tuple<InternalSharedPtr<InlineStorage>, Domain, bool>
 Storage::map(  // NOLINT(readability-make-member-function-const)
   const Domain& domain,
   const InternalSharedPtr<Partition>& partition,
   const DomainPoint& color,
   legate::mapping::StoreTarget target,
-  bool is_read)
+  bool is_read,
+  DataMovementRequests* requests)
 {
   LEGATE_CHECK(!unbound());
 
@@ -129,12 +131,12 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     LEGATE_ASSERT(storage_data_);
 
     // TODO(wonchanl): GPU-to-CPU copies must be temporary copy-outs, not permanent remapping
-    storage_data_->remap_to(target);
+    storage_data_->remap_to(target, requests);
 
     LEGATE_ASSERT(sub_domain.dim == 0 || sub_domain.get_volume() == 0 ||
                   storage_data_->domain().intersection(sub_domain) == sub_domain);
 
-    return {storage_data_, sub_domain, std::nullopt, true};
+    return {storage_data_, sub_domain, true};
   }
 
   // LEGATE_CHECK(partition->is_complete_for(domain));
@@ -145,21 +147,20 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   if (!storage_data_) {
     storage_data_ = data;
 
-    return {data, sub_domain, std::nullopt, false};
+    return {data, sub_domain, false};
   }
 
   // TODO(wonchanl): Need to handle copy-outs
   LEGATE_CHECK(is_read);
   LEGATE_ASSERT(key_partition_);
 
-  return {data,
-          sub_domain,
-          std::make_optional<CopyRequest>(
-            storage_data_, data, *key_partition_, partition, domain, field_size_),
-          false};
+  requests->register_copy_in(
+    CopyRequest{storage_data_, data, *key_partition_, partition, domain, field_size_});
+
+  return {data, sub_domain, false};
 }
 
-std::tuple<InternalSharedPtr<InlineStorage>, Domain, std::optional<ReductionRequest>>
+std::pair<InternalSharedPtr<InlineStorage>, Domain>
 Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   const Domain& domain,
   const InternalSharedPtr<Partition>& partition,
@@ -167,7 +168,8 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   legate::mapping::StoreTarget target,
   bool is_parallel,
   const InternalSharedPtr<Type>& type,
-  ReductionOpKind op_kind)
+  ReductionOpKind op_kind,
+  DataMovementRequests* requests)
 {
   LEGATE_ASSERT(!unbound());
 
@@ -183,7 +185,7 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   LEGATE_ASSERT(sub_domain.dim <= 1);
 
   if (!is_parallel && key_partition_.has_value() && !(*key_partition_)->has_color_shape()) {
-    return {storage_data_, sub_domain, std::nullopt};
+    return {storage_data_, sub_domain};
   }
 
   auto tmp = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
@@ -205,9 +207,9 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): We need to raise an uninitialized access exception if this doesn't hold
   LEGATE_CHECK(storage_data_);
 
-  auto reduction_request = std::make_optional<ReductionRequest>(tmp, storage_data_, type, op_kind);
+  requests->register_reduction(ReductionRequest{tmp, storage_data_, type, op_kind});
 
-  return {std::move(tmp), sub_domain, std::move(reduction_request)};
+  return {std::move(tmp), sub_domain};
 }
 
 // Unmapping is a logically non-const operation

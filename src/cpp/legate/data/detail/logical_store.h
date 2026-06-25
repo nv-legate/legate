@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <legate/data/detail/copy_request.h>
-#include <legate/data/detail/reduction_request.h>
 #include <legate/data/detail/storage.h>
 #include <legate/data/slice.h>
 #include <legate/mapping/mapping.h>
@@ -34,6 +32,7 @@ class Machine;
 
 namespace legate::detail {
 
+class DataMovementRequests;
 class LogicalStorePartition;
 class TransformStack;
 class Partition;
@@ -119,20 +118,22 @@ class LogicalStore {
     std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape);
 
  public:
-  [[nodiscard]] std::tuple<InternalSharedPtr<PhysicalStore>, std::optional<CopyRequest>, bool> map(
+  [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, bool> map(
     const InternalSharedPtr<Partition>& partition,
     const SymbolicPoint& store_projection,
     const Domain& launch_domain,
     const DomainPoint& task_index,
     bool is_read,
-    const legate::mapping::detail::Machine& machine);
-  [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, std::optional<ReductionRequest>>
-  map_reduction(const InternalSharedPtr<Partition>& partition,
-                const SymbolicPoint& store_projection,
-                const Domain& launch_domain,
-                const DomainPoint& task_index,
-                ReductionOpKind op_kind,
-                const legate::mapping::detail::Machine& machine);
+    const legate::mapping::detail::Machine& machine,
+    DataMovementRequests* requests);
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> map_reduction(
+    const InternalSharedPtr<Partition>& partition,
+    const SymbolicPoint& store_projection,
+    const Domain& launch_domain,
+    const DomainPoint& task_index,
+    ReductionOpKind op_kind,
+    const legate::mapping::detail::Machine& machine,
+    DataMovementRequests* requests);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 
