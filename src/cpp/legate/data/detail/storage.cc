@@ -64,9 +64,14 @@ Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::stri
   storage_data_ = make_internal_shared<InlineStorage>(
     domain, field_size_, Runtime::get_runtime().get_machine().preferred_scalar_store_target());
 
-  std::memcpy(storage_data_->data(), scalar.data(), scalar.size());
-
   set_key_partition(create_no_partition());
+
+  const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+
+  auto&& api = cuda::detail::get_cuda_driver_api();
+
+  api->mem_cpy_async(
+    storage_data_->data(), scalar.data(), scalar.size(), Runtime::get_runtime().get_cuda_stream());
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape,

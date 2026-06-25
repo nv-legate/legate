@@ -223,7 +223,7 @@ void Machine::cache_preferred_targets_()
     }
     return StoreTarget::SYSMEM;
   }();
-  preferred_scalar_store_target_ = StoreTarget::SYSMEM;
+  preferred_scalar_store_target_ = preferred_store_target_;
 }
 
 std::ostream& operator<<(std::ostream& os, const Machine& machine)
