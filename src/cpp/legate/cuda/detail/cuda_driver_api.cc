@@ -181,6 +181,13 @@ void load_cu_driver_function(cuGetProcAddressT cu_get_proc_address,
 
 }  // namespace
 
+Logger& logger()
+{
+  static Logger log{"legate.cuda"};
+
+  return log;
+}
+
 void CUDADriverAPI::read_symbols_()
 {
   // Don't check that cuGetProcAddress is ABI compatible. We are specifically using the _v1
@@ -386,6 +393,12 @@ void* CUDADriverAPI::mem_alloc_async(std::size_t num_bytes, CUstream stream) con
   CUdeviceptr ret{};
 
   check_initialized_();
+  if (logger().want_debug()) {
+    auto&& [free, _] = mem_get_info();
+
+    logger().debug() << "Allocating " << num_bytes << " num_bytes, Free before allocation: " << free
+                     << " bytes";
+  }
   LEGATE_CHECK_CUDRIVER(mem_alloc_async_(&ret, num_bytes, stream));
   return reinterpret_cast<void*>(ret);  // NOLINT(performance-no-int-to-ptr)
 }
@@ -412,6 +425,11 @@ void CUDADriverAPI::mem_free_async(void** ptr, CUstream stream) const
 {
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(mem_free_async_(reinterpret_cast<CUdeviceptr>(*ptr), stream));
+  if (logger().want_debug()) {
+    auto&& [free, _] = mem_get_info();
+
+    logger().debug() << "Free after deallocation: " << free << " bytes";
+  }
   *ptr = nullptr;
 }
 

@@ -316,6 +316,12 @@ namespace detail {
 
 }  // namespace detail
 
+namespace cuda::detail {
+
+[[nodiscard]] LEGATE_EXPORT Logger& logger();
+
+}  // namespace cuda::detail
+
 }  // namespace legate
 
 // backwards-compat workaround, should not use
