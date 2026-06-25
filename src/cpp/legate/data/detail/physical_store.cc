@@ -53,9 +53,10 @@ class GetInlineAllocationPtr {
                                             const Domain& sub_domain,
                                             mapping::StoreTarget target) const
   {
-    const auto acc = FieldAccessor<DIM>{region_instance, fid, sub_domain};
+    const auto& dm = sanitize_0d_(sub_domain);
+    const auto acc = FieldAccessor<DIM>{region_instance, fid, dm};
 
-    return create_(DIM, sub_domain, acc, target);
+    return create_(DIM, dm, acc, target);
   }
 
   template <std::int32_t M, std::int32_t N>
@@ -65,9 +66,10 @@ class GetInlineAllocationPtr {
                                             const Legion::AffineTransform<M, N>& transform,
                                             mapping::StoreTarget target) const
   {
-    const auto acc = FieldAccessor<N>{region_instance, fid, transform, sub_domain};
+    const auto& dm = sanitize_0d_(sub_domain);
+    const auto acc = FieldAccessor<N>{region_instance, fid, transform, dm};
 
-    return create_(N, sub_domain, acc, target);
+    return create_(N, dm, acc, target);
   }
 
  private:
@@ -81,6 +83,18 @@ class GetInlineAllocationPtr {
     void* ptr    = acc.ptr(rect, strides.data());
 
     return {ptr, std::move(strides), target};
+  }
+
+  static const Domain& sanitize_0d_(const Domain& domain)
+  {
+    static const Domain for_0d = []() noexcept {
+      Domain result;
+
+      result.dim = 1;
+      return result;
+    }();
+
+    return domain.dim == 0 ? for_0d : domain;
   }
 };
 

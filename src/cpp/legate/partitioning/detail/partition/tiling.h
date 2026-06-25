@@ -190,12 +190,12 @@ class Tiling final : public Partition {
   DomainPoint offsets_dp_{};
 };
 
-[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(
+[[nodiscard]] InternalSharedPtr<Partition> create_tiling(
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets = {});
 
-[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(
+[[nodiscard]] InternalSharedPtr<Partition> create_tiling(
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,

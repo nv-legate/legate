@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/storage.h>
 #include <legate/data/detail/transform/transform_stack.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/array_algorithms.h>
@@ -251,19 +252,26 @@ std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, of
 
 // ==========================================================================================
 
-InternalSharedPtr<Tiling> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-                                        SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-                                        SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets /*= {}*/)
+InternalSharedPtr<Partition> create_tiling(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets /*= {}*/)
 {
+  if (tile_shape.empty()) {
+    return create_no_partition();
+  }
   return make_internal_shared<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets));
 }
 
-InternalSharedPtr<Tiling> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-                                        SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-                                        SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
-                                        SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides)
+InternalSharedPtr<Partition> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+                                           SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+                                           SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+                                           SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides)
 {
+  if (tile_shape.empty()) {
+    return create_no_partition();
+  }
   return make_internal_shared<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));
 }
