@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "numpy>=1.22,!=2.1.0",
+    "numpy>=1.22,<2.5,!=2.1.0",
     "h5py",
     "rich",
     "nvidia-cufile-cu12; sys_platform == 'linux'",
