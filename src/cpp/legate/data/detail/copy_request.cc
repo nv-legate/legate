@@ -450,7 +450,7 @@ struct ReorderElementsGPU {
                   CUstream stream)
   {
     auto volume = target.domain().get_volume();
-    
+
     if (volume == 0) {
       return;
     }
@@ -458,8 +458,8 @@ struct ReorderElementsGPU {
     const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
     auto&& api         = cuda::detail::get_cuda_driver_api();
     auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
-    CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
-                                                        ReorderElementsKernelName<VAL>::value);
+    CUkernel kern      = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
+                                                             ReorderElementsKernelName<VAL>::value);
 
     auto target_extents      = calculate_extents(target.domain());
     auto tile_shape          = tiling->tile_shape_dp();
@@ -467,8 +467,7 @@ struct ReorderElementsGPU {
     auto color_strides       = calculate_strides(tiling->color_shape_dp());
     std::int64_t tile_volume = calculate_volume(tile_shape);
 
-    const auto num_blocks =
-      (volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
+    const auto num_blocks = (volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
 
     api->launch_kernel(kern,
                        {num_blocks},
