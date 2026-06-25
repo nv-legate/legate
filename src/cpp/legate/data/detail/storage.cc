@@ -186,33 +186,44 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): Put back the optimization that converts reductions to read-write accesses when
   // the partition is disjoint
 
-  // TODO(wonchanl): No multi-dimensional reductions yet
-  LEGATE_ASSERT(sub_domain.dim <= 1);
-
   if (!is_parallel && key_partition_.has_value() && !(*key_partition_)->has_color_shape()) {
     return {storage_data_, sub_domain};
   }
 
   auto tmp = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
 
-  // TODO(wonchanl): We actually need to initialize this storage with the reduction identity
+  // Initialize the per-task scratch with the reduction identity so that ranks that don't write
+  // to a given cell don't perturb the final reduction result.
+  const auto volume = sub_domain.get_volume();
   if (target == legate::mapping::StoreTarget::FBMEM) {
     const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
 
     auto&& api = cuda::detail::get_cuda_driver_api();
 
+    // TODO(wonchanl): GPU identity initialization is only correct for ops whose identity is
+    // all-zero bytes (ADD/OR/XOR and float/double for ADD). Non-zero identities (MUL/MIN/MAX/AND)
+    // require a typed device fill, which will land with the GPU reduction rework.
     api->mem_set_d8_async(tmp->data(),
-                          0,
-                          field_size_ * sub_domain.get_volume(),
+                          /*val=*/0,
+                          field_size_ * volume,
                           Runtime::get_runtime().get_cuda_stream());
   } else {
-    std::memset(tmp->data(), 0, field_size_ * sub_domain.get_volume());
+    fill_with_reduction_identity(tmp->data(), volume, type->code, op_kind);
   }
 
   // TODO(wonchanl): We need to raise an uninitialized access exception if this doesn't hold
   LEGATE_CHECK(storage_data_);
 
-  requests->register_reduction(ReductionRequest{tmp, storage_data_, type, op_kind});
+  auto source_partition = partition;
+  auto target_partition = key_partition_.has_value() ? *key_partition_ : create_no_partition();
+
+  requests->register_reduction(ReductionRequest{tmp,
+                                                storage_data_,
+                                                std::move(source_partition),
+                                                std::move(target_partition),
+                                                domain,
+                                                type,
+                                                op_kind});
 
   return {std::move(tmp), sub_domain};
 }

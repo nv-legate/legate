@@ -12,10 +12,16 @@ namespace legate::detail {
 
 inline ReductionRequest::ReductionRequest(InternalSharedPtr<InlineStorage> source,
                                           InternalSharedPtr<InlineStorage> target,
+                                          InternalSharedPtr<Partition> source_partition,
+                                          InternalSharedPtr<Partition> target_partition,
+                                          const Domain& sub_domain,
                                           InternalSharedPtr<Type> type,
                                           ReductionOpKind op_kind)
   : source_{std::move(source)},
     target_{std::move(target)},
+    source_partition_{std::move(source_partition)},
+    target_partition_{std::move(target_partition)},
+    sub_domain_{sub_domain},
     type_{std::move(type)},
     op_kind_{op_kind}
 {
