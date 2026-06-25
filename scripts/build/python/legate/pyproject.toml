@@ -4,7 +4,8 @@
 [build-system]
 requires = [
     "scikit-build-core",
-    "cython>=3.0.1",
+    # 3.2.6 triggers https://github.com/cython/cython/issues/7767
+    "cython>=3.0.1,!=3.2.6",
     "rich",
 ]
 build-backend = "scikit_build_core.build"
