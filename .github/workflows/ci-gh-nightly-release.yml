@@ -219,7 +219,7 @@ jobs:
     # build succeeds. nightly-uploaded-main waits on uploads; nightly-main is the
     # test/docs/source-release signal.
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.50
     with:
       client-repo: ${{ github.event.repository.name }}
       client-ref: ${{ github.event.inputs.ref-sha }}
@@ -265,7 +265,7 @@ jobs:
   push_code:
     name: Nightly source release
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-push-code.yml@v1.49
+      nv-legate/legate-gh-ci/.github/workflows/gh-push-code.yml@v1.50
     with:
       runs-on: linux-amd64-cpu4
       source-repo: "${{ github.repository_owner }}/legate.internal"
