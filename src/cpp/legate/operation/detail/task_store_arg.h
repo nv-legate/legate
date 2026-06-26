@@ -8,16 +8,11 @@
 
 #include <legate/utilities/internal_shared_ptr.h>
 
-#include <legion.h>
-
 #include <optional>
-#include <unordered_map>
-#include <variant>
 
 namespace legate::detail {
 
 class LogicalStore;
-class PhysicalStore;
 class Variable;
 
 class TaskStoreArg {
@@ -25,29 +20,17 @@ class TaskStoreArg {
   /**
    * @brief Construct a TaskStoreArg for LogicalStore.
    *
-   * `priv` should be initialized to the following values based on whether the argument as an
-   * input, output, or reduction:
-   *
-   * - input: `LEGION_READ_ONLY`
-   * - output: `LEGION_WRITE_ONLY`
-   * - reduction: `LEGION_REDUCE`
-   *
-   * If the owning task is a streaming task, then this privilege is further fixed up during
-   * scheduling window flush to include additional discard privileges. Therefore, the privilege
-   * member should *not* be considered stable until the task is sent to Legion.
-   *
-   * @param priv The access privilege for this task argument.
    * @param _store The LogicalStore for this argument.
+   * @param _variable The store's partition variable.
    */
-  TaskStoreArg(Legion::PrivilegeMode priv,
-               InternalSharedPtr<LogicalStore> _store,
-               const Variable* _variable = nullptr);
+  TaskStoreArg(InternalSharedPtr<LogicalStore> _store, const Variable* _variable = nullptr);
 
   [[nodiscard]] bool needs_flush() const;
 
-  Legion::PrivilegeMode privilege{Legion::PrivilegeMode::LEGION_NO_ACCESS};
   InternalSharedPtr<LogicalStore> store{};
   const Variable* variable{};
 };
 
 }  // namespace legate::detail
+
+#include <legate/operation/detail/task_store_arg.inl>

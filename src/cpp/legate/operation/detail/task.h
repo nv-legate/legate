@@ -226,15 +226,12 @@ class ManualTask final : public LogicalTask {
   /**
    * @brief Add a store as an argument to the `ManualTask`
    *
-   * @param priv The privilege of the store to add. See `TaskStoreArg` for further discussion
-   * on this value.
    * @param store_args The store of arguments to append to.
    * @param store The store to add as an argument.
    * @param partition The partitioning descriptor for the store.
    * @param projection An optional projection to use on the partitioned store.
    */
-  void add_store_(Legion::PrivilegeMode priv,
-                  SmallVector<TaskStoreArg>& store_args,
+  void add_store_(SmallVector<TaskStoreArg>& store_args,
                   const InternalSharedPtr<LogicalStore>& store,
                   InternalSharedPtr<Partition> partition,
                   std::optional<SymbolicPoint> projection = {},

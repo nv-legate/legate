@@ -330,7 +330,6 @@ target_sources(
     legate/operation/detail/fill.cc
     legate/operation/detail/operation.cc
     legate/operation/detail/task.cc
-    legate/operation/detail/task_store_arg.cc
     legate/operation/detail/timing.cc
     legate/partitioning/constraint.cc
     legate/partitioning/proxy.cc

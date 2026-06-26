@@ -218,7 +218,7 @@ template <bool WRITE>
 
   result.reserve(store_args.size());
   data_requests->reserve_copy_ins(store_args.size());
-  for (auto&& [_, store, variable] : store_args) {
+  for (auto&& [store, variable] : store_args) {
     auto&& partition                  = strategy[*variable];
     auto&& [physical_store, subsumed] = store->map(partition,
                                                    strategy.find_store_projection(*variable),
@@ -253,7 +253,7 @@ template <bool WRITE>
   result.reserve(store_args.size());
   data_requests->reserve_reduction_requests(store_args.size());
   for (auto&& [store_arg, op_arg] : zip_equal(store_args, reduction_ops)) {
-    auto&& [_, store, variable]          = store_arg;
+    auto&& [store, variable]             = store_arg;
     auto&& [op_kind, store_has_identity] = op_arg;
     auto&& partition                     = strategy[*variable];
     result.emplace_back(store->map_reduction(partition,
@@ -394,16 +394,14 @@ void AutoTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable* 
     throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used as input"};
   }
 
-  auto& arg = inputs_.emplace_back(
-    Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(store), partition_symbol);
+  auto& arg = inputs_.emplace_back(std::move(store), partition_symbol);
 
   record_partition_(partition_symbol, arg.store);
 }
 
 void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol)
 {
-  auto& arg = outputs_.emplace_back(
-    Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(store), partition_symbol);
+  auto& arg = outputs_.emplace_back(std::move(store), partition_symbol);
 
   record_partition_(partition_symbol, arg.store);
 }
@@ -421,8 +419,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
 
   reduction_ops_.emplace_back(static_cast<ReductionOpKind>(redop_kind), store_has_identity);
 
-  auto& arg = reductions_.emplace_back(
-    Legion::PrivilegeMode::LEGION_REDUCE, std::move(store), partition_symbol);
+  auto& arg = reductions_.emplace_back(std::move(store), partition_symbol);
 
   record_partition_(partition_symbol, arg.store);
 }
@@ -513,12 +510,12 @@ void ManualTask::add_input(InternalSharedPtr<LogicalStore> store)
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used as input"};
   }
 
-  add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY, inputs_, store, create_no_partition());
+  add_store_(inputs_, store, create_no_partition());
 }
 
 void ManualTask::add_output(InternalSharedPtr<LogicalStore> store)
 {
-  add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
+  add_store_(outputs_, store, create_no_partition());
 }
 
 void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store,
@@ -529,7 +526,7 @@ void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store,
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reduction"};
   }
 
-  add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
+  add_store_(reductions_, store, create_no_partition());
 
   reduction_ops_.emplace_back(static_cast<ReductionOpKind>(redop_kind), store_has_identity);
 }
@@ -538,8 +535,7 @@ void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store
                            std::optional<SymbolicPoint> projection,
                            bool is_key_partition)
 {
-  add_store_(Legion::PrivilegeMode::LEGION_READ_ONLY,
-             inputs_,
+  add_store_(inputs_,
              store_partition->store(),
              store_partition->partition(),
              std::move(projection),
@@ -552,8 +548,7 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
 {
   // Unbound stores can never be partitioned immediately
   LEGATE_ASSERT(!store_partition->store()->unbound());
-  add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY,
-             outputs_,
+  add_store_(outputs_,
              store_partition->store(),
              store_partition->partition(),
              std::move(projection),
@@ -566,8 +561,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
                                bool is_key_partition,
                                bool store_has_identity)
 {
-  add_store_(Legion::PrivilegeMode::LEGION_REDUCE,
-             reductions_,
+  add_store_(reductions_,
              store_partition->store(),
              store_partition->partition(),
              std::move(projection),
@@ -576,8 +570,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
   reduction_ops_.emplace_back(static_cast<ReductionOpKind>(redop_kind), store_has_identity);
 }
 
-void ManualTask::add_store_(Legion::PrivilegeMode priv,
-                            SmallVector<TaskStoreArg>& store_args,
+void ManualTask::add_store_(SmallVector<TaskStoreArg>& store_args,
                             const InternalSharedPtr<LogicalStore>& store,
                             InternalSharedPtr<Partition> partition,
                             std::optional<SymbolicPoint> projection,
@@ -585,7 +578,7 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
 {
   const auto* partition_symbol = declare_partition();
 
-  store_args.emplace_back(priv, store, partition_symbol);
+  store_args.emplace_back(store, partition_symbol);
 
   record_partition_(partition_symbol, store);
 
