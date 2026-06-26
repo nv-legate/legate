@@ -14,7 +14,6 @@
 #include <legate/operation/detail/task_store_arg.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
-#include <legate/runtime/detail/streaming/generation.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -115,33 +114,13 @@ class LogicalTask : public TaskBase {
               mapping::detail::Machine machine);
 
  public:
-  /**
-   * @brief Set the streaming generation for this task.
-   *
-   * This marks a task as part of a set of streaming tasks. Among other effects, this informs
-   * the mapper that this task should be mapped "vertically", i.e. map each "column" of index
-   * points of a streaming generation at a time before mapping new tasks. See
-   * `BaseMapper::select_tasks_to_map()` for more information.
-   *
-   * If `streaming_gen` is `std::nullopt`, the task is no longer considered to be part of a
-   * streaming generation. It will be eagerly (i.e. horizontally) mapped by the mapper.
-   *
-   * @param streaming_gen The streaming generation.
-   */
-  void set_streaming_generation(std::optional<StreamingGeneration> streaming_gen);
   void add_communicator(std::string_view name, bool bypass_signature_check);
-
-  /**
-   * @return The streaming generation if the task is a streaming task, `std::nullopt` otherwise.
-   */
-  [[nodiscard]] const std::optional<StreamingGeneration>& streaming_generation() const;
 
  protected:
   void launch_task_(Strategy* strategy);
 
  private:
   SmallVector<std::reference_wrapper<CommunicatorFactory>> communicator_factories_{};
-  std::optional<StreamingGeneration> streaming_gen_{};
 };
 
 class AutoTask final : public LogicalTask {

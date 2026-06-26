@@ -327,9 +327,7 @@ target_sources(
     legate/mapping/detail/proxy_store_mapping.cc
     legate/operation/projection.cc
     legate/operation/task.cc
-    legate/operation/detail/execution_fence.cc
     legate/operation/detail/fill.cc
-    legate/operation/detail/mapping_fence.cc
     legate/operation/detail/operation.cc
     legate/operation/detail/task.cc
     legate/operation/detail/task_store_arg.cc
@@ -378,12 +376,6 @@ target_sources(
     legate/runtime/detail/argument_parsing/flags/sysmem.cc
     legate/runtime/detail/argument_parsing/flags/cuda_driver_path.cc
     legate/runtime/detail/mpi_detection.cc
-    legate/runtime/detail/streaming/analysis.cc
-    legate/runtime/detail/streaming/generation.cc
-    legate/runtime/detail/streaming/dependency_checker.cc
-    legate/runtime/detail/streaming/disallowed_operation_checker.cc
-    legate/runtime/detail/streaming/launch_domain_equality_checker.cc
-    legate/runtime/detail/streaming/util.cc
     legate/task/registrar.cc
     legate/task/task_context.cc
     legate/task/task_info.cc

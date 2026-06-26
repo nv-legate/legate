@@ -20,9 +20,7 @@
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/mapping.h>
-#include <legate/operation/detail/execution_fence.h>
 #include <legate/operation/detail/fill.h>
-#include <legate/operation/detail/mapping_fence.h>
 #include <legate/operation/detail/offload.h>
 #include <legate/operation/detail/task.h>
 #include <legate/partitioning/detail/constraint.h>
@@ -33,7 +31,6 @@
 #include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/mpi_detection.h>
-#include <legate/runtime/detail/streaming/analysis.h>
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/legion_task.h>
@@ -327,18 +324,6 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
   std::ignore = task->add_output(store);
 
   submit(std::move(task));
-  // We issue a mapping fence here because downstream tasks that do not access
-  // `store` do not have mapping order dependency on the offload task. Such tasks
-  // may allocate data on the `target_mem` ahead of the offload task thus
-  // preventing the offloading from happening at the right time.
-  //
-  // However, we do not need to and should not issue the mapping fence inside a
-  // streaming scope because mapping fence breaks the streaming scope into two
-  // sets. Further, each streaming scope already has a mapping fence at the end, so
-  // that should suffice.
-  if (!scope().parallel_policy().streaming()) {
-    issue_mapping_fence();
-  }
 }
 
 void Runtime::flush_scheduling_window(bool) {}
@@ -627,7 +612,7 @@ void Runtime::record_pending_exception(ReturnedException pending_exception)
   }
 }
 
-void Runtime::issue_mapping_fence() { submit(make_internal_shared<MappingFence>(new_op_id())); }
+void Runtime::issue_mapping_fence() {}
 
 void Runtime::issue_execution_fence(bool)
 {

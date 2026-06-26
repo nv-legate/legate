@@ -37,13 +37,6 @@ inline const VariantInfo& TaskBase::variant_info_() const { return vinfo_; }
 
 // ==========================================================================================
 
-inline const std::optional<StreamingGeneration>& LogicalTask::streaming_generation() const
-{
-  return streaming_gen_;
-}
-
-// ==========================================================================================
-
 inline Operation::Kind AutoTask::kind() const { return Kind::AUTO_TASK; }
 
 inline bool AutoTask::needs_partitioning() const { return true; }

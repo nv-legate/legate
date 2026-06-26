@@ -6,7 +6,6 @@
 
 #include <legate/operation/detail/operation.h>
 
-#include <legate/operation/detail/access_mode.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/runtime.h>
@@ -24,21 +23,10 @@ namespace {
 [[nodiscard]] ZStringView OP_NAME(Operation::Kind kind)
 {
   switch (kind) {
-    case Operation::Kind::ATTACH: return "Attach";
     case Operation::Kind::AUTO_TASK: return "AutoTask";
-    case Operation::Kind::COPY: return "Copy";
-    case Operation::Kind::DISCARD: return "Discard";
-    case Operation::Kind::EXECUTION_FENCE: return "ExecutionFence";
     case Operation::Kind::FILL: return "Fill";
-    case Operation::Kind::GATHER: return "Gather";
-    case Operation::Kind::INDEX_ATTACH: return "IndexAttach";
     case Operation::Kind::MANUAL_TASK: return "ManualTask";
-    case Operation::Kind::MAPPING_FENCE: return "MappingFence";
-    case Operation::Kind::REDUCE: return "Reduce";
-    case Operation::Kind::SCATTER: return "Scatter";
-    case Operation::Kind::SCATTER_GATHER: return "ScatterGather";
     case Operation::Kind::TIMING: return "Timing";
-    case Operation::Kind::RELEASE_REGION_FIELD: return "ReleaseRegionField";
   }
 
   throw TracedException<std::invalid_argument>{"invalid operation kind"};
@@ -107,11 +95,9 @@ const InternalSharedPtr<LogicalStore>& Operation::find_store(const Variable* var
   return store_mappings_.at(*variable);
 }
 
-void Operation::record_partition_(
-  const Variable* variable,
-  // Obviously, it is moved, but clang-tidy does not see that...
-  InternalSharedPtr<LogicalStore> store,  // NOLINT(performance-unnecessary-value-param)
-  AccessMode access_mode)
+void Operation::record_partition_(const Variable* variable,
+                                  // Obviously, it is moved, but clang-tidy does not see that...
+                                  InternalSharedPtr<LogicalStore> store)
 {
   const auto sid            = store->id();
   const auto [it, inserted] = store_mappings_.try_emplace(*variable, std::move(store));
@@ -128,27 +114,6 @@ void Operation::record_partition_(
   } else if (mapped_store->id() != sid) {
     throw TracedException<std::invalid_argument>{
       fmt::format("Variable {} is already assigned to another store", *variable)};
-  }
-
-  // structured bindings can't be captured, hence cap_it, and cap_inserted
-  auto emplace_with_try_catch = [&, cap_it = it, cap_inserted = inserted](auto* vec_ptr) {
-    try {
-      vec_ptr->emplace_back(StoreArg{mapped_store, variable});
-    } catch (...) {
-      // strong exception guarantee
-      if (cap_inserted) {
-        store_mappings_.erase(cap_it);
-      }
-      throw;
-    }
-  };
-
-  // moving after exception checks but keep out of if(inserted) because we want to
-  // track reads, writes, reductions separately.
-  switch (access_mode) {
-    case AccessMode::READ: emplace_with_try_catch(&input_args_); break;
-    case AccessMode::WRITE: emplace_with_try_catch(&output_args_); break;
-    case AccessMode::REDUCE: emplace_with_try_catch(&reduction_args_); break;
   }
 }
 

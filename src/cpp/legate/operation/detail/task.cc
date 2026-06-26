@@ -150,11 +150,6 @@ LogicalTask::LogicalTask(const Library& library,
   }
 }
 
-void LogicalTask::set_streaming_generation(std::optional<StreamingGeneration> streaming_generation)
-{
-  streaming_gen_ = std::move(streaming_generation);
-}
-
 void LogicalTask::add_communicator(std::string_view name, bool bypass_signature_check)
 {
   if (const auto& comms = variant_info_().options.communicators; comms.has_value()) {
@@ -399,7 +394,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable* 
   auto& arg = inputs_.emplace_back(
     Legion::PrivilegeMode::LEGION_READ_ONLY, std::move(store), partition_symbol);
 
-  record_partition_(partition_symbol, arg.store, AccessMode::READ);
+  record_partition_(partition_symbol, arg.store);
 }
 
 void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol)
@@ -407,7 +402,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable*
   auto& arg = outputs_.emplace_back(
     Legion::PrivilegeMode::LEGION_WRITE_ONLY, std::move(store), partition_symbol);
 
-  record_partition_(partition_symbol, arg.store, AccessMode::WRITE);
+  record_partition_(partition_symbol, arg.store);
 }
 
 void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
@@ -425,7 +420,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
   auto& arg = reductions_.emplace_back(
     Legion::PrivilegeMode::LEGION_REDUCE, std::move(store), partition_symbol);
 
-  record_partition_(partition_symbol, arg.store, AccessMode::REDUCE);
+  record_partition_(partition_symbol, arg.store);
 }
 
 void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint, bool bypass_signature_check)
@@ -585,26 +580,7 @@ void ManualTask::add_store_(Legion::PrivilegeMode priv,
 
   store_args.emplace_back(priv, store, partition_symbol);
 
-  const auto privelege_to_access_mode = [](Legion::PrivilegeMode p) {
-    switch (p) {
-      case LEGION_READ_ONLY: [[fallthrough]];
-      case LEGION_READ_DISCARD: return AccessMode::READ;
-      case LEGION_REDUCE: return AccessMode::REDUCE;
-      case LEGION_WRITE_ONLY: [[fallthrough]];
-      case LEGION_READ_WRITE: [[fallthrough]];
-      case LEGION_WRITE_DISCARD: [[fallthrough]];
-      case LEGION_WRITE_PRIV: return AccessMode::WRITE;
-      case LEGION_NO_ACCESS: [[fallthrough]];
-      case LEGION_DISCARD_MASK: [[fallthrough]];
-      case LEGION_DISCARD_OUTPUT_MASK:
-        LEGATE_ABORT(fmt::format("No way to convert privilege {} to AccessMode", p));
-        return AccessMode::REDUCE;
-    }
-    LEGATE_ABORT(fmt::format("No way to convert privilege {} to AccessMode", p));
-    return AccessMode::WRITE;
-  };
-
-  record_partition_(partition_symbol, store, privelege_to_access_mode(priv));
+  record_partition_(partition_symbol, store);
 
   if (is_key_partition) {
     strategy_->record_key_partition({}, *partition_symbol);

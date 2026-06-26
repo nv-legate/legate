@@ -9,7 +9,6 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/mapping/detail/machine.h>
-#include <legate/operation/detail/access_mode.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -49,37 +48,12 @@ class Operation {
 
  public:
   /**
-   * @brief
-   * Class to pair stores and their associated variable symbols.
-   */
-  class StoreArg {
-   public:
-    /**
-     * @return true if store needs flush.
-     */
-    [[nodiscard]] bool needs_flush() const;
-    InternalSharedPtr<LogicalStore> store{};
-    const Variable* variable{};
-  };
-
-  /**
    * @brief. Operation kind assigned for each subclass.
    */
   enum class Kind : std::uint8_t {
-    ATTACH,
     AUTO_TASK,
-    COPY,
-    DISCARD,
-    EXECUTION_FENCE,
     FILL,
-    GATHER,
-    INDEX_ATTACH,
     MANUAL_TASK,
-    MAPPING_FENCE,
-    REDUCE,
-    RELEASE_REGION_FIELD,
-    SCATTER,
-    SCATTER_GATHER,
     TIMING,
   };
 
@@ -154,25 +128,6 @@ class Operation {
   [[nodiscard]] const ParallelPolicy& parallel_policy() const;
   [[nodiscard]] ZStringView provenance() const;
 
-  /**
-   * @brief Return all the stores read by this operation.
-   *
-   * @return a vector of input StoreArg objects.
-   */
-  [[nodiscard]] const SmallVector<StoreArg>& input_stores() const;
-  /**
-   * @brief Return all the stores written by this operation.
-   *
-   * @return a vector of output StoreArg objects.
-   */
-  [[nodiscard]] const SmallVector<StoreArg>& output_stores() const;
-  /**
-   * @brief Return all the stores reduced by this operation.
-   *
-   * @return a vector of StoreArg objects used in reductions.
-   */
-  [[nodiscard]] const SmallVector<StoreArg>& reduction_stores() const;
-
  protected:
   /**
    * @brief Register a store access with the base class.
@@ -183,12 +138,8 @@ class Operation {
    * @param variable pointer to the symbol created for the store being accessed.
    *
    * @param store pointer to the store being accessed.
-   *
-   * @param access_mode the mode of access.
    */
-  void record_partition_(const Variable* variable,
-                         InternalSharedPtr<LogicalStore> store,
-                         AccessMode access_mode);
+  void record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store);
 
   std::uint64_t unique_id_{};
   std::int32_t next_part_id_{};
@@ -197,11 +148,6 @@ class Operation {
   std::unordered_map<std::reference_wrapper<const Variable>, InternalSharedPtr<LogicalStore>>
     store_mappings_{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};
-
-  // Derived classes populate these vectors via calls to record_partition_
-  SmallVector<StoreArg> input_args_{};
-  SmallVector<StoreArg> output_args_{};
-  SmallVector<StoreArg> reduction_args_{};
 
   std::string provenance_{};
   mapping::detail::Machine machine_{};
