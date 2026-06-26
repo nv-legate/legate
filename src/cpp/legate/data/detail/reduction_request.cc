@@ -189,24 +189,23 @@ class FillGPU {
     auto&& api = cuda::detail::get_cuda_driver_api();
 
     if constexpr (sizeof(VAL) == 1) {
-      api->mem_set_d8_async(
-        dst,
-        *reinterpret_cast<const std::uint8_t*>(&reduction_identity_v<REDOP, CODE>),
-        count,
-        Runtime::get_runtime().get_cuda_stream());
+      std::uint8_t value{};
+
+      std::memcpy(&value, &reduction_identity_v<REDOP, CODE>, sizeof(VAL));
+      api->mem_set_d8_async(dst, value, count, Runtime::get_runtime().get_cuda_stream());
     } else if constexpr (sizeof(VAL) == 4) {
-      api->mem_set_d32_async(
-        dst,
-        *reinterpret_cast<const std::uint32_t*>(&reduction_identity_v<REDOP, CODE>),
-        count,
-        Runtime::get_runtime().get_cuda_stream());
+      std::uint32_t value{};
+
+      std::memcpy(&value, &reduction_identity_v<REDOP, CODE>, sizeof(VAL));
+      api->mem_set_d32_async(dst, value, count, Runtime::get_runtime().get_cuda_stream());
     } else if constexpr (sizeof(VAL) == 8) {
       auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
       auto kern =
         mod_manager.load_kernel_from_fatbin(reduction_request_fatbin, "legate_fill_kernel_64");
       const auto num_blocks = (count + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
-      auto value = *reinterpret_cast<const std::uint64_t*>(&reduction_identity_v<REDOP, CODE>);
+      std::uint64_t value{};
 
+      std::memcpy(&value, &reduction_identity_v<REDOP, CODE>, sizeof(VAL));
       api->launch_kernel(kern,
                          {num_blocks},
                          {LEGATE_THREADS_PER_BLOCK},
