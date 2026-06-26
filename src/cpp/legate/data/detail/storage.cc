@@ -61,10 +61,15 @@ Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::stri
   // so we need to create a new allocation and copy the data over.
   const Domain domain = to_domain(this->shape()->extents());
 
-  storage_data_ = make_internal_shared<InlineStorage>(
-    domain, field_size_, Runtime::get_runtime().get_machine().preferred_scalar_store_target());
+  const auto target = Runtime::get_runtime().get_machine().preferred_scalar_store_target();
+  storage_data_     = make_internal_shared<InlineStorage>(domain, field_size_, target);
 
   set_key_partition(create_no_partition());
+
+  if (target == mapping::StoreTarget::SYSMEM) {
+    std::memcpy(storage_data_->data(), scalar.data(), scalar.size());
+    return;
+  }
 
   const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
 
