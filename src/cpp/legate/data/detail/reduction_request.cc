@@ -8,8 +8,10 @@
 
 #include <legate/comm/coll.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/cuda/detail/cuda_util.h>
 #include <legate/data/detail/copy_util.h>
 #include <legate/data/detail/inline_storage.h>
+#include <legate/generated/fatbin/reduction_request_fatbin.h>
 #include <legate/redop/base.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/type_traits.h>
@@ -28,99 +30,216 @@ namespace legate::detail {
 
 namespace {
 
-template <typename T>
-void fill_typed(T* typed, std::size_t count, ReductionOpKind op_kind)
+template <ReductionOpKind REDOP, Type::Code CODE>
+struct reduction_identity;
+
+template <Type::Code CODE>
+struct reduction_identity<ReductionOpKind::ADD, CODE> {
+  using VAL                   = type_of_t<CODE>;
+  static constexpr auto value = SumReduction<VAL>::identity;
+};
+
+template <Type::Code CODE>
+struct reduction_identity<ReductionOpKind::MUL, CODE> {
+  using VAL                   = type_of_t<CODE>;
+  static constexpr auto value = ProdReduction<VAL>::identity;
+};
+
+template <Type::Code CODE>
+struct reduction_identity<ReductionOpKind::MAX, CODE> {
+  using VAL                   = type_of_t<CODE>;
+  static constexpr auto value = MaxReduction<VAL>::identity;
+};
+
+template <Type::Code CODE>
+struct reduction_identity<ReductionOpKind::MIN, CODE> {
+  using VAL                   = type_of_t<CODE>;
+  static constexpr auto value = MinReduction<VAL>::identity;
+};
+
+template <Type::Code CODE>
+struct reduction_identity<ReductionOpKind::OR, CODE> {
+  using VAL                   = type_of_t<CODE>;
+  static constexpr auto value = OrReduction<VAL>::identity;
+};
+
+template <Type::Code CODE>
+struct reduction_identity<ReductionOpKind::AND, CODE> {
+  using VAL                   = type_of_t<CODE>;
+  static constexpr auto value = AndReduction<VAL>::identity;
+};
+
+template <Type::Code CODE>
+struct reduction_identity<ReductionOpKind::XOR, CODE> {
+  using VAL                   = type_of_t<CODE>;
+  static constexpr auto value = XORReduction<VAL>::identity;
+};
+
+template <ReductionOpKind REDOP, Type::Code CODE>
+inline constexpr decltype(auto) reduction_identity_v = reduction_identity<REDOP, CODE>::value;
+
+constexpr bool supports_reduction(Type::Code code)
+{
+  // The set of supported type codes mirrors `to_coll_data_type_()` in
+  // copy_util.cc. Keep these in sync.
+  return code == Type::Code::INT8 || code == Type::Code::INT32 || code == Type::Code::INT64 ||
+         code == Type::Code::UINT8 || code == Type::Code::UINT32 || code == Type::Code::UINT64 ||
+         code == Type::Code::FLOAT32 || code == Type::Code::FLOAT64;
+}
+
+template <ReductionOpKind REDOP, Type::Code CODE>
+struct valid_reduction;
+
+template <Type::Code CODE>
+struct valid_reduction<ReductionOpKind::ADD, CODE> {
+  static constexpr bool value = supports_reduction(CODE);
+};
+
+template <Type::Code CODE>
+struct valid_reduction<ReductionOpKind::MUL, CODE> {
+  static constexpr bool value = supports_reduction(CODE);
+};
+
+template <Type::Code CODE>
+struct valid_reduction<ReductionOpKind::MAX, CODE> {
+  static constexpr bool value = supports_reduction(CODE);
+};
+
+template <Type::Code CODE>
+struct valid_reduction<ReductionOpKind::MIN, CODE> {
+  static constexpr bool value = supports_reduction(CODE);
+};
+
+template <Type::Code CODE>
+struct valid_reduction<ReductionOpKind::OR, CODE> {
+  static constexpr bool value = supports_reduction(CODE) && std::is_integral_v<type_of_t<CODE>>;
+};
+
+template <Type::Code CODE>
+struct valid_reduction<ReductionOpKind::AND, CODE> {
+  static constexpr bool value = supports_reduction(CODE) && std::is_integral_v<type_of_t<CODE>>;
+};
+
+template <Type::Code CODE>
+struct valid_reduction<ReductionOpKind::XOR, CODE> {
+  static constexpr bool value = supports_reduction(CODE) && std::is_integral_v<type_of_t<CODE>>;
+};
+
+template <ReductionOpKind REDOP, Type::Code CODE>
+inline constexpr bool valid_reduction_v = valid_reduction<REDOP, CODE>::value;
+
+template <typename Functor, typename... Fnargs>
+constexpr decltype(auto) redop_dispatch(ReductionOpKind op_kind, Functor f, Fnargs&&... args)
 {
   switch (op_kind) {
     case ReductionOpKind::ADD: {
-      std::fill_n(typed, count, legate::SumReduction<T>::identity);
-      return;
+      return f.template operator()<ReductionOpKind::ADD>(std::forward<Fnargs>(args)...);
     }
     case ReductionOpKind::MUL: {
-      std::fill_n(typed, count, legate::ProdReduction<T>::identity);
-      return;
+      return f.template operator()<ReductionOpKind::MUL>(std::forward<Fnargs>(args)...);
     }
     case ReductionOpKind::MAX: {
-      std::fill_n(typed, count, legate::MaxReduction<T>::identity);
-      return;
+      return f.template operator()<ReductionOpKind::MAX>(std::forward<Fnargs>(args)...);
     }
     case ReductionOpKind::MIN: {
-      std::fill_n(typed, count, legate::MinReduction<T>::identity);
-      return;
+      return f.template operator()<ReductionOpKind::MIN>(std::forward<Fnargs>(args)...);
     }
     case ReductionOpKind::OR: {
-      if constexpr (std::is_integral_v<T>) {
-        std::fill_n(typed, count, legate::OrReduction<T>::identity);
-        return;
-      }
-      throw TracedException<std::invalid_argument>{
-        "Reduction identity does not support non-integral types with OR"};
+      return f.template operator()<ReductionOpKind::OR>(std::forward<Fnargs>(args)...);
     }
     case ReductionOpKind::AND: {
-      if constexpr (std::is_integral_v<T>) {
-        std::fill_n(typed, count, legate::AndReduction<T>::identity);
-        return;
-      }
-      throw TracedException<std::invalid_argument>{
-        "Reduction identity does not support non-integral types with AND"};
+      return f.template operator()<ReductionOpKind::AND>(std::forward<Fnargs>(args)...);
     }
     case ReductionOpKind::XOR: {
-      if constexpr (std::is_integral_v<T>) {
-        std::fill_n(typed, count, legate::XORReduction<T>::identity);
-        return;
-      }
-      throw TracedException<std::invalid_argument>{
-        "Reduction identity does not support non-integral types with XOR"};
+      return f.template operator()<ReductionOpKind::XOR>(std::forward<Fnargs>(args)...);
     }
   }
   LEGATE_UNREACHABLE();
+  return f.template operator()<ReductionOpKind::ADD>(std::forward<Fnargs>(args)...);
 }
 
-class FillTypedFn {
+template <Type::Code CODE>
+class FillCPU {
  public:
-  template <Type::Code CODE>
-  void operator()(void* dst, std::size_t count, ReductionOpKind op_kind) const
+  template <ReductionOpKind REDOP, std::enable_if_t<valid_reduction_v<REDOP, CODE>>* = nullptr>
+  void operator()(void* dst, std::size_t count) const
   {
-    if constexpr (CODE == Type::Code::INT8 || CODE == Type::Code::INT32 ||
-                  CODE == Type::Code::INT64 || CODE == Type::Code::UINT8 ||
-                  CODE == Type::Code::UINT32 || CODE == Type::Code::UINT64 ||
-                  CODE == Type::Code::FLOAT32 || CODE == Type::Code::FLOAT64) {
-      using T = type_of_t<CODE>;
-      fill_typed<T>(static_cast<T*>(dst), count, op_kind);
-    } else {
-      // The set of supported type codes mirrors `to_coll_data_type_()` in
-      // copy_util.cc. Keep these in sync.
-      throw TracedException<std::runtime_error>{"Not supported yet"};
-    }
+    using VAL = type_of_t<CODE>;
+
+    auto* typed = static_cast<VAL*>(dst);
+    std::fill_n(typed, count, reduction_identity_v<REDOP, CODE>);
+  }
+
+  template <ReductionOpKind REDOP, std::enable_if_t<!valid_reduction_v<REDOP, CODE>>* = nullptr>
+  void operator()(void*, std::size_t) const
+  {
+    throw TracedException<std::invalid_argument>{"Unsupported reduction"};
   }
 };
 
-struct CopyTileIntoFullStoreCPUFn {
-  template <Type::Code CODE>
-  void operator()(InlineStorage& full, const Domain& full_domain, const InlineStorage& tile) const
+template <Type::Code CODE>
+class FillGPU {
+ public:
+  template <ReductionOpKind REDOP, std::enable_if_t<valid_reduction_v<REDOP, CODE>>* = nullptr>
+  void operator()(void* dst, std::size_t count) const
   {
-    if constexpr (CODE == Type::Code::INT8 || CODE == Type::Code::INT32 ||
-                  CODE == Type::Code::INT64 || CODE == Type::Code::UINT8 ||
-                  CODE == Type::Code::UINT32 || CODE == Type::Code::UINT64 ||
-                  CODE == Type::Code::FLOAT32 || CODE == Type::Code::FLOAT64) {
-      using T = type_of_t<CODE>;
+    using VAL = type_of_t<CODE>;
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
 
-      const auto& tile_domain = tile.domain();
-      if (tile_domain.get_volume() == 0) {
-        return;
-      }
-      const auto full_strides = calculate_strides(full_domain);
-      const auto tile_strides = calculate_strides(tile_domain);
+    auto&& api = cuda::detail::get_cuda_driver_api();
 
-      auto* full_ptr = static_cast<T*>(full.data()) - inner_product(full_domain.lo(), full_strides);
-      const auto* tile_ptr =
-        static_cast<const T*>(tile.data()) - inner_product(tile_domain.lo(), tile_strides);
+    if constexpr (sizeof(VAL) == 1) {
+      api->mem_set_d8_async(
+        dst,
+        *reinterpret_cast<const std::uint8_t*>(&reduction_identity_v<REDOP, CODE>),
+        count,
+        Runtime::get_runtime().get_cuda_stream());
+    } else if constexpr (sizeof(VAL) == 4) {
+      api->mem_set_d32_async(
+        dst,
+        *reinterpret_cast<const std::uint32_t*>(&reduction_identity_v<REDOP, CODE>),
+        count,
+        Runtime::get_runtime().get_cuda_stream());
+    } else if constexpr (sizeof(VAL) == 8) {
+      auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
+      auto kern =
+        mod_manager.load_kernel_from_fatbin(reduction_request_fatbin, "legate_fill_kernel_64");
+      const auto num_blocks = (count + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
+      auto value = *reinterpret_cast<const std::uint64_t*>(&reduction_identity_v<REDOP, CODE>);
 
-      for (Domain::DomainPointIterator it{tile_domain}; it; ++it) {
-        full_ptr[inner_product(it.p, full_strides)] = tile_ptr[inner_product(it.p, tile_strides)];
-      }
+      api->launch_kernel(kern,
+                         {num_blocks},
+                         {LEGATE_THREADS_PER_BLOCK},
+                         /*shared_mem_bytes=*/0,
+                         Runtime::get_runtime().get_cuda_stream(),
+                         static_cast<std::uint64_t*>(dst),
+                         count,
+                         value);
+
     } else {
-      throw TracedException<std::runtime_error>{"Not supported yet"};
+      throw TracedException<std::runtime_error>{"Unsupported type"};
+    }
+  }
+
+  template <ReductionOpKind REDOP, std::enable_if_t<!valid_reduction_v<REDOP, CODE>>* = nullptr>
+  void operator()(void*, std::size_t) const
+  {
+    throw TracedException<std::invalid_argument>{"Unsupported reduction"};
+  }
+};
+
+class FillDispatch {
+ public:
+  template <Type::Code CODE>
+  void operator()(void* dst,
+                  std::size_t count,
+                  mapping::StoreTarget target,
+                  ReductionOpKind op_kind) const
+  {
+    if (target == mapping::StoreTarget::SYSMEM) {
+      redop_dispatch(op_kind, FillCPU<CODE>{}, dst, count);
+    } else {
+      redop_dispatch(op_kind, FillGPU<CODE>{}, dst, count);
     }
   }
 };
@@ -129,25 +248,19 @@ struct CopyTileIntoFullStoreCPUFn {
 
 void fill_with_reduction_identity(void* dst,
                                   std::size_t count,
+                                  mapping::StoreTarget target,
                                   Type::Code type_code,
                                   ReductionOpKind op_kind)
 {
   if (count == 0) {
     return;
   }
-  type_dispatch(type_code, FillTypedFn{}, dst, count, op_kind);
+
+  type_dispatch(type_code, FillDispatch{}, dst, count, target, op_kind);
 }
 
 void ReductionRequest::perform(VariantCode variant_code) const
 {
-  // The GPU path currently funnels every scenario through `all_reduce_` (ncclAllReduce).
-  // Partition-aware GPU paths will be added when the GPU reduction rework lands.
-  if (variant_code == VariantCode::GPU) {
-    all_reduce_(variant_code);
-    return;
-  }
-  LEGATE_ASSERT(variant_code == VariantCode::CPU);
-
   const auto target_partitioned       = target_partition_->has_color_shape();
   const auto source_partitioned       = source_partition_->has_color_shape();
   const auto source_covers_full_store = source_->domain().get_volume() == sub_domain_.get_volume();
@@ -161,11 +274,6 @@ void ReductionRequest::perform(VariantCode variant_code) const
     LEGATE_ASSERT(target_partitioned);
     throw TracedException<std::runtime_error>{
       "Reduction with NoPartition source into a Tiling target is not yet supported"};
-  }
-
-  if (!target_partitioned) {
-    reduce_to_replicated_target_(variant_code);
-    return;
   }
 
   throw TracedException<std::runtime_error>{
@@ -193,29 +301,6 @@ void ReductionRequest::all_reduce_(VariantCode variant_code) const
   collAllreduce(source_->data(),
                 target_->data(),
                 static_cast<int>(source_->domain().get_volume()),
-                to_coll_data_type_(type_->code),
-                op_kind_,
-                Runtime::get_runtime().get_cpu_comm());
-}
-
-void ReductionRequest::reduce_to_replicated_target_(VariantCode variant_code) const
-{
-  LEGATE_ASSERT(variant_code == VariantCode::CPU);
-  static_cast<void>(variant_code);
-
-  const auto full_volume = sub_domain_.get_volume();
-  if (full_volume == 0) {
-    return;
-  }
-
-  InlineStorage local_full{sub_domain_, type_->size(), source_->target()};
-  fill_with_reduction_identity(local_full.data(), full_volume, type_->code, op_kind_);
-
-  type_dispatch(type_->code, CopyTileIntoFullStoreCPUFn{}, local_full, sub_domain_, *source_);
-
-  collAllreduce(local_full.data(),
-                target_->data(),
-                static_cast<int>(full_volume),
                 to_coll_data_type_(type_->code),
                 op_kind_,
                 Runtime::get_runtime().get_cpu_comm());

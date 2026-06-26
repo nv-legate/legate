@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/data/detail/inline_storage.h>
+#include <legate/mapping/mapping.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/type/detail/types.h>
 #include <legate/type/types.h>
@@ -19,6 +20,7 @@ namespace legate::detail {
 
 void fill_with_reduction_identity(void* dst,
                                   std::size_t count,
+                                  mapping::StoreTarget target,
                                   Type::Code type_code,
                                   ReductionOpKind op_kind);
 

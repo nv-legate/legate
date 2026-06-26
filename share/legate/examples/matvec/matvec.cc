@@ -86,7 +86,8 @@ void run_example()
   auto lhs  = runtime->create_store(legate::Shape{OUT_DIM}, legate::int32());
 
   auto init_rhs1_task = runtime->create_task(library, InitTask<2>::TASK_CONFIG.task_id());
-  init_rhs1_task.add_output(rhs1);
+  auto init_rhs1_part = init_rhs1_task.add_output(rhs1);
+  init_rhs1_task.add_constraint(legate::broadcast(init_rhs1_part, {1}));
   init_rhs1_task.add_scalar_arg(legate::Scalar{1});
   runtime->submit(std::move(init_rhs1_task));
 
