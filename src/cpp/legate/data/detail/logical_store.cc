@@ -387,6 +387,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
   const Domain& launch_domain,
   const DomainPoint& task_index,
   ReductionOpKind op_kind,
+  bool store_has_identity,
   const legate::mapping::detail::Machine& machine,
   DataMovementRequests* requests)
 {
@@ -401,6 +402,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
                                                                 launch_domain.is_valid(),
                                                                 type_,
                                                                 op_kind,
+                                                                store_has_identity,
                                                                 requests);
 
   return make_internal_shared<PhysicalStore>(

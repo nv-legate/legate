@@ -31,7 +31,10 @@ inline Span<const TaskStoreArg> TaskBase::outputs() const { return outputs_; }
 
 inline Span<const TaskStoreArg> TaskBase::reductions() const { return reductions_; }
 
-inline Span<const ReductionOpKind> TaskBase::reduction_ops() const { return reduction_ops_; }
+inline Span<const std::pair<ReductionOpKind, bool>> TaskBase::reduction_ops() const
+{
+  return reduction_ops_;
+}
 
 inline const VariantInfo& TaskBase::variant_info_() const { return vinfo_; }
 

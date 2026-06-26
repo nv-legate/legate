@@ -32,14 +32,18 @@ Variable AutoTask::add_output(LogicalStore store)
   return Variable{impl_()->add_output(std::move(store).impl())};
 }
 
-Variable AutoTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
+Variable AutoTask::add_reduction(LogicalStore store,
+                                 ReductionOpKind redop_kind,
+                                 bool store_has_identity)
 {
-  return add_reduction(std::move(store), static_cast<std::int32_t>(redop_kind));
+  return add_reduction(std::move(store), static_cast<std::int32_t>(redop_kind), store_has_identity);
 }
 
-Variable AutoTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
+Variable AutoTask::add_reduction(LogicalStore store,
+                                 std::int32_t redop_kind,
+                                 bool store_has_identity)
 {
-  return Variable{impl_()->add_reduction(std::move(store).impl(), redop_kind)};
+  return Variable{impl_()->add_reduction(std::move(store).impl(), redop_kind, store_has_identity)};
 }
 
 Variable AutoTask::add_input(LogicalStore store, Variable partition_symbol)
@@ -56,17 +60,22 @@ Variable AutoTask::add_output(LogicalStore store, Variable partition_symbol)
 
 Variable AutoTask::add_reduction(LogicalStore store,
                                  ReductionOpKind redop_kind,
-                                 Variable partition_symbol)
+                                 Variable partition_symbol,
+                                 bool store_has_identity)
 {
-  return add_reduction(
-    std::move(store), static_cast<std::int32_t>(redop_kind), std::move(partition_symbol));
+  return add_reduction(std::move(store),
+                       static_cast<std::int32_t>(redop_kind),
+                       std::move(partition_symbol),
+                       store_has_identity);
 }
 
 Variable AutoTask::add_reduction(LogicalStore store,
                                  std::int32_t redop_kind,
-                                 Variable partition_symbol)
+                                 Variable partition_symbol,
+                                 bool store_has_identity)
 {
-  impl_()->add_reduction(std::move(store).impl(), redop_kind, partition_symbol.impl());
+  impl_()->add_reduction(
+    std::move(store).impl(), redop_kind, partition_symbol.impl(), store_has_identity);
   return partition_symbol;
 }
 
@@ -156,34 +165,42 @@ void ManualTask::add_output(LogicalStorePartition store_partition,
   impl_()->add_output(std::move(store_partition).impl(), std::move(projection), is_key_partition);
 }
 
-void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
+void ManualTask::add_reduction(LogicalStore store,
+                               ReductionOpKind redop_kind,
+                               bool store_has_identity)
 {
-  add_reduction(std::move(store), static_cast<std::int32_t>(redop_kind));
+  add_reduction(std::move(store), static_cast<std::int32_t>(redop_kind), store_has_identity);
 }
 
-void ManualTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
+void ManualTask::add_reduction(LogicalStore store, std::int32_t redop_kind, bool store_has_identity)
 {
-  impl_()->add_reduction(std::move(store).impl(), redop_kind);
+  impl_()->add_reduction(std::move(store).impl(), redop_kind, store_has_identity);
 }
 
 void ManualTask::add_reduction(LogicalStorePartition store_partition,
                                ReductionOpKind redop_kind,
                                std::optional<SymbolicPoint> projection,
-                               bool is_key_partition)
+                               bool is_key_partition,
+                               bool store_has_identity)
 {
   add_reduction(std::move(store_partition),
                 static_cast<std::int32_t>(redop_kind),
                 std::move(projection),
-                is_key_partition);
+                is_key_partition,
+                store_has_identity);
 }
 
 void ManualTask::add_reduction(LogicalStorePartition store_partition,
                                std::int32_t redop_kind,
                                std::optional<SymbolicPoint> projection,
-                               bool is_key_partition)
+                               bool is_key_partition,
+                               bool store_has_identity)
 {
-  impl_()->add_reduction(
-    std::move(store_partition).impl(), redop_kind, std::move(projection), is_key_partition);
+  impl_()->add_reduction(std::move(store_partition).impl(),
+                         redop_kind,
+                         std::move(projection),
+                         is_key_partition,
+                         store_has_identity);
 }
 
 void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_()->add_scalar_arg(scalar.impl()); }

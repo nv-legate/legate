@@ -241,7 +241,7 @@ template <bool WRITE>
 
 [[nodiscard]] SmallVector<InternalSharedPtr<PhysicalStore>> map_reduction_stores(
   Span<const TaskStoreArg> store_args,
-  Span<const ReductionOpKind> reduction_ops,
+  Span<const std::pair<ReductionOpKind, bool>> reduction_ops,
   const legate::mapping::detail::Machine& machine,
   const Strategy& strategy,
   const Domain& launch_domain,
@@ -252,14 +252,16 @@ template <bool WRITE>
 
   result.reserve(store_args.size());
   data_requests->reserve_reduction_requests(store_args.size());
-  for (auto&& [store_arg, op_kind] : zip_equal(store_args, reduction_ops)) {
-    auto&& [_, store, variable] = store_arg;
-    auto&& partition            = strategy[*variable];
+  for (auto&& [store_arg, op_arg] : zip_equal(store_args, reduction_ops)) {
+    auto&& [_, store, variable]          = store_arg;
+    auto&& [op_kind, store_has_identity] = op_arg;
+    auto&& partition                     = strategy[*variable];
     result.emplace_back(store->map_reduction(partition,
                                              strategy.find_store_projection(*variable),
                                              launch_domain,
                                              task_index,
                                              op_kind,
+                                             store_has_identity,
                                              machine,
                                              data_requests));
   }
@@ -378,10 +380,11 @@ const Variable* AutoTask::add_output(InternalSharedPtr<LogicalStore> store)
 }
 
 const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
-                                        std::int32_t redop_kind)
+                                        std::int32_t redop_kind,
+                                        bool store_has_identity)
 {
   const auto* symb = find_or_declare_partition(store);
-  add_reduction(std::move(store), redop_kind, symb);
+  add_reduction(std::move(store), redop_kind, symb, store_has_identity);
   return symb;
 }
 
@@ -407,7 +410,8 @@ void AutoTask::add_output(InternalSharedPtr<LogicalStore> store, const Variable*
 
 void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
                              std::int32_t redop_kind,
-                             const Variable* partition_symbol)
+                             const Variable* partition_symbol,
+                             bool store_has_identity)
 {
   if (store->unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound store cannot be used for reductions"};
@@ -415,7 +419,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
 
   LEGATE_ASSERT(!store->type()->variable_size());
 
-  reduction_ops_.push_back(static_cast<ReductionOpKind>(redop_kind));
+  reduction_ops_.emplace_back(static_cast<ReductionOpKind>(redop_kind), store_has_identity);
 
   auto& arg = reductions_.emplace_back(
     Legion::PrivilegeMode::LEGION_REDUCE, std::move(store), partition_symbol);
@@ -517,7 +521,9 @@ void ManualTask::add_output(InternalSharedPtr<LogicalStore> store)
   add_store_(Legion::PrivilegeMode::LEGION_WRITE_ONLY, outputs_, store, create_no_partition());
 }
 
-void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store, std::int32_t redop_kind)
+void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store,
+                               std::int32_t redop_kind,
+                               bool store_has_identity)
 {
   if (store->unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reduction"};
@@ -525,7 +531,7 @@ void ManualTask::add_reduction(InternalSharedPtr<LogicalStore> store, std::int32
 
   add_store_(Legion::PrivilegeMode::LEGION_REDUCE, reductions_, store, create_no_partition());
 
-  reduction_ops_.push_back(static_cast<ReductionOpKind>(redop_kind));
+  reduction_ops_.emplace_back(static_cast<ReductionOpKind>(redop_kind), store_has_identity);
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
@@ -557,7 +563,8 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                                std::int32_t redop_kind,
                                std::optional<SymbolicPoint> projection,
-                               bool is_key_partition)
+                               bool is_key_partition,
+                               bool store_has_identity)
 {
   add_store_(Legion::PrivilegeMode::LEGION_REDUCE,
              reductions_,
@@ -566,7 +573,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
              std::move(projection),
              is_key_partition);
 
-  reduction_ops_.push_back(static_cast<ReductionOpKind>(redop_kind));
+  reduction_ops_.emplace_back(static_cast<ReductionOpKind>(redop_kind), store_has_identity);
 }
 
 void ManualTask::add_store_(Legion::PrivilegeMode priv,

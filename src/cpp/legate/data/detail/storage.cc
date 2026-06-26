@@ -174,6 +174,7 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   bool is_parallel,
   const InternalSharedPtr<Type>& type,
   ReductionOpKind op_kind,
+  bool store_has_identity,
   DataMovementRequests* requests)
 {
   LEGATE_ASSERT(!unbound());
@@ -190,23 +191,32 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
     return {storage_data_, sub_domain};
   }
 
-  // TODO(wonchanl): For now we create a full-size reduction buffer when the target is replicated.
-  // If we have proper tile-wise reduction support, we should pass the `sub_domain` as the storage
-  // domain.
-  auto tmp = make_internal_shared<InlineStorage>(domain, field_size_, target);
-
-  // Initialize the per-task scratch with the reduction identity so that ranks that don't write
-  // to a given cell don't perturb the final reduction result.
-  fill_with_reduction_identity(tmp->data(), domain.get_volume(), target, type->code, op_kind);
-
   // TODO(wonchanl): We need to raise an uninitialized access exception if these don't hold
   LEGATE_CHECK(storage_data_);
   LEGATE_CHECK(key_partition_.has_value());
 
-  requests->register_reduction(
-    ReductionRequest{tmp, storage_data_, partition, *key_partition_, domain, type, op_kind});
+  InternalSharedPtr<InlineStorage> reduction_buffer{};
 
-  return {std::move(tmp), sub_domain};
+  // If the store is just initialized with the reduction identity and the key partition subsumes the
+  // partition used in reduction, we can use the storage directly as the reduction buffer.
+  if (store_has_identity && (*key_partition_)->subsumes(domain, partition)) {
+    reduction_buffer = storage_data_;
+  } else {
+    // TODO(wonchanl): For now we create a full-size reduction buffer when the target is replicated.
+    // If we have proper tile-wise reduction support, we should pass the `sub_domain` as the storage
+    // domain.
+    reduction_buffer = make_internal_shared<InlineStorage>(domain, field_size_, target);
+
+    // Initialize the per-task scratch with the reduction identity so that ranks that don't write
+    // to a given cell don't perturb the final reduction result.
+    fill_with_reduction_identity(
+      reduction_buffer->data(), domain.get_volume(), target, type->code, op_kind);
+  }
+
+  requests->register_reduction(ReductionRequest{
+    reduction_buffer, storage_data_, partition, *key_partition_, domain, type, op_kind});
+
+  return {std::move(reduction_buffer), sub_domain};
 }
 
 // Unmapping is a logically non-const operation

@@ -132,6 +132,7 @@ class LogicalStore {
     const Domain& launch_domain,
     const DomainPoint& task_index,
     ReductionOpKind op_kind,
+    bool store_has_identity,
     const legate::mapping::detail::Machine& machine,
     DataMovementRequests* requests);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(

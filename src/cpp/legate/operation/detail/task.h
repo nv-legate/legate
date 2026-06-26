@@ -82,7 +82,7 @@ class TaskBase : public Operation {
   /**
    * @return The reduction arguments for the task.
    */
-  [[nodiscard]] Span<const ReductionOpKind> reduction_ops() const;
+  [[nodiscard]] Span<const std::pair<ReductionOpKind, bool>> reduction_ops() const;
 
   [[nodiscard]] const Library& library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
@@ -101,7 +101,7 @@ class TaskBase : public Operation {
   SmallVector<TaskStoreArg> inputs_{};
   SmallVector<TaskStoreArg> outputs_{};
   SmallVector<TaskStoreArg> reductions_{};
-  SmallVector<ReductionOpKind> reduction_ops_{};
+  SmallVector<std::pair<ReductionOpKind, bool>> reduction_ops_{};
 };
 
 class LogicalTask : public TaskBase {
@@ -135,13 +135,15 @@ class AutoTask final : public LogicalTask {
   [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalStore> store);
   [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalStore> store);
   [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalStore> store,
-                                              std::int32_t redop_kind);
+                                              std::int32_t redop_kind,
+                                              bool store_has_identity);
 
   void add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol);
   void add_output(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol);
   void add_reduction(InternalSharedPtr<LogicalStore> store,
                      std::int32_t redop_kind,
-                     const Variable* partition_symbol);
+                     const Variable* partition_symbol,
+                     bool store_has_identity);
 
   void add_constraint(InternalSharedPtr<Constraint> constraint, bool bypass_signature_check);
   void add_to_solver(ConstraintSolver& solver) override;
@@ -173,7 +175,9 @@ class ManualTask final : public LogicalTask {
 
   void add_input(InternalSharedPtr<LogicalStore> store);
   void add_output(InternalSharedPtr<LogicalStore> store);
-  void add_reduction(InternalSharedPtr<LogicalStore> store, std::int32_t redop_kind);
+  void add_reduction(InternalSharedPtr<LogicalStore> store,
+                     std::int32_t redop_kind,
+                     bool store_has_identity);
   void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                  std::optional<SymbolicPoint> projection,
                  bool is_key_partition);
@@ -183,7 +187,8 @@ class ManualTask final : public LogicalTask {
   void add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                      std::int32_t redop_kind,
                      std::optional<SymbolicPoint> projection,
-                     bool is_key_partition);
+                     bool is_key_partition,
+                     bool store_has_identity);
 
   /**
    * @brief Get the launch domain for this ManualTask.

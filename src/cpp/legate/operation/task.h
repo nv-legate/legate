@@ -78,7 +78,9 @@ class LEGATE_EXPORT AutoTask {
    *
    * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalStore store, ReductionOpKind redop_kind);
+  Variable add_reduction(LogicalStore store,
+                         ReductionOpKind redop_kind,
+                         bool store_has_identity = false);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -91,7 +93,9 @@ class LEGATE_EXPORT AutoTask {
    *
    * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalStore store, std::int32_t redop_kind);
+  Variable add_reduction(LogicalStore store,
+                         std::int32_t redop_kind,
+                         bool store_has_identity = false);
 
   /**
    * @brief Adds a store to the task as input
@@ -130,7 +134,10 @@ class LEGATE_EXPORT AutoTask {
    *
    * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalStore store, ReductionOpKind redop_kind, Variable partition_symbol);
+  Variable add_reduction(LogicalStore store,
+                         ReductionOpKind redop_kind,
+                         Variable partition_symbol,
+                         bool store_has_identity = false);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -144,7 +151,10 @@ class LEGATE_EXPORT AutoTask {
    *
    * @return The partition symbol assigned to the store
    */
-  Variable add_reduction(LogicalStore store, std::int32_t redop_kind, Variable partition_symbol);
+  Variable add_reduction(LogicalStore store,
+                         std::int32_t redop_kind,
+                         Variable partition_symbol,
+                         bool store_has_identity = false);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -327,7 +337,9 @@ class LEGATE_EXPORT ManualTask {
    * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
    */
-  void add_reduction(LogicalStore store, ReductionOpKind redop_kind);
+  void add_reduction(LogicalStore store,
+                     ReductionOpKind redop_kind,
+                     bool store_has_identity = false);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -337,7 +349,7 @@ class LEGATE_EXPORT ManualTask {
    * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
    */
-  void add_reduction(LogicalStore store, std::int32_t redop_kind);
+  void add_reduction(LogicalStore store, std::int32_t redop_kind, bool store_has_identity = false);
   /**
    * @brief Adds a store partition to the task for reductions
    *
@@ -352,7 +364,8 @@ class LEGATE_EXPORT ManualTask {
   void add_reduction(LogicalStorePartition store_partition,
                      ReductionOpKind redop_kind,
                      std::optional<SymbolicPoint> projection = std::nullopt,
-                     bool is_key_partition                   = false);
+                     bool is_key_partition                   = false,
+                     bool store_has_identity                 = false);
   /**
    * @brief Adds a store partition to the task for reductions
    *
@@ -367,7 +380,8 @@ class LEGATE_EXPORT ManualTask {
   void add_reduction(LogicalStorePartition store_partition,
                      std::int32_t redop_kind,
                      std::optional<SymbolicPoint> projection = std::nullopt,
-                     bool is_key_partition                   = false);
+                     bool is_key_partition                   = false,
+                     bool store_has_identity                 = false);
   /**
    * @brief Adds a by-value scalar argument to the task
    *

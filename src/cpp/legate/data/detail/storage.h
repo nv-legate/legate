@@ -126,6 +126,7 @@ class Storage {
     bool is_parallel,
     const InternalSharedPtr<Type>& type,
     ReductionOpKind op_kind,
+    bool store_has_identity,
     DataMovementRequests* requests);
 
   void unmap();

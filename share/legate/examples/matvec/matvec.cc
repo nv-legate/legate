@@ -108,7 +108,8 @@ void run_example()
   auto matvec_task = runtime->create_task(library, MatVecTask::TASK_CONFIG.task_id());
   auto rhs1_part   = matvec_task.add_input(rhs1);
   auto rhs2_part   = matvec_task.add_input(rhs2.promote(0, OUT_DIM));
-  auto lhs_part = matvec_task.add_reduction(lhs.promote(1, RED_DIM), legate::ReductionOpKind::ADD);
+  auto lhs_part    = matvec_task.add_reduction(
+    lhs.promote(1, RED_DIM), legate::ReductionOpKind::ADD, /*store_has_identity=*/true);
   matvec_task.add_constraint(legate::align(rhs1_part, rhs2_part));
   matvec_task.add_constraint(legate::align(lhs_part, rhs1_part));
   runtime->submit(std::move(matvec_task));
