@@ -12,15 +12,78 @@ namespace legate::detail {
 
 namespace {
 
-__device__ std::int64_t inner_product(const DomainPoint& rhs1, const DomainPoint& rhs2) noexcept
+template <typename VAL, int NDIM>
+__device__ __forceinline__ void copy_to_send_buffer_dim_specialized_(
+  VAL* __restrict__ target,
+  const VAL* __restrict__ source,
+  std::size_t tid,
+  const DomainPoint& extents,
+  const DomainPoint& strides) noexcept
 {
-  std::int64_t result = 0;
+  std::int64_t src_off;
 
-  for (std::int32_t dim = 0; dim < rhs1.dim; ++dim) {
-    result += rhs1[dim] * rhs2[dim];
+  if constexpr (NDIM == 1) {
+    src_off = strides[0] * static_cast<std::int64_t>(tid);
+  } else if constexpr (NDIM == 2) {
+    const auto col = static_cast<std::int64_t>(tid) % extents[1];
+    const auto row = static_cast<std::int64_t>(tid) / extents[1];
+    src_off        = row * strides[0] + col * strides[1];
+  } else if constexpr (NDIM == 3) {
+    auto rem     = static_cast<std::int64_t>(tid);
+    const auto k = rem % extents[2];
+    rem /= extents[2];
+    const auto j = rem % extents[1];
+    rem /= extents[1];
+    src_off = rem * strides[0] + j * strides[1] + k * strides[2];
+  } else {
+    auto rem = static_cast<std::int64_t>(tid);
+    src_off  = 0;
+    for (std::int32_t d = extents.dim - 1; d > 0; --d) {
+      const auto coord = rem % extents[d];
+      rem /= extents[d];
+      src_off += coord * strides[d];
+    }
+    src_off += rem * strides[0];
   }
 
-  return result;
+  target[tid] = source[src_off];
+}
+
+template <typename VAL, int NDIM>
+__device__ __forceinline__ void copy_from_recv_buffer_dim_specialized_(
+  VAL* __restrict__ target,
+  const VAL* __restrict__ source,
+  std::size_t tid,
+  const DomainPoint& extents,
+  const DomainPoint& strides) noexcept
+{
+  std::int64_t tgt_off;
+
+  if constexpr (NDIM == 1) {
+    tgt_off = strides[0] * static_cast<std::int64_t>(tid);
+  } else if constexpr (NDIM == 2) {
+    const auto col = static_cast<std::int64_t>(tid) % extents[1];
+    const auto row = static_cast<std::int64_t>(tid) / extents[1];
+    tgt_off        = row * strides[0] + col * strides[1];
+  } else if constexpr (NDIM == 3) {
+    auto rem     = static_cast<std::int64_t>(tid);
+    const auto k = rem % extents[2];
+    rem /= extents[2];
+    const auto j = rem % extents[1];
+    rem /= extents[1];
+    tgt_off = rem * strides[0] + j * strides[1] + k * strides[2];
+  } else {
+    auto rem = static_cast<std::int64_t>(tid);
+    tgt_off  = 0;
+    for (std::int32_t d = extents.dim - 1; d > 0; --d) {
+      const auto coord = rem % extents[d];
+      rem /= extents[d];
+      tgt_off += coord * strides[d];
+    }
+    tgt_off += rem * strides[0];
+  }
+
+  target[tgt_off] = source[tid];
 }
 
 template <typename VAL>
@@ -28,27 +91,38 @@ __device__ void legate_copy_to_send_buffer_(void* target_ptr,
                                             const void* source_ptr,
                                             std::size_t volume,
                                             const DomainPoint& target_extents,
-                                            const DomainPoint& source_strides)
+                                            const DomainPoint& source_strides) noexcept
 {
   auto* target       = static_cast<VAL*>(target_ptr);
   const auto* source = static_cast<const VAL*>(source_ptr);
+  const auto tid     = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
-  auto idx = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
-
-  if (idx >= volume) {
+  if (tid >= volume) {
     return;
   }
 
-  DomainPoint point;
-
-  point.dim = target_extents.dim;
-  for (std::int32_t dim = target_extents.dim - 1; dim > 0; --dim) {
-    point[dim] = idx % target_extents[dim];
-    idx /= target_extents[dim];
+  switch (target_extents.dim) {
+    case 1: {
+      copy_to_send_buffer_dim_specialized_<VAL, 1>(
+        target, source, tid, target_extents, source_strides);
+      break;
+    }
+    case 2: {
+      copy_to_send_buffer_dim_specialized_<VAL, 2>(
+        target, source, tid, target_extents, source_strides);
+      break;
+    }
+    case 3: {
+      copy_to_send_buffer_dim_specialized_<VAL, 3>(
+        target, source, tid, target_extents, source_strides);
+      break;
+    }
+    default: {  // legate-lint: no-switch-default
+      copy_to_send_buffer_dim_specialized_<VAL, 0>(
+        target, source, tid, target_extents, source_strides);
+      break;
+    }
   }
-  point[0] = idx;
-
-  target[idx] = source[inner_product(source_strides, point)];
 }
 
 template <typename VAL>
@@ -56,27 +130,38 @@ __device__ void legate_copy_from_recv_buffer_(void* target_ptr,
                                               const void* source_ptr,
                                               std::size_t volume,
                                               const DomainPoint& source_extents,
-                                              const DomainPoint& target_strides)
+                                              const DomainPoint& target_strides) noexcept
 {
   auto* target       = static_cast<VAL*>(target_ptr);
   const auto* source = static_cast<const VAL*>(source_ptr);
+  const auto tid     = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
-  auto idx = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
-
-  if (idx >= volume) {
+  if (tid >= volume) {
     return;
   }
 
-  DomainPoint point;
-
-  point.dim = source_extents.dim;
-  for (std::int32_t dim = source_extents.dim - 1; dim > 0; --dim) {
-    point[dim] = idx % source_extents[dim];
-    idx /= source_extents[dim];
+  switch (source_extents.dim) {
+    case 1: {
+      copy_from_recv_buffer_dim_specialized_<VAL, 1>(
+        target, source, tid, source_extents, target_strides);
+      break;
+    }
+    case 2: {
+      copy_from_recv_buffer_dim_specialized_<VAL, 2>(
+        target, source, tid, source_extents, target_strides);
+      break;
+    }
+    case 3: {
+      copy_from_recv_buffer_dim_specialized_<VAL, 3>(
+        target, source, tid, source_extents, target_strides);
+      break;
+    }
+    default: {  // legate-lint: no-switch-default
+      copy_from_recv_buffer_dim_specialized_<VAL, 0>(
+        target, source, tid, source_extents, target_strides);
+      break;
+    }
   }
-  point[0] = idx;
-
-  target[inner_product(target_strides, point)] = source[idx];
 }
 
 template <typename VAL>
