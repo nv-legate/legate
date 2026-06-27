@@ -49,4 +49,19 @@ if(legate_USE_CUDA)
   target_link_libraries(transpose PRIVATE CCCL::CCCL)
 endif()
 
+add_executable(repartition repartition.cc)
+
+target_include_directories(repartition PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+
+# Compile the GPU task variants alongside the CPU sources.
+if(legate_USE_CUDA)
+  target_sources(repartition PRIVATE repartition.cu)
+
+  if(NOT TARGET CCCL::CCCL)
+    find_package(CCCL REQUIRED)
+  endif()
+  target_link_libraries(repartition PRIVATE CCCL::CCCL)
+endif()
+
 legate_configure_target(transpose)
+legate_configure_target(repartition)

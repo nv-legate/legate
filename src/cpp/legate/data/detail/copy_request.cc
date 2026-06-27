@@ -17,6 +17,7 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/array_algorithms.h>
+#include <legate/utilities/detail/divmod.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/geometry.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -291,6 +292,9 @@ struct CopyToSendBufferGPU {
       auto count          = counts[idx];
       auto target_extents = calculate_extents(target_subdomain);
 
+      FastDivmodU64 divmod{source_domain.dim == 2 ? static_cast<std::uint64_t>(target_extents[1])
+                                                  : 1};
+
       api->launch_kernel(kern,
                          {num_blocks},
                          {LEGATE_THREADS_PER_BLOCK},
@@ -300,6 +304,7 @@ struct CopyToSendBufferGPU {
                          static_cast<const void*>(source_ptr_shifted),
                          count,
                          target_extents,
+                         divmod,
                          source_strides);
     }
   }
@@ -385,6 +390,9 @@ struct CopyFromRecvBufferGPU {
       auto count          = counts[idx];
       auto source_extents = calculate_extents(source_subdomain);
 
+      FastDivmodU64 divmod{target_domain.dim == 2 ? static_cast<std::uint64_t>(source_extents[1])
+                                                  : 1};
+
       api->launch_kernel(kern,
                          {num_blocks},
                          {LEGATE_THREADS_PER_BLOCK},
@@ -394,6 +402,7 @@ struct CopyFromRecvBufferGPU {
                          static_cast<const void*>(source_ptr),
                          count,
                          source_extents,
+                         divmod,
                          target_strides);
     }
   }

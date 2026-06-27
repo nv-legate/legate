@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <legate/utilities/detail/divmod.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
@@ -18,6 +19,7 @@ __device__ __forceinline__ void copy_to_send_buffer_dim_specialized_(
   const VAL* __restrict__ source,
   std::size_t tid,
   const DomainPoint& extents,
+  const FastDivmodU64& divmod,
   const DomainPoint& strides) noexcept
 {
   std::int64_t src_off;
@@ -25,9 +27,11 @@ __device__ __forceinline__ void copy_to_send_buffer_dim_specialized_(
   if constexpr (NDIM == 1) {
     src_off = strides[0] * static_cast<std::int64_t>(tid);
   } else if constexpr (NDIM == 2) {
-    const auto col = static_cast<std::int64_t>(tid) % extents[1];
-    const auto row = static_cast<std::int64_t>(tid) / extents[1];
-    src_off        = row * strides[0] + col * strides[1];
+    std::uint64_t row;
+    std::uint64_t col;
+
+    divmod(col, row, tid);
+    src_off = row * strides[0] + col * strides[1];
   } else if constexpr (NDIM == 3) {
     auto rem     = static_cast<std::int64_t>(tid);
     const auto k = rem % extents[2];
@@ -55,6 +59,7 @@ __device__ __forceinline__ void copy_from_recv_buffer_dim_specialized_(
   const VAL* __restrict__ source,
   std::size_t tid,
   const DomainPoint& extents,
+  const FastDivmodU64& divmod,
   const DomainPoint& strides) noexcept
 {
   std::int64_t tgt_off;
@@ -91,6 +96,7 @@ __device__ void legate_copy_to_send_buffer_(void* target_ptr,
                                             const void* source_ptr,
                                             std::size_t volume,
                                             const DomainPoint& target_extents,
+                                            const FastDivmodU64& divmod,
                                             const DomainPoint& source_strides) noexcept
 {
   auto* target       = static_cast<VAL*>(target_ptr);
@@ -104,22 +110,22 @@ __device__ void legate_copy_to_send_buffer_(void* target_ptr,
   switch (target_extents.dim) {
     case 1: {
       copy_to_send_buffer_dim_specialized_<VAL, 1>(
-        target, source, tid, target_extents, source_strides);
+        target, source, tid, target_extents, divmod, source_strides);
       break;
     }
     case 2: {
       copy_to_send_buffer_dim_specialized_<VAL, 2>(
-        target, source, tid, target_extents, source_strides);
+        target, source, tid, target_extents, divmod, source_strides);
       break;
     }
     case 3: {
       copy_to_send_buffer_dim_specialized_<VAL, 3>(
-        target, source, tid, target_extents, source_strides);
+        target, source, tid, target_extents, divmod, source_strides);
       break;
     }
     default: {  // legate-lint: no-switch-default
       copy_to_send_buffer_dim_specialized_<VAL, 0>(
-        target, source, tid, target_extents, source_strides);
+        target, source, tid, target_extents, divmod, source_strides);
       break;
     }
   }
@@ -130,6 +136,7 @@ __device__ void legate_copy_from_recv_buffer_(void* target_ptr,
                                               const void* source_ptr,
                                               std::size_t volume,
                                               const DomainPoint& source_extents,
+                                              const FastDivmodU64& divmod,
                                               const DomainPoint& target_strides) noexcept
 {
   auto* target       = static_cast<VAL*>(target_ptr);
@@ -143,22 +150,22 @@ __device__ void legate_copy_from_recv_buffer_(void* target_ptr,
   switch (source_extents.dim) {
     case 1: {
       copy_from_recv_buffer_dim_specialized_<VAL, 1>(
-        target, source, tid, source_extents, target_strides);
+        target, source, tid, source_extents, divmod, target_strides);
       break;
     }
     case 2: {
       copy_from_recv_buffer_dim_specialized_<VAL, 2>(
-        target, source, tid, source_extents, target_strides);
+        target, source, tid, source_extents, divmod, target_strides);
       break;
     }
     case 3: {
       copy_from_recv_buffer_dim_specialized_<VAL, 3>(
-        target, source, tid, source_extents, target_strides);
+        target, source, tid, source_extents, divmod, target_strides);
       break;
     }
     default: {  // legate-lint: no-switch-default
       copy_from_recv_buffer_dim_specialized_<VAL, 0>(
-        target, source, tid, source_extents, target_strides);
+        target, source, tid, source_extents, divmod, target_strides);
       break;
     }
   }
@@ -210,80 +217,88 @@ extern "C" __global__ void legate_copy_to_send_buffer_8(void* target_ptr,
                                                         const void* source_ptr,
                                                         std::size_t volume,
                                                         DomainPoint target_extents,
+                                                        FastDivmodU64 divmod,
                                                         DomainPoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint8_t>(
-    target_ptr, source_ptr, volume, target_extents, source_strides);
+    target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
 }
 
 extern "C" __global__ void legate_copy_to_send_buffer_16(void* target_ptr,
                                                          const void* source_ptr,
                                                          std::size_t volume,
                                                          DomainPoint target_extents,
+                                                         FastDivmodU64 divmod,
                                                          DomainPoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint16_t>(
-    target_ptr, source_ptr, volume, target_extents, source_strides);
+    target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
 }
 
 extern "C" __global__ void legate_copy_to_send_buffer_32(void* target_ptr,
                                                          const void* source_ptr,
                                                          std::size_t volume,
                                                          DomainPoint target_extents,
+                                                         FastDivmodU64 divmod,
                                                          DomainPoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint32_t>(
-    target_ptr, source_ptr, volume, target_extents, source_strides);
+    target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
 }
 
 extern "C" __global__ void legate_copy_to_send_buffer_64(void* target_ptr,
                                                          const void* source_ptr,
                                                          std::size_t volume,
                                                          DomainPoint target_extents,
+                                                         FastDivmodU64 divmod,
                                                          DomainPoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint64_t>(
-    target_ptr, source_ptr, volume, target_extents, source_strides);
+    target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
 }
 
 extern "C" __global__ void legate_copy_from_recv_buffer_8(void* target_ptr,
                                                           const void* source_ptr,
                                                           std::size_t volume,
                                                           DomainPoint source_extents,
+                                                          FastDivmodU64 divmod,
                                                           DomainPoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint8_t>(
-    target_ptr, source_ptr, volume, source_extents, target_strides);
+    target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
 }
 
 extern "C" __global__ void legate_copy_from_recv_buffer_16(void* target_ptr,
                                                            const void* source_ptr,
                                                            std::size_t volume,
                                                            DomainPoint source_extents,
+                                                           FastDivmodU64 divmod,
                                                            DomainPoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint16_t>(
-    target_ptr, source_ptr, volume, source_extents, target_strides);
+    target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
 }
 
 extern "C" __global__ void legate_copy_from_recv_buffer_32(void* target_ptr,
                                                            const void* source_ptr,
                                                            std::size_t volume,
                                                            DomainPoint source_extents,
+                                                           FastDivmodU64 divmod,
                                                            DomainPoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint32_t>(
-    target_ptr, source_ptr, volume, source_extents, target_strides);
+    target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
 }
 
 extern "C" __global__ void legate_copy_from_recv_buffer_64(void* target_ptr,
                                                            const void* source_ptr,
                                                            std::size_t volume,
                                                            DomainPoint source_extents,
+                                                           FastDivmodU64 divmod,
                                                            DomainPoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint64_t>(
-    target_ptr, source_ptr, volume, source_extents, target_strides);
+    target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
 }
 
 extern "C" __global__ void legate_reorder_elements_8(void* target_ptr,
