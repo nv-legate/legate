@@ -30,7 +30,7 @@ __device__ __forceinline__ void copy_to_send_buffer_dim_specialized_(
     std::uint64_t row;
     std::uint64_t col;
 
-    divmod(col, row, tid);
+    divmod(row, col, tid);
     src_off = row * strides[0] + col * strides[1];
   } else if constexpr (NDIM == 3) {
     auto rem     = static_cast<std::int64_t>(tid);
