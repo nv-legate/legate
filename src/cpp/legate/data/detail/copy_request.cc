@@ -257,7 +257,7 @@ struct CopyToSendBufferKernelName<std::uint64_t> {
 
 struct CopyToSendBufferGPU {
   template <typename VAL>
-  void operator()(SmallVector<InternalSharedPtr<InlineStorage>>& targets,
+  void operator()(SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
                   const InlineStorage& source,
                   const Domain& source_domain,
                   DomainPoint& source_strides,
@@ -279,8 +279,14 @@ struct CopyToSendBufferGPU {
         continue;
       }
 
+      auto&& [target, needs_copy] = targets[idx];
+
+      if (!needs_copy) {
+        continue;
+      }
+
       const auto& target_subdomain = target_subdomains[idx];
-      auto* target_ptr             = static_cast<VAL*>(targets[idx]->data());
+      auto* target_ptr             = static_cast<VAL*>(target->data());
       const auto* source_ptr_shifted =
         source_ptr + inner_product(target_subdomain.lo(), source_strides);
 
@@ -319,14 +325,15 @@ struct CopyToSendBufferGPU {
   }
 };
 
-void copy_to_send_buffer_gpu_(std::uint32_t field_size,
-                              SmallVector<InternalSharedPtr<InlineStorage>>& targets,
-                              const InlineStorage& source,
-                              const Domain& source_domain,
-                              DomainPoint& source_strides,
-                              const SmallVector<Domain>& target_subdomains,
-                              const SmallVector<int>& counts,
-                              CUstream stream)
+void copy_to_send_buffer_gpu_(
+  std::uint32_t field_size,
+  SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
+  const InlineStorage& source,
+  const Domain& source_domain,
+  DomainPoint& source_strides,
+  const SmallVector<Domain>& target_subdomains,
+  const SmallVector<int>& counts,
+  CUstream stream)
 {
   field_size_dispatch(field_size,
                       CopyToSendBufferGPU{},
@@ -367,7 +374,7 @@ struct CopyFromRecvBufferGPU {
   void operator()(InlineStorage& target,
                   const Domain& target_domain,
                   DomainPoint& target_strides,
-                  const SmallVector<InternalSharedPtr<InlineStorage>>& sources,
+                  const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
                   const SmallVector<Domain>& source_subdomains,
                   const SmallVector<int>& counts,
                   CUstream stream)
@@ -388,9 +395,15 @@ struct CopyFromRecvBufferGPU {
         continue;
       }
 
+      auto&& [source, needs_copy] = sources[idx];
+
+      if (!needs_copy) {
+        continue;
+      }
+
       const auto& source_subdomain = source_subdomains[idx];
       auto* target_ptr_shifted = target_ptr + inner_product(source_subdomain.lo(), target_strides);
-      const auto* source_ptr   = static_cast<const VAL*>(sources[idx]->data());
+      const auto* source_ptr   = static_cast<const VAL*>(source->data());
 
       const auto num_blocks =
         (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
@@ -427,14 +440,15 @@ struct CopyFromRecvBufferGPU {
   }
 };
 
-void copy_from_recv_buffer_gpu_(std::uint32_t field_size,
-                                InlineStorage& target,
-                                const Domain& target_domain,
-                                DomainPoint& target_strides,
-                                const SmallVector<InternalSharedPtr<InlineStorage>>& sources,
-                                const SmallVector<Domain>& source_subdomains,
-                                const SmallVector<int>& counts,
-                                CUstream stream)
+void copy_from_recv_buffer_gpu_(
+  std::uint32_t field_size,
+  InlineStorage& target,
+  const Domain& target_domain,
+  DomainPoint& target_strides,
+  const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
+  const SmallVector<Domain>& source_subdomains,
+  const SmallVector<int>& counts,
+  CUstream stream)
 {
   field_size_dispatch(field_size,
                       CopyFromRecvBufferGPU{},
@@ -706,16 +720,25 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   LEGATE_ASSERT(variant_code == VariantCode::GPU);
 
   // For GPU shuffle, we allocate a separate buffer for each intersection
-  SmallVector<InternalSharedPtr<InlineStorage>> send_buffers(tags::size_tag, device_count, nullptr);
-  SmallVector<InternalSharedPtr<InlineStorage>> recv_buffers(tags::size_tag, device_count, nullptr);
+  SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>> send_buffers(
+    tags::size_tag, device_count, {nullptr, false});
+  SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>> recv_buffers(
+    tags::size_tag, device_count, {nullptr, false});
+
+  auto source_strides = calculate_strides(source_tiling->tile_shape_dp());
+  auto target_strides = calculate_strides(target_tiling->tile_shape_dp());
 
   for (auto&& [idx, send_domain] : enumerate(send_subdomains)) {
     if (send_counts[idx] == 0) {
       continue;
     }
 
-    send_buffers[idx] =
-      make_internal_shared<InlineStorage>(send_domain, field_size_, source_->target());
+    if (source_strides == calculate_strides(send_domain)) {
+      send_buffers[idx] = std::make_pair<>(source_, false);
+    } else {
+      send_buffers[idx] = std::make_pair<>(
+        make_internal_shared<InlineStorage>(send_domain, field_size_, source_->target()), true);
+    }
   }
 
   for (auto&& [idx, recv_domain] : enumerate(recv_subdomains)) {
@@ -723,16 +746,17 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
       continue;
     }
 
-    recv_buffers[idx] =
-      make_internal_shared<InlineStorage>(recv_domain, field_size_, target_->target());
+    if (target_strides == calculate_strides(recv_domain)) {
+      recv_buffers[idx] = std::make_pair<>(target_, false);
+    } else {
+      recv_buffers[idx] = std::make_pair<>(
+        make_internal_shared<InlineStorage>(recv_domain, field_size_, target_->target()), true);
+    }
   }
 
   const auto stream         = Runtime::get_runtime().get_cuda_stream();
   const auto comm           = Runtime::get_runtime().get_gpu_comm();
   const auto nccl_data_type = to_nccl_data_type(field_size_);
-
-  auto source_strides = calculate_strides(source_tiling->tile_shape_dp());
-  auto target_strides = calculate_strides(target_tiling->tile_shape_dp());
 
   copy_to_send_buffer_gpu_(field_size_,
                            send_buffers,
@@ -750,8 +774,16 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
       continue;
     }
 
+    auto&& [send_buffer, needs_copy] = send_buffers[idx];
+
+    const auto* send_buffer_ptr = static_cast<const std::uint8_t*>(send_buffer->data());
+
+    if (!needs_copy) {
+      send_buffer_ptr +=
+        inner_product(send_domain.lo() - source_->domain().lo(), source_strides) * field_size_;
+    }
     LEGATE_CHECK_NCCL(
-      ncclSend(send_buffers[idx]->data(), send_counts[idx], nccl_data_type, idx, comm, stream));
+      ncclSend(send_buffer_ptr, send_counts[idx], nccl_data_type, idx, comm, stream));
   }
 
   for (auto&& [idx, recv_domain] : enumerate(recv_subdomains)) {
@@ -759,8 +791,16 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
       continue;
     }
 
+    auto&& [recv_buffer, needs_copy] = recv_buffers[idx];
+
+    auto* recv_buffer_ptr = static_cast<std::uint8_t*>(recv_buffer->data());
+
+    if (!needs_copy) {
+      recv_buffer_ptr +=
+        inner_product(recv_domain.lo() - target_->domain().lo(), target_strides) * field_size_;
+    }
     LEGATE_CHECK_NCCL(
-      ncclRecv(recv_buffers[idx]->data(), recv_counts[idx], nccl_data_type, idx, comm, stream));
+      ncclRecv(recv_buffer_ptr, recv_counts[idx], nccl_data_type, idx, comm, stream));
   }
 
   LEGATE_CHECK_NCCL(ncclGroupEnd());
