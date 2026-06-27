@@ -56,6 +56,13 @@ class CUDADriverAPI {
                      std::size_t num_bytes,
                      CUstream stream) const;
   void mem_cpy_async(void* dst, const void* src, std::size_t num_bytes, CUstream stream) const;
+  void mem_cpy_2d_async(void* dst,
+                        const void* src,
+                        std::uint32_t dst_pitch,
+                        std::uint32_t src_pitch,
+                        std::uint32_t width_in_bytes,
+                        std::uint32_t height,
+                        CUstream stream) const;
   void mem_set_d8_async(void* dst,
                         std::uint8_t val,
                         std::size_t num_elements,
@@ -158,6 +165,7 @@ class CUDADriverAPI {
                              CUdeviceptr src,
                              std::size_t num_bytes,
                              CUstream stream)                                             = nullptr;
+  CUresult (*mem_cpy_2d_async_)(const CUDA_MEMCPY2D_st* pCopy, CUstream stream)           = nullptr;
   CUresult (*mem_get_default_pool_)(CUmemoryPool* pool_out,
                                     CUmemLocation* location,
                                     CUmemAllocationType type)                             = nullptr;

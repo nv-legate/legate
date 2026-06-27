@@ -282,6 +282,7 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeAsync, &mem_free_async_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemFreeHost, &mem_free_host_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemcpyAsync, &mem_cpy_async_);
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemcpy2DAsync, &mem_cpy_2d_async_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemsetD8Async, &mem_set_d8_async_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemsetD32Async, &mem_set_d32_async_);
 
@@ -458,6 +459,30 @@ void CUDADriverAPI::mem_cpy_async(void* dst,
   check_initialized_();
   mem_cpy_async(
     reinterpret_cast<CUdeviceptr>(dst), reinterpret_cast<CUdeviceptr>(src), num_bytes, stream);
+}
+
+void CUDADriverAPI::mem_cpy_2d_async(void* dst,
+                                     const void* src,
+                                     std::uint32_t dst_pitch,
+                                     std::uint32_t src_pitch,
+                                     std::uint32_t width_in_bytes,
+                                     std::uint32_t height,
+                                     CUstream stream) const
+{
+  CUDA_MEMCPY2D_st copy;
+
+  check_initialized_();
+  std::memset(&copy, 0, sizeof(copy));
+  copy.dstDevice     = reinterpret_cast<CUdeviceptr>(dst);
+  copy.srcDevice     = reinterpret_cast<CUdeviceptr>(src);
+  copy.dstMemoryType = CU_MEMORYTYPE_DEVICE;
+  copy.srcMemoryType = CU_MEMORYTYPE_DEVICE;
+  copy.dstPitch      = dst_pitch;
+  copy.srcPitch      = src_pitch;
+  copy.WidthInBytes  = width_in_bytes;
+  copy.Height        = height;
+
+  LEGATE_CHECK_CUDRIVER(mem_cpy_2d_async_(&copy, stream));
 }
 
 void CUDADriverAPI::mem_set_d8_async(void* dst,

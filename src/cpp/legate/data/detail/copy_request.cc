@@ -266,12 +266,10 @@ struct CopyToSendBufferGPU {
                   CUstream stream)
   {
     const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
-
     auto&& api         = cuda::detail::get_cuda_driver_api();
     auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
     CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
                                                         CopyToSendBufferKernelName<VAL>::value);
-
     const auto node_count = Runtime::get_runtime().node_count();
     const auto* source_ptr =
       static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
@@ -291,6 +289,17 @@ struct CopyToSendBufferGPU {
         LEGATE_THREADS_PER_BLOCK;
       auto count          = counts[idx];
       auto target_extents = calculate_extents(target_subdomain);
+
+      if (source_domain.dim == 2) {
+        api->mem_cpy_2d_async(target_ptr,
+                              source_ptr_shifted,
+                              target_extents[1] * sizeof(VAL),
+                              source_strides[0] * sizeof(VAL),
+                              target_extents[1] * sizeof(VAL),
+                              target_extents[0],
+                              stream);
+        continue;
+      }
 
       FastDivmodU64 divmod{source_domain.dim == 2 ? static_cast<std::uint64_t>(target_extents[1])
                                                   : 1};
@@ -364,13 +373,12 @@ struct CopyFromRecvBufferGPU {
                   CUstream stream)
   {
     const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+    auto&& api            = cuda::detail::get_cuda_driver_api();
+    const auto node_count = Runtime::get_runtime().node_count();
 
-    auto&& api         = cuda::detail::get_cuda_driver_api();
     auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
     CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
                                                         CopyFromRecvBufferKernelName<VAL>::value);
-
-    const auto node_count = Runtime::get_runtime().node_count();
 
     auto* target_ptr =
       static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
@@ -389,6 +397,17 @@ struct CopyFromRecvBufferGPU {
         LEGATE_THREADS_PER_BLOCK;
       auto count          = counts[idx];
       auto source_extents = calculate_extents(source_subdomain);
+
+      if (target_domain.dim == 2) {
+        api->mem_cpy_2d_async(target_ptr_shifted,
+                              source_ptr,
+                              target_strides[0] * sizeof(VAL),
+                              source_extents[1] * sizeof(VAL),
+                              source_extents[1] * sizeof(VAL),
+                              source_extents[0],
+                              stream);
+        continue;
+      }
 
       FastDivmodU64 divmod{target_domain.dim == 2 ? static_cast<std::uint64_t>(source_extents[1])
                                                   : 1};

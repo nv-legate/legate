@@ -14,6 +14,7 @@ struct CUlib_st;
 struct CUkern_st;
 struct CUmemPoolHandle_st;
 struct CUmemLocation_st;
+struct CUDA_MEMCPY2D_st;
 
 namespace legate {
 
