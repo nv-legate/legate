@@ -49,7 +49,8 @@ cuda_compiler:
 
 cython_version:
   # 3.2.6 triggers https://github.com/cython/cython/issues/7767
-  - ">=3.0.1,<3.3,!=3.2.6"
+  # 3.2.7 contains 3.3 sources: https://github.com/cython/cython/issues/7781
+  - ">=3.0.1,<3.3,!=3.2.6,!=3.2.7"
 
 setuptools_scm_version:
   - ">=3.5.0,<9.3"
