@@ -142,7 +142,7 @@ template <typename InputRange,
  * @param transform_op The binary operation to apply to the elements of the two
  *          input ranges prior to the reduction step.
  *
- * @pre @li `InputRange1` and `InputRange2 must satisfy the
+ * @pre @li `InputRange1` and `InputRange2` must satisfy the
  *          @c logical_store_like concept.
  *      @li `Init` must satisfy the @c logical_store_like concept.
  *      @li The shape of the input ranges must be the same.
