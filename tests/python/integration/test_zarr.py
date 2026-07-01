@@ -19,20 +19,13 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from legate.core import (
-    LogicalStore,
-    Type,
-    VariantCode,
-    get_legate_runtime,
-    types as ty,
-)
+from legate.core import LogicalStore, Type, get_legate_runtime, types as ty
 from legate.core.data_interface import (
     LegateDataInterface,
     LegateDataInterfaceItem,
 )
 from legate.core.experimental.io import zarr as legate_zarr
 from legate.core.experimental.io.zarr import read_array, write_array
-from legate.core.task import InputStore, task
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -69,9 +62,9 @@ _ZARR_USES_SYNC_WORKERS = _zarr_major_version() >= ZARR_PYTHON_V3_MAJOR
 _ZARR_SYNC_CALL_LOCK = threading.RLock()
 _zarr_sync_cleanup: Callable[[], None] | None
 
-# Production no longer calls zarr-python. These test helpers still do from
-# Legate tasks and the main test thread, and zarr 3 sync calls need explicit
-# cleanup around each sync API use.
+# Production no longer calls zarr-python. These test helpers still do from the
+# main test thread, and zarr 3 sync calls need explicit cleanup around each
+# sync API use.
 if _ZARR_USES_SYNC_WORKERS:
     try:
         from zarr.core.sync import (  # type: ignore # noqa: PGH003
@@ -174,40 +167,6 @@ class DataInterfaceWrapper(LegateDataInterface):
         return {"version": 2, "data": {self._field: self._store}}
 
 
-@task(variants=(VariantCode.CPU,))
-def init_test_zarr_task(
-    input_store: InputStore,
-    dirpath: str,
-    array_shape: tuple[int, ...],
-    array_dtype: str,
-    chunks: tuple[int, ...],
-    use_default_chunks: bool,
-    zarr_format: int,
-    use_compressor: bool,
-) -> None:
-    """Task to initialize test Zarr array (single-instance, CPU-only).
-
-    This task creates a Zarr array and populates it with data from the
-    input store. It must run as a single instance to avoid race conditions.
-    """
-    chunks_arg = None if use_default_chunks else tuple(int(c) for c in chunks)
-    data = np.asarray(input_store.get_inline_allocation())
-    kwargs: dict[str, object] = {
-        "mode": "w",
-        "shape": tuple(int(s) for s in array_shape),
-        "dtype": np.dtype(array_dtype),
-        "chunks": chunks_arg,
-    }
-    kwargs.update(_zarr_format_kwargs(zarr_format))
-    if not use_compressor and zarr_format < ZARR_V3_DISK_FORMAT:
-        # This helper still emits v2 metadata when requested, so compressor
-        # remains the v2 spelling even under zarr-python 3.
-        kwargs["compressor"] = None
-
-    with _zarr_test_sync_call():
-        zarr.open_array(dirpath, **kwargs)[...] = data
-
-
 def create_test_zarr(
     tmp_path: Path,
     data: np.ndarray,
@@ -215,49 +174,41 @@ def create_test_zarr(
     zarr_format: int = 2,
     use_compressor: bool = False,
 ) -> None:
-    """Create a test Zarr array using a single-instance manual task.
+    """Create a Zarr test fixture without running zarr-python in a task.
 
-    Parameters
-    ----------
-    tmp_path : Path
-        Directory path for the zarr array.
-    data : np.ndarray
-        Data to write to the zarr array.
-    chunks : tuple[int, ...] | None
-        Chunk sizes, or None for default.
-    zarr_format : int
-        Zarr format version (2 or 3).
-    use_compressor : bool
-        If True, use zarr's default compressor for v2. If False, create
-        uncompressed v2 arrays. Ignored for v3, where this helper only creates
-        enough metadata to exercise the format guard.
+    The v3 rejection test only needs enough metadata for read_array() to
+    identify an unsupported format. It intentionally avoids asking
+    zarr-python to create a full v3 array.
     """
     runtime = get_legate_runtime()
 
-    store = runtime.create_store_from_buffer(
-        Type.from_numpy_dtype(data.dtype), data.shape, data, read_only=True
-    )
+    if runtime.node_id == 0:
+        if zarr_format >= ZARR_V3_DISK_FORMAT:
+            # read_array() consults zarr.json only when no v2 .zarray
+            # metadata exists, so write the minimal v3 marker directly.
+            tmp_path.mkdir(parents=True, exist_ok=True)
+            (tmp_path / ".zarray").unlink(missing_ok=True)
+            with (tmp_path / "zarr.json").open("w", encoding="utf-8") as f:
+                json.dump({"zarr_format": ZARR_V3_DISK_FORMAT}, f)
+                f.write("\n")
+        else:
+            kwargs: dict[str, object] = {
+                "mode": "w",
+                "shape": data.shape,
+                "dtype": data.dtype,
+                "chunks": chunks,
+            }
+            kwargs.update(_zarr_format_kwargs(zarr_format))
+            if not use_compressor:
+                # This helper still emits v2 metadata when requested, so
+                # compressor remains the v2 spelling even under zarr-python 3.
+                kwargs["compressor"] = None
 
-    use_default_chunks = chunks is None
-    if chunks is None:
-        chunks_arg: tuple[int, ...] = (-1,)
-    else:
-        chunks_arg = tuple(chunks)
+            with _zarr_test_sync_call():
+                zarr.open_array(tmp_path, **kwargs)[...] = data
 
-    # Create and execute a manual task with a single instance
-    manual_task = runtime.create_manual_task(
-        init_test_zarr_task.library, init_test_zarr_task.task_id, (1,)
-    )
-
-    manual_task.add_input(store)
-    manual_task.add_scalar_arg(str(tmp_path), ty.string_type)
-    manual_task.add_scalar_arg(data.shape, (ty.int64,))
-    manual_task.add_scalar_arg(str(data.dtype), ty.string_type)
-    manual_task.add_scalar_arg(chunks_arg, (ty.int64,))
-    manual_task.add_scalar_arg(use_default_chunks, ty.bool_)
-    manual_task.add_scalar_arg(zarr_format, ty.int32)
-    manual_task.add_scalar_arg(use_compressor, ty.bool_)
-    manual_task.execute()
+    # The fixture write is out-of-band on node 0. Fence before submitting
+    # Legate read tasks from any control-replicated node.
     runtime.issue_execution_fence(block=True)
 
 
@@ -511,7 +462,7 @@ class TestZarrV2:
         """Test read of a Zarr array."""
         a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
 
-        # Use helper function to create zarr array with single-instance task
+        # Create the fixture without zarr-python task workers.
         create_test_zarr(tmp_path, a, chunks=chunks)
 
         store = read_array(dirpath=tmp_path)
@@ -649,8 +600,6 @@ class TestZarrV3:
     def test_read_array_v3(self, tmp_path: Path) -> None:
         """Test read of a v3 format Zarr array."""
         a = np.array((1, 2, 3))
-
-        # Use helper function to create zarr array with single-instance task
         create_test_zarr(tmp_path, a, zarr_format=3)
 
         msg = "Zarr format 3 support is not implemented yet"
