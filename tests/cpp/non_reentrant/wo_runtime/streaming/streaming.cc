@@ -531,7 +531,7 @@ TEST_F(StreamingUnit, SumAfterPointwise)
   validate_sum(output);
 }
 
-TEST_F(StreamingUnit, DISABLED_SumForTemporary)
+TEST_F(StreamingUnit, SumForTemporary)
 {
   auto* const runtime = legate::Runtime::get_runtime();
   const auto output   = runtime->create_store(legate::Shape{1},
