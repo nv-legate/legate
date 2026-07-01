@@ -194,6 +194,8 @@ tuple<std::uint64_t> LogicalStorePartition::color_shape() const
   return tuple<std::uint64_t>{std::move(vec)};
 }
 
+void LogicalStorePartition::fetch() const { impl()->fetch(); }
+
 const SharedPtr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const
 {
   return impl_->impl();

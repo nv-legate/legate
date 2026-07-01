@@ -18,4 +18,6 @@ Span<const std::uint64_t> LogicalStorePartition::color_shape() const
   return partition_->color_shape();
 }
 
+void LogicalStorePartition::fetch() const { store()->reshuffle(partition_); }
+
 }  // namespace legate::detail

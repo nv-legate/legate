@@ -132,6 +132,10 @@ class Storage {
   void unmap();
   void free_early();
 
+  [[nodiscard]] mapping::StoreTarget target() const;
+
+  void set_inline_storage(InternalSharedPtr<InlineStorage> storage_data);
+
   [[nodiscard]] Restrictions compute_restrictions() const;
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
     const Restrictions& restrictions) const;

@@ -135,6 +135,7 @@ class LogicalStore {
     bool store_has_identity,
     const legate::mapping::detail::Machine& machine,
     DataMovementRequests* requests);
+  void reshuffle(const InternalSharedPtr<Partition>& new_key_partition);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 
@@ -177,6 +178,7 @@ class LogicalStore {
   void set_key_partition(const mapping::detail::Machine& machine,
                          const ParallelPolicy& parallel_policy,
                          InternalSharedPtr<Partition> partition);
+  void set_key_partition(InternalSharedPtr<Partition> partition);
   void reset_key_partition();
 
  private:

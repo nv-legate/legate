@@ -231,6 +231,13 @@ void Storage::free_early()
   // TODO(wonchanl): Need a v2 implementation
 }
 
+mapping::StoreTarget Storage::target() const { return storage_data_->target(); }
+
+void Storage::set_inline_storage(InternalSharedPtr<InlineStorage> storage_data)
+{
+  storage_data_ = storage_data;
+}
+
 Restrictions Storage::compute_restrictions() const { return Restrictions{dim()}; }
 
 std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(

@@ -25,6 +25,8 @@ class LogicalStorePartition {
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
   [[nodiscard]] Span<const std::uint64_t> color_shape() const;
 
+  void fetch() const;
+
  private:
   InternalSharedPtr<Partition> partition_{};
   InternalSharedPtr<LogicalStore> store_{};

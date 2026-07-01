@@ -409,6 +409,25 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
     shape()->ndim(), type(), transform_, LEGION_REDUCE, std::move(allocation), subdomain);
 }
 
+void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partition)
+{
+  DataMovementRequests requests{};
+
+  requests.reserve_copy_ins(1);
+
+  const auto color  = new_key_partition->compute_color(Runtime::get_runtime().node_id());
+  const auto target = get_storage()->target();
+
+  auto&& [new_inline_storage, _, __] =
+    get_storage()->map(domain_, new_key_partition, color, target, /*is_read=*/true, &requests);
+
+  requests.perform_copy_ins(target == mapping::StoreTarget::FBMEM ? VariantCode::GPU
+                                                                  : VariantCode::CPU);
+
+  get_storage()->set_inline_storage(new_inline_storage);
+  set_key_partition(new_key_partition);
+}
+
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   std::optional<legate::mapping::StoreTarget> target, bool)
 {
@@ -506,6 +525,14 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
 {
   LEGATE_ASSERT(!transformed());
   num_pieces_ = machine.count() * parallel_policy.overdecompose_factor();
+  get_storage()->set_key_partition(partition);
+  key_partition_ = std::move(partition);
+}
+
+void LogicalStore::set_key_partition(InternalSharedPtr<Partition> partition)
+{
+  LEGATE_ASSERT(!transformed());
+  num_pieces_ = array_volume(partition->color_shape());
   get_storage()->set_key_partition(partition);
   key_partition_ = std::move(partition);
 }
