@@ -272,6 +272,10 @@ set(
   unit/physical_store/reduce_accessor.cc
   unit/physical_store/transform.cc
   unit/physical_store/write_accessor.cc
+  unit/operation/attach.cc
+  unit/operation/copy.cc
+  unit/operation/gather.cc
+  unit/operation/index_attach.cc
   unit/operation/task.cc
   unit/projection.cc
   unit/redop/apply.cc
