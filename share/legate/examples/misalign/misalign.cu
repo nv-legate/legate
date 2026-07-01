@@ -5,28 +5,38 @@
  */
 
 #include <misalign.h>
-#include <thrust/execution_policy.h>
-#include <thrust/fill.h>
-#include <thrust/iterator/zip_iterator.h>
-#include <thrust/system/cuda/execution_policy.h>
-#include <thrust/transform.h>
-#include <thrust/tuple.h>
 
 namespace {
 
-struct AddFunctor {
-  __host__ __device__ std::int32_t operator()(
-    const thrust::tuple<std::int32_t, std::int32_t>& tpl) const
-  {
-    return thrust::get<0>(tpl) + thrust::get<1>(tpl);
+template <typename LHS, typename RHS>
+__global__ void add_kernel(
+  std::size_t volume, legate::Point<3> extents, legate::Point<3> lo, LHS lhs, RHS rhs1, RHS rhs2)
+{
+  const auto tid = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+
+  if (tid >= volume) {
+    return;
   }
-};
+
+  auto idx = tid;
+
+  legate::Point<3> p;
+  p[0] = idx / (extents[1] * extents[2]);
+  idx %= extents[1] * extents[2];
+  p[1] = idx / extents[2];
+  idx %= extents[2];
+  p[2] = idx;
+
+  p += lo;
+
+  lhs[p] = rhs1[p] + rhs2[p];
+}
 
 }  // namespace
 
 void AddTask::gpu_variant(legate::TaskContext context)
 {
-  constexpr std::int32_t DIM = 2;
+  constexpr std::int32_t DIM = 3;
 
   const auto x_input_store = context.input(0);
   const auto y_input_store = context.input(1);
@@ -38,15 +48,15 @@ void AddTask::gpu_variant(legate::TaskContext context)
 
   LEGATE_CHECK(x_shape == y_shape && y_shape == output_shape);
 
-  auto x_ptr      = x_input_store.read_accessor<std::int32_t, DIM>().ptr(x_shape);
-  auto y_ptr      = y_input_store.read_accessor<std::int32_t, DIM>().ptr(y_shape);
-  auto output_ptr = output_store.write_accessor<std::int32_t, DIM>().ptr(output_shape);
+  auto x_acc   = x_input_store.read_accessor<std::int32_t, DIM>();
+  auto y_acc   = y_input_store.read_accessor<std::int32_t, DIM>();
+  auto out_acc = output_store.write_accessor<std::int32_t, DIM>();
 
   const auto volume = output_shape.volume();
   auto stream       = context.get_task_stream();
 
-  auto begin = thrust::make_zip_iterator(thrust::make_tuple(x_ptr, y_ptr));
-  auto end   = thrust::make_zip_iterator(thrust::make_tuple(x_ptr + volume, y_ptr + volume));
+  const auto num_blocks = (volume + 127) / 128;
+  const auto extents    = x_shape.hi - x_shape.lo + legate::Point<3>::ONES();
 
-  thrust::transform(thrust::cuda::par.on(stream), begin, end, output_ptr, AddFunctor{});
+  add_kernel<<<num_blocks, 128, 0, stream>>>(volume, extents, x_shape.lo, out_acc, x_acc, y_acc);
 }

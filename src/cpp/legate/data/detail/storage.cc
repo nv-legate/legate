@@ -46,6 +46,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     unbound_{shape->unbound()},
     shape_{std::move(shape)},
+    domain_{to_domain(shape_->extents())},
     field_size_{field_size},
     provenance_{std::move(provenance)}
 {
@@ -57,12 +58,8 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
 Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::string_view provenance)
   : Storage{shape, static_cast<std::uint32_t>(scalar.size()), provenance}
 {
-  // No alignment guarantee for the pointer provided by Scalar,
-  // so we need to create a new allocation and copy the data over.
-  const Domain domain = to_domain(this->shape()->extents());
-
   const auto target = Runtime::get_runtime().get_machine().preferred_scalar_store_target();
-  storage_data_     = make_internal_shared<InlineStorage>(domain, field_size_, target);
+  storage_data_     = make_internal_shared<InlineStorage>(domain_, field_size_, target);
 
   set_key_partition(create_no_partition());
 
@@ -164,8 +161,8 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   LEGATE_CHECK(is_read);
   LEGATE_ASSERT(key_partition_);
 
-  requests->register_copy_in(
-    CopyRequest{storage_data_, data, *key_partition_, partition, domain, field_size_});
+  requests->register_copy_in(CopyRequest{
+    id(), storage_data_, data, *key_partition_, partition, domain_, domain, field_size_});
 
   return {data, sub_domain, false};
 }

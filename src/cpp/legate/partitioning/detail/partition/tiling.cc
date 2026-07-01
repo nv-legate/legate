@@ -232,7 +232,7 @@ bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) 
                  offsets(),
                  other_tiling->tile_shape(),
                  other_tiling->offsets())) {
-    if (my_tile_ext == other_tile_ext) {
+    if (my_tile_ext == other_tile_ext && my_off == other_off) {
       continue;
     }
     if (color_ext > 1) {

@@ -131,6 +131,7 @@ class Tiling final : public Partition {
 
   [[nodiscard]] const DomainPoint& tile_shape_dp() const;
   [[nodiscard]] const DomainPoint& color_shape_dp() const;
+  [[nodiscard]] const DomainPoint& offsets_dp() const;
 
   /**
    * @copydoc Partition::convert()

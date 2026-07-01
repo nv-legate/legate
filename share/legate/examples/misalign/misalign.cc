@@ -29,7 +29,7 @@ void InitTask::cpu_variant(legate::TaskContext context)
 
 void AddTask::cpu_variant(legate::TaskContext context)
 {
-  constexpr std::int32_t DIM = 2;
+  constexpr std::int32_t DIM = 3;
 
   const auto x_input_store = context.input(0);
   const auto y_input_store = context.input(1);
@@ -52,19 +52,24 @@ void AddTask::cpu_variant(legate::TaskContext context)
 
 void CheckTask::cpu_variant(legate::TaskContext context)
 {
-  constexpr std::int32_t DIM = 2;
-  const auto result          = context.input(0);
-  const auto expected        = context.scalar(0).value<std::int32_t>();
-  const auto offset          = context.scalar(1).value<std::int32_t>();
-  const auto shape           = result.shape<DIM>();
-  auto acc                   = result.read_accessor<std::int32_t, DIM>();
+  constexpr std::int32_t DIM         = 3;
+  constexpr std::uint32_t MAX_ERRORS = 5;
+  const auto result                  = context.input(0);
+  const auto expected                = context.scalar(0).value<std::int32_t>();
+  const auto offset                  = context.scalar(1).value<std::int32_t>();
+  const auto shape                   = result.shape<DIM>();
+  auto acc                           = result.read_accessor<std::int32_t, DIM>();
 
   std::cerr << shape << std::endl;
-  bool all_correct = true;
+  bool all_correct         = true;
+  std::uint32_t num_errors = 0;
   for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
     if (acc[*it] != expected + (*it)[0] * 2 + offset) {
-      std::cerr << "Error at position (" << (*it)[0] << "," << (*it)[1] << "): expected "
-                << expected << ", got " << acc[*it] << "\n";
+      if (++num_errors > MAX_ERRORS) {
+        break;
+      }
+      std::cerr << "Error at position " << *it << ": expected " << expected << ", got " << acc[*it]
+                << "\n";
       all_correct = false;
     }
   }
@@ -84,8 +89,8 @@ void run_example()
   AddTask::register_variants(library);
   CheckTask::register_variants(library);
 
-  const auto x_shape = legate::Shape{21, 40, 20};
-  const auto y_shape = legate::Shape{10, 40};
+  const auto x_shape = legate::Shape{41, 20, 41};
+  const auto y_shape = legate::Shape{40, 20, 40};
 
   auto x_store = runtime->create_store(x_shape, legate::int32());
   auto y_store = runtime->create_store(y_shape, legate::int32());
@@ -99,8 +104,10 @@ void run_example()
   dummy_task.add_input(x_store);
   runtime->submit(std::move(dummy_task));
 
-  auto slice1 = x_store.slice(0, legate::Slice{11, legate::Slice::OPEN}).project(2, 1);
-  auto slice2 = x_store.slice(0, legate::Slice{legate::Slice::OPEN, -11}).project(2, 1);
+  auto slice1 = x_store.slice(0, legate::Slice{1, legate::Slice::OPEN})
+                  .slice(2, legate::Slice{legate::Slice::OPEN, -1});
+  auto slice2 = x_store.slice(0, legate::Slice{legate::Slice::OPEN, -1})
+                  .slice(2, legate::Slice{1, legate::Slice::OPEN});
 
   auto add_task    = runtime->create_task(library, AddTask::TASK_CONFIG.task_id());
   auto add_s1_part = add_task.add_input(slice1);
@@ -112,8 +119,8 @@ void run_example()
 
   auto check_task = runtime->create_task(library, CheckTask::TASK_CONFIG.task_id());
   check_task.add_input(y_store);
-  check_task.add_scalar_arg(legate::Scalar{2});   // Expected sum
-  check_task.add_scalar_arg(legate::Scalar{11});  // Offset
+  check_task.add_scalar_arg(legate::Scalar{2});  // Expected sum
+  check_task.add_scalar_arg(legate::Scalar{1});  // Offset
   runtime->submit(std::move(check_task));
 }
 

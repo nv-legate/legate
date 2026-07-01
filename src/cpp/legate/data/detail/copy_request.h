@@ -19,11 +19,13 @@ namespace legate::detail {
 // cases.
 class CopyRequest {
  public:
-  CopyRequest(InternalSharedPtr<InlineStorage> source,
+  CopyRequest(std::uint64_t storage_id,
+              InternalSharedPtr<InlineStorage> source,
               InternalSharedPtr<InlineStorage> target,
               InternalSharedPtr<Partition> source_partition,
               InternalSharedPtr<Partition> target_partition,
-              const Domain& sub_domain,
+              const Domain& source_domain,
+              const Domain& target_domain,
               std::uint32_t field_size);
   void perform(VariantCode variant_code) const;
 
@@ -37,11 +39,13 @@ class CopyRequest {
   void all_gather_(VariantCode variant_code) const;
   void shuffle_(VariantCode variant_code) const;
 
+  std::uint64_t storage_id_{};
   InternalSharedPtr<InlineStorage> source_{};
   InternalSharedPtr<InlineStorage> target_{};
   InternalSharedPtr<Partition> source_partition_{};
   InternalSharedPtr<Partition> target_partition_{};
-  Domain sub_domain_{};
+  Domain source_domain_{};
+  Domain target_domain_{};
   std::uint32_t field_size_{};
 };
 

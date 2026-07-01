@@ -8,6 +8,7 @@
 
 #include <legate/comm/detail/coll.h>
 #include <legate/utilities/detail/error.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 
@@ -16,6 +17,7 @@
 #include <array>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -33,7 +35,8 @@ void abort_handler(std::string_view file, std::string_view func, int line, std::
   // potentially unrelated sources) are definitely flushed.
   std::ignore = std::fflush(nullptr);
   std::cerr << make_error_message(errs) << std::endl;  // NOLINT(performance-avoid-endl)
-  comm::coll::abort();
+  throw TracedException<std::runtime_error>{"abort"};
+  // comm::coll::abort();
 }
 
 }  // namespace legate::detail

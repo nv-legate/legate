@@ -144,6 +144,7 @@ class Storage {
   std::uint64_t storage_id_{};
   bool unbound_{};
   InternalSharedPtr<Shape> shape_{};
+  Domain domain_{};
   std::uint32_t field_size_{};
   std::string_view provenance_{};  // only relevant on the root Storage
 

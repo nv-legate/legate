@@ -28,4 +28,6 @@ inline const DomainPoint& Tiling::tile_shape_dp() const { return tile_shape_dp_;
 
 inline const DomainPoint& Tiling::color_shape_dp() const { return color_shape_dp_; }
 
+inline const DomainPoint& Tiling::offsets_dp() const { return offsets_dp_; }
+
 }  // namespace legate::detail

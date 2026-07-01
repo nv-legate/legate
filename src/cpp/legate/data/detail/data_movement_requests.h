@@ -8,7 +8,6 @@
 
 #include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/reduction_request.h>
-#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
@@ -33,8 +32,8 @@ class DataMovementRequests {
 
  private:
   bool data_sync_required_{};
-  SmallVector<CopyRequest> copy_ins_{};
-  SmallVector<ReductionRequest> reductions_{};
+  std::vector<CopyRequest> copy_ins_{};
+  std::vector<ReductionRequest> reductions_{};
 };
 
 }  // namespace legate::detail

@@ -202,7 +202,7 @@ struct CopyFromRecvBufferCPU {
       const auto* source_ptr       = static_cast<const VAL*>(source.data()) + offsets[idx] -
                                      inner_product(source_subdomain.lo(), source_strides);
 
-      for (Domain::DomainPointIterator it{source_subdomain}; it; ++it) {
+      for (Domain::DomainPointIterator it{source_subdomain, /*fortran_order=*/false}; it; ++it) {
         target_ptr[inner_product(it.p, target_strides)] =
           source_ptr[inner_product(it.p, source_strides)];
       }
@@ -260,7 +260,7 @@ struct CopyToSendBufferGPU {
   void operator()(SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
                   const InlineStorage& source,
                   const Domain& source_domain,
-                  DomainPoint& source_strides,
+                  const DomainPoint& source_strides,
                   const SmallVector<Domain>& target_subdomains,
                   const SmallVector<int>& counts,
                   CUstream stream)
@@ -330,7 +330,7 @@ void copy_to_send_buffer_gpu_(
   SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
   const InlineStorage& source,
   const Domain& source_domain,
-  DomainPoint& source_strides,
+  const DomainPoint& source_strides,
   const SmallVector<Domain>& target_subdomains,
   const SmallVector<int>& counts,
   CUstream stream)
@@ -373,7 +373,7 @@ struct CopyFromRecvBufferGPU {
   template <typename VAL>
   void operator()(InlineStorage& target,
                   const Domain& target_domain,
-                  DomainPoint& target_strides,
+                  const DomainPoint& target_strides,
                   const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
                   const SmallVector<Domain>& source_subdomains,
                   const SmallVector<int>& counts,
@@ -444,7 +444,7 @@ void copy_from_recv_buffer_gpu_(
   std::uint32_t field_size,
   InlineStorage& target,
   const Domain& target_domain,
-  DomainPoint& target_strides,
+  const DomainPoint& target_strides,
   const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
   const SmallVector<Domain>& source_subdomains,
   const SmallVector<int>& counts,
@@ -537,14 +537,19 @@ void reorder_elements_gpu_(std::uint32_t field_size,
 }
 
 std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
-find_all_intersections(const Tiling* from, const Tiling* to, const Domain& store_domain)
+find_all_intersections(const Tiling* from,
+                       const Tiling* to,
+                       const Domain& from_domain,
+                       const Domain& to_domain)
 {
   const auto device_count = Runtime::get_runtime().node_count();
   const auto my_device_id = Runtime::get_runtime().node_id();
 
-  const auto from_tile_domain    = from->shard(store_domain, from->compute_color(my_device_id));
-  const auto intersection_colors = Domain{from_tile_domain.lo() / to->tile_shape_dp(),
-                                          from_tile_domain.hi() / to->tile_shape_dp()};
+  const auto from_tile_domain =
+    from->shard(from_domain, from->compute_color(my_device_id)).intersection(to_domain);
+  const auto intersection_colors =
+    Domain{(from_tile_domain.lo() - to->offsets_dp()) / to->tile_shape_dp(),
+           (from_tile_domain.hi() - to->offsets_dp()) / to->tile_shape_dp()};
 
   auto intersection_subdomains = SmallVector<Domain>(tags::size_tag, device_count, {});
   auto intersection_strides    = SmallVector<DomainPoint>(tags::size_tag, device_count, {});
@@ -638,37 +643,45 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   const auto* target_tiling = static_cast<Tiling*>(target_partition_.get());
   const auto device_count   = Runtime::get_runtime().node_count();
 
-  auto&& [source_subdomain, send_subdomains, send_strides, send_counts] =
-    find_all_intersections(source_tiling, target_tiling, sub_domain_);
-  auto&& [target_subdomain, recv_subdomains, recv_strides, recv_counts] =
-    find_all_intersections(target_tiling, source_tiling, sub_domain_);
+  auto&& [send_domain, send_subdomains, send_strides, send_counts] =
+    find_all_intersections(source_tiling, target_tiling, source_domain_, target_domain_);
+  auto&& [recv_domain, recv_subdomains, recv_strides, recv_counts] =
+    find_all_intersections(target_tiling, source_tiling, target_domain_, source_domain_);
+
+  const auto& source_domain = source_->domain();
+  const auto& target_domain = target_->domain();
+  const auto source_strides = calculate_strides(source_domain);
+  const auto target_strides = calculate_strides(target_domain);
 
   // TODO(wonchanl): Add an option to toggle this behavior
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     std::stringstream ss{};
 
-    ss << "SHUFFLE\n  from: " << source_tiling->to_string()
-       << "\n  to: " << target_tiling->to_string() << "\n  store_domain: " << sub_domain_
-       << "\n  intersections:\n";
-    for (auto&& [to, send_domain] : enumerate(send_subdomains)) {
+    ss << "SHUFFLE(storage_id: " << storage_id_ << ")\n";
+    ss << "  from: " << source_tiling->to_string() << "\n";
+    ss << "    domain: " << source_domain_ << "\n";
+    ss << "  to: " << target_tiling->to_string() << "\n";
+    ss << "    domain: " << target_domain_ << "\n";
+    ss << "  intersections:\n";
+    for (auto&& [to, send_subdomain] : enumerate(send_subdomains)) {
       if (send_counts[to] == 0) {
         continue;
       }
-      ss << "    send to " << to << ": " << send_domain << "\n";
+      ss << "    send to " << to << ": " << send_subdomain << "\n";
     }
-    for (auto&& [from, recv_domain] : enumerate(recv_subdomains)) {
+    for (auto&& [from, recv_subdomain] : enumerate(recv_subdomains)) {
       if (recv_counts[from] == 0) {
         continue;
       }
-      ss << "    recv from " << from << ": " << recv_domain << "\n";
+      ss << "    recv from " << from << ": " << recv_subdomain << "\n";
     }
     log_copy().debug() << std::move(ss).str();
   }
 
   if (variant_code == VariantCode::CPU) {
     // For CPU shuffle, we allocate contiguous transfer buffers to match the all-to-all API
-    InlineStorage send_buffer{source_subdomain, field_size_, source_->target()};
-    InlineStorage recv_buffer{target_subdomain, field_size_, target_->target()};
+    InlineStorage send_buffer{send_domain, field_size_, source_->target()};
+    InlineStorage recv_buffer{recv_domain, field_size_, target_->target()};
 
     SmallVector<int> recv_offsets(tags::size_tag, device_count, 0);
     SmallVector<int> send_offsets(tags::size_tag, device_count, 0);
@@ -679,17 +692,17 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     }
 
     LEGATE_ASSERT(
-      source_subdomain.get_volume() ==
+      send_domain.get_volume() ==
       static_cast<std::size_t>(send_offsets[device_count - 1] + send_counts[device_count - 1]));
     LEGATE_ASSERT(
-      target_subdomain.get_volume() ==
+      recv_domain.get_volume() ==
       static_cast<std::size_t>(recv_offsets[device_count - 1] + recv_counts[device_count - 1]));
 
     copy_to_send_buffer_cpu_(field_size_,
                              send_buffer,
                              *source_,
-                             source_subdomain,
-                             calculate_strides(source_tiling->tile_shape_dp()),
+                             source_domain,
+                             source_strides,
                              send_subdomains,
                              send_strides,
                              send_counts,
@@ -706,8 +719,8 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
     copy_from_recv_buffer_cpu_(field_size_,
                                *target_,
-                               target_subdomain,
-                               calculate_strides(target_tiling->tile_shape_dp()),
+                               target_domain,
+                               target_strides,
                                recv_buffer,
                                recv_subdomains,
                                recv_strides,
@@ -725,32 +738,29 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>> recv_buffers(
     tags::size_tag, device_count, {nullptr, false});
 
-  auto source_strides = calculate_strides(source_tiling->tile_shape_dp());
-  auto target_strides = calculate_strides(target_tiling->tile_shape_dp());
-
-  for (auto&& [idx, send_domain] : enumerate(send_subdomains)) {
+  for (auto&& [idx, send_subdomain] : enumerate(send_subdomains)) {
     if (send_counts[idx] == 0) {
       continue;
     }
 
-    if (source_strides == calculate_strides(send_domain)) {
+    if (source_strides == calculate_strides(send_subdomain)) {
       send_buffers[idx] = std::make_pair<>(source_, false);
     } else {
       send_buffers[idx] = std::make_pair<>(
-        make_internal_shared<InlineStorage>(send_domain, field_size_, source_->target()), true);
+        make_internal_shared<InlineStorage>(send_subdomain, field_size_, source_->target()), true);
     }
   }
 
-  for (auto&& [idx, recv_domain] : enumerate(recv_subdomains)) {
+  for (auto&& [idx, recv_subdomain] : enumerate(recv_subdomains)) {
     if (recv_counts[idx] == 0) {
       continue;
     }
 
-    if (target_strides == calculate_strides(recv_domain)) {
+    if (target_strides == calculate_strides(recv_subdomain)) {
       recv_buffers[idx] = std::make_pair<>(target_, false);
     } else {
       recv_buffers[idx] = std::make_pair<>(
-        make_internal_shared<InlineStorage>(recv_domain, field_size_, target_->target()), true);
+        make_internal_shared<InlineStorage>(recv_subdomain, field_size_, target_->target()), true);
     }
   }
 
@@ -761,7 +771,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   copy_to_send_buffer_gpu_(field_size_,
                            send_buffers,
                            *source_,
-                           source_subdomain,
+                           source_domain,
                            source_strides,
                            send_subdomains,
                            send_counts,
@@ -769,7 +779,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
   LEGATE_CHECK_NCCL(ncclGroupStart());
 
-  for (auto&& [idx, send_domain] : enumerate(send_subdomains)) {
+  for (auto&& [idx, send_subdomain] : enumerate(send_subdomains)) {
     if (send_counts[idx] == 0) {
       continue;
     }
@@ -780,13 +790,13 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
     if (!needs_copy) {
       send_buffer_ptr +=
-        inner_product(send_domain.lo() - source_->domain().lo(), source_strides) * field_size_;
+        inner_product(send_subdomain.lo() - source_->domain().lo(), source_strides) * field_size_;
     }
     LEGATE_CHECK_NCCL(
       ncclSend(send_buffer_ptr, send_counts[idx], nccl_data_type, idx, comm, stream));
   }
 
-  for (auto&& [idx, recv_domain] : enumerate(recv_subdomains)) {
+  for (auto&& [idx, recv_subdomain] : enumerate(recv_subdomains)) {
     if (recv_counts[idx] == 0) {
       continue;
     }
@@ -797,7 +807,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
     if (!needs_copy) {
       recv_buffer_ptr +=
-        inner_product(recv_domain.lo() - target_->domain().lo(), target_strides) * field_size_;
+        inner_product(recv_subdomain.lo() - target_->domain().lo(), target_strides) * field_size_;
     }
     LEGATE_CHECK_NCCL(
       ncclRecv(recv_buffer_ptr, recv_counts[idx], nccl_data_type, idx, comm, stream));
@@ -807,7 +817,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
   copy_from_recv_buffer_gpu_(field_size_,
                              *target_,
-                             target_subdomain,
+                             target_domain,
                              target_strides,
                              recv_buffers,
                              recv_subdomains,
