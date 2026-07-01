@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mapping &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>mapping &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -724,7 +724,7 @@ SPDX-License-Identifier: Apache-2.0
 <dt class="sig sig-object cpp" id="_CPPv410TaskTarget">
 <span id="_CPPv310TaskTarget"></span><span id="_CPPv210TaskTarget"></span><span class="target" id="group__mapping_1gaf92a9e7bfa097c7df5de8503ec53ef40"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TaskTarget</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><a class="headerlink" href="#_CPPv410TaskTarget" title="Link to this definition">#</a><br /></dt>
 <dd><p>An enum class for task targets. </p>
-<p>The enumerators of <code class="docutils literal notranslate"><a class="reference internal" href="#group__mapping_1gaf92a9e7bfa097c7df5de8503ec53ef40"><span class="std std-ref"><span class="pre">TaskTarget</span></span></a></code> are ordered by their precedence; i.e., <code class="docutils literal notranslate"><span class="pre">GPU</span></code>, if available, is chosen over <code class="docutils literal notranslate"><span class="pre">OMP</span></code> or <code class="docutils literal notranslate"><span class="pre">CPU,</span></code>OMP<code class="docutils literal notranslate"><span class="pre">,</span> <span class="pre">if</span> <span class="pre">available,</span> <span class="pre">is</span> <span class="pre">chosen</span> <span class="pre">over</span></code>CPU`. </p>
+<p>The enumerators of <code class="docutils literal notranslate"><a class="reference internal" href="#group__mapping_1gaf92a9e7bfa097c7df5de8503ec53ef40"><span class="std std-ref"><span class="pre">TaskTarget</span></span></a></code> are ordered by their precedence; i.e., <code class="docutils literal notranslate"><span class="pre">GPU</span></code>, if available, is chosen over <code class="docutils literal notranslate"><span class="pre">OMP</span></code> or <code class="docutils literal notranslate"><span class="pre">CPU</span></code>; <code class="docutils literal notranslate"><span class="pre">OMP</span></code>, if available, is chosen over <code class="docutils literal notranslate"><span class="pre">CPU</span></code>. </p>
 <p><em>Values:</em></p>
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N10TaskTarget3GPUE">
@@ -754,7 +754,7 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N11StoreTarget6SYSMEME">
 <span id="_CPPv3N11StoreTarget6SYSMEME"></span><span id="_CPPv2N11StoreTarget6SYSMEME"></span><span class="target" id="group__mapping_1gga19ebca7fe83366de13de7a8d8d163cb0afd675e30b081b246462b344319d7a19a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">SYSMEM</span></span></span><a class="headerlink" href="#_CPPv4N11StoreTarget6SYSMEME" title="Link to this definition">#</a><br /></dt>
-<dd><p>Indicates the store be mapped to the system memory (host memory) </p>
+<dd><p>Indicates the store be mapped to the system memory (host memory). </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
@@ -1010,7 +1010,7 @@ SPDX-License-Identifier: Apache-2.0
 <dd><p>Returns the processor range for the preferred processor type in this descriptor. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A processor range ` </p>
+<dd class="field-odd"><p>A processor range </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1273,13 +1273,13 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7mapping11DimOrdering4Kind1CE">
 <span id="_CPPv3N6legate7mapping11DimOrdering4Kind1CE"></span><span id="_CPPv2N6legate7mapping11DimOrdering4Kind1CE"></span><span class="target" id="classlegate_1_1mapping_1_1DimOrdering_1a17e3c74af9bcd141c2a9dd208bac27c3a0d61f8370cad1d412f80b84d143e1257"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">C</span></span></span><br /></dt>
-<dd><p>Indicates the instance has C layout (i.e., the last dimension is the leading dimension in the instance) </p>
+<dd><p>Indicates the instance has C layout (i.e., the last dimension is the leading dimension in the instance). </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7mapping11DimOrdering4Kind7FORTRANE">
 <span id="_CPPv3N6legate7mapping11DimOrdering4Kind7FORTRANE"></span><span id="_CPPv2N6legate7mapping11DimOrdering4Kind7FORTRANE"></span><span class="target" id="classlegate_1_1mapping_1_1DimOrdering_1a17e3c74af9bcd141c2a9dd208bac27c3a36b29acfc7b63ef39d78dd854034ebc5"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FORTRAN</span></span></span><br /></dt>
-<dd><p>Indicates the instance has Fortran layout (i.e., the first dimension is the leading dimension in the instance) </p>
+<dd><p>Indicates the instance has Fortran layout (i.e., the first dimension is the leading dimension in the instance). </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
@@ -1325,7 +1325,7 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate7mapping11DimOrdering10dimensionsEv">
 <span id="_CPPv3NK6legate7mapping11DimOrdering10dimensionsEv"></span><span id="_CPPv2NK6legate7mapping11DimOrdering10dimensionsEv"></span><span id="legate::mapping::DimOrdering::dimensionsC"></span><span class="target" id="classlegate_1_1mapping_1_1DimOrdering_1ac586e918feed2fbc0759febaf1461fef"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dimensions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><br /></dt>
-<dd><p>Dimension list. Used only when the <code class="docutils literal notranslate"><span class="pre">kind</span></code> is <code class="docutils literal notranslate"><span class="pre">CUSTOM</span></code>. </p>
+<dd><p>Dimension list. Used only when the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1DimOrdering_1af3a20559c04edaf5a55538ec991a7128"><span class="std std-ref"><span class="pre">kind</span></span></a></code> is <code class="docutils literal notranslate"><span class="pre">CUSTOM</span></code>. </p>
 </dd></dl>
 
 </div>
@@ -1430,10 +1430,10 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NR6legate7mapping21InstanceMappingPolicy10with_exactEb">
 <span id="_CPPv3NR6legate7mapping21InstanceMappingPolicy10with_exactEb"></span><span id="_CPPv2NR6legate7mapping21InstanceMappingPolicy10with_exactEb"></span><span id="legate::mapping::InstanceMappingPolicy::with_exact__bR"></span><span class="target" id="classlegate_1_1mapping_1_1InstanceMappingPolicy_1a5d2f0a36bcb421b455e4dbf475d8f766"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1mapping_1_1InstanceMappingPolicy.html#_CPPv4N6legate7mapping21InstanceMappingPolicyE" title="legate::mapping::InstanceMappingPolicy"><span class="n"><span class="pre">InstanceMappingPolicy</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_exact</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">exact</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><br /></dt>
-<dd><p>Changes the value of <code class="docutils literal notranslate"><span class="pre">exact</span></code></p>
+<dd><p>Changes the value of <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a6a82a59885c85bc0c874889bf6373f60"><span class="std std-ref"><span class="pre">exact</span></span></a></code>. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>exact</strong> – A new value for the <code class="docutils literal notranslate"><span class="pre">exact</span></code> field</p>
+<dd class="field-odd"><p><strong>exact</strong> – A new value for the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a6a82a59885c85bc0c874889bf6373f60"><span class="std std-ref"><span class="pre">exact</span></span></a></code> field</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>This instance mapping policy </p>
@@ -1444,10 +1444,10 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NR6legate7mapping21InstanceMappingPolicy14with_redundantEb">
 <span id="_CPPv3NR6legate7mapping21InstanceMappingPolicy14with_redundantEb"></span><span id="_CPPv2NR6legate7mapping21InstanceMappingPolicy14with_redundantEb"></span><span id="legate::mapping::InstanceMappingPolicy::with_redundant__bR"></span><span class="target" id="classlegate_1_1mapping_1_1InstanceMappingPolicy_1a89bee4129dbb3d3355d27395f1448e08"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="../class/classlegate_1_1mapping_1_1InstanceMappingPolicy.html#_CPPv4N6legate7mapping21InstanceMappingPolicyE" title="legate::mapping::InstanceMappingPolicy"><span class="n"><span class="pre">InstanceMappingPolicy</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_redundant</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">redundant</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><br /></dt>
-<dd><p>Changes the value of <code class="docutils literal notranslate"><span class="pre">redundant</span></code></p>
+<dd><p>Changes the value of <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a180d2a61d6decd0b995c4cb2199c7da7"><span class="std std-ref"><span class="pre">redundant</span></span></a></code>. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>redundant</strong> – A new value for the <code class="docutils literal notranslate"><span class="pre">redundant</span></code> field</p>
+<dd class="field-odd"><p><strong>redundant</strong> – A new value for the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a180d2a61d6decd0b995c4cb2199c7da7"><span class="std std-ref"><span class="pre">redundant</span></span></a></code> field</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>This instance mapping policy </p>
@@ -1491,10 +1491,10 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7mapping21InstanceMappingPolicy9set_exactEb">
 <span id="_CPPv3N6legate7mapping21InstanceMappingPolicy9set_exactEb"></span><span id="_CPPv2N6legate7mapping21InstanceMappingPolicy9set_exactEb"></span><span id="legate::mapping::InstanceMappingPolicy::set_exact__b"></span><span class="target" id="classlegate_1_1mapping_1_1InstanceMappingPolicy_1aa605756a42fed4f83677c6ce003cdccd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_exact</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">exact</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Changes the value of <code class="docutils literal notranslate"><span class="pre">exact</span></code></p>
+<dd><p>Changes the value of <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a6a82a59885c85bc0c874889bf6373f60"><span class="std std-ref"><span class="pre">exact</span></span></a></code>. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>exact</strong> – A new value for the <code class="docutils literal notranslate"><span class="pre">exact</span></code> field </p>
+<dd class="field-odd"><p><strong>exact</strong> – A new value for the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a6a82a59885c85bc0c874889bf6373f60"><span class="std std-ref"><span class="pre">exact</span></span></a></code> field </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1502,10 +1502,10 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7mapping21InstanceMappingPolicy13set_redundantEb">
 <span id="_CPPv3N6legate7mapping21InstanceMappingPolicy13set_redundantEb"></span><span id="_CPPv2N6legate7mapping21InstanceMappingPolicy13set_redundantEb"></span><span id="legate::mapping::InstanceMappingPolicy::set_redundant__b"></span><span class="target" id="classlegate_1_1mapping_1_1InstanceMappingPolicy_1a2793ebc3106bce92c6a6c61596f94d06"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_redundant</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">redundant</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Changes the value of <code class="docutils literal notranslate"><span class="pre">redundant</span></code></p>
+<dd><p>Changes the value of <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a180d2a61d6decd0b995c4cb2199c7da7"><span class="std std-ref"><span class="pre">redundant</span></span></a></code>. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>redundant</strong> – A new value for the <code class="docutils literal notranslate"><span class="pre">redundant</span></code> field </p>
+<dd class="field-odd"><p><strong>redundant</strong> – A new value for the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1mapping_1_1InstanceMappingPolicy_1a180d2a61d6decd0b995c4cb2199c7da7"><span class="std std-ref"><span class="pre">redundant</span></span></a></code> field </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1808,7 +1808,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><br /></dt>
 <dd><p>Returns an upper bound for the amount of memory (in bytes), of a particular memory type, allocated by a task via Legate allocators. </p>
-<p>All buffers created by <code class="docutils literal notranslate"><span class="pre">create_buffer</span></code> or <code class="docutils literal notranslate"><span class="pre">create_output_buffer</span></code> calls are drawn from this allocation pool, and their aggregate size cannot exceed the upper bound returned from this call (the program will crash otherwise). Any out-of-band memory allocations (e.g., those created by <code class="docutils literal notranslate"><span class="pre">malloc</span></code> or <code class="docutils literal notranslate"><span class="pre">cudaMalloc</span></code>) invisible to Legate are not subject to this pool bound.</p>
+<p>All buffers created by <code class="docutils literal notranslate"><a class="reference internal" href="group__data.html#group__data_1gad11ba71b6c0221f16f936ffd10eaa811"><span class="std std-ref"><span class="pre">create_buffer</span></span></a></code> or <code class="docutils literal notranslate"><span class="pre">create_output_buffer</span></code> calls are drawn from this allocation pool, and their aggregate size cannot exceed the upper bound returned from this call (the program will crash otherwise). Any out-of-band memory allocations (e.g., those created by <code class="docutils literal notranslate"><span class="pre">malloc</span></code> or <code class="docutils literal notranslate"><span class="pre">cudaMalloc</span></code>) invisible to Legate are not subject to this pool bound.</p>
 <p>This callback is invoked only for task variants that are registered with <code class="docutils literal notranslate"><span class="pre">has_allocations</span></code> being <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

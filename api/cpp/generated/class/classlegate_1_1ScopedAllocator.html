@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::ScopedAllocator &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>legate::ScopedAllocator &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -751,7 +751,7 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate15ScopedAllocator8allocateENSt6size_tE">
 <span id="_CPPv3N6legate15ScopedAllocator8allocateENSt6size_tE"></span><span id="_CPPv2N6legate15ScopedAllocator8allocateENSt6size_tE"></span><span id="legate::ScopedAllocator::allocate__std::s"></span><span class="target" id="classlegate_1_1ScopedAllocator_1a8af6843f6dccf71a9d0f719d7904b4cc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">allocate</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate15ScopedAllocator8allocateENSt6size_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Allocates a contiguous buffer of the given <code class="docutils literal notranslate"><span class="pre">Memory::Kind</span></code></p>
+<dd><p>Allocates a contiguous buffer of the given <code class="docutils literal notranslate"><span class="pre">Memory::Kind</span></code>. </p>
 <p>When the allocator runs out of memory, the runtime will fail with an error message. Otherwise, the function returns a valid pointer. If <code class="docutils literal notranslate"><span class="pre">bytes</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code>, returns <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>.</p>
 <p><div class="admonition seealso">
 <p class="admonition-title">See also</p>

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>runtime &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -1058,7 +1058,7 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate14ResourceConfig13max_dyn_tasksE">
 <span id="_CPPv3N6legate14ResourceConfig13max_dyn_tasksE"></span><span id="_CPPv2N6legate14ResourceConfig13max_dyn_tasksE"></span><span id="legate::ResourceConfig::max_dyn_tasks__std::int64_t"></span><span class="target" id="structlegate_1_1ResourceConfig_1a5ff4feb5fdf033fd3c3504014a343a1f"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">max_dyn_tasks</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate14ResourceConfig13max_dyn_tasksE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Maximum number of dynamic tasks that the library can register (cannot exceed max_tasks) </p>
+<dd><p>Maximum number of dynamic tasks that the library can register (cannot exceed max_tasks). </p>
 </dd></dl>
 
 <dl class="cpp var">
@@ -1776,7 +1776,7 @@ SPDX-License-Identifier: Apache-2.0
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime19issue_mapping_fenceEv">
 <span id="_CPPv3N6legate7Runtime19issue_mapping_fenceEv"></span><span id="_CPPv2N6legate7Runtime19issue_mapping_fenceEv"></span><span id="legate::Runtime::issue_mapping_fence"></span><span class="target" id="classlegate_1_1Runtime_1a6950b7bdf4e180bab582a4a6eeeb1787"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">issue_mapping_fence</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
 <dd><p>Issues a mapping fence. </p>
-<p>A mapping fence, when issued, blocks mapping of all downstream operations before those preceding the fence get mapped. An <code class="docutils literal notranslate"><span class="pre">issue_mapping_fence</span></code> call returns immediately after the request is submitted to the runtime, and the fence asynchronously goes through the runtime analysis pipeline just like any other Legate operations. The call also flushes the scheduling window for batched execution.</p>
+<p>A mapping fence, when issued, blocks mapping of all downstream operations before those preceding the fence get mapped. An <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Runtime_1a6950b7bdf4e180bab582a4a6eeeb1787"><span class="std std-ref"><span class="pre">issue_mapping_fence</span></span></a></code> call returns immediately after the request is submitted to the runtime, and the fence asynchronously goes through the runtime analysis pipeline just like any other Legate operations. The call also flushes the scheduling window for batched execution.</p>
 <p>Mapping fences only affect how the operations are mapped and do not change their execution order, so they are semantically no-op. Nevertheless, they are sometimes useful when the user wants to control how the resource is consumed by independent tasks. Consider a program with two independent tasks A and B, both of which discard their stores right after their execution. If the stores are too big to be allocated all at once, mapping A and B in parallel (which can happen because A and B are independent and thus nothing stops them from getting mapped concurrently) can lead to a failure. If a mapping fence exists between the two, the runtime serializes their mapping and can reclaim the memory space from stores that would be discarded after A’s execution to create allocations for B. </p>
 </dd></dl>
 
@@ -1890,7 +1890,7 @@ SPDX-License-Identifier: Apache-2.0
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail15StoreAnalyzableE">
-<span id="_CPPv3N6legate6detail15StoreAnalyzableE"></span><span id="_CPPv2N6legate6detail15StoreAnalyzableE"></span><span class="target" id="launcher__arg_8h_1a120c15a82637145c89ed28996f0d1a70"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">StoreAnalyzable</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">variant</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">RegionFieldArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">OutputRegionArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ReplicatedScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">WriteOnlyScalarStoreArg</span></span><span class="p"><span class="pre">&gt;</span></span><br /></dt>
+<span id="_CPPv3N6legate6detail15StoreAnalyzableE"></span><span id="_CPPv2N6legate6detail15StoreAnalyzableE"></span><span class="target" id="launcher__arg_8h_1a613e57a67daa689b34373c401f44fb73"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">StoreAnalyzable</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">variant</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">RegionFieldArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">OutputRegionArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ReplicatedScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">WriteOnlyScalarStoreArg</span></span><span class="p"><span class="pre">&gt;</span></span><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp type">
@@ -2032,6 +2032,11 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail11CoreShardID9LINEARIZEE">
 <span id="_CPPv3N6legate6detail11CoreShardID9LINEARIZEE"></span><span id="_CPPv2N6legate6detail11CoreShardID9LINEARIZEE"></span><span class="target" id="core__ids_8h_1a2657a5242f4bf74600c5451dfc46db54a0f41e8ad81adc40cf18bf96718f02261"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LINEARIZE</span></span></span><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail11CoreShardID11MAX_FUNCTORE">
+<span id="_CPPv3N6legate6detail11CoreShardID11MAX_FUNCTORE"></span><span id="_CPPv2N6legate6detail11CoreShardID11MAX_FUNCTORE"></span><span class="target" id="core__ids_8h_1a2657a5242f4bf74600c5451dfc46db54a7147c86de7eaf482efb7a3e386ac326d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MAX_FUNCTOR</span></span></span><br /></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -4492,7 +4497,7 @@ The enumerator is classed as a bidirectional iterator, so can be both incremente
 
 <span class="sig-paren">)</span><br /></dt>
 <dd><p>Split a string into substrings using a specified delimiter. </p>
-<p><code class="docutils literal notranslate"><span class="pre">sep</span></code> must not be <code class="docutils literal notranslate"><span class="pre">or</span></code>”`.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sep</span></code> must not be <code class="docutils literal notranslate"><span class="pre">'</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>StringType</strong> – <a class="reference internal" href="group__types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a> of string to store each split part (defaults to std::string).</p>
@@ -4973,6 +4978,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardIDE"><code class="docutils literal notranslate"><span class="pre">CoreShardID</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardID13TOPLEVEL_TASKE"><code class="docutils literal notranslate"><span class="pre">TOPLEVEL_TASK</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardID9LINEARIZEE"><code class="docutils literal notranslate"><span class="pre">LINEARIZE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardID11MAX_FUNCTORE"><code class="docutils literal notranslate"><span class="pre">MAX_FUNCTOR</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13CoreTransformE"><code class="docutils literal notranslate"><span class="pre">CoreTransform</span></code></a><ul class="nav section-nav flex-column">

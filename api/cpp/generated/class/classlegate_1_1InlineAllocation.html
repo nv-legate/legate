@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::InlineAllocation &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>legate::InlineAllocation &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -729,15 +729,15 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate16InlineAllocation7stridesE">
 <span id="_CPPv3N6legate16InlineAllocation7stridesE"></span><span id="_CPPv2N6legate16InlineAllocation7stridesE"></span><span id="legate::InlineAllocation::strides__std::vector:std::s:"></span><span class="target" id="classlegate_1_1InlineAllocation_1aca7a0abd9c797c57d99bbfd397c6e8f3"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">strides</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate16InlineAllocation7stridesE" title="Link to this definition">#</a><br /></dt>
-<dd><p>vector of byte-offsets into <code class="docutils literal notranslate"><span class="pre">ptr</span></code>. </p>
+<dd><p>vector of byte-offsets into <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1InlineAllocation_1a2fb9eb16494e98f894506fad498c11ff"><span class="std std-ref"><span class="pre">ptr</span></span></a></code>. </p>
 <p>The offsets are given in bytes, and represent the number of bytes needed to jump to the next array element in the corresponding dimension. For example:</p>
-<p>#. For an array whose entries are 4 bytes long, and whose shape is <code class="docutils literal notranslate"><span class="pre">(1,)</span></code>, <code class="docutils literal notranslate"><span class="pre">strides</span></code> would be <code class="docutils literal notranslate"><span class="pre">[4]</span></code> (entry <code class="docutils literal notranslate"><span class="pre">i</span></code> given by <code class="docutils literal notranslate"><span class="pre">4*i</span></code>). #. For an array whose entries are 8 bytes long, and whose shape is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,)</span></code>, <code class="docutils literal notranslate"><span class="pre">strides</span></code> would be <code class="docutils literal notranslate"><span class="pre">[16,</span> <span class="pre">8]</span></code> (entry <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> given by <code class="docutils literal notranslate"><span class="pre">16*i</span> <span class="pre">+</span> <span class="pre">8*j</span></code>). #. For an array whose entries are 8 bytes long, and whose shape is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">3)</span></code>, strides<code class="docutils literal notranslate"><span class="pre">would</span> <span class="pre">be</span></code>[48, 24, 8]<code class="docutils literal notranslate"><span class="pre">(entry</span></code>(i, j, k)<code class="docutils literal notranslate"><span class="pre">given</span> <span class="pre">by</span></code>48*i + 24*j + 8*k`). </p>
+<p>#. For an array whose entries are 4 bytes long, and whose shape is <code class="docutils literal notranslate"><span class="pre">(1,)</span></code>, <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1InlineAllocation_1aca7a0abd9c797c57d99bbfd397c6e8f3"><span class="std std-ref"><span class="pre">strides</span></span></a></code> would be <code class="docutils literal notranslate"><span class="pre">[4]</span></code> (entry <code class="docutils literal notranslate"><span class="pre">i</span></code> given by <code class="docutils literal notranslate"><span class="pre">4*i</span></code>). #. For an array whose entries are 8 bytes long, and whose shape is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,)</span></code>, <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1InlineAllocation_1aca7a0abd9c797c57d99bbfd397c6e8f3"><span class="std std-ref"><span class="pre">strides</span></span></a></code> would be <code class="docutils literal notranslate"><span class="pre">[16,</span> <span class="pre">8]</span></code> (entry <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> given by <code class="docutils literal notranslate"><span class="pre">16*i</span> <span class="pre">+</span> <span class="pre">8*j</span></code>). #. For an array whose entries are 8 bytes long, and whose shape is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">3)</span></code>, <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1InlineAllocation_1aca7a0abd9c797c57d99bbfd397c6e8f3"><span class="std std-ref"><span class="pre">strides</span></span></a></code> would be <code class="docutils literal notranslate"><span class="pre">[48,</span> <span class="pre">24,</span> <span class="pre">8]</span></code> (entry <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j,</span> <span class="pre">k)</span></code> given by <code class="docutils literal notranslate"><span class="pre">48*i</span> <span class="pre">+</span> <span class="pre">24*j</span> <span class="pre">+</span> <span class="pre">8*k</span></code>). </p>
 </dd></dl>
 
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate16InlineAllocation6targetE">
 <span id="_CPPv3N6legate16InlineAllocation6targetE"></span><span id="_CPPv2N6legate16InlineAllocation6targetE"></span><span id="legate::InlineAllocation::target__mapping::StoreTarget"></span><span class="target" id="classlegate_1_1InlineAllocation_1a1419feaaf2ea0ff1182ae9ea4bae0352"></span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">StoreTarget</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">target</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N6legate16InlineAllocation6targetE" title="Link to this definition">#</a><br /></dt>
-<dd><p>The type of memory that <code class="docutils literal notranslate"><span class="pre">ptr</span></code> resides in. </p>
+<dd><p>The type of memory that <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1InlineAllocation_1a2fb9eb16494e98f894506fad498c11ff"><span class="std std-ref"><span class="pre">ptr</span></span></a></code> resides in. </p>
 </dd></dl>
 
 </div>

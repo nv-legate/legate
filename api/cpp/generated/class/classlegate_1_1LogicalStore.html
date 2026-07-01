@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::LogicalStore &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>legate::LogicalStore &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -143,11 +143,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -261,11 +261,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -927,7 +927,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore7projectENSt7int32_tENSt7int64_tE">
 <span id="_CPPv3NK6legate12LogicalStore7projectENSt7int32_tENSt7int64_tE"></span><span id="_CPPv2NK6legate12LogicalStore7projectENSt7int32_tENSt7int64_tE"></span><span id="legate::LogicalStore::project__std::int32_t.std::int64_tC"></span><span class="target" id="classlegate_1_1LogicalStore_1afeb43f147765bf992058083bdfaf6a95"></span><a class="reference internal" href="#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">project</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore7projectENSt7int32_tENSt7int64_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Projects out a dimension of the store. </p>
-<p>Each dimension <span class="math notranslate nohighlight">\(i\)</span>, where <span class="math notranslate nohighlight">\(i\)</span> &gt; <code class="docutils literal notranslate"><span class="pre">dim</span></code>, is mapped to dimension <span class="math notranslate nohighlight">\(i-1\)</span> in a returned store. A returned store provides a view to the input store where the values are on hyperplane <span class="math notranslate nohighlight">\(x_\mathtt{dim} = \mathtt{index}\)</span>.</p>
+<p>Each dimension <span class="math notranslate nohighlight">\(i\)</span>, where <span class="math notranslate nohighlight">\(i\)</span> &gt; <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code>, is mapped to dimension <span class="math notranslate nohighlight">\(i-1\)</span> in a returned store. A returned store provides a view to the input store where the values are on hyperplane <span class="math notranslate nohighlight">\(x_\mathtt{dim} = \mathtt{index}\)</span>.</p>
 <p>For example, if a 2D store <code class="docutils literal notranslate"><span class="pre">A</span></code> contains <code class="docutils literal notranslate"><span class="pre">[[1,</span> <span class="pre">2],</span> <span class="pre">[3,</span> <span class="pre">4]]</span></code>, <code class="docutils literal notranslate"><span class="pre">A.project(0,</span> <span class="pre">1)</span></code> yields a store equivalent to <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">4]</span></code>, whereas <code class="docutils literal notranslate"><span class="pre">A.project(1,</span> <span class="pre">0)</span></code> yields <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3]</span></code>.</p>
 <p>The call can block if the store is unbound</p>
 <dl class="field-list simple">
@@ -938,7 +938,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not a valid dimension index or <code class="docutils literal notranslate"><span class="pre">index</span></code> is out of bounds of the dimension. </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code> is not a valid dimension index or <code class="docutils literal notranslate"><span class="pre">index</span></code> is out of bounds of the dimension. </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new store with one fewer dimension</p>
@@ -950,7 +950,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE">
 <span id="_CPPv3NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE"></span><span id="_CPPv2NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE"></span><span id="legate::LogicalStore::broadcast__std::int32_t.std::sC"></span><span class="target" id="classlegate_1_1LogicalStore_1ae96df6a2d7d86add72a4b9466360b277"></span><a class="reference internal" href="#_CPPv4N6legate12LogicalStoreE" title="legate::LogicalStore"><span class="n"><span class="pre">LogicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim_size</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore9broadcastENSt7int32_tENSt6size_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Broadcasts a unit-size dimension of the store. </p>
-<p>The output store is a view to the input store where the dimension <code class="docutils literal notranslate"><span class="pre">dim</span></code> is broadcasted to size <code class="docutils literal notranslate"><span class="pre">dim_size</span></code>.</p>
+<p>The output store is a view to the input store where the dimension <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code> is broadcasted to size <code class="docutils literal notranslate"><span class="pre">dim_size</span></code>.</p>
 <p>For example, For a 2D store <code class="docutils literal notranslate"><span class="pre">A</span></code></p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[[1, 2, 3]]
 </pre></div>
@@ -972,8 +972,8 @@ The size and alignment of the new type must match that of the existing type.</p>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not a valid dimension index. </p></li>
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the size of dimension <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not 1. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code> is not a valid dimension index. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the size of dimension <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code> is not 1. </p></li>
 </ul>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1022,7 +1022,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is not a valid dimension name </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code> is not a valid dimension name </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new store that corresponds to the sliced section</p>
@@ -1081,7 +1081,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore11delinearizeENSt7int32_tENSt6vectorINSt8uint64_tEEE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Delinearizes a dimension into multiple dimensions. </p>
-<p>Each dimension <span class="math notranslate nohighlight">\(i\)</span> of the store, where <span class="math notranslate nohighlight">\(i &gt;\)</span> <code class="docutils literal notranslate"><span class="pre">dim</span></code>, will be mapped to dimension <span class="math notranslate nohighlight">\(i+N\)</span> of the resulting store, where <span class="math notranslate nohighlight">\(N\)</span> is the length of <code class="docutils literal notranslate"><span class="pre">sizes</span></code>. A delinearization that does not preserve the size of the store is invalid.</p>
+<p>Each dimension <span class="math notranslate nohighlight">\(i\)</span> of the store, where <span class="math notranslate nohighlight">\(i &gt;\)</span> <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code>, will be mapped to dimension <span class="math notranslate nohighlight">\(i+N\)</span> of the resulting store, where <span class="math notranslate nohighlight">\(N\)</span> is the length of <code class="docutils literal notranslate"><span class="pre">sizes</span></code>. A delinearization that does not preserve the size of the store is invalid.</p>
 <p>For example, consider a 2D store <code class="docutils literal notranslate"><span class="pre">A</span></code></p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[[1, 2, 3, 4],
  [5, 6, 7, 8]]
@@ -1105,7 +1105,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the store or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimension </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1abdfc1f87572f7dba457c34eaa380d145"><span class="std std-ref"><span class="pre">dim</span></span></a></code> is invalid for the store or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimension </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new store with the chosen dimension delinearized</p>
@@ -1190,7 +1190,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore25get_cached_physical_storeEv">
 <span id="_CPPv3NK6legate12LogicalStore25get_cached_physical_storeEv"></span><span id="_CPPv2NK6legate12LogicalStore25get_cached_physical_storeEv"></span><span id="legate::LogicalStore::get_cached_physical_storeC"></span><span class="target" id="classlegate_1_1LogicalStore_1a7ee07d10d405c97113f68c2be02b09dd"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="classlegate_1_1PhysicalStore.html#_CPPv4N6legate13PhysicalStoreE" title="legate::PhysicalStore"><span class="n"><span class="pre">PhysicalStore</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_cached_physical_store</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore25get_cached_physical_storeEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Gets the currently mapped <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for this <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code></p>
+<dd><p>Gets the currently mapped <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for this <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code>. </p>
 <p>Returns the physical store if this logical store has already been mapped to physical memory via a previous call to <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore_1a65a19d72698f2e1c1d99f0f54620d7dd"><span class="std std-ref"><span class="pre">get_physical_store()</span></span></a></code>. This method does not trigger any new mapping operations and does not block.</p>
 <p>This is useful for checking if a store has an existing physical allocation without forcing a new inline mapping operation.</p>
 <dl class="field-list simple">
@@ -1209,7 +1209,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 </dl>
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Creates a <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for this <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code></p>
+<dd><p>Creates a <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for this <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code>. </p>
 <p>This call blocks the client’s control flow and fetches the data for the whole store to the current node.</p>
 <p>When the target is <code class="docutils literal notranslate"><span class="pre">StoreTarget::FBMEM</span></code>, the data will be consolidated in the framebuffer of the first GPU available in the scope.</p>
 <p>If no <code class="docutils literal notranslate"><span class="pre">target</span></code> is given, the runtime uses <code class="docutils literal notranslate"><span class="pre">StoreTarget::SOCKETMEM</span></code> if it exists and <code class="docutils literal notranslate"><span class="pre">StoreTarget::SYSMEM</span></code> otherwise.</p>

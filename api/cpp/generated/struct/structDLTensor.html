@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DLTensor &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>DLTensor &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -723,8 +723,8 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp var">
 <dt class="sig sig-object cpp" id="_CPPv4N8DLTensor4dataE">
 <span id="_CPPv3N8DLTensor4dataE"></span><span id="_CPPv2N8DLTensor4dataE"></span><span id="DLTensor::data__voidP"></span><span class="target" id="structDLTensor_1a6af4539ae2c74d60e8dbc4c6047ed805"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">data</span></span></span><a class="headerlink" href="#_CPPv4N8DLTensor4dataE" title="Link to this definition">#</a><br /></dt>
-<dd><p>The data pointer points to the allocated data. This will be CUDA device pointer or cl_mem handle in OpenCL. It may be opaque on some device types. This pointer is always aligned to 256 bytes as in CUDA. The <code class="docutils literal notranslate"><span class="pre">byte_offset</span></code> field should be used to point to the beginning of the data. </p>
-<p>Note that as of Nov 2021, multiple libraries (CuPy, PyTorch, TensorFlow, TVM, perhaps others) do not adhere to this 256 byte alignment requirement on CPU/CUDA/ROCm, and always use <code class="docutils literal notranslate"><span class="pre">byte_offset=0</span></code>. This must be fixed (after which this note will be updated); at the moment it is recommended to not rely on the data pointer being correctly aligned.</p>
+<dd><p>The data pointer points to the allocated data. This will be CUDA device pointer or cl_mem handle in OpenCL. It may be opaque on some device types. This pointer is always aligned to 256 bytes as in CUDA. The <code class="docutils literal notranslate"><a class="reference internal" href="#structDLTensor_1a647dfbb2a3b976c4e9d1e17740dca568"><span class="std std-ref"><span class="pre">byte_offset</span></span></a></code> field should be used to point to the beginning of the data. </p>
+<p>Note that as of Nov 2021, multiple libraries (CuPy, PyTorch, TensorFlow, TVM, perhaps others) do not adhere to this 256 byte alignment requirement on CPU/CUDA/ROCm, and always use <code class="docutils literal notranslate"><a class="reference internal" href="#structDLTensor_1a647dfbb2a3b976c4e9d1e17740dca568"><span class="std std-ref"><span class="pre">byte_offset</span></span></a><span class="pre">=0</span></code>. This must be fixed (after which this note will be updated); at the moment it is recommended to not rely on the data pointer being correctly aligned.</p>
 <p>For given <a class="reference internal" href="#structDLTensor"><span class="std std-ref">DLTensor</span></a>, the size of memory required to store the contents of data is calculated as follows:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="nf">GetDataSize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DLTensor</span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>

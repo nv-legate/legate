@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>partitioning &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>partitioning &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -143,11 +143,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -261,11 +261,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -963,7 +963,7 @@ SPDX-License-Identifier: Apache-2.0
 <span class="k">auto</span><span class="w"> </span><span class="n">cn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">broadcast</span><span class="p">(</span><span class="n">vn</span><span class="p">,</span><span class="w"> </span><span class="p">{...});</span>
 </pre></div>
 </div>
-<p>See <code class="docutils literal notranslate"><span class="pre">broadcast(</span><a class="reference internal" href="#classlegate_1_1Variable"><span class="std std-ref"><span class="pre">Variable</span></span></a><span class="pre">,</span> <span class="pre">Span&lt;const</span> <span class="pre">std::uint32_t&gt;)</span></code> for further discussion on the semantics of broadcast constraints with axes.</p>
+<p>See <code class="docutils literal notranslate"><a class="reference internal" href="#group__partitioning_1gaeca3a6f726a461867dfd6f4caefb5994"><span class="std std-ref"><span class="pre">broadcast</span></span></a><span class="pre">(</span><a class="reference internal" href="#classlegate_1_1Variable"><span class="std std-ref"><span class="pre">Variable</span></span></a><span class="pre">,</span> <span class="pre">Span&lt;const</span> <span class="pre">std::uint32_t&gt;)</span></code> for further discussion on the semantics of broadcast constraints with axes.</p>
 <p><div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <p><a class="reference internal" href="#group__partitioning_1gad5903cd200a9e0a0644d4f937c02e97c"><span class="std std-ref">broadcast(Variable, Span&lt;const std::uint32_t&gt;)</span></a></p>
@@ -1154,7 +1154,7 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <p>For example, this may be used in compacting a <code class="docutils literal notranslate"><span class="pre">5x56</span></code> array of <code class="docutils literal notranslate"><span class="pre">bool</span></code>s to a <code class="docutils literal notranslate"><span class="pre">5x7</span></code> array of bytes, treated as a bitfield. In this case <code class="docutils literal notranslate"><span class="pre">var_smaller</span></code> would be the byte array, <code class="docutils literal notranslate"><span class="pre">var_bigger</span></code> would be the array of <code class="docutils literal notranslate"><span class="pre">bool</span></code>s, and <code class="docutils literal notranslate"><span class="pre">factors</span></code> would be <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">8]</span></code> (a <code class="docutils literal notranslate"><span class="pre">2x3</span></code> tile on the byte array corresponds to a <code class="docutils literal notranslate"><span class="pre">2x24</span></code> tile on the bool array.</p>
 <p>Formally: if two stores <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are constrained by a scaling constraint</p>
 <p><code class="docutils literal notranslate"><span class="pre">legate::scale(S,</span> <span class="pre">pA,</span> <span class="pre">pB)</span></code></p>
-<p>where <code class="docutils literal notranslate"><span class="pre">pA</span></code> and <code class="docutils literal notranslate"><span class="pre">pB</span></code> are partition symbols for <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>, respectively, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> will be partitioned such that each pair of sub-stores <code class="docutils literal notranslate"><span class="pre">Ak</span></code> and <code class="docutils literal notranslate"><span class="pre">Bk</span></code> satisfy the following property:</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">pA</span></code> and <code class="docutils literal notranslate"><span class="pre">pB</span> </code> are partition symbols for <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>, respectively, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> will be partitioned such that each pair of sub-stores <code class="docutils literal notranslate"><span class="pre">Ak</span></code> and <code class="docutils literal notranslate"><span class="pre">Bk</span></code> satisfy the following property:</p>
 <p><span class="math notranslate nohighlight">\(\mathtt{S} \cdot \mathit{dom}(\mathtt{Ak}) \cap \mathit{dom}(\mathtt{B}) \subseteq \)</span> <span class="math notranslate nohighlight">\(\mathit{dom}(\mathtt{Bk})\)</span></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1220,7 +1220,7 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <p>For example, if <code class="docutils literal notranslate"><span class="pre">var_source</span></code> and <code class="docutils literal notranslate"><span class="pre">var_bloat</span></code> correspond to 10-element vectors, <code class="docutils literal notranslate"><span class="pre">var_source</span></code> is split into 2 tiles, <code class="docutils literal notranslate"><span class="pre">0-4</span></code> and <code class="docutils literal notranslate"><span class="pre">5-9</span></code>, <code class="docutils literal notranslate"><span class="pre">low_offsets</span> <span class="pre">==</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">high_offsets</span> <span class="pre">==</span> <span class="pre">2</span></code>, then <code class="docutils literal notranslate"><span class="pre">var_bloat</span></code> will be split into 2 tiles, <code class="docutils literal notranslate"><span class="pre">0-6</span></code> and <code class="docutils literal notranslate"><span class="pre">4-9</span></code>.</p>
 <p>Formally, if two stores <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are constrained by a bloating constraint</p>
 <p><code class="docutils literal notranslate"><span class="pre">legate::bloat(pA,</span> <span class="pre">pB,</span> <span class="pre">L,</span> <span class="pre">H)</span></code></p>
-<p>where <code class="docutils literal notranslate"><span class="pre">pA</span></code> and <code class="docutils literal notranslate"><span class="pre">pB</span></code> are partition symbols for <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>, respectively, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> will be partitioned such that each pair of sub-stores <code class="docutils literal notranslate"><span class="pre">Ak</span></code> and <code class="docutils literal notranslate"><span class="pre">Bk</span></code> satisfy the following property:</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">pA</span></code> and <code class="docutils literal notranslate"><span class="pre">pB</span> </code> are partition symbols for <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>, respectively, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> will be partitioned such that each pair of sub-stores <code class="docutils literal notranslate"><span class="pre">Ak</span></code> and <code class="docutils literal notranslate"><span class="pre">Bk</span></code> satisfy the following property:</p>
 <p><span class="math notranslate nohighlight">\( \forall p \in \mathit{dom}(\mathtt{Ak}). \forall \delta \in [-\mathtt{L}, \mathtt{H}]. \)</span> <span class="math notranslate nohighlight">\( p + \delta \in \mathit{dom}(\mathtt{Bk}) \lor p + \delta \not \in \mathit{dom}(\mathtt{B})\)</span></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1436,7 +1436,7 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
 <dl class="cpp type">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail15StoreAnalyzableE">
-<span id="_CPPv3N6legate6detail15StoreAnalyzableE"></span><span id="_CPPv2N6legate6detail15StoreAnalyzableE"></span><span class="target" id="launcher__arg_8h_1a120c15a82637145c89ed28996f0d1a70"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">StoreAnalyzable</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">variant</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">RegionFieldArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">OutputRegionArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ReplicatedScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">WriteOnlyScalarStoreArg</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6legate6detail15StoreAnalyzableE" title="Link to this definition">#</a><br /></dt>
+<span id="_CPPv3N6legate6detail15StoreAnalyzableE"></span><span id="_CPPv2N6legate6detail15StoreAnalyzableE"></span><span class="target" id="launcher__arg_8h_1a613e57a67daa689b34373c401f44fb73"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">StoreAnalyzable</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">variant</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">RegionFieldArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">OutputRegionArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">ReplicatedScalarStoreArg</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">WriteOnlyScalarStoreArg</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6legate6detail15StoreAnalyzableE" title="Link to this definition">#</a><br /></dt>
 <dd></dd></dl>
 
 <dl class="cpp type">
@@ -1578,6 +1578,11 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <dl class="cpp enumerator">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail11CoreShardID9LINEARIZEE">
 <span id="_CPPv3N6legate6detail11CoreShardID9LINEARIZEE"></span><span id="_CPPv2N6legate6detail11CoreShardID9LINEARIZEE"></span><span class="target" id="core__ids_8h_1a2657a5242f4bf74600c5451dfc46db54a0f41e8ad81adc40cf18bf96718f02261"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LINEARIZE</span></span></span><a class="headerlink" href="#_CPPv4N6legate6detail11CoreShardID9LINEARIZEE" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6detail11CoreShardID11MAX_FUNCTORE">
+<span id="_CPPv3N6legate6detail11CoreShardID11MAX_FUNCTORE"></span><span id="_CPPv2N6legate6detail11CoreShardID11MAX_FUNCTORE"></span><span class="target" id="core__ids_8h_1a2657a5242f4bf74600c5451dfc46db54a7147c86de7eaf482efb7a3e386ac326d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MAX_FUNCTOR</span></span></span><a class="headerlink" href="#_CPPv4N6legate6detail11CoreShardID11MAX_FUNCTORE" title="Link to this definition">#</a><br /></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -4038,7 +4043,7 @@ The enumerator is classed as a bidirectional iterator, so can be both incremente
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6legate6detail12string_splitENSt6vectorI10StringTypeEENSt11string_viewEc" title="Link to this definition">#</a><br /></dt>
 <dd><p>Split a string into substrings using a specified delimiter. </p>
-<p><code class="docutils literal notranslate"><span class="pre">sep</span></code> must not be <code class="docutils literal notranslate"><span class="pre">or</span></code>”`.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sep</span></code> must not be <code class="docutils literal notranslate"><span class="pre">'</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>StringType</strong> – <a class="reference internal" href="group__types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a> of string to store each split part (defaults to std::string).</p>
@@ -4502,6 +4507,7 @@ The adaptor returned by this routine implements a “zip equal” zip operation.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardIDE"><code class="docutils literal notranslate"><span class="pre">CoreShardID</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardID13TOPLEVEL_TASKE"><code class="docutils literal notranslate"><span class="pre">TOPLEVEL_TASK</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardID9LINEARIZEE"><code class="docutils literal notranslate"><span class="pre">LINEARIZE</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail11CoreShardID11MAX_FUNCTORE"><code class="docutils literal notranslate"><span class="pre">MAX_FUNCTOR</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6detail13CoreTransformE"><code class="docutils literal notranslate"><span class="pre">CoreTransform</span></code></a><ul class="nav section-nav flex-column">

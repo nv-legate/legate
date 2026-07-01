@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::PhysicalStore &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>legate::PhysicalStore &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -729,7 +729,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore18span_read_accessorE11mdspan_typeIK1T3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns a read-only mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><span class="pre">span_read_accessor&lt;T,</span> <span class="pre">DIM&gt;(shape&lt;DIM&gt;())</span></code>. </p>
+<dd><p>Returns a read-only mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1ac261dc46090b06d105406cbde0f67a8b"><span class="std std-ref"><span class="pre">span_read_accessor</span></span></a><span class="pre">&lt;T,</span> <span class="pre">DIM&gt;(</span><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1a4010bec43c6475267f42986bab00afb1"><span class="std std-ref"><span class="pre">shape</span></span></a><span class="pre">&lt;DIM&gt;())</span></code>. </p>
 <p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
@@ -762,7 +762,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE_bEN6legate13PhysicalStore19span_write_accessorE11mdspan_typeI1T3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns a write-only mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><span class="pre">span_write_accessor&lt;T,</span> <span class="pre">DIM&gt;(shape&lt;DIM&gt;())</span></code>. </p>
+<dd><p>Returns a write-only mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1ad3f8cf23c5c9464f1c992d69437ce950"><span class="std std-ref"><span class="pre">span_write_accessor</span></span></a><span class="pre">&lt;T,</span> <span class="pre">DIM&gt;(</span><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1a4010bec43c6475267f42986bab00afb1"><span class="std std-ref"><span class="pre">shape</span></span></a><span class="pre">&lt;DIM&gt;())</span></code>. </p>
 <p>
 The user may read from a write-only accessor, but must write to the read-from location first, otherwise the returned values are undefined:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">acc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">span_write_accessor</span><span class="o">&lt;</span><span class="kt">float</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="p">();</span>
@@ -804,7 +804,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE_bEN6legate13PhysicalStore24span_read_write_accessorE11mdspan_typeI1T3DIMENSt6size_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns a read-write mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><span class="pre">span_read_write_accessor&lt;T,</span> <span class="pre">DIM&gt;(shape&lt;DIM&gt;())</span></code>. </p>
+<dd><p>Returns a read-write mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1a585787103a7fd296fe2f8ebf7a97f431"><span class="std std-ref"><span class="pre">span_read_write_accessor</span></span></a><span class="pre">&lt;T,</span> <span class="pre">DIM&gt;(</span><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1a4010bec43c6475267f42986bab00afb1"><span class="std std-ref"><span class="pre">shape</span></span></a><span class="pre">&lt;DIM&gt;())</span></code>. </p>
 <p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
@@ -837,7 +837,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_b_NSt7int32_tE_bEN6legate13PhysicalStore20span_reduce_accessorE11mdspan_typeIN5Redop3LHSE3DIMN6detail17ReductionAccessorI5Redop9EXCLUSIVEEEENSt6size_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns a reduction mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><span class="pre">span_reduce_accessor&lt;Redop,</span> <span class="pre">EXCLUSIVE,</span> <span class="pre">DIM&gt;(shape&lt;DIM&gt;())</span></code>. </p>
+<dd><p>Returns a reduction mdspan to the store over its entire domain. Equivalent to <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1a167e806fde491c9946c101b2061ce439"><span class="std std-ref"><span class="pre">span_reduce_accessor</span></span></a><span class="pre">&lt;Redop,</span> <span class="pre">EXCLUSIVE,</span> <span class="pre">DIM&gt;(</span><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1a4010bec43c6475267f42986bab00afb1"><span class="std std-ref"><span class="pre">shape</span></span></a><span class="pre">&lt;DIM&gt;())</span></code>. </p>
 <p><code class="docutils literal notranslate"><span class="pre">elem_size</span></code> should not normally need to be passed. It is, however, necessary for type-punning when the size of the stored type and viewed type differ. For example, a store might refer to binary data where each element is of size 10, but we wish to view it as an mdspan of <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>s (which would have size = 1). In this case:</p>
 <p>#. Pass the viewed type (e.g. <code class="docutils literal notranslate"><span class="pre">std::byte</span></code>) as the template parameter <code class="docutils literal notranslate"><span class="pre">T</span></code>. #. Pass <code class="docutils literal notranslate"><span class="pre">VALIDATE_TYPE</span> <span class="pre">=</span> <span class="pre">false</span></code> (to avoid warnings about type mismatch). #. Pass <code class="docutils literal notranslate"><a class="reference internal" href="../group/group__data.html#classlegate_1_1PhysicalStore_1abfb6b2ecd92005a113fcf3c57a51a7c3"><span class="std std-ref"><span class="pre">type()</span></span></a><span class="pre">.size()</span></code> as <code class="docutils literal notranslate"><span class="pre">elem_size</span></code>.</p>
 <div class="admonition note">
@@ -1457,7 +1457,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore6domainEv">
 <span id="_CPPv3NK6legate13PhysicalStore6domainEv"></span><span id="_CPPv2NK6legate13PhysicalStore6domainEv"></span><span id="legate::PhysicalStore::domainC"></span><span class="target" id="classlegate_1_1PhysicalStore_1ac800a0aa8b6b175322270fd34bb5cad5"></span><span class="n"><span class="pre">Domain</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">domain</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore6domainEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns the store’s <code class="docutils literal notranslate"><span class="pre">Domain</span></code></p>
+<dd><p>Returns the store’s <code class="docutils literal notranslate"><span class="pre">Domain</span></code>. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Store’s <code class="docutils literal notranslate"><span class="pre">Domain</span></code></p>
@@ -1468,7 +1468,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore18get_logical_regionEv">
 <span id="_CPPv3NK6legate13PhysicalStore18get_logical_regionEv"></span><span id="_CPPv2NK6legate13PhysicalStore18get_logical_regionEv"></span><span id="legate::PhysicalStore::get_logical_regionC"></span><span class="target" id="classlegate_1_1PhysicalStore_1a2232375d34e96373ae12b75debd66f35"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Legion</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">LogicalRegion</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_logical_region</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore18get_logical_regionEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns the LogicalRegion backing this store (if region-backed) </p>
+<dd><p>Returns the LogicalRegion backing this store (if region-backed). </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional LogicalRegion if this store is backed by a Legion region </p>
@@ -1479,7 +1479,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore12get_field_idEv">
 <span id="_CPPv3NK6legate13PhysicalStore12get_field_idEv"></span><span id="_CPPv2NK6legate13PhysicalStore12get_field_idEv"></span><span id="legate::PhysicalStore::get_field_idC"></span><span class="target" id="classlegate_1_1PhysicalStore_1a89a237476d433a6caf4948e0f8865b74"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Legion</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">FieldID</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_field_id</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore12get_field_idEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns the FieldID of this store (if region-backed) </p>
+<dd><p>Returns the FieldID of this store (if region-backed). </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional FieldID if this store is backed by a Legion region </p>
@@ -1585,7 +1585,7 @@ The user may read from a write-only accessor, but must write to the read-from lo
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore9is_futureEv">
 <span id="_CPPv3NK6legate13PhysicalStore9is_futureEv"></span><span id="_CPPv2NK6legate13PhysicalStore9is_futureEv"></span><span id="legate::PhysicalStore::is_futureC"></span><span class="target" id="classlegate_1_1PhysicalStore_1a4ffd6f1ba13c2220e9cd6a914533d4e8"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">is_future</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore9is_futureEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Indicates whether the store is backed by a future (i.e., a container for scalar value) </p>
+<dd><p>Indicates whether the store is backed by a future (i.e., a container for scalar value). </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if the store is backed by a future, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise </p>

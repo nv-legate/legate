@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>env &#8212; NVIDIA legate (26.07.00.dev45+g4f49b38b6)</title>
+    <title>env &#8212; NVIDIA legate (26.07.00.dev52+g8091704bc)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=163597e4"></script>
+    <script src="../../../../_static/documentation_options.js?v=0915bedb"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev45+g4f49b38b6) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev52+g8091704bc) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev45+g4f49b38b6)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev52+g8091704bc)</p>
   
 </a>
 
@@ -731,9 +731,9 @@ SPDX-License-Identifier: Apache-2.0
 <dd><p>Location of the Legate MPI wrapper shared library to load. Possible values: a string. </p>
 <p>This variable (if set) must either be the relative or absolute path to the shared library, or simply the name of the shared library. In either case, if set, the shared library must exist either at the specified location, or somewhere in the runtime linker path depending on the form of the path.</p>
 <p>If the path contains the platform-local “preferred” directory separator (‘/’ on Unixen, ‘' on Windows), the path is considered to be relative or absolute. Otherwise, the path is considered to be the name of the shared library. If the path is relative, it must be relative to the current working directory.</p>
-<p>For example, if <code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER=&quot;foo.so&quot;</span></code> then “foo.so” is considered to be the library name, and will be looked up using the runtime linker path. If it does not exist, or the linker fails to load the library, an error is raised.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER=&quot;../relative/path/to/foo.so&quot;</span></code> (on a Unix machine) then it is considered to be a relative path. The path is first resolved (relative to the current working directory), then checked for existence. If the shared library does not exist at the resolved location, an error is raised.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER=&quot;/full/path/to/foo.so&quot;</span></code> (on a Unix machine) then it is considered to be an absolute path. The path is checked for existence and if it does not exist, an error is raised.</p>
+<p>For example, if <code class="docutils literal notranslate"><a class="reference internal" href="#group__env_1gadd157b9b31fb4305162b46c1704f489c"><span class="std std-ref"><span class="pre">LEGATE_MPI_WRAPPER</span></span></a><span class="pre">=&quot;foo.so&quot;</span></code> then “foo.so” is considered to be the library name, and will be looked up using the runtime linker path. If it does not exist, or the linker fails to load the library, an error is raised.</p>
+<p>If <code class="docutils literal notranslate"><a class="reference internal" href="#group__env_1gadd157b9b31fb4305162b46c1704f489c"><span class="std std-ref"><span class="pre">LEGATE_MPI_WRAPPER</span></span></a><span class="pre">=&quot;../relative/path/to/foo.so&quot;</span></code> (on a Unix machine) then it is considered to be a relative path. The path is first resolved (relative to the current working directory), then checked for existence. If the shared library does not exist at the resolved location, an error is raised.</p>
+<p>If <code class="docutils literal notranslate"><a class="reference internal" href="#group__env_1gadd157b9b31fb4305162b46c1704f489c"><span class="std std-ref"><span class="pre">LEGATE_MPI_WRAPPER</span></span></a><span class="pre">=&quot;/full/path/to/foo.so&quot;</span></code> (on a Unix machine) then it is considered to be an absolute path. The path is checked for existence and if it does not exist, an error is raised.</p>
 <p>If the variable is not set, the default wrapper shipped with Legate will be used. Depending on the flavor and version of your locally installed MPI, however, this may result in runtime dynamic link errors. </p>
 </dd></dl>
 
