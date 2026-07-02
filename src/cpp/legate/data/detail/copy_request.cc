@@ -556,6 +556,8 @@ find_all_intersections(const Tiling* from,
   auto intersection_counts     = SmallVector<int>(tags::size_tag, device_count, {});
 
   for (Domain::DomainPointIterator it{intersection_colors}; it; ++it) {
+    // FIXME(wonchanl): compute_device_id can return multiple devices when the tiling has
+    // overlapping tiles
     const auto to_device_id = to->compute_device_id(it.p);
     const auto subdomain    = to->shard(from_tile_domain, it.p);
 
@@ -573,7 +575,8 @@ void CopyRequest::perform(VariantCode variant_code) const
 {
   LEGATE_CHECK(source_partition_->has_color_shape());
 
-  if (!target_partition_->has_color_shape()) {
+  if (!target_partition_->has_color_shape() ||
+      array_volume(target_partition_->color_shape()) == 1) {
     all_gather_(variant_code);
   } else {
     shuffle_(variant_code);

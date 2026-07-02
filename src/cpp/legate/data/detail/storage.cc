@@ -20,6 +20,7 @@
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/parallel_policy.h>
+#include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -203,6 +204,12 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // partition used in reduction, we can use the storage directly as the reduction buffer.
   if (store_has_identity && (*key_partition_)->subsumes(domain, partition)) {
     reduction_buffer = storage_data_;
+
+    // FIXME(wonchanl): We need a proper disjointedness check when the key_partition_ is a Tiling.
+    if (!(*key_partition_)->has_color_shape()) {
+      requests->register_reduction(ReductionRequest{
+        reduction_buffer, storage_data_, partition, *key_partition_, domain, type, op_kind});
+    }
   } else {
     // TODO(wonchanl): For now we create a full-size reduction buffer when the target is replicated.
     // If we have proper tile-wise reduction support, we should pass the `sub_domain` as the storage
@@ -213,10 +220,10 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
     // to a given cell don't perturb the final reduction result.
     fill_with_reduction_identity(
       reduction_buffer->data(), domain.get_volume(), target, type->code, op_kind);
-  }
 
-  requests->register_reduction(ReductionRequest{
-    reduction_buffer, storage_data_, partition, *key_partition_, domain, type, op_kind});
+    requests->register_reduction(ReductionRequest{
+      reduction_buffer, storage_data_, partition, *key_partition_, domain, type, op_kind});
+  }
 
   return {std::move(reduction_buffer), sub_domain};
 }
