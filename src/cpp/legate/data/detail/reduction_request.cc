@@ -287,7 +287,7 @@ void ReductionRequest::all_reduce_(VariantCode variant_code) const
     // TODO(wonchanl): Error checking
     ncclAllReduce(source_->data(),
                   target_->data(),
-                  source_->domain().get_volume(),
+                  std::max<>(source_->domain().get_volume(), std::size_t{1}),
                   to_nccl_data_type(type_->code),
                   to_nccl_red_op(op_kind_),
                   Runtime::get_runtime().get_gpu_comm(),
@@ -299,7 +299,7 @@ void ReductionRequest::all_reduce_(VariantCode variant_code) const
 
   collAllreduce(source_->data(),
                 target_->data(),
-                static_cast<int>(source_->domain().get_volume()),
+                std::max<>(static_cast<int>(source_->domain().get_volume()), 1),
                 to_coll_data_type_(type_->code),
                 op_kind_,
                 Runtime::get_runtime().get_cpu_comm());

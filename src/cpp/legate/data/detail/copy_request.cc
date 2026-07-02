@@ -575,8 +575,9 @@ void CopyRequest::perform(VariantCode variant_code) const
 {
   LEGATE_CHECK(source_partition_->has_color_shape());
 
-  if (!target_partition_->has_color_shape() ||
-      array_volume(target_partition_->color_shape()) == 1) {
+  if (source_partition_->is_equi_size(source_domain_) &&
+      (!target_partition_->has_color_shape() ||
+       (array_volume(target_partition_->color_shape()) == 1))) {
     all_gather_(variant_code);
   } else {
     shuffle_(variant_code);
@@ -585,6 +586,18 @@ void CopyRequest::perform(VariantCode variant_code) const
 
 void CopyRequest::all_gather_(VariantCode variant_code) const
 {
+  // TODO(wonchanl): Add an option to toggle this behavior
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    std::stringstream ss{};
+
+    ss << "ALL_GATHER(storage_id: " << storage_id_ << ")\n";
+    ss << "  from: " << source_partition_->to_string() << "\n";
+    ss << "    domain: " << source_domain_ << "\n";
+    ss << "  to: " << target_partition_->to_string() << "\n";
+    ss << "    domain: " << target_domain_ << "\n";
+    log_copy().debug() << std::move(ss).str();
+  }
+
   // TODO(wonchanl): The code below doesn't handle the case where there are smaller tiles
 
   // All-gathers the source into `dest` using the collective backing the given variant.

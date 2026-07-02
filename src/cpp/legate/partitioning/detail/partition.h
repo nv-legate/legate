@@ -88,6 +88,8 @@ class Partition {
    */
   [[nodiscard]] virtual Span<const std::uint64_t> color_shape() const = 0;
 
+  [[nodiscard]] virtual bool is_equi_size(const Domain& domain) const = 0;
+
   /**
    * @brief Returns the launch domain associated with this partition.
    *

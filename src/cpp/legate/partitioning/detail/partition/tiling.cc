@@ -129,6 +129,23 @@ InternalSharedPtr<Partition> Tiling::bloat(Span<const std::uint64_t> low_offsets
                        SmallVector<std::uint64_t, LEGATE_MAX_DIM>{this->tile_shape()});
 }
 
+bool Tiling::is_equi_size(const Domain& domain) const
+{
+  for (std::int32_t dim = 0; dim < domain.dim; ++dim) {
+    const auto offset   = offsets()[dim];
+    const auto tile_ext = tile_shape()[dim];
+    const auto lo_incl  = domain.rect_data[dim] + offset;
+    const auto hi_excl  = std::min<std::int64_t>(domain.rect_data[dim + domain.dim] + offset + 1,
+                                                 color_shape_dp()[dim] * tile_ext);
+
+    if ((hi_excl - lo_incl) % tile_ext != 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 Legion::Domain Tiling::launch_domain() const { return detail::to_domain(color_shape_); }
 
 std::string Tiling::to_string() const

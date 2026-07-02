@@ -72,6 +72,13 @@ bool array_all_of(F&& func, const T& arr, const Tn&... rest)
   });
 }
 
+template <typename T, typename V>
+bool array_equal_to(const T& arr, const V& to_match)
+{
+  return std::all_of(
+    arr.begin(), arr.end(), [&to_match](const auto& value) { return value == to_match; });
+}
+
 template <typename F, typename T, typename... Tn>
 bool array_any_of(F&& func, const T& arr, const Tn&... rest)
 {

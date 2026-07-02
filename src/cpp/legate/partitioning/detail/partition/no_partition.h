@@ -69,6 +69,8 @@ class NoPartition final : public Partition {
    */
   [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
 
+  [[nodiscard]] bool is_equi_size(const Domain& domain) const override;
+
   /**
    * @copydoc Partition::launch_domain()
    *

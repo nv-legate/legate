@@ -78,6 +78,9 @@ template <typename U, typename T>
 template <typename F, typename T, typename... Tn>
 [[nodiscard]] bool array_all_of(F&& func, const T& arr, const Tn&... rest);
 
+template <typename T>
+[[nodiscard]] bool array_all_equal_to(const T& arr, const T& to_match);
+
 /**
  * @brief Determine whether a predicate `func` is true for any combination of elements in the
  * arrays.

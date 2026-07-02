@@ -33,6 +33,8 @@ Span<const std::uint64_t> NoPartition::color_shape() const
   throw TracedException<std::invalid_argument>{"NoPartition doesn't support color_shape"};
 }
 
+bool NoPartition::is_equi_size(const Domain&) const { return true; }
+
 Legion::Domain NoPartition::launch_domain() const
 {
   throw TracedException<std::invalid_argument>{"NoPartition has no launch domain"};
