@@ -87,4 +87,9 @@ inline std::uint32_t Runtime::node_count() const { return local_machine().total_
 
 inline std::uint32_t Runtime::node_id() const { return local_machine().node_id; }
 
+inline bool Runtime::is_rank_per_gpu() const
+{
+  return local_machine().total_nodes == local_machine().total_gpu_count();
+}
+
 }  // namespace legate::detail

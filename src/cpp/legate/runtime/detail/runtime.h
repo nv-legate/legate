@@ -468,6 +468,7 @@ class Runtime {
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
   [[nodiscard]] std::uint32_t node_count() const;
   [[nodiscard]] std::uint32_t node_id() const;
+  [[nodiscard]] bool is_rank_per_gpu() const;
 
   [[nodiscard]] Legion::ProjectionID get_affine_projection(std::uint32_t src_ndim,
                                                            const proj::SymbolicPoint& point);

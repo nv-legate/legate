@@ -76,8 +76,11 @@ CUstream TaskContext::get_task_stream() const { return Runtime::get_runtime().ge
 
 void TaskContext::concurrent_task_barrier()
 {
-  Runtime::get_runtime().get_legion_runtime()->concurrent_task_barrier(
-    Legion::Runtime::get_context());
+  // check whether we run rank per GPU or rank per node
+  if (!Runtime::get_runtime().is_rank_per_gpu()) {
+    Runtime::get_runtime().get_legion_runtime()->concurrent_task_barrier(
+      Legion::Runtime::get_context());
+  }
 }
 
 }  // namespace legate::detail
