@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import gc
 import re
 import random
 from typing import TYPE_CHECKING, Any, ParamSpec
@@ -83,6 +84,15 @@ def auto_sync_runtime() -> Generator[None, None, None]:
 
 class CustomException(Exception):
     pass
+
+
+_GC_ENABLED_DURING_EXCEPTION_FORMATTING: list[bool] = []
+
+
+class GCTrackingException(Exception):
+    def __str__(self) -> str:
+        _GC_ENABLED_DURING_EXCEPTION_FORMATTING.append(gc.isenabled())
+        return super().__str__()
 
 
 class BaseTest:
@@ -334,6 +344,40 @@ class TestTask(BaseTest):
             lg.Scope(exception_mode=lg.ExceptionMode.DEFERRED),
         ):
             raises_exception()
+
+    @pytest.mark.parametrize("gc_enabled_at_entry", (True, False))
+    def test_exception_formatting_gc_state(
+        self, gc_enabled_at_entry: bool
+    ) -> None:
+        @lct.task(options=VariantOptions(may_throw_exception=True))
+        def raises_exception() -> None:
+            raise GCTrackingException
+
+        gc_was_enabled = gc.isenabled()
+
+        if gc_enabled_at_entry:
+            gc.enable()
+        else:
+            gc.disable()
+
+        _GC_ENABLED_DURING_EXCEPTION_FORMATTING.clear()
+
+        try:
+            with (
+                pytest.raises(GCTrackingException),
+                lg.Scope(exception_mode=lg.ExceptionMode.DEFERRED),
+            ):
+                raises_exception()
+
+            assert _GC_ENABLED_DURING_EXCEPTION_FORMATTING
+            assert not any(_GC_ENABLED_DURING_EXCEPTION_FORMATTING)
+            assert gc.isenabled() is gc_enabled_at_entry
+        finally:
+            if gc_was_enabled:
+                gc.enable()
+            else:
+                gc.disable()
+            _GC_ENABLED_DURING_EXCEPTION_FORMATTING.clear()
 
     @pytest.mark.parametrize(
         "ExnType",

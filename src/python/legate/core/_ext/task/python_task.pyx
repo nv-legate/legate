@@ -46,25 +46,7 @@ cdef void py_variant_inner(TaskContext ctx):
         f"registered for variant kind: {variant_kind}"  # pragma: no cover
     )
 
-    # Disable garbage collection while executing a python task, because some
-    # Legate objects perform Legion runtime calls in their destructor (e.g.
-    # LogicalStore can launch a Discard operation), which are not allowed in
-    # leaf tasks. See https://github.com/nv-legate/legate.internal/issues/2261.
-    #
-    # TODO(mpapadakis): We should make sure we never relinquish the GIL
-    # and get context-switched out to the main thread (e.g. by calling a
-    # runtime function). Otherwise that thread would be executing with
-    # garbage collection disabled
-    cdef bool gc_enabled_at_entry = gc.isenabled()
-
-    if gc_enabled_at_entry:
-        gc.disable()
-
-    try:
-        py_callback(ctx)
-    finally:
-        if gc_enabled_at_entry:
-            gc.enable()
+    py_callback(ctx)
 
 
 cdef void abort_process(object exception) noexcept:
@@ -124,33 +106,54 @@ cdef void py_variant_with_gil "py_variant_with_gil" (
     _TaskContext ctx,
     bool cache_hit
 ) noexcept:
-    cdef TaskContext py_ctx
+    cdef TaskContext py_ctx = None
+    cdef bool gc_enabled_at_entry = gc.isenabled()
 
-    # Need to do this in here (because it is marked as "with gil"), because
-    # Cython doesn't know we hold the GIL in legate_python_task_entry()
-    try:
-        global _TLS_CACHE_HIT_COUNTER
-
-        _TLS_CACHE_HIT_COUNTER += cache_hit
-    except Exception as e:  # pragma: no cover
-        abort_process(e)  # pragma: no cover
-
-    try:
-        py_ctx = TaskContext.from_handle(&ctx)
-    except Exception as e:  # pragma: no cover
-        # If we cannot even create the TaskContext, then the only thing to
-        # do is abort
-        abort_process(e)  # pragma: no cover
+    # Disable garbage collection across the complete Python task path,
+    # including exception handling and local context cleanup. Some Legate
+    # objects perform Legion runtime calls in their destructor (e.g.
+    # LogicalStore can launch a Discard operation), which are not allowed in
+    # leaf tasks. See https://github.com/nv-legate/legate.internal/issues/2261.
+    #
+    # TODO(mpapadakis): We should make sure we never relinquish the GIL
+    # and get context-switched out to the main thread (e.g. by calling a
+    # runtime function). Otherwise that thread would be executing with
+    # garbage collection disabled
+    if gc_enabled_at_entry:
+        gc.disable()
 
     try:
-        py_variant_inner(py_ctx)
-    except Exception as e:
-        # Cython does not know how to throw C++ exceptions, so we have to
-        # tell the context to throw them later
+        # Need to do this in here (because it is marked as "with gil"),
+        # because Cython doesn't know we hold the GIL in
+        # legate_python_task_entry()
         try:
-            py_ctx.set_exception(e)
-        except Exception as e2:  # pragma: no cover
-            abort_process(e2)  # pragma: no cover
+            global _TLS_CACHE_HIT_COUNTER
+
+            _TLS_CACHE_HIT_COUNTER += cache_hit
+        except Exception as e:  # pragma: no cover
+            abort_process(e)  # pragma: no cover
+
+        try:
+            py_ctx = TaskContext.from_handle(&ctx)
+        except Exception as e:  # pragma: no cover
+            # If we cannot even create the TaskContext, then the only thing to
+            # do is abort
+            abort_process(e)  # pragma: no cover
+
+        try:
+            py_variant_inner(py_ctx)
+        except Exception as e:
+            # Cython does not know how to throw C++ exceptions, so we have to
+            # tell the context to throw them later
+            try:
+                py_ctx.set_exception(e)
+            except Exception as e2:  # pragma: no cover
+                abort_process(e2)  # pragma: no cover
+    finally:
+        # Do not defer py_ctx cleanup to Cython's epilogue after gc.enable().
+        del py_ctx
+        if gc_enabled_at_entry:
+            gc.enable()
 
 
 cdef extern from * nogil:
