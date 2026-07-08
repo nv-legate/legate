@@ -165,23 +165,9 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
   return {LogicalStore{std::move(store)}, LogicalStorePartition{std::move(partition)}};
 }
 
-void Runtime::prefetch_bloated_instances(const LogicalStore& store,
-                                         Span<const std::uint64_t> low_offsets,
-                                         Span<const std::uint64_t> high_offsets,
-                                         bool initialize)
-{
-  impl_->prefetch_bloated_instances(
-    store.impl(),
-    detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{low_offsets},
-    detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{high_offsets},
-    initialize);
-}
-
 void Runtime::issue_mapping_fence() { impl_->issue_mapping_fence(); }
 
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }
-
-void Runtime::raise_pending_exception() { impl_->raise_pending_exception(); }
 
 std::uint32_t Runtime::node_count() const { return impl_->node_count(); }
 
@@ -228,13 +214,6 @@ std::optional<Runtime> the_public_runtime{};
     the_public_runtime.emplace(Runtime{detail::Runtime::get_runtime()});
   }
   return &*the_public_runtime;
-}
-
-void Runtime::start_profiling_range() { impl()->start_profiling_range(); }
-
-void Runtime::stop_profiling_range(std::string_view provenance)
-{
-  impl()->stop_profiling_range(provenance);
 }
 
 void start()

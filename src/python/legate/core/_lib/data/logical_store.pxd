@@ -43,7 +43,6 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         ) except+
         _PhysicalStore get_physical_store(std_optional[StoreTarget]) except+
         void detach() except+
-        void offload_to(StoreTarget) except+
         std_string to_string() except+
         bool equal_storage(const _LogicalStore&) except+
 
@@ -76,7 +75,6 @@ cdef class LogicalStore(Unconstructable):
     )
     cpdef PhysicalStore get_physical_store(self, target: object=*)
     cpdef void detach(self)
-    cpdef void offload_to(self, StoreTarget target_mem)
     cpdef bool equal_storage(self, LogicalStore other)
 
 

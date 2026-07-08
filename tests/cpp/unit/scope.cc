@@ -21,9 +21,6 @@ namespace {
 constexpr std::int32_t MAGIC_PRIORITY1 = 42;
 constexpr std::int32_t MAGIC_PRIORITY2 = 43;
 
-constexpr legate::ExceptionMode MODE1 = legate::ExceptionMode::DEFERRED;
-constexpr legate::ExceptionMode MODE2 = legate::ExceptionMode::IGNORED;
-
 constexpr std::string_view MAGIC_PROVENANCE1 = "42";
 constexpr std::string_view MAGIC_PROVENANCE2 = "43";
 
@@ -43,17 +40,6 @@ TEST_F(ScopeTest, BasicPriority)
     EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY1);
   }
   EXPECT_EQ(legate::Scope::priority(), old_priority);
-}
-
-TEST_F(ScopeTest, BasicExceptionMode)
-{
-  const auto old_exception_mode = legate::Scope::exception_mode();
-  {
-    const legate::Scope test_exception_mode{MODE1};
-
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
-  }
-  EXPECT_EQ(legate::Scope::exception_mode(), old_exception_mode);
 }
 
 TEST_F(ScopeTest, BasicProvenance)
@@ -96,23 +82,6 @@ TEST_F(ScopeTest, NestedPriority)
   EXPECT_EQ(legate::Scope::priority(), old_priority);
 }
 
-TEST_F(ScopeTest, NestedExceptionMode)
-{
-  const auto old_exception_mode = legate::Scope::exception_mode();
-  {
-    const legate::Scope test_exception_mode1{MODE1};
-
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
-    {
-      const legate::Scope test_exception_mode2{MODE2};
-
-      EXPECT_EQ(legate::Scope::exception_mode(), MODE2);
-    }
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
-  }
-  EXPECT_EQ(legate::Scope::exception_mode(), old_exception_mode);
-}
-
 TEST_F(ScopeTest, NestedProvenance)
 {
   const auto old_provenance = legate::Scope::provenance();
@@ -151,113 +120,95 @@ TEST_F(ScopeTest, NestedMachine)
 
 TEST_F(ScopeTest, BasicChain)
 {
-  const auto old_priority       = legate::Scope::priority();
-  const auto old_exception_mode = legate::Scope::exception_mode();
-  const auto old_provenance     = legate::Scope::provenance();
-  const auto old_machine        = legate::Scope::machine();
+  const auto old_priority   = legate::Scope::priority();
+  const auto old_provenance = legate::Scope::provenance();
+  const auto old_machine    = legate::Scope::machine();
   {
     const auto sliced   = remove_last_proc(legate::Scope::machine());
     const auto test_all = legate::Scope{}
                             .with_priority(MAGIC_PRIORITY1)
-                            .with_exception_mode(MODE1)
                             .with_provenance(std::string{MAGIC_PROVENANCE1})
                             .with_machine(sliced);
 
     EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY1);
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
     EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE1);
     EXPECT_EQ(legate::Scope::machine(), sliced);
   }
   EXPECT_EQ(legate::Scope::priority(), old_priority);
-  EXPECT_EQ(legate::Scope::exception_mode(), old_exception_mode);
   EXPECT_EQ(legate::Scope::provenance(), old_provenance);
   EXPECT_EQ(legate::Scope::machine(), old_machine);
 }
 
 TEST_F(ScopeTest, NestedChain)
 {
-  const auto old_priority       = legate::Scope::priority();
-  const auto old_exception_mode = legate::Scope::exception_mode();
-  const auto old_provenance     = legate::Scope::provenance();
-  const auto old_machine        = legate::Scope::machine();
+  const auto old_priority   = legate::Scope::priority();
+  const auto old_provenance = legate::Scope::provenance();
+  const auto old_machine    = legate::Scope::machine();
   {
     const auto sliced1   = remove_last_proc(legate::Scope::machine());
     const auto test_all1 = legate::Scope{}
                              .with_priority(MAGIC_PRIORITY1)
-                             .with_exception_mode(MODE1)
                              .with_provenance(std::string{MAGIC_PROVENANCE1})
                              .with_machine(sliced1);
 
     EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY1);
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
     EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE1);
     EXPECT_EQ(legate::Scope::machine(), sliced1);
     {
       const auto sliced2   = remove_last_proc(legate::Scope::machine());
       const auto test_all2 = legate::Scope{}
                                .with_priority(MAGIC_PRIORITY2)
-                               .with_exception_mode(MODE2)
                                .with_provenance(std::string{MAGIC_PROVENANCE2})
                                .with_machine(sliced2);
 
       EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY2);
-      EXPECT_EQ(legate::Scope::exception_mode(), MODE2);
       EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE2);
       EXPECT_EQ(legate::Scope::machine(), sliced2);
     }
 
     EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY1);
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
     EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE1);
     EXPECT_EQ(legate::Scope::machine(), sliced1);
   }
   EXPECT_EQ(legate::Scope::priority(), old_priority);
-  EXPECT_EQ(legate::Scope::exception_mode(), old_exception_mode);
   EXPECT_EQ(legate::Scope::provenance(), old_provenance);
   EXPECT_EQ(legate::Scope::machine(), old_machine);
 }
 
 TEST_F(ScopeTest, BasicSet)
 {
-  const auto old_priority       = legate::Scope::priority();
-  const auto old_exception_mode = legate::Scope::exception_mode();
-  const auto old_provenance     = legate::Scope::provenance();
-  const auto old_machine        = legate::Scope::machine();
+  const auto old_priority   = legate::Scope::priority();
+  const auto old_provenance = legate::Scope::provenance();
+  const auto old_machine    = legate::Scope::machine();
   {
     const auto sliced = remove_last_proc(legate::Scope::machine());
     auto test_all     = legate::Scope{};
 
     test_all.set_priority(MAGIC_PRIORITY1);
-    test_all.set_exception_mode(MODE1);
     test_all.set_provenance(std::string{MAGIC_PROVENANCE1});
     test_all.set_machine(sliced);
     EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY1);
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
     EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE1);
     EXPECT_EQ(legate::Scope::machine(), sliced);
   }
   EXPECT_EQ(legate::Scope::priority(), old_priority);
-  EXPECT_EQ(legate::Scope::exception_mode(), old_exception_mode);
   EXPECT_EQ(legate::Scope::provenance(), old_provenance);
   EXPECT_EQ(legate::Scope::machine(), old_machine);
 }
 
 TEST_F(ScopeTest, NestedSet)
 {
-  const auto old_priority       = legate::Scope::priority();
-  const auto old_exception_mode = legate::Scope::exception_mode();
-  const auto old_provenance     = legate::Scope::provenance();
-  const auto old_machine        = legate::Scope::machine();
+  const auto old_priority   = legate::Scope::priority();
+  const auto old_provenance = legate::Scope::provenance();
+  const auto old_machine    = legate::Scope::machine();
   {
     const auto sliced1 = remove_last_proc(legate::Scope::machine());
     auto test_all1     = legate::Scope{};
 
     test_all1.set_priority(MAGIC_PRIORITY1);
-    test_all1.set_exception_mode(MODE1);
     test_all1.set_provenance(std::string{MAGIC_PROVENANCE1});
     test_all1.set_machine(sliced1);
     EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY1);
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
     EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE1);
     EXPECT_EQ(legate::Scope::machine(), sliced1);
 
@@ -266,22 +217,18 @@ TEST_F(ScopeTest, NestedSet)
       auto test_all2     = legate::Scope{};
 
       test_all2.set_priority(MAGIC_PRIORITY2);
-      test_all2.set_exception_mode(MODE2);
       test_all2.set_provenance(std::string{MAGIC_PROVENANCE2});
       test_all2.set_machine(sliced2);
       EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY2);
-      EXPECT_EQ(legate::Scope::exception_mode(), MODE2);
       EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE2);
       EXPECT_EQ(legate::Scope::machine(), sliced2);
     }
 
     EXPECT_EQ(legate::Scope::priority(), MAGIC_PRIORITY1);
-    EXPECT_EQ(legate::Scope::exception_mode(), MODE1);
     EXPECT_EQ(legate::Scope::provenance(), MAGIC_PROVENANCE1);
     EXPECT_EQ(legate::Scope::machine(), sliced1);
   }
   EXPECT_EQ(legate::Scope::priority(), old_priority);
-  EXPECT_EQ(legate::Scope::exception_mode(), old_exception_mode);
   EXPECT_EQ(legate::Scope::provenance(), old_provenance);
   EXPECT_EQ(legate::Scope::machine(), old_machine);
 }
@@ -304,27 +251,6 @@ TEST_F(ScopeTest, SetPriorityOnInitializedScopeError)
 TEST_F(ScopeTest, ChainPriorityTwiceError)
 {
   EXPECT_THROW(static_cast<void>(legate::Scope{MAGIC_PRIORITY1}.with_priority(MAGIC_PRIORITY2)),
-               std::invalid_argument);
-}
-
-TEST_F(ScopeTest, SetExceptionModeTwiceOnDefaultScopeError)
-{
-  legate::Scope test_exception_mode{};
-
-  test_exception_mode.set_exception_mode(MODE1);
-  EXPECT_THROW(test_exception_mode.set_exception_mode(MODE2), std::invalid_argument);
-}
-
-TEST_F(ScopeTest, SetExceptionModeOnInitializedScopeError)
-{
-  legate::Scope test_exception_mode{MODE1};
-
-  EXPECT_THROW(test_exception_mode.set_exception_mode(MODE2), std::invalid_argument);
-}
-
-TEST_F(ScopeTest, ChainExceptionModeTwiceError)
-{
-  EXPECT_THROW(static_cast<void>(legate::Scope{MODE1}.with_exception_mode(MODE2)),
                std::invalid_argument);
 }
 

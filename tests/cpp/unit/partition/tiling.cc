@@ -36,7 +36,7 @@ class TilingTest : public DefaultFixture {
     auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
     auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
     auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
-    return legate::detail::create_tiling(tile_shape, color_shape, offsets);
+    return legate::make_internal_shared<legate::detail::Tiling>(tile_shape, color_shape, offsets);
   }
 
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_overlapped_tiling()
@@ -45,7 +45,8 @@ class TilingTest : public DefaultFixture {
     auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
     auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
     auto strides     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3};
-    return legate::detail::create_tiling(tile_shape, color_shape, offsets, strides);
+    return legate::make_internal_shared<legate::detail::Tiling>(
+      tile_shape, color_shape, offsets, strides);
   }
 
   legate::InternalSharedPtr<legate::detail::Tiling> tiling;

@@ -14,8 +14,6 @@ namespace legate::detail {
 
 inline std::int32_t Scope::priority() const { return priority_; }
 
-inline ExceptionMode Scope::exception_mode() const { return exception_mode_; }
-
 inline ZStringView Scope::provenance() const { return provenance_; }
 
 inline const InternalSharedPtr<Scope::Machine>& Scope::machine() const { return machine_; }
@@ -27,11 +25,6 @@ inline std::uint32_t Scope::scheduling_window_size() const { return scheduling_w
 inline std::int32_t Scope::exchange_priority(std::int32_t priority)
 {
   return std::exchange(priority_, priority);
-}
-
-inline ExceptionMode Scope::exchange_exception_mode(ExceptionMode exception_mode)
-{
-  return std::exchange(exception_mode_, exception_mode);
 }
 
 inline std::string Scope::exchange_provenance(std::string provenance)

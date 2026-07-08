@@ -152,7 +152,6 @@ set(
   integration/bloat_constraints.cc
   integration/broadcast_constraints.cc
   integration/core_mapper.cc
-  integration/exception.cc
   integration/fill.cc
   integration/find_memory_kind.cc
   integration/image_constraints.cc
@@ -179,7 +178,6 @@ set(
   integration/scalar_out.cc
   integration/scale_constraints.cc
   integration/store_colocation.cc
-  integration/streaming_checker.cc
   integration/task_misc.cc
   integration/comm/cpu_allreduce_typed.cc
   integration/comm/cpu_communicator.cc
@@ -266,8 +264,6 @@ set(
   unit/dlpack/from_dlpack/versioned.cc
   unit/dlpack/from_dlpack/unversioned.cc
   unit/dlpack/to_dlpack/to_dlpack.cc
-  unit/streaming/extract_streamable_prefix.cc
-  unit/streaming/nested_scopes.cc
   unit/proxy_store_mapping.cc
   # experimental
   experimental/stl/elementwise.cc
@@ -313,7 +309,6 @@ set(
   noinit/shared_ptr.cc
   noinit/small_vector.cc
   noinit/string_utils.cc
-  noinit/task_exception.cc
   noinit/to_domain.cc
   noinit/tuple.cc
   noinit/unravel.cc
@@ -325,7 +320,6 @@ set(
   noinit/argument_parsing/cuda_driver_path.cc
   noinit/argument_parsing/fbmem.cc
   noinit/argument_parsing/gpus.cc
-  noinit/argument_parsing/legion_default_args.cc
   noinit/argument_parsing/logging.cc
   noinit/argument_parsing/numamem.cc
   noinit/argument_parsing/ompthreads.cc
@@ -351,7 +345,6 @@ endif()
 set(
   non_reentrant_with_runtime_SRC
   non_reentrant/death_example.cc
-  unit/logical_store/offload_to.cc
   non_reentrant/oom_message.cc
   non_reentrant/runtime.cc
   non_reentrant/shutdown_callback.cc
@@ -368,7 +361,6 @@ set(
   non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/inline_storage/basic.cc
   non_reentrant/wo_runtime/machine/local_machine.cc
-  non_reentrant/wo_runtime/streaming/streaming.cc
 )
 
 legate_configure_test(

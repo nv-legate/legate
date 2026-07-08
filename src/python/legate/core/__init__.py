@@ -37,11 +37,9 @@ from ._lib.partitioning.constraint import (
     min_extents,
     scale,
 )
-from ._lib.runtime.exception_mode import ExceptionMode
 from ._lib.runtime.library import Library
 from ._lib.runtime.resource import ResourceConfig
 from ._lib.runtime.runtime import (
-    ProfileRange,
     Runtime,
     get_legate_runtime,
     get_machine,
@@ -64,7 +62,7 @@ from ._lib.utilities.typedefs import (
     LocalTaskID,
     VariantCode,
 )
-from .data_interface import LegateDataInterface, as_logical_store, offload_to
+from .data_interface import LegateDataInterface, as_logical_store
 from .types import (
     FixedArrayType,
     ReductionOpKind,
@@ -126,7 +124,6 @@ __all__ = (
     "Domain",
     "DomainPoint",
     "EmptyMachineError",
-    "ExceptionMode",
     "ExternalAllocation",
     "FixedArrayType",
     "GlobalRedopID",

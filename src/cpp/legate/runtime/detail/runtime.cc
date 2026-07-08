@@ -95,7 +95,6 @@ namespace {
 // This is the unique string name for our library which can be used from both C++ and Python to
 // generate IDs
 constexpr std::string_view CORE_LIBRARY_NAME = "legate.core";
-constexpr const char* const TOPLEVEL_NAME    = "Toplevel Task";
 
 }  // namespace
 
@@ -133,7 +132,6 @@ Library& Runtime::create_library(
 
   return libraries_
     .try_emplace(std::string{library_name},
-                 Library::ConstructKey{},
                  std::string{library_name},
                  config,
                  std::move(mapper),
@@ -293,37 +291,6 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
 
   submit(make_internal_shared<Fill>(
     std::move(lhs), std::move(value), new_op_id(), scope().priority(), get_machine()));
-}
-
-void Runtime::offload_to(mapping::StoreTarget target_mem,
-                         const InternalSharedPtr<LogicalStore>& store)
-{
-  const auto target_proc = mapping::detail::get_matching_task_target(target_mem);
-
-  switch (target_proc) {
-    case mapping::TaskTarget::GPU: {
-      if constexpr (!LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-        throw TracedException<std::invalid_argument>{
-          fmt::format("Cannot offload to {} without GPU/CUDA Support", target_mem)};
-      }
-      break;
-    }
-
-    case mapping::TaskTarget::CPU: [[fallthrough]];
-    case mapping::TaskTarget::OMP: break;
-  }
-
-  const auto scp = legate::Scope{legate::mapping::Machine{get_machine()}.only(target_proc)};
-  auto task      = create_task(core_library(), OffloadTo::TASK_CONFIG.task_id());
-
-  task->add_scalar_arg(legate::Scalar{target_mem}.impl());
-
-  // Ask for Read/Write privileges so that data is copied to the target_mem and
-  // invalidated in other memories if any other copies exist.
-  std::ignore = task->add_input(store);
-  std::ignore = task->add_output(store);
-
-  submit(std::move(task));
 }
 
 void Runtime::flush_scheduling_window(bool) {}
@@ -498,33 +465,6 @@ Runtime::IndexAttachResult Runtime::create_store(
   return {std::move(store), std::move(partition)};
 }
 
-void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
-                                         SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
-                                         SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets,
-                                         bool initialize)
-{
-  if (scope().machine()->count() <= 1) {
-    log_legate().debug() << "Prefetching bloated instances is not necessary because there is only "
-                            "one processor in the "
-                            "scope";
-    return;
-  }
-  if (initialize) {
-    issue_fill(store, Scalar{store->type()});
-  }
-
-  auto task  = create_task(core_library(), LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES});
-  auto part1 = task->declare_partition();
-  auto part2 = task->declare_partition();
-  task->add_input(store, part1);
-  task->add_input(std::move(store), part2);
-  task->add_constraint(bloat(part2, part1, std::move(low_offsets), std::move(high_offsets)),
-                       /*bypass_signature_check=*/false);
-  submit(std::move(task));
-
-  issue_mapping_fence();
-}
-
 void Runtime::check_dimensionality_(std::uint32_t dim)
 {
   if (dim > LEGATE_MAX_DIM) {
@@ -532,83 +472,6 @@ void Runtime::check_dimensionality_(std::uint32_t dim)
       fmt::format("The maximum number of dimensions is {}, but a {}-D store is requested",
                   LEGION_MAX_DIM,
                   dim)};
-  }
-}
-
-namespace {
-
-class ExtractExceptionFn {
- public:
-  [[nodiscard]] std::optional<ReturnedException> operator()(
-    const Legion::Future& fut) const noexcept
-  {
-    if (auto exn = fut.get_result<ReturnedException>(); exn.raised()) {
-      return {std::move(exn)};
-    }
-
-    return std::nullopt;
-  }
-
-  [[nodiscard]] std::optional<ReturnedException> operator()(
-    ReturnedException& pending) const noexcept
-  {
-    if (pending.raised()) {
-      return {std::move(pending)};
-    }
-
-    return std::nullopt;
-  }  // namespace
-};
-
-}  // namespace
-
-void Runtime::raise_pending_exception()
-{
-  std::optional<ReturnedException> found{};
-
-  for (auto&& pending_exception : pending_exceptions_) {
-    found = std::visit(ExtractExceptionFn{}, pending_exception);
-    if (found.has_value()) {
-      break;
-    }
-  }
-
-  pending_exceptions_.clear();
-
-  if (found.has_value()) {
-    found->throw_exception();
-  }
-}
-
-void Runtime::record_pending_exception(Legion::Future pending_exception)
-{
-  switch (scope().exception_mode()) {
-    case ExceptionMode::IGNORED: return;
-    case ExceptionMode::DEFERRED: {
-      pending_exceptions_.emplace_back(std::move(pending_exception));
-      break;
-    }
-    case ExceptionMode::IMMEDIATE: {
-      if (auto&& exn = pending_exception.get_result<ReturnedException>(); exn.raised()) {
-        exn.throw_exception();
-      }
-      break;
-    }
-  }
-}
-
-void Runtime::record_pending_exception(ReturnedException pending_exception)
-{
-  switch (scope().exception_mode()) {
-    case ExceptionMode::IGNORED: return;
-    case ExceptionMode::DEFERRED:
-      pending_exceptions_.emplace_back(std::move(pending_exception));
-      break;
-    case ExceptionMode::IMMEDIATE:
-      if (pending_exception.raised()) {
-        pending_exception.throw_exception();
-      }
-      break;
   }
 }
 
@@ -808,12 +671,6 @@ void set_env_vars()
       "Legate runtime cannot be started after legate::finish is called"};
   }
 
-  if (Legion::Runtime::has_runtime() || Legion::Runtime::has_context()) {
-    throw TracedException<std::runtime_error>{
-      "Legion runtime has already been started by another process. This mode is not supported by "
-      "Legate, which expects to initialize Legion itself."};
-  }
-
   set_env_vars();
 
   const auto need_network_init = multi_node_job() || REALM_UCP_BOOTSTRAP_MODE.get() == "p2p";
@@ -841,56 +698,29 @@ void set_env_vars()
       std::free(static_cast<void*>(argv));
     });
 
-  Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
-
-  const bool single_controller_mode = [&]() -> bool {
-    auto* const config                     = new Config{handle_legate_args()};
-    const bool single_controller_execution = config->single_controller_execution();
-    // Need to transport `Config` via raw pointer (which, if the below call fails, will simply
-    // leak) because `Config` is not a POD. Legion expects to `memcpy()` the pointer given to
-    // UntypedBuffer, so can't even use `std::unique_ptr` or something like that.
-    static_assert(!std::is_trivially_copyable_v<Config>);
-    const auto buf = Legion::UntypedBuffer{
-      static_cast<const void*>(&config),
-      sizeof(config)  // NOLINT(bugprone-sizeof-expression)
-    };
-
-    Legion::Runtime::perform_registration_callback(
-      initialize_core_library_callback_, buf, false /*global*/, false /*dedup*/);
-
-    return single_controller_execution;
-  }();
-
-  const bool is_worker = single_controller_mode && Realm::Network::my_node_id != 0;
-
   // Under control replication mode, all ranks return from Legion::Runtime::start(); however,
   // under single controller execution mode, only the controller rank returns immediately.
   // The worker ranks return when the Realm runtime is destructed by the controller.
-  if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/!is_worker)) {
-    throw TracedException<std::runtime_error>{
-      fmt::format("Legion Runtime failed to start, error code: {}", result)};
-  }
 
-  if (is_worker) {
-    // All Legate programs are control-replicated, meaning that the code after start() is
-    // Legate application code. Under single controller execution mode, workers reaching
-    // this line are done executing their Legate program. Returning from start() would mean
-    // incorrectly executing Legate code again; however, so for now, we simply exit the program.
-    // A better API where workers in single controller execution mode do not call start()
-    // and have their own method of connecting to the runtime should be considered.
-    std::exit(EXIT_SUCCESS);
-  }
-}
+  auto runtime = Realm::Runtime::get_runtime();
 
-void Runtime::start_profiling_range()
-{
-  Legion::Runtime::get_runtime()->start_profiling_range(Legion::Runtime::get_context());
-}
+  auto&& check_realm = [&](auto result) {
+    if (!result) {
+      throw TracedException<std::runtime_error>{fmt::format("Realm Runtime failed to start")};
+    }
+  };
 
-void Runtime::stop_profiling_range(std::string_view provenance)
-{
-  Legion::Runtime::get_runtime()->stop_profiling_range(Legion::Runtime::get_context(),
-                                                       std::string{provenance}.c_str());
+  check_realm(runtime.network_init(&argc, &argv));
+  check_realm(runtime.create_configs(argc, argv));
+
+  auto config = handle_legate_args();
+
+  runtime.parse_command_line(argc, argv);
+  runtime.finish_configure();
+
+  runtime.start();
+
+  initialize_(std::move(config));
 }
 
 namespace {
@@ -1059,7 +889,6 @@ std::int32_t Runtime::finish()
   cu_mod_manager_.reset();
   // This should be empty at this point, since the execution fence will ensure they are all
   // raised, but just in case, clear them. There is no hope of properly handling them now.
-  pending_exceptions_.clear();
   initialized_ = false;
 
   // Legion may shut down as soon as wait_for_shutdown() observes that all
@@ -1069,7 +898,8 @@ std::int32_t Runtime::finish()
   the_runtime.mark_finalizing();
   // The previous call is asynchronous so we still need to
   // wait for the shutdown of the runtime to complete
-  const auto ret = Legion::Runtime::wait_for_shutdown();
+  Realm::Runtime::get_runtime().shutdown();
+  auto result = Realm::Runtime::get_runtime().wait_for_shutdown();
   // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
   // circumstances.
   //
@@ -1079,87 +909,35 @@ std::int32_t Runtime::finish()
   //
   // BEGIN DO NOT MODIFY
   the_runtime.reset();
-  return ret;
+  return result;
   // END DO NOT MODIFY
 }
-
-namespace prefetch_task {
-
-namespace {
-
-// This task is launched for the side effect of having bloated instances created for the task and
-// intended to do nothing otherwise.
-class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES}};
-
-  static void cpu_variant(const Legion::Task* /*task*/,
-                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
-                          Legion::Context /*context*/,
-                          Legion::Runtime* /*runtime*/)
-  {
-  }  // namespace prefetch_task
-#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
-  static void omp_variant(const Legion::Task* /*task*/,
-                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
-                          Legion::Context /*context*/,
-                          Legion::Runtime* /*runtime*/)
-  {
-  }
-#endif
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  static void gpu_variant(const Legion::Task* /*task*/,
-                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
-                          Legion::Context /*context*/,
-                          Legion::Runtime* /*runtime*/)
-  {
-  }
-#endif
-};
-
-}  // namespace
-
-}  // namespace prefetch_task
 
 namespace {
 
 void register_legate_core_tasks(Library& core_lib)
 {
-  const auto pub_core_lib = legate::Library{&core_lib};
-
-  prefetch_task::PrefetchBloatedInstances::register_variants(pub_core_lib);
   comm::register_tasks(core_lib);
   legate::experimental::io::detail::register_tasks();
-  OffloadTo::register_variants(pub_core_lib);
 }
 
 }  // namespace
 
-extern void register_exception_reduction_op(const Library& context);
-
-/*static*/ void Runtime::initialize_core_library_callback_(
-  const Legion::RegistrationCallbackArgs& args)
+/*static*/ void Runtime::initialize_(Config config)
 {
-  auto& runtime = [&]() -> Runtime& {
-    auto ptr = std::unique_ptr<Config>{*static_cast<Config**>(args.buffer.get_ptr())};
+  auto& runtime = the_runtime.construct_runtime(std::move(config));
 
-    LEGATE_CHECK(args.buffer.get_size() == sizeof(Config*));
-    LEGATE_CHECK(ptr);
-    return the_runtime.construct_runtime(std::move(*ptr));
-  }();
+  ResourceConfig lib_config;
 
-  ResourceConfig config;
-
-  config.max_tasks       = CoreTask::MAX_TASK;
-  config.max_dyn_tasks   = config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
-  config.max_projections = to_underlying(CoreProjectionOp::MAX_FUNCTOR);
+  lib_config.max_tasks       = CoreTask::MAX_TASK;
+  lib_config.max_dyn_tasks   = lib_config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
+  lib_config.max_projections = to_underlying(CoreProjectionOp::MAX_FUNCTOR);
   // We register one sharding functor for each new projection functor
-  config.max_shardings     = to_underlying(CoreShardID::MAX_FUNCTOR);
-  config.max_reduction_ops = to_underlying(CoreReductionOp::MAX_REDUCTION);
+  lib_config.max_shardings     = to_underlying(CoreShardID::MAX_FUNCTOR);
+  lib_config.max_reduction_ops = to_underlying(CoreReductionOp::MAX_REDUCTION);
 
-  auto&& core_lib =
-    runtime.create_library(CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {});
+  auto&& core_lib = runtime.create_library(
+    CORE_LIBRARY_NAME, lib_config, mapping::detail::create_core_mapper(), {});
   // Order is deliberate. core_library_() must be set here, because the core mapper and mapper
   // manager expect to call get_runtime()->core_library().
   runtime.core_library_ = core_lib;

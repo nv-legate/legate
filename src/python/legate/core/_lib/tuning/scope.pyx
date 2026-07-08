@@ -2,7 +2,6 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from libcpp cimport bool
 from libcpp.optional cimport (
     nullopt as std_nullopt,
     make_optional as std_make_optional
@@ -12,8 +11,6 @@ from typing import Any
 
 from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..mapping.machine cimport Machine
-from ..runtime.exception_mode cimport ExceptionMode
-from ..runtime.runtime cimport raise_pending_exception
 from .parallel_policy cimport ParallelPolicy
 
 
@@ -22,17 +19,12 @@ cdef class Scope:
         self,
         *,
         priority: object = None,
-        exception_mode: object = None,
         str provenance = None,
         Machine machine = None,
         ParallelPolicy parallel_policy = None,
     ) -> None:
         self._priority = (
             _Scope.priority() if priority is None else priority
-        )
-        self._exception_mode = (
-            _Scope.exception_mode()
-            if exception_mode is None else exception_mode
         )
         self._provenance = provenance
         self._machine = machine
@@ -47,7 +39,6 @@ cdef class Scope:
 
         self._handle = std_make_optional[_Scope]()
         self._handle.value().set_priority(self._priority)
-        self._handle.value().set_exception_mode(self._exception_mode)
         if self._provenance is not None:
             self._handle.value().set_provenance(self._provenance.encode())
         if self._machine is not None:
@@ -58,21 +49,11 @@ cdef class Scope:
             )
 
     def __exit__(self, _: Any, __: Any, ___: Any) -> None:
-        cdef bool exn_deferred = self._exception_mode == ExceptionMode.DEFERRED
         self._handle.reset()
-        # If we're about to transition from the deferred exception handling to
-        # the eager exception handling, we should raise pending exceptions as
-        # the scope collapses.
-        if exn_deferred and self.exception_mode() == ExceptionMode.IMMEDIATE:
-            raise_pending_exception()
 
     @staticmethod
     def priority() -> int:
         return _Scope.priority()
-
-    @staticmethod
-    def exception_mode() -> ExceptionMode:
-        return _Scope.exception_mode()
 
     @staticmethod
     def provenance() -> str:

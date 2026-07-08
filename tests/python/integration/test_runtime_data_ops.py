@@ -55,20 +55,6 @@ class TestStoreOpsErrors:
         with pytest.raises(ValueError, match=msg):
             runtime.issue_fill(store, None)
 
-    @pytest.mark.xfail(run=False, reason="hits LEGION ERROR and aborts proc")
-    def test_prefetch_uninitialized(self) -> None:
-        runtime = get_legate_runtime()
-        store = runtime.create_store(ty.int32, (3, 1, 3))
-        # docstring says this will trip "runtime error"
-        # taking aborting python proc as correct behavior
-        # LEGION ERROR: Region requirement 0 of operation
-        # legate::detail::(anonymous namespace)::PrefetchBloatedInstances
-        # in parent task Legate Core Toplevel Task is using uninitialized data
-        # for field(s) 10000 of logical region (29,10,10)
-        # with read-only privileges
-        with pytest.raises(RuntimeError):
-            runtime.prefetch_bloated_instances(store, (1, 2, 3), (3, 2, 1))
-
     @pytest.fixture
     def preserve_seed_state(self) -> Generator[None, Any, Any]:
         state = np.random.get_state()

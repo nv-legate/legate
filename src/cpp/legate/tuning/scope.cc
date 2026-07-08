@@ -26,16 +26,6 @@ class Scope::Impl {
     priority_ = detail::Runtime::get_runtime().scope().exchange_priority(priority);
   }
 
-  void set_exception_mode(ExceptionMode exception_mode)
-  {
-    if (exception_mode_) {
-      throw detail::TracedException<std::invalid_argument>{
-        "Exception mode can be set only once for each scope"};
-    }
-    exception_mode_ =
-      detail::Runtime::get_runtime().scope().exchange_exception_mode(exception_mode);
-  }
-
   void set_provenance(std::string provenance)
   {
     if (provenance_) {
@@ -125,10 +115,6 @@ class Scope::Impl {
       static_cast<void>(global_scope.exchange_priority(*priority_));
       priority_ = std::nullopt;
     }
-    if (exception_mode_.has_value()) {
-      static_cast<void>(global_scope.exchange_exception_mode(*exception_mode_));
-      exception_mode_ = std::nullopt;
-    }
     if (provenance_.has_value()) {
       static_cast<void>(global_scope.exchange_provenance(std::move(*provenance_)));
       provenance_ = std::nullopt;
@@ -151,7 +137,6 @@ class Scope::Impl {
 
  private:
   std::optional<std::int32_t> priority_{};
-  std::optional<ExceptionMode> exception_mode_{};
   std::optional<std::string> provenance_{};
   InternalSharedPtr<mapping::detail::Machine> machine_{};
   std::optional<ParallelPolicy> parallel_policy_{};
@@ -163,8 +148,6 @@ template class DefaultDelete<Scope::Impl>;
 Scope::Scope() : impl_{new Scope::Impl{}} {}
 
 Scope::Scope(std::int32_t priority) : Scope{} { set_priority(priority); }
-
-Scope::Scope(ExceptionMode exception_mode) : Scope{} { set_exception_mode(exception_mode); }
 
 Scope::Scope(std::string provenance) : Scope{} { set_provenance(std::move(provenance)); }
 
@@ -178,12 +161,6 @@ Scope::Scope(ParallelPolicy parallel_policy) : Scope{}
 Scope&& Scope::with_priority(std::int32_t priority) &&
 {
   set_priority(priority);
-  return std::move(*this);
-}
-
-Scope&& Scope::with_exception_mode(ExceptionMode exception_mode) &&
-{
-  set_exception_mode(exception_mode);
   return std::move(*this);
 }
 
@@ -206,11 +183,6 @@ Scope&& Scope::with_parallel_policy(ParallelPolicy parallel_policy) &&
 }
 
 void Scope::set_priority(std::int32_t priority) { impl_->set_priority(priority); }
-
-void Scope::set_exception_mode(ExceptionMode exception_mode)
-{
-  impl_->set_exception_mode(exception_mode);
-}
 
 void Scope::set_provenance(std::string provenance) { impl_->set_provenance(std::move(provenance)); }
 
@@ -245,11 +217,6 @@ Scope::~Scope() noexcept(false)
 /*static*/ std::int32_t Scope::priority()
 {
   return detail::Runtime::get_runtime().scope().priority();
-}
-
-/*static*/ legate::ExceptionMode Scope::exception_mode()
-{
-  return detail::Runtime::get_runtime().scope().exception_mode();
 }
 
 /*static*/ std::string_view Scope::provenance()

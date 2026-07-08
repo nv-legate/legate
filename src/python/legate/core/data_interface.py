@@ -4,13 +4,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, Protocol, TypeAlias, TypedDict
+from typing import Final, Protocol, TypeAlias, TypedDict
 
 from ._lib.data.logical_store import LogicalStore
-
-if TYPE_CHECKING:
-    from . import StoreTarget
-
 
 MIN_DATA_INTERFACE_VERSION: Final = 2
 MAX_DATA_INTERFACE_VERSION: Final = 2
@@ -106,19 +102,3 @@ def as_logical_store(obj: LegateDataInterface) -> LogicalStore:
         raise NotImplementedError(msg)
 
     return data[field]
-
-
-def offload_to(obj: LogicalStoreLike, *, target: StoreTarget) -> None:
-    """Offload a logical store-like object to a particular memory space.
-
-    Parameters
-    ----------
-    obj: LogicalStoreLike
-        The object to offload. A ``LogicalStore`` or object exposing a
-        Legate Data Interface.
-    target: :class:`~legate.core.StoreTarget`
-        The store target to offload to, e.g. StoreTarget.SYSMEM
-
-    """
-    store = as_logical_store(obj)
-    store.offload_to(target)

@@ -43,13 +43,6 @@ inline bool TaskContext::can_raise_exception() const noexcept { return false; }
 
 inline bool TaskContext::can_elide_device_ctx_sync() const noexcept { return true; }
 
-inline void TaskContext::set_exception(ReturnedException) {}
-
-inline std::optional<ReturnedException> TaskContext::get_exception() noexcept
-{
-  return std::nullopt;
-}
-
 // ===========================================================================================
 
 inline Span<const InternalSharedPtr<PhysicalStore>> TaskContext::get_unbound_stores_()

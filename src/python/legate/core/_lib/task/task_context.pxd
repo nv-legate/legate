@@ -59,6 +59,5 @@ cdef class TaskContext(Unconstructable):
     cdef TaskContext from_handle(_TaskContext* ptr)
     cpdef _GlobalTaskID get_task_id(self)
     cpdef VariantCode get_variant_kind(self)
-    cpdef void set_exception(self, Exception) except *
     cpdef bool is_single_task(self)
     cpdef bool can_raise_exception(self)

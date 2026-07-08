@@ -23,7 +23,6 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
-#include <legate/task/detail/returned_exception.h>
 #include <legate/task/detail/task.h>
 #include <legate/task/detail/task_context.h>
 #include <legate/task/detail/task_info.h>

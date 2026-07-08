@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 from legate.core import (
     InlineAllocation,
     PhysicalStore,
-    ProfileRange,
     Scalar,
     VariantCode,
     VariantOptions,
@@ -183,12 +182,6 @@ def repeat_task(
     for i in range(store_arr.ndim):
         store_arr = lib.repeat(store_arr, repeats[i], axis=i)
     out_arr[:] = store_arr
-
-
-@task(variants=tuple(VariantCode))
-def profile_range_task() -> None:
-    with ProfileRange("foobarbaz"):
-        pass
 
 
 def basic_min_extents_task(

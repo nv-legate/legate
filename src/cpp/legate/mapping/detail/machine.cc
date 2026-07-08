@@ -271,45 +271,44 @@ std::ostream& operator<<(std::ostream& os, const ProcessorSpan& range)
 // legate::mapping::LocalMachine
 ///////////////////////////////////////////
 LocalMachine::LocalMachine()
-  : LocalMachine{[](Legion::Machine::ProcessorQuery& pq) -> Legion::Machine::ProcessorQuery& {
+  : LocalMachine{[](Realm::Machine::ProcessorQuery& pq) -> Realm::Machine::ProcessorQuery& {
                    return pq.local_address_space();
                  },
-                 [](Legion::Machine::MemoryQuery& mq) -> Legion::Machine::MemoryQuery& {
+                 [](Realm::Machine::MemoryQuery& mq) -> Realm::Machine::MemoryQuery& {
                    return mq.local_address_space();
                  }}
 {
 }
 
 LocalMachine::LocalMachine(Processor p)
-  : LocalMachine{[p](Legion::Machine::ProcessorQuery& pq) -> Legion::Machine::ProcessorQuery& {
+  : LocalMachine{[p](Realm::Machine::ProcessorQuery& pq) -> Realm::Machine::ProcessorQuery& {
                    return pq.same_address_space_as(p);
                  },
-                 [p](Legion::Machine::MemoryQuery& mq) -> Legion::Machine::MemoryQuery& {
+                 [p](Realm::Machine::MemoryQuery& mq) -> Realm::Machine::MemoryQuery& {
                    return mq.same_address_space_as(p);
                  }}
 {
 }
 
 LocalMachine::LocalMachine(Memory m)
-  : LocalMachine{[m](Legion::Machine::ProcessorQuery& pq) -> Legion::Machine::ProcessorQuery& {
+  : LocalMachine{[m](Realm::Machine::ProcessorQuery& pq) -> Realm::Machine::ProcessorQuery& {
                    return pq.same_address_space_as(m);
                  },
-                 [m](Legion::Machine::MemoryQuery& mq) -> Legion::Machine::MemoryQuery& {
+                 [m](Realm::Machine::MemoryQuery& mq) -> Realm::Machine::MemoryQuery& {
                    return mq.same_address_space_as(m);
                  }}
 {
 }
 
 LocalMachine::LocalMachine(
-  const std::function<Legion::Machine::ProcessorQuery&(Legion::Machine::ProcessorQuery&)>&
+  const std::function<Realm::Machine::ProcessorQuery&(Realm::Machine::ProcessorQuery&)>&
     localize_pq,
-  const std::function<Legion::Machine::MemoryQuery&(Legion::Machine::MemoryQuery&)>& localize_mq)
+  const std::function<Realm::Machine::MemoryQuery&(Realm::Machine::MemoryQuery&)>& localize_mq)
   : node_id{static_cast<std::uint32_t>(Realm::Network::my_node_id)},
-    total_nodes{
-      static_cast<std::uint32_t>(Legion::Machine::get_machine().get_address_space_count())}
+    total_nodes{static_cast<std::uint32_t>(Realm::Machine::get_machine().get_address_space_count())}
 {
-  auto legion_machine = Legion::Machine::get_machine();
-  Legion::Machine::ProcessorQuery procs{legion_machine};
+  auto realm_machine = Realm::Machine::get_machine();
+  Realm::Machine::ProcessorQuery procs{realm_machine};
   // Query to find all our local processors
   localize_pq(procs);
   for (auto proc : procs) {
@@ -336,31 +335,31 @@ LocalMachine::LocalMachine(
   }
 
   // Now do queries to find all our local memories
-  Legion::Machine::MemoryQuery sysmem{legion_machine};
-  localize_mq(sysmem).only_kind(Legion::Memory::SYSTEM_MEM);
+  Realm::Machine::MemoryQuery sysmem{realm_machine};
+  localize_mq(sysmem).only_kind(Realm::Memory::SYSTEM_MEM);
   LEGATE_CHECK(sysmem.count() > 0);
   system_memory_ = sysmem.first();
 
   if (!gpus_.empty()) {
-    Legion::Machine::MemoryQuery zcmem{legion_machine};
+    Realm::Machine::MemoryQuery zcmem{realm_machine};
 
-    localize_mq(zcmem).only_kind(Legion::Memory::Z_COPY_MEM);
+    localize_mq(zcmem).only_kind(Realm::Memory::Z_COPY_MEM);
     LEGATE_CHECK(zcmem.count() > 0);
     zerocopy_memory_ = zcmem.first();
   }
 
   for (auto&& gpu : gpus_) {
-    Legion::Machine::MemoryQuery framebuffer{legion_machine};
+    Realm::Machine::MemoryQuery framebuffer{realm_machine};
 
-    localize_mq(framebuffer).only_kind(Legion::Memory::GPU_DYNAMIC_MEM).best_affinity_to(gpu);
+    localize_mq(framebuffer).only_kind(Realm::Memory::GPU_DYNAMIC_MEM).best_affinity_to(gpu);
     LEGATE_CHECK(framebuffer.count() > 0);
     frame_buffers_[gpu] = framebuffer.first();
   }
 
   for (auto&& omp : omps_) {
-    Legion::Machine::MemoryQuery sockmem{legion_machine};
+    Realm::Machine::MemoryQuery sockmem{realm_machine};
 
-    localize_mq(sockmem).only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);
+    localize_mq(sockmem).only_kind(Realm::Memory::SOCKET_MEM).best_affinity_to(omp);
     // If we have socket memories then use them
     if (sockmem.count() > 0) {
       socket_memories_[omp] = sockmem.first();
@@ -375,7 +374,7 @@ LocalMachine::LocalMachine(
 }
 
 void LocalMachine::init_g2c_multi_hop_bandwidth_(
-  const std::function<Legion::Machine::MemoryQuery&(Legion::Machine::MemoryQuery&)>& localize_mq)
+  const std::function<Realm::Machine::MemoryQuery&(Realm::Machine::MemoryQuery&)>& localize_mq)
 {
   // Estimate local-node CPU<->GPU multi-hop memory copy bandwidth. If the CPU memory is not pinned,
   // then Realm cannot do this in one hop, and therefore get_mem_mem_affinity won't cover this case.
@@ -383,14 +382,14 @@ void LocalMachine::init_g2c_multi_hop_bandwidth_(
   // affinities to zerocopy memory as a stand-in for that.
   // TODO(mpapadakis): Will no longer need to do this once Realm provides an API to estimate
   // multi-hop copy bandwidth, see https://github.com/StanfordLegion/legion/issues/1704.
-  auto legion_machine = Legion::Machine::get_machine();
+  auto realm_machine = Realm::Machine::get_machine();
   if (zerocopy_memory_.exists()) {
-    Legion::Machine::MemoryQuery gpu_mems{legion_machine};
+    Realm::Machine::MemoryQuery gpu_mems{realm_machine};
 
-    localize_mq(gpu_mems).only_kind(Legion::Memory::GPU_FB_MEM);
+    localize_mq(gpu_mems).only_kind(Realm::Memory::GPU_FB_MEM);
     for (auto gpu_mem : gpu_mems) {
-      std::vector<Legion::MemoryMemoryAffinity> g2z_affinities;
-      legion_machine.get_mem_mem_affinity(
+      std::vector<Realm::Machine::MemoryMemoryAffinity> g2z_affinities;
+      realm_machine.get_mem_mem_affinity(
         g2z_affinities, gpu_mem, zerocopy_memory_, false /*not just local affinities*/);
       if (g2z_affinities.empty()) {
         continue;
@@ -399,15 +398,15 @@ void LocalMachine::init_g2c_multi_hop_bandwidth_(
       auto g2z_bandwidth  = g2z_affinities.front().bandwidth;
       auto& cache_for_gpu = g2c_multi_hop_bandwidth_[gpu_mem];
 
-      Legion::Machine::MemoryQuery cpu_mems{legion_machine};
+      Realm::Machine::MemoryQuery cpu_mems{realm_machine};
       localize_mq(cpu_mems);
       for (auto cpu_mem : cpu_mems) {
-        if (cpu_mem.kind() != Legion::Memory::SYSTEM_MEM &&
-            cpu_mem.kind() != Legion::Memory::SOCKET_MEM) {
+        if (cpu_mem.kind() != Realm::Memory::SYSTEM_MEM &&
+            cpu_mem.kind() != Realm::Memory::SOCKET_MEM) {
           continue;
         }
-        std::vector<Legion::MemoryMemoryAffinity> c2z_affinities;
-        legion_machine.get_mem_mem_affinity(
+        std::vector<Realm::Machine::MemoryMemoryAffinity> c2z_affinities;
+        realm_machine.get_mem_mem_affinity(
           c2z_affinities, cpu_mem, zerocopy_memory_, false /*not just local affinities*/);
         if (c2z_affinities.empty()) {
           continue;
@@ -466,7 +465,7 @@ std::size_t LocalMachine::calculate_field_reuse_size(std::uint32_t field_reuse_f
 bool LocalMachine::has_socket_memory() const
 {
   return !socket_memories().empty() &&
-         socket_memories().begin()->second.kind() == Legion::Memory::SOCKET_MEM;
+         socket_memories().begin()->second.kind() == Realm::Memory::SOCKET_MEM;
 }
 
 ProcessorSpan LocalMachine::slice(const Machine& machine) const
@@ -574,7 +573,7 @@ const Processor& LocalMachine::find_first_processor_with_affinity_to(StoreTarget
   LEGATE_ABORT("invalid StoreTarget: ", legate::detail::to_underlying(target));
 }
 
-Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) const
+Realm::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) const
 {
   switch (target) {
     case StoreTarget::SYSMEM: return system_memory();
@@ -585,7 +584,7 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
   LEGATE_ABORT("invalid StoreTarget: ", legate::detail::to_underlying(target));
 }
 
-Legion::Memory LocalMachine::get_memory(Processor proc, Memory::Kind kind) const
+Realm::Memory LocalMachine::get_memory(Processor proc, Memory::Kind kind) const
 {
   switch (kind) {
     case Memory::Kind::SYSTEM_MEM: return system_memory();

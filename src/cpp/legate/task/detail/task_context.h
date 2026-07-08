@@ -10,7 +10,6 @@
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/data/scalar.h>
 #include <legate/mapping/detail/machine.h>
-#include <legate/task/detail/returned_exception.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
@@ -51,9 +50,6 @@ class TaskContext {
   [[nodiscard]] bool can_raise_exception() const noexcept;
   [[nodiscard]] CUstream get_task_stream() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const noexcept;
-
-  void set_exception(ReturnedException what);
-  [[nodiscard]] std::optional<ReturnedException> get_exception() noexcept;
 
   /**
    * @brief Makes all of unbound output stores of this task empty

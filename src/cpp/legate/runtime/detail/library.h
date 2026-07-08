@@ -49,15 +49,7 @@ class Library {
   friend class Runtime;
 
  public:
-  class ConstructKey {
-    ConstructKey() = default;
-
-    friend class Runtime;
-    friend class Library;
-  };
-
-  Library(ConstructKey,
-          std::string library_name,
+  Library(std::string library_name,
           const ResourceConfig& config,
           std::unique_ptr<mapping::Mapper> mapper,
           std::map<VariantCode, VariantOptions> default_options);
@@ -79,9 +71,6 @@ class Library {
    * @param callback The callback to perform.
    * @param buffer The buffer to pass to the callback.
    */
-  static void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                               const Legion::UntypedBuffer& buffer);
-
   [[nodiscard]] ZStringView get_library_name() const;
 
   [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
@@ -106,12 +95,6 @@ class Library {
   [[nodiscard]] mapping::Mapper& get_mapper();
 
  private:
-  Library(std::string library_name,
-          const ResourceConfig& config,
-          std::unique_ptr<mapping::Mapper> mapper,
-          std::map<VariantCode, VariantOptions> default_options,
-          Legion::Runtime* runtime);
-
   std::string library_name_{};
   ResourceIdScope task_scope_{};
   ResourceIdScope redop_scope_{};

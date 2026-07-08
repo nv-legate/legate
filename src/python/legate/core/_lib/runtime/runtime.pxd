@@ -79,18 +79,11 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
             const std_vector[std_pair[_ExternalAllocation, _tuple[uint64_t]]]&,
             const _DimOrdering&
         ) except+
-        void prefetch_bloated_instances(
-            const _LogicalStore, _tuple[uint64_t], _tuple[uint64_t], bool
-        ) except+
         void issue_mapping_fence() except+
         void issue_execution_fence(bool) except+
-        void raise_pending_exception() except +handle_legate_exception
         uint32_t node_count() except+
         uint32_t node_id() except+
         _Machine get_machine() except+
-
-        void start_profiling_range() except+
-        void stop_profiling_range(std_string_view) except+
 
         void* get_cuda_stream() except+
         int32_t get_current_cuda_device() except+
@@ -165,27 +158,17 @@ cdef class Runtime(Unconstructable):
         list allocations,
         object ordering = *,
     )
-    cpdef void prefetch_bloated_instances(
-        self,
-        LogicalStore store,
-        tuple low_offsets,
-        tuple high_offsets,
-        bool initialize = *,
-    )
     cpdef void issue_mapping_fence(self)
     cpdef void issue_execution_fence(self, bool block = *)
     cpdef Machine get_machine(self)
     cpdef void finish(self)
     cpdef void add_shutdown_callback(self, object callback)
-    cpdef void start_profiling_range(self)
-    cpdef void stop_profiling_range(self, str provenance)
     cdef void* get_cuda_stream(self)
     cdef int32_t get_current_cuda_device(self)
     cdef void synchronize_cuda_stream(self, void* stream)
     cpdef Config config(self)
     cpdef RealmConfig realm_config(self)
 
-cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()
 cpdef Machine get_machine()
 cpdef bool is_running_in_task()

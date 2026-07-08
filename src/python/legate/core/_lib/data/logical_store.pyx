@@ -740,22 +740,6 @@ cdef class LogicalStore(Unconstructable):
         with nogil:
             self._handle.detach()
 
-    cpdef void offload_to(self, StoreTarget target_mem):
-        r"""
-        Offload store to specified target memory. This call copies the store to
-        the specified target memory and makes the copy exclusive to that
-        memory, thus allowing the runtime to discard any other copies and make
-        space in other memories.
-
-        Parameters
-        ----------
-        target_mem : :class:`~legate.core.StoreTarget`
-            The target memory to offload to, e.g. StoreTarget.SYSMEM
-
-        """
-        with nogil:
-            self._handle.offload_to(target_mem)
-
     @property
     def __array_interface__(self) -> dict[str, Any]:
         r"""

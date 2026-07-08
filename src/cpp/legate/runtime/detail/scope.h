@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/mapping/detail/machine.h>
-#include <legate/runtime/exception_mode.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/zstring_view.h>
@@ -39,7 +38,6 @@ class Scope {
   };
 
   [[nodiscard]] std::int32_t priority() const;
-  [[nodiscard]] ExceptionMode exception_mode() const;
   [[nodiscard]] ZStringView provenance() const;
   [[nodiscard]] const InternalSharedPtr<Machine>& machine() const;
   /*
@@ -53,7 +51,6 @@ class Scope {
   [[nodiscard]] std::uint32_t scheduling_window_size() const;
 
   [[nodiscard]] std::int32_t exchange_priority(std::int32_t priority);
-  [[nodiscard]] ExceptionMode exchange_exception_mode(ExceptionMode exception_mode);
   [[nodiscard]] std::string exchange_provenance(std::string provenance);
   [[nodiscard]] InternalSharedPtr<Machine> exchange_machine(InternalSharedPtr<Machine> machine);
   /*
@@ -104,7 +101,6 @@ class Scope {
 
  private:
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
-  ExceptionMode exception_mode_{ExceptionMode::IMMEDIATE};
   std::string provenance_{};
   InternalSharedPtr<Machine> machine_{};
   std::uint32_t scheduling_window_size_{1};

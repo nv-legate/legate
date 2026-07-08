@@ -6,7 +6,6 @@
 
 #include <legate/runtime/detail/argument_parsing/legate_args.h>
 
-#include <legate/runtime/detail/argument_parsing/config_legion.h>
 #include <legate/runtime/detail/argument_parsing/config_realm.h>
 #include <legate/runtime/detail/argument_parsing/flags/cpus.h>
 #include <legate/runtime/detail/argument_parsing/flags/cuda_driver_path.h>
@@ -177,7 +176,6 @@ Config handle_legate_args()
   }
 
   configure_realm(parsed);
-  configure_legion(parsed);
   return cfg;
 }
 

@@ -361,7 +361,6 @@ target_sources(
     legate/runtime/detail/argument_parsing/util.cc
     legate/runtime/detail/scope.cc
     legate/runtime/detail/argument_parsing/parse.cc
-    legate/runtime/detail/argument_parsing/config_legion.cc
     legate/runtime/detail/argument_parsing/config_realm.cc
     legate/runtime/detail/argument_parsing/exceptions.cc
     legate/runtime/detail/argument_parsing/legate_args.cc
@@ -383,9 +382,6 @@ target_sources(
     legate/task/task_signature.cc
     legate/task/task_config.cc
     legate/task/detail/return_value.cc
-    legate/task/detail/returned_exception.cc
-    legate/task/detail/returned_cpp_exception.cc
-    legate/task/detail/returned_python_exception.cc
     legate/task/detail/task_context.cc
     legate/task/detail/task.cc
     legate/task/detail/variant_info.cc
@@ -857,7 +853,6 @@ install(
 
 install(
   FILES
-    legate/runtime/exception_mode.h
     legate/runtime/library.h
     legate/runtime/library.inl
     legate/runtime/resource.h

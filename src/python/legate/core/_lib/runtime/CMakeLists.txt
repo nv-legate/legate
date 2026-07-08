@@ -7,6 +7,6 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "runtime")
 
 add_subdirectory(detail)
 
-set(cython_sources exception_mode.pyx library.pyx resource.pyx runtime.pyx)
+set(cython_sources library.pyx resource.pyx runtime.pyx)
 
 legate_create_cython_modules(SOURCES "${cython_sources}")

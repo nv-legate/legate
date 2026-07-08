@@ -297,54 +297,6 @@ class TestTask(BaseTest):
 
         foo()
 
-    @pytest.mark.parametrize(
-        "ExnType",
-        (CustomException, ValueError, TypeError, RuntimeError, IndexError),
-    )
-    def test_raised_exception(self, ExnType: type) -> None:
-        msg = "There is no peace but the Pax Romana"
-
-        @lct.task(options=VariantOptions(may_throw_exception=True))
-        def raises_exception() -> None:
-            raise ExnType(msg)
-
-        with pytest.raises(ExnType, match=msg):
-            raises_exception()
-        auto_task = raises_exception.prepare_call()
-        with pytest.raises(ExnType, match=msg):
-            auto_task.execute()
-
-    @pytest.mark.parametrize(
-        "ExnType",
-        (CustomException, ValueError, TypeError, RuntimeError, IndexError),
-    )
-    def test_deferred_exception(self, ExnType: type) -> None:
-        @lct.task(options=VariantOptions(may_throw_exception=True))
-        def raises_exception() -> None:
-            msg = "There is no peace but the Pax Romana"
-            raise ExnType(msg)
-
-        with (
-            pytest.raises(
-                ExnType, match=r"There is no peace but the Pax Romana"
-            ),
-            lg.Scope(exception_mode=lg.ExceptionMode.DEFERRED),
-        ):
-            raises_exception()
-
-    @pytest.mark.parametrize(
-        "ExnType",
-        (CustomException, ValueError, TypeError, RuntimeError, IndexError),
-    )
-    def test_ignored_exception(self, ExnType: type) -> None:
-        @lct.task(options=VariantOptions(may_throw_exception=True))
-        def raises_exception() -> None:
-            msg = "There is no peace but the Pax Romana"
-            raise ExnType(msg)
-
-        with lg.Scope(exception_mode=lg.ExceptionMode.IGNORED):
-            raises_exception()
-
     def test_legate_exception_handling(self) -> None:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int64, (1,))

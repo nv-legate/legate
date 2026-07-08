@@ -13,45 +13,6 @@
 #include <legate/utilities/macros.h>
 #include <legate/utilities/typedefs.h>
 
-namespace legate::detail {
-
-template <typename T>
-class CUDAReductionOpWrapper : public T {
- public:
-  static constexpr bool has_cuda_reductions = true;  // NOLINT(readability-identifier-naming)
-
-  template <bool EXCLUSIVE>
-  LEGATE_DEVICE static void apply_cuda(typename T::LHS& lhs, typename T::RHS rhs)
-  {
-    T::template apply<EXCLUSIVE>(lhs, std::move(rhs));
-  }
-
-  template <bool EXCLUSIVE>
-  LEGATE_DEVICE static void fold_cuda(typename T::RHS& lhs, typename T::RHS rhs)
-  {
-    T::template fold<EXCLUSIVE>(lhs, std::move(rhs));
-  }
-};
-
-template <typename REDOP>
-void register_reduction_callback(const Legion::RegistrationCallbackArgs& args)
-{
-  const auto legion_redop_id = *static_cast<const Legion::ReductionOpID*>(args.buffer.get_ptr());
-
-  if constexpr (LEGATE_DEFINED(LEGATE_NVCC)) {
-    Legion::Runtime::register_reduction_op(
-      legion_redop_id,
-      Realm::ReductionOpUntyped::create_reduction_op<detail::CUDAReductionOpWrapper<REDOP>>(),
-      nullptr,
-      nullptr,
-      false);
-  } else {
-    Legion::Runtime::register_reduction_op<REDOP>(legion_redop_id);
-  }
-}
-
-}  // namespace legate::detail
-
 namespace legate {
 
 inline Library::Library(detail::Library* impl) : impl_{impl} {}
@@ -66,8 +27,6 @@ GlobalRedopID Library::register_reduction_operator(LocalRedopID redop_id)
                                       "this reduction operator should be registered in a .cu file.";
   }
 #endif
-  perform_callback_(detail::register_reduction_callback<REDOP>,
-                    Legion::UntypedBuffer{&legion_redop_id, sizeof(decltype(legion_redop_id))});
   return legion_redop_id;
 }
 

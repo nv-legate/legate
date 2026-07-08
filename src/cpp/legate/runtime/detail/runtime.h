@@ -18,7 +18,6 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/scope.h>
-#include <legate/task/detail/returned_exception.h>
 #include <legate/task/variant_options.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -122,9 +121,6 @@ class Runtime {
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
 
-  // also used for offloading stores
-  void offload_to(mapping::StoreTarget target_mem, const InternalSharedPtr<LogicalStore>& store);
-
   /**
    * @brief Launch operations in Legate's queue.
    *
@@ -183,11 +179,6 @@ class Runtime {
     Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
     InternalSharedPtr<mapping::detail::DimOrdering> ordering);
 
-  void prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
-                                  SmallVector<std::uint64_t, LEGATE_MAX_DIM> low_offsets,
-                                  SmallVector<std::uint64_t, LEGATE_MAX_DIM> high_offsets,
-                                  bool initialize);
-
  private:
   static void check_dimensionality_(std::uint32_t dim);
 
@@ -196,11 +187,6 @@ class Runtime {
    * @return A new unique operation ID.
    */
   [[nodiscard]] std::uint64_t new_op_id();
-
-  void raise_pending_exception();
-  [[nodiscard]] std::optional<ReturnedException> check_pending_task_exception();
-  void record_pending_exception(Legion::Future pending_exception);
-  void record_pending_exception(ReturnedException pending_exception);
 
   [[nodiscard]] std::uint64_t get_unique_store_id();
   [[nodiscard]] std::uint64_t get_unique_storage_id();
@@ -255,12 +241,6 @@ class Runtime {
   [[nodiscard]] legate::comm::coll::CollComm get_cpu_comm() const;
   [[nodiscard]] ncclComm_t get_gpu_comm() const;
 
-  [[nodiscard]] Legion::Runtime* get_legion_runtime();
-  [[nodiscard]] Legion::Context get_legion_context();
-
-  void start_profiling_range();
-  void stop_profiling_range(std::string_view provenance);
-
  private:
   /**
    * @brief The Legion runtime initialization callback.
@@ -273,7 +253,7 @@ class Runtime {
    *
    * @param args The registration args.
    */
-  static void initialize_core_library_callback_(const Legion::RegistrationCallbackArgs& args);
+  static void initialize_(Config config);
 
   bool initialized_{};
   Config config_{};
@@ -305,8 +285,6 @@ class Runtime {
   using ReductionOpTableKey = std::pair<std::uint32_t, std::int32_t>;
   std::unordered_map<ReductionOpTableKey, GlobalRedopID, hasher<ReductionOpTableKey>>
     reduction_ops_{};
-
-  std::vector<std::variant<Legion::Future, ReturnedException>> pending_exceptions_{};
 
   std::optional<cuda::detail::CUDAModuleManager> cu_mod_manager_{};
 };

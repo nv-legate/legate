@@ -2,10 +2,7 @@
 # All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from cpython.bytes cimport PyBytes_AsStringAndSize
-from libc.stddef cimport size_t
 from libc.stdint cimport uintptr_t
-from libcpp.string cimport string as std_string
 
 from ..data.physical_store cimport PhysicalStore
 from ..data.scalar cimport Scalar
@@ -23,40 +20,6 @@ from ..._ext.cython_libcpp.string_view cimport (
     std_string_view,
     str_from_string_view
 )
-
-import pickle
-import traceback
-
-# Cython doesn't know about std::byte, so we have to hide the conversion from
-# const char* to it.
-cdef extern from *:
-    """
-    #include <legate/task/detail/task_context.h>
-    #include <legate/task/detail/returned_python_exception.h>
-
-    #include <cstddef>
-    #include <string>
-
-    namespace {
-
-    void set_python_exception(
-      const legate::TaskContext& ctx,
-      const char *buf,
-      std::size_t len,
-      std::string msg)
-    {
-      ctx.impl()->set_exception(
-        legate::detail::ReturnedPythonException{
-          reinterpret_cast<const std::byte *>(buf), len, std::move(msg)
-        }
-      );
-    }
-
-    } // namespace
-    """
-    void set_python_exception(
-        const _TaskContext&, const char*, size_t, std_string
-    )
 
 cdef class TaskContext(Unconstructable):
     # the defacto constructor
@@ -235,16 +198,6 @@ cdef class TaskContext(Unconstructable):
         if stream == NULL:
             return None
         return int(<uintptr_t>stream)
-
-    # Not documented on purpose, this is a private function
-    cpdef void set_exception(self, Exception excn) except *:
-        cdef Py_ssize_t length = 0
-        cdef char *buf = NULL
-        cdef bytes exn_bytes = pickle.dumps(excn)
-        cdef str exn_text = "".join(traceback.format_exception(excn))
-
-        PyBytes_AsStringAndSize(exn_bytes, &buf, &length)
-        set_python_exception(self._handle[0], buf, length, exn_text.encode())
 
     cpdef bool can_raise_exception(self):
         r"""

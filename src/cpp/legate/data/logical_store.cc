@@ -150,11 +150,6 @@ const SharedPtr<detail::LogicalStore>& LogicalStore::impl() const { return impl_
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::detach() { impl()->detach(); }
 
-void LogicalStore::offload_to(mapping::StoreTarget target_mem) const
-{
-  detail::Runtime::get_runtime().offload_to(target_mem, impl());
-}
-
 LogicalStore::~LogicalStore() noexcept = default;
 
 // ==========================================================================================

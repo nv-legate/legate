@@ -21,18 +21,42 @@
 
 namespace legate::detail {
 
+namespace {
+
+// TODO(wonchanl): Make these functions thread-safe
+std::int64_t generate_library_task_ids_(std::int64_t max_tasks)
+{
+  static auto base = std::int64_t{100};
+
+  const auto result = base;
+
+  base += max_tasks;
+
+  return result;
+}
+
+std::int64_t generate_library_reduction_ids_(std::int64_t max_reduction_ops)
+{
+  static auto base = std::int64_t{100};
+
+  const auto result = base;
+
+  base += max_reduction_ops;
+
+  return result;
+}
+
+}  // namespace
+
 Library::Library(std::string library_name,
                  const ResourceConfig& config,
                  std::unique_ptr<mapping::Mapper> mapper,
-                 std::map<VariantCode, VariantOptions> default_options,
-                 Legion::Runtime* runtime)
+                 std::map<VariantCode, VariantOptions> default_options)
   : library_name_{std::move(library_name)},
-    task_scope_{runtime->generate_library_task_ids(library_name_.c_str(), config.max_tasks),
-                config.max_tasks,
-                config.max_dyn_tasks},
-    redop_scope_{
-      runtime->generate_library_reduction_ids(library_name_.c_str(), config.max_reduction_ops),
-      config.max_reduction_ops},
+    task_scope_{
+      generate_library_task_ids_(config.max_tasks), config.max_tasks, config.max_dyn_tasks},
+    redop_scope_{generate_library_reduction_ids_(config.max_reduction_ops),
+                 config.max_reduction_ops},
     mapper_{std::move(mapper)},
     default_options_{std::move(default_options)}
 {
@@ -40,30 +64,6 @@ Library::Library(std::string library_name,
 }
 
 // ==========================================================================================
-
-Library::Library(ConstructKey,
-                 std::string library_name,
-                 const ResourceConfig& config,
-                 std::unique_ptr<mapping::Mapper> mapper,
-                 std::map<VariantCode, VariantOptions> default_options)
-  : Library{std::move(library_name),
-            config,
-            std::move(mapper),
-            std::move(default_options),
-            Legion::Runtime::get_runtime()}
-{
-}
-
-/*static*/ void Library::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                                          const Legion::UntypedBuffer& buffer)
-{
-  // Under single-controller execution, only the controller will call this method; however,
-  // callback must be executed on all workers, so register the callback globally.
-  const bool global = Runtime::get_runtime().config().single_controller_execution();
-
-  Legion::Runtime::perform_registration_callback(
-    callback, buffer, global /*global*/, false /*dedup*/);
-}
 
 GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
 {

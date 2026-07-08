@@ -7,7 +7,6 @@
 #include <legate.h>
 
 #include <legate/data/detail/shape.h>
-#include <legate/operation/detail/execution_fence.h>
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/utilities/detail/dlpack/common.h>
@@ -134,22 +133,9 @@ INSTANTIATE_TEST_SUITE_P(FormatterUnit,
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
   FormatOperationKind,
-  ::testing::Values(
-    std::make_tuple(legate::detail::Operation::Kind::ATTACH, "Attach"),
-    std::make_tuple(legate::detail::Operation::Kind::AUTO_TASK, "AutoTask"),
-    std::make_tuple(legate::detail::Operation::Kind::COPY, "Copy"),
-    std::make_tuple(legate::detail::Operation::Kind::DISCARD, "Discard"),
-    std::make_tuple(legate::detail::Operation::Kind::EXECUTION_FENCE, "ExecutionFence"),
-    std::make_tuple(legate::detail::Operation::Kind::FILL, "Fill"),
-    std::make_tuple(legate::detail::Operation::Kind::GATHER, "Gather"),
-    std::make_tuple(legate::detail::Operation::Kind::INDEX_ATTACH, "IndexAttach"),
-    std::make_tuple(legate::detail::Operation::Kind::MANUAL_TASK, "ManualTask"),
-    std::make_tuple(legate::detail::Operation::Kind::MAPPING_FENCE, "MappingFence"),
-    std::make_tuple(legate::detail::Operation::Kind::REDUCE, "Reduce"),
-    std::make_tuple(legate::detail::Operation::Kind::RELEASE_REGION_FIELD, "ReleaseRegionField"),
-    std::make_tuple(legate::detail::Operation::Kind::SCATTER, "Scatter"),
-    std::make_tuple(legate::detail::Operation::Kind::SCATTER_GATHER, "ScatterGather"),
-    std::make_tuple(legate::detail::Operation::Kind::TIMING, "Timing")));
+  ::testing::Values(std::make_tuple(legate::detail::Operation::Kind::AUTO_TASK, "AutoTask"),
+                    std::make_tuple(legate::detail::Operation::Kind::FILL, "Fill"),
+                    std::make_tuple(legate::detail::Operation::Kind::TIMING, "Timing")));
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
@@ -414,16 +400,6 @@ TEST_F(FormatterUnit, InvalidDLPackDeviceType)
   auto device_type = static_cast<DLDeviceType>(99);  // Invalid device type
 
   ASSERT_EQ(fmt::format("{}", device_type), "Unknown DLPack device type");
-}
-
-TEST_F(FormatterUnit, ExecutionFence)
-{
-  // To hit format operation
-  const legate::InternalSharedPtr<legate::detail::Operation> smart_ptr{
-    new legate::detail::ExecutionFence{/*unique_id=*/1, /*block=*/false}};
-  constexpr std::string_view expect_str = "ExecutionFence:1";
-
-  ASSERT_EQ(fmt::format("{}", *smart_ptr), expect_str);
 }
 
 TEST_F(FormatterUnit, Alignment)

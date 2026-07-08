@@ -64,10 +64,4 @@ TaskInfo Library::find_task(LocalTaskID local_task_id) const
   return TaskInfo{impl()->find_task(local_task_id)};
 }
 
-void Library::perform_callback_(Legion::RegistrationWithArgsCallbackFnptr callback,
-                                const Legion::UntypedBuffer& buffer)
-{
-  detail::Library::perform_callback(callback, buffer);
-}
-
 }  // namespace legate

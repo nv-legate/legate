@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/cuda/detail/nvtx.h>
-#include <legate/task/detail/returned_exception.h>
 #include <legate/task/task_context.h>
 #include <legate/utilities/typedefs.h>
 

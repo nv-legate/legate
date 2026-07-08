@@ -177,9 +177,6 @@ class LEGATE_EXPORT Library {
   [[nodiscard]] detail::Library* impl();
 
  private:
-  static void perform_callback_(Legion::RegistrationWithArgsCallbackFnptr callback,
-                                const Legion::UntypedBuffer& buffer);
-
   detail::Library* impl_{};
 };
 
