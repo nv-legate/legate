@@ -26,7 +26,9 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/redop/detail/register.h>
+#include <legate/runtime/detail/argument_parsing/flags/logging.h>
 #include <legate/runtime/detail/argument_parsing/legate_args.h>
+#include <legate/runtime/detail/argument_parsing/parse.h>
 #include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/library.h>
@@ -59,10 +61,10 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
+#include <fmt/std.h>
 
 #include <atomic>
 #include <cstdlib>
-#include <mappers/logging_wrapper.h>
 #include <nccl.h>
 // GCC 14 alloc-zero warning when using Conda installed compiler
 LEGATE_PRAGMA_PUSH();
@@ -553,7 +555,7 @@ namespace {
 
 #endif  // REALM_USE_GASNETEX
 
-void handle_realm_default_args(bool need_network_init)
+void handle_realm_default_args(const ParsedArgs& parsed_args, bool need_network_init)
 {
   constexpr EnvironmentVariable<std::string> REALM_DEFAULT_ARGS{"REALM_DEFAULT_ARGS"};
   std::stringstream ss;
@@ -614,6 +616,17 @@ void handle_realm_default_args(bool need_network_init)
 #endif
   } else {
     ss << " -ll:networks none";
+  }
+
+  if (auto&& log_levels = parsed_args.log_levels.value(); !log_levels.empty()) {
+    ss << fmt::format(" -level {} ", convert_log_levels(log_levels));
+  }
+
+  if (parsed_args.log_to_file.value()) {
+    ss << fmt::format(
+      " -logfile \"{}\" "
+      "-errlevel 4 ",
+      parsed_args.log_dir.value() / "legate_%.log");
   }
 
   const auto realm_default_args = ss.str();
@@ -680,7 +693,9 @@ void set_env_vars()
     set_mpi_wrapper_libraries();
   }
 
-  handle_realm_default_args(need_network_init);
+  auto parsed_args = parse_legate_args();
+
+  handle_realm_default_args(parsed_args, need_network_init);
 
   int argc                           = 1;
   const char* const dummy_argv_arr[] = {"legate-placeholder-binary-name", nullptr};
@@ -713,7 +728,7 @@ void set_env_vars()
   check_realm(runtime.network_init(&argc, &argv));
   check_realm(runtime.create_configs(argc, argv));
 
-  auto config = handle_legate_args();
+  auto config = handle_legate_args(&parsed_args);
 
   runtime.parse_command_line(argc, argv);
   runtime.finish_configure();

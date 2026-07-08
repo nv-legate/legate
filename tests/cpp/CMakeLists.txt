@@ -380,6 +380,7 @@ legate_configure_test(
 legate_configure_test(
   NAME tests_non_reentrant_wo_runtime
   SOURCES main_wo_runtime_init.cc ${non_reentrant_wo_runtime_SRC}
+  ADDITIONAL_TARGETS ${wo_runtime_EXTRA_TARGETS}
 )
 
 set(gpu_SRC)

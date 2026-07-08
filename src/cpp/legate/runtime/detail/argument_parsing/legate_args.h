@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/runtime/detail/argument_parsing/parse.h>
 #include <legate/runtime/detail/config.h>
 
 #include <string_view>
@@ -17,11 +18,13 @@ namespace legate::detail {
  */
 [[nodiscard]] std::string_view get_parsed_LEGATE_CONFIG();  // NOLINT(readability-identifier-naming)
 
+[[nodiscard]] ParsedArgs parse_legate_args();
+
 /**
  * @brief Parse `LEGATE_CONFIG` and generate a `Config` database from it.
  *
  * @return The configuration of Legate.
  */
-[[nodiscard]] Config handle_legate_args();
+[[nodiscard]] Config handle_legate_args(ParsedArgs* parsed);
 
 }  // namespace legate::detail

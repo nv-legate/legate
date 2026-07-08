@@ -41,9 +41,7 @@ std::string LEGATE_CONFIG_SAVED{};
 
 std::string_view get_parsed_LEGATE_CONFIG() { return LEGATE_CONFIG_SAVED; }
 
-namespace {
-
-[[nodiscard]] ParsedArgs parse_legate_args()
+ParsedArgs parse_legate_args()
 {
   LEGATE_CONFIG_SAVED = LEGATE_CONFIG.get().value_or("");
 
@@ -54,6 +52,8 @@ namespace {
   args.insert(args.begin(), "LEGATE_CONFIG");
   return parse_args(std::move(args));
 }
+
+namespace {
 
 Config prefill_config(const ParsedArgs& args)
 {
@@ -157,15 +157,14 @@ void autoconfigure(ParsedArgs* args, Config* config)
 
 }  // namespace
 
-Config handle_legate_args()
+Config handle_legate_args(ParsedArgs* parsed)
 {
-  auto parsed = parse_legate_args();
-  auto cfg    = prefill_config(parsed);
+  auto cfg = prefill_config(*parsed);
 
-  autoconfigure(&parsed, &cfg);
+  autoconfigure(parsed, &cfg);
   if (cfg.show_config()) {
     // Can't use a logger, since Realm hasn't been initialized yet.
-    fmt::println(parsed.config_summary());
+    fmt::println(parsed->config_summary());
   }
 
   if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && cfg.need_openmp()) {
@@ -175,7 +174,7 @@ Config handle_legate_args()
       "flag"};
   }
 
-  configure_realm(parsed);
+  configure_realm(*parsed);
   return cfg;
 }
 
