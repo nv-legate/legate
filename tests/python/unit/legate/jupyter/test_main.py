@@ -26,7 +26,11 @@ if TYPE_CHECKING:
 
 # TODO: this test with the fake argv path does not work for the way
 # legate is installed in CI, so skip for now.
-@pytest.mark.skip
+@pytest.mark.skip(
+    reason=(
+        "not severe: fake argv path does not match Legate's CI install layout"
+    )
+)
 def test_main(mocker: MockerFixture) -> None:
     config_spy = mocker.spy(legate.jupyter.config.Config, "__init__")
     system_spy = mocker.spy(legate.util.system.System, "__init__")

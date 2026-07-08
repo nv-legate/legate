@@ -32,11 +32,11 @@ class TestParserDefaults:
 
     # multi_node
 
-    @pytest.mark.skipif(is_multi_node(), reason="Single node test")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: Single node test")
     def test_nodes(self) -> None:
         assert m.parser.get_default("nodes") == defaults.LEGATE_NODES
 
-    @pytest.mark.skipif(is_multi_node(), reason="Single node test")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: Single node test")
     def test_ranks_per_node(self) -> None:
         assert (
             m.parser.get_default("ranks_per_node")

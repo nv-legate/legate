@@ -60,11 +60,11 @@ class TestProfileRange:
                 assert b"foobarbaz" in out
                 assert b"profile_range_task" in out
 
-    @pytest.mark.skipif(ASAN, reason="ASAN is configured")
+    @pytest.mark.skipif(ASAN, reason="not severe: ASAN is configured")
     def test_output_without_asan(self) -> None:
         self._test_output({})
 
-    @pytest.mark.skipif(not ASAN, reason="ASAN is not configured")
+    @pytest.mark.skipif(not ASAN, reason="not severe: ASAN is not configured")
     def test_output_with_asan(self) -> None:
         self._test_output(dict(os.environ))
 

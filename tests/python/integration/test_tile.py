@@ -89,7 +89,7 @@ else:
 @pytest.mark.skipif(
     not has_cufile
     and get_legate_runtime().machine.preferred_target == TaskTarget.GPU,
-    reason="test require nvidia_fs",
+    reason="not severe: test require nvidia_fs",
 )
 @pytest.mark.parametrize(
     ("shape", "tile_shape", "offsets", "expected"),

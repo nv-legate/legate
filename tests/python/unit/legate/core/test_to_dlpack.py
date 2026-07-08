@@ -49,7 +49,7 @@ class TestToDLPack:
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
     @pytest.mark.parametrize("target", tuple(TaskTarget))
-    @pytest.mark.skipif(is_multi_node(), reason="single node only")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: single node only")
     def test_basic(
         self, shape: tuple[int, ...], legate_type: Type, target: TaskTarget
     ) -> None:
@@ -58,8 +58,8 @@ class TestToDLPack:
 
         if runtime.machine.count(target) == 0:
             pytest.skip(
-                f"Test requires support for {store_target} memory in order "
-                "to be run"
+                f"not severe: Test requires support for {store_target} "
+                "memory in order to be run"
             )
 
         store = runtime.create_store(dtype=legate_type, shape=shape)
@@ -76,7 +76,7 @@ class TestToDLPack:
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
-    @pytest.mark.skipif(is_multi_node(), reason="single node only")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: single node only")
     def test_to_numpy(self, shape: tuple[int, ...], legate_type: Type) -> None:
         VALUE = 3
         store = get_legate_runtime().create_store(
@@ -100,7 +100,7 @@ class TestToDLPack:
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
-    @pytest.mark.skipif(is_multi_node(), reason="single node only")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: single node only")
     def test_to_numpy_must_copy(
         self, shape: tuple[int, ...], legate_type: Type
     ) -> None:
@@ -133,7 +133,7 @@ class TestToDLPack:
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
     )
-    @pytest.mark.skipif(is_multi_node(), reason="single node only")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: single node only")
     def test_to_numpy_never_copy(
         self, shape: tuple[int, ...], legate_type: Type
     ) -> None:
@@ -164,9 +164,9 @@ class TestToDLPack:
 
     @pytest.mark.skipif(
         TaskTarget.GPU not in get_legate_runtime().machine.valid_targets,
-        reason="GPU only test",
+        reason="not severe: GPU only test",
     )
-    @pytest.mark.xfail(reason="dlpack broken in FBMEM")
+    @pytest.mark.xfail(reason="severe: issue-2739 dlpack broken in FBMEM")
     @pytest.mark.parametrize("stream", [-1, 0, 2])
     def test_stream(self, stream: int) -> None:
         store = get_legate_runtime().create_store(
@@ -180,7 +180,7 @@ class TestToDLPack:
 
     @pytest.mark.skipif(
         TaskTarget.GPU not in get_legate_runtime().machine.valid_targets,
-        reason="GPU only test (ZCMEM requires CUDA)",
+        reason="not severe: GPU only test (ZCMEM requires CUDA)",
     )
     def test_zcmem_dlpack_device(self) -> None:
         """Test that ZCMEM (pinned memory) returns kDLCUDAHost device type."""

@@ -35,7 +35,9 @@ SYSTEM = System()
 
 CONSOLE = Console(color_system=None, soft_wrap=True)
 
-pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
+pytestmark = pytest.mark.skipif(
+    is_multi_node(), reason="not severe: Single node tests"
+)
 
 
 class TestDriver:

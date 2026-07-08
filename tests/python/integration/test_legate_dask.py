@@ -41,7 +41,7 @@ except ModuleNotFoundError:
     dask = None
 
 
-@pytest.mark.skipif(dask is None, reason="Dask is not installed")
+@pytest.mark.skipif(dask is None, reason="not severe: Dask is not installed")
 class TestDaskCluster:
     # This function is executed as Dask Task, hence the deferred import
     def getenv(self, env_var: str) -> str:
@@ -87,7 +87,7 @@ class TestDaskCluster:
                 assert bootstrap_mode == BootstrapMode.P2P
 
 
-@pytest.mark.skipif(dask is None, reason="Dask is not installed")
+@pytest.mark.skipif(dask is None, reason="not severe: Dask is not installed")
 class TestDaskWorker:
     @pytest.mark.parametrize("workers", range(1, 5))
     def test_workers(

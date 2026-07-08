@@ -31,7 +31,9 @@ def test_LEGATE_GLOBAL_RANK_SUBSTITUTION() -> None:
     assert m.LEGATE_GLOBAL_RANK_SUBSTITUTION == "%%LEGATE_GLOBAL_RANK%%"
 
 
-pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
+pytestmark = pytest.mark.skipif(
+    is_multi_node(), reason="not severe: Single node tests"
+)
 
 
 def test_CMD_PARTS() -> None:
@@ -645,7 +647,9 @@ class Test_cmd_user_opts:
         assert result == tuple(opts)
 
     @pytest.mark.parametrize("opts", USER_OPTS, ids=str)
-    @pytest.mark.skipif(not install_info.use_cuda, reason="no CUDA support")
+    @pytest.mark.skipif(
+        not install_info.use_cuda, reason="not severe: no CUDA support"
+    )
     def test_with_legate_opts(self, genobjs: GenObjs, opts: list[str]) -> None:
         args = ["--verbose", "--gpus", "2", *opts]
         config, system, launcher = genobjs(args, fake_module=None)

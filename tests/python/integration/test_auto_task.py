@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from typing import Any
 from unittest import mock
 
@@ -161,16 +162,11 @@ class TestAutoTask:
 
     @pytest.mark.parametrize(
         ("val", "dtype"),
-        tuple(zip(SCALAR_VALS, ARRAY_TYPES, strict=True)),
+        tuple(zip(SCALAR_VALS[:-1], ARRAY_TYPES[:-1], strict=True)),
         ids=str,
     )
     def test_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
-        if (
-            isinstance(val, bytes)
-            and runtime.machine.preferred_target == TaskTarget.GPU
-        ):
-            pytest.skip("aborts proc with GPU")
         shape = (3, 1, 3)
         dtype_np = dtype.to_numpy_dtype()
         auto_task = runtime.create_auto_task(
@@ -290,7 +286,7 @@ class TestAutoTask:
 
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="test_side_effect not supported in multi-rank mode",
+        reason="not severe: test_side_effect not supported in multi-rank mode",
     )
     def test_side_effect(self) -> None:
         class foo:
@@ -530,6 +526,33 @@ class TestAutoTaskConstraints:
 
 
 class TestAutoTaskErrors:
+    def test_binary_scalar_arg_unsupported_on_gpu(self) -> None:
+        runtime = get_legate_runtime()
+        if runtime.machine.preferred_target != TaskTarget.GPU:
+            pytest.skip("not severe: bytes scalar unsupported only on GPU")
+        if "coverage" in sys.modules:
+            pytest.skip(
+                "not severe: issue-3759 coverage inflates propagated exception"
+            )
+
+        shape = (3, 1, 3)
+        dtype = ty.binary_type(len(SCALAR_VALS[-1]))
+        auto_task = runtime.create_auto_task(
+            tasks.fill_task_may_throw.library,
+            tasks.fill_task_may_throw.task_id,
+        )
+        out_store = runtime.create_store(dtype, shape)
+        auto_task.add_output(out_store)
+        auto_task.add_scalar_arg(Scalar(SCALAR_VALS[-1], dtype))
+
+        def run_task() -> None:
+            auto_task.execute()
+            runtime.issue_execution_fence(block=True)
+
+        msg = r"Unsupported (type <class 'bytes'>|dtype \|S26)"
+        with pytest.raises((TypeError, ValueError), match=msg):
+            run_task()
+
     def test_nonexistent_task_id(self) -> None:
         runtime = get_legate_runtime()
         msg = "does not have task"
@@ -588,7 +611,10 @@ class TestAutoTaskErrors:
         with pytest.raises(TypeError, match=msg):
             auto_task.add_scalar_arg(123, (ty.int32,))
 
-    @pytest.mark.xfail(run=False, reason="arbitrary crash during reuse")
+    @pytest.mark.xfail(
+        run=False,
+        reason="severe: issue-384 issue-440 crash on auto task reuse",
+    )
     def test_auto_task_reuse(self) -> None:
         runtime = get_legate_runtime()
         library = tasks.basic_task.library
@@ -608,7 +634,10 @@ class TestAutoTaskErrors:
             assert msg not in str(exc)  # noqa: PT017
         runtime.issue_execution_fence(block=True)
 
-    @pytest.mark.xfail(run=False, reason="crashes1,  application")
+    @pytest.mark.xfail(
+        run=False,
+        reason="severe: issue-465 crash on uninitialized input store",
+    )
     def test_uninitialized_input_store(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(

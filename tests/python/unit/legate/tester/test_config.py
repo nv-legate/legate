@@ -260,7 +260,9 @@ class TestConfig:
 class Test_test_files:
     # first two tests are too sensitive to actual repo state and run location
 
-    @pytest.mark.skip
+    @pytest.mark.skip(
+        reason="not severe: sensitive to repo state and run location"
+    )
     def test_basic(self) -> None:
         c = m.Config(["test.py", "--root-dir", str(REPO_TOP)], project=PROJECT)
 

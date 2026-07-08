@@ -238,7 +238,9 @@ class TestScopeErrors:
         with pytest.raises(ValueError, match=msg), scope, scope:
             pass
 
-    @pytest.mark.xfail(reason="issue-3323, reuse works")
+    @pytest.mark.xfail(
+        reason="severe: issue-3323 Scope object reuse is currently allowed"
+    )
     def test_reuse_scope_obj(self) -> None:
         msg = "Each Scope object can be used only once as a context manager"
         scope = Scope()

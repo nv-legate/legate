@@ -51,7 +51,9 @@ def test_LAUNCHER_VAR_PREFIXES() -> None:
     )
 
 
-pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
+pytestmark = pytest.mark.skipif(
+    is_multi_node(), reason="not severe: Single node tests"
+)
 
 
 class TestLauncher:

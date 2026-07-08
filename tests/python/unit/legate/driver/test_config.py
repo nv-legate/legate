@@ -21,7 +21,9 @@ from ...util import is_multi_node, powerset
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
+pytestmark = pytest.mark.skipif(
+    is_multi_node(), reason="not severe: Single node tests"
+)
 
 
 class TestMultiNode:

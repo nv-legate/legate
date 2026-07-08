@@ -82,7 +82,7 @@ class TestFromDLPack:
     @pytest.mark.skipif(
         cupy is None
         or get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
-        reason="test requires cupy and GPUs",
+        reason="not severe: test requires cupy and GPUs",
     )
     def test_cupy_gpu(self) -> None:
         buf = cupy.zeros(10, dtype=cupy.float64)
@@ -158,7 +158,8 @@ class TestFromSysmem:
 
 
 @pytest.mark.skipif(
-    not install_info.use_cuda, reason="ZCMEM requires a CUDA-enabled build"
+    not install_info.use_cuda,
+    reason="not severe: ZCMEM requires a CUDA-enabled build",
 )
 class TestFromZcmem:
     def test_basic(self) -> None:
@@ -173,7 +174,7 @@ class TestFromZcmem:
 @pytest.mark.skipif(
     cupy is None
     or get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
-    reason="test requires cupy and GPUs",
+    reason="not severe: test requires cupy and GPUs",
 )
 class TestFromFbmem:
     def test_basic(self) -> None:

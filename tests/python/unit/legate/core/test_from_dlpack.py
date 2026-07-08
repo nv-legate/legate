@@ -135,7 +135,13 @@ class TestFromDLPack:
         np.testing.assert_allclose(store1_arr, x)
         np.testing.assert_allclose(store2_arr, x)
 
-    @pytest.mark.xfail(run=False, reason="aborts python proc")
+    @pytest.mark.xfail(
+        run=False,
+        reason=(
+            "severe: issue-2730 to_target aborts on unhandled "
+            "Processor::Kind 14"
+        ),
+    )
     @pytest.mark.parametrize("shape", ((1,), (2, 2), (3, 3, 3)))
     @pytest.mark.parametrize(
         "legate_type", (ty.int32, ty.float32, ty.uint64, ty.complex128)
@@ -144,7 +150,7 @@ class TestFromDLPack:
         self, shape: tuple[int, ...], legate_type: Type
     ) -> None:
         if not cupy:
-            pytest.skip(reason="test requires cupy")
+            pytest.skip(reason="not severe: test requires cupy")
 
         x = cupy.ones(shape=shape, dtype=legate_type.to_numpy_dtype())
         store1 = from_dlpack(x)

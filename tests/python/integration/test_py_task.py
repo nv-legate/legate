@@ -108,12 +108,12 @@ class TestPyTask:
 
     @pytest.mark.skipif(
         get_legate_runtime().machine.preferred_target != TaskTarget.GPU,
-        reason="GPU only test",
+        reason="not severe: GPU only test",
     )
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     def test_cupy_dlpack_input_output(self, shape: tuple[int, ...]) -> None:
         if not cupy:
-            pytest.skip(reason="test requires cupy")
+            pytest.skip(reason="not severe: test requires cupy")
         cupy.random.seed(42)
         arr = cupy.random.rand(*shape)
         out_arr = cupy.empty(shape)
@@ -130,7 +130,7 @@ class TestPyTask:
 
     @pytest.mark.skipif(
         TaskTarget.GPU not in get_legate_runtime().machine.valid_targets,
-        reason="GPU only test",
+        reason="not severe: GPU only test",
     )
     @pytest.mark.parametrize("stream", [-1, 0, 2])
     def test_dlpack_stream(self, stream: int) -> None:
@@ -161,42 +161,17 @@ class TestPyTask:
         tasks.mixed_sum_task(store1, store2, out_store)
         np.testing.assert_allclose(exp, out_arr)
 
-    @pytest.mark.xfail(reason="LogicalStorePartition not supported")
-    @pytest.mark.parametrize(
-        "shape",
-        [
-            # LEGION ERROR: Invalid color space color for child 0 of logical
-            # partition (1,1,1)
-            pytest.param(
-                (2, 4, 6, 8),
-                marks=pytest.mark.xfail(
-                    run=False, reason="crashes application"
-                ),
-            ),
-            (3, 4, 6, 8),
-            (7, 4, 3, 9),
-            # LEGION ERROR: Invalid color space color for child 1 of
-            # partition 3
-            pytest.param(
-                (500, 3, 3, 3),
-                marks=pytest.mark.xfail(
-                    run=False, reason="crashes application"
-                ),
-            ),
-        ],
-        ids=str,
-    )
+    @pytest.mark.parametrize("shape", [(3, 4, 6, 8), (7, 4, 3, 9)], ids=str)
     def test_partition_to_store(self, shape: tuple[int, ...]) -> None:
         tile = (2, 2, 2, 2)
-        arr, store = utils.random_array_and_store(shape)
+        _, store = utils.random_array_and_store(shape)
         partition = store.partition_by_tiling(tile)
+        child_store = partition.get_child_store(0, 0, 0, 0)
+        expected = np.asarray(child_store.get_physical_store()).copy()
         out_arr, out_store = utils.zero_array_and_store(ty.float64, tile)
-        # TypeError: Argument: 'partition' expected one of
-        # (<class 'legate._lib.data.logical_store.LogicalStore'>,
-        # <class 'legate._lib.data.logical_array.LogicalArray'>), got
-        # <class 'legate._lib.data.logical_store.LogicalStorePartition'>
-        tasks.partition_to_store_task(partition, out_store)
-        np.testing.assert_allclose(out_arr, arr)
+        tasks.partition_to_store_task(child_store, out_store)
+        get_legate_runtime().issue_execution_fence(block=True)
+        np.testing.assert_allclose(out_arr, expected)
 
     def test_python_scalar_arg(self) -> None:
         @task(variants=tuple(VariantCode))
@@ -211,16 +186,10 @@ class TestPyTask:
 
     @pytest.mark.parametrize(
         ("val", "dtype"),
-        tuple(zip(SCALAR_VALS, ARRAY_TYPES, strict=True)),
+        tuple(zip(SCALAR_VALS[:-1], ARRAY_TYPES[:-1], strict=True)),
         ids=str,
     )
     def test_legate_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
-        runtime = get_legate_runtime()
-        if (
-            isinstance(val, bytes)
-            and runtime.machine.preferred_target == TaskTarget.GPU
-        ):
-            pytest.skip("aborts proc with GPU")
         shape = (3, 1, 3)
         arr_np = np.full(shape, val, dtype=dtype.to_numpy_dtype())
         out_np, out_store = utils.empty_array_and_store(dtype, shape)
@@ -247,7 +216,19 @@ class TestPyTask:
 
     @pytest.mark.parametrize(
         "shape",
-        [pytest.param((), marks=pytest.mark.xfail(run=False)), *SHAPES],
+        [
+            pytest.param(
+                (),
+                marks=pytest.mark.xfail(
+                    run=False,
+                    reason=(
+                        "severe: issue-2529 Legion assertion false for "
+                        "ndim == 0 output buffer"
+                    ),
+                ),
+            ),
+            *SHAPES,
+        ],
     )
     def test_bind_buffer(self, shape: tuple[int, ...]) -> None:
         val = 98765
@@ -278,7 +259,18 @@ class TestPyTask:
 
     @pytest.mark.parametrize(
         "shape",
-        [pytest.param((), marks=pytest.mark.xfail(run=False)), *SHAPES],
+        [
+            pytest.param(
+                (),
+                marks=pytest.mark.xfail(
+                    run=False,
+                    reason=(
+                        "severe: issue-2529 crash on ndim == 0 deferred bind"
+                    ),
+                ),
+            ),
+            *SHAPES,
+        ],
     )
     def test_bind_deferred(self, shape: tuple[int, ...]) -> None:
         val1 = 98765
@@ -308,7 +300,13 @@ class TestPyTask:
         assert store2.shape == shape2
         assert (np.asarray(store2) == val2).all()
 
-    @pytest.mark.xfail(run=False, reason="aborts python")
+    @pytest.mark.xfail(
+        run=False,
+        reason=(
+            "severe: issue-3759 LEGION programming model exception for "
+            "unbound output buffer"
+        ),
+    )
     def test_allocate_without_binding(self) -> None:
         @task(
             variants=tuple(VariantCode),
@@ -354,7 +352,13 @@ class TestPyTask:
         bad_binding(store1, store2)
         runtime.issue_execution_fence(block=True)
 
-    @pytest.mark.xfail(run=False, reason="aborts python")
+    @pytest.mark.xfail(
+        run=False,
+        reason=(
+            "severe: issue-3759 LEGION resource exception for deferred "
+            "buffer without allocation"
+        ),
+    )
     def test_binding_without_allocation(self) -> None:
         @task(variants=tuple(VariantCode))
         def forgot_allocation(out: tasks.OutputStore) -> None:
@@ -375,7 +379,13 @@ class TestPyTask:
         forgot_allocation(store)
         runtime.issue_execution_fence(block=True)
 
-    @pytest.mark.xfail(run=False, reason="aborts python")
+    @pytest.mark.xfail(
+        run=False,
+        reason=(
+            "severe: issue-2691 Realm assertion failure on rebinding "
+            "output buffer"
+        ),
+    )
     def test_rebind(self) -> None:
         @task(
             variants=tuple(VariantCode),
@@ -403,7 +413,7 @@ class TestPyTask:
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     @pytest.mark.parametrize(
         ("dtype", "val"),
-        tuple(zip(ARRAY_TYPES, SCALAR_VALS, strict=True)),
+        tuple(zip(ARRAY_TYPES[:-1], SCALAR_VALS[:-1], strict=True)),
         ids=str,
     )
     def test_ndarray_scalar_arg(
@@ -411,17 +421,12 @@ class TestPyTask:
     ) -> None:
         if val is None or (isinstance(val, bytes) and shape is None):
             pytest.skip(
-                "numpy does not have a 0-sized type, so deducing the shape of "
-                "the resulting store leads to size mismatches between the "
-                "numpy type and legate type"
+                "not severe: numpy does not have a 0-sized type, so "
+                "deducing the shape of the resulting store leads to size "
+                "mismatches between the numpy type and legate type"
             )
 
         runtime = get_legate_runtime()
-        if (
-            isinstance(val, bytes)
-            and runtime.machine.preferred_target == TaskTarget.GPU
-        ):
-            pytest.skip("aborts proc with GPU")
         out_arr, out_store = utils.empty_array_and_store(dtype, shape)
         in_arr = np.full(shape, val, dtype=dtype.to_numpy_dtype())
         tasks.copy_np_array_task(out_store, in_arr)
@@ -439,7 +444,7 @@ class TestPyTask:
             runtime.machine.preferred_target == TaskTarget.GPU
             and in_np.size >= 1024
         ):
-            pytest.xfail(reason="cupy reporting overflow")
+            pytest.xfail(reason="not severe: cupy reporting overflow")
         # Need to cast to int since randint() returns signedinteger[_32Bit |
         # _64Bit] since numpy 2.13
         repeats = tuple(map(int, np.random.randint(1, 3, in_np.ndim)))
@@ -500,7 +505,13 @@ class TestPyTask:
             # correctly
             pytest.param(
                 ImageComputationHint.NO_HINT,
-                marks=pytest.mark.xfail(run=False),
+                marks=pytest.mark.xfail(
+                    run=False,
+                    reason=(
+                        "severe: issue-2539 sparse sub-stores not "
+                        "handled correctly"
+                    ),
+                ),
             ),
             ImageComputationHint.MIN_MAX,
             ImageComputationHint.FIRST_LAST,
@@ -536,34 +547,6 @@ class TestPyTask:
 
         _, range_store = utils.random_array_and_store(shape)
         py_task(func_store, range_store)
-
-    @pytest.mark.parametrize(
-        "shape",
-        [
-            # TODO(yimoj): check and fix this later
-            pytest.param((3, 2, 1), marks=pytest.mark.xfail(run=False)),
-            pytest.param(
-                (2, 1024, 1),
-                # NotImplementedError: Unsupported type: (2, 1024, 1).
-                # All elements must have the same type.
-                # Element at index 1 has type uint16, expected uint8
-                marks=pytest.mark.xfail(reason="insufficient dtype deduced"),
-            ),
-        ],
-        ids=str,
-    )
-    def test_bloat_constraints(self, shape: tuple[int, ...]) -> None:
-        low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
-        high_offsets = low_offsets[::-1]
-        bloat_task = task(
-            variants=tuple(VariantCode),
-            constraints=(
-                bloat("in_store", "bloat_store", low_offsets, high_offsets),
-            ),
-        )(tasks.basic_bloat_task)
-        _, source_store = utils.random_array_and_store(shape)
-        _, bloat_store = utils.random_array_and_store(shape)
-        bloat_task(source_store, bloat_store, low_offsets, high_offsets, shape)
 
     @pytest.mark.parametrize(
         "minimum_extents",
@@ -708,7 +691,7 @@ class TestPyTask:
 
     @pytest.mark.skipif(
         TaskTarget.OMP in get_legate_runtime().machine.valid_targets,
-        reason="CPU/GPU only test",
+        reason="not severe: CPU/GPU only test",
     )
     def test_unregistered_variant(self) -> None:
         def foo() -> None:
@@ -818,7 +801,7 @@ class TestPyTask:
         "mode", [StreamingMode.OFF, StreamingMode.RELAXED], ids=repr
     )
     @pytest.mark.parametrize("factor", [1, 2, 43])
-    @pytest.mark.skipif(is_multi_node(), reason="single node only")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: single node only")
     def test_parallel_tasks(self, mode: StreamingMode, factor: int) -> None:
         runtime = get_legate_runtime()
         subregions = len(runtime.machine) * factor
@@ -861,3 +844,103 @@ if __name__ == "__main__":
     import sys
 
     sys.exit(pytest.main(sys.argv))
+
+
+class TestPyTaskErrors:
+    def test_partition_to_store_unsupported(self) -> None:
+        tile = (2, 2, 2, 2)
+        _, store = utils.random_array_and_store((3, 4, 6, 8))
+        partition = store.partition_by_tiling(tile)
+        _, out_store = utils.zero_array_and_store(ty.float64, tile)
+        msg = re.escape(
+            "Argument: 'partition' expected one of "
+            "(<class 'legate.core._lib.data.logical_store.LogicalStore'>,), "
+            "got <class "
+            "'legate.core._lib.data.logical_store.LogicalStorePartition'>"
+        )
+        with pytest.raises(TypeError, match=msg):
+            tasks.partition_to_store_task(partition, out_store)
+
+    def test_legate_binary_scalar_arg_unsupported_on_gpu(self) -> None:
+        runtime = get_legate_runtime()
+        if runtime.machine.preferred_target != TaskTarget.GPU:
+            pytest.skip("not severe: bytes scalar unsupported only on GPU")
+        if "coverage" in sys.modules:
+            pytest.skip(
+                "not severe: issue-3759 coverage inflates propagated exception"
+            )
+
+        shape = (3, 1, 3)
+        dtype = ty.binary_type(len(SCALAR_VALS[-1]))
+        _, out_store = utils.empty_array_and_store(dtype, shape)
+
+        def run_task() -> None:
+            tasks.fill_task_may_throw(
+                out_store, Scalar(SCALAR_VALS[-1], dtype)
+            )
+
+        msg = r"Unsupported (type <class 'bytes'>|dtype \|S26)"
+        with pytest.raises(Exception, match=msg):
+            run_task()
+
+    def test_ndarray_binary_type_unsupported_on_gpu(self) -> None:
+        runtime = get_legate_runtime()
+        if runtime.machine.preferred_target != TaskTarget.GPU:
+            pytest.skip("not severe: binary ndarray scalar is GPU-specific")
+        if "coverage" in sys.modules:
+            pytest.skip(
+                "not severe: issue-3759 coverage inflates propagated exception"
+            )
+
+        dtype = ty.binary_type(len(SCALAR_VALS[-1]))
+        shape = (3, 1, 3)
+        _, out_store = utils.empty_array_and_store(dtype, shape)
+        in_arr = np.full(shape, SCALAR_VALS[-1], dtype=dtype.to_numpy_dtype())
+
+        def run_task() -> None:
+            tasks.copy_np_array_task(out_store, in_arr)
+            runtime.issue_execution_fence(block=True)
+
+        msg = re.escape("Unsupported dtype |S26")
+        with pytest.raises(ValueError, match=msg):
+            run_task()
+
+    def test_bloat_constraint_mismatched_bounds(self) -> None:
+        shape = (3, 2, 1)
+        low_offsets = (1, 2, 3)
+        high_offsets = (3, 2, 1)
+        bloat_task = task(
+            variants=tuple(VariantCode),
+            constraints=(
+                bloat("in_store", "bloat_store", low_offsets, high_offsets),
+            ),
+            options=VariantOptions(may_throw_exception=True),
+        )(tasks.basic_bloat_task)
+        _, source_store = utils.random_array_and_store(shape)
+        _, bloat_store = utils.random_array_and_store(shape)
+        msg = "overflow encountered in scalar subtract"
+        with pytest.raises(RuntimeWarning, match=msg):
+            bloat_task(
+                source_store, bloat_store, low_offsets, high_offsets, shape
+            )
+
+    def test_bloat_constraint_tuple_dtype_unsupported(self) -> None:
+        shape = (2, 1024, 1)
+        low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
+        high_offsets = low_offsets[::-1]
+        msg = re.escape(
+            "Argument type: <class 'tuple'> not natively supported by "
+            "type inference"
+        )
+        bloat_task = task(
+            variants=tuple(VariantCode),
+            constraints=(
+                bloat("in_store", "bloat_store", low_offsets, high_offsets),
+            ),
+        )(tasks.basic_bloat_task)
+        _, source_store = utils.random_array_and_store(shape)
+        _, bloat_store = utils.random_array_and_store(shape)
+        with pytest.raises(UserWarning, match=msg):
+            bloat_task(
+                source_store, bloat_store, low_offsets, high_offsets, shape
+            )

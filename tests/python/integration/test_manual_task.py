@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from typing import Any
 from unittest import mock
 
@@ -165,16 +166,11 @@ class TestManualTask:
 
     @pytest.mark.parametrize(
         ("val", "dtype"),
-        tuple(zip(SCALAR_VALS, ARRAY_TYPES, strict=True)),
+        tuple(zip(SCALAR_VALS[:-1], ARRAY_TYPES[:-1], strict=True)),
         ids=str,
     )
     def test_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
-        if (
-            isinstance(val, bytes)
-            and runtime.machine.preferred_target == TaskTarget.GPU
-        ):
-            pytest.skip("aborts proc with GPU")
         shape = (3, 1, 3)
         dtype_np = dtype.to_numpy_dtype()
         manual_task = runtime.create_manual_task(
@@ -224,7 +220,11 @@ class TestManualTask:
             pytest.param(
                 (2, 4, 6, 8),
                 marks=pytest.mark.xfail(
-                    run=False, reason="crashes application"
+                    run=False,
+                    reason=(
+                        "severe: issue-2064 LEGION ERROR invalid color "
+                        "space color for child 0"
+                    ),
                 ),
             ),
             (3, 4, 6, 8),
@@ -234,7 +234,11 @@ class TestManualTask:
             pytest.param(
                 (500, 3, 3, 3),
                 marks=pytest.mark.xfail(
-                    run=False, reason="crashes application"
+                    run=False,
+                    reason=(
+                        "severe: issue-2064 LEGION ERROR invalid color "
+                        "space color for child 1 of partition 3"
+                    ),
                 ),
             ),
         ],
@@ -385,7 +389,7 @@ class TestManualTask:
 
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="test_side_effect not supported in multi-rank mode",
+        reason="not severe: test_side_effect not supported in multi-rank mode",
     )
     def test_side_effect(self) -> None:
         class foo:
@@ -458,6 +462,34 @@ class TestManualTask:
 
 
 class TestManualTaskErrors:
+    def test_binary_scalar_arg_unsupported_on_gpu(self) -> None:
+        runtime = get_legate_runtime()
+        if runtime.machine.preferred_target != TaskTarget.GPU:
+            pytest.skip("not severe: bytes scalar unsupported only on GPU")
+        if "coverage" in sys.modules:
+            pytest.skip(
+                "not severe: issue-3759 coverage inflates propagated exception"
+            )
+
+        shape = (3, 1, 3)
+        dtype = ty.binary_type(len(SCALAR_VALS[-1]))
+        manual_task = runtime.create_manual_task(
+            tasks.fill_task_may_throw.library,
+            tasks.fill_task_may_throw.task_id,
+            shape,
+        )
+        out_store = runtime.create_store(dtype, shape)
+        manual_task.add_output(out_store)
+        manual_task.add_scalar_arg(Scalar(SCALAR_VALS[-1], dtype))
+
+        def run_task() -> None:
+            manual_task.execute()
+            runtime.issue_execution_fence(block=True)
+
+        msg = r"Unsupported (type <class 'bytes'>|dtype \|S26)"
+        with pytest.raises((TypeError, ValueError), match=msg):
+            run_task()
+
     def test_add_invalid_input_output(self) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
@@ -490,7 +522,9 @@ class TestManualTaskErrors:
         with pytest.raises(TypeError, match=msg):
             manual_task.add_scalar_arg(123, (ty.int32,))
 
-    @pytest.mark.xfail(run=False, reason="crash during reuse")
+    @pytest.mark.xfail(
+        run=False, reason="severe: issue-384 crash on manual task reuse"
+    )
     def test_manual_task_exception_reuse(self) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
@@ -526,7 +560,13 @@ class TestManualTaskErrors:
                 library, tasks.basic_task.task_id, shape, bounds
             )
 
-    @pytest.mark.xfail(run=False, reason="crashes application")
+    @pytest.mark.xfail(
+        run=False,
+        reason=(
+            "severe: issue-450 output shape mismatch exception not "
+            "catchable in Python"
+        ),
+    )
     def test_launch_output_shape_mismatch(self) -> None:
         runtime = get_legate_runtime()
         library = tasks.basic_task.library
@@ -577,7 +617,10 @@ class TestManualTaskErrors:
                 1,  # type:ignore [arg-type]
             )
 
-    @pytest.mark.xfail(run=False, reason="crashes application")
+    @pytest.mark.xfail(
+        run=False,
+        reason="severe: issue-465 crash on uninitialized input store",
+    )
     def test_uninitialized_input_store(self) -> None:
         runtime = get_legate_runtime()
         shape = (1,)
@@ -607,7 +650,10 @@ class TestManualTaskErrors:
         with pytest.raises(exc, match=msg):
             task.add_communicator("foo")
 
-    @pytest.mark.xfail(run=False, reason="crashes application")
+    @pytest.mark.xfail(
+        run=False,
+        reason="severe: issue-1261 illegal concurrent index space mapping",
+    )
     def test_invalid_concurrent_mapping(self) -> None:
         runtime = get_legate_runtime()
         shape = (runtime.machine.count() + 1,)

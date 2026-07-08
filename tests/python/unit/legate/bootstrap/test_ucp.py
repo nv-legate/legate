@@ -25,7 +25,9 @@ from legate.bootstrap import (
 
 from ...util import is_multi_node
 
-pytestmark = pytest.mark.skipif(is_multi_node(), reason="single node only")
+pytestmark = pytest.mark.skipif(
+    is_multi_node(), reason="not severe: single node only"
+)
 
 
 class TestUcpSetupPeer:

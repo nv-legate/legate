@@ -21,7 +21,10 @@ from ...util import is_multi_node
 
 pytestmark = pytest.mark.skipif(
     is_multi_node(),
-    reason="These tests cause others after them to fail on multi-rank tests.",
+    reason=(
+        "severe: issue-3323 these tests cause others after them to "
+        "fail on multi-rank tests"
+    ),
 )
 
 
@@ -92,7 +95,7 @@ class TestInlineAllocation:
 
     @pytest.mark.skipif(
         get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
-        reason="This test requires GPUs",
+        reason="not severe: This test requires GPUs",
     )
     @pytest.mark.parametrize("dtype", (ty.int8, ty.int16, ty.int32, ty.int64))
     @pytest.mark.parametrize("shape", ((1,), (1, 2, 3), (1, 2, 3, 4)))
@@ -137,7 +140,7 @@ class TestInlineAllocation:
 
     @pytest.mark.skipif(
         get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
-        reason="This test requires GPUs",
+        reason="not severe: This test requires GPUs",
     )
     @pytest.mark.parametrize("dtype", (ty.int8, ty.int16, ty.int32, ty.int64))
     @pytest.mark.parametrize("shape", ((1,), (1, 2, 3), (1, 2, 3, 4)))

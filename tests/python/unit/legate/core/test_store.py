@@ -189,7 +189,9 @@ def get_num_gpus_() -> int:
 
 
 class Test_offload_to:
-    @pytest.mark.skipif(get_num_gpus_() == 0, reason="No GPUs found")
+    @pytest.mark.skipif(
+        get_num_gpus_() == 0, reason="not severe: No GPUs found"
+    )
     def test_host_offload(self) -> None:
         runtime = get_legate_runtime()
         # TODO(amberhassaan): This test either needs access to the amount of

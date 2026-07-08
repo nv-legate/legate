@@ -120,7 +120,7 @@ class TestShutdownCallback:
     def assert_reset(cls) -> None:
         assert cls.counter == 0
 
-    @pytest.mark.skipif(is_multi_node(), reason="single node only")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: single node only")
     def test_basic_shutdown_callback(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -141,7 +141,7 @@ class TestShutdownCallback:
         runtime.finish()
         assert TestShutdownCallback.counter == count + 1
 
-    @pytest.mark.skipif(is_multi_node(), reason="single node only")
+    @pytest.mark.skipif(is_multi_node(), reason="not severe: single node only")
     def test_LIFO(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
     ) -> None:
@@ -160,7 +160,10 @@ class TestShutdownCallback:
 
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="Test spawns a sub-process and only works on single node",
+        reason=(
+            "not severe: Test spawns a sub-process and only works on "
+            "single node"
+        ),
     )
     def test_duplicate_callback(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -179,7 +182,10 @@ class TestShutdownCallback:
 
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="Test spawns a sub-process and only works on single node",
+        reason=(
+            "not severe: Test spawns a sub-process and only works on "
+            "single node"
+        ),
     )
     def test_atexit(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -201,7 +207,9 @@ class TestShutdownCallback:
 
 @pytest.mark.skipif(
     is_multi_node(),
-    reason="Test spawns a sub-process and only works on single node",
+    reason=(
+        "not severe: Test spawns a sub-process and only works on single node"
+    ),
 )
 class TestRealmBacktrace:
     def test_realm_backtrace_faulthandler(
@@ -224,7 +232,10 @@ class TestRealmBacktrace:
     @pytest.mark.parametrize("val", ["0", "1"])
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="Test spawns a sub-process and only works on single node",
+        reason=(
+            "not severe: Test spawns a sub-process and only works on "
+            "single node"
+        ),
     )
     def test_realm_backtrace_set(
         self,
@@ -247,7 +258,10 @@ class TestRealmBacktrace:
 
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="Test spawns a sub-process and only works on single node",
+        reason=(
+            "not severe: Test spawns a sub-process and only works on "
+            "single node"
+        ),
     )
     def test_realm_backtrace_unset(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -264,7 +278,10 @@ class TestRealmBacktrace:
 
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="Test spawns a sub-process and only works on single node",
+        reason=(
+            "not severe: Test spawns a sub-process and only works on "
+            "single node"
+        ),
     )
     def test_realm_backtrace_invalid(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -311,7 +328,7 @@ class TestRuntime:
 
     @pytest.mark.skipif(
         not settings.settings.limit_stdout(),
-        reason="test requires limit_stdout",
+        reason="not severe: test requires limit_stdout",
     )
     def test_limit_stdout(self, capsys: pytest.CaptureFixture[Any]) -> None:
         runtime = get_legate_runtime()
@@ -342,7 +359,8 @@ class TestRuntime:
         assert not err
 
     @pytest.mark.skipif(
-        is_multi_node(), reason="In multi-node, the directory can get deleted "
+        is_multi_node(),
+        reason="not severe: In multi-node, the directory can get deleted ",
     )
     def test_output_stream(self, tmp_path: Path) -> None:
         runtime = get_legate_runtime()

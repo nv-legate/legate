@@ -38,7 +38,10 @@ class TestLogicalStoreOperation:
                 (1, 0, 1),
                 1,
                 (0, 0),
-                marks=pytest.mark.xfail(reason="SIGFPE", run=False),
+                marks=pytest.mark.xfail(
+                    reason="severe: issue-503 SIGFPE on delinearize [0, 0]",
+                    run=False,
+                ),
             ),
         ],
         ids=str,
@@ -122,7 +125,17 @@ class TestLogicalStoreOperation:
             # Legion::Domain::operator Legion::Rect<DIM, T>() const
             # [with int DIM = 1; T = long long int; Legion::Rect<DIM, T> =
             # Realm::Rect<1, long long int>]: Assertion `DIM == dim' failed.
-            pytest.param((), 0, marks=pytest.mark.xfail(run=False)),
+            pytest.param(
+                (),
+                0,
+                marks=pytest.mark.xfail(
+                    run=False,
+                    reason=(
+                        "severe: issue-498 Legion assertion crash for "
+                        "ndim == 0 promote"
+                    ),
+                ),
+            ),
             ((1,), 0),
             ((1, 2, 3), 2),
             ((1024, 1, 1), 2),
@@ -245,7 +258,7 @@ class TestLogicalStoreOperation:
                     # TODO(yimoj) [issue 522]
                     # LogicalStore Shape(0,1,2,1)
                     # __array_interface__ (0, 1, 2, 3)
-                    reason="wrong shape in array interface"
+                    reason="severe: issue-522 wrong shape in array interface"
                 ),
             ),
         ],
@@ -299,7 +312,9 @@ class TestLogicalStoreOperation:
 
 
 class TestLogicalStoreOperationErrors:
-    @pytest.mark.xfail(reason="LEGATE_MAX_DIM is not respected")
+    @pytest.mark.xfail(
+        reason="severe: issue-288 LEGATE_MAX_DIM not respected by promote"
+    )
     def test_promote_exceed_max_dim(self) -> None:
         shape = range(1, LEGATE_MAX_DIM + 1)
         runtime = get_legate_runtime()
@@ -321,7 +336,9 @@ class TestLogicalStoreOperationErrors:
         with pytest.raises(ValueError, match="Invalid delinearization on dim"):
             store.delinearize(3, (1, 2))
 
-    @pytest.mark.xfail(reason="LEGATE_MAX_DIM is not respected")
+    @pytest.mark.xfail(
+        reason="severe: issue-288 LEGATE_MAX_DIM not respected by delinearize"
+    )
     def test_delinearize_exceed_max_dim(self) -> None:
         shape = (1, 2, 4, 5)
         runtime = get_legate_runtime()
@@ -465,12 +482,14 @@ class TestLogicalStoreOperationErrors:
 
     @pytest.mark.skipif(
         len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
-        reason="test requires GPU",
+        reason="not severe: test requires GPU",
     )
     def test_cupy_from_sysmem(self) -> None:
         # prior to 13.6.0 cupy fallbacks to numpy and passes
         if not cupy or Version(cupy.__version__) < Version("13.6.0"):
-            pytest.skip(reason="test requires cupy 13.6.0 or above")
+            pytest.skip(
+                reason="not severe: test requires cupy 13.6.0 or above"
+            )
         _, store = utils.random_array_and_store((3, 2, 1))
         msg = (
             "Physical store in a host-only memory does not support the CUDA "

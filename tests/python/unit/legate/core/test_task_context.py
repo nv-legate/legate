@@ -51,7 +51,7 @@ class TestTaskContext:
 
     @pytest.mark.skipif(
         get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
-        reason="This test requires GPUs",
+        reason="not severe: This test requires GPUs",
     )
     def test_basic_gpu(self) -> None:
         @task(variants=(VariantCode.GPU,))

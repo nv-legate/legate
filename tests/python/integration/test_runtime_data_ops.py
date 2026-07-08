@@ -239,15 +239,14 @@ class TestStoreOps:
         runtime.issue_fill(store, val_store)
         assert (arr == val).all()
 
-    @pytest.mark.xfail(
+    @pytest.mark.skipif(
         get_legate_runtime().machine.count() > 2,
-        run=False,
-        reason="PyTask can't take arbitrary number of inputs yet",
+        reason="not severe: test defines reducers for one or two inputs only",
     )
     @pytest.mark.skipif(
         get_legate_runtime().machine.count() >= 2
         and not os.getenv("LEGATE_TEST"),
-        reason="Require multinode to match number of args",
+        reason="not severe: Require multinode to match number of args",
     )
     def test_tree_reduce(self) -> None:
         runtime = get_legate_runtime()
@@ -366,7 +365,13 @@ class TestStoreOpsErrors:
         with pytest.raises(ValueError, match=msg):
             runtime.issue_fill(store, None)
 
-    @pytest.mark.xfail(run=False, reason="hits LEGION ERROR and aborts proc")
+    @pytest.mark.xfail(
+        run=False,
+        reason=(
+            "severe: issue-2589 prefetching uninitialized store hits "
+            "LEGION ERROR"
+        ),
+    )
     def test_prefetch_uninitialized(self) -> None:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int32, (3, 1, 3))

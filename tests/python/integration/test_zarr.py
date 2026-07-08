@@ -230,8 +230,7 @@ class TestZarrV2:
     @pytest.mark.skipif(
         MULTI_GPU_CI,
         reason=(
-            "Intermittent failures in CI for multi-gpu, "
-            "see https://github.com/nv-legate/legate.internal/issues/2326"
+            "severe: issue-2326 intermittent failures in CI for multi-gpu"
         ),
     )
     def test_write_array(
@@ -427,8 +426,7 @@ class TestZarrV2:
     @pytest.mark.skipif(
         MULTI_GPU_CI,
         reason=(
-            "Intermittent failures in CI for multi-gpu, "
-            "see https://github.com/nv-legate/legate.internal/issues/2326"
+            "severe: issue-2326 intermittent failures in CI for multi-gpu"
         ),
     )
     def test_write_array_from_data_interface(
@@ -580,7 +578,8 @@ class TestZarrV2:
 
 
 @pytest.mark.skipif(
-    _zarr_major_version() < ZARR_PYTHON_V3_MAJOR, reason="zarr v3 only tests"
+    _zarr_major_version() < ZARR_PYTHON_V3_MAJOR,
+    reason="not severe: zarr v3 only tests",
 )
 class TestZarrV3:
     def test_write_array_v2_format(self, tmp_path: Path) -> None:

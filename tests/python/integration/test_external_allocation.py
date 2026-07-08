@@ -344,11 +344,11 @@ def test_wrong_allocation_type() -> None:
 
 @pytest.mark.skipif(
     len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
-    reason="test requires GPU",
+    reason="not severe: test requires GPU",
 )
 def test_from_dlpack_cupy_single_tile() -> None:
     if cupy is None:
-        pytest.skip("cupy not available")
+        pytest.skip("not severe: cupy not available")
 
     runtime = get_legate_runtime()
 
@@ -370,13 +370,13 @@ def test_from_dlpack_cupy_single_tile() -> None:
 
 @pytest.mark.skipif(
     len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
-    reason="test requires GPU",
+    reason="not severe: test requires GPU",
 )
 def test_from_dlpack_torch_gpu() -> None:
     if torch is None:
-        pytest.skip("torch not available")
+        pytest.skip("not severe: torch not available")
     if not torch.cuda.is_available():
-        pytest.skip("CUDA not available")
+        pytest.skip("not severe: CUDA not available")
 
     runtime = get_legate_runtime()
 
@@ -398,13 +398,13 @@ def test_from_dlpack_torch_gpu() -> None:
 
 @pytest.mark.skipif(
     len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0,
-    reason="test requires GPU",
+    reason="not severe: test requires GPU",
 )
 def test_from_dlpack_torch_multi_tile() -> None:
     if torch is None:
-        pytest.skip("torch not available")
+        pytest.skip("not severe: torch not available")
     if not torch.cuda.is_available():
-        pytest.skip("CUDA not available")
+        pytest.skip("not severe: CUDA not available")
 
     runtime = get_legate_runtime()
 
@@ -432,11 +432,11 @@ def test_from_dlpack_torch_multi_tile() -> None:
     .machine.get_processor_range(TaskTarget.GPU)
     .per_node_count
     < 2,
-    reason="test requires >= 2 GPUs per rank",
+    reason="not severe: test requires >= 2 GPUs per rank",
 )
 def test_multi_gpu_one_tile_per_gpu() -> None:
     if cupy is None:
-        pytest.skip("cupy not available")
+        pytest.skip("not severe: cupy not available")
 
     runtime = get_legate_runtime()
     n_gpus = runtime.machine.get_processor_range(TaskTarget.GPU).per_node_count
@@ -468,11 +468,11 @@ def test_multi_gpu_one_tile_per_gpu() -> None:
     .machine.get_processor_range(TaskTarget.GPU)
     .per_node_count
     < 2,
-    reason="test requires >= 2 GPUs per rank",
+    reason="not severe: test requires >= 2 GPUs per rank",
 )
 def test_multi_gpu_sum() -> None:
     if cupy is None:
-        pytest.skip("cupy not available")
+        pytest.skip("not severe: cupy not available")
 
     runtime = get_legate_runtime()
     n_gpus = runtime.machine.get_processor_range(TaskTarget.GPU).per_node_count
@@ -499,7 +499,8 @@ def test_multi_gpu_sum() -> None:
 
 
 @pytest.mark.skipif(
-    get_legate_runtime().node_count < 2, reason="test requires >= 2 ranks"
+    get_legate_runtime().node_count < 2,
+    reason="not severe: test requires >= 2 ranks",
 )
 def test_multi_rank_one_tile_per_rank() -> None:
     runtime = get_legate_runtime()

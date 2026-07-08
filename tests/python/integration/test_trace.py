@@ -30,7 +30,7 @@ def launch_task(store: LogicalStore) -> None:
 
 @pytest.mark.skipif(
     not bool(os.getenv("COVERAGE_RUN")),
-    reason="Tracing cannot be used until we add "
+    reason="not severe: Tracing cannot be used until we add "
     "launch-time return size handling",
 )
 def test_trace() -> None:

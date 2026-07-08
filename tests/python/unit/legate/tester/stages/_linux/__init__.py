@@ -8,4 +8,4 @@ import sys
 import pytest
 
 if sys.platform != "linux":
-    pytestmark = pytest.mark.skip()
+    pytestmark = pytest.mark.skip(reason="not severe: Linux-only tests")

@@ -795,9 +795,7 @@ class TestLegateDataInterface:
         ):
             foo(too_many)
 
-    # Trying to create a nullable array, even a fake one, explodes
-    @pytest.mark.skip
-    def test_bad_nullable_array(self) -> None:
+    def test_nullable_array(self) -> None:
         class NullableStore:
             @property
             def __legate_data_interface__(self) -> LegateDataInterfaceItem:
@@ -805,15 +803,11 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputStore) -> None:
-            pytest.fail("Must never reach this point")
+            arr = np.asarray(x)
+            assert arr.dtype == np.int64
+            assert (arr == 123).all()
 
-        nullable = NullableStore()
-
-        with pytest.raises(
-            NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with nullable stores are unsupported",  # noqa: E501
-        ):
-            foo(nullable)
+        foo(NullableStore())
 
     def test_task_properties(self) -> None:
         @lct.task

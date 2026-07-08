@@ -23,7 +23,10 @@ if TYPE_CHECKING:
 class TestPyTaskThreadState:
     @pytest.mark.skipif(
         is_multi_node(),
-        reason="Test spawns a sub-process and only works on single node",
+        reason=(
+            "not severe: Test spawns a sub-process and only works on "
+            "single node"
+        ),
     )
     def test_explicit_finish_after_python_task_shutdown_callback(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None

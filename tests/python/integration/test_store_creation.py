@@ -175,7 +175,9 @@ class TestStoreCreationErrors:
                 ty.int32, (1,), print, False
             )
 
-    @pytest.mark.xfail(reason="issue-3062")
+    @pytest.mark.xfail(
+        reason="severe: issue-3062 BufferError re-raised as buffer too small"
+    )
     def test_invalid_fortran_ordering(self) -> None:
         # TODO(yimoj) [issue-3062]
         # The BufferError gets caught and re-raised as ValueError, same one
@@ -195,7 +197,9 @@ class TestStoreCreationErrors:
                 ordering=DimOrdering.fortran_order(),
             )
 
-    @pytest.mark.xfail(reason="issue-3062")
+    @pytest.mark.xfail(
+        reason="severe: issue-3062 BufferError re-raised as buffer too small"
+    )
     def test_invalid_c_ordering(self) -> None:
         # TODO(yimoj) [issue-3062]
         # The BufferError gets caught and re-raised as ValueError, same one

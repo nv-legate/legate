@@ -81,6 +81,13 @@ repos:
         'types_or': [c++, c, cuda]
         stages: [pre-commit]
         exclude: '^tests/cpp/.*$'
+      - id: pytest-markers
+        name: pytest-markers
+        description: 'Validate pytest skip/xfail reasons and severity labels'
+        entry: ./scripts/pre-commit/pytest_markers.py
+        language: python
+        files: '^tests/.*\.py$'
+        stages: [pre-commit]
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.2
     hooks:
@@ -111,7 +118,7 @@ repos:
         args: ['src', 'tests', 'config', 'test.py', 'scripts/release']
         # config/ensure_aedifix.py as well in case aedifix version changes
         additional_dependencies: [
-          numpy,
+          "numpy<2.5",
           pytest,
           pytest_mock,
           types-psutil,

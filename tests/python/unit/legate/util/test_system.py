@@ -67,7 +67,9 @@ class TestSystem:
         assert len(cpus) > 0
         assert all(len(cpu.ids) > 0 for cpu in cpus)
 
-    @pytest.mark.skipif(platform.system() != "Darwin", reason="OSX test")
+    @pytest.mark.skipif(
+        platform.system() != "Darwin", reason="not severe: OSX test"
+    )
     def test_gpus_osx(self) -> None:
         s = m.System()
 
@@ -191,7 +193,9 @@ class Test_parse_cuda_visible_devices:
         assert m.parse_cuda_visible_devices(env_string, max_gpu) == expected
 
 
-@pytest.mark.skipif(platform.system() == "Darwin", reason="non-OSX test")
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="not severe: non-OSX test"
+)
 def test_linux_cpus_repects_affinity(mocker: MockerFixture) -> None:
     mocker.patch(
         "legate.util.system.linux_load_sibling_sets",

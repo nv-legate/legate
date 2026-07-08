@@ -13,7 +13,9 @@ from legate.util import defaults
 
 from ...util import is_multi_node
 
-pytestmark = pytest.mark.skipif(is_multi_node(), reason="Single node tests")
+pytestmark = pytest.mark.skipif(
+    is_multi_node(), reason="not severe: Single node tests"
+)
 
 
 class TestParserDefaults:

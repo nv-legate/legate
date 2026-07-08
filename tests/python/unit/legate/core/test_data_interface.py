@@ -154,7 +154,7 @@ class TestOffload:
     @pytest.mark.skipif(
         len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0
         or is_multi_node(),
-        reason="test requires GPU",
+        reason="not severe: test requires GPU",
     )
     def test_store_offload(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -192,7 +192,7 @@ class TestOffload:
     @pytest.mark.skipif(
         len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0
         or is_multi_node(),
-        reason="test requires GPU and single node",
+        reason="not severe: test requires GPU and single node",
     )
     def test_offload_no_duplicate(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None
@@ -215,7 +215,7 @@ class TestOffload:
     @pytest.mark.skipif(
         len(get_legate_runtime().machine.only(TaskTarget.GPU)) == 0
         or (is_multi_node()),
-        reason="test requires GPU",
+        reason="not severe: test requires GPU",
     )
     def test_store_offload_overload(
         self, run_subprocess: Callable[..., CompletedProcess[Any]] | None

@@ -107,7 +107,7 @@ def copy_store_task_no_constraints(
 def partition_to_store_task(partition: InputStore, out: OutputStore) -> None:
     arr = asarray(partition.get_inline_allocation())
     out_arr = asarray(out.get_inline_allocation())
-    out_arr[:] = out_arr + arr
+    out_arr[:] = arr
 
 
 @task(variants=tuple(VariantCode))
@@ -141,13 +141,25 @@ def mixed_sum_task(
     out_arr_np[:] = arr1_np + arr2_np
 
 
-@task(variants=tuple(VariantCode))
-def fill_task(out: OutputStore, val: Scalar) -> None:
-    out_arr_np = asarray(out)
+def _fill_task(out: OutputStore, val: Scalar) -> None:
+    out_arr_np = asarray(out.get_inline_allocation())
     v = val.value()
     if isinstance(v, memoryview):
         v = bytes(v)
     out_arr_np.fill(v)
+
+
+@task(variants=tuple(VariantCode))
+def fill_task(out: OutputStore, val: Scalar) -> None:
+    _fill_task(out, val)
+
+
+@task(
+    variants=tuple(VariantCode),
+    options=VariantOptions(may_throw_exception=True),
+)
+def fill_task_may_throw(out: OutputStore, val: Scalar) -> None:
+    _fill_task(out, val)
 
 
 @task(
