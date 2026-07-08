@@ -34,9 +34,6 @@ class Type {
   [[nodiscard]] virtual bool is_primitive() const       = 0;
   virtual void pack(BufferBuilder& buffer) const        = 0;
 
-  void record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const;
-  [[nodiscard]] GlobalRedopID find_reduction_operator(std::int32_t op_kind) const;
-  [[nodiscard]] GlobalRedopID find_reduction_operator(ReductionOpKind op_kind) const;
   [[nodiscard]] virtual bool operator==(const Type& other) const;
   [[nodiscard]] bool operator!=(const Type& other) const;
 

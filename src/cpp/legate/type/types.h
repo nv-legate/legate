@@ -164,46 +164,6 @@ class LEGATE_EXPORT Type {
    */
   [[nodiscard]] ListType as_list_type() const;
   /**
-   * @brief Records a reduction operator.
-   *
-   * The global ID of the reduction operator is issued when that operator is registered
-   * to the runtime.
-   *
-   * @param op_kind Reduction operator kind
-   * @param global_op_id Global reduction operator ID
-   */
-  void record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const;
-  /**
-   * @brief Records a reduction operator.
-   *
-   * The global ID of the reduction operator is issued when that operator is registered
-   * to the runtime.
-   *
-   * @param op_kind Reduction operator kind
-   * @param global_op_id Global reduction operator ID
-   */
-  void record_reduction_operator(ReductionOpKind op_kind, GlobalRedopID global_op_id) const;
-  /**
-   * @brief Finds the global operator ID for a given reduction operator kind.
-   *
-   * Raises an exception if no reduction operator has been registered for the kind.
-   *
-   * @param op_kind Reduction operator kind
-   *
-   * @return Global reduction operator ID
-   */
-  [[nodiscard]] GlobalRedopID find_reduction_operator(std::int32_t op_kind) const;
-  /**
-   * @brief Finds the global operator ID for a given reduction operator kind.
-   *
-   * Raises an exception if no reduction operator has been registered for the kind.
-   *
-   * @param op_kind Reduction operator kind
-   *
-   * @return Global reduction operator ID
-   */
-  [[nodiscard]] GlobalRedopID find_reduction_operator(ReductionOpKind op_kind) const;
-  /**
    * @brief Equality check between types
    *
    * Note that type checks are name-based; two isomorphic fixed-size array types are considered

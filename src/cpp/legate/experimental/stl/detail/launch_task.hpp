@@ -321,15 +321,7 @@ template <typename Fun>
 template <typename ElementType, typename Fun>
 [[nodiscard]] std::int32_t record_reduction_for_()  // NOLINT(readability-identifier-naming)
 {
-  static const auto kind = []() -> std::int32_t {
-    const Type type{primitive_type(type_code_of_v<ElementType>)};
-    const GlobalRedopID id      = get_reduction_id_<Fun>();
-    const std::int32_t red_kind = reduction_kind_for_<Fun>();
-
-    type.record_reduction_operator(red_kind, id);
-    return red_kind;
-  }();
-  return kind;
+  return 0;
 }
 /**
  * @endcond

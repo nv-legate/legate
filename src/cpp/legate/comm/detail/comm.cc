@@ -15,19 +15,6 @@
 
 namespace legate::detail::comm {
 
-void register_tasks(Library& library)
-{
-  if constexpr (LEGATE_DEFINED(LEGATE_USE_NCCL)) {
-    nccl::register_tasks(library);
-  }
-
-  // Always register CPU communication tasks. The communicator factory selects
-  // the appropriate backend (MPI, UCX, or the local collectives implementation)
-  // internally, so even purely local builds still need these tasks registered
-  // to satisfy add_cpu_communicator() callers.
-  cpu::register_tasks(library);
-}
-
 void register_builtin_communicator_factories(const Library& library)
 {
   if (LEGATE_DEFINED(LEGATE_USE_NCCL)) {

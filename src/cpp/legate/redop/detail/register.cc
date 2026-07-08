@@ -178,10 +178,9 @@ void realm_register_cuda_reductions(Realm::Cuda::CudaModule* cuda,
  * @param op The reduction operation kind.
  * @param type_code The type code of the primitive type.
  */
-void record(ReductionOpKind op, Type::Code type_code)
+void record(ReductionOpKind, Type::Code)
 {
-  PrimitiveType{type_code}.record_reduction_operator(to_underlying(op),
-                                                     builtin_redop_id(op, type_code));
+  // TODO(wonchanl): Need custom reduction op support in nvshard
 }
 
 /**

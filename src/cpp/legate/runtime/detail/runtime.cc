@@ -35,7 +35,6 @@
 #include <legate/runtime/detail/mpi_detection.h>
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
-#include <legate/task/detail/legion_task.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/task_config.h>
 #include <legate/task/task_signature.h>
@@ -191,43 +190,6 @@ Library& Runtime::find_or_create_library(
     *created = true;
   }
   return *result;
-}
-
-void Runtime::record_reduction_operator(std::uint32_t type_uid,
-                                        std::int32_t op_kind,
-                                        GlobalRedopID legion_op_id)
-{
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Record reduction op (type_uid: " << type_uid
-                         << ", op_kind: " << op_kind
-                         << ", legion_op_id: " << fmt::underlying(legion_op_id) << ")";
-  }
-
-  const auto inserted = reduction_ops_.try_emplace({type_uid, op_kind}, legion_op_id).second;
-
-  if (!inserted) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Reduction op {} already exists for type {}", op_kind, type_uid)};
-  }
-}
-
-GlobalRedopID Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32_t op_kind) const
-{
-  const auto finder = reduction_ops_.find({type_uid, op_kind});
-
-  if (reduction_ops_.end() == finder) {
-    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      log_legate().debug() << "Can't find reduction op (type_uid: " << type_uid
-                           << ", op_kind: " << op_kind << ")";
-    }
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Reduction op {} does not exist for type {}", op_kind, type_uid)};
-  }
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Found reduction op " << fmt::underlying(finder->second)
-                         << " (type_uid: " << type_uid << ", op_kind: " << op_kind << ")";
-  }
-  return finder->second;
 }
 
 std::pair<mapping::detail::Machine, const VariantInfo&> Runtime::slice_machine_for_task_(
@@ -928,16 +890,6 @@ std::int32_t Runtime::finish()
   // END DO NOT MODIFY
 }
 
-namespace {
-
-void register_legate_core_tasks(Library& core_lib)
-{
-  comm::register_tasks(core_lib);
-  legate::experimental::io::detail::register_tasks();
-}
-
-}  // namespace
-
 /*static*/ void Runtime::initialize_(Config config)
 {
   auto& runtime = the_runtime.construct_runtime(std::move(config));
@@ -1033,9 +985,7 @@ void register_legate_core_tasks(Library& core_lib)
       &runtime.gpu_communicator_, local_machine.total_nodes, comm_ids[0], local_machine.node_id);
   }
 
-  comm::register_builtin_communicator_factories(runtime.core_library());
-
-  register_legate_core_tasks(core_lib);
+  legate::experimental::io::detail::register_tasks();
 
   runtime.initialized_ = true;
 }

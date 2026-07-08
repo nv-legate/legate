@@ -204,30 +204,4 @@ TEST_F(TypeFeaturesUnit, BinaryTypeUid)
   ASSERT_NE(binary_type.uid(), diff_binary_type.uid());
 }
 
-TEST_P(ReductionOperatorTest, Record)
-{
-  constexpr auto GLOBAL_OP_ID = legate::GlobalRedopID{0x1F};
-  const auto& param           = GetParam();
-  const auto type             = std::get<0>(param);
-  const auto op_kind          = std::get<1>(param);
-
-  type.record_reduction_operator(static_cast<std::int32_t>(op_kind), GLOBAL_OP_ID);
-  ASSERT_EQ(type.find_reduction_operator(static_cast<std::int32_t>(op_kind)), GLOBAL_OP_ID);
-  ASSERT_EQ(type.find_reduction_operator(op_kind), GLOBAL_OP_ID);
-
-  // repeat records for same type
-  ASSERT_THAT(
-    [&]() { type.record_reduction_operator(static_cast<std::int32_t>(op_kind), GLOBAL_OP_ID); },
-    testing::ThrowsMessage<std::invalid_argument>(::testing::HasSubstr("already exists for type")));
-}
-
-TEST_F(TypeFeaturesUnit, RecordReductionOperatorWithEnumKind)
-{
-  constexpr auto GLOBAL_OP_ID = legate::GlobalRedopID{0x2F};
-  auto type                   = legate::binary_type(3);
-
-  type.record_reduction_operator(legate::ReductionOpKind::ADD, GLOBAL_OP_ID);
-  ASSERT_EQ(type.find_reduction_operator(legate::ReductionOpKind::ADD), GLOBAL_OP_ID);
-}
-
 }  // namespace type_features_test

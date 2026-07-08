@@ -381,7 +381,6 @@ target_sources(
     legate/task/variant_info.cc
     legate/task/task_signature.cc
     legate/task/task_config.cc
-    legate/task/detail/return_value.cc
     legate/task/detail/task_context.cc
     legate/task/detail/task.cc
     legate/task/detail/variant_info.cc

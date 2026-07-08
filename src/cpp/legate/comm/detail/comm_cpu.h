@@ -12,8 +12,6 @@ class Library;
 
 namespace comm::cpu {
 
-void register_tasks(Library& library);
-
 void register_factory(const Library& library);
 
 }  // namespace comm::cpu

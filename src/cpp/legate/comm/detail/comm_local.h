@@ -23,8 +23,6 @@ class CommunicatorFactory;
 
 namespace legate::detail::comm::local {
 
-void register_tasks(const legate::Library& core_library);
-
 [[nodiscard]] std::unique_ptr<CommunicatorFactory> make_factory(const detail::Library& library);
 
 }  // namespace legate::detail::comm::local

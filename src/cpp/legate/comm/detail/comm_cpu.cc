@@ -22,33 +22,6 @@
 
 namespace legate::detail::comm::cpu {
 
-void register_tasks(detail::Library& core_library)
-{
-  using legate::comm::coll::CollCommType;
-
-  const auto lib = legate::Library{&core_library};
-
-  switch (coll::BackendNetwork::guess_comm_type_()) {
-    case CollCommType::CollMPI:
-      if constexpr (LEGATE_DEFINED(LEGATE_USE_MPI)) {
-        mpi::register_tasks(lib);
-      } else {
-        throw legate::detail::TracedException<std::runtime_error>{
-          "cannot register MPI tasks, legate was not configured with MPI support"};
-      }
-      break;
-    case CollCommType::CollLocal: local::register_tasks(lib); break;
-    case CollCommType::CollUCC:
-      if constexpr (LEGATE_DEFINED(LEGATE_USE_UCX)) {
-        legate::detail::comm::ucc::register_tasks(lib);
-      } else {
-        throw legate::detail::TracedException<std::runtime_error>{
-          "cannot register UCC tasks, legate was not configured with UCC support"};
-      }
-      break;
-  }
-}
-
 void register_factory(const detail::Library& library)
 {
   auto factory = [&]() -> std::unique_ptr<CommunicatorFactory> {

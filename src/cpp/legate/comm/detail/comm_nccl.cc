@@ -15,7 +15,6 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
-#include <legate/task/detail/legion_task.h>
 #include <legate/task/task_config.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -38,169 +37,6 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 namespace comm::nccl {
 
 namespace {
-
-#define LEGATE_CHECK_NCCL(...)               \
-  do {                                       \
-    const ncclResult_t result = __VA_ARGS__; \
-    check_nccl(result, __FILE__, __LINE__);  \
-  } while (false)
-
-void check_nccl(ncclResult_t error, const char* file, int line)
-{
-  if (error != ncclSuccess) {
-    static_cast<void>(fprintf(stderr,
-                              "Internal NCCL failure with error %d (%s) in file %s at line %d\n",
-                              error,
-                              ncclGetErrorString(error),
-                              file,
-                              line));
-    std::exit(error);
-  }
-}
-
-class Payload {
- public:
-  std::uint64_t field0;
-  std::uint64_t field1;
-};
-
-class InitId : public detail::LegionTask<InitId> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_NCCL_ID}}.with_variant_options(
-      legate::VariantOptions{}.with_elide_device_ctx_sync(true));
-
-  static ncclUniqueId gpu_variant(const Legion::Task* task,
-                                  const std::vector<Legion::PhysicalRegion>& /*regions*/,
-                                  Legion::Context context,
-                                  Legion::Runtime* runtime)
-  {
-    const nvtx3::scoped_range auto_range{task_name_().data()};
-
-    legate::detail::show_progress(task, context, runtime);
-
-    ncclUniqueId id;
-    LEGATE_CHECK_NCCL(ncclGetUniqueId(&id));
-
-    return id;
-  }
-};
-
-class Init : public detail::LegionTask<Init> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_NCCL}}.with_variant_options(
-      legate::VariantOptions{}
-        .with_concurrent(true)
-        .with_elide_device_ctx_sync(true)
-        .with_has_allocations(true));
-
-  static ncclComm_t* gpu_variant(const Legion::Task* task,
-                                 const std::vector<Legion::PhysicalRegion>& /*regions*/,
-                                 Legion::Context context,
-                                 Legion::Runtime* runtime)
-  {
-    const nvtx3::scoped_range auto_range{task_name_().data()};
-
-    legate::detail::show_progress(task, context, runtime);
-
-    LEGATE_CHECK(task->futures.size() == 1);
-
-    auto id   = task->futures[0].get_result<ncclUniqueId>();
-    auto comm = std::make_unique<ncclComm_t>();
-
-    auto num_ranks = task->index_domain.get_volume();
-    auto rank_id   = task->index_point[0];
-
-    auto ts_init_start = std::chrono::high_resolution_clock::now();
-    LEGATE_CHECK_NCCL(ncclGroupStart());
-    LEGATE_CHECK_NCCL(ncclCommInitRank(comm.get(), num_ranks, id, rank_id));
-    LEGATE_CHECK_NCCL(ncclGroupEnd());
-    auto ts_init_stop = std::chrono::high_resolution_clock::now();
-
-    constexpr double MILLI = 1000.0;
-    auto time_init = std::chrono::duration<double>{ts_init_stop - ts_init_start}.count() * MILLI;
-
-    if (0 == rank_id) {
-      legate::detail::log_legate().debug() << "NCCL initialization took " << time_init << " ms";
-    }
-
-    if (num_ranks == 1) {
-      return comm.release();
-    }
-
-    if (!detail::Runtime::get_runtime().config().warmup_nccl()) {
-      return comm.release();
-    }
-
-    auto&& driver = cuda::detail::get_cuda_driver_api();
-    auto stream   = detail::Runtime::get_runtime().get_cuda_stream();
-
-    // Perform a warm-up all-to-all
-    CUevent ev_start          = driver->event_create();
-    CUevent ev_end_all_to_all = driver->event_create();
-    CUevent ev_end_all_gather = driver->event_create();
-
-    auto src_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
-    auto tgt_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
-
-    driver->event_record(ev_start, stream);
-
-    LEGATE_CHECK_NCCL(ncclGroupStart());
-    for (std::size_t idx = 0; idx < num_ranks; ++idx) {
-      LEGATE_CHECK_NCCL(ncclSend(src_buffer.ptr(0), sizeof(Payload), ncclInt8, idx, *comm, stream));
-      LEGATE_CHECK_NCCL(ncclRecv(tgt_buffer.ptr(0), sizeof(Payload), ncclInt8, idx, *comm, stream));
-    }
-    LEGATE_CHECK_NCCL(ncclGroupEnd());
-
-    driver->event_record(ev_end_all_to_all, stream);
-
-    LEGATE_CHECK_NCCL(
-      ncclAllGather(src_buffer.ptr(0), tgt_buffer.ptr(0), 1, ncclUint64, *comm, stream));
-
-    driver->event_record(ev_end_all_gather, stream);
-
-    driver->event_synchronize(ev_end_all_gather);
-
-    const auto time_all_to_all = driver->event_elapsed_time(ev_start, ev_end_all_to_all);
-    const auto time_all_gather = driver->event_elapsed_time(ev_end_all_to_all, ev_end_all_gather);
-
-    if (0 == rank_id) {
-      legate::detail::log_legate().debug(
-        "NCCL warm-up took %f ms (all-to-all: %f ms, all-gather: %f ms)",
-        time_all_to_all + time_all_gather,
-        time_all_to_all,
-        time_all_gather);
-    }
-
-    driver->event_destroy(&ev_start);
-    driver->event_destroy(&ev_end_all_to_all);
-    driver->event_destroy(&ev_end_all_gather);
-    return comm.release();
-  }
-};
-
-class Finalize : public detail::LegionTask<Finalize> {
- public:
-  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{CoreTask::FINALIZE_NCCL}}.with_variant_options(
-      legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true));
-
-  static void gpu_variant(const Legion::Task* task,
-                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
-                          Legion::Context context,
-                          Legion::Runtime* runtime)
-  {
-    const nvtx3::scoped_range auto_range{task_name_().data()};
-
-    legate::detail::show_progress(task, context, runtime);
-
-    LEGATE_CHECK(task->futures.size() == 1);
-    auto comm = task->futures[0].get_result<ncclComm_t*>();
-    LEGATE_CHECK_NCCL(ncclCommDestroy(*comm));
-    delete comm;
-  }
-};
 
 class Factory final : public detail::CommunicatorFactory {
  public:
@@ -246,14 +82,6 @@ void Factory::finalize_(const mapping::detail::Machine&, std::uint32_t, const Le
 }
 
 }  // namespace
-
-void register_tasks(detail::Library& core_library)
-{
-  // Register the task variants
-  InitId::register_variants(legate::Library{&core_library});
-  Init::register_variants(legate::Library{&core_library});
-  Finalize::register_variants(legate::Library{&core_library});
-}
 
 void register_factory(const detail::Library& core_library)
 {

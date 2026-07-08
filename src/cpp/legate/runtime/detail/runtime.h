@@ -273,7 +273,6 @@ class Runtime {
   std::list<InternalSharedPtr<Operation>> operations_{};
   std::atomic<std::uint64_t> cur_op_id_{};
 
-  using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::uint64_t next_store_id_{1};
   std::uint64_t next_storage_id_{1};
   std::size_t field_reuse_size_{1};
@@ -281,10 +280,6 @@ class Runtime {
   // This could be a hash map, but kept as an ordered map just in case we may later support
   // library-specific shutdown callbacks that can launch tasks.
   std::map<std::string, Library, std::less<>> libraries_{};
-
-  using ReductionOpTableKey = std::pair<std::uint32_t, std::int32_t>;
-  std::unordered_map<ReductionOpTableKey, GlobalRedopID, hasher<ReductionOpTableKey>>
-    reduction_ops_{};
 
   std::optional<cuda::detail::CUDAModuleManager> cu_mod_manager_{};
 };

@@ -34,26 +34,6 @@ StructType Type::as_struct_type() const { return StructType{impl()}; }
 
 ListType Type::as_list_type() const { return ListType{impl()}; }
 
-void Type::record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const
-{
-  impl()->record_reduction_operator(op_kind, global_op_id);
-}
-
-void Type::record_reduction_operator(ReductionOpKind op_kind, GlobalRedopID global_op_id) const
-{
-  impl()->record_reduction_operator(static_cast<std::int32_t>(op_kind), global_op_id);
-}
-
-GlobalRedopID Type::find_reduction_operator(std::int32_t op_kind) const
-{
-  return impl()->find_reduction_operator(op_kind);
-}
-
-GlobalRedopID Type::find_reduction_operator(ReductionOpKind op_kind) const
-{
-  return impl()->find_reduction_operator(static_cast<std::int32_t>(op_kind));
-}
-
 bool Type::operator==(const Type& other) const { return *impl() == *other.impl(); }
 
 bool Type::operator!=(const Type& other) const { return *impl() != *other.impl(); }

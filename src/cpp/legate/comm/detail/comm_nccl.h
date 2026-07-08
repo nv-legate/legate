@@ -12,8 +12,6 @@ class Library;
 
 namespace comm::nccl {
 
-void register_tasks(Library& core_library);
-
 void register_factory(const Library& core_library);
 
 }  // namespace comm::nccl
