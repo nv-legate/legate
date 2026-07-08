@@ -8,6 +8,9 @@
 
 #include <legate.h>
 
+#include <legate/operation/detail/timing.h>
+#include <legate/runtime/detail/runtime.h>
+
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -75,6 +78,23 @@ TEST_F(Timing, MeasureNanoseconds)
   test_hello_task();
   auto t2 = legate::timing::measure_nanoseconds();
   EXPECT_GT(t2.value(), t1.value());
+}
+
+TEST_F(Timing, LaunchWithStrategyDelegatesToLaunch)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{}, legate::int64(), /*optimize_scalar=*/true);
+  auto timing  = legate::detail::Timing{
+    runtime->impl()->new_op_id(), legate::detail::Timing::Precision::MICRO, store.impl()};
+
+  ASSERT_EQ(timing.kind(), legate::detail::Operation::Kind::TIMING);
+
+  timing.launch(static_cast<legate::detail::Strategy*>(nullptr));
+
+  auto future = store.impl()->get_future();
+
+  ASSERT_TRUE(future.exists());
+  ASSERT_GE(future.get_result<std::int64_t>(), 0);
 }
 
 // NOLINTEND(readability-magic-numbers)

@@ -276,6 +276,9 @@ set(
   unit/operation/copy.cc
   unit/operation/gather.cc
   unit/operation/index_attach.cc
+  unit/operation/scatter.cc
+  unit/operation/scatter_gather.cc
+  unit/operation/store_analyzer.cc
   unit/operation/task.cc
   unit/projection.cc
   unit/redop/apply.cc

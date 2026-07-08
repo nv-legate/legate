@@ -9,10 +9,13 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/storage.h>
 #include <legate/redop/redop.h>
+#include <legate/runtime/detail/runtime.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <utilities/env.h>
 #include <utilities/utilities.h>
 
@@ -39,6 +42,20 @@ class InlineStorageUnit : public DefaultFixture {
                                                             /* value */ "--inline-task-launch 1",
                                                             /* overwrite */ true};
 };
+
+void assert_int32_store_values(const legate::LogicalStore& store,
+                               std::int32_t expected,
+                               std::size_t expected_size)
+{
+  constexpr auto DIM = std::int32_t{1};
+  const auto phys    = store.get_physical_store();
+  const auto mdspan  = phys.span_read_accessor<std::int32_t, DIM>();
+
+  ASSERT_EQ(mdspan.extent(0), expected_size);
+  for (auto idx = 0; idx < mdspan.extent(0); ++idx) {
+    ASSERT_EQ(mdspan(idx), expected);
+  }
+}
 
 }  // namespace
 
@@ -67,6 +84,45 @@ TEST_F(InlineStorageUnit, Basic)
       ASSERT_EQ(mdspan(i, j), VALUE);
     }
   }
+}
+
+TEST_F(InlineStorageUnit, Copy)
+{
+  constexpr auto NUM_ELEMENTS = std::size_t{6};
+  constexpr auto FILL_VALUE   = std::int32_t{7};
+  auto* const runtime         = legate::Runtime::get_runtime();
+  auto source                 = runtime->create_store(legate::Shape{NUM_ELEMENTS}, legate::int32());
+  auto target                 = runtime->create_store(legate::Shape{NUM_ELEMENTS}, legate::int32());
+
+  runtime->issue_fill(source, legate::Scalar{FILL_VALUE});
+  runtime->issue_copy(target, source);
+
+  assert_int32_store_values(target, FILL_VALUE, NUM_ELEMENTS);
+}
+
+TEST_F(InlineStorageUnit, CopyFromInlineSourceToRegionTarget)
+{
+  constexpr auto NUM_ELEMENTS = std::size_t{6};
+  constexpr auto FILL_VALUE   = std::int32_t{11};
+  auto* const runtime         = legate::Runtime::get_runtime();
+  const auto shape            = legate::Shape{NUM_ELEMENTS};
+  const auto public_type      = legate::int32();
+  const auto type             = legate::InternalSharedPtr<legate::detail::Type>{public_type.impl()};
+  auto source                 = runtime->create_store(shape, public_type);
+  auto region_field =
+    runtime->impl()->create_region_field(shape.impl(), static_cast<std::uint32_t>(type->size()));
+  auto storage = legate::make_internal_shared<legate::detail::Storage>(
+    shape.impl(), std::move(region_field), "");
+  auto target = legate::LogicalStore{
+    legate::make_internal_shared<legate::detail::LogicalStore>(std::move(storage), type)};
+
+  ASSERT_EQ(source.impl()->get_storage()->kind(), legate::detail::Storage::Kind::INLINE_STORAGE);
+  ASSERT_EQ(target.impl()->get_storage()->kind(), legate::detail::Storage::Kind::REGION_FIELD);
+
+  runtime->issue_fill(source, legate::Scalar{FILL_VALUE});
+  runtime->issue_copy(target, source);
+
+  assert_int32_store_values(target, FILL_VALUE, NUM_ELEMENTS);
 }
 
 TEST_F(InlineStorageUnit, Scalar)
