@@ -18,16 +18,10 @@ namespace legate {
 inline Library::Library(detail::Library* impl) : impl_{impl} {}
 
 template <typename REDOP>
-GlobalRedopID Library::register_reduction_operator(LocalRedopID redop_id)
+GlobalRedopID Library::register_reduction_operator(LocalRedopID)
 {
-  auto legion_redop_id = get_reduction_op_id(redop_id);
-#ifndef __CUDACC__
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-    detail::log_legate().warning() << "For the runtime's DMA engine to GPU accelerate reductions, "
-                                      "this reduction operator should be registered in a .cu file.";
-  }
-#endif
-  return legion_redop_id;
+  // TODO(wonchanl): Need custom reduction op support in nvshard
+  return GlobalRedopID{0};
 }
 
 inline bool Library::operator==(const Library& other) const { return impl() == other.impl(); }

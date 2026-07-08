@@ -8,28 +8,6 @@ from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
 
-# Cannot do:
-#
-# from ..utilities.typedefs cimport _GlobalRedopID
-#
-# Because otherwise python crashes on startup with weird errors such as:
-#
-# - Fatal Python error: Segmentation fault
-# - KeyError: '__reduce_cython__'
-# - scalar.pyx:37: in init legate.core._lib.data.scalar, ImportError: cannot
-#   import name null_type
-#
-# My best guess is that utilities.typedefs introduces a circular import, which
-# Cython seemingly does not handle properly. So we must unfortunately declare
-# this type anew here...
-cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
-    ctypedef int _Legion_ReductionOpID "Legion::ReductionOpID"
-
-    cdef enum class _GlobalRedopID "legate::GlobalRedopID" (
-        _Legion_ReductionOpID
-    ):
-        pass
-
 # Yes this is a hack. No, you cannot get it to work any other way. Declaring
 # the enum inline within Type leads to confusing
 #
@@ -82,8 +60,6 @@ cdef extern from "legate/type/types.h" namespace "legate" nogil:
         bool is_primitive() except+
         _FixedArrayType as_fixed_array_type() except+
         _StructType as_struct_type() except+
-        void record_reduction_operator(int32_t, _GlobalRedopID) except+
-        _GlobalRedopID find_reduction_operator(int32_t) except+
         bool operator==(const _Type&) except+
 
     cdef cppclass _FixedArrayType "legate::FixedArrayType" (_Type):
@@ -138,10 +114,6 @@ cdef class Type:
     @staticmethod
     cdef Type from_handle(_Type)
 
-    cpdef void record_reduction_op(
-        self, int32_t op_kind, _GlobalRedopID reduction_op_id
-    )
-    cpdef _GlobalRedopID reduction_op_id(self, int32_t op_kind)
     cpdef object to_numpy_dtype(self)
 
     @staticmethod

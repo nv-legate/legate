@@ -13,8 +13,6 @@
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
-#include <legion/api/types.h>
-
 #include <functional>
 #include <map>
 #include <optional>
@@ -42,7 +40,6 @@ class TaskInfo {
    *
    * @param vid The variant kind to add.
    * @param body The variant task body.
-   * @param code_desc The Legion code descriptor to be passed on to Legion.
    * @param options The variant options.
    */
   void add_variant(VariantCode vid,

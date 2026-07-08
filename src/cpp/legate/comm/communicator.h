@@ -10,8 +10,6 @@
 
 #include <legate/utilities/detail/doxygen.h>
 
-#include <legion.h>
-
 /**
  * @file
  * @brief Class definition for legate::comm::Communicator
@@ -37,7 +35,7 @@ namespace legate::comm {
 class LEGATE_EXPORT Communicator {
  public:
   Communicator() = default;
-  explicit Communicator(Legion::Future future);
+  explicit Communicator(void* comm);
 
   /**
    * @brief Returns the communicator stored in the wrapper
@@ -50,7 +48,7 @@ class LEGATE_EXPORT Communicator {
   [[nodiscard]] T get() const;
 
  private:
-  Legion::Future future_{};
+  void* comm_{};
 };
 
 /** @} */

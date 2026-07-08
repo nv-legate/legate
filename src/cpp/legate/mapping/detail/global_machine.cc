@@ -19,10 +19,10 @@ namespace legate::mapping::detail {
 
 GlobalMachine::GlobalMachine()
   : total_nodes_{
-      static_cast<std::uint32_t>(Legion::Machine::get_machine().get_address_space_count())}
+      static_cast<std::uint32_t>(Realm::Machine::get_machine().get_address_space_count())}
 {
-  auto legion_machine = Legion::Machine::get_machine();
-  const Legion::Machine::ProcessorQuery procs{legion_machine};
+  auto realm_machine = Realm::Machine::get_machine();
+  const Realm::Machine::ProcessorQuery procs{realm_machine};
 
   for (auto proc : procs) {
     switch (proc.kind()) {

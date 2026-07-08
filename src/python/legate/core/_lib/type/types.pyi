@@ -7,8 +7,6 @@ from typing import Any, cast
 import numpy as np
 from numpy.typing import DTypeLike
 
-from ..utilities.typedefs import GlobalRedopID
-
 class TypeCode(IntEnum):
     NIL = cast(int, ...)
     BOOL = cast(int, ...)
@@ -59,14 +57,6 @@ class Type:
     def variable_size(self) -> bool: ...
     @property
     def is_primitive(self) -> bool: ...
-    def record_reduction_op(
-        self,
-        op_kind: ReductionOpKind | int,
-        reduction_op_id: GlobalRedopID | int,
-    ) -> None: ...
-    def reduction_op_id(
-        self, op_kind: ReductionOpKind | int
-    ) -> GlobalRedopID: ...
     def to_numpy_dtype(self) -> np.dtype[Any]: ...
     @property
     def raw_ptr(self) -> int: ...

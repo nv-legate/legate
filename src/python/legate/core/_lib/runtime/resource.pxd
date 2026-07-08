@@ -12,8 +12,6 @@ cdef extern from "legate/runtime/resource.h" namespace "legate" nogil:
         int64_t max_tasks
         int64_t max_dyn_tasks
         int64_t max_reduction_ops
-        int64_t max_projections
-        int64_t max_shardings
 
 
 cdef class ResourceConfig:

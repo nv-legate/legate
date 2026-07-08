@@ -10,8 +10,6 @@
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
-#include <legion.h>
-
 #include <cstdint>
 #include <initializer_list>
 #include <tuple>

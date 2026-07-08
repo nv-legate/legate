@@ -21,7 +21,6 @@
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/mapping.h>
 #include <legate/operation/detail/fill.h>
-#include <legate/operation/detail/offload.h>
 #include <legate/operation/detail/task.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
@@ -434,7 +433,7 @@ void Runtime::check_dimensionality_(std::uint32_t dim)
   if (dim > LEGATE_MAX_DIM) {
     throw TracedException<std::out_of_range>{
       fmt::format("The maximum number of dimensions is {}, but a {}-D store is requested",
-                  LEGION_MAX_DIM,
+                  LEGATE_MAX_DIM,
                   dim)};
   }
 }
@@ -896,12 +895,9 @@ std::int32_t Runtime::finish()
 
   ResourceConfig lib_config;
 
-  lib_config.max_tasks       = CoreTask::MAX_TASK;
-  lib_config.max_dyn_tasks   = lib_config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
-  lib_config.max_projections = to_underlying(CoreProjectionOp::MAX_FUNCTOR);
-  // We register one sharding functor for each new projection functor
-  lib_config.max_shardings     = to_underlying(CoreShardID::MAX_FUNCTOR);
-  lib_config.max_reduction_ops = to_underlying(CoreReductionOp::MAX_REDUCTION);
+  lib_config.max_tasks         = CoreTask::MAX_TASK;
+  lib_config.max_dyn_tasks     = lib_config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
+  lib_config.max_reduction_ops = 0;
 
   auto&& core_lib = runtime.create_library(
     CORE_LIBRARY_NAME, lib_config, mapping::detail::create_core_mapper(), {});

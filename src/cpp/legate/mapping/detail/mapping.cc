@@ -123,40 +123,4 @@ VariantCode to_variant_code(TaskTarget target)
 
 VariantCode to_variant_code(Processor::Kind kind) { return to_variant_code(to_target(kind)); }
 
-// ==========================================================================================
-
-std::vector<Legion::DimensionKind> DimOrdering::generate_legion_dims(std::uint32_t ndim) const
-{
-  std::vector<Legion::DimensionKind> ordering;
-
-  LEGATE_CHECK(ndim > 0);
-  ordering.reserve(static_cast<std::size_t>(ndim) + 1);
-  switch (kind) {
-    case Kind::C: {
-      for (auto dim = static_cast<std::int32_t>(ndim) - 1; dim >= 0; --dim) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
-      }
-      break;
-    }
-    case Kind::FORTRAN: {
-      for (std::uint32_t dim = 0; dim < ndim; ++dim) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
-      }
-      break;
-    }
-    case Kind::CUSTOM: {
-      LEGATE_CHECK(ndim == dims.size());
-      for (auto dim : dims) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
-      }
-      break;
-    }
-  }
-  // After listing all dimension names, we add the field dimension as the last one so the instance
-  // will have an SOA layout
-  ordering.push_back(LEGION_DIM_F);
-
-  return ordering;
-}
-
 }  // namespace legate::mapping::detail

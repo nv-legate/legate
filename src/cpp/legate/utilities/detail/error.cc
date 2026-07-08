@@ -99,11 +99,6 @@ constexpr auto BASE_ERROR_PREFIX = std::string_view{"LEGATE ERROR:"};
                      LEGATE_GIT_HASH);
 }
 
-[[nodiscard]] std::string legion_version_summary()
-{
-  return fmt::format("Legion version: {} ({})", LEGION_VERSION, LEGION_GIT_HASH);
-}
-
 [[nodiscard]] std::string configure_summary()
 {
   return fmt::format("Configure options: {}", LEGATE_CONFIGURE_OPTIONS);
@@ -197,7 +192,6 @@ std::string make_error_message(Span<const ErrorDescription> errs)
 
     fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, system_summary());
     fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, legate_version_summary());
-    fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, legion_version_summary());
     fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, configure_summary());
     return ret;
   }();

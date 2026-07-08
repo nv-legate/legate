@@ -851,10 +851,6 @@ ParsedArgs parse_args(std::vector<std::string> args)
     add_logger(cuda::detail::logger().get_name(), "debug");
   }
 
-  if (profile.value()) {
-    add_logger("legion_prof");
-  }
-
   return {/* auto_config */ std::move(auto_config),
           /* show_config */ std::move(show_config),
           /* show_progress */ std::move(show_progress),

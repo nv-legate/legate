@@ -52,15 +52,6 @@ class DimOrdering {
 
   [[nodiscard]] bool operator==(const DimOrdering& other) const;
 
-  /**
-   * @brief Generates a vector of Legion dimensions of size `ndim`.
-   *
-   * @param ndim The number of dimensions to generate.
-   *
-   * @returns a vector of Legion dimensions.
-   */
-  [[nodiscard]] std::vector<Legion::DimensionKind> generate_legion_dims(std::uint32_t ndim) const;
-
   Kind kind{};
   std::vector<std::int32_t> dims{};
 };

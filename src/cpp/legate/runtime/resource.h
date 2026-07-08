@@ -33,8 +33,6 @@ struct ResourceConfig {
    * @brief Maximum number of custom reduction operators that the library can register
    */
   std::int64_t max_reduction_ops{};
-  std::int64_t max_projections{};
-  std::int64_t max_shardings{};
 };
 
 /** @} */

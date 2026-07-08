@@ -42,12 +42,6 @@
 #include <variant>
 #include <vector>
 
-namespace Legion {  // NOLINT
-
-struct RegistrationCallbackArgs;
-
-}  // namespace Legion
-
 namespace legate {
 
 class TaskInfo;
@@ -106,12 +100,6 @@ class Runtime {
     std::unique_ptr<mapping::Mapper> mapper,
     const std::map<VariantCode, VariantOptions>& default_options,
     bool* created);
-
-  void record_reduction_operator(std::uint32_t type_uid,
-                                 std::int32_t op_kind,
-                                 GlobalRedopID legion_op_id);
-  [[nodiscard]] GlobalRedopID find_reduction_operator(std::uint32_t type_uid,
-                                                      std::int32_t op_kind) const;
 
   [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library& library,
                                                         LocalTaskID task_id);
@@ -242,17 +230,6 @@ class Runtime {
   [[nodiscard]] ncclComm_t get_gpu_comm() const;
 
  private:
-  /**
-   * @brief The Legion runtime initialization callback.
-   *
-   * This routine eventually creates and initializes the main Runtime object. It is registered
-   * with Legion to run on every node at startup, and therefore must be called before the
-   * runtime is accessed.
-   *
-   * This routine will also create the core legate library object.
-   *
-   * @param args The registration args.
-   */
   static void initialize_(Config config);
 
   bool initialized_{};

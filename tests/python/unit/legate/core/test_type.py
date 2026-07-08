@@ -157,12 +157,6 @@ class TestType:
         assert not dtype.is_primitive
         assert not dtype.variable_size
 
-    def test_record_reduction_op(self) -> None:
-        op_kind = ty.ReductionOpKind.AND
-        op_id = 34567
-        ty.string_type.record_reduction_op(op_kind, op_id)
-        assert ty.string_type.reduction_op_id(op_kind) == op_id
-
 
 class TestTypeErrors:
     @pytest.mark.parametrize(

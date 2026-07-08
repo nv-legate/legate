@@ -26,9 +26,6 @@ TaskInfo::TaskInfo(std::string task_name, InternalSharedPtr<TaskConfig> task_con
 {
 }
 
-static_assert(!is_pure_move_constructible_v<Legion::CodeDescriptor>,
-              "Use by value and std::move for Legion::CodeDescriptor");
-
 void TaskInfo::add_variant(VariantCode vid,
                            VariantImpl body,
                            const VariantOptions& options,

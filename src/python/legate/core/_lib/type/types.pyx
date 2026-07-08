@@ -259,47 +259,6 @@ cdef class Type:
             ret = self._handle.is_primitive()
         return ret
 
-    cpdef void record_reduction_op(
-        self, int32_t op_kind, _GlobalRedopID reduction_op_id
-    ):
-        r"""
-        Record a reduction operator.
-
-        The global ID of the reduction operator is issued when that operator is
-        registered to the runtime.
-
-        Parameters
-        ----------
-        op_kind : ReductionOpKind | int
-            The reduction operator kind.
-        reduction_op_id : GlobalRedopID
-            The global reduction ID.
-        """
-        with nogil:
-            self._handle.record_reduction_operator(op_kind, reduction_op_id)
-
-    cpdef _GlobalRedopID reduction_op_id(self, int32_t op_kind):
-        r"""
-        Finds the global redop ID for a given reduction op kind.
-
-        Parameters
-        ----------
-        op_kind : ReductionOpKind | int
-            The redop kind.
-
-        Returns
-        -------
-        GlobalRedopID
-            The global redop ID.
-
-        Raises
-        ------
-        ValueError
-            If `op_kind` does not exist for this type.
-        """
-        with nogil:
-            return self._handle.find_reduction_operator(op_kind)
-
     def __repr__(self) -> str:
         r"""
         Return a human-readable string representation of the type.

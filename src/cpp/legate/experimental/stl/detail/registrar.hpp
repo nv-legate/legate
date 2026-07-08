@@ -38,8 +38,6 @@ inline constexpr ResourceConfig LEGATE_STL_RESOURCE_CONFIG = {
   1024,  //< max_tasks{1024};
   1024,  //< max_dyn_tasks{0};
   64,    //< max_reduction_ops{};
-  0,     //< max_projections{};
-  0      //< max_shardings{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

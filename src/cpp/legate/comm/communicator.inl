@@ -12,12 +12,12 @@
 
 namespace legate::comm {
 
-inline Communicator::Communicator(Legion::Future future) : future_{std::move(future)} {}
+inline Communicator::Communicator(void* comm) : comm_{comm} {}
 
 template <typename T>
 T Communicator::get() const
 {
-  return future_.get_result<T>();
+  return *static_cast<const T*>(comm_);
 }
 
 }  // namespace legate::comm

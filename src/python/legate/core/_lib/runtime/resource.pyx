@@ -12,8 +12,6 @@ cdef class ResourceConfig:
         max_tasks: object = None,
         max_dyn_tasks: object = None,
         max_reduction_ops: object = None,
-        max_projections: object = None,
-        max_shardings: object = None
     ) -> None:
         self._handle = _ResourceConfig()
 
@@ -23,10 +21,6 @@ cdef class ResourceConfig:
             self.max_dyn_tasks = max_dyn_tasks
         if max_reduction_ops is not None:
             self.max_reduction_ops = max_reduction_ops
-        if max_projections is not None:
-            self.max_projections = max_projections
-        if max_shardings is not None:
-            self.max_shardings = max_shardings
 
     @property
     def max_tasks(self) -> int64_t:
@@ -102,47 +96,3 @@ cdef class ResourceConfig:
             The maximum number of reduction operators.
         """
         self._handle.max_reduction_ops = max_reduction_ops
-
-    @property
-    def max_projections(self) -> int64_t:
-        r"""
-        Get the maximum number of projection operators a library can register.
-
-        :returns: The maximum number of projection operators.
-        :rtype: int
-        """
-        return self._handle.max_projections
-
-    @max_projections.setter
-    def max_projections(self, int64_t max_projections) -> None:
-        r"""
-        Set the maximum number of projection operators a library can register.
-
-        Parameters
-        ----------
-        max_projections : int
-            The maximum number of projection operators.
-        """
-        self._handle.max_projections = max_projections
-
-    @property
-    def max_shardings(self) -> int64_t:
-        r"""
-        Get the maximum number of sharding operators a library can register.
-
-        :returns: The maximum number of sharding operators.
-        :rtype: int
-        """
-        return self._handle.max_shardings
-
-    @max_shardings.setter
-    def max_shardings(self, int64_t max_shardings) -> None:
-        r"""
-        Set the maximum number of sharding operators a library can register.
-
-        Parameters
-        ----------
-        max_shardings : int
-            The maximum number of sharding operators.
-        """
-        self._handle.max_shardings = max_shardings
