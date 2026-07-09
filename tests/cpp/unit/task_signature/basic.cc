@@ -198,6 +198,84 @@ TEST_F(TaskSignatureUnit, InvalidConstraint)
                 fmt::format("Invalid task signature for task {}", task_name))));
 }
 
+TEST_F(TaskSignatureUnit, UnspecifiedCountsAcceptProxyArrays)
+{
+  constexpr std::string_view task_name = "UnspecifiedArgumentCountsAcceptProxyArrayConstraints";
+  const auto signature                 = legate::TaskSignature{}.constraints(
+    {{legate::align(legate::proxy::inputs[0], legate::proxy::outputs[0])}});
+  const auto& sig = signature.impl();
+
+  ASSERT_NO_THROW(sig->validate(task_name));
+}
+
+TEST_F(TaskSignatureUnit, InvalidBloatReportsName)
+{
+  constexpr std::string_view task_name = "InvalidBloatReportsName";
+  const auto signature                 = legate::TaskSignature{}.inputs(1).outputs(1).constraints(
+    {{legate::bloat(legate::proxy::inputs[-1], legate::proxy::outputs[0], {0}, {0})}});
+  const auto& sig = signature.impl();
+
+  ASSERT_THAT(
+    [&] { sig->validate(task_name); },
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("for bloat constraint")));
+}
+
+TEST_F(TaskSignatureUnit, InvalidBroadcastReportsName)
+{
+  constexpr std::string_view task_name = "InvalidBroadcastReportsName";
+  const auto signature =
+    legate::TaskSignature{}.inputs(1).constraints({{legate::broadcast(legate::proxy::inputs[-1])}});
+  const auto& sig = signature.impl();
+
+  ASSERT_THAT(
+    [&] { sig->validate(task_name); },
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("for broadcast constraint")));
+}
+
+TEST_F(TaskSignatureUnit, InvalidImageReportsName)
+{
+  constexpr std::string_view task_name = "InvalidImageReportsName";
+  const auto signature                 = legate::TaskSignature{}.inputs(1).outputs(1).constraints(
+    {{legate::image(legate::proxy::inputs[-1], legate::proxy::outputs[0])}});
+  const auto& sig = signature.impl();
+
+  ASSERT_THAT(
+    [&] { sig->validate(task_name); },
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("for image constraint")));
+}
+
+TEST_F(TaskSignatureUnit, InvalidMinExtentsReportsName)
+{
+  constexpr std::string_view task_name = "InvalidMinExtentsReportsName";
+  const auto signature                 = legate::TaskSignature{}.inputs(1).constraints(
+    {{legate::min_extents(legate::proxy::inputs[-1], legate::tuple<std::uint64_t>{1})}});
+  const auto& sig = signature.impl();
+
+  ASSERT_THAT([&] { sig->validate(task_name); },
+              ::testing::ThrowsMessage<std::out_of_range>(
+                ::testing::HasSubstr("for min_extents constraint")));
+}
+
+TEST_F(TaskSignatureUnit, InvalidScaleReportsName)
+{
+  constexpr std::string_view task_name = "InvalidScaleReportsName";
+  const auto signature                 = legate::TaskSignature{}.inputs(1).outputs(1).constraints(
+    {{legate::scale({2}, legate::proxy::inputs[-1], legate::proxy::outputs[0])}});
+  const auto& sig = signature.impl();
+
+  ASSERT_THAT(
+    [&] { sig->validate(task_name); },
+    ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("for scale constraint")));
+}
+
+TEST_F(TaskSignatureUnit, BloatProxyArgsDiffer)
+{
+  const auto lhs = legate::bloat(legate::proxy::inputs, legate::proxy::outputs, {0}, {1});
+  const auto rhs = legate::bloat(legate::proxy::outputs, legate::proxy::inputs, {0}, {1});
+
+  ASSERT_FALSE(*lhs.impl() == *rhs.impl());
+}
+
 using TaskSignatureDeathTest = TaskSignatureUnit;
 
 TEST_F(TaskSignatureDeathTest, InvalidProxyArray)
@@ -243,6 +321,8 @@ INSTANTIATE_TEST_SUITE_P(
                     legate::bloat(legate::proxy::inputs, legate::proxy::outputs, {0}, {1})),
     std::make_tuple(legate::image(legate::proxy::inputs, legate::proxy::outputs),
                     legate::image(legate::proxy::inputs, legate::proxy::outputs)),
+    std::make_tuple(legate::min_extents(legate::proxy::inputs, legate::tuple<std::uint64_t>{1}),
+                    legate::min_extents(legate::proxy::inputs, legate::tuple<std::uint64_t>{1})),
     std::make_tuple(legate::scale({2}, legate::proxy::inputs, legate::proxy::outputs),
                     legate::scale({2}, legate::proxy::inputs, legate::proxy::outputs))));
 
@@ -267,6 +347,8 @@ INSTANTIATE_TEST_SUITE_P(
                     legate::image(legate::proxy::inputs,
                                   legate::proxy::outputs,
                                   legate::ImageComputationHint::NO_HINT)),
+    std::make_tuple(legate::min_extents(legate::proxy::inputs, legate::tuple<std::uint64_t>{1}),
+                    legate::min_extents(legate::proxy::inputs, legate::tuple<std::uint64_t>{2})),
     std::make_tuple(legate::scale({2}, legate::proxy::inputs, legate::proxy::outputs),
                     legate::scale({2}, legate::proxy::inputs, legate::proxy::inputs)),
     std::make_tuple(legate::align(legate::proxy::inputs),

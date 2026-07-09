@@ -12,6 +12,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <utilities/utilities.h>
 
 namespace {
@@ -57,6 +58,12 @@ TEST_F(Constraint, Variable)
   ASSERT_EQ(*part_imp, *part1_imp);
   auto part2     = task.declare_partition();
   auto part2_imp = part2.impl();
+  ASSERT_FALSE(*part_imp == *part2_imp);
+
+  auto other_task     = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
+  auto other_part     = other_task.declare_partition();
+  auto other_part_imp = other_part.impl();
+  ASSERT_FALSE(*part_imp == *other_part_imp);
 
   // Test find_partition_symbols
   legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
@@ -89,12 +96,36 @@ TEST_F(Constraint, Alignment)
   ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(alignment.get()), nullptr);
   ASSERT_FALSE(alignment->is_trivial());
 
+  auto trivial_alignment = legate::detail::align(part1.impl(), part1.impl());
+  ASSERT_TRUE(trivial_alignment->is_trivial());
+
   // Test find_partition_symbols
   legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
   alignment->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 2);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part1.impl()) != symbols.end());
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part2.impl()) != symbols.end());
+}
+
+TEST_F(Constraint, AlignmentSpanEmpty)
+{
+  const auto variables = legate::Span<const legate::Variable>{};
+  auto constraints     = legate::align(variables);
+
+  ASSERT_TRUE(constraints.empty());
+}
+
+TEST_F(Constraint, AlignmentSpanSingle)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
+
+  auto part            = task.declare_partition();
+  const auto variables = legate::Span<const legate::Variable>{&part, 1};
+  auto constraints     = legate::align(variables);
+
+  ASSERT_TRUE(constraints.empty());
 }
 
 TEST_F(Constraint, Broadcast)
@@ -120,6 +151,98 @@ TEST_F(Constraint, Broadcast)
   broadcast->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 1);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part1.impl()) != symbols.end());
+}
+
+TEST_F(Constraint, BroadcastSpan)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
+  auto part1   = task.declare_partition();
+  auto part2   = task.declare_partition();
+
+  const auto variables = std::array<legate::Variable, 2>{part1, part2};
+  auto constraints =
+    legate::broadcast(legate::Span<const legate::Variable>{variables.data(), variables.size()});
+
+  ASSERT_EQ(constraints.size(), variables.size());
+  ASSERT_EQ(constraints[0].impl()->kind(), legate::detail::Constraint::Kind::BROADCAST);
+  const auto* first_broadcast =
+    dynamic_cast<const legate::detail::Broadcast*>(constraints[0].impl().get());
+  ASSERT_NE(first_broadcast, nullptr);
+  ASSERT_EQ(first_broadcast->variable(), part1.impl());
+  ASSERT_TRUE(first_broadcast->axes().empty());
+
+  ASSERT_EQ(constraints[1].impl()->kind(), legate::detail::Constraint::Kind::BROADCAST);
+  const auto* second_broadcast =
+    dynamic_cast<const legate::detail::Broadcast*>(constraints[1].impl().get());
+  ASSERT_NE(second_broadcast, nullptr);
+  ASSERT_EQ(second_broadcast->variable(), part2.impl());
+  ASSERT_TRUE(second_broadcast->axes().empty());
+}
+
+TEST_F(Constraint, BroadcastSpanWithAxes)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
+  auto part1   = task.declare_partition();
+  auto part2   = task.declare_partition();
+
+  const auto first_axes  = std::array<std::uint32_t, 1>{0};
+  const auto second_axes = std::array<std::uint32_t, 2>{1, 2};
+  using BroadcastSpec    = std::pair<legate::Variable, legate::Span<const std::uint32_t>>;
+  const auto variables   = std::array<BroadcastSpec, 2>{
+    {{part1, legate::Span<const std::uint32_t>{first_axes.data(), first_axes.size()}},
+     {part2, legate::Span<const std::uint32_t>{second_axes.data(), second_axes.size()}}}};
+  auto constraints =
+    legate::broadcast(legate::Span<const BroadcastSpec>{variables.data(), variables.size()});
+
+  ASSERT_EQ(constraints.size(), variables.size());
+  ASSERT_EQ(constraints[0].impl()->kind(), legate::detail::Constraint::Kind::BROADCAST);
+  const auto* first_broadcast =
+    dynamic_cast<const legate::detail::Broadcast*>(constraints[0].impl().get());
+  ASSERT_NE(first_broadcast, nullptr);
+  ASSERT_EQ(first_broadcast->variable(), part1.impl());
+  ASSERT_EQ(first_broadcast->axes().size(), first_axes.size());
+  ASSERT_EQ(first_broadcast->axes()[0], first_axes[0]);
+
+  ASSERT_EQ(constraints[1].impl()->kind(), legate::detail::Constraint::Kind::BROADCAST);
+  const auto* second_broadcast =
+    dynamic_cast<const legate::detail::Broadcast*>(constraints[1].impl().get());
+  ASSERT_NE(second_broadcast, nullptr);
+  ASSERT_EQ(second_broadcast->variable(), part2.impl());
+  ASSERT_EQ(second_broadcast->axes().size(), second_axes.size());
+  ASSERT_EQ(second_broadcast->axes()[0], second_axes[0]);
+  ASSERT_EQ(second_broadcast->axes()[1], second_axes[1]);
+}
+
+TEST_F(Constraint, MinExtents)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
+  auto part    = task.declare_partition();
+
+  auto minimum_extents = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 4, 8};
+  auto min_extents     = legate::detail::min_extents(part.impl(), minimum_extents);
+  ASSERT_EQ(min_extents->kind(), legate::detail::Constraint::Kind::MIN_EXTENTS);
+  ASSERT_EQ(min_extents->variable(), part.impl());
+  ASSERT_EQ(
+    (legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{min_extents->minimum_extents()}),
+    minimum_extents);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(min_extents.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(min_extents.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::MinExtents*>(min_extents.get()), min_extents.get());
+  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(min_extents.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(min_extents.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(min_extents.get()), nullptr);
+
+  // Test find_partition_symbols
+  legate::detail::SmallVector<const legate::detail::Variable*> symbols = {};
+  min_extents->find_partition_symbols(symbols);
+  ASSERT_EQ(symbols.size(), 1);
+  ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part.impl()) != symbols.end());
 }
 
 TEST_F(Constraint, ImageConstraint)

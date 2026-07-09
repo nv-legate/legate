@@ -258,6 +258,7 @@ set(
   unit/mapping/store/properties.cc
   unit/mapping/store/transform.cc
   unit/mapping/store_mapping.cc
+  unit/partition/launch_domain_resolver.cc
   unit/partition/image.cc
   unit/partition/nopartition.cc
   unit/partition/tiling.cc
@@ -316,6 +317,7 @@ set(
   unit/task_signature/bloat.cc
   unit/task_signature/broadcast.cc
   unit/task_signature/image.cc
+  unit/task_signature/min_extents.cc
   unit/task_signature/scale.cc
   unit/task_config/basic.cc
   unit/dlpack/from_dlpack/versioned.cc
