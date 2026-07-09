@@ -145,6 +145,7 @@ INSTANTIATE_TEST_SUITE_P(
     std::make_tuple(legate::detail::Operation::Kind::INDEX_ATTACH, "IndexAttach"),
     std::make_tuple(legate::detail::Operation::Kind::MANUAL_TASK, "ManualTask"),
     std::make_tuple(legate::detail::Operation::Kind::MAPPING_FENCE, "MappingFence"),
+    std::make_tuple(legate::detail::Operation::Kind::PHYSICAL_TASK, "PhysicalTask"),
     std::make_tuple(legate::detail::Operation::Kind::REDUCE, "Reduce"),
     std::make_tuple(legate::detail::Operation::Kind::RELEASE_REGION_FIELD, "ReleaseRegionField"),
     std::make_tuple(legate::detail::Operation::Kind::SCATTER, "Scatter"),

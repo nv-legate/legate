@@ -276,6 +276,9 @@ set(
   unit/operation/copy.cc
   unit/operation/gather.cc
   unit/operation/index_attach.cc
+  unit/operation/launcher_arg.cc
+  unit/operation/release_region_field.cc
+  unit/operation/reduce.cc
   unit/operation/scatter.cc
   unit/operation/scatter_gather.cc
   unit/operation/store_analyzer.cc
