@@ -141,7 +141,6 @@ __all__ = (
     "PhysicalStore",
     "ProcessorRange",
     "ProcessorSlice",
-    "ProfileRange",
     "ReductionOpKind",
     "ResourceConfig",
     "Runtime",
