@@ -154,7 +154,8 @@ class BuildConfig(SectionConfig):
         pkgs = (
             # 3.25.0 triggers gitlab.kitware.com/cmake/cmake/-/issues/24119
             "cmake>=3.24,!=3.25.0",
-            "cython>=3.0.1",
+            # 3.2.6 triggers https://github.com/cython/cython/issues/7767
+            "cython>=3.0.1,!=3.2.6",
             "git",
             "make",
             "rust",
@@ -208,7 +209,7 @@ class RuntimeConfig(SectionConfig):
     def conda(self) -> Reqs:
         pkgs = (
             "llvm-openmp",
-            "numpy>=1.22,!=2.1.0",
+            "numpy>=1.22,<2.5,!=2.1.0",
             "libblas=*=*openblas*",
             "openblas=*=*openmp*",
             # work around https://github.com/StanfordLegion/legion/issues/1500

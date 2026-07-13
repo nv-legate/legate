@@ -20,10 +20,9 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
                                                       const Domain& launch_domain,
                                                       Legion::ProjectionID proj_id)
 {
-  // The base communicator FutureMap is a 1-D map indexed by the linearized
-  // launch point. An identity projection over a 1-D launch already matches that
-  // indexing, so we can return it directly; any other case must be reprojected.
-  if (launch_domain.dim == 1 && proj_id == 0) {
+  if (launch_domain.dim == 1) {
+    // 1-D consumer launches read futures by raw point coordinate, no reshape
+    // and so no key-store projection is involved.
     return find_or_create_(target, range, launch_domain.get_volume());
   }
 
