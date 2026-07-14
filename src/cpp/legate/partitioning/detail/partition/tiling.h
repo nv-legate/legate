@@ -25,7 +25,7 @@ class Storage;
  *
  * A `Tiling` represents an N-dimensional grid of tiles, each tile having a fixed
  * `tile_shape` and arranged according to a specified `color_shape`. Optional
- * `offsets` and `strides` shift and space tiles within the parent store`s
+ * `offsets` and `strides` shift and space tiles within the parent store's
  * coordinate space.
  *
  * Tiled partitions are typically disjoint and complete when the parent extents
@@ -111,7 +111,7 @@ class Tiling final : public Partition {
     Span<const std::uint64_t> factors) const override;
 
   /**
-   * @copydoc Partition::blaot()
+   * @copydoc Partition::bloat()
    */
   [[nodiscard]] InternalSharedPtr<Partition> bloat(
     Span<const std::uint64_t> low_offsets, Span<const std::uint64_t> high_offsets) const override;

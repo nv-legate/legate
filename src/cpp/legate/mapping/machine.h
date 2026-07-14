@@ -161,7 +161,7 @@ class LEGATE_EXPORT Machine {
    * @brief Returns the processor range for the preferred processor type in this descriptor
    *
    * @return A processor range
-  ` */
+   */
   [[nodiscard]] ProcessorRange processor_range() const;
   /**
    * @brief Returns the processor range for a given processor type
