@@ -122,6 +122,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   const DomainPoint& color,
   legate::mapping::StoreTarget target,
   bool is_read,
+  bool is_transformed,
   DataMovementRequests* requests)
 {
   LEGATE_CHECK(!unbound());
@@ -147,10 +148,45 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     return {storage_data_, sub_domain, true};
   }
 
-  // LEGATE_CHECK(partition->is_complete_for(domain));
+  // Registers a copy-out that merges the sub-region written into `data` back into the canonical
+  // storage after the task runs. Only needed for transformed stores (e.g. slices) that are views
+  // into a larger storage; a non-transformed write covers the whole store and simply replaces it.
+  const auto register_copy_out = [&](const InternalSharedPtr<InlineStorage>& data) {
+    LEGATE_ASSERT(storage_data_);
+    LEGATE_ASSERT(key_partition_.has_value());
+    requests->register_copy_out(CopyRequest{
+      id(), data, storage_data_, partition, *key_partition_, domain, domain_, field_size_});
+  };
+
+  // Finalizes a write into `data`: a transformed store (e.g. a slice) is a view into a larger
+  // storage whose written sub-region is merged back via a copy-out, whereas a non-transformed
+  // write covers the whole store and so its buffer becomes the new canonical storage.
+  const auto finalize_write = [&](const InternalSharedPtr<InlineStorage>& data) {
+    if (is_transformed) {
+      register_copy_out(data);
+    } else {
+      storage_data_ = data;
+    }
+  };
+
+  // Reuse an allocation already handed out for this storage during the current task launch. This
+  // makes a store that is passed as both an input and an output (or accessed multiple times with
+  // the same partition) map to a single physical allocation, so that the task's updates are seen
+  // in place rather than being lost in a second, independent allocation.
+  if (auto cached = requests->find_mapped_alloc(id());
+      cached.has_value() && (*cached)->domain() == sub_domain) {
+    auto data = *std::move(cached);
+
+    if (!is_read) {
+      finalize_write(data);
+    }
+    return {std::move(data), sub_domain, false};
+  }
 
   // Otherwise, we need to allocate a new storage
   auto data = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
+
+  requests->record_mapped_alloc(id(), data);
 
   if (!storage_data_) {
     storage_data_ = data;
@@ -158,12 +194,14 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     return {data, sub_domain, false};
   }
 
-  // TODO(wonchanl): Need to handle copy-outs
-  LEGATE_CHECK(is_read);
-  LEGATE_ASSERT(key_partition_);
+  LEGATE_ASSERT(key_partition_.has_value());
 
-  requests->register_copy_in(CopyRequest{
-    id(), storage_data_, data, *key_partition_, partition, domain_, domain, field_size_});
+  if (is_read) {
+    requests->register_copy_in(CopyRequest{
+      id(), storage_data_, data, *key_partition_, partition, domain_, domain, field_size_});
+  } else {
+    finalize_write(data);
+  }
 
   return {data, sub_domain, false};
 }

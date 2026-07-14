@@ -117,6 +117,7 @@ class Storage {
     const DomainPoint& color,
     legate::mapping::StoreTarget target,
     bool is_read,
+    bool is_transformed,
     DataMovementRequests* requests);
   [[nodiscard]] std::pair<InternalSharedPtr<InlineStorage>, Domain> map_reduction(
     const Domain& domain,

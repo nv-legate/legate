@@ -216,7 +216,11 @@ template <bool WRITE>
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
 
   result.reserve(store_args.size());
-  data_requests->reserve_copy_ins(store_args.size());
+  if constexpr (WRITE) {
+    data_requests->reserve_copy_outs(store_args.size());
+  } else {
+    data_requests->reserve_copy_ins(store_args.size());
+  }
   for (auto&& [store, variable] : store_args) {
     auto&& partition                  = strategy[*variable];
     auto&& [physical_store, subsumed] = store->map(partition,
@@ -228,8 +232,10 @@ template <bool WRITE>
                                                    data_requests);
     result.emplace_back(physical_store);
     if constexpr (WRITE) {
-      // TODO(wonchanl): write accesses with slices are not supported yet
-      LEGATE_CHECK(!store->transformed() || subsumed);
+      static_cast<void>(subsumed);
+      // A write through a transformed store (e.g. a slice) is a view into a larger storage and
+      // must not reset the key partition of the whole storage; the updates are merged back into
+      // the canonical storage via a copy-out registered by `Storage::map`.
       if (!store->transformed()) {
         store->set_key_partition(machine, parallel_policy, partition);
       }
@@ -338,6 +344,7 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
     variant_info_().body(legate::TaskContext{&*maybe_ctx});
 
     data_requests.perform_reductions(variant_code);
+    data_requests.perform_copy_outs(variant_code);
   };
 
   if (variant_code != VariantCode::GPU) {

@@ -373,7 +373,7 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
   auto inverted = partition->invert(partition, transform_);
 
   auto&& [allocation, subdomain, subsumed] = get_storage()->map(
-    domain_, inverted, color, machine.preferred_store_target(), is_read, requests);
+    domain_, inverted, color, machine.preferred_store_target(), is_read, transformed(), requests);
 
   return {
     make_internal_shared<PhysicalStore>(
@@ -418,8 +418,13 @@ void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partiti
   const auto color  = new_key_partition->compute_color(Runtime::get_runtime().node_id());
   const auto target = get_storage()->target();
 
-  auto&& [new_inline_storage, _, __] =
-    get_storage()->map(domain_, new_key_partition, color, target, /*is_read=*/true, &requests);
+  auto&& [new_inline_storage, _, __] = get_storage()->map(domain_,
+                                                          new_key_partition,
+                                                          color,
+                                                          target,
+                                                          /*is_read=*/true,
+                                                          /*is_transformed=*/false,
+                                                          &requests);
 
   requests.perform_copy_ins(target == mapping::StoreTarget::FBMEM ? VariantCode::GPU
                                                                   : VariantCode::CPU);
@@ -444,8 +449,13 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
 
   DataMovementRequests requests{};
 
-  auto&& [allocation, subdomain, _] =
-    storage->map(domain_, create_no_partition(), {}, effective_target, /*is_read=*/true, &requests);
+  auto&& [allocation, subdomain, _] = storage->map(domain_,
+                                                   create_no_partition(),
+                                                   {},
+                                                   effective_target,
+                                                   /*is_read=*/true,
+                                                   /*is_transformed=*/false,
+                                                   &requests);
 
   // TODO(wonchanl): Handle the case when the target is FBMEM
   requests.perform_copy_ins(VariantCode::CPU);

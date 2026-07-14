@@ -7,33 +7,60 @@
 #pragma once
 
 #include <legate/data/detail/copy_request.h>
+#include <legate/data/detail/inline_storage.h>
 #include <legate/data/detail/reduction_request.h>
+#include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
+#include <optional>
+#include <unordered_map>
+#include <vector>
 
 namespace legate::detail {
 
 class DataMovementRequests {
  public:
   void register_copy_in(CopyRequest&& copy_in);
+  void register_copy_out(CopyRequest&& copy_out);
   void register_reduction(ReductionRequest&& reduction);
 
   void require_data_sync();
 
   void reserve_copy_ins(std::size_t size);
+  void reserve_copy_outs(std::size_t size);
   void reserve_reduction_requests(std::size_t size);
 
   void perform_data_sync() const;
   void perform_copy_ins(VariantCode variant_code) const;
   void perform_reductions(VariantCode variant_code) const;
+  void perform_copy_outs(VariantCode variant_code) const;
+
+  /**
+   * @brief Looks up a physical allocation already handed out for a given storage during the
+   * current task launch.
+   *
+   * This is used to make a store passed as both an input and an output (or otherwise accessed
+   * multiple times with the same partition within a single task) map to a single physical
+   * allocation, so that updates made by the task are seen in place rather than being lost in a
+   * second, independent allocation.
+   *
+   * @param storage_id The id of the storage being mapped.
+   *
+   * @return The cached allocation, or `std::nullopt` if none has been recorded yet.
+   */
+  [[nodiscard]] std::optional<InternalSharedPtr<InlineStorage>> find_mapped_alloc(
+    std::uint64_t storage_id) const;
+  void record_mapped_alloc(std::uint64_t storage_id, InternalSharedPtr<InlineStorage> alloc);
 
   bool empty() const;
 
  private:
   bool data_sync_required_{};
   std::vector<CopyRequest> copy_ins_{};
+  std::vector<CopyRequest> copy_outs_{};
   std::vector<ReductionRequest> reductions_{};
+  std::unordered_map<std::uint64_t, InternalSharedPtr<InlineStorage>> mapped_allocs_{};
 };
 
 }  // namespace legate::detail

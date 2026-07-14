@@ -14,6 +14,8 @@ inline void DataMovementRequests::require_data_sync() { data_sync_required_ = tr
 
 inline void DataMovementRequests::reserve_copy_ins(std::size_t size) { copy_ins_.reserve(size); }
 
+inline void DataMovementRequests::reserve_copy_outs(std::size_t size) { copy_outs_.reserve(size); }
+
 inline void DataMovementRequests::reserve_reduction_requests(std::size_t size)
 {
   reductions_.reserve(size);
