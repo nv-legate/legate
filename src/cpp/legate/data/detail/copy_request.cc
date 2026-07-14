@@ -96,8 +96,13 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
 
   const auto& color_strides = calculate_strides(tiling->color_shape_dp());
 
+  const auto target_lo = target.domain().lo();
+
   for (Domain::DomainPointIterator it{target.domain()}; it; ++it) {
-    const auto target_idx = inner_product(it.p, target_strides);
+    // `target_idx` is relative to the target's origin, whereas the tile-major `source_idx` is
+    // computed from the global coordinate `it.p` (the tiling lives in the storage's global
+    // coordinate space). These differ whenever the target is offset (e.g. a slice).
+    const auto target_idx = inner_product(it.p - target_lo, target_strides);
     const auto source_idx = inner_product(it.p % tile_shape, tile_strides) +
                             inner_product(it.p / tile_shape, color_strides) * tile_volume;
 
@@ -504,6 +509,7 @@ struct ReorderElementsGPU {
                                                              ReorderElementsKernelName<VAL>::value);
 
     auto target_extents      = calculate_extents(target.domain());
+    auto target_lo           = target.domain().lo();
     auto tile_shape          = tiling->tile_shape_dp();
     auto tile_strides        = calculate_strides(tile_shape);
     auto color_strides       = calculate_strides(tiling->color_shape_dp());
@@ -520,6 +526,7 @@ struct ReorderElementsGPU {
                        source.data(),
                        volume,
                        target_extents,
+                       target_lo,
                        tile_shape,
                        tile_strides,
                        color_strides,
@@ -619,21 +626,53 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
     }
   };
 
-  // If the source partition is a "batch" partition, the source can be directly all-gathered into
-  // the target in the correct order.
+  // The all-gathered result is laid out tile-major: one source tile per participating device,
+  // concatenated in device order. The gathered buffer therefore holds the *total* gathered volume
+  // rather than the (possibly smaller and/or offset) target domain.
+  //
+  // FIXME(wonchan): source_->domain() may not be the tile shape if source_ isn't a tight
+  // allocation
+  const auto gathered_volume = static_cast<std::int64_t>(Runtime::get_runtime().node_count()) *
+                               static_cast<std::int64_t>(source_->domain().get_volume());
+
+  // We can all-gather directly into the target only when the tile-major layout produced by the
+  // collective already coincides with the target's row-major layout. That is the case iff all of:
+  //
+  //   1. The tiles are stacked along the first dimension only (color shape == (P, 1, ..., 1)), so
+  //      concatenating tiles in device order yields exactly a row-major buffer. Checking only the
+  //      last color dimension is insufficient: e.g. a (1, P) color is contiguous per-tile but not
+  //      row-major across tiles.
+  //   2. The target starts at the storage origin (no slice offset). A sliced target has its data
+  //      at non-zero global coordinates, so a straight copy would land the elements in the wrong
+  //      place.
+  //   3. The target exactly holds the whole gathered region (its volume equals the total gathered
+  //      volume). Otherwise the direct all-gather would overflow the target buffer (when the
+  //      gathered region is larger, e.g. because of padded/partial tiles) or leave it only
+  //      partially filled.
+  //
+  // When any of these fail, we all-gather into a temporary and reorder the elements into the target
+  // below.
   //
   // TODO(wonchan): need to check if the device mesh has C order as well
-  if (source_partition_->color_shape().back() == 1) {
+  const auto color_shape       = source_partition_->color_shape();
+  auto stacked_along_first_dim = true;
+  for (std::size_t dim = 1; dim < color_shape.size(); ++dim) {
+    stacked_along_first_dim = stacked_along_first_dim && (color_shape[dim] == 1);
+  }
+
+  const auto target_lo  = target_->domain().lo();
+  auto target_at_origin = true;
+  for (std::int32_t dim = 0; dim < target_lo.dim; ++dim) {
+    target_at_origin = target_at_origin && (target_lo[dim] == 0);
+  }
+
+  if (stacked_along_first_dim && target_at_origin &&
+      target_->domain().get_volume() == static_cast<std::size_t>(gathered_volume)) {
     all_gather_fn(*target_);
     return;
   }
 
-  // Otherwise, the all-gathered result is laid out tile-major and needs to be re-ordered into the
-  // target.
-  //
-  // FIXME(wonchan): source_->domain() may not be the tile shape if source_ isn't a tight
-  // allocation
-  InlineStorage tmp{target_->domain(), field_size_, target_->target()};
+  InlineStorage tmp{Domain{Rect<1>{0, gathered_volume - 1}}, field_size_, target_->target()};
 
   all_gather_fn(tmp);
 
