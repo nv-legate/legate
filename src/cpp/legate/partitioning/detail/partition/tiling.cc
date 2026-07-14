@@ -12,6 +12,7 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/array_algorithms.h>
+#include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/geometry.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -43,8 +44,7 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
     offsets_{std::move(offsets)},
     strides_{tile_shape_},
     tile_shape_dp_{to_domain_point(tile_shape_)},
-    color_shape_dp_{to_domain_point(color_shape_)},
-    color_strides_{calculate_strides(color_shape_dp_)}
+    color_shape_dp_{to_domain_point(color_shape_)}
 {
   if (offsets_.empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
@@ -52,6 +52,7 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   offsets_dp_ = to_domain_point(offsets_);
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
+  init_device_mesh_from_color_shape_();
 }
 
 Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
@@ -64,8 +65,32 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
     offsets_{std::move(offsets)},
     strides_{std::move(strides)},
     tile_shape_dp_{to_domain_point(tile_shape_)},
-    color_shape_dp_{to_domain_point(color_shape_)},
-    color_strides_{calculate_strides(color_shape_dp_)}
+    color_shape_dp_{to_domain_point(color_shape_)}
+{
+  if (this->offsets().empty()) {
+    offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
+  }
+  offsets_dp_ = to_domain_point(offsets_);
+  LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
+  LEGATE_CHECK(tile_shape_.size() == offsets_.size());
+  init_device_mesh_from_color_shape_();
+}
+
+Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+               SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+               SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+               SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides,
+               DeviceMesh device_mesh,
+               SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh)
+  : overlapped_{!array_all_of(std::greater_equal<>{}, strides, tile_shape)},
+    tile_shape_{std::move(tile_shape)},
+    color_shape_{std::move(color_shape)},
+    offsets_{std::move(offsets)},
+    strides_{std::move(strides)},
+    device_mesh_{std::move(device_mesh)},
+    color_to_mesh_{std::move(color_to_mesh)},
+    tile_shape_dp_{to_domain_point(tile_shape_)},
+    color_shape_dp_{to_domain_point(color_shape_)}
 {
   if (this->offsets().empty()) {
     offsets_.assign(tags::size_tag, this->tile_shape().size(), 0);
@@ -75,10 +100,25 @@ Tiling::Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
 
+void Tiling::init_device_mesh_from_color_shape_()
+{
+  const auto color_dim = static_cast<std::int32_t>(color_shape_.size());
+
+  // Default 1-to-1 mapping: the device mesh mirrors the color shape (one device per tile, laid
+  // out in C order) and each color dimension selects the mesh dimension with the same index.
+  // This reproduces the legacy behavior where a color linearizes directly to a device id.
+  device_mesh_ = DeviceMesh{SmallVector<std::uint64_t, LEGATE_MAX_DIM>{color_shape_}};
+  color_to_mesh_.assign(tags::size_tag, color_dim, 0);
+  for (std::int32_t dim = 0; dim < color_dim; ++dim) {
+    color_to_mesh_[dim] = dim;
+  }
+}
+
 bool Tiling::operator==(const Tiling& other) const
 {
   return tile_shape_ == other.tile_shape_ && color_shape_ == other.color_shape_ &&
-         offsets_ == other.offsets_ && strides_ == other.strides_;
+         offsets_ == other.offsets_ && strides_ == other.strides_ &&
+         device_mesh_ == other.device_mesh_ && color_to_mesh_ == other.color_to_mesh_;
 }
 
 InternalSharedPtr<Partition> Tiling::scale(Span<const std::uint64_t> factors) const
@@ -146,16 +186,18 @@ bool Tiling::is_equi_size(const Domain& domain) const
   return true;
 }
 
-Legion::Domain Tiling::launch_domain() const { return detail::to_domain(color_shape_); }
+Legion::Domain Tiling::launch_domain() const { return to_domain(color_shape_); }
 
 std::string Tiling::to_string() const
 {
-  return fmt::format("Tiling(tile: {}, colors: {}, offset: {}, strides: {}, color strides: {})",
-                     tile_shape_,
-                     color_shape_,
-                     offsets_,
-                     strides_,
-                     color_strides_);
+  return fmt::format(
+    "Tiling(tile: {}, colors: {}, offset: {}, strides: {}, mesh: {}, color->mesh: {})",
+    tile_shape_,
+    color_shape_,
+    offsets_,
+    strides_,
+    device_mesh_.to_string(),
+    color_to_mesh_);
 }
 
 InternalSharedPtr<Partition> Tiling::convert(
@@ -188,23 +230,48 @@ InternalSharedPtr<Partition> Tiling::invert(
 
 DomainPoint Tiling::compute_color(std::uint64_t device_id) const
 {
-  // TODO(wonchanl): Add device mesh
+  const auto grid = device_mesh_.grid_point(device_id);
+
+  // A device that the mesh does not map to holds no tile of this partition.
+  if (grid.dim == 0) {
+    return DomainPoint{};
+  }
+
   DomainPoint result;
 
   result.dim = color_shape_dp_.dim;
-  for (std::int32_t dim = result.dim - 1; dim > 0; --dim) {
-    result[dim] = device_id % color_shape_dp_[dim];
-    device_id /= color_shape_dp_[dim];
+  for (std::int32_t c = 0; c < result.dim; ++c) {
+    const auto m = color_to_mesh_[c];
+
+    // Color dimensions that do not select a mesh dimension are not distributed; their coordinate
+    // is canonically 0.
+    result[c] = (m >= 0) ? grid[m] : 0;
   }
-  result[0] = device_id;
 
   return result;
 }
 
-std::uint64_t Tiling::compute_device_id(const DomainPoint& color) const
+std::vector<std::uint64_t> Tiling::compute_device_ids(const DomainPoint& color) const
 {
-  // TODO(wonchanl): Add device mesh
-  return inner_product(color_strides_, color);
+  auto submesh = to_domain(device_mesh().shape());
+
+  for (const auto& [color_dim, mesh_dim] : enumerate(color_to_mesh_)) {
+    if (mesh_dim < 0) {
+      continue;
+    }
+    submesh.rect_data[mesh_dim]               = color[color_dim];
+    submesh.rect_data[mesh_dim + submesh.dim] = color[color_dim];
+  }
+
+  // Enumerate every combination of the replication axes, emitting one device id per combination.
+  std::vector<std::uint64_t> result{};
+
+  result.reserve(submesh.get_volume());
+  for (Domain::DomainPointIterator it{submesh, false}; it; ++it) {
+    result.push_back(device_mesh_.device_id(*it));
+  }
+
+  return result;
 }
 
 Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
@@ -243,6 +310,10 @@ bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) 
     return false;
   }
 
+  if (device_mesh() != other_tiling->device_mesh()) {
+    return false;
+  }
+
   for (auto&& [my_tile_ext, color_ext, my_off, other_tile_ext, other_off] :
        zip_equal(tile_shape(),
                  color_shape(),
@@ -265,7 +336,10 @@ bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) 
   return true;
 }
 
-std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
+std::size_t Tiling::hash() const
+{
+  return hash_all(tile_shape_, color_shape_, offsets_, strides_, device_mesh_, color_to_mesh_);
+}
 
 // ==========================================================================================
 
@@ -291,6 +365,24 @@ InternalSharedPtr<Partition> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX
   }
   return make_internal_shared<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));
+}
+
+InternalSharedPtr<Partition> create_tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+                                           SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+                                           SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+                                           SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides,
+                                           DeviceMesh device_mesh,
+                                           SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh)
+{
+  if (tile_shape.empty()) {
+    return create_no_partition();
+  }
+  return make_internal_shared<Tiling>(std::move(tile_shape),
+                                      std::move(color_shape),
+                                      std::move(offsets),
+                                      std::move(strides),
+                                      std::move(device_mesh),
+                                      std::move(color_to_mesh));
 }
 
 }  // namespace legate::detail

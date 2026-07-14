@@ -98,7 +98,7 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
 
   const auto target_lo = target.domain().lo();
 
-  for (Domain::DomainPointIterator it{target.domain()}; it; ++it) {
+  for (Domain::DomainPointIterator it{target.domain(), false}; it; ++it) {
     // `target_idx` is relative to the target's origin, whereas the tile-major `source_idx` is
     // computed from the global coordinate `it.p` (the tiling lives in the storage's global
     // coordinate space). These differ whenever the target is offset (e.g. a slice).
@@ -552,25 +552,35 @@ find_all_intersections(const Tiling* from,
   const auto device_count = Runtime::get_runtime().node_count();
   const auto my_device_id = Runtime::get_runtime().node_id();
 
-  const auto from_tile_domain =
-    from->shard(from_domain, from->compute_color(my_device_id)).intersection(to_domain);
-  const auto intersection_colors =
-    Domain{(from_tile_domain.lo() - to->offsets_dp()) / to->tile_shape_dp(),
-           (from_tile_domain.hi() - to->offsets_dp()) / to->tile_shape_dp()};
-
   auto intersection_subdomains = SmallVector<Domain>(tags::size_tag, device_count, {});
   auto intersection_strides    = SmallVector<DomainPoint>(tags::size_tag, device_count, {});
   auto intersection_counts     = SmallVector<int>(tags::size_tag, device_count, {});
 
-  for (Domain::DomainPointIterator it{intersection_colors}; it; ++it) {
-    // FIXME(wonchanl): compute_device_id can return multiple devices when the tiling has
-    // overlapping tiles
-    const auto to_device_id = to->compute_device_id(it.p);
-    const auto subdomain    = to->shard(from_tile_domain, it.p);
+  // The color of the source tile this device owns. A device that the `from` mesh does not map to
+  // (e.g. one outside a partially-replicated mesh) owns no tile and has nothing to exchange.
+  const auto my_color = from->compute_color(my_device_id);
 
-    intersection_subdomains[to_device_id] = subdomain;
-    intersection_strides[to_device_id]    = calculate_strides(subdomain);
-    intersection_counts[to_device_id]     = subdomain.get_volume();
+  if (my_color.dim == 0) {
+    return {Domain{}, intersection_subdomains, intersection_strides, intersection_counts};
+  }
+
+  const auto from_tile_domain = from->shard(from_domain, my_color).intersection(to_domain);
+  const auto intersection_colors =
+    Domain{(from_tile_domain.lo() - to->offsets_dp()) / to->tile_shape_dp(),
+           (from_tile_domain.hi() - to->offsets_dp()) / to->tile_shape_dp()};
+
+  for (Domain::DomainPointIterator it{intersection_colors, false}; it; ++it) {
+    const auto subdomain = to->shard(from_tile_domain, it.p);
+    const auto strides   = calculate_strides(subdomain);
+    const auto count     = static_cast<int>(subdomain.get_volume());
+
+    // A destination color may be held by more than one device when `to` replicates the tile; the
+    // same subdomain is exchanged with each of them.
+    for (const auto to_device_id : to->compute_device_ids(it.p)) {
+      intersection_subdomains[to_device_id] = subdomain;
+      intersection_strides[to_device_id]    = strides;
+      intersection_counts[to_device_id]     = count;
+    }
   }
 
   return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};

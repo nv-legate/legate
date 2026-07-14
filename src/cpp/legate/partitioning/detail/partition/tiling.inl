@@ -30,4 +30,6 @@ inline const DomainPoint& Tiling::color_shape_dp() const { return color_shape_dp
 
 inline const DomainPoint& Tiling::offsets_dp() const { return offsets_dp_; }
 
+inline const DeviceMesh& Tiling::device_mesh() const { return device_mesh_; }
+
 }  // namespace legate::detail

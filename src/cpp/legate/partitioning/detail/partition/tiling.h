@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/partitioning/detail/device_mesh.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -15,6 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace legate::detail {
 
@@ -77,6 +79,28 @@ class Tiling final : public Partition {
          SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
          SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
          SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
+
+  /**
+   * @brief Construct a Tiling partition with an explicit device mesh.
+   *
+   * The `color_to_mesh` mapping associates dimensions of the color shape with dimensions of the
+   * device mesh (`color_to_mesh[c]` is the mesh dimension driven by color dimension `c`, or `-1`
+   * if color dimension `c` does not select a mesh dimension). Mesh dimensions not selected by any
+   * color dimension are replication axes: a single tile is placed on every device along them.
+   *
+   * @param tile_shape    The size of each tile.
+   * @param color_shape   The number of tiles in each dimension.
+   * @param offsets       Origin offsets for the first tile.
+   * @param strides       Spacing between tiles.
+   * @param device_mesh   The device mesh the tiles are mapped onto.
+   * @param color_to_mesh Mapping from color dimensions to mesh dimensions (`-1` for unmapped).
+   */
+  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+         SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides,
+         DeviceMesh device_mesh,
+         SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh);
 
   bool operator==(const Tiling& other) const;
 
@@ -151,7 +175,22 @@ class Tiling final : public Partition {
 
   [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
 
-  [[nodiscard]] std::uint64_t compute_device_id(const DomainPoint& color) const;
+  /**
+   * @brief Compute the device ids a given tile color is mapped to.
+   *
+   * A color maps to more than one device id when the tiling replicates the tile (i.e. the device
+   * mesh has a dimension not selected by any color dimension).
+   *
+   * @param color The tile color.
+   *
+   * @return The device ids holding the tile.
+   */
+  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(const DomainPoint& color) const;
+
+  /**
+   * @brief Return the device mesh the tiles are mapped onto.
+   */
+  [[nodiscard]] const DeviceMesh& device_mesh() const;
 
   [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
 
@@ -182,14 +221,18 @@ class Tiling final : public Partition {
   [[nodiscard]] std::size_t hash() const;
 
  private:
+  void init_device_mesh_from_color_shape_();
+
   bool overlapped_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
+  DeviceMesh device_mesh_{};
+  // color_to_mesh_[c] is the mesh dimension selected by color dimension c, or -1 if unmapped.
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh_{};
   DomainPoint tile_shape_dp_{};
   DomainPoint color_shape_dp_{};
-  DomainPoint color_strides_{};
   DomainPoint offsets_dp_{};
 };
 
@@ -203,6 +246,14 @@ class Tiling final : public Partition {
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
   SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
+
+[[nodiscard]] InternalSharedPtr<Partition> create_tiling(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides,
+  DeviceMesh device_mesh,
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh);
 
 }  // namespace legate::detail
 
