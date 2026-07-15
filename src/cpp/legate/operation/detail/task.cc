@@ -338,13 +338,20 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
   }
 
   auto execute_task = [&] {
-    data_requests.perform_copy_ins(variant_code);
+    // Remap copy-ins bring each store's redundant copy onto the memory the task runs on, and must
+    // precede any repartitioning copy-in for that store. The data sync in between ensures a
+    // device-to-host remap copy-in has completed before a CPU repartitioning copy-in (or the task
+    // body) reads the redundant copy. Remap copy-outs merge the redundant copies back into the
+    // active storages, and must follow any repartitioning copy-out.
+    data_requests.perform_remap_copy_ins(variant_code);
     data_requests.perform_data_sync();
+    data_requests.perform_copy_ins(variant_code);
 
     variant_info_().body(legate::TaskContext{&*maybe_ctx});
 
     data_requests.perform_reductions(variant_code);
     data_requests.perform_copy_outs(variant_code);
+    data_requests.perform_remap_copy_outs(variant_code);
   };
 
   if (variant_code != VariantCode::GPU) {

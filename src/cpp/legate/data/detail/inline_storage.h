@@ -23,7 +23,6 @@ enum class StoreTarget : std::uint8_t;
 
 namespace legate::detail {
 
-class DataMovementRequests;
 class Type;
 
 /**
@@ -90,15 +89,6 @@ class InlineStorage {
    * @return The region instance wrapping the memory allocation of the inline storage.
    */
   [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> region_instance() const;
-
-  /**
-   * @brief Remaps the current inline storage to a new target memory kind.
-   *
-   * This will free the currently existing memory allocation if remapping to a new target.
-   *
-   * @param new_target The new target memory kind to remap to.
-   */
-  void remap_to(mapping::StoreTarget new_target, DataMovementRequests* requests);
 
  private:
   [[nodiscard]] const legate::ExternalAllocation& alloc_() const;

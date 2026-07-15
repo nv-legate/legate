@@ -426,8 +426,12 @@ void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partiti
                                                           /*is_transformed=*/false,
                                                           &requests);
 
-  requests.perform_copy_ins(target == mapping::StoreTarget::FBMEM ? VariantCode::GPU
-                                                                  : VariantCode::CPU);
+  const auto variant_code =
+    target == mapping::StoreTarget::FBMEM ? VariantCode::GPU : VariantCode::CPU;
+
+  requests.perform_remap_copy_ins(variant_code);
+  requests.perform_data_sync();
+  requests.perform_copy_ins(variant_code);
 
   get_storage()->set_inline_storage(new_inline_storage);
   set_key_partition(new_key_partition);
@@ -457,9 +461,9 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
                                                    /*is_transformed=*/false,
                                                    &requests);
 
-  // TODO(wonchanl): Handle the case when the target is FBMEM
-  requests.perform_copy_ins(VariantCode::CPU);
+  requests.perform_remap_copy_ins(VariantCode::CPU);
   requests.perform_data_sync();
+  requests.perform_copy_ins(VariantCode::CPU);
 
   return make_internal_shared<PhysicalStore>(
     shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain);

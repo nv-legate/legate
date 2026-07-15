@@ -13,6 +13,7 @@
 #include <legate/data/detail/data_movement_requests.h>
 #include <legate/data/detail/external_allocation.h>
 #include <legate/data/detail/reduction_request.h>
+#include <legate/data/detail/remap_request.h>
 #include <legate/data/detail/shape.h>
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/detail/machine.h>
@@ -130,8 +131,51 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): Better way to check invalid colors
   auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
 
-  // If no data needs to be moved to serve the requested partition, return the current storage
-  // immediately
+  // The canonical ("active") storage stays put on its own memory (by default the rank's GPU). When
+  // the task runs on a different memory, it operates on a redundant copy on `target` instead, and
+  // the canonical storage is left in place. `resolve_active` lazily produces the storage the task
+  // operates on: the canonical storage itself when it already lives on `target`, otherwise a
+  // redundant copy that is populated from the canonical storage by a remap copy-in. The copy is
+  // shared across the input and output mappings of the same store (via `working_copies_`), so a
+  // single remap copy-in populates it. `needs_remap` is false before the first materialization.
+  const bool needs_remap = storage_data_ && storage_data_->target() != target;
+  InternalSharedPtr<InlineStorage> active_copy;  // memoizes resolve_active within this call
+
+  const auto resolve_active = [&]() -> const InternalSharedPtr<InlineStorage>& {
+    if (active_copy) {
+      return active_copy;
+    }
+    if (!needs_remap) {
+      active_copy = storage_data_;
+      return active_copy;
+    }
+    if (auto cached = requests->find_working_copy(id()); cached.has_value()) {
+      active_copy = *std::move(cached);
+      return active_copy;
+    }
+    active_copy = make_internal_shared<InlineStorage>(storage_data_->domain(), field_size_, target);
+    requests->record_working_copy(id(), active_copy);
+
+    auto copy_in = RemapRequest{storage_data_, active_copy, field_size_};
+
+    // A device-to-host copy must be awaited before the (CPU) task reads the redundant copy.
+    if (copy_in.requires_host_sync()) {
+      requests->require_data_sync();
+    }
+    requests->register_remap_copy_in(std::move(copy_in));
+    return active_copy;
+  };
+
+  // When the task writes through a redundant copy, the copy must be merged back into the canonical
+  // storage after the task via a remap copy-out (ordered after any repartitioning copy-out).
+  const auto register_remap_copy_out = [&] {
+    if (needs_remap) {
+      requests->register_remap_copy_out(RemapRequest{resolve_active(), storage_data_, field_size_});
+    }
+  };
+
+  // If no repartitioning is needed, the task operates directly on the active storage (or its
+  // redundant copy on `target`).
   //
   // TODO(wonchanl): Since NoPartition will always return true, the current policy will keep the
   // initial replicated storage even when the entire storage gets written with a disjoint partition
@@ -139,23 +183,29 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   if (key_partition_.has_value() && (*key_partition_)->subsumes(domain, partition)) {
     LEGATE_ASSERT(storage_data_);
 
-    // TODO(wonchanl): GPU-to-CPU copies must be temporary copy-outs, not permanent remapping
-    storage_data_->remap_to(target, requests);
+    auto&& active = resolve_active();
+
+    if (!is_read) {
+      register_remap_copy_out();
+    }
 
     LEGATE_ASSERT(sub_domain.dim == 0 || sub_domain.get_volume() == 0 ||
-                  storage_data_->domain().intersection(sub_domain) == sub_domain);
+                  active->domain().intersection(sub_domain) == sub_domain);
 
-    return {storage_data_, sub_domain, true};
+    return {active, sub_domain, true};
   }
 
-  // Registers a copy-out that merges the sub-region written into `data` back into the canonical
-  // storage after the task runs. Only needed for transformed stores (e.g. slices) that are views
-  // into a larger storage; a non-transformed write covers the whole store and simply replaces it.
+  // Registers a copy-out that merges the sub-region written into `data` back into the active
+  // storage after the task runs (repartitioning it into the active storage's partition). Only
+  // needed for transformed stores (e.g. slices) that are views into a larger storage; a
+  // non-transformed write covers the whole store and simply replaces it. When the active storage is
+  // a redundant copy, a remap copy-out then merges it back into the canonical storage.
   const auto register_copy_out = [&](const InternalSharedPtr<InlineStorage>& data) {
     LEGATE_ASSERT(storage_data_);
     LEGATE_ASSERT(key_partition_.has_value());
     requests->register_copy_out(CopyRequest{
-      id(), data, storage_data_, partition, *key_partition_, domain, domain_, field_size_});
+      id(), data, resolve_active(), partition, *key_partition_, domain, domain_, field_size_});
+    register_remap_copy_out();
   };
 
   // Finalizes a write into `data`: a transformed store (e.g. a slice) is a view into a larger
@@ -189,6 +239,11 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   requests->record_mapped_alloc(id(), data);
 
   if (!storage_data_) {
+    // First materialization of the active storage: it lives on the memory of the task that first
+    // writes it (by default the rank's GPU, since tasks run on the GPU when one is available). A
+    // store first written on the GPU therefore keeps its active storage on the GPU; a task that
+    // later runs on a different memory operates on a temporary redundant copy (see above) rather
+    // than permanently migrating the active storage.
     storage_data_ = data;
 
     return {data, sub_domain, false};
@@ -198,7 +253,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
 
   if (is_read) {
     requests->register_copy_in(CopyRequest{
-      id(), storage_data_, data, *key_partition_, partition, domain_, domain, field_size_});
+      id(), resolve_active(), data, *key_partition_, partition, domain_, domain, field_size_});
   } else {
     finalize_write(data);
   }

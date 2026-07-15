@@ -9,7 +9,6 @@
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/cuda_util.h>
 #include <legate/data/detail/allocation_cache.h>
-#include <legate/data/detail/data_movement_requests.h>
 #include <legate/data/detail/external_allocation.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
@@ -250,54 +249,6 @@ std::pair<Realm::RegionInstance, Realm::FieldID> InlineStorage::region_instance(
   // Region instances from InlineStorage are created with a single field, so grab the first one.
   const Realm::FieldID fid = region_instance_.get_layout()->fields.begin()->first;
   return {region_instance_, fid};
-}
-
-void InlineStorage::remap_to(mapping::StoreTarget new_target, DataMovementRequests* requests)
-{
-  if (target() == new_target) {
-    return;
-  }
-
-  const std::size_t volume = std::max<>(std::size_t{1}, domain().get_volume());
-
-  const auto num_bytes = alloc_().size();
-  auto tmp = InlineStorage{domain(), static_cast<std::uint32_t>(num_bytes / volume), new_target};
-
-  const auto device_copy = [&] {
-    switch (new_target) {
-      case mapping::StoreTarget::SYSMEM: [[fallthrough]];
-      case mapping::StoreTarget::SOCKETMEM: {
-        switch (target()) {
-          case mapping::StoreTarget::SYSMEM: [[fallthrough]];
-          case mapping::StoreTarget::SOCKETMEM: return false;  // Host to host
-          case mapping::StoreTarget::FBMEM: [[fallthrough]];
-          case mapping::StoreTarget::ZCMEM: return true;  // Device to host
-        }
-        LEGATE_ABORT("Unhandled target");
-      }
-      case mapping::StoreTarget::FBMEM: [[fallthrough]];
-      case mapping::StoreTarget::ZCMEM: return true;  // Device to device or host to device
-    }
-    LEGATE_ABORT("Unhandled target");
-  }();
-
-  if (device_copy) {
-    // Either source or destination is on device. This will handle either case transparently.
-    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
-
-    auto&& api = cuda::detail::get_cuda_driver_api();
-
-    api->mem_cpy_async(tmp.data(), data(), num_bytes, Runtime::get_runtime().get_cuda_stream());
-
-    if (new_target == mapping::StoreTarget::SYSMEM) {
-      requests->require_data_sync();
-    }
-  } else {
-    std::memcpy(tmp.data(), data(), num_bytes);
-  }
-
-  alloc_().impl()->maybe_deallocate();
-  *this = std::move(tmp);
 }
 
 }  // namespace legate::detail

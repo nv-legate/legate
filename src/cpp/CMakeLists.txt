@@ -315,6 +315,7 @@ target_sources(
     legate/data/detail/buffer.cc
     legate/data/detail/inline_storage.cc
     legate/data/detail/reduction_request.cc
+    legate/data/detail/remap_request.cc
     legate/mapping/machine.cc
     legate/mapping/mapping.cc
     legate/mapping/proxy_store_mapping.cc
