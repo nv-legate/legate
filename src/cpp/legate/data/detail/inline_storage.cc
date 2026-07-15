@@ -233,9 +233,6 @@ InlineStorage::~InlineStorage()
   if (alloc_().impl()) {
     alloc_().impl()->maybe_deallocate();
   }
-  if (stale_.has_value() && stale_->impl()) {
-    stale_->impl()->maybe_deallocate();
-  }
 }
 
 mapping::StoreTarget InlineStorage::target() const { return alloc_().target(); }
