@@ -195,7 +195,7 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
     return;
   }
 
-  auto acc = p_store.read_write_accessor<std::uint64_t, 1>();
+  // auto acc = p_store.read_write_accessor<std::uint64_t, 1>();
 
   for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
     // TODO(issue 464)

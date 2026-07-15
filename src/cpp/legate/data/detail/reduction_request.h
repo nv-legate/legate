@@ -46,6 +46,10 @@ class ReductionRequest {
  private:
   void all_reduce_(VariantCode variant_code) const;
   void reduce_to_replicated_target_(VariantCode variant_code) const;
+  // Merges this rank's reduction buffer into its (disjoint) tile of the canonical storage. Valid
+  // when the reduction's launch tiling matches the target's key tiling, so each rank's buffer
+  // already holds the fully-reduced values for the tile it owns.
+  void reduce_to_tiled_target_(VariantCode variant_code) const;
 
   InternalSharedPtr<InlineStorage> source_{};
   InternalSharedPtr<InlineStorage> target_{};

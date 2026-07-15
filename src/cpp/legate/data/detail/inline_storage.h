@@ -8,6 +8,7 @@
 
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/mapping.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/typedefs.h>
 
 #include <realm/instance.h>
@@ -89,6 +90,20 @@ class InlineStorage {
    * @return The region instance wrapping the memory allocation of the inline storage.
    */
   [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> region_instance() const;
+
+  /**
+   * @brief Returns the base pointer and per-dimension byte strides of the storage's affine
+   * layout.
+   *
+   * The base pointer is the address of the element at the storage's coordinate origin (i.e. the
+   * point `(0, ..., 0)`), following the affine convention `addr(p) = base + sum(p[i] *
+   * strides[i])`. The strides are given in bytes and have as many entries as the storage
+   * domain's dimension (at least one).
+   *
+   * @return A pair of the base pointer and the byte strides.
+   */
+  [[nodiscard]] std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> base_and_byte_strides()
+    const;
 
  private:
   [[nodiscard]] const legate::ExternalAllocation& alloc_() const;

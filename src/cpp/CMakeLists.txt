@@ -418,8 +418,6 @@ target_sources(
     legate/utilities/detail/dlpack/to_dlpack.cc
     legate/utilities/detail/dlpack/common.cc
     legate/timing/timing.cc
-    # stl
-    legate/experimental/stl/detail/clang_tidy_dummy.cpp
     # io
     legate/io/hdf5/interface.cc
     legate/experimental/io/kvikio/detail/basic.cc
@@ -779,6 +777,7 @@ install(
 
 install(
   FILES
+    legate/data/accessor.h
     legate/data/allocator.h
     legate/data/allocator.inl
     legate/data/buffer.h
@@ -974,42 +973,6 @@ install(
 install(
   FILES legate/io/hdf5/interface.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/io/hdf5
-)
-
-# ########################################################################################
-# * install Legate STL -----------------------------------------------------------
-
-install(
-  FILES legate/experimental/stl.hpp
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental
-)
-
-install(
-  FILES
-    legate/experimental/stl/detail/for_each.hpp
-    legate/experimental/stl/detail/span.hpp
-    legate/experimental/stl/detail/registrar.hpp
-    legate/experimental/stl/detail/transform_reduce.hpp
-    legate/experimental/stl/detail/stlfwd.hpp
-    legate/experimental/stl/detail/get_logical_store.hpp
-    legate/experimental/stl/detail/config.hpp
-    legate/experimental/stl/detail/elementwise.hpp
-    legate/experimental/stl/detail/functional.hpp
-    legate/experimental/stl/detail/meta.hpp
-    legate/experimental/stl/detail/mdspan.hpp
-    legate/experimental/stl/detail/suffix.hpp
-    legate/experimental/stl/detail/prefix.hpp
-    legate/experimental/stl/detail/slice.hpp
-    legate/experimental/stl/detail/type_traits.hpp
-    legate/experimental/stl/detail/transform.hpp
-    legate/experimental/stl/detail/iterator.hpp
-    legate/experimental/stl/detail/utility.hpp
-    legate/experimental/stl/detail/store.hpp
-    legate/experimental/stl/detail/launch_task.hpp
-    legate/experimental/stl/detail/ranges.hpp
-    legate/experimental/stl/detail/reduce.hpp
-    legate/experimental/stl/detail/fill.hpp
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental/stl/detail
 )
 
 # ########################################################################################

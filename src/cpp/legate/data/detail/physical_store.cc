@@ -126,6 +126,55 @@ InlineAllocation PhysicalStore::get_inline_allocation() const
   return dim_dispatch(subdim, GetInlineAllocationPtr{}, instance, fid, sub_domain, target());
 }
 
+std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> PhysicalStore::get_base_and_strides()
+  const
+{
+  // Base pointer (address of the storage's coordinate origin) and byte strides over the
+  // untransformed storage domain (one entry per storage dimension).
+  auto base_and_strides       = storage_()->base_and_byte_strides();
+  void* const base            = base_and_strides.first;
+  auto&& storage_strides      = base_and_strides.second;
+  const auto num_storage_dims = storage_strides.size();
+
+  const auto store_lo = domain().lo();
+
+  // The storage coordinate that the store's lower bound maps to, expressed over the storage's
+  // dimensions. For a transformed store, invert the transform stack so that coordinate offsets
+  // introduced by projections, shifts, etc. are folded into the point. Otherwise the store and
+  // storage coordinates coincide (this also covers 0-D stores, which are never transformed).
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> storage_point;
+
+  if (transformed()) {
+    SmallVector<std::int64_t, LEGATE_MAX_DIM> store_point;
+
+    store_point.reserve(dim());
+    for (std::int32_t i = 0; i < dim(); ++i) {
+      store_point.push_back(store_lo[i]);
+    }
+    storage_point = transform_->invert_point(std::move(store_point));
+  } else {
+    storage_point.reserve(num_storage_dims);
+    for (std::size_t j = 0; j < num_storage_dims; ++j) {
+      storage_point.push_back(store_lo[static_cast<std::int32_t>(j)]);
+    }
+  }
+
+  // origin = base + sum_j storage_point[j] * storage_strides[j]  (in bytes)
+  std::int64_t offset = 0;
+
+  for (std::size_t j = 0; j < num_storage_dims; ++j) {
+    offset += storage_point[j] * static_cast<std::int64_t>(storage_strides[j]);
+  }
+  auto* const origin = static_cast<std::int8_t*>(base) + offset;
+
+  // Re-express the storage's byte strides over the store's (possibly higher/lower-dimensional)
+  // domain.
+  auto store_strides = transformed() ? transform_->convert_strides(std::move(storage_strides))
+                                     : std::move(storage_strides);
+
+  return {origin, std::move(store_strides)};
+}
+
 bool PhysicalStore::is_accessible(mapping::TaskTarget task_target) const
 {
   if (task_target == mapping::TaskTarget::CPU) {

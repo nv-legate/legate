@@ -9,49 +9,6 @@
 #include <legate/data/physical_store.h>
 #include <legate/utilities/detail/mdspan/util.h>
 
-namespace legate::detail::store_detail {
-
-template <typename ACC, typename T, std::int32_t N>
-class RegionInstanceTransAccessorFn {
- public:
-  template <std::int32_t M>
-  ACC operator()(const Realm::RegionInstance& instance,
-                 Realm::FieldID fid,
-                 const Legion::AffineTransform<M, N>& transform,
-                 const Rect<N>& bounds)
-  {
-    return {instance,
-            fid,
-            transform,
-            bounds,
-            sizeof(T) /* = actual_field_size */,
-            false /* = check_field_size */};
-  }
-};
-
-template <typename ACC, typename T, std::int32_t N>
-class RegionInstanceTransReductionAccessorFn {
- public:
-  template <std::int32_t M>
-  ACC operator()(const Realm::RegionInstance& instance,
-                 Realm::FieldID fid,
-                 const Legion::AffineTransform<M, N>& transform,
-                 const Rect<N>& bounds)
-  {
-    return {instance,
-            fid,
-            transform,
-            bounds,
-            false /* = silence_warnings */,
-            nullptr /* = warning_string */,
-            0 /* = subfield_offset */,
-            sizeof(T) /* = actual_field_size */,
-            false /* = check_field_size */};
-  }
-};
-
-}  // namespace legate::detail::store_detail
-
 namespace legate {
 
 template <typename T, std::int32_t DIM, bool VALIDATE_TYPE>
@@ -87,13 +44,13 @@ template <typename T,
           typename Acc,
           std::int32_t DIM>
 [[nodiscard]] PhysicalStore::mdspan_type<T, DIM, AccessorPolicy> make_accessor(
-  const Acc& legion_accessor, const Rect<DIM>& bounds, std::size_t elem_size)
+  const Acc& legate_accessor, const Rect<DIM>& bounds, std::size_t)
 {
   static_assert(DIM >= 0);
   static_assert(DIM <= LEGATE_MAX_DIM);
 
   auto strides    = ::cuda::std::array<std::size_t, DIM>{};
-  auto* const ptr = legion_accessor.ptr(bounds, strides.data(), elem_size);
+  auto* const ptr = legate_accessor.ptr(bounds, strides.data());
 
   using mdspan_type  = PhysicalStore::mdspan_type<T, DIM, AccessorPolicy>;
   using mapping_type = typename mdspan_type::mapping_type;
@@ -267,20 +224,20 @@ ACC PhysicalStore::create_region_instance_accessor_(const Rect<DIM>& bounds,
                                                     bool validate_type) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
+  // Our accessors address absolutely and do not carry bounds, so `bounds` and `validate_type`
+  // (the type check happens in the caller) are unused.
+  static_cast<void>(bounds);
+  static_cast<void>(validate_type);
 
-  auto&& [instance, fid] = get_region_instance_();
+  auto&& [base, byte_strides] = get_base_and_strides_();
+  const auto lo               = shape<DIM>().lo;
 
-  if (transformed()) {
-    const auto transform = get_inverse_transform_();
+  std::array<std::size_t, DIM> strides{};
 
-    return dim_dispatch(transform.transform.m,
-                        detail::store_detail::RegionInstanceTransAccessorFn<ACC, T, DIM>{},
-                        instance,
-                        fid,
-                        transform,
-                        bounds);
+  for (std::int32_t i = 0; i < DIM; ++i) {
+    strides[i] = byte_strides[i] / sizeof(T);
   }
-  return {instance, fid, bounds, /* actual_field_size */ sizeof(T), validate_type};
+  return ACC{static_cast<T*>(base), lo, strides.data()};
 }
 
 template <typename ACC, typename T, std::int32_t DIM>
@@ -288,26 +245,21 @@ ACC PhysicalStore::create_region_instance_reduction_accessor_(const Rect<DIM>& b
                                                               bool validate_type) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
+  static_cast<void>(bounds);
+  static_cast<void>(validate_type);
 
-  auto&& [pr, fid] = get_region_instance_();
+  // The reduction accessor stores (and folds into) elements of the reduction op's RHS type.
+  using ELEM = typename ACC::RHS;
 
-  if (transformed()) {
-    auto transform = get_inverse_transform_();
-    return dim_dispatch(transform.transform.m,
-                        detail::store_detail::RegionInstanceTransReductionAccessorFn<ACC, T, DIM>{},
-                        pr,
-                        fid,
-                        transform,
-                        bounds);
+  auto&& [base, byte_strides] = get_base_and_strides_();
+  const auto lo               = shape<DIM>().lo;
+
+  std::array<std::size_t, DIM> strides{};
+
+  for (std::int32_t i = 0; i < DIM; ++i) {
+    strides[i] = byte_strides[i] / sizeof(ELEM);
   }
-  return {pr,
-          fid,
-          bounds,
-          /* silence_warnings */ false,
-          /* warning_string */ nullptr,
-          /* subfield_offset */ 0,
-          /* actual_field_size */ sizeof(T),
-          /* check_field_size */ validate_type};
+  return ACC{static_cast<ELEM*>(base), lo, strides.data()};
 }
 
 inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }

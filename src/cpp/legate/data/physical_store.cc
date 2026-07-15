@@ -139,4 +139,16 @@ std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_insta
   return impl()->get_region_instance();
 }
 
+std::pair<void*, std::array<std::size_t, LEGATE_MAX_DIM>> PhysicalStore::get_base_and_strides_()
+  const
+{
+  auto&& [base, strides] = impl()->get_base_and_strides();
+  std::array<std::size_t, LEGATE_MAX_DIM> result{};
+
+  for (std::size_t i = 0; i < strides.size(); ++i) {
+    result[i] = strides[i];
+  }
+  return {base, result};
+}
+
 }  // namespace legate

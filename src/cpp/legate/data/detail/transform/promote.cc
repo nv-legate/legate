@@ -110,6 +110,15 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_extents(
   return extents;
 }
 
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_strides(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+{
+  // The promoted dimension is not backed by the storage, so moving along it does not move in
+  // memory: its stride is 0.
+  strides.insert(strides.begin() + extra_dim_, 0);
+  return strides;
+}
+
 SymbolicPoint Promote::invert(SymbolicPoint point) const
 {
   point.remove_inplace(extra_dim_);

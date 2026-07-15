@@ -109,6 +109,15 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_extents(
   return extents;
 }
 
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_strides(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+{
+  // The projected dimension is fixed to a single coordinate; its stride is dropped from the
+  // store (the fixed coordinate's contribution is folded into the base pointer instead).
+  strides.erase(strides.begin() + dim_);
+  return strides;
+}
+
 SymbolicPoint Project::invert(SymbolicPoint point) const
 {
   point.insert_inplace(dim_, SymbolicExpr{});

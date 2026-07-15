@@ -82,6 +82,21 @@ class PhysicalStore {
    */
   [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> get_region_instance() const;
 
+  /**
+   * @brief Returns the base pointer and per-dimension byte strides for constructing an accessor
+   * over this store's (possibly transformed) domain.
+   *
+   * The base pointer is the address of the element at the store domain's lower bound, and the
+   * strides are expressed in bytes over the store's dimensions (i.e. `dim()` entries). Any
+   * store transformations are accounted for: strides are converted to the store's
+   * dimensionality via the transform stack, and coordinate offsets introduced by the transforms
+   * (projections, shifts, ...) are folded into the base pointer.
+   *
+   * @return A pair of the base pointer and the store-space byte strides.
+   */
+  [[nodiscard]] std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> get_base_and_strides()
+    const;
+
  protected:
   InternalSharedPtr<detail::TransformStack> transform_{};
   InternalSharedPtr<Type> type_{};

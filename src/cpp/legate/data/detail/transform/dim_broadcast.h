@@ -100,6 +100,16 @@ class DimBroadcast final : public StoreTransform {
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
   /**
+   * @brief Convert strides.
+   *
+   * The stride of the broadcast dimension `dim_` is set to 0 so that indexing along it always
+   * refers to the single backing element.
+   *
+   * @return `strides` with the `dim_`-th stride updated to 0.
+   */
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_strides(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const override;
+  /**
    * @brief Invert a symbolic point.
    *
    * The `dim_`-th coordinate in the input symbolic point is ignored.

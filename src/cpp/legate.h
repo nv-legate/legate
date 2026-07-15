@@ -16,6 +16,7 @@
 // legion.h has to go before these
 #include <legate_defines.h>
 //
+#include <legate/data/accessor.h>
 #include <legate/data/allocator.h>
 #include <legate/data/external_allocation.h>
 #include <legate/data/logical_store.h>
@@ -43,6 +44,5 @@
 #include <legate/type/half.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/dispatch.h>
-#include <legate/utilities/mdspan.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>

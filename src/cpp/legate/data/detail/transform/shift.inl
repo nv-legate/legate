@@ -38,6 +38,14 @@ inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_extents(
   return extents;
 }
 
+// A shift only offsets coordinates; it does not change the storage layout, so the strides are
+// unchanged (the offset is folded into the base pointer via `invert_point`).
+inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_strides(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+{
+  return strides;
+}
+
 inline Restrictions Shift::invert(Restrictions restrictions) const { return restrictions; }
 
 inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::invert_color(

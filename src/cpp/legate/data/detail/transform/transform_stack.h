@@ -43,6 +43,8 @@ class TransformStack final : public Transform {
     SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_strides(
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const override;
 
   [[nodiscard]] SymbolicPoint invert(SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;

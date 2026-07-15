@@ -274,12 +274,21 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): Better way to check invalid colors
   auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
 
+  // Reducing directly into the canonical storage is only valid when it already lives on the memory
+  // the reduction task runs on. Otherwise the task would reduce into a redundant copy on `target`
+  // whose result is never merged back (`map_reduction` does not carry the remap copy-out machinery
+  // that `map` does), silently dropping the reduction. When a remap is needed we fall through to
+  // the "fresh buffer on `target` + ReductionRequest" path, which copies the result back into the
+  // canonical storage.
+  const bool needs_remap = storage_data_ && storage_data_->target() != target;
+
   // No subsumption checks for reductions as we need to create a new storage anyway
   //
   // TODO(wonchanl): Put back the optimization that converts reductions to read-write accesses when
   // the partition is disjoint
 
-  if (!is_parallel && key_partition_.has_value() && !(*key_partition_)->has_color_shape()) {
+  if (!needs_remap && !is_parallel && key_partition_.has_value() &&
+      !(*key_partition_)->has_color_shape()) {
     return {storage_data_, sub_domain};
   }
 
@@ -290,8 +299,9 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   InternalSharedPtr<InlineStorage> reduction_buffer{};
 
   // If the store is just initialized with the reduction identity and the key partition subsumes the
-  // partition used in reduction, we can use the storage directly as the reduction buffer.
-  if (store_has_identity && (*key_partition_)->subsumes(domain, partition)) {
+  // partition used in reduction, we can use the storage directly as the reduction buffer (unless a
+  // cross-memory remap is required; see above).
+  if (!needs_remap && store_has_identity && (*key_partition_)->subsumes(domain, partition)) {
     reduction_buffer = storage_data_;
 
     // FIXME(wonchanl): We need a proper disjointedness check when the key_partition_ is a Tiling.

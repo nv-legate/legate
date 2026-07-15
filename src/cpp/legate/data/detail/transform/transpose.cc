@@ -120,6 +120,13 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_extents(
   return array_map(extents, axes_);
 }
 
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_strides(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+{
+  // No in-place available
+  return array_map(strides, axes_);
+}
+
 SymbolicPoint Transpose::invert(SymbolicPoint point) const
 {
   // No in-place available

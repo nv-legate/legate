@@ -6,8 +6,6 @@
 
 #include <legate.h>
 
-#include <legate/experimental/stl/detail/registrar.hpp>
-
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -35,13 +33,6 @@ int main(int argc, char** argv)
     legate::start();
   } catch (const std::exception& e) {
     [&] { FAIL() << "Legate failed to start: " << e.what(); }();
-    return 1;
-  }
-
-  try {
-    const legate::experimental::stl::initialize_library init{};
-  } catch (const std::exception& exn) {
-    [&] { FAIL() << "Legate STL failed to start: " << exn.what(); }();
     return 1;
   }
 

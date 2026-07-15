@@ -69,6 +69,16 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_extents(
     std::move(extents));
 }
 
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_strides(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+{
+  return convert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->convert_strides(std::forward<std::decay_t<decltype(input)>>(input));
+    },
+    std::move(strides));
+}
+
 SymbolicPoint TransformStack::invert(SymbolicPoint point) const
 {
   return invert_(

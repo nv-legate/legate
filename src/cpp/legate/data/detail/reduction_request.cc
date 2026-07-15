@@ -12,6 +12,7 @@
 #include <legate/data/detail/copy_util.h>
 #include <legate/data/detail/inline_storage.h>
 #include <legate/generated/fatbin/reduction_request_fatbin.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/redop/base.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/type_traits.h>
@@ -22,6 +23,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
 #include <nccl.h>
 #include <stdexcept>
 #include <type_traits>
@@ -264,9 +266,23 @@ void ReductionRequest::perform(VariantCode variant_code) const
   const auto source_partitioned       = source_partition_->has_color_shape();
   const auto source_covers_full_store = source_->domain().get_volume() == sub_domain_.get_volume();
 
+  // Replicated target: every rank holds a full-size partial that must be combined across ranks.
   if (!target_partitioned && source_covers_full_store) {
     all_reduce_(variant_code);
     return;
+  }
+
+  // Disjoint tiled target whose tiling matches the reduction's launch tiling: each rank's buffer
+  // already holds the fully-reduced values for the (disjoint) tile it owns, so it just copies that
+  // tile back into the canonical storage. No cross-rank communication is required.
+  if (target_partitioned && source_covers_full_store) {
+    const auto* source_tiling = dynamic_cast<const Tiling*>(source_partition_.get());
+    const auto* target_tiling = dynamic_cast<const Tiling*>(target_partition_.get());
+
+    if (source_tiling != nullptr && target_tiling != nullptr && *source_tiling == *target_tiling) {
+      reduce_to_tiled_target_(variant_code);
+      return;
+    }
   }
 
   if (!source_partitioned) {
@@ -277,6 +293,51 @@ void ReductionRequest::perform(VariantCode variant_code) const
 
   throw TracedException<std::runtime_error>{
     "Reduction with Tiling source into a misaligned Tiling target is not yet supported"};
+}
+
+void ReductionRequest::reduce_to_tiled_target_(VariantCode variant_code) const
+{
+  const auto target_domain = target_->domain();
+  const auto count         = target_domain.get_volume();
+
+  if (count == 0) {
+    return;
+  }
+
+  const auto source_domain  = source_->domain();
+  const auto source_strides = calculate_strides(source_domain);
+  const auto source_extents = calculate_extents(source_domain);
+  const auto target_extents = calculate_extents(target_domain);
+
+  // The target tile occupies a contiguous run of the row-major source only when it spans the full
+  // extent of every dimension but the outermost (true for the 1-D reduction stores handled here,
+  // and for tilings along the outermost dimension). Refuse the strided case loudly rather than
+  // silently corrupting data.
+  for (std::int32_t dim = 1; dim < source_domain.dim; ++dim) {
+    if (target_extents[dim] != source_extents[dim]) {
+      throw TracedException<std::runtime_error>{
+        "Reduction into a non-contiguous tile of the target is not yet supported"};
+    }
+  }
+
+  // This rank's tile lives at its global coordinates within the full-size source buffer.
+  const auto field_size    = type_->size();
+  const auto source_offset = inner_product(target_domain.lo() - source_domain.lo(), source_strides);
+  const auto num_bytes     = count * field_size;
+  const auto* source_ptr =
+    static_cast<const std::int8_t*>(source_->data()) + (source_offset * field_size);
+  auto* target_ptr = static_cast<std::int8_t*>(target_->data());
+
+  if (variant_code == VariantCode::GPU) {
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+
+    cuda::detail::get_cuda_driver_api()->mem_cpy_async(
+      target_ptr, source_ptr, num_bytes, Runtime::get_runtime().get_cuda_stream());
+    return;
+  }
+
+  LEGATE_ASSERT(variant_code == VariantCode::CPU);
+  std::memcpy(target_ptr, source_ptr, num_bytes);
 }
 
 void ReductionRequest::all_reduce_(VariantCode variant_code) const

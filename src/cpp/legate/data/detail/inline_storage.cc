@@ -14,9 +14,11 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/dispatch.h>
 
+#include <realm/inst_layout.h>
 #include <realm/memory.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
 namespace legate::detail {
@@ -203,6 +205,27 @@ class MakeRegionInstance {
   }
 };
 
+class GetBaseAndStrides {
+ public:
+  template <std::int32_t DIM>
+  [[nodiscard]] std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> operator()(
+    const Realm::RegionInstance& instance, Realm::FieldID fid) const
+  {
+    // A byte-typed accessor over the whole instance reports the affine layout's base address
+    // (the address of coordinate zero) and the per-dimension strides in bytes.
+    const Realm::AffineAccessor<std::int8_t, DIM, coord_t> acc{instance, fid};
+
+    SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides;
+
+    strides.reserve(DIM);
+    for (std::int32_t i = 0; i < DIM; ++i) {
+      strides.push_back(acc.strides[i]);
+    }
+    // `ptr(0)` yields the address of the coordinate origin without an int-to-pointer cast.
+    return {acc.ptr(Point<DIM>::ZEROES()), std::move(strides)};
+  }
+};
+
 }  // namespace
 
 InlineStorage::InlineStorage(const Domain& domain,
@@ -246,6 +269,16 @@ std::pair<Realm::RegionInstance, Realm::FieldID> InlineStorage::region_instance(
   // Region instances from InlineStorage are created with a single field, so grab the first one.
   const Realm::FieldID fid = region_instance_.get_layout()->fields.begin()->first;
   return {region_instance_, fid};
+}
+
+std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> InlineStorage::base_and_byte_strides()
+  const
+{
+  auto&& [instance, fid] = region_instance();
+
+  // A 0-D storage is materialized as a 1-D instance (see MakeRegionInstance), so dispatch on the
+  // same sanitized dimensionality.
+  return dim_dispatch(std::max(1, domain_.get_dim()), GetBaseAndStrides{}, instance, fid);
 }
 
 }  // namespace legate::detail

@@ -77,6 +77,15 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::convert_extents(
   return extents;
 }
 
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::convert_strides(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+{
+  // Broadcasting reads the same (unit-extent) backing element for every index along `dim_`, so
+  // its stride must be 0.
+  strides.at(dim_) = 0;
+  return strides;
+}
+
 SymbolicPoint DimBroadcast::invert(SymbolicPoint point) const
 {
   point.at(dim_) = constant(0);

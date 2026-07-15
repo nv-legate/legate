@@ -265,15 +265,6 @@ set(
   unit/dlpack/from_dlpack/unversioned.cc
   unit/dlpack/to_dlpack/to_dlpack.cc
   unit/proxy_store_mapping.cc
-  # experimental
-  experimental/stl/elementwise.cc
-  experimental/stl/fill.cc
-  experimental/stl/for_each.cc
-  experimental/stl/reduce.cc
-  experimental/stl/store.cc
-  experimental/stl/transform.cc
-  experimental/stl/transform_reduce.cc
-  experimental/stl/views.cc
 )
 
 if(legate_USE_HDF5)

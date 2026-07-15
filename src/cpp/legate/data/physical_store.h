@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/data/accessor.h>
 #include <legate/data/buffer.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/data/logical_store.h>
@@ -23,6 +24,7 @@
 
 #include <cuda/std/mdspan>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -56,6 +58,7 @@ namespace legate {
  */
 class LEGATE_EXPORT PhysicalStore {
  public:
+  // FIXME(wonchanl): We need to get rid of all accessors in this class
   template <typename T,
             std::uint32_t DIM,
             typename AccessorPolicy = ::cuda::std::default_accessor<T>>
@@ -860,6 +863,19 @@ class LEGATE_EXPORT PhysicalStore {
    * @return Pair of the region instance and field ID wrapping the underlying memory allocation.
    */
   [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> get_region_instance_() const;
+
+  /**
+   * @brief Returns the base pointer and per-dimension byte strides used to construct an accessor
+   * over the underlying storage.
+   *
+   * The base pointer is the address of the element at the store's lower bound, and the strides
+   * (in bytes) are expressed over the store's dimensions, accounting for any store
+   * transformations. Only the first `dim()` entries of the returned array are meaningful.
+   *
+   * @return The base pointer and byte strides.
+   */
+  [[nodiscard]] std::pair<void*, std::array<std::size_t, LEGATE_MAX_DIM>> get_base_and_strides_()
+    const;
 
   SharedPtr<detail::PhysicalStore> impl_{};
   // This member exists purely to solve the temporary store problem. It is illegal for Physical

@@ -181,63 +181,6 @@ using Legion::Domain;
 
 /** @} */  // end of geometry
 
-// Accessor types
-
-/**
- * @addtogroup accessor
- * @{
- */
-
-/**
- * @brief Read-only accessor
- *
- * See
- * [legion.h](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion.h#L2555-L2562)
- * for a complete list of supported operators.
- */
-template <typename FT, int N, typename T = coord_t>
-using AccessorRO =
-  Legion::FieldAccessor<LEGION_READ_ONLY, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
-
-/**
- * @brief Write-only accessor
- *
- * See
- * [legion.h](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion.h#L2575-L2581)
- * for a complete list of supported operators.
- */
-template <typename FT, int N, typename T = coord_t>
-using AccessorWO =
-  Legion::FieldAccessor<LEGION_WRITE_DISCARD, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
-
-/**
- * @brief Read-write accessor
- *
- * See
- * [legion.h](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion.h#L2564-L2573)
- * for a complete list of supported operators.
- */
-template <typename FT, int N, typename T = coord_t>
-using AccessorRW =
-  Legion::FieldAccessor<LEGION_READ_WRITE, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
-
-/**
- * @brief Reduction accessor
- *
- * Unlike the other accessors, an index expression on a reduction accessor allows the client to
- * perform only two operations, `<<=` and `reduce`, both of which reduce a value to the chosen
- * element.
- *
- * See
- * [legion.h](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion.h#L2837-L2848)
- * for details about the reduction accessor.
- */
-template <typename REDOP, bool EXCLUSIVE, int N, typename T = coord_t>
-using AccessorRD = Legion::
-  ReductionAccessor<REDOP, EXCLUSIVE, N, T, Realm::AffineAccessor<typename REDOP::RHS, N, T>>;
-
-/** @} */  // end of accessor
-
 // Iterators
 
 /**
