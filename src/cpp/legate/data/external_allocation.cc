@@ -9,20 +9,9 @@
 #include <legate_defines.h>
 
 #include <legate/data/detail/external_allocation.h>
-#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <realm/instance.h>
-
 #include <stdexcept>
-
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include <realm/cuda/cuda_access.h>
-#endif
-
-#include <fmt/format.h>
-
-#include <memory>
 
 namespace legate {
 
@@ -42,15 +31,8 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   bool read_only /*=true*/,
   std::optional<Deleter> deleter /*=std::nullopt*/)  // NOLINT(performance-unnecessary-value-param)
 {
-  auto realm_resource = std::make_unique<Realm::ExternalMemoryResource>(
-    reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
-  return ExternalAllocation{
-    make_internal_shared<detail::ExternalAllocation>(read_only,
-                                                     mapping::StoreTarget::SYSMEM,
-                                                     ptr,
-                                                     size,
-                                                     std::move(realm_resource),
-                                                     std::move(deleter))};
+  return ExternalAllocation{make_internal_shared<detail::ExternalAllocation>(
+    read_only, mapping::StoreTarget::SYSMEM, ptr, size, std::move(deleter))};
 }
 
 /*static*/ ExternalAllocation ExternalAllocation::create_zcmem(
@@ -60,15 +42,8 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   std::optional<Deleter> deleter /*=std::nullopt*/)  // NOLINT(performance-unnecessary-value-param)
 {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  auto realm_resource = std::make_unique<Realm::ExternalCudaPinnedHostResource>(
-    reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
-  return ExternalAllocation{
-    make_internal_shared<detail::ExternalAllocation>(read_only,
-                                                     mapping::StoreTarget::ZCMEM,
-                                                     ptr,
-                                                     size,
-                                                     std::move(realm_resource),
-                                                     std::move(deleter))};
+  return ExternalAllocation{make_internal_shared<detail::ExternalAllocation>(
+    read_only, mapping::StoreTarget::ZCMEM, ptr, size, std::move(deleter))};
 #else
   static_cast<void>(ptr);
   static_cast<void>(size);
@@ -87,15 +62,9 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   std::optional<Deleter> deleter /*=std::nullopt*/)  // NOLINT(performance-unnecessary-value-param)
 {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  auto realm_resource = std::make_unique<Realm::ExternalCudaMemoryResource>(
-    local_device_id, reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
-  return ExternalAllocation{
-    make_internal_shared<detail::ExternalAllocation>(read_only,
-                                                     mapping::StoreTarget::FBMEM,
-                                                     ptr,
-                                                     size,
-                                                     std::move(realm_resource),
-                                                     std::move(deleter))};
+  static_cast<void>(local_device_id);
+  return ExternalAllocation{make_internal_shared<detail::ExternalAllocation>(
+    read_only, mapping::StoreTarget::FBMEM, ptr, size, std::move(deleter))};
 #else
   static_cast<void>(local_device_id);
   static_cast<void>(ptr);

@@ -12,14 +12,11 @@
 #include <legate/data/detail/external_allocation.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/utilities/dispatch.h>
-
-#include <realm/inst_layout.h>
-#include <realm/memory.h>
+#include <legate/utilities/detail/geometry.h>
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
+#include <utility>
 
 namespace legate::detail {
 
@@ -39,37 +36,6 @@ namespace {
   static CpuAllocationCache cpu_allocation_cache{CPU_CACHE_MAX_SIZE, CPU_ALLOC_ALIGNMENT};
 
   return cpu_allocation_cache;
-}
-
-/**
- * @brief Returns the default Realm memory for the given storage target.
- *
- * Inline storage assumes single processor execution. As a result, return
- * the first available memory of the given type. This memory should be
- * the same memory for the default processor of the system.
- *
- * @param target The storage target to get the default Realm memory for.
- *
- * @return The default Realm memory for the given storage target.
- */
-[[nodiscard]] Realm::Memory get_realm_memory(mapping::StoreTarget target)
-{
-  switch (target) {
-    case mapping::StoreTarget::SYSMEM: [[fallthrough]];
-    case mapping::StoreTarget::SOCKETMEM: {
-      return Runtime::get_runtime().local_machine().system_memory();
-    }
-    case mapping::StoreTarget::FBMEM: {
-      auto&& local_machine = Runtime::get_runtime().local_machine();
-      const auto gpu       = local_machine.gpus().front();
-
-      return local_machine.get_memory(gpu, target);
-    }
-    case mapping::StoreTarget::ZCMEM: {
-      return Runtime::get_runtime().local_machine().zerocopy_memory();
-    }
-  }
-  LEGATE_ABORT("Unhandled memory kind ", to_underlying(target));
 }
 
 /**
@@ -142,110 +108,22 @@ namespace {
   LEGATE_ABORT("Unhandled memory kind ", to_underlying(target));
 }
 
-class MakeRegionInstance {
- public:
-  template <std::int32_t DIM>
-  [[nodiscard]] Realm::RegionInstance operator()(const Domain& domain,
-                                                 std::uint32_t field_size,
-                                                 const detail::ExternalAllocation& alloc) const
-  {
-    const auto& dm = sanitize_0d_(domain);
-
-    Realm::RegionInstance ret;
-
-    // Later dimensions have smaller strides, following C-ordering.
-    std::array<std::int32_t, DIM> dim_ordering;
-    for (std::int32_t i = 0; i < DIM; ++i) {
-      dim_ordering[i] = DIM - 1 - i;
-    }
-
-    auto* const layout = Realm::InstanceLayoutGeneric::choose_instance_layout<DIM, coord_t>(
-      Realm::IndexSpace<DIM, coord_t>{static_cast<Rect<DIM, coord_t>>(dm)},
-      Realm::InstanceLayoutConstraints{{field_size}, /*block_size=*/0},
-      dim_ordering.data());
-
-    // Modify the layout alignment accordingly to satisfy
-    // the alignment of the provided allocation.
-    const auto addr         = reinterpret_cast<std::int64_t>(alloc.ptr());
-    std::uint32_t alignment = 1;
-
-    while (addr % (alignment * 2) == 0) {
-      alignment *= 2;
-    }
-    layout->alignment_reqd = alignment;
-
-    LEGATE_CHECK(alloc.resource()->satisfies(*layout));
-
-    const auto ready =
-      Realm::RegionInstance::create_external_instance(ret,
-                                                      get_realm_memory(alloc.target()),
-                                                      *layout,
-                                                      *alloc.resource(),
-                                                      Realm::ProfilingRequestSet{});
-
-    // Should always receive NO_EVENT because we are providing a valid external allocation
-    // and we don't have any precondition.
-    LEGATE_CHECK(ready == Realm::Event::NO_EVENT);
-    LEGATE_CHECK(ret != Realm::RegionInstance::NO_INST);
-
-    return ret;
-  }
-
- private:
-  static const Domain& sanitize_0d_(const Domain& domain)
-  {
-    static const Domain for_0d = []() noexcept {
-      Domain result;
-
-      result.dim = 1;
-      return result;
-    }();
-
-    return domain.dim == 0 ? for_0d : domain;
-  }
-};
-
-class GetBaseAndStrides {
- public:
-  template <std::int32_t DIM>
-  [[nodiscard]] std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> operator()(
-    const Realm::RegionInstance& instance, Realm::FieldID fid) const
-  {
-    // A byte-typed accessor over the whole instance reports the affine layout's base address
-    // (the address of coordinate zero) and the per-dimension strides in bytes.
-    const Realm::AffineAccessor<std::int8_t, DIM, coord_t> acc{instance, fid};
-
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides;
-
-    strides.reserve(DIM);
-    for (std::int32_t i = 0; i < DIM; ++i) {
-      strides.push_back(acc.strides[i]);
-    }
-    // `ptr(0)` yields the address of the coordinate origin without an int-to-pointer cast.
-    return {acc.ptr(Point<DIM>::ZEROES()), std::move(strides)};
-  }
-};
-
 }  // namespace
 
 InlineStorage::InlineStorage(const Domain& domain,
                              std::uint32_t field_size,
                              mapping::StoreTarget target)
   : domain_{domain},
+    field_size_{field_size},
     allocation_{
-      make_external_alloc(target, std::max<>(domain.get_volume(), std::size_t{1}) * field_size)},
-    region_instance_{dim_dispatch(
-      std::max<>(1, domain.get_dim()), MakeRegionInstance{}, domain, field_size, *alloc_().impl())}
+      make_external_alloc(target, std::max<>(domain.get_volume(), std::size_t{1}) * field_size)}
 {
 }
 
 InlineStorage::InlineStorage(const Domain& domain,
                              std::uint32_t field_size,
                              const legate::ExternalAllocation& alloc)
-  : domain_{domain},
-    allocation_{alloc.impl()},
-    region_instance_{dim_dispatch(
-      std::max<>(1, domain.get_dim()), MakeRegionInstance{}, domain, field_size, *alloc_().impl())}
+  : domain_{domain}, field_size_{field_size}, allocation_{alloc.impl()}
 {
 }
 
@@ -264,21 +142,31 @@ void* InlineStorage::data() { return alloc_().ptr(); }
 
 const void* InlineStorage::data() const { return alloc_().ptr(); }
 
-std::pair<Realm::RegionInstance, Realm::FieldID> InlineStorage::region_instance() const
-{
-  // Region instances from InlineStorage are created with a single field, so grab the first one.
-  const Realm::FieldID fid = region_instance_.get_layout()->fields.begin()->first;
-  return {region_instance_, fid};
-}
-
 std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> InlineStorage::base_and_byte_strides()
   const
 {
-  auto&& [instance, fid] = region_instance();
+  // Pure computation: the storage uses a C-ordered (row-major) affine layout whose allocation
+  // starts at the domain's lower bound, so the base (address of coordinate zero) and per-dimension
+  // byte strides follow directly from the domain and field size.
+  static const Domain for_0d = []() noexcept {
+    Domain result;
 
-  // A 0-D storage is materialized as a 1-D instance (see MakeRegionInstance), so dispatch on the
-  // same sanitized dimensionality.
-  return dim_dispatch(std::max(1, domain_.get_dim()), GetBaseAndStrides{}, instance, fid);
+    result.dim = 1;
+    return result;
+  }();
+  const auto& dm             = domain_.dim == 0 ? for_0d : domain_;
+  const auto element_strides = calculate_strides(dm);
+
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> byte_strides;
+
+  byte_strides.reserve(dm.dim);
+  for (std::int32_t i = 0; i < dm.dim; ++i) {
+    byte_strides.push_back(static_cast<std::uint64_t>(element_strides[i]) * field_size_);
+  }
+  auto* const base = static_cast<std::int8_t*>(alloc_().ptr()) -
+                     (inner_product(dm.lo(), element_strides) * field_size_);
+
+  return {static_cast<void*>(base), std::move(byte_strides)};
 }
 
 }  // namespace legate::detail

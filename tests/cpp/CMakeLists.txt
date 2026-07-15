@@ -188,7 +188,6 @@ set(
   integration/transpose_dim_order.cc
   integration/variant_options_precedence.cc
   # unit
-  unit/attachment.cc
   unit/constraint.cc
   unit/data/allocation_cache.cc
   unit/dispatch.cc

@@ -757,55 +757,6 @@ class LEGATE_EXPORT PhysicalStore {
   template <typename T>
   void check_accessor_type_() const;
   void check_accessor_type_(Type::Code code, std::size_t size_of_T) const;
-  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
-
-  [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field_() const;
-
-  /**
-   * @brief Create a standard read/read-write/write-only field accessor over the underlying
-   * data of the store for a physical store backed by a region field.
-   *
-   * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
-   * be useful to disable it wholesale, for example when punning the underlying buffer as some
-   * other data-type. In this case, the user must take care to pass the right field sizes and
-   * shapes to the accessor, but is otherwise free to recast the data as they see fit.
-   *
-   * @tparam ACC The accessor type to create.
-   * @tparam T The value type of the accessor (since Legion accessors don't expose this
-   * directly).
-   * @tparam DIM The dimension of the accessor (and therefore the shape).
-   *
-   * @param bounds The bounds over which the accessor should provide access. Must be within the
-   * bounds of the store's shape.
-   * @param validate_type Whether to perform type size verification.
-   *
-   * @return The accessor.
-   */
-  template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
-
-  /**
-   * @brief Create a reduction field accessor over the underlying data for a physical store
-   * backed by a region field.
-   *
-   * Type validation is usually enabled in debug-mode, and disabled in release mode. But it may
-   * be useful to disable it wholesale, for example when punning the underlying buffer as some
-   * other data-type. In this case, the user must take care to pass the right field sizes and
-   * shapes to the accessor, but is otherwise free to recast the data as they see fit.
-   *
-   * @tparam ACC The accessor type to create.
-   * @tparam T The value type of the accessor (since Legion accessors don't expose this
-   * directly).
-   * @tparam DIM The dimension of the accessor (and therefore the shape).
-   *
-   * @param bounds The bounds over which the accessor should provide access. Must be within the
-   * bounds of the store's shape.
-   * @param validate_type Whether to perform type size verification.
-   *
-   * @return The accessor.
-   */
-  template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
 
   /**
    * @brief Create a standard read/read-write/write-only field accessor over the underlying
@@ -854,15 +805,6 @@ class LEGATE_EXPORT PhysicalStore {
   template <typename ACC, typename T, std::int32_t DIM>
   [[nodiscard]] ACC create_region_instance_reduction_accessor_(const Rect<DIM>& bounds,
                                                                bool validate_type) const;
-
-  /**
-   * @brief Returns the region instance and field ID that backs the underlying physical store.
-   *
-   * @throws std::invalid_cast if the store is not an InlinePhysicalStore.
-   *
-   * @return Pair of the region instance and field ID wrapping the underlying memory allocation.
-   */
-  [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> get_region_instance_() const;
 
   /**
    * @brief Returns the base pointer and per-dimension byte strides used to construct an accessor

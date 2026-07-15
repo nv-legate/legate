@@ -11,8 +11,6 @@
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/typedefs.h>
 
-#include <realm/instance.h>
-
 #include <cstdint>
 #include <utility>
 
@@ -82,16 +80,6 @@ class InlineStorage {
   [[nodiscard]] const void* data() const;
 
   /**
-   * @brief Returns the region instance wrapping the memory allocation of the inline storage.
-   *
-   * This is useful for information such as constructing accessors for interaction with
-   * the underlying memory.
-   *
-   * @return The region instance wrapping the memory allocation of the inline storage.
-   */
-  [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> region_instance() const;
-
-  /**
    * @brief Returns the base pointer and per-dimension byte strides of the storage's affine
    * layout.
    *
@@ -109,8 +97,8 @@ class InlineStorage {
   [[nodiscard]] const legate::ExternalAllocation& alloc_() const;
 
   Domain domain_{};
+  std::uint32_t field_size_{};
   legate::ExternalAllocation allocation_{};
-  Realm::RegionInstance region_instance_{};
 };
 
 }  // namespace legate::detail

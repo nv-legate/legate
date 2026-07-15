@@ -9,10 +9,6 @@
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/mapping.h>
 
-#include <legion.h>
-#include <realm/instance.h>
-
-#include <memory>
 #include <optional>
 
 namespace legate::detail {
@@ -25,14 +21,12 @@ class ExternalAllocation {
                      mapping::StoreTarget target,
                      void* ptr,
                      std::size_t size,
-                     std::unique_ptr<Realm::ExternalInstanceResource> resource,
                      std::optional<Deleter> deleter = std::nullopt);
 
   [[nodiscard]] bool read_only() const;
   [[nodiscard]] mapping::StoreTarget target() const;
   [[nodiscard]] void* ptr() const;
   [[nodiscard]] std::size_t size() const;
-  [[nodiscard]] const Realm::ExternalInstanceResource* resource() const;
   void maybe_deallocate();
 
   // detail::ExternalAllocation should never be copied
@@ -44,7 +38,6 @@ class ExternalAllocation {
   mapping::StoreTarget target_{mapping::StoreTarget::SYSMEM};
   void* ptr_{};
   std::size_t size_{};
-  std::unique_ptr<Realm::ExternalInstanceResource> resource_{};
   std::optional<Deleter> deleter_{};
 };
 

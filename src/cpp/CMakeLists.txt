@@ -293,7 +293,6 @@ target_sources(
     legate/data/shape.cc
     legate/data/physical_store.cc
     legate/data/detail/allocation_cache.cc
-    legate/data/detail/attachment.cc
     legate/data/detail/copy_request.cc
     legate/data/detail/copy_util.cc
     legate/data/detail/data_movement_requests.cc

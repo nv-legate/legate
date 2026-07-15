@@ -64,23 +64,11 @@ class PhysicalStore {
   [[nodiscard]] bool is_writable() const;
   [[nodiscard]] bool is_reducible() const;
 
-  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
-
   void check_shape_dimension(std::int32_t dim) const;
   void check_accessor_type(Type::Code code, std::size_t size_of_T) const;
   void check_accessor_dimension(std::int32_t dim) const;
   void check_write_access() const;
   void check_reduction_access() const;
-
-  /**
-   * @brief Returns the region instance and field ID wrapping the underlying memory allocation.
-   *
-   * This is useful for information such as constructing Legion accessors for interaction
-   * with the underlying memory.
-   *
-   * @return std::pair holding the region instance and field ID wrapping wrapped memory allocation.
-   */
-  [[nodiscard]] std::pair<Realm::RegionInstance, Realm::FieldID> get_region_instance() const;
 
   /**
    * @brief Returns the base pointer and per-dimension byte strides for constructing an accessor

@@ -7,14 +7,13 @@
 #include <legate/data/detail/physical_store.h>
 
 #include <legate/utilities/detail/traced_exception.h>
-#include <legate/utilities/dispatch.h>
 
 #include <fmt/format.h>
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>  // std::memcpy
 #include <stdexcept>
+#include <vector>
 
 namespace legate::detail {
 
@@ -36,94 +35,13 @@ Domain PhysicalStore::domain() const
   return result;
 }
 
-namespace {
-
-class GetInlineAllocationPtr {
-  template <std::int32_t DIM>
-  using FieldAccessor = Legion::FieldAccessor<LEGION_READ_WRITE,
-                                              std::int8_t,
-                                              DIM,
-                                              coord_t,
-                                              Realm::AffineAccessor<std::int8_t, DIM, coord_t>>;
-
- public:
-  template <std::int32_t DIM>
-  [[nodiscard]] InlineAllocation operator()(const Realm::RegionInstance& region_instance,
-                                            Realm::FieldID fid,
-                                            const Domain& sub_domain,
-                                            mapping::StoreTarget target) const
-  {
-    const auto& dm = sanitize_0d_(sub_domain);
-    const auto acc = FieldAccessor<DIM>{region_instance, fid, dm};
-
-    return create_(DIM, dm, acc, target);
-  }
-
-  template <std::int32_t M, std::int32_t N>
-  [[nodiscard]] InlineAllocation operator()(const Realm::RegionInstance& region_instance,
-                                            Realm::FieldID fid,
-                                            const Domain& sub_domain,
-                                            const Legion::AffineTransform<M, N>& transform,
-                                            mapping::StoreTarget target) const
-  {
-    const auto& dm = sanitize_0d_(sub_domain);
-    const auto acc = FieldAccessor<N>{region_instance, fid, transform, dm};
-
-    return create_(N, dm, acc, target);
-  }
-
- private:
-  template <typename Rect, typename Acc>
-  [[nodiscard]] static InlineAllocation create_(std::size_t dim,
-                                                const Rect& rect,
-                                                const Acc& acc,
-                                                mapping::StoreTarget target)
-  {
-    auto strides = std::vector<std::size_t>(dim, 0);
-    void* ptr    = acc.ptr(rect, strides.data());
-
-    return {ptr, std::move(strides), target};
-  }
-
-  static const Domain& sanitize_0d_(const Domain& domain)
-  {
-    static const Domain for_0d = []() noexcept {
-      Domain result;
-
-      result.dim = 1;
-      return result;
-    }();
-
-    return domain.dim == 0 ? for_0d : domain;
-  }
-};
-
-}  // namespace
-
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
-  // Determine dimensionality of the domain. `domain()` could be 0D/empty,
-  // so account for this edge case.
-  auto&& sub_domain      = domain();
-  const auto subdim      = std::max(1, sub_domain.get_dim());
-  auto&& [instance, fid] = get_region_instance();
+  // The base pointer and store-space byte strides are computed directly from the storage's
+  // allocation and the (possibly transformed) domain; no Realm region instance is involved.
+  auto&& [ptr, strides] = get_base_and_strides();
 
-  LEGATE_CHECK(subdim >= 0);
-
-  if (transformed()) {
-    const auto transform = get_inverse_transform();
-
-    return double_dispatch(transform.transform.m,
-                           transform.transform.n,
-                           GetInlineAllocationPtr{},
-                           instance,
-                           fid,
-                           sub_domain,
-                           transform,
-                           target());
-  }
-
-  return dim_dispatch(subdim, GetInlineAllocationPtr{}, instance, fid, sub_domain, target());
+  return {ptr, std::vector<std::size_t>(strides.begin(), strides.end()), target()};
 }
 
 std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> PhysicalStore::get_base_and_strides()
@@ -182,11 +100,6 @@ bool PhysicalStore::is_accessible(mapping::TaskTarget task_target) const
   }
 
   return target() == mapping::StoreTarget::FBMEM || target() == mapping::StoreTarget::ZCMEM;
-}
-
-Legion::DomainAffineTransform PhysicalStore::get_inverse_transform() const
-{
-  return transform_->inverse_transform(dim());
 }
 
 void PhysicalStore::check_shape_dimension(std::int32_t dim) const

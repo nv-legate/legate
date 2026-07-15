@@ -129,16 +129,6 @@ void PhysicalStore::check_write_access_() const { impl()->check_write_access(); 
 
 void PhysicalStore::check_reduction_access_() const { impl()->check_reduction_access(); }
 
-Legion::DomainAffineTransform PhysicalStore::get_inverse_transform_() const
-{
-  return impl()->get_inverse_transform();
-}
-
-std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_instance_() const
-{
-  return impl()->get_region_instance();
-}
-
 std::pair<void*, std::array<std::size_t, LEGATE_MAX_DIM>> PhysicalStore::get_base_and_strides_()
   const
 {

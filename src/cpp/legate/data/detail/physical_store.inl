@@ -46,11 +46,6 @@ inline bool PhysicalStore::is_writable() const { return writable_; }
 
 inline bool PhysicalStore::is_reducible() const { return reducible_; }
 
-inline std::pair<Realm::RegionInstance, Realm::FieldID> PhysicalStore::get_region_instance() const
-{
-  return storage_()->region_instance();
-}
-
 inline const InternalSharedPtr<InlineStorage>& PhysicalStore::storage_() const
 {
   return inline_storage_;
