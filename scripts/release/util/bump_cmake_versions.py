@@ -43,6 +43,5 @@ def bump_legion_version(ctx: Context) -> None:
     lg_data["version"] = full_ver
 
     if not ctx.dry_run:
-        with legion_version.open(mode="w") as fd:
-            json.dump(data, fd, indent=4)
+        legion_version.write_text(f"{json.dumps(data, indent=4)}\n")
     ctx.vprint(f"Updated {legion_version}")

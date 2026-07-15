@@ -79,8 +79,9 @@ def rotate_switcher(ctx: Context) -> None:
         dev_entry = data.pop(dev_idx)
         data.append(dev_entry)
     if not ctx.dry_run:
-        with switcher_json.open(mode="w") as fd:
-            json.dump(data, fd, indent=4, sort_keys=True)
+        switcher_json.write_text(
+            f"{json.dumps(data, indent=4, sort_keys=True)}\n"
+        )
 
     ctx.vprint(f"Updated {switcher_json} to {new_version}")
 
@@ -174,7 +175,7 @@ def _rotate_log_files(ctx: Context) -> Path:
     )
 
     if not ctx.dry_run:
-        new_log.write_text(changelog)
+        new_log.write_text(f"{changelog}\n")
         ctx.run_cmd(["git", "add", str(new_log)])
 
     ctx.vprint(f"Wrote new log to {new_log}")
