@@ -7,6 +7,8 @@
 #include <legate.h>
 
 #include <legate/data/detail/logical_store.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/core_ids.h>
 
 #include <gtest/gtest.h>
 
@@ -289,6 +291,23 @@ void check_image(const legate::LogicalStore& func,
   runtime->submit(std::move(task));
 }
 
+[[nodiscard]] legate::Domain run_bounding_box_task(legate::LocalTaskID task_id,
+                                                   const legate::LogicalStore& input)
+{
+  auto* const runtime = legate::Runtime::get_runtime();
+  const auto core_library =
+    runtime->find_library(runtime->impl()->core_library().get_library_name().as_string_view());
+  auto output = runtime->create_store(
+    legate::Shape{1}, legate::binary_type(sizeof(legate::Domain)), /*optimize_scalar=*/true);
+  auto task = runtime->create_task(core_library, task_id, legate::Domain{legate::Rect<1>{0, 0}});
+
+  task.add_input(input);
+  task.add_output(output);
+  runtime->submit(std::move(task));
+
+  return output.get_physical_store().read_accessor<legate::Domain, 1>()[0];
+}
+
 void test_image(const std::vector<std::uint64_t>& domain_extents,
                 const std::vector<std::uint64_t>& range_extents,
                 legate::ImageComputationHint hint,
@@ -348,6 +367,37 @@ TEST_P(Valid, 3D)
 {
   auto& [hint, is_rect, ascending] = GetParam();
   test_image({2, 3, 4}, {5, 5, 5}, hint, is_rect, ascending);
+}
+
+TEST_F(ImageConstraint, FindBoundingBoxIgnoresEmptyRects)
+{
+  auto* const runtime = legate::Runtime::get_runtime();
+  auto func           = runtime->create_store(legate::Shape{2}, legate::rect_type(1));
+  const auto valid    = legate::Rect<1>{legate::Point<1>{5}, legate::Point<1>{6}};
+  const auto empty    = legate::Rect<1>{legate::Point<1>{1}, legate::Point<1>{0}};
+
+  auto acc = func.get_physical_store().write_accessor<legate::Rect<1>, 1>();
+  acc[0]   = valid;
+  acc[1]   = empty;
+
+  const auto result =
+    run_bounding_box_task(legate::LocalTaskID{legate::detail::CoreTask::FIND_BOUNDING_BOX}, func);
+  const auto actual = result.bounds<1, legate::coord_t>();
+
+  ASSERT_EQ(actual, valid);
+}
+
+TEST_F(ImageConstraint, FindBoundingBoxSortedHandlesEmptyInput)
+{
+  auto* const runtime = legate::Runtime::get_runtime();
+  auto func           = runtime->create_store(legate::Shape{0}, legate::point_type(1));
+
+  runtime->issue_fill(func, legate::Scalar{legate::Point<1>{0}});
+
+  const auto result = run_bounding_box_task(
+    legate::LocalTaskID{legate::detail::CoreTask::FIND_BOUNDING_BOX_SORTED}, func);
+
+  ASSERT_EQ(result.get_volume(), 0);
 }
 
 TEST_F(ImageConstraint, InvalidType)

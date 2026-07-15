@@ -204,7 +204,7 @@ __device__ void find_bounding_box_kernel(
   auto local_high = identity_high;
 
   for (std::size_t iter = 0; iter < num_iters; ++iter) {
-    const auto index = ((iter * gridDim.x + blockIdx.x) * blockDim.x) + threadIdx.x;
+    const auto index = ((((iter * gridDim.x) + blockIdx.x) * blockDim.x) + threadIdx.x);
 
     if (index < unravel.volume()) {
       auto p = unravel(index);
@@ -212,8 +212,10 @@ __device__ void find_bounding_box_kernel(
       if constexpr (std::is_same_v<InAcc, legate::Rect<POINT_NDIM>>) {
         const auto& rect = in[p];
 
-        RED_LOW::template fold<true /*EXCLUSIVE*/>(local_low, rect.lo);
-        RED_HIGH::template fold<true /*EXCLUSIVE*/>(local_high, rect.hi);
+        if (!rect.empty()) {
+          RED_LOW::template fold<true /*EXCLUSIVE*/>(local_low, rect.lo);
+          RED_HIGH::template fold<true /*EXCLUSIVE*/>(local_high, rect.hi);
+        }
       } else {
         const auto& point = in[p];
 

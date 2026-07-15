@@ -10,6 +10,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <utilities/utilities.h>
 
 namespace inline_map {
@@ -17,6 +18,10 @@ namespace inline_map {
 // NOLINTBEGIN(readability-magic-numbers)
 
 namespace {
+
+constexpr std::uint64_t STORE_EXTENT    = 5;
+constexpr legate::coord_t UPDATED_INDEX = 2;
+constexpr std::int64_t UPDATED_VALUE    = 42;
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
@@ -45,6 +50,16 @@ class Config {
 
 class InlineMap : public RegisterOnceFixture<Config> {};
 
+void initialize_store(const legate::PhysicalStore& store)
+{
+  const auto shape = store.shape<1>();
+  auto acc         = store.write_accessor<std::int64_t, 1>();
+  for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
+    acc[*it] = 0;
+  }
+  acc[UPDATED_INDEX] = UPDATED_VALUE;
+}
+
 void test_inline_map_future()
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -56,27 +71,26 @@ void test_inline_map_future()
 void test_inline_map_region_and_slice()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto root_ls = runtime->create_store(legate::Shape{5}, legate::int64());
+  auto root_ls = runtime->create_store(legate::Shape{STORE_EXTENT}, legate::int64());
   auto root_ps = root_ls.get_physical_store();
   EXPECT_FALSE(root_ps.is_future());
   auto slice_ls = root_ls.slice(/*dim=*/0, legate::Slice{1});
   auto slice_ps = slice_ls.get_physical_store();
   EXPECT_FALSE(slice_ps.is_future());
-  auto root_acc  = root_ps.write_accessor<std::int64_t, 1>();
-  root_acc[2]    = 42;
-  auto slice_acc = slice_ps.read_accessor<std::int64_t, 1>();
-  EXPECT_EQ(slice_acc[1], 42);
+  auto root_acc           = root_ps.write_accessor<std::int64_t, 1>();
+  root_acc[UPDATED_INDEX] = UPDATED_VALUE;
+  auto slice_acc          = slice_ps.read_accessor<std::int64_t, 1>();
+  EXPECT_EQ(slice_acc[1], UPDATED_VALUE);
 }
 
 void test_inline_map_and_task()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto l_store = runtime->create_store(legate::Shape{5}, legate::int64());
+  auto l_store = runtime->create_store(legate::Shape{STORE_EXTENT}, legate::int64());
   {
     auto p_store = l_store.get_physical_store();
-    auto acc     = p_store.write_accessor<std::int64_t, 1>();
-    acc[2]       = 42;
+    initialize_store(p_store);
   }
   auto task = runtime->create_task(context, AdderTask::TASK_CONFIG.task_id(), {1});
   task.add_input(l_store);
@@ -84,7 +98,7 @@ void test_inline_map_and_task()
   runtime->submit(std::move(task));
   auto p_store = l_store.get_physical_store();
   auto acc     = p_store.read_accessor<std::int64_t, 1>();
-  EXPECT_EQ(acc[2], 43);
+  EXPECT_EQ(acc[UPDATED_INDEX], UPDATED_VALUE + 1);
 }
 
 void test_inline_map_region_gpu()
@@ -94,20 +108,22 @@ void test_inline_map_region_gpu()
   }
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  auto l_store = runtime->create_store(legate::Shape{5}, legate::int64());
+  auto l_store = runtime->create_store(legate::Shape{STORE_EXTENT}, legate::int64());
 
   {
     auto p_store = l_store.get_physical_store(legate::mapping::StoreTarget::FBMEM);
     auto acc     = p_store.write_accessor<std::int64_t, 1>();
-    auto* ptr    = acc.ptr(2);
-    auto value   = std::int64_t{42};
+    auto* ptr    = acc.ptr(0);
+    auto values  = std::array<std::int64_t, STORE_EXTENT>{};
+
+    values[UPDATED_INDEX] = UPDATED_VALUE;
 
     const auto ctx    = legate::cuda::detail::AutoPrimaryContext{0};
     auto&& driver_api = legate::cuda::detail::get_cuda_driver_api();
     auto stream       = driver_api->stream_create(0);
 
     try {
-      driver_api->mem_cpy_async(ptr, &value, sizeof(value), stream);
+      driver_api->mem_cpy_async(ptr, values.data(), sizeof(values), stream);
       driver_api->stream_synchronize(stream);
     } catch (...) {
       driver_api->stream_destroy(&stream);
@@ -124,7 +140,7 @@ void test_inline_map_region_gpu()
   {
     auto p_store = l_store.get_physical_store(legate::mapping::StoreTarget::SYSMEM);
     auto acc     = p_store.read_accessor<std::int64_t, 1>();
-    EXPECT_EQ(acc[2], 43);
+    EXPECT_EQ(acc[UPDATED_INDEX], UPDATED_VALUE + 1);
   }
 }
 

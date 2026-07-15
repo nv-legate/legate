@@ -135,17 +135,17 @@ set(
   bug/alias_via_promote.cc
   bug/aligned_unpack.cc
   bug/dangling_store_partition.cc
-  bug/key_partition_invalidation.cc
   bug/interfering_requirements.cc
+  bug/key_partition_invalidation.cc
   bug/logical_store_transform.cc
   bug/premature_free.cc
+  bug/private_scalar_copy.cc
+  bug/projection_c_order.cc
   bug/remap_double_detach.cc
   bug/singleton_index_task.cc
-  bug/projection_c_order.cc
+  bug/temporary_logical_store.cc
   bug/transpose_c_order.cc
   bug/transpose_fortran_order.cc
-  bug/temporary_logical_store.cc
-  bug/private_scalar_copy.cc
   # integration
   integration/aligned_unbound_stores.cc
   integration/alignment_constraints.cc
@@ -157,10 +157,10 @@ set(
   integration/consensus_match.cc
   integration/copy_failure.cc
   integration/copy_gather.cc
-  integration/core_mapper.cc
   integration/copy_gather_scatter.cc
   integration/copy_normal.cc
   integration/copy_scatter.cc
+  integration/core_mapper.cc
   integration/delinearize.cc
   integration/exception.cc
   integration/field_reuse.cc
@@ -179,10 +179,11 @@ set(
   integration/min_extent_constraints.cc
   integration/mixed_dim.cc
   integration/multi_scalar_out.cc
+  integration/opaque.cc
   integration/parallel_policy.cc
   integration/partitioner.cc
-  integration/projection.cc
   integration/proc_local_storage.cc
+  integration/projection.cc
   integration/provenance.cc
   integration/redundant.cc
   integration/region_manager.cc
@@ -195,8 +196,8 @@ set(
   integration/streaming_checker.cc
   integration/task_misc.cc
   integration/comm/cpu_allreduce_typed.cc
-  integration/comm/cpu_communicator.cc
   integration/comm/cpu_comm_exception.cc
+  integration/comm/cpu_communicator.cc
   integration/tasks/task_simple.cc
   integration/task_store/auto_task_tests.cc
   integration/task_store/manual_task_tests.cc
@@ -206,7 +207,6 @@ set(
   integration/tree_reduce_unique.cc
   integration/tunable.cc
   integration/variant_options_precedence.cc
-  integration/opaque.cc
   # unit
   unit/attachment.cc
   unit/constraint.cc
@@ -225,8 +225,8 @@ set(
   unit/shape.cc
   unit/storage.cc
   unit/timing.cc
-  unit/buffer/typed_buffer.cc
   unit/buffer/task_local_buffer.cc
+  unit/buffer/typed_buffer.cc
   unit/logical_store/broadcast.cc
   unit/logical_store/create_store.cc
   unit/logical_store/delinearize.cc
@@ -236,15 +236,15 @@ set(
   unit/logical_store/physical_store.cc
   unit/logical_store/project.cc
   unit/logical_store/promote.cc
+  unit/logical_store/reinterpret_as.cc
   unit/logical_store/slice.cc
   unit/logical_store/transpose.cc
-  unit/logical_store/reinterpret_as.cc
-  unit/machine/node_range.cc
-  unit/machine/processor_range.cc
-  unit/machine/machine.cc
   unit/machine/global_machine.cc
   unit/machine/local_machine.cc
   unit/machine/local_machine_selector.cc
+  unit/machine/machine.cc
+  unit/machine/node_range.cc
+  unit/machine/processor_range.cc
   unit/mapping/base_mapper.cc
   unit/mapping/common_api.cc
   unit/mapping/dim_ordering.cc
@@ -258,11 +258,23 @@ set(
   unit/mapping/store/properties.cc
   unit/mapping/store/transform.cc
   unit/mapping/store_mapping.cc
-  unit/partition/launch_domain_resolver.cc
+  unit/operation/attach.cc
+  unit/operation/copy.cc
+  unit/operation/gather.cc
+  unit/operation/index_attach.cc
+  unit/operation/launcher_arg.cc
+  unit/operation/reduce.cc
+  unit/operation/release_region_field.cc
+  unit/operation/scatter.cc
+  unit/operation/scatter_gather.cc
+  unit/operation/store_analyzer.cc
+  unit/operation/task.cc
   unit/partition/image.cc
+  unit/partition/launch_domain_resolver.cc
   unit/partition/nopartition.cc
-  unit/partition/tiling.cc
   unit/partition/opaque.cc
+  unit/partition/restriction.cc
+  unit/partition/tiling.cc
   unit/physical_store/create_bound_store.cc
   unit/physical_store/create_future_store.cc
   unit/physical_store/create_unbound_store.cc
@@ -273,17 +285,6 @@ set(
   unit/physical_store/reduce_accessor.cc
   unit/physical_store/transform.cc
   unit/physical_store/write_accessor.cc
-  unit/operation/attach.cc
-  unit/operation/copy.cc
-  unit/operation/gather.cc
-  unit/operation/index_attach.cc
-  unit/operation/launcher_arg.cc
-  unit/operation/release_region_field.cc
-  unit/operation/reduce.cc
-  unit/operation/scatter.cc
-  unit/operation/scatter_gather.cc
-  unit/operation/store_analyzer.cc
-  unit/operation/task.cc
   unit/projection.cc
   unit/redop/apply.cc
   unit/redop/complex.cc
@@ -310,18 +311,18 @@ set(
   unit/type/struct_type.cc
   unit/type/type_features.cc
   unit/type/type_traits.cc
-  unit/task_signature/nargs.cc
-  unit/task_signature/basic.cc
-  unit/task_signature/register.cc
   unit/task_signature/alignment.cc
+  unit/task_signature/basic.cc
   unit/task_signature/bloat.cc
   unit/task_signature/broadcast.cc
   unit/task_signature/image.cc
   unit/task_signature/min_extents.cc
+  unit/task_signature/nargs.cc
+  unit/task_signature/register.cc
   unit/task_signature/scale.cc
   unit/task_config/basic.cc
-  unit/dlpack/from_dlpack/versioned.cc
   unit/dlpack/from_dlpack/unversioned.cc
+  unit/dlpack/from_dlpack/versioned.cc
   unit/dlpack/to_dlpack/to_dlpack.cc
   unit/streaming/extract_streamable_prefix.cc
   unit/streaming/nested_scopes.cc
@@ -343,9 +344,9 @@ if(legate_USE_HDF5)
   list(
     APPEND with_runtime_SRC
     unit/io/hdf5/negative.cc
+    unit/io/hdf5/partitioner.cc
     unit/io/hdf5/read.cc
     unit/io/hdf5/write.cc
-    unit/io/hdf5/partitioner.cc
   )
   list(APPEND with_runtime_TARGETS HDF5::HDF5)
 endif()
@@ -388,8 +389,8 @@ set(
   noinit/argument_parsing/legion_default_args.cc
   noinit/argument_parsing/logging.cc
   noinit/argument_parsing/numamem.cc
-  noinit/argument_parsing/ompthreads.cc
   noinit/argument_parsing/omps.cc
+  noinit/argument_parsing/ompthreads.cc
   noinit/argument_parsing/parse_args.cc
   noinit/argument_parsing/scaled.cc
   noinit/argument_parsing/sysmem.cc
@@ -402,8 +403,8 @@ if(legate_USE_UCX)
   list(
     APPEND wo_runtime_SRC
     integration/comm/ucc_integration.cc
-    unit/comm/ucc_network.cc
     unit/comm/oob_allgather.cc
+    unit/comm/ucc_network.cc
   )
   list(APPEND wo_runtime_EXTRA_TARGETS ucx::ucp ucx::ucs ucc::ucc)
 endif()
@@ -414,8 +415,8 @@ set(
   unit/logical_store/offload_to.cc
   non_reentrant/oom_message.cc
   non_reentrant/runtime.cc
-  non_reentrant/shutdown_callback.cc
   non_reentrant/sharding.cc
+  non_reentrant/shutdown_callback.cc
 )
 
 set(
