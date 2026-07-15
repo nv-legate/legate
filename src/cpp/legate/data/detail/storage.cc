@@ -79,17 +79,13 @@ Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::stri
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
-                 const InternalSharedPtr<Type>& type,
+                 std::uint32_t field_size,
                  InternalSharedPtr<ExternalAllocation> allocation,
                  std::string_view provenance)
-  : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
-    shape_{std::move(shape)},
-    provenance_{std::move(provenance)}
+  : Storage{shape, field_size, provenance}
 {
-  storage_data_ =
-    make_internal_shared<InlineStorage>(to_domain(this->shape()->extents()),
-                                        type->size(),
-                                        legate::ExternalAllocation{std::move(allocation)});
+  storage_data_ = make_internal_shared<InlineStorage>(
+    domain_, field_size, legate::ExternalAllocation{std::move(allocation)});
 
   set_key_partition(create_no_partition());
 }

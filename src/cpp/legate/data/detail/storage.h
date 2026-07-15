@@ -80,7 +80,7 @@ class Storage {
    * @param provenance The provenance of the storage.
    */
   Storage(InternalSharedPtr<Shape> shape,
-          const InternalSharedPtr<Type>& type,
+          std::uint32_t field_size,
           InternalSharedPtr<ExternalAllocation> allocation,
           std::string_view provenance);
 

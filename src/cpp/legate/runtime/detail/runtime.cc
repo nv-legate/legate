@@ -393,18 +393,11 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
       *type)};
   }
 
-  if (config().enable_inline_task_launch()) {
-    // Create an allocated Storage directly from the external allocation.
-    auto storage = make_internal_shared<detail::Storage>(
-      shape, type, allocation, get_provenance().as_string_view());
-    return make_internal_shared<detail::LogicalStore>(std::move(storage), std::move(type));
-  }
+  // Create an allocated Storage directly from the external allocation.
+  auto storage = make_internal_shared<detail::Storage>(
+    shape, type->size(), allocation, get_provenance().as_string_view());
 
-  auto store = create_store(shape, std::move(type));
-
-  // TODO(wonchanl): Need a v2 implementation
-
-  return store;
+  return make_internal_shared<detail::LogicalStore>(std::move(storage), std::move(type));
 }
 
 Runtime::IndexAttachResult Runtime::create_store(
