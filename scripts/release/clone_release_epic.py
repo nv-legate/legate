@@ -16,6 +16,8 @@ Issue: TypeAlias = dict[str, Any]
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+MONTHS_PER_YEAR: Final[int] = 12
+
 SRC_REPO: Final = "nv-legate/legate.internal"
 
 PREFIX: Final = (
@@ -69,12 +71,28 @@ def add_sub_issue(epic: Issue, issue: Issue, target_repo: str) -> None:
     )
 
 
-def port_text(
-    text: str, prev_release: str, curr_release: str, next_release: str
-) -> str:
+def next_month(date: str) -> str:
+    year, month = map(int, date.split("."))
+    if not 1 <= month <= MONTHS_PER_YEAR:
+        msg = "Release month must be between 01 and 12"
+        raise ValueError(msg)
+    if month == MONTHS_PER_YEAR:
+        year = (year + 1) % 100
+        month = 1
+    else:
+        month += 1
+    return f"{year:02d}.{month:02d}"
+
+
+def port_text(text: str, prev_release: str, curr_release: str) -> str:
+    prev_placeholder = next_month(prev_release)
+    curr_placeholder = next_month(curr_release)
     return (
-        text.replace(curr_release, next_release)
-        .replace(curr_release.replace(".", ""), next_release.replace(".", ""))
+        text.replace(prev_placeholder, curr_placeholder)
+        .replace(
+            prev_placeholder.replace(".", ""),
+            curr_placeholder.replace(".", ""),
+        )
         .replace(prev_release, curr_release)
         .replace(prev_release.replace(".", ""), curr_release.replace(".", ""))
         .replace("- [X]", "- [ ]")
@@ -83,15 +101,9 @@ def port_text(
 
 
 def clone_issue(
-    issue: Issue,
-    prev_release: str,
-    curr_release: str,
-    next_release: str,
-    target_repo: str,
+    issue: Issue, prev_release: str, curr_release: str, target_repo: str
 ) -> Issue:
-    new_title = port_text(
-        issue["title"], prev_release, curr_release, next_release
-    )
+    new_title = port_text(issue["title"], prev_release, curr_release)
     assignees = tuple(user["login"] for user in issue["assignees"])
     cmd = [
         "--method",
@@ -101,7 +113,7 @@ def clone_issue(
         f"title={new_title}",
     ]
     if (body := issue.get("body")) is not None:
-        new_body = port_text(body, prev_release, curr_release, next_release)
+        new_body = port_text(body, prev_release, curr_release)
         cmd += ["-f", f"body={new_body}"]
     new_issue = cast(Issue, execute(*cmd))
     add_assignees(int(new_issue["number"]), assignees, target_repo)
@@ -133,12 +145,6 @@ def main() -> None:
         help="Release for which we are producing the epic, in the form YY.MM",
     )
     parser.add_argument(
-        "--next-release",
-        required=True,
-        type=yy_dot_mm,
-        help="Next projected release, in the form YY.MM",
-    )
-    parser.add_argument(
         "--epic-number",
         required=True,
         type=int,
@@ -154,20 +160,12 @@ def main() -> None:
     epic = get_issue(args.epic_number)
     assert args.prev_release in epic["title"]
     cloned_epic = clone_issue(
-        epic,
-        args.prev_release,
-        args.curr_release,
-        args.next_release,
-        args.target_repo,
+        epic, args.prev_release, args.curr_release, args.target_repo
     )
 
     for issue in get_sub_issues(args.epic_number):
         cloned_issue = clone_issue(
-            issue,
-            args.prev_release,
-            args.curr_release,
-            args.next_release,
-            args.target_repo,
+            issue, args.prev_release, args.curr_release, args.target_repo
         )
         add_sub_issue(cloned_epic, cloned_issue, args.target_repo)
 
