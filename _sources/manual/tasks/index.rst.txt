@@ -159,7 +159,7 @@ This declares a task type ``MyTask``, which has a local task ID of ``0``, and wh
 
 #. When this task is registered with a ``Library``, its ``Library``-local ID will be
    ``0`` (derived from ``TASK_CONFIG.task_id()``).
-#. It supports execution on CPU's, but does not support execution on other processor
+#. It supports execution on CPUs, but does not support execution on other processor
    kinds.
 
 The user is able to specify additional configuration and options for the tasks via the

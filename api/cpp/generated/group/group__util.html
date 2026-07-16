@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>util &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>util &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../../../../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -1432,7 +1432,7 @@ This routine is often used to convert a “local” 1d index, in the range <code
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The problem are the modulus and div commands. Modern compilers are seemingly unable to hoist those computations out of the loop and vectorize the code. So an equivalent loop over the extents “normally”:</p>
+<p>The problem is the modulus and div commands. Modern compilers are seemingly unable to hoist those computations out of the loop and vectorize the code. So an equivalent loop over the extents “normally”:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">span</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">span</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">span</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...</span>
@@ -1481,7 +1481,7 @@ This routine is often used to convert a “local” 1d index, in the range <code
 </div>
 <p>Where the number of nested loops generated are equal to the rank of the extent.</p>
 <p>The utility of this function is multi-fold:</p>
-<p>#. It allow efficient iteration over an mdspan of variable dimension. #. It separates the iteration from the container. For example, if the user wanted to iterate over the intersection of multiple mdspans, they could compute the intersection of their extents, and use this function to generate the loops.</p>
+<p>#. It allows efficient iteration over an mdspan of variable dimension. #. It separates the iteration from the container. For example, if the user wanted to iterate over the intersection of multiple mdspans, they could compute the intersection of their extents, and use this function to generate the loops.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

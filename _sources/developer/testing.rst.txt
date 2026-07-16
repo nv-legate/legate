@@ -195,7 +195,7 @@ various flags.
 Python
 ======
 
-The python tests are invoked directly via ``pytest``. As such, you must install a set of
+The Python tests are invoked directly via ``pytest``. As such, you must install a set of
 pre-requisite Python packages before you can run them (note the following list may not be
 complete):
 
@@ -237,20 +237,19 @@ wish to execute:
 .. code-block:: sh
 
    $ pytest tests/python/unit/legate/core/test_task.py
-   ============================= test session starts =============================
-   platform darwin -- Python 3.13.3, pytest-8.3.5, pluggy-1.6.0
+   ================================ test session starts =================================
+   platform linux -- Python 3.14.3, pytest-9.0.2, pluggy-1.6.0
    cachedir: .cache/pytest
-   rootdir: /Users/jfaibussowit/soft/nv/legate.core.internal
+   rootdir: /path/to/legate
    configfile: pyproject.toml
-   plugins: mock-3.14.1
-   collected 186 items
+   plugins: cov-7.0.0, mock-3.15.1
+   collected 133 items
 
-   tests/python/unit/legate/core/test_task.py ............................ [ 15%]
-   ....................................................................... [ 53%]
-   ................................xs..................................... [ 91%]
-   ................                                                        [100%]
+   tests/python/unit/legate/core/test_task.py ................................... [ 26%]
+   .............................................................................. [ 84%]
+   ....................                                                           [100%]
 
-   ================== 184 passed, 1 skipped, 1 xfailed in 1.06s ==================
+   ================================ 133 passed in 8.32s =================================
 
 
 Any Legate-related arguments must be passed via the ``LEGATE_CONFIG`` environment variable:

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Legate Test Suite &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>Legate Test Suite &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -859,7 +859,7 @@ various flags.</p>
 </section>
 <section id="python">
 <span id="sec-testing-python"></span><h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
-<p>The python tests are invoked directly via <code class="docutils literal notranslate"><span class="pre">pytest</span></code>. As such, you must install a set of
+<p>The Python tests are invoked directly via <code class="docutils literal notranslate"><span class="pre">pytest</span></code>. As such, you must install a set of
 pre-requisite Python packages before you can run them (note the following list may not be
 complete):</p>
 <ul class="simple">
@@ -892,20 +892,19 @@ the C++ tests, you must additionally pass <code class="docutils literal notransl
 <p>The tests are run in the usual way, by invoking <code class="docutils literal notranslate"><span class="pre">pytest</span></code> on the directory or test you
 wish to execute:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pytest<span class="w"> </span>tests/python/unit/legate/core/test_task.py
-<span class="o">=============================</span><span class="w"> </span><span class="nb">test</span><span class="w"> </span>session<span class="w"> </span><span class="nv">starts</span><span class="w"> </span><span class="o">=============================</span>
-platform<span class="w"> </span>darwin<span class="w"> </span>--<span class="w"> </span>Python<span class="w"> </span><span class="m">3</span>.13.3,<span class="w"> </span>pytest-8.3.5,<span class="w"> </span>pluggy-1.6.0
+<span class="o">================================</span><span class="w"> </span><span class="nb">test</span><span class="w"> </span>session<span class="w"> </span><span class="nv">starts</span><span class="w"> </span><span class="o">=================================</span>
+platform<span class="w"> </span>linux<span class="w"> </span>--<span class="w"> </span>Python<span class="w"> </span><span class="m">3</span>.14.3,<span class="w"> </span>pytest-9.0.2,<span class="w"> </span>pluggy-1.6.0
 cachedir:<span class="w"> </span>.cache/pytest
-rootdir:<span class="w"> </span>/Users/jfaibussowit/soft/nv/legate.core.internal
+rootdir:<span class="w"> </span>/path/to/legate
 configfile:<span class="w"> </span>pyproject.toml
-plugins:<span class="w"> </span>mock-3.14.1
-collected<span class="w"> </span><span class="m">186</span><span class="w"> </span>items
+plugins:<span class="w"> </span>cov-7.0.0,<span class="w"> </span>mock-3.15.1
+collected<span class="w"> </span><span class="m">133</span><span class="w"> </span>items
 
-tests/python/unit/legate/core/test_task.py<span class="w"> </span>............................<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">15</span>%<span class="o">]</span>
-.......................................................................<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">53</span>%<span class="o">]</span>
-................................xs.....................................<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">91</span>%<span class="o">]</span>
-................<span class="w">                                                        </span><span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
+tests/python/unit/legate/core/test_task.py<span class="w"> </span>...................................<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">26</span>%<span class="o">]</span>
+..............................................................................<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">84</span>%<span class="o">]</span>
+....................<span class="w">                                                           </span><span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
 
-<span class="o">==================</span><span class="w"> </span><span class="m">184</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">1</span><span class="w"> </span>skipped,<span class="w"> </span><span class="m">1</span><span class="w"> </span>xfailed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span>.06s<span class="w"> </span><span class="o">==================</span>
+<span class="o">================================</span><span class="w"> </span><span class="m">133</span><span class="w"> </span>passed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">8</span>.32s<span class="w"> </span><span class="o">=================================</span>
 </pre></div>
 </div>
 <p>Any Legate-related arguments must be passed via the <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> environment variable:</p>

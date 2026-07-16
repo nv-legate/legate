@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 24.11 &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>Changes: 24.11 &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -800,7 +800,7 @@ members) to be stable, and should not depend on the values themselves.</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">VariantOptions::elide_device_ctx_sync</span></code> and
 <code class="docutils literal notranslate"><span class="pre">VariantOptions::with_elide_device_ctx_sync()</span></code> to allow specifying that a particular
 task variant need not perform device context synchronization after task completion.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">TaskContext::get_task_stream()</span></code> to retrieve the current tasks’ active CUDA stream.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">TaskContext::get_task_stream()</span></code> to retrieve the current task’s active CUDA stream.</p></li>
 <li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">TaskRegistrar::record_task(std::int64_t</span> <span class="pre">std::unique_ptr&lt;TaskInfo&gt;)</span></code>. Users
 should use <code class="docutils literal notranslate"><span class="pre">LegateTask::Registrar</span></code> combined with <code class="docutils literal notranslate"><span class="pre">TaskRegistrar::register_all_tasks()</span></code>
 instead.</p></li>

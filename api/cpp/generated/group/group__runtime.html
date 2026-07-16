@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtime &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>runtime &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../../../../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -920,7 +920,7 @@ SPDX-License-Identifier: Apache-2.0
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The value of tunable parameter in a <code class="docutils literal notranslate"><a class="reference internal" href="group__data.html#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code></p>
+<dd class="field-even"><p>The value of the tunable parameter in a <code class="docutils literal notranslate"><a class="reference internal" href="group__data.html#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -934,7 +934,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><br /></dt>
-<dd><p>Registers a library specific reduction operator. </p>
+<dd><p>Registers a library-specific reduction operator. </p>
 <p>The type parameter <code class="docutils literal notranslate"><span class="pre">REDOP</span></code> points to a class that implements a reduction operator. Each reduction operator class has the following structure:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">RedOp</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">LHS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span><span class="w"> </span><span class="c1">// Type of the LHS values</span>
@@ -1748,7 +1748,7 @@ SPDX-License-Identifier: Apache-2.0
 
 <span class="sig-paren">)</span><br /></dt>
 <dd><p>Gives the runtime a hint that the store can benefit from bloated instances. </p>
-<p>The runtime currently does not look ahead in the task stream to recognize that a given set of tasks can benefit from the ahead-of-time creation of “bloated” instances encompassing multiple slices of a store. This means that the runtime will construct bloated instances incrementally and completely only when it sees all the slices, resulting in intermediate instances that (temporarily) increases the memory footprint. This function can be used to give the runtime a hint ahead of time about the bloated instances, which would be reused by the downstream tasks without going through the same incremental process.</p>
+<p>The runtime currently does not look ahead in the task stream to recognize that a given set of tasks can benefit from the ahead-of-time creation of “bloated” instances encompassing multiple slices of a store. This means that the runtime will construct bloated instances incrementally and completely only when it sees all the slices, resulting in intermediate instances that (temporarily) increase the memory footprint. This function can be used to give the runtime a hint ahead of time about the bloated instances, which would be reused by the downstream tasks without going through the same incremental process.</p>
 <p>For example, let’s say we have a 1-D store A of size 10 and we want to partition A across two GPUs. By default, A would be partitioned equally and each GPU gets an instance of size 5. Suppose we now have a task that aligns two slices A[1:10] and A[:9]. The runtime would partition the slices such that the task running on the first GPU gets A[1:6] and A[:5], and the task running on the second GPU gets A[6:] and A[5:9]. Since the original instance on the first GPU does not cover the element A[5] included in the first slice A[1:6], the mapper needs to create a new instance for A[:6] that encompasses both of the slices, leading to an extra copy. In this case, if the code calls <code class="docutils literal notranslate"><span class="pre">prefetch(A,</span> <span class="pre">{0},</span> <span class="pre">{1})</span></code> to pre-allocate instances that contain one extra element on the right before it uses A, the extra copy can be avoided.</p>
 <p>A couple of notes about the API:</p>
 <p><ul class="simple">
@@ -2941,7 +2941,7 @@ SPDX-License-Identifier: Apache-2.0
 <p><ol class="lowerroman simple">
 <li><p>Find each discard operation and note the store…</p></li>
 <li><p>Find the last task (within the stream) which used the discarded store, and…</p></li>
-<li><p>Mark the store for that particular task with <code class="docutils literal notranslate"><span class="pre">LEGION_DISCARD_OUTPUT_MASK</span></code>, so that Legion knows it can eargerly collect the memory of the store immediately after the task finishes.</p></li>
+<li><p>Mark the store for that particular task with <code class="docutils literal notranslate"><span class="pre">LEGION_DISCARD_OUTPUT_MASK</span></code>, so that Legion knows it can eagerly collect the memory of the store immediately after the task finishes.</p></li>
 </ol>
 </p>
 <p>Together, these transformations have the effect of “moving” the discarding of a store “forward” in the task stream. This makes the eventual discard operation pointless, because the store should already have been eagerly collected after the last using task ran. So we remove the discard operation (but crucially <em>only</em> the discard ops that were handled in the ops stream).</p>
@@ -3423,7 +3423,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><br /></dt>
-<dd><p>Detect if the specified mapping is injective for a container of a particular size.. </p>
+<dd><p>Detect if the specified mapping is injective for a container of a particular size. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3443,7 +3443,7 @@ SPDX-License-Identifier: Apache-2.0
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail15assert_in_rangeENSt6size_tENSt7int64_tE">
 <span id="_CPPv3N6legate6detail15assert_in_rangeENSt6size_tENSt7int64_tE"></span><span id="_CPPv2N6legate6detail15assert_in_rangeENSt6size_tENSt7int64_tE"></span><span id="legate::detail::assert_in_range__std::s.std::int64_t"></span><span class="target" id="array__algorithms_8cc_1adf0e34459f749157fd86f9e0c1f34194"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">assert_in_range</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">container_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><br /></dt>
-<dd><p>Assert that a position is within th bounds of an array. </p>
+<dd><p>Assert that a position is within the bounds of an array. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3481,7 +3481,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><br /></dt>
-<dd><p>Create a copy of the container my mapping the current values via the supplied mapping. </p>
+<dd><p>Create a copy of the container by mapping the current values via the supplied mapping. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

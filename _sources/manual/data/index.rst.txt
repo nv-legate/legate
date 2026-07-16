@@ -39,7 +39,7 @@ materialize the buffer in any way until such time as the buffer is observable by
 
 In the vast majority of cases, a store is considered "observable" (and therefore
 materialized) only when the store is accessed by a task. This could be by requesting to
-read the buffer (adding it as a input parameter), but could also be from write-only access
+read the buffer (adding it as an input parameter), but could also be from write-only access
 (adding the store as an output parameter), which also causes the pieces to be
 materialized.
 

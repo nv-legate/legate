@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>io-hdf5 &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>io-hdf5 &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../../../../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -730,7 +730,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49from_fileRKNSt10filesystem4pathENSt11string_viewE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Load a HDF5 dataset into a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a>. </p>
+<dd><p>Load an HDF5 dataset into a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a>. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -762,7 +762,7 @@ SPDX-License-Identifier: Apache-2.0
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47to_fileRK12LogicalStoreNSt10filesystem4pathENSt11string_viewE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Write a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> to disk as a HDF5 dataset. </p>
+<dd><p>Write a <a class="reference internal" href="group__data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> to disk as an HDF5 dataset. </p>
 <p>If <code class="docutils literal notranslate"><span class="pre">file_path</span></code> already exists at the time of writing, the file will be overwritten.</p>
 <p><code class="docutils literal notranslate"><span class="pre">file_path</span></code> may be absolute or relative. If it is relative, it will be written relative to the current working directory at the time of this function call.</p>
 <p><code class="docutils literal notranslate"><span class="pre">file_path</span></code> may not fully exist at the time of this function call. Any missing directories are created (with the same permissions and properties of the current process) before tasks are launched. However, no protection is provided if those directories are later deleted before the task executes &amp;#8212; the tasks assume these directories exist when they execute.</p>
@@ -787,7 +787,7 @@ SPDX-License-Identifier: Apache-2.0
 <span id="_CPPv3N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE"></span><span id="_CPPv2N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE"></span><span id="legate::io::hdf5::UnsupportedHDF5DataTypeError"></span><span class="target" id="classlegate_1_1io_1_1hdf5_1_1UnsupportedHDF5DataTypeError"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">UnsupportedHDF5DataTypeError</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invalid_argument</span></span><br /></dt>
 <dd><div class="docutils container">
 <em>#include &lt;legate/io/hdf5/interface.h&gt;</em></div>
-<p>An exception thrown when a HDF5 datatype could not be converted to a <a class="reference internal" href="group__types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a>. </p>
+<p>An exception thrown when an HDF5 datatype could not be converted to a <a class="reference internal" href="group__types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a>. </p>
 </dd></dl>
 
 <dl class="cpp class">

@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running Legate Programs &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>Running Legate Programs &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -1189,6 +1189,20 @@ viewed in NVIDIA Nsight Systems 2024.5.1 or later.</p>
 <p>A sample command using Legion’s <code class="docutils literal notranslate"><span class="pre">CG</span></code> example would be:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>legate<span class="w"> </span>--gpus<span class="w"> </span><span class="m">2</span><span class="w"> </span>--nsys<span class="w"> </span>--profile<span class="w"> </span>examples/cg.py<span class="w">  </span>-n<span class="w"> </span><span class="m">235</span>
 </pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">nsys</span> <span class="pre">profile</span></code> is only started when <code class="docutils literal notranslate"><span class="pre">--nsys</span></code> reaches the <code class="docutils literal notranslate"><span class="pre">legate</span></code>
+driver. This happens both when <code class="docutils literal notranslate"><span class="pre">--nsys</span></code> is passed directly to <code class="docutils literal notranslate"><span class="pre">legate</span></code>
+and when it is set via <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> for a driver-launched run
+(e.g. <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG=&quot;--nsys&quot;</span> <span class="pre">legate</span> <span class="pre">myprog.py</span></code>), because the driver
+forwards <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> into its own arguments. In these cases the
+process is wrapped with <code class="docutils literal notranslate"><span class="pre">nsys</span> <span class="pre">profile</span></code> and NVTX ranges are emitted.</p>
+<p>By contrast, running under the standard Python interpreter
+(<code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG=&quot;--nsys&quot;</span> <span class="pre">python</span> <span class="pre">myprog.py</span></code>) or launching a compiled C++
+application directly only enables NVTX range emission; it does <strong>not</strong>
+invoke <code class="docutils literal notranslate"><span class="pre">nsys</span> <span class="pre">profile</span></code> and therefore does not generate an <code class="docutils literal notranslate"><span class="pre">.nsys-rep</span></code>
+by itself.</p>
 </div>
 <p>This will create a <code class="docutils literal notranslate"><span class="pre">legate_0.nsys-rep</span></code> file which can be viewed in the Nsight Systems UI. In this file, you can see your cuPyNumeric operations in the NVTXW row:</p>
 <figure class="align-default">

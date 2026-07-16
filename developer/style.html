@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Code Style &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>Code Style &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -896,7 +896,7 @@ taking a <code class="docutils literal notranslate"><span class="pre">const</spa
 value.</p>
 </li>
 <li><p>For functions in header files, declarations and definitions must always be separate. If
-the function is a template (or otherwise very very small), the definition should go in
+the function is a template (or otherwise very, very small), the definition should go in
 the corresponding <code class="docutils literal notranslate"><span class="pre">.inl</span></code>. If not, the definition should go in the <code class="docutils literal notranslate"><span class="pre">.cc</span></code>. This also
 applies for any member functions of classes.</p>
 <p>This does not apply to translation unit-local functions defined in anonymous
@@ -1021,7 +1021,7 @@ type it is, because the function is short enough to fit on your screen (as per t
 short functions <a class="reference internal" href="#label-short-and-sweet-functions"><span class="std std-ref">rule</span></a>). There is no need to
 encode this in the name of the variable as well.</p></li>
 <li><p>Never use acronyms. You might know what “<code class="docutils literal notranslate"><span class="pre">dcv</span></code>” (dimension-less color vector)
-means now, but nobody else does, and neither will you in 4 week’s time.</p></li>
+means now, but nobody else does, and neither will you in 4 weeks’ time.</p></li>
 <li><p>Use commonly understood names for common things. For example, <code class="docutils literal notranslate"><span class="pre">for</span></code>-loop indices
 should almost always be <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j</span></code>, or <code class="docutils literal notranslate"><span class="pre">k</span></code>. If something returns an iterator, it
 should probably be called <code class="docutils literal notranslate"><span class="pre">it</span></code>, not e.g. <code class="docutils literal notranslate"><span class="pre">pos</span></code>, <code class="docutils literal notranslate"><span class="pre">idx</span></code>, or <code class="docutils literal notranslate"><span class="pre">finder</span></code>.</p></li>
@@ -1061,7 +1061,7 @@ have a lot of if branches).</p></li>
 use <code class="docutils literal notranslate"><span class="pre">std::optional&lt;T&gt;</span></code> instead. This also goes for smart pointers; as described
 above, Legate assumes all pointers (smart or otherwise) are non-null and point to a
 value.</p>
-<p>The rationale for this is that compiler will warn about unchecked accesses to
+<p>The rationale for this is that the compiler will warn about unchecked accesses to
 <code class="docutils literal notranslate"><span class="pre">std::optional&lt;T&gt;</span></code> (which is undefined behavior if the optional does not contain a
 value), while they won’t complain about NULL-pointer dereferences. <code class="docutils literal notranslate"><span class="pre">std::optional</span></code> is
 also more explicit and self-documenting. It tells the reader unambiguously that “this

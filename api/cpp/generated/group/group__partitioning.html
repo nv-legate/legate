@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>partitioning &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>partitioning &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../../../../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -143,11 +143,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -261,11 +261,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -2487,7 +2487,7 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <p><ol class="lowerroman simple">
 <li><p>Find each discard operation and note the store…</p></li>
 <li><p>Find the last task (within the stream) which used the discarded store, and…</p></li>
-<li><p>Mark the store for that particular task with <code class="docutils literal notranslate"><span class="pre">LEGION_DISCARD_OUTPUT_MASK</span></code>, so that Legion knows it can eargerly collect the memory of the store immediately after the task finishes.</p></li>
+<li><p>Mark the store for that particular task with <code class="docutils literal notranslate"><span class="pre">LEGION_DISCARD_OUTPUT_MASK</span></code>, so that Legion knows it can eagerly collect the memory of the store immediately after the task finishes.</p></li>
 </ol>
 </p>
 <p>Together, these transformations have the effect of “moving” the discarding of a store “forward” in the task stream. This makes the eventual discard operation pointless, because the store should already have been eagerly collected after the last using task ran. So we remove the discard operation (but crucially <em>only</em> the discard ops that were handled in the ops stream).</p>
@@ -2969,7 +2969,7 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail20assert_valid_mappingENSt6size_tE4SpanIKNSt7int32_tEE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Detect if the specified mapping is injective for a container of a particular size.. </p>
+<dd><p>Detect if the specified mapping is injective for a container of a particular size. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2989,7 +2989,7 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6detail15assert_in_rangeENSt6size_tENSt7int64_tE">
 <span id="_CPPv3N6legate6detail15assert_in_rangeENSt6size_tENSt7int64_tE"></span><span id="_CPPv2N6legate6detail15assert_in_rangeENSt6size_tENSt7int64_tE"></span><span id="legate::detail::assert_in_range__std::s.std::int64_t"></span><span class="target" id="array__algorithms_8cc_1adf0e34459f749157fd86f9e0c1f34194"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">assert_in_range</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">container_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6detail15assert_in_rangeENSt6size_tENSt7int64_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Assert that a position is within th bounds of an array. </p>
+<dd><p>Assert that a position is within the bounds of an array. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3027,7 +3027,7 @@ Currently, the precise image computation can be performed only by CPUs. As a res
 </dl>
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6legate6detail9array_mapE1TRK1T4SpanIKNSt7int32_tEE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Create a copy of the container my mapping the current values via the supplied mapping. </p>
+<dd><p>Create a copy of the container by mapping the current values via the supplied mapping. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

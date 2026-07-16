@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate::TaskSignature &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>legate::TaskSignature &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../../../../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -735,7 +735,7 @@ SPDX-License-Identifier: Apache-2.0
 <span class="w">      </span><span class="n">legate</span><span class="o">::</span><span class="n">scale</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">proxy</span><span class="o">::</span><span class="n">outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">proxy</span><span class="o">::</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])}});</span>
 </pre></div>
 </div>
-<p>A tasks signature describes how many input, output, scalar, or reduction arguments they take, as well as any constraints that are to be applied to the task. If a task predeclares its signature in this manner, the runtime will be able to perform a number of optimizations and sanity-checks for the user, including (but not limited to):</p>
+<p>A task’s signature describes how many input, output, scalar, or reduction arguments it takes, as well as any constraints that are to be applied to the task. If a task predeclares its signature in this manner, the runtime will be able to perform a number of optimizations and sanity-checks for the user, including (but not limited to):</p>
 <p><ul class="simple">
 <li><p>Checking the number of arguments matches the expected signature (and raising exceptions if not).</p></li>
 <li><p>Automatically applying constraints on task arguments.</p></li>
@@ -744,7 +744,7 @@ SPDX-License-Identifier: Apache-2.0
 </p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>While it is highly recommended that user statically declare their tasks’ signatures, the user is no longer allowed to deviate from the signature at runtime. For example, tasks that predeclare their constraints are not allowed to add additional constraints during task launch. </p>
+<p>While it is highly recommended that users statically declare their tasks’ signatures, the user is no longer allowed to deviate from the signature at runtime. For example, tasks that predeclare their constraints are not allowed to add additional constraints during task launch. </p>
 </div>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>

@@ -164,7 +164,7 @@ Python
 
 .. rubric:: I/O
 
-- Add ``legate.io.hdf5.from_file_batched()`` to read a HDF5 file in batches.
+- Add ``legate.io.hdf5.from_file_batched()`` to read an HDF5 file in batches.
 - Remove ``legate.io.hdf5.kerchunk_read()``. Legate has had first-class support for HDF5
   reads for a while, making this function obsolete.
 - Add ``legate.io.hdf5.to_file()`` to write a ``legate.core.LogicalArray`` to file using

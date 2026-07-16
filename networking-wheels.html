@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Networking with Legate Wheels &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>Networking with Legate Wheels &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="_static/documentation_options.js?v=ec8444a0"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -727,7 +727,7 @@ and use one of its bundled <em>MPI wrappers</em>.  There are two wrappers, one f
 OpenMPI and one for MPICH.  Most of the time this process works automatically
 and does not require user intervention.  However, in rare cases, the user may
 need to manually specify the MPI wrapper to use.  For example, the following
-error indicates that wrapper may have to be chosen explicitly</p>
+error indicates that the wrapper may have to be chosen explicitly</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>LEGATE<span class="w"> </span>ERROR:<span class="w"> </span><span class="c1">#0 std::runtime_error: dlopen(&quot;libmpi.so&quot;) failed: libmpi.so: cannot open shared object file: No such file or directory, please make sure MPI is installed and libmpi.so is in your LD_LIBRARY_PATH.</span>
 </pre></div>
 </div>
@@ -755,7 +755,7 @@ module does not provide <code class="docutils literal notranslate"><span class="
 detection code.  So, when using this module, one must set the wrapper
 explicitly.  The <code class="docutils literal notranslate"><span class="pre">mpich</span></code> module, on the other hand, provides <code class="docutils literal notranslate"><span class="pre">libmpi.so</span></code>, so
 the Legate MPI detection code will work without any user intervention.</p>
-<p>If neither of the pre-built wrappers work for your system, check
+<p>If neither of the pre-built wrappers works for your system, check
 <a class="reference internal" href="mpi-wrapper.html#installation-of-mpi-wrapper"><span class="std std-ref">Installation of the Legate MPI wrapper</span></a> for instructions on building the MPI wrapper
 from source.</p>
 </section>
@@ -775,7 +775,7 @@ libraries set the following variable:</p>
 <section id="potential-issues">
 <h2>Potential Issues<a class="headerlink" href="#potential-issues" title="Link to this heading">#</a></h2>
 <p>Note that the framework of automatic detection and automatic support for
-networking depends on multiple dynamic loads of the MPI and the UCX libraries.  Sometimes, errors may occur when an incorrect or conflicting libraries are
+networking depends on multiple dynamic loads of the MPI and the UCX libraries.  Sometimes, errors may occur when incorrect or conflicting libraries are
 loaded.  If that happens and a crash occurs, Legate should print out a
 backtrace showing which versions of the different libraries were loaded.  If one
 of the libraries is loaded from a different location than expected, you can set
@@ -806,7 +806,7 @@ dependency.  Configurations that are known to work with Legate wheels include
 Ubuntu 20.x and above with Ubuntu-installed OpenMPI, and with CUDA toolkit
 12.5 through 13.0.  The Legate wheel was also tested on Perlmutter with the
 <code class="docutils literal notranslate"><span class="pre">cray-mpich-abi</span></code> module and the <code class="docutils literal notranslate"><span class="pre">mpich</span></code> modules.</p>
-<p>However, because wheels are not as self contained as the Conda ecosystem, it is
+<p>However, because wheels are not as self-contained as the Conda ecosystem, it is
 possible that other configurations may not work as well.  If you encounter
 problems with the Legate wheels, visit the <a class="reference internal" href="overview.html#overview-contact"><span class="std std-ref">Contact</span></a> page for
 more information on how to get help.`</p>

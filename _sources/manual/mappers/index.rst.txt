@@ -57,7 +57,7 @@ do not need to override it.
 
 The user may however define their own custom mappers by deriving from
 ``legate::mapping::Mapper``, and passing their derived class as an additional argument
-when creating ``Library``'s:
+when creating ``Library`` instances:
 
 .. code-block:: cpp
    :dedent:

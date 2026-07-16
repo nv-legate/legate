@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Usage &#8212; NVIDIA legate (26.07.00.dev65+gbabaf3be0)</title>
+    <title>Usage &#8212; NVIDIA legate (26.07.00.dev69+g0a257204f)</title>
   
   
   
@@ -48,7 +48,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 
-    <script src="../../../_static/documentation_options.js?v=fb3bc0ea"></script>
+    <script src="../../../_static/documentation_options.js?v=ec8444a0"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -142,11 +142,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a></div>
     
@@ -260,11 +260,11 @@ SPDX-License-Identifier: Apache-2.0
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev65+gbabaf3be0) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (26.07.00.dev69+g0a257204f) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (26.07.00.dev65+gbabaf3be0)</p>
+    <p class="title logo__title">NVIDIA legate (26.07.00.dev69+g0a257204f)</p>
   
 </a>
 
@@ -896,7 +896,7 @@ than STL ranges.</p>
 </div>
 <section id="reductions">
 <h3>Reductions<a class="headerlink" href="#reductions" title="Link to this heading">#</a></h3>
-<p>Reductions are algorithms on stores that reduces the stores’ dimensionality by
+<p>Reductions are algorithms on stores that reduce the stores’ dimensionality by
 combining elements along a chosen axis via repeated application of a binary
 operation. In the Standard Template Library, the <code class="docutils literal notranslate"><span class="pre">std::reduce</span></code> and
 <code class="docutils literal notranslate"><span class="pre">std::accumulate</span></code> algorithms are both examples of reductions.</p>
@@ -908,7 +908,7 @@ with the views described below, let you apply reductions along any axis of a
 store using the familiar function objects from the Standard library like
 <code class="docutils literal notranslate"><span class="pre">std::plus</span></code> and <code class="docutils literal notranslate"><span class="pre">std::minus</span></code>.</p>
 <p>Below is an example that does a row-wise reduction of a 2-D store using
-using <code class="docutils literal notranslate"><span class="pre">std::plus</span></code>. It is described after the break.</p>
+<code class="docutils literal notranslate"><span class="pre">std::plus</span></code>. It is described after the break.</p>
 <div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">});</span>
 
 <span class="c1">// fill the store with data so it looks like this:</span>
