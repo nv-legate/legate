@@ -34,6 +34,7 @@ TEST_F(ConfigTest, DefaultValues)
   ASSERT_FALSE(config.profile());
   ASSERT_EQ(config.profile_name(), "legate");
   ASSERT_FALSE(config.provenance());
+  ASSERT_FALSE(config.nsys());
   ASSERT_EQ(config.num_omp_threads(), 0);
   ASSERT_FALSE(config.show_mapper_usage());
   ASSERT_FALSE(config.need_cuda());
@@ -225,6 +226,21 @@ TEST_F(ConfigTest, SetIoUseVfdGds)
 
   config.set_io_use_vfd_gds(true);
   ASSERT_TRUE(config.io_use_vfd_gds());
+}
+
+TEST_F(ConfigTest, NsysDefaultFalse)
+{
+  const legate::detail::Config config;
+
+  ASSERT_FALSE(config.nsys());
+}
+
+TEST_F(ConfigTest, SetNsys)
+{
+  legate::detail::Config config;
+
+  config.set_nsys(true);
+  ASSERT_TRUE(config.nsys());
 }
 
 }  // namespace config_test

@@ -30,6 +30,7 @@ cdef extern from "legate/runtime/detail/config.h" namespace "legate" nogil:
         bool profile() except+
         std_string profile_name() except+
         bool provenance() except+
+        bool nsys() except+
         bool experimental_copy_path() except+
 
 cdef extern from "legate/runtime/detail/config.h" \

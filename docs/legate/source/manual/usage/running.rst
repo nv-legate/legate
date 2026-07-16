@@ -568,6 +568,21 @@ A sample command using Legion's ``CG`` example would be:
 
     legate --gpus 2 --nsys --profile examples/cg.py  -n 235
 
+.. important::
+
+   ``nsys profile`` is only started when ``--nsys`` reaches the ``legate``
+   driver. This happens both when ``--nsys`` is passed directly to ``legate``
+   and when it is set via ``LEGATE_CONFIG`` for a driver-launched run
+   (e.g. ``LEGATE_CONFIG="--nsys" legate myprog.py``), because the driver
+   forwards ``LEGATE_CONFIG`` into its own arguments. In these cases the
+   process is wrapped with ``nsys profile`` and NVTX ranges are emitted.
+
+   By contrast, running under the standard Python interpreter
+   (``LEGATE_CONFIG="--nsys" python myprog.py``) or launching a compiled C++
+   application directly only enables NVTX range emission; it does **not**
+   invoke ``nsys profile`` and therefore does not generate an ``.nsys-rep``
+   by itself.
+
 This will create a ``legate_0.nsys-rep`` file which can be viewed in the Nsight Systems UI. In this file, you can see your cuPyNumeric operations in the NVTXW row:
 
 .. figure:: images/nsys_ui.png

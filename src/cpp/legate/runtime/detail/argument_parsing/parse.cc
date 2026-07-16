@@ -119,6 +119,7 @@ std::string ParsedArgs::config_summary() const
   print_var(profile);
   print_var(profile_name);
   print_var(provenance);
+  print_var(nsys);
   print_var(log_levels);
   print_var(log_dir);
   print_var(log_to_file);
@@ -762,6 +763,21 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "profiles, progress output, nvtx ranges, and some error messages. Enabling --profile "
     "will automatically enable --provenance.",
     /*init=*/false);
+  auto nsys = parser.add_argument(
+    "--nsys",
+    "Whether to emit NVTX ranges, for added context on nsys timelines.\n"
+    "\n"
+    "When set, provenance (caller file:line) is captured and attached as NVTX range payloads, "
+    "enabling source-location attribution in the Nsight Systems timeline. Enabling --nsys "
+    "will automatically enable --provenance.\n"
+    "\n"
+    "NOTE: this flag only enables NVTX range emission; it does not start an nsys "
+    "collection by itself. An .nsys-rep is only produced when the process is wrapped "
+    "by 'nsys profile', which the legate driver does when it receives --nsys, either "
+    "passed directly or via LEGATE_CONFIG (the driver forwards LEGATE_CONFIG into its "
+    "own arguments). Under a standard 'python app.py' run or a directly launched C++ "
+    "application, setting LEGATE_CONFIG=--nsys only enables NVTX emission. ",
+    /*init=*/false);
   auto log_levels = parser.add_argument("--logging", logging_help_str(), std::string{});
   auto log_dir = parser.add_argument("--logdir",
                                      "Directory to emit logfiles to, defaults to current directory",
@@ -887,6 +903,7 @@ ParsedArgs parse_args(std::vector<std::string> args)
           /* profile */ std::move(profile),
           /* profile_name */ std::move(profile_name),
           /* provenance */ std::move(provenance),
+          /* nsys */ std::move(nsys),
           /* log_levels */ std::move(log_levels),
           /* log_dir */ std::move(log_dir),
           /* log_to_file */ std::move(log_to_file),

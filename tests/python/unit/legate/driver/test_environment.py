@@ -44,6 +44,7 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_profile,
         m.env_profile_name,
         m.env_provenance,
+        m.env_nsys,
         m.env_freeze_on_error,
         m.env_auto_config,
         m.env_show_config,
@@ -168,6 +169,18 @@ class Test_provenance:
         config = genconfig(["--provenance"])
         result = m.env_provenance(config)
         assert result == ("--provenance",)
+
+
+class Test_nsys:
+    def test_default(self, genconfig: GenConfig) -> None:
+        config = genconfig([])
+        result = m.env_nsys(config)
+        assert result == ()
+
+    def test_value(self, genconfig: GenConfig) -> None:
+        config = genconfig(["--nsys"])
+        result = m.env_nsys(config)
+        assert result == ("--nsys",)
 
 
 class Test_freeze_on_error:

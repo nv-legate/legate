@@ -204,6 +204,7 @@ class BuildConfig(SectionConfig):
 class RuntimeConfig(SectionConfig):
     sanitizers: bool
     openmpi: bool
+    cupynumeric: bool
 
     header = "runtime"
 
@@ -222,6 +223,8 @@ class RuntimeConfig(SectionConfig):
             "hdf5",
             "h5py",
         )
+        if self.cupynumeric:
+            pkgs += ("nvtx",)
         if self.sanitizers:
             pkgs += ("libsanitizer",)
         return pkgs
@@ -319,7 +322,7 @@ class EnvConfig:
 
     @property
     def runtime(self) -> RuntimeConfig:
-        return RuntimeConfig(self.sanitizers, self.openmpi)
+        return RuntimeConfig(self.sanitizers, self.openmpi, self.cupynumeric)
 
     @property
     def tests(self) -> TestsConfig:

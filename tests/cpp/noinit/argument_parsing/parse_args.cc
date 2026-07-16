@@ -143,6 +143,7 @@ TEST_F(ParseArgsUnit, NoArgs)
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.profile_name, ArgumentMatches(std::string{"legate"}));
   ASSERT_THAT(parsed.provenance, ArgumentMatches(::testing::IsFalse()));
+  ASSERT_THAT(parsed.nsys, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{}));
   ASSERT_THAT(parsed.log_dir, ArgumentMatches(std::filesystem::current_path()));
   ASSERT_THAT(parsed.log_to_file, ArgumentMatches(::testing::IsFalse()));
@@ -631,6 +632,22 @@ TEST_F(ParseArgsUnit, ProvenanceEnabledAndArgs)
 
   ASSERT_THAT(parsed.provenance, ArgumentMatches(::testing::IsTrue()));
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsFalse()));
+}
+
+TEST_F(ParseArgsUnit, NsysEnabled)
+{
+  const auto parsed = legate::detail::parse_args({"dummy", "--nsys", "t"});
+
+  ASSERT_THAT(parsed.nsys, ArgumentMatches(::testing::IsTrue()));
+}
+
+TEST_F(ParseArgsUnit, NsysEnabledProvenanceNotSet)
+{
+  const auto parsed = legate::detail::parse_args({"dummy", "--nsys", "t"});
+
+  ASSERT_THAT(parsed.nsys, ArgumentMatches(::testing::IsTrue()));
+  // provenance not explicitly set - prefill_config will auto-enable it
+  ASSERT_FALSE(parsed.provenance.was_set());
 }
 
 TEST_F(ParseArgsUnit, LogLevels)

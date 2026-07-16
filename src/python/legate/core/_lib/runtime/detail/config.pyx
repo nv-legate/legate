@@ -232,6 +232,31 @@ cdef class Config(Unconstructable):
         return self._handle.provenance()
 
     @property
+    def nsys(self) -> bool:
+        r"""
+        Whether to emit NVTX ranges, for added context on nsys timelines.
+
+        When True, provenance (caller file:line) is captured and attached as
+        NVTX range payloads so source locations appear in the nsys timeline.
+
+        .. note::
+            NVTX emission is enabled whenever ``--nsys`` is set, including
+            via ``LEGATE_CONFIG``. Actually starting an ``nsys profile``
+            collection, however, requires that ``--nsys`` reach the
+            ``legate`` driver. This happens both when it is passed directly
+            and when it is set via ``LEGATE_CONFIG`` for a driver-launched
+            run (the driver forwards ``LEGATE_CONFIG`` into its own
+            arguments, so ``LEGATE_CONFIG="--nsys" legate app.py`` also
+            starts collection). Under a standard Python interpreter
+            (``python app.py``) or a directly launched C++ application,
+            ``LEGATE_CONFIG="--nsys"`` only enables NVTX emission and does
+            not produce an ``.nsys-rep``.
+
+        :rtype: bool
+        """
+        return self._handle.nsys()
+
+    @property
     def experimental_copy_path(self) -> bool:
         r"""
         Whether conditional copy optimizations based on workload

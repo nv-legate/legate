@@ -87,12 +87,13 @@ Config prefill_config(const ParsedArgs& args)
     cfg.set_need_network(multi_node_job());
   }
   cfg.set_profile_name(args.profile_name.value());
-  // Turn on provenance if profiling is enabled
+  // Turn on provenance if profiling or nsys is enabled
   cfg.set_profile(args.profile.value());
+  cfg.set_nsys(args.nsys.value());
   if (args.provenance.was_set()) {
     cfg.set_provenance(args.provenance.value());
   } else {
-    cfg.set_provenance(args.profile.value());
+    cfg.set_provenance(args.profile.value() || args.nsys.value());
   }
   return cfg;
 }

@@ -409,7 +409,15 @@ profiling.add_argument(
     dest="nsys",
     action="store_true",
     required=False,
-    help="Run Legate with Nsight Systems "
+    help="Wrap the process with 'nsys profile' and enable NVTX range "
+    "emission. Automatically enables --provenance. "
+    "Note: 'nsys profile' is only started when --nsys reaches the legate "
+    "driver, either passed directly or via LEGATE_CONFIG (the driver "
+    "forwards LEGATE_CONFIG into its own arguments, so "
+    "LEGATE_CONFIG='--nsys' legate app.py also starts collection). Under a "
+    "standard 'python app.py' run or a directly launched C++ application, "
+    "LEGATE_CONFIG='--nsys' only enables NVTX emission and does not start "
+    "nsys (no .nsys-rep is generated). "
     "[legate-only, not supported with standard Python invocation]",
 )
 
