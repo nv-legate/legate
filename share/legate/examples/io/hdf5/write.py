@@ -165,8 +165,8 @@ def benchmark_write(
     wall_start = pytime.time()
 
     # Creates a a store with the given type and shape and fill it with a
-    # constant value of 1. This store is written to a HDF5 file with
-    # the given name and dataset name. Legate will create a HDF5
+    # constant value of 1. This store is written to an HDF5 file with
+    # the given name and dataset name. Legate will create an HDF5
     # virtual dataset on disk for the dataset.
     store = runtime.create_store(dtype=legate_dtype, shape=shape)
 

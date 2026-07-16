@@ -37,7 +37,7 @@ class Library;
  * @brief A helper class for task variant registration.
  *
  * The `legate::TaskRegistrar` class is designed to simplify the boilerplate that client libraries
- * need to register all its task variants. The following is a boilerplate that each library
+ * need to register all their task variants. The following is a boilerplate that each library
  * needs to write:
  *
  * @code{.cpp}

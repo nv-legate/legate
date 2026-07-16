@@ -39,8 +39,8 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_TEST);
  * exist either at the specified location, or somewhere in the runtime linker path depending on
  * the form of the path.
  *
- * If the path contains the platform-local "preferred" directory separator ('/' on Unixen, '\'
- * on Windows), the path is considered to be relative or absolute. Otherwise, the path is
+ * If the path contains the platform-local "preferred" directory separator ('/' on Unixen, the
+ * backslash on Windows), the path is considered to be relative or absolute. Otherwise, the path is
  * considered to be the name of the shared library. If the path is relative, it must be
  * relative to the current working directory.
  *

@@ -80,11 +80,11 @@ class LEGATE_EXPORT Library {
    * @param tunable_id ID of the tunable parameter
    * @param type Type of the tunable value
    *
-   * @return The value of tunable parameter in a `Scalar`
+   * @return The value of the tunable parameter in a `Scalar`
    */
   [[nodiscard]] Scalar get_tunable(std::int64_t tunable_id, const Type& type);
   /**
-   * @brief Registers a library specific reduction operator.
+   * @brief Registers a library-specific reduction operator.
    *
    * The type parameter `REDOP` points to a class that implements a reduction operator.
    * Each reduction operator class has the following structure:

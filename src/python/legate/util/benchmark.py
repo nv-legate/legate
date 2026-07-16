@@ -82,7 +82,7 @@ def benchmark_log(
     benchmarking legate code.
 
     The context manager will write a table of benchmarking data to a specified
-    output textstream, including with the table a header comment with
+    output text stream, including with the table a header comment with
     reproducibility data about how the benchmark was run.
 
     Parameters

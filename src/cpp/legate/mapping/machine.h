@@ -52,7 +52,7 @@ class LEGATE_EXPORT NodeRange {
 /**
  * @brief A class to represent a range of processors.
  *
- * `ProcessorRange`s are half-open intervals of logical processors IDs.
+ * `ProcessorRange`s are half-open intervals of logical processor IDs.
  */
 class LEGATE_EXPORT ProcessorRange {
  public:
@@ -77,8 +77,8 @@ class LEGATE_EXPORT ProcessorRange {
   /**
    * @brief Checks if the processor range is empty
    *
-   * @return true The range is empty
-   * @return false The range is not empty
+   * @return true if the range is empty
+   * @return false if the range is not empty
    */
   [[nodiscard]] constexpr bool empty() const noexcept;
   /**
@@ -311,8 +311,8 @@ class LEGATE_EXPORT Machine {
    *
    * A machine descriptor is empty when all its processor ranges are empty
    *
-   * @return true The machine descriptor is empty
-   * @return false The machine descriptor is non-empty
+   * @return true if the machine descriptor is empty
+   * @return false if the machine descriptor is non-empty
    */
   [[nodiscard]] bool empty() const;
 

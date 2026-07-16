@@ -207,7 +207,7 @@ typedef enum {
  *   - float4_e2m1fn: type_code = 17, bits = 4, lanes = 1 (packed in memory)
  *
  *  When a sub-byte type is packed, DLPack requires the data to be in little bit-endian, i.e.,
- *  for a packed data set D ((D >> (i * bits)) && bit_mask) stores the i-th element.
+ *  for a packed data set D ((D >> (i * bits)) & bit_mask) stores the i-th element.
  */
 typedef struct {
   /*!
@@ -268,7 +268,7 @@ typedef struct {
   int64_t* shape;
   /*!
    * \brief strides of the tensor (in number of elements, not bytes)
-   *  can be NULL, indicating tensor is compact and row-majored.
+   *  can be NULL, indicating tensor is compact and row-major.
    */
   int64_t* strides;
   /*! \brief The offset in bytes to the beginning pointer to data */

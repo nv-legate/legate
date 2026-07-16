@@ -216,7 +216,7 @@ cdef class ProcessorRange:
         Returns
         -------
         str
-            The human readable representation of the range.
+            The human-readable representation of the range.
         """
         return self._handle.to_string().decode()
 
@@ -227,7 +227,7 @@ cdef class ProcessorRange:
         Returns
         -------
         str
-            The human readable representation of the range.
+            The human-readable representation of the range.
         """
         return str(self)
 
@@ -353,7 +353,7 @@ cdef class Machine:
 
     cpdef tuple get_node_range(self, target: object = None):
         r"""
-        Returns the node range for processor of a given task target.
+        Returns the node range for processors of a given task target.
 
         Parameters
         ----------
@@ -558,7 +558,7 @@ cdef class Machine:
         Returns
         -------
         str
-            The human readable representation of the `Machine`.
+            The human-readable representation of the `Machine`.
         """
         return self._handle.to_string().decode()
 
@@ -569,7 +569,7 @@ cdef class Machine:
         Returns
         -------
         str
-            The human readable representation of the `Machine`.
+            The human-readable representation of the `Machine`.
         """
         return str(self)
 

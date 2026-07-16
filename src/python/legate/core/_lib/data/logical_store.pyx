@@ -220,7 +220,7 @@ cdef class LogicalStore(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the store.
+            The human-readable representation of the store.
         """
         return self._handle.to_string().decode()
 
@@ -231,7 +231,7 @@ cdef class LogicalStore(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the store.
+            The human-readable representation of the store.
         """
         return str(self)
 

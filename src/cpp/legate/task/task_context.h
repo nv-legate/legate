@@ -235,7 +235,7 @@ class LEGATE_EXPORT TaskContext {
   /**
    * @brief Get the current task CUDA stream.
    *
-   * @return The current tasks CUDA stream.
+   * @return The current task's CUDA stream.
    *
    * All asynchronous stream work performed by a GPU variant must be performed on, or
    * synchronized with the stream returned by this method. Doing asynchronous work on other

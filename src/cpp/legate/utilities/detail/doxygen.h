@@ -20,10 +20,10 @@
  */
 
 /**
- * @defgroup io-kvikio KVikIO
+ * @defgroup io-kvikio KvikIO
  * @ingroup io
  *
- * @brief I/O operations backed by KVikIO.
+ * @brief I/O operations backed by KvikIO.
  */
 
 /**

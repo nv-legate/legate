@@ -343,7 +343,7 @@ cdef class Scalar:
         Returns
         -------
         str
-            The human readable representation of the scalar.
+            The human-readable representation of the scalar.
         """
         return f"Scalar({self.value()}, {self.type})"
 
@@ -354,7 +354,7 @@ cdef class Scalar:
         Returns
         -------
         str
-            The human readable representation of the scalar.
+            The human-readable representation of the scalar.
         """
         return str(self)
 

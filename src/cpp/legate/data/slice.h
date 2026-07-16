@@ -41,7 +41,7 @@ class LEGATE_EXPORT Slice {
    * @param _start The optional begin index of the slice, or `Slice::OPEN` if the start of the
    * slice is unbounded.
    * @param _stop The optional stop index of the slice, or `Slice::OPEN` if the end of the
-   * slice if unbounded.
+   * slice is unbounded.
    *
    * If provided (and not `Slice::OPEN`), `_start` must compare less than or equal to
    * `_stop`. Similarly, if provided (and not `Slice::OPEN`), `_stop` must compare greater than

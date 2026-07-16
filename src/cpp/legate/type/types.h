@@ -156,9 +156,9 @@ class LEGATE_EXPORT Type {
    */
   [[nodiscard]] StructType as_struct_type() const;
   /**
-   * @brief Dynamically casts the type into a struct type.
+   * @brief Dynamically casts the type into a list type.
    *
-   * If the type is not a struct type, an exception will be raised.
+   * If the type is not a list type, an exception will be raised.
    *
    * @return Type object
    */

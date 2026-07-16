@@ -735,8 +735,8 @@ class LEGATE_EXPORT PhysicalStore {
   /**
    * @brief Indicates whether the store is an unbound store.
    *
-   * The value DOES NOT indicate that the store has already assigned to a buffer; i.e., the store
-   * may have been assigned to a buffer even when this function returns `true`.
+   * The value DOES NOT indicate that the store has already been assigned to a buffer; i.e., the
+   * store may have been assigned to a buffer even when this function returns `true`.
    *
    * @return `true` if the store is an unbound store, `false` otherwise
    */
