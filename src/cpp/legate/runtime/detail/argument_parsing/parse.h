@@ -51,6 +51,7 @@ class ParsedArgs {
   Argument<bool> profile;
   Argument<std::string> profile_name;
   Argument<bool> provenance;
+  Argument<bool> nsys;
   Argument<std::string> log_levels;
   Argument<std::filesystem::path> log_dir;
   Argument<bool> log_to_file;
