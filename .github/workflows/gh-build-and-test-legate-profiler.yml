@@ -8,10 +8,6 @@ on:
       platform:
         required: true
         type: string
-      ref-sha:
-        required: false
-        type: string
-        default: ''
       build-type:
         type: string
         required: true
@@ -24,15 +20,10 @@ on:
       network:
         type: string
         required: true
-      event_name:
-        required: true
-        type: string
-      refname:
-        required: true
-        type: string
-      default-branch:
-        required: true
-        type: string
+      publish-packages:
+        required: false
+        type: boolean
+        default: false
       cuda-version:
         required: false
         type: string
@@ -45,17 +36,16 @@ jobs:
   build-profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.51
     with:
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
       build-has-tests: false
       build-type: profiler
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -66,29 +56,33 @@ jobs:
     secrets: inherit
 
   upload-profiler:
-    # Only upload when triggered by nightly schedule
-    if: ${{ github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' }}
     needs: build-profiler
+    if: >-
+      ${{
+        needs.build-profiler.result == 'success' &&
+        github.repository_owner == 'nv-legate' &&
+        inputs.publish-packages &&
+        inputs.build-type == 'nightly'
+      }}
     name: Upload Legate Profiler
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.51
     with:
       build-mode: release
       build-type: profiler
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       build-has-tests: false
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       name: Upload package to Anaconda
       network: ${{ inputs.network }}
       pkgSubString: "legate-profiler"
       platform: ${{ inputs.platform }}
       python-version: ${{ inputs.python-version }}
+      artifact-name: ${{ needs.build-profiler.outputs.artifact-name }}
+      publish-packages: ${{ inputs.publish-packages }}
       repos-Root: "legate-profiler"
       target-device: ${{ inputs.target-device }}
       upload-action: "upload-package-Anaconda"
-      refname: ${{ inputs.refname }}
-      default-branch: ${{ inputs.default-branch }}
       timeout: 15
       ci-verbose: ${{ inputs.ci-verbose }}
     secrets: inherit
@@ -96,17 +90,16 @@ jobs:
   build-legate:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.51
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
       build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -189,11 +182,10 @@ jobs:
       matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.51
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       build-type: ${{ inputs.build-type }}
       name: "${{ matrix.test-config.name }} (${{ matrix.runner.device }})"
       target-device: ${{ inputs.target-device }}
@@ -201,7 +193,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -227,11 +219,10 @@ jobs:
       matrix: ${{fromJson(needs.setup-profiler-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.51
     with:
       build-has-tests: true
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       build-type: ${{ inputs.build-type }}
       name: "${{ matrix.test-config.name }} (${{ matrix.runner.device }})"
       target-device: ${{ inputs.target-device }}
@@ -239,7 +230,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: release
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}

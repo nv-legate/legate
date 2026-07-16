@@ -62,8 +62,6 @@ jobs:
       python-version: "3.14"
       target-device: ${{ matrix.target-device }}
       build-has-tests: true
-      refname: ${{ github.ref_name }}
-      default-branch: ${{ github.event.repository.default_branch }}
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit
 

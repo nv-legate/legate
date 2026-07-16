@@ -17,10 +17,6 @@ on:
       platform:
         required: true
         type: string
-      ref-sha:
-        required: false
-        type: string
-        default: ''
       python-version:
         required: false
         type: string
@@ -34,16 +30,10 @@ on:
       build-has-tests:
         required: true
         type: boolean
-      upload-action:
+      publish-packages:
         required: false
-        default: 'upload-package-None'
-        type: string
-      refname:
-        required: true
-        type: string
-      default-branch:
-        required: true
-        type: string
+        default: false
+        type: boolean
       cuda-version:
         required: false
         type: string
@@ -60,17 +50,16 @@ jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.51
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
       build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -147,11 +136,10 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.51
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       build-type: ${{ inputs.build-type }}
       name: "${{ matrix.test-config.name }} (${{ matrix.runner.device }})"
       target-device: ${{ inputs.target-device }}
@@ -159,7 +147,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -184,11 +172,10 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.51
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       build-type: ${{ inputs.build-type }}
       name: ${{ matrix.test-config.name }}
       target-device: ${{ inputs.target-device }}
@@ -196,7 +183,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
@@ -210,30 +197,34 @@ jobs:
 
   upload:
     needs: build
-    # The use of always() below, ensures the step will run even on failure of the tests
-    # before if other conditionals are all true.
-    # We use the package with tests to test and then upload corresponding package without test.
-    if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.build-has-tests == false }}
+    if: >-
+      ${{
+        needs.build.result == 'success' &&
+        github.repository_owner == 'nv-legate' &&
+        inputs.publish-packages &&
+        inputs.build-type == 'nightly' &&
+        inputs.build-mode == 'release' &&
+        inputs.build-has-tests == false
+      }}
     name: Upload package to Server
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.51
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ inputs.ref-sha }}
       build-type: ${{ inputs.build-type }}
       name: Upload to Anaconda
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.50"
+      legate-gh-ci-tag: "v1.51"
       build-mode: ${{ inputs.build-mode }}
       network: ${{ inputs.network }}
       upload-action: 'upload-package-Anaconda'
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      publish-packages: ${{ inputs.publish-packages }}
       pkgSubString: "legate"
       repos-Root: "legate"
       python-version: ${{ inputs.python-version }}
-      refname: ${{ inputs.refname }}
-      default-branch: ${{ inputs.default-branch }}
       timeout: 15
       cuda-version: ${{ inputs.cuda-version }}
       ci-verbose: ${{ inputs.ci-verbose }}

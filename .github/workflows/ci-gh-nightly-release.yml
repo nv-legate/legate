@@ -10,10 +10,11 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      ref-sha:
-        description: 'The Full-commit SHA to checkout. Default=HEAD'
+      publish-packages:
+        description: 'Publish successful package builds to Anaconda'
         required: false
-        default: ''
+        type: boolean
+        default: false
       ci-verbose:
         description: 'Print full CI diagnostics and uncapped artifact summaries'
         required: false
@@ -33,7 +34,6 @@ jobs:
     uses:
       ./.github/workflows/gh-wrapper-packages.yml
     with:
-      ref-sha: ${{ github.event.inputs.ref-sha || github.sha }}
       wrapper-set: gex
       publishable-nightly: true
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
@@ -63,18 +63,14 @@ jobs:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: release
       build-type: nightly
       build-has-tests: true
-      upload-action: upload-package-None
       python-version: ${{ matrix.python-version }}
       supplemental-channel-artifact: ${{ matrix.network == 'gex' && needs.gex-wrapper-packages.outputs.artifact-name || '' }}
       network: ${{ matrix.network }}
-      refname: ${{ github.ref_name }}
       cuda-version: "12.9.0"
-      default-branch: ${{ github.event.repository.default_branch }}
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit
 
@@ -87,17 +83,14 @@ jobs:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: release
       build-type: nightly
       build-has-tests: false
-      upload-action: upload-package-Anaconda
+      publish-packages: ${{ github.event_name == 'workflow_dispatch' && inputs.publish-packages || false }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
-      refname: ${{ github.ref_name }}
       cuda-version: "12.9.0"
-      default-branch: ${{ github.event.repository.default_branch }}
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit
 
@@ -112,18 +105,14 @@ jobs:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: release
       build-type: nightly
       build-has-tests: true
-      upload-action: upload-package-None
       python-version: ${{ matrix.python-version }}
       supplemental-channel-artifact: ${{ matrix.network == 'gex' && needs.gex-wrapper-packages.outputs.artifact-name || '' }}
       network: ${{ matrix.network }}
-      refname: ${{ github.ref_name }}
       cuda-version: "13.0.0"
-      default-branch: ${{ github.event.repository.default_branch }}
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit
 
@@ -136,17 +125,14 @@ jobs:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: release
       build-type: nightly
       build-has-tests: false
-      upload-action: upload-package-Anaconda
+      publish-packages: ${{ github.event_name == 'workflow_dispatch' && inputs.publish-packages || false }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
-      refname: ${{ github.ref_name }}
       cuda-version: "13.0.0"
-      default-branch: ${{ github.event.repository.default_branch }}
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit
 
@@ -174,17 +160,13 @@ jobs:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: release
       build-type: nightly
       build-has-tests: true
-      upload-action: upload-package-None
       python-version: ${{ matrix.python-version }}
       supplemental-channel-artifact: ${{ matrix.network == 'gex' && needs.gex-wrapper-packages.outputs.artifact-name || '' }}
       network: ${{ matrix.network }}
-      refname: ${{ github.ref_name }}
-      default-branch: ${{ github.event.repository.default_branch }}
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit
 
@@ -197,16 +179,13 @@ jobs:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: release
       build-type: nightly
       build-has-tests: false
-      upload-action: upload-package-Anaconda
+      publish-packages: ${{ github.event_name == 'workflow_dispatch' && inputs.publish-packages || false }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
-      refname: ${{ github.ref_name }}
-      default-branch: ${{ github.event.repository.default_branch }}
       ci-verbose: ${{ github.event_name == 'workflow_dispatch' && inputs.ci-verbose || false }}
     secrets: inherit
 
@@ -214,29 +193,34 @@ jobs:
     name: Upload GEX wrapper packages
     needs:
       - gex-wrapper-packages
-    if: ${{ github.repository_owner == 'nv-legate' }}
+    if: >-
+      ${{
+        needs.gex-wrapper-packages.result == 'success' &&
+        github.repository_owner == 'nv-legate' &&
+        github.event_name == 'workflow_dispatch' &&
+        inputs.publish-packages
+      }}
     # Wrapper packages are build-script artifacts, so publish after their package
-    # build succeeds. nightly-uploaded-main waits on uploads; nightly-main is the
-    # test/docs/source-release signal.
+    # build succeeds. nightly-uploaded-main waits on uploads,
+    # nightly-artifacts-main waits on builds/tests, and nightly-main records
+    # completion of the full workflow.
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.51
     with:
       client-repo: ${{ github.event.repository.name }}
-      client-ref: ${{ github.event.inputs.ref-sha }}
       build-has-tests: false
       build-type: nightly
       name: Upload GEX wrapper packages to Anaconda
       target-device: cpu
       platform: linux
-      legate-gh-ci-tag: "v1.49"
+      legate-gh-ci-tag: "v1.51"
       build-mode: release
       upload-action: upload-package-Anaconda
       artifact-name: ${{ needs.gex-wrapper-packages.outputs.artifact-name }}
+      publish-packages: ${{ inputs.publish-packages }}
       upload-all-packages: true
       repos-Root: "legate"
       network: gex
-      refname: ${{ github.ref_name }}
-      default-branch: ${{ github.event.repository.default_branch }}
       timeout: 15
     secrets: inherit
 
@@ -255,7 +239,6 @@ jobs:
       ./.github/workflows/gh-build-docs.yml
     with:
       platform: ${{ matrix.platform }}
-      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
       upload-docs-to-gh-pages: true
@@ -267,7 +250,7 @@ jobs:
     # Temporarily suspend mirroring to the public repository.
     if: ${{ false }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-push-code.yml@v1.50
+      nv-legate/legate-gh-ci/.github/workflows/gh-push-code.yml@v1.51
     with:
       runs-on: linux-amd64-cpu4
       source-repo: "${{ github.repository_owner }}/legate.internal"
@@ -297,7 +280,7 @@ jobs:
       cancel-in-progress: false
     timeout-minutes: 15
     env:
-      TARGET_SHA: ${{ github.event.inputs.ref-sha || github.sha }}
+      TARGET_SHA: ${{ github.sha }}
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       MOVING_BRANCH: nightly-main
     steps:
@@ -422,11 +405,48 @@ jobs:
               throw error;
             }
 
+  update-nightly-artifacts-main-branch:
+    name: Update nightly-artifacts-main branch
+    if: >-
+      ${{
+        always() &&
+        github.repository_owner == 'nv-legate' &&
+        github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+        needs.gex-wrapper-packages.result == 'success' &&
+        needs.cu129-tests.result == 'success' &&
+        needs.cu129.result == 'success' &&
+        needs.cu130-tests.result == 'success' &&
+        needs.cu130.result == 'success' &&
+        needs.cpu-tests.result == 'success' &&
+        needs.cpu-packages.result == 'success'
+      }}
+    needs:
+      - gex-wrapper-packages
+      - cu129-tests
+      - cu129
+      - cu130-tests
+      - cu130
+      - cpu-tests
+      - cpu-packages
+    runs-on: linux-amd64-cpu4
+    concurrency:
+      group: ${{ format('{0}-{1}', github.workflow, 'nightly-artifacts-main-ref') }}
+      cancel-in-progress: false
+    timeout-minutes: 15
+    env:
+      TARGET_SHA: ${{ github.sha }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      MOVING_BRANCH: nightly-artifacts-main
+    steps:
+      - *update-moving-branch-step
+
   update-nightly-uploaded-main-branch:
     name: Update nightly-uploaded-main branch
     if: >-
       ${{
         github.repository_owner == 'nv-legate' &&
+        github.event_name == 'workflow_dispatch' &&
+        inputs.publish-packages &&
         github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
         needs.cu129.result == 'success' &&
         needs.cu130.result == 'success' &&
@@ -444,7 +464,7 @@ jobs:
       cancel-in-progress: false
     timeout-minutes: 15
     env:
-      TARGET_SHA: ${{ github.event.inputs.ref-sha || github.sha }}
+      TARGET_SHA: ${{ github.sha }}
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       MOVING_BRANCH: nightly-uploaded-main
     steps:
