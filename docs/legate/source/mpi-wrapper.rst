@@ -154,10 +154,7 @@ library. Assuming the wrapper was installed to ``/my/prefix/directory``:
 
 .. code-block:: sh
 
-   # On Linux
    $ export LEGATE_MPI_WRAPPER="/my/prefix/directory/lib/legate_mpi_wrapper.so"
-   # On macOS
-   $ export LEGATE_MPI_WRAPPER="/my/prefix/directory/lib/legate_mpi_wrapper.dylib"
 
 
 As with any environment variable, you can either ``export`` it once (as above), or set it

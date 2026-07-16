@@ -13,10 +13,6 @@ To easily inspect some Legate objects, Legate provides pretty printers
 for GDB and LLDB. The source code for these printers is in the ``share/legate/gdb``
 and ``share/legate/lldb`` directories, respectively.
 
-.. note::
-
-   Pretty printers for GDB on Darwin/macOS are not currently supported.
-
 The pretty printers support the following types:
 - ``legate::InternalSharedPtr``
 - ``legate::SharedPtr``

@@ -255,8 +255,9 @@ dependencies, e.g. building and testing tools, and for exact version requirement
 Operating system
 ----------------
 
-Legate has been tested on Linux and macOS, although only a few flavors of Linux such as
-Ubuntu have been thoroughly tested. Windows is currently only supported through WSL.
+Legate is routinely tested on Linux, although only a few flavors of Linux such
+as Ubuntu have been thoroughly tested. Windows is currently only supported
+through WSL.
 
 Python
 ------
@@ -410,10 +411,7 @@ dynamic library resolution path:
 
 .. code-block:: sh
 
-   # On Linux
    $ export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}"
-   # On macOS
-   $ export DYLD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${DYLD_LIBRARY_PATH}"
 
 
 This way you can make sure that the (typically more recent) conda version of any common
