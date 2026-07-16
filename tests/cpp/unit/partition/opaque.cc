@@ -96,6 +96,14 @@ TEST_F(OpaqueTest, LaunchDomain)
   ASSERT_EQ(opaque->launch_domain(), domain);
 }
 
+TEST_F(OpaqueTest, NoLaunchDomain)
+{
+  const auto opaque_without_launch_domain = legate::detail::create_opaque();
+
+  ASSERT_FALSE(opaque_without_launch_domain->has_launch_domain());
+  ASSERT_EQ(opaque_without_launch_domain->launch_domain(), Legion::Domain::NO_DOMAIN);
+}
+
 TEST_F(OpaqueTest, IsDisjointFor)
 {
   auto domain1 = Legion::Domain::NO_DOMAIN;

@@ -12,12 +12,14 @@
 #include <legate/data/detail/transform/delinearize.h>
 #include <legate/data/detail/transform/non_invertible_transformation.h>
 #include <legate/data/detail/transform/promote.h>
+#include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partition/tiling.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
+#include <utility>
 
 namespace unit {
 
@@ -32,17 +34,28 @@ class ImageTest : public DefaultFixture {
   }
 
  public:
+  [[nodiscard]] static legate::InternalSharedPtr<legate::detail::Tiling> create_tiling(
+    std::uint64_t tile_extent = 1)
+  {
+    auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tile_extent};
+    auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1};
+    return legate::detail::create_tiling(tile_shape, color_shape);
+  }
+
+  [[nodiscard]] static legate::InternalSharedPtr<legate::detail::Image> create_image_for(
+    legate::InternalSharedPtr<legate::detail::LogicalStore> store,
+    legate::InternalSharedPtr<legate::detail::Partition> partition,
+    legate::ImageComputationHint hint = legate::ImageComputationHint::NO_HINT)
+  {
+    return legate::detail::create_image(
+      std::move(store), std::move(partition), legate::mapping::detail::Machine{}, hint);
+  }
+
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Image> create_image()
   {
     auto runtime = legate::Runtime::get_runtime();
     auto store   = runtime->create_store(legate::Shape{1}, legate::int32());
-    auto partition =
-      legate::detail::create_tiling(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1},
-                                    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1});
-    return legate::detail::create_image(store.impl(),
-                                        partition,
-                                        legate::mapping::detail::Machine{},
-                                        legate::ImageComputationHint::NO_HINT);
+    return create_image_for(store.impl(), create_tiling());
   }
 
   legate::InternalSharedPtr<legate::detail::Image> image;
@@ -57,6 +70,16 @@ TEST_F(ImageTest, Compare)
 
   auto image2 = create_image();
   ASSERT_FALSE(*image2 == *image);
+
+  auto* const runtime = legate::Runtime::get_runtime();
+  auto store          = runtime->create_store(legate::Shape{1}, legate::int32());
+  auto partition      = create_tiling();
+  auto image3         = create_image_for(store.impl(), partition);
+  auto image4         = create_image_for(store.impl(), create_tiling(2));
+  auto image5 = create_image_for(store.impl(), partition, legate::ImageComputationHint::MIN_MAX);
+
+  ASSERT_FALSE(*image4 == *image3);
+  ASSERT_FALSE(*image5 == *image3);
 }
 
 TEST_F(ImageTest, IsDisjointFor)
@@ -86,6 +109,8 @@ TEST_F(ImageTest, IsCompleteFor)
 }
 
 TEST_F(ImageTest, IsConvertible) { ASSERT_FALSE(image->is_convertible()); }
+
+TEST_F(ImageTest, IsInvertible) { ASSERT_FALSE(image->is_invertible()); }
 
 TEST_F(ImageTest, LaunchDomain)
 {
@@ -138,6 +163,17 @@ TEST_F(ImageTest, Bloat)
   auto low_offsets  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{0, 0};
   auto high_offsets = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 1};
   ASSERT_THROW(static_cast<void>(image->bloat(low_offsets, high_offsets)), std::runtime_error);
+}
+
+TEST_F(ImageTest, ConstructNoLaunchDomain)
+{
+  auto* const runtime = legate::Runtime::get_runtime();
+  auto store          = runtime->create_store(legate::Shape{1}, legate::int32());
+  auto image_without_launch_domain =
+    create_image_for(store.impl(), legate::detail::create_no_partition());
+
+  ASSERT_EQ(image_without_launch_domain->construct(Legion::LogicalRegion{}, /*complete=*/false),
+            Legion::LogicalPartition::NO_PART);
 }
 
 TEST_F(ImageTest, Convert)

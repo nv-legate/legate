@@ -273,6 +273,7 @@ set(
   unit/partition/launch_domain_resolver.cc
   unit/partition/nopartition.cc
   unit/partition/opaque.cc
+  unit/partition/partitioner.cc
   unit/partition/restriction.cc
   unit/partition/tiling.cc
   unit/physical_store/create_bound_store.cc

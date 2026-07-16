@@ -79,9 +79,10 @@ bool Tiling::is_complete_for(const detail::Storage& storage) const
   LEGATE_ASSERT(storage_exts.size() == storage_offs.size());
   LEGATE_ASSERT(storage_offs.size() == offsets_.size());
 
-  const auto zip =
-    legate::detail::zip_equal(offsets_, strides_, color_shape_, storage_offs, storage_exts);
-  using zipper_type = std::tuple<const std::int64_t&,
+  const auto zip = legate::detail::zip_equal(
+    tile_shape_, offsets_, strides_, color_shape_, storage_offs, storage_exts);
+  using zipper_type = std::tuple<const std::uint64_t&,
+                                 const std::int64_t&,
                                  const std::uint64_t&,
                                  const std::uint64_t&,
                                  const std::int64_t&,
@@ -89,12 +90,16 @@ bool Tiling::is_complete_for(const detail::Storage& storage) const
   static_assert(std::is_same_v<zipper_type, decltype(*zip.begin())>);
 
   return std::all_of(zip.begin(), zip.end(), [](const zipper_type& zip_tuple) {
-    auto&& [offset, stride, color_shape, storage_off, storage_ext] = zip_tuple;
-    const auto my_lo                                               = offset;
-    const auto my_hi = my_lo + static_cast<std::int64_t>(stride * color_shape);
+    auto&& [tile_shape, offset, stride, color_shape, storage_off, storage_ext] = zip_tuple;
+    if (color_shape == 0 || stride > tile_shape) {
+      return false;
+    }
+
+    const auto my_lo = offset;
+    const auto my_hi = my_lo + static_cast<std::int64_t>((stride * (color_shape - 1)) + tile_shape);
     const auto soff  = static_cast<std::int64_t>(storage_off);
 
-    return soff >= my_lo || my_hi >= (soff + static_cast<std::int64_t>(storage_ext));
+    return soff >= my_lo && my_hi >= (soff + static_cast<std::int64_t>(storage_ext));
   });
 }
 

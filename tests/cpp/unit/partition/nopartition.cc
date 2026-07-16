@@ -43,6 +43,8 @@ TEST_F(NoPartitionTest, IsCompleteFor)
 
 TEST_F(NoPartitionTest, IsConvertible) { ASSERT_TRUE(nopartition->is_convertible()); }
 
+TEST_F(NoPartitionTest, IsInvertible) { ASSERT_TRUE(nopartition->is_invertible()); }
+
 TEST_F(NoPartitionTest, SatisfiesRestrictions)
 {
   auto restrictions1 = legate::detail::Restrictions{};

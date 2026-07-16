@@ -49,6 +49,13 @@ class TilingTest : public DefaultFixture {
     return legate::detail::create_tiling(tile_shape, color_shape, offsets, strides);
   }
 
+  [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_zero_offset_tiling()
+  {
+    return legate::detail::create_tiling(
+      legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4},
+      legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2});
+  }
+
   legate::InternalSharedPtr<legate::detail::Tiling> tiling;
 };
 
@@ -70,6 +77,32 @@ TEST_F(TilingTest, Shape)
             expected_strides);
 }
 
+TEST_F(TilingTest, ExplicitStridesUseZeroOffsets)
+{
+  auto tile_shape       = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 3};
+  auto color_shape      = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 5};
+  auto explicit_strides = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{6, 7};
+  auto tiling_with_default_offsets =
+    legate::detail::create_tiling(tile_shape,
+                                  color_shape,
+                                  legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{},
+                                  explicit_strides);
+  auto expected_offsets = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{0, 0};
+
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{
+              tiling_with_default_offsets->tile_shape()}),
+            tile_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{
+              tiling_with_default_offsets->color_shape()}),
+            color_shape);
+  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{
+              tiling_with_default_offsets->offsets()}),
+            expected_offsets);
+  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{
+              tiling_with_default_offsets->strides()}),
+            explicit_strides);
+}
+
 TEST_F(TilingTest, Compare)
 {
   auto tiling1 = create_tiling();
@@ -86,12 +119,64 @@ TEST_F(TilingTest, IsCompleteFor)
   constexpr auto dim1 = 8;
   auto shape1         = legate::Shape{dim1, dim1};
   auto store1         = runtime->create_store(shape1, legate::int32());
-  ASSERT_TRUE(tiling->is_complete_for(*store1.impl()->get_storage()));
+  ASSERT_FALSE(tiling->is_complete_for(*store1.impl()->get_storage()));
 
   constexpr auto dim2 = 10;
   auto shape2         = legate::Shape{dim2, dim2};
   auto store2         = runtime->create_store(shape2, legate::int32());
   ASSERT_FALSE(tiling->is_complete_for(*store2.impl()->get_storage()));
+}
+
+TEST_F(TilingTest, IsCompleteWithZeroOffset)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  constexpr auto dim      = 8;
+  auto zero_offset_tiling = create_zero_offset_tiling();
+  auto store              = runtime->create_store(legate::Shape{dim, dim}, legate::int32());
+
+  ASSERT_TRUE(zero_offset_tiling->is_complete_for(*store.impl()->get_storage()));
+}
+
+TEST_F(TilingTest, IsIncompleteWithZeroOffset)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  constexpr auto dim      = 10;
+  auto zero_offset_tiling = create_zero_offset_tiling();
+  auto store              = runtime->create_store(legate::Shape{dim, dim}, legate::int32());
+
+  ASSERT_FALSE(zero_offset_tiling->is_complete_for(*store.impl()->get_storage()));
+}
+
+TEST_F(TilingTest, IsIncompleteWithExplicitStrideGaps)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto tile_shape       = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 3};
+  auto color_shape      = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 5};
+  auto explicit_strides = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{6, 7};
+  auto explicit_stride_tiling =
+    legate::detail::create_tiling(tile_shape,
+                                  color_shape,
+                                  legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{},
+                                  explicit_strides);
+
+  constexpr auto actual_last_tile_end_dim0 = 20;
+  constexpr auto actual_last_tile_end_dim1 = 31;
+  auto actual_endpoint_store               = runtime->create_store(
+    legate::Shape{actual_last_tile_end_dim0, actual_last_tile_end_dim1}, legate::int32());
+
+  ASSERT_FALSE(
+    explicit_stride_tiling->is_complete_for(*actual_endpoint_store.impl()->get_storage()));
+
+  constexpr auto old_stride_bound_dim0 = 24;
+  constexpr auto old_stride_bound_dim1 = 35;
+  auto old_stride_bound_store          = runtime->create_store(
+    legate::Shape{old_stride_bound_dim0, old_stride_bound_dim1}, legate::int32());
+
+  ASSERT_FALSE(
+    explicit_stride_tiling->is_complete_for(*old_stride_bound_store.impl()->get_storage()));
 }
 
 TEST_F(TilingTest, IsConvertible) { ASSERT_TRUE(tiling->is_convertible()); }
