@@ -77,7 +77,9 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
     shape_{storage->shape()},
     storage_{std::move(storage)},
     transform_{make_internal_shared<TransformStack>()},
-    domain_{to_maybe_empty_domain(shape()->extents())}
+    // An unbound store's extents are unknown until a buffer is bound to it; keep the domain empty
+    // until then rather than forcing (and throwing on) the unbound extents.
+    domain_{shape()->unbound() ? Domain{} : to_maybe_empty_domain(shape()->extents())}
 {
   assert_fixed_storage_size(this->type());
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -407,6 +409,22 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
 
   return make_internal_shared<PhysicalStore>(
     shape()->ndim(), type(), transform_, LEGION_REDUCE, std::move(allocation), subdomain);
+}
+
+InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
+  const InternalSharedPtr<LogicalStore>& self, legate::mapping::StoreTarget target)
+{
+  LEGATE_ASSERT(self.get() == this);
+  LEGATE_ASSERT(unbound());
+
+  return make_internal_shared<PhysicalStore>(
+    static_cast<std::int32_t>(dim()), type(), transform_, target, self);
+}
+
+void LogicalStore::bind_buffer(InternalSharedPtr<InlineStorage> storage, const Domain& domain)
+{
+  get_storage()->bind(std::move(storage), domain);
+  domain_ = domain;
 }
 
 void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partition)

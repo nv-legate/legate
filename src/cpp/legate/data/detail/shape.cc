@@ -53,6 +53,13 @@ void Shape::copy_extents_from(const Shape& other)
   extents_ = other.extents_;
 }
 
+void Shape::bind_extents(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents)
+{
+  LEGATE_ASSERT(dim_ == extents.size());
+  state_   = State::READY;
+  extents_ = std::move(extents);
+}
+
 std::string Shape::to_string() const
 {
   switch (state_) {
@@ -75,11 +82,8 @@ bool Shape::operator==(Shape& other)
     return true;
   }
   if (State::UNBOUND == state_ || State::UNBOUND == other.state_) {
-    Runtime::get_runtime().flush_scheduling_window();
-    if (State::UNBOUND == state_ || State::UNBOUND == other.state_) {
-      throw TracedException<std::invalid_argument>{
-        "Illegal to access an uninitialized unbound store"};
-    }
+    throw TracedException<std::invalid_argument>{
+      "Illegal to access an uninitialized unbound store"};
   }
   // If both shapes are in the bound state and their index spaces are the same, we can elide the
   // blocking equivalence check
@@ -93,10 +97,6 @@ bool Shape::operator==(Shape& other)
 
 void Shape::ensure_binding_()
 {
-  if (State::UNBOUND != state_) {
-    return;
-  }
-  Runtime::get_runtime().flush_scheduling_window();
   if (State::UNBOUND == state_) {
     throw TracedException<std::invalid_argument>{
       "Illegal to access an uninitialized unbound store"};

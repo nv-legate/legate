@@ -6,6 +6,8 @@
 
 #include <legate/data/detail/physical_store.h>
 
+#include <legate/data/detail/logical_store.h>
+#include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
@@ -13,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace legate::detail {
@@ -91,6 +94,44 @@ std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> PhysicalStore::get_
                                      : std::move(storage_strides);
 
   return {origin, std::move(store_strides)};
+}
+
+InternalSharedPtr<InlineStorage> PhysicalStore::create_output_buffer_storage(
+  const Domain& bounds) const
+{
+  return make_internal_shared<InlineStorage>(bounds, type_->size(), target());
+}
+
+void PhysicalStore::bind_data(InternalSharedPtr<InlineStorage> storage, const Domain& domain)
+{
+  LEGATE_CHECK(unbound_);
+  // Update the originating logical store in place so downstream operations observe the produced
+  // data. This is the single-rank realization of the unbound-store "return" path.
+  originating_store_->bind_buffer(storage, domain);
+  // Reflect the freshly bound data in this physical store as well.
+  inline_storage_ = std::move(storage);
+  domain_         = domain;
+  unbound_        = false;
+  readable_       = true;
+}
+
+void PhysicalStore::bind_empty_data()
+{
+  LEGATE_CHECK(unbound_);
+
+  const auto ndim = dim_ == 0 ? std::int32_t{1} : dim_;
+  DomainPoint lo;
+  DomainPoint hi;
+
+  lo.dim = hi.dim = ndim;
+  for (std::int32_t i = 0; i < ndim; ++i) {
+    lo[i] = 0;
+    hi[i] = -1;  // hi < lo => zero-volume (empty) domain
+  }
+
+  const Domain empty{lo, hi};
+
+  bind_data(create_output_buffer_storage(empty), empty);
 }
 
 bool PhysicalStore::is_accessible(mapping::TaskTarget task_target) const

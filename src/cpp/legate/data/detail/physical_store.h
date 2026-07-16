@@ -36,6 +36,27 @@ class PhysicalStore {
                 InternalSharedPtr<InlineStorage> storage,
                 const Domain& domain);
 
+  /**
+   * @brief Constructs a physical store for an unbound output store.
+   *
+   * The store has no backing `InlineStorage` yet: the task body is expected to produce the data
+   * by calling `create_output_buffer(..., bind_buffer=true)` or `bind_data(...)`, which allocates
+   * an `InlineStorage` on @p target and binds it back into @p originating_store.
+   *
+   * @param dim The (declared) dimensionality of the unbound store.
+   * @param type The element type of the store.
+   * @param transform The transform stack over the store.
+   * @param target The memory kind the produced buffer should be allocated on (the store's mapping
+   * decision).
+   * @param originating_store The `LogicalStore` this physical store was mapped from, updated in
+   * place when the task binds data.
+   */
+  PhysicalStore(std::int32_t dim,
+                InternalSharedPtr<Type> type,
+                InternalSharedPtr<detail::TransformStack> transform,
+                mapping::StoreTarget target,
+                InternalSharedPtr<LogicalStore> originating_store);
+
   PhysicalStore(PhysicalStore&& other) noexcept            = default;
   PhysicalStore& operator=(PhysicalStore&& other) noexcept = default;
 
@@ -63,6 +84,36 @@ class PhysicalStore {
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;
   [[nodiscard]] bool is_reducible() const;
+  [[nodiscard]] bool is_unbound_store() const;
+
+  /**
+   * @brief Allocates an `InlineStorage` for an output buffer of this (unbound) store.
+   *
+   * The storage spans @p bounds, holds elements of this store's type, and is allocated on the
+   * store's mapped target memory. Used by `create_output_buffer`.
+   *
+   * @param bounds The domain the buffer should span.
+   *
+   * @return The freshly allocated inline storage.
+   */
+  [[nodiscard]] InternalSharedPtr<InlineStorage> create_output_buffer_storage(
+    const Domain& bounds) const;
+
+  /**
+   * @brief Binds an inline storage (produced as a buffer by the task) to this unbound store.
+   *
+   * The originating `LogicalStore` is updated in place so downstream operations observe the
+   * produced data, and this physical store is updated to reflect the now-bound data.
+   *
+   * @param storage The inline storage to bind.
+   * @param domain The domain the store should span over @p storage.
+   */
+  void bind_data(InternalSharedPtr<InlineStorage> storage, const Domain& domain);
+
+  /**
+   * @brief Binds empty data to this unbound store (the store becomes a bound, zero-volume store).
+   */
+  void bind_empty_data();
 
   void check_shape_dimension(std::int32_t dim) const;
   void check_accessor_type(Type::Code code, std::size_t size_of_T) const;
@@ -98,11 +149,19 @@ class PhysicalStore {
   bool writable_{};
   bool reducible_{};
 
-  // The inline storage that holds the manually-managed memory of the store.
+  // The inline storage that holds the manually-managed memory of the store. Null for an unbound
+  // store that has not been bound to a buffer yet.
   InternalSharedPtr<InlineStorage> inline_storage_{};
 
   // The domain over inline_storage_ that this store spans.
   Domain domain_{};
+
+  // Unbound-store state. `unbound_` is true for an unbound store that has not been bound yet;
+  // `unbound_target_` is the memory a produced buffer should be allocated on, and
+  // `originating_store_` is the LogicalStore that gets updated in place when the task binds data.
+  bool unbound_{false};
+  mapping::StoreTarget unbound_target_{};
+  InternalSharedPtr<LogicalStore> originating_store_{};
 };
 
 }  // namespace legate::detail

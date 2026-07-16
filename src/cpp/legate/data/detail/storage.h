@@ -137,6 +137,19 @@ class Storage {
 
   void set_inline_storage(InternalSharedPtr<InlineStorage> storage_data);
 
+  /**
+   * @brief Binds a previously unbound storage to a concrete inline storage and domain.
+   *
+   * Valid only when this storage is unbound. After this call the storage is bound: its shape
+   * becomes READY with extents derived from @p domain, its domain is set, its backing
+   * `InlineStorage` is @p storage_data, and it is given a trivial key partition. This is the
+   * single-rank realization of a task binding a buffer to an unbound store.
+   *
+   * @param storage_data The inline storage produced by the task.
+   * @param domain The domain (extents) that the store should span over @p storage_data.
+   */
+  void bind(InternalSharedPtr<InlineStorage> storage_data, const Domain& domain);
+
   [[nodiscard]] Restrictions compute_restrictions() const;
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
     const Restrictions& restrictions) const;

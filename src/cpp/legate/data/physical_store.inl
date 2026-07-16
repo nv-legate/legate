@@ -174,9 +174,16 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
 }
 
 template <typename T, std::int32_t DIM>
-Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>&, bool) const
+Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
+                                                   bool bind_buffer) const
 {
-  return {};
+  const auto bounds = Rect<DIM>{Point<DIM>::ZEROES(), extents - Point<DIM>::ONES()};
+  auto buffer       = Buffer<T, DIM>{create_output_buffer_storage_(Domain{bounds}), bounds};
+
+  if (bind_buffer) {
+    bind_inline_storage_(buffer.get_storage(), Domain{bounds});
+  }
+  return buffer;
 }
 
 template <typename TYPE_CODE>
@@ -206,9 +213,11 @@ VAL PhysicalStore::scalar() const
 }
 
 template <typename T, std::int32_t DIM>
-void PhysicalStore::bind_data(Buffer<T, DIM>&, const Point<DIM>&) const
+void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 {
-  LEGATE_ABORT("Not supported");
+  const auto bounds = Rect<DIM>{Point<DIM>::ZEROES(), extents - Point<DIM>::ONES()};
+
+  bind_inline_storage_(buffer.get_storage(), Domain{bounds});
 }
 
 template <typename T>

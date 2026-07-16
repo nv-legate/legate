@@ -222,6 +222,15 @@ template <bool WRITE>
     data_requests->reserve_copy_ins(store_args.size());
   }
   for (auto&& [store, variable] : store_args) {
+    if constexpr (WRITE) {
+      // An unbound output store has no shape/storage yet: map it to a physical store with no
+      // backing storage. The task body materializes it via
+      // create_output_buffer(...)/bind_data(...).
+      if (store->unbound()) {
+        result.emplace_back(store->map_unbound(store, machine.preferred_store_target()));
+        continue;
+      }
+    }
     auto&& partition                  = strategy[*variable];
     auto&& [physical_store, subsumed] = store->map(partition,
                                                    strategy.find_store_projection(*variable),

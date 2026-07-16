@@ -136,6 +136,33 @@ class LogicalStore {
     const legate::mapping::detail::Machine& machine,
     DataMovementRequests* requests);
   void reshuffle(const InternalSharedPtr<Partition>& new_key_partition);
+
+  /**
+   * @brief Maps an unbound store to a physical store with no backing storage.
+   *
+   * The returned physical store carries the memory kind a produced buffer should be allocated on
+   * and a reference back to this logical store, so that a task binding a buffer can update this
+   * store in place (see `bind_buffer`).
+   *
+   * @param self A shared pointer to this store (used as the originating-store back-reference).
+   * @param target The memory kind produced buffers should be allocated on.
+   *
+   * @return The physical store handed to the task body.
+   */
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> map_unbound(
+    const InternalSharedPtr<LogicalStore>& self, legate::mapping::StoreTarget target);
+
+  /**
+   * @brief Binds a task-produced inline storage to this (unbound) store.
+   *
+   * Updates the store's shape/domain and backing storage in place. After this call the store is
+   * no longer unbound and downstream operations observe the produced data.
+   *
+   * @param storage The inline storage produced by the task.
+   * @param domain The domain the store should span over @p storage.
+   */
+  void bind_buffer(InternalSharedPtr<InlineStorage> storage, const Domain& domain);
+
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
 

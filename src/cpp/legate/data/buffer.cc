@@ -7,16 +7,23 @@
 #include <legate/data/buffer.h>
 
 #include <legate/data/detail/buffer.h>
+#include <legate/data/detail/inline_storage.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/machine.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <fmt/format.h>
 
 #include <cstddef>
+#include <cstdint>
+#include <optional>
 #include <stdexcept>
+#include <utility>
 
 namespace legate::detail {
 
@@ -32,6 +39,30 @@ void check_alignment(std::size_t alignment)
     throw detail::TracedException<std::domain_error>{
       fmt::format("invalid alignment {}, must be a power of 2", alignment)};
   }
+}
+
+InternalSharedPtr<InlineStorage> create_buffer_storage(std::uint32_t field_size,
+                                                       const Domain& bounds,
+                                                       Memory::Kind kind)
+{
+  return make_internal_shared<InlineStorage>(bounds, field_size, mapping::detail::to_target(kind));
+}
+
+void inline_storage_layout(const InternalSharedPtr<InlineStorage>& storage,
+                           void** base_out,
+                           std::uint64_t* byte_strides_out)
+{
+  auto&& [base, byte_strides] = storage->base_and_byte_strides();
+
+  *base_out = base;
+  for (std::size_t i = 0; i < byte_strides.size(); ++i) {
+    byte_strides_out[i] = byte_strides[i];
+  }
+}
+
+Memory::Kind get_memory_kind(const InternalSharedPtr<InlineStorage>& storage)
+{
+  return mapping::detail::to_kind(storage->target());
 }
 
 }  // namespace legate::detail
@@ -62,6 +93,22 @@ void check_type(const Type& ty, std::size_t size_of, std::size_t align_of)
 
 }  // namespace untyped_buffer_detail
 
+namespace {
+
+// Allocates an inline storage for a task-local buffer, resolving the memory kind from the
+// executing processor when one is not explicitly requested.
+[[nodiscard]] InternalSharedPtr<detail::InlineStorage> make_task_local_inline_storage(
+  const Type& type, Span<const std::uint64_t> bounds, std::optional<mapping::StoreTarget> mem_kind)
+{
+  const auto target = mem_kind.value_or(mapping::detail::to_target(
+    find_memory_kind_for_executing_processor(/* host_accessible */ false)));
+
+  return make_internal_shared<detail::InlineStorage>(
+    detail::to_domain(bounds), type.size(), target);
+}
+
+}  // namespace
+
 TaskLocalBuffer::TaskLocalBuffer(const TaskLocalBuffer&) = default;
 
 TaskLocalBuffer& TaskLocalBuffer::operator=(const TaskLocalBuffer&) = default;
@@ -76,26 +123,20 @@ TaskLocalBuffer::TaskLocalBuffer(SharedPtr<detail::TaskLocalBuffer> impl) : impl
 {
 }
 
-TaskLocalBuffer::TaskLocalBuffer(const Legion::UntypedDeferredBuffer<>& buf,
+TaskLocalBuffer::TaskLocalBuffer(InternalSharedPtr<detail::InlineStorage> storage,
                                  const Type& type,
-                                 const Domain& bounds)
-  : TaskLocalBuffer{legate::make_shared<detail::TaskLocalBuffer>(buf, type.impl(), bounds)}
+                                 // Domain is a POD type, no point in moving it
+                                 const Domain& bounds)  // NOLINT(modernize-pass-by-value)
+  : TaskLocalBuffer{
+      legate::make_shared<detail::TaskLocalBuffer>(std::move(storage), type.impl(), bounds)}
 {
 }
 
 TaskLocalBuffer::TaskLocalBuffer(const Type& type,
                                  Span<const std::uint64_t> bounds,
                                  std::optional<mapping::StoreTarget> mem_kind)
-  : TaskLocalBuffer{{
-                      type.size(),
-                      static_cast<int>(bounds.size()),
-                      mem_kind.has_value()
-                        ? mapping::detail::to_kind(*mem_kind)
-                        : find_memory_kind_for_executing_processor(/* host_accessible */ false),
-                      detail::to_domain(bounds),
-                    },
-                    type,
-                    detail::to_domain(bounds)}
+  : TaskLocalBuffer{
+      make_task_local_inline_storage(type, bounds, mem_kind), type, detail::to_domain(bounds)}
 {
 }
 
@@ -112,9 +153,9 @@ InlineAllocation TaskLocalBuffer::get_inline_allocation() const
   return impl()->get_inline_allocation();
 }
 
-const Legion::UntypedDeferredBuffer<>& TaskLocalBuffer::legion_buffer_() const
+const InternalSharedPtr<detail::InlineStorage>& TaskLocalBuffer::storage_() const
 {
-  return impl()->legion_buffer();
+  return impl()->get_storage();
 }
 
 }  // namespace legate

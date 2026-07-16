@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/data/detail/inline_storage.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -31,11 +32,11 @@ class TaskLocalBuffer {
   /**
    * @brief Construct a `TaskLocalBuffer`.
    *
-   * @param buf The Legion buffer from which to construct this buffer from.
-   * @param type The type to interpret `buf` as.
+   * @param storage The inline storage backing this buffer.
+   * @param type The type to interpret `storage` as.
    * @param bounds The extents of the buffer.
    */
-  TaskLocalBuffer(const Legion::UntypedDeferredBuffer<>& buf,
+  TaskLocalBuffer(InternalSharedPtr<InlineStorage> storage,
                   InternalSharedPtr<Type> type,
                   const Domain& bounds);
 
@@ -60,9 +61,9 @@ class TaskLocalBuffer {
   [[nodiscard]] mapping::StoreTarget memory_kind() const;
 
   /**
-   * @return The legion buffer handle.
+   * @return The inline storage backing this buffer.
    */
-  [[nodiscard]] const Legion::UntypedDeferredBuffer<>& legion_buffer() const;
+  [[nodiscard]] const InternalSharedPtr<InlineStorage>& get_storage() const;
 
   /**
    * @brief Get the `InlineAllocation` for the buffer.
@@ -75,7 +76,7 @@ class TaskLocalBuffer {
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
 
  private:
-  Legion::UntypedDeferredBuffer<> buf_{};
+  InternalSharedPtr<InlineStorage> storage_{};
   InternalSharedPtr<Type> type_{};
   Domain domain_{};
 };

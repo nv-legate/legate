@@ -30,6 +30,21 @@ inline PhysicalStore::PhysicalStore(std::int32_t dim,
 {
 }
 
+inline PhysicalStore::PhysicalStore(std::int32_t dim,
+                                    InternalSharedPtr<Type> type,
+                                    InternalSharedPtr<detail::TransformStack> transform,
+                                    mapping::StoreTarget target,
+                                    InternalSharedPtr<LogicalStore> originating_store)
+  : transform_{std::move(transform)},
+    type_{std::move(type)},
+    dim_{dim},
+    writable_{true},
+    unbound_{true},
+    unbound_target_{target},
+    originating_store_{std::move(originating_store)}
+{
+}
+
 inline bool PhysicalStore::valid() const { return true; }
 
 inline bool PhysicalStore::transformed() const { return !transform_->identity(); }
@@ -38,13 +53,18 @@ inline std::int32_t PhysicalStore::dim() const { return dim_; }
 
 inline const InternalSharedPtr<Type>& PhysicalStore::type() const { return type_; }
 
-inline mapping::StoreTarget PhysicalStore::target() const { return storage_()->target(); }
+inline mapping::StoreTarget PhysicalStore::target() const
+{
+  return unbound_ ? unbound_target_ : storage_()->target();
+}
 
 inline bool PhysicalStore::is_readable() const { return readable_; }
 
 inline bool PhysicalStore::is_writable() const { return writable_; }
 
 inline bool PhysicalStore::is_reducible() const { return reducible_; }
+
+inline bool PhysicalStore::is_unbound_store() const { return unbound_; }
 
 inline const InternalSharedPtr<InlineStorage>& PhysicalStore::storage_() const
 {

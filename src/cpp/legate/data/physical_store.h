@@ -819,6 +819,27 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] std::pair<void*, std::array<std::size_t, LEGATE_MAX_DIM>> get_base_and_strides_()
     const;
 
+  /**
+   * @brief Allocates an inline storage for an output buffer of this (unbound) store spanning
+   * `bounds`, on the store's mapped target memory.
+   *
+   * Kept out-of-line (and in the library) so the templated `create_output_buffer` does not need to
+   * touch `detail::InlineStorage` directly.
+   */
+  [[nodiscard]] InternalSharedPtr<detail::InlineStorage> create_output_buffer_storage_(
+    const Domain& bounds) const;
+
+  /**
+   * @brief Binds an inline storage (produced by the task as a buffer) to this unbound store.
+   *
+   * @param storage The inline storage to bind.
+   * @param extents The domain the store should span over `storage`.
+   *
+   * @throw std::invalid_argument If this store is not an unbound store.
+   */
+  void bind_inline_storage_(const InternalSharedPtr<detail::InlineStorage>& storage,
+                            const Domain& extents) const;
+
   SharedPtr<detail::PhysicalStore> impl_{};
   // This member exists purely to solve the temporary store problem. It is illegal for Physical
   // stores to outlive their LogicalStore counterparts, but it is pretty easy to get into a

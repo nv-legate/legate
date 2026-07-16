@@ -37,6 +37,18 @@ class Shape {
 
   void copy_extents_from(const Shape& other);
 
+  /**
+   * @brief Binds this (previously unbound) shape to a concrete set of extents.
+   *
+   * Used when a task binds a buffer to an unbound store: the store's shape, which up to this
+   * point only knew its dimensionality, becomes fully known (READY) with the given extents. It
+   * is legal to call this on a shape in any state as long as the dimensionality matches; the
+   * shape transitions directly to READY.
+   *
+   * @param extents The now-known extents of the shape.
+   */
+  void bind_extents(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents);
+
   [[nodiscard]] std::string to_string() const;
 
   bool operator==(Shape& other);

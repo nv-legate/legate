@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/data/inline_allocation.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
@@ -21,7 +24,7 @@
 
 /**
  * @file
- * @brief Type alias definition for legate::Buffer and utility functions for it
+ * @brief Class definition for legate::Buffer and utility functions for it
  */
 
 namespace legate::mapping {
@@ -32,7 +35,41 @@ enum class StoreTarget : std::uint8_t;
 
 namespace legate::detail {
 
+class InlineStorage;
 class TaskLocalBuffer;
+
+/**
+ * @brief Allocates an `InlineStorage` of `field_size`-byte elements spanning `bounds`.
+ *
+ * Exported so that the `Buffer` class template (which is instantiated in user code) never has to
+ * touch `InlineStorage`'s (hidden-visibility) members directly.
+ *
+ * @param field_size The size of each element in bytes.
+ * @param bounds The domain the storage should span.
+ * @param kind The memory kind to allocate on.
+ *
+ * @return The freshly allocated inline storage.
+ */
+[[nodiscard]] LEGATE_EXPORT InternalSharedPtr<InlineStorage> create_buffer_storage(
+  std::uint32_t field_size, const Domain& bounds, Memory::Kind kind);
+
+/**
+ * @brief Reads the base pointer and byte strides of an inline storage's affine layout.
+ *
+ * `base_out` receives the address of the storage's coordinate origin (i.e. the point
+ * `(0, ..., 0)`); `byte_strides_out` (which must have room for at least `LEGATE_MAX_DIM` entries)
+ * receives the per-dimension byte strides.
+ *
+ * @param storage The storage to inspect.
+ * @param base_out Out-param for the base pointer.
+ * @param byte_strides_out Out-param for the byte strides.
+ */
+LEGATE_EXPORT void inline_storage_layout(const InternalSharedPtr<InlineStorage>& storage,
+                                         void** base_out,
+                                         std::uint64_t* byte_strides_out);
+
+[[nodiscard]] LEGATE_EXPORT Memory::Kind get_memory_kind(
+  const InternalSharedPtr<InlineStorage>& storage);
 
 }  // namespace legate::detail
 
@@ -54,31 +91,113 @@ inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
  * Values in a buffer can be accessed by index expressions with \ref Point objects, or via a raw
  * pointer to the underlying allocation, which can be queried with the `Buffer::ptr()` method.
  *
- * \ref Buffer is an alias to
- * [Legion::DeferredBuffer](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion.h#L3509-L3609).
+ * A \ref Buffer is backed by a `legate::detail::InlineStorage`, a manually-managed affine
+ * allocation. The buffer shares ownership of that storage, so the memory stays alive for as long
+ * as any copy of the buffer (or the store the buffer is bound to) is alive. The allocation may
+ * also be released eagerly with `Buffer::destroy()`.
  *
- * Note on using temporary buffers in CUDA tasks:
+ * The buffer uses a C-ordered (row-major) affine layout, consistent with the layout used by the
+ * store accessors, so a buffer that is bound to an output store can be read back through the
+ * store's accessors without any re-layout.
  *
- * We use `Legion::DeferredBuffer`, whose lifetime is not connected with the CUDA stream(s)
- * used to launch kernels. The buffer is allocated immediately at the point when
- * create_buffer() is called, whereas the kernel that uses it is placed on a stream, and may
- * run at a later point. Normally a `Legion::DeferredBuffer` is deallocated automatically by
- * Legion once all the kernels launched in the task are complete. However, a
- * `Legion::DeferredBuffer` can also be deallocated immediately using
- * `Legion::DeferredBuffer::destroy()`, which is useful for operations that want to deallocate
- * intermediate memory as soon as possible. This deallocation is not synchronized with the task
- * stream, i.e. it may happen before a kernel which uses the buffer has actually
- * completed. This is safe as long as we use the same stream on all GPU tasks running on the
- * same device (which is guaranteed by the current implementation of @ref
- * TaskContext::get_task_stream()), because then all the actual uses of the buffer are done in
- * order on the one stream. It is important that all library CUDA code uses @ref
- * TaskContext::get_task_stream(), and all CUDA operations (including library calls) are
- * enqueued on that stream exclusively. This analysis additionally assumes that no code outside
- * of Legate is concurrently allocating from the eager pool, and that it's OK for kernels to
- * access a buffer even after it's technically been deallocated.
+ * @note The indexing operator and `ptr()` overloads only read the cached base pointer and strides,
+ * so they are safe to call from device code. The buffer shares ownership through a smart pointer
+ * whose operations must run on the host, so a buffer should be created (and destroyed) on the
+ * host; the raw pointer obtained from `ptr()` is what should be handed to device kernels.
  */
 template <typename VAL, std::int32_t DIM = 1>
-using Buffer = Legion::DeferredBuffer<VAL, DIM>;
+class Buffer {
+ public:
+  Buffer() = default;
+
+  /**
+   * @brief Constructs a `Buffer` that views `storage` over `bounds`.
+   *
+   * @param storage The inline storage backing the buffer.
+   * @param bounds The extents (as a rectangle whose lower bound is the origin) of the buffer.
+   */
+  Buffer(InternalSharedPtr<detail::InlineStorage> storage, const Rect<DIM>& bounds);
+
+  /**
+   * @brief Returns a reference to the element at `p`.
+   *
+   * @param p The point to access (in absolute coordinates within `get_bounds()`).
+   *
+   * @return A reference to the element.
+   */
+  [[nodiscard]] LEGATE_HOST_DEVICE VAL& operator[](const Point<DIM>& p) const { return *ptr(p); }
+
+  /**
+   * @brief Returns a pointer to the element at `p`.
+   *
+   * @param p The point to access.
+   *
+   * @return A pointer to the element.
+   */
+  [[nodiscard]] LEGATE_HOST_DEVICE VAL* ptr(const Point<DIM>& p) const
+  {
+    return base_ + offset_(p);
+  }
+
+  /**
+   * @brief Returns a pointer to the element at `r.lo`, additionally writing the element strides.
+   *
+   * @param r The rectangle whose lower bound to return a pointer to.
+   * @param strides Out-param that receives the per-dimension element strides.
+   *
+   * @return A pointer to the element at `r.lo`.
+   */
+  [[nodiscard]] LEGATE_HOST_DEVICE VAL* ptr(const Rect<DIM>& r, std::size_t strides[DIM]) const
+  {
+    for (std::int32_t i = 0; i < DIM; ++i) {
+      strides[i] = strides_[i];
+    }
+    return ptr(r.lo);
+  }
+
+  /**
+   * @return The extents of the buffer.
+   */
+  [[nodiscard]] LEGATE_HOST_DEVICE Rect<DIM> get_bounds() const { return bounds_; }
+
+  /**
+   * @brief Eagerly releases this buffer's ownership of the backing storage.
+   *
+   * If this buffer holds the last reference to the storage, the allocation is freed.
+   */
+  void destroy()
+  {
+    storage_ = {};
+    base_    = nullptr;
+  }
+
+  /**
+   * @return The inline storage backing the buffer (used to bind the buffer to a store or to wrap
+   * it as a `TaskLocalBuffer`).
+   */
+  [[nodiscard]] const InternalSharedPtr<detail::InlineStorage>& get_storage() const
+  {
+    return storage_;
+  }
+
+  [[nodiscard]] Memory::Kind memory_kind() const { return detail::get_memory_kind(get_storage()); }
+
+ private:
+  [[nodiscard]] LEGATE_HOST_DEVICE std::int64_t offset_(const Point<DIM>& p) const
+  {
+    std::int64_t off = 0;
+
+    for (std::int32_t i = 0; i < DIM; ++i) {
+      off += static_cast<std::int64_t>(p[i]) * static_cast<std::int64_t>(strides_[i]);
+    }
+    return off;
+  }
+
+  InternalSharedPtr<detail::InlineStorage> storage_{};
+  VAL* base_{nullptr};          // address of coordinate (0, ..., 0)
+  std::size_t strides_[DIM]{};  // element strides
+  Rect<DIM> bounds_{};
+};
 
 /**
  * @brief A task-local temporary buffer.
@@ -105,11 +224,11 @@ class LEGATE_EXPORT TaskLocalBuffer {
   /**
    * @brief Construct a `TaskLocalBuffer`.
    *
-   * @param buf The Legion buffer from which to construct this buffer.
-   * @param type The type to interpret `buf` as.
+   * @param storage The inline storage backing the buffer.
+   * @param type The type to interpret `storage` as.
    * @param bounds The extent of the buffer.
    */
-  TaskLocalBuffer(const Legion::UntypedDeferredBuffer<>& buf,
+  TaskLocalBuffer(InternalSharedPtr<detail::InlineStorage> storage,
                   const Type& type,
                   const Domain& bounds);
 
@@ -135,7 +254,7 @@ class LEGATE_EXPORT TaskLocalBuffer {
    * version of this ctor. That constructor will deduce the `Type` based on `T`. The point of
    * _this_ ctor is to provide the ability to type-pun the `Buffer` with an equivalent type.
    *
-   * @param buf The typed Legion buffer from which to construct this buffer from.
+   * @param buf The typed buffer from which to construct this buffer from.
    * @param type The type to interpret `buf` as.
    *
    * @throws std::invalid_argument If `sizeof(T)` is not the same as the type size.
@@ -149,7 +268,7 @@ class LEGATE_EXPORT TaskLocalBuffer {
    *
    * The type of the buffer is deduced from `T`.
    *
-   * @param buf The typed Legion buffer from which to construct this buffer from.
+   * @param buf The typed buffer from which to construct this buffer from.
    */
   template <typename T, std::int32_t DIM>
   explicit TaskLocalBuffer(const Buffer<T, DIM>& buf);
@@ -199,7 +318,7 @@ class LEGATE_EXPORT TaskLocalBuffer {
   [[nodiscard]] const SharedPtr<detail::TaskLocalBuffer>& impl() const;
 
  private:
-  [[nodiscard]] const Legion::UntypedDeferredBuffer<>& legion_buffer_() const;
+  [[nodiscard]] const InternalSharedPtr<detail::InlineStorage>& storage_() const;
 
   SharedPtr<detail::TaskLocalBuffer> impl_{};
 };

@@ -27,20 +27,16 @@ class BufferFn {
     switch (DIM) {
       case 1: {
         auto buffer = legate::create_buffer<T>(bytes, kind, alignment);
-        auto memory = buffer.get_instance().get_location();
-        EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
-        EXPECT_EQ(memory.kind(),
+        EXPECT_EQ(buffer.memory_kind(),
                   kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM
                                                      : static_cast<legate::Memory::Kind>(kind));
         break;
       }
       default: {
         auto buffer = legate::create_buffer<T, DIM>(legate::Point<DIM>{bytes}, kind, alignment);
-        auto memory = buffer.get_instance().get_location();
-        EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
-        EXPECT_EQ(memory.kind(),
+        EXPECT_EQ(buffer.memory_kind(),
                   kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM
                                                      : static_cast<legate::Memory::Kind>(kind));
         break;

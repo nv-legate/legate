@@ -16,9 +16,9 @@ inline std::int32_t TaskLocalBuffer::dim() const { return domain().get_dim(); }
 
 inline const Domain& TaskLocalBuffer::domain() const { return domain_; }
 
-inline const Legion::UntypedDeferredBuffer<>& TaskLocalBuffer::legion_buffer() const
+inline const InternalSharedPtr<InlineStorage>& TaskLocalBuffer::get_storage() const
 {
-  return buf_;
+  return storage_;
 }
 
 }  // namespace legate::detail
