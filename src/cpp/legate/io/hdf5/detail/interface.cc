@@ -119,7 +119,7 @@ namespace {
 }
 
 /**
- * @brief Create a LogicalStore from a HDF5 dataset and shape.
+ * @brief Create a LogicalStore from an HDF5 dataset and shape.
  *
  * @param dataset The HDF5 dataset.
  * @param shape The shape of the dataset.

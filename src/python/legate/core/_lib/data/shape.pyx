@@ -31,7 +31,7 @@ cdef class Shape:
         Parameters
         ----------
         obj : Shape | Collection[int]
-            An iterable from which to construct the new shape from.
+            An iterable from which to construct the new shape.
         """
         self._handle = Shape.from_shape_like(obj)
 
@@ -178,7 +178,7 @@ cdef class Shape:
         Returns
         -------
         str
-            The human readable representation of the shape.
+            The human-readable representation of the shape.
         """
         return self._handle.to_string().decode()
 
@@ -189,6 +189,6 @@ cdef class Shape:
         Returns
         -------
         str
-            The human readable representation of the shape.
+            The human-readable representation of the shape.
         """
         return str(self)

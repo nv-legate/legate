@@ -165,7 +165,7 @@ namespace {
   // From DLPack docs on the strides member:
   //
   // > strides of the tensor (in number of elements, not bytes) can be NULL, indicating tensor
-  // > is compact and row-majored.
+  // > is compact and row-major.
   if (!tensor.strides) {
     return legate::mapping::DimOrdering::c_order();
   }

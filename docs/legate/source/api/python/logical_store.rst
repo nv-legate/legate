@@ -34,7 +34,7 @@ unbound store are invalid.
 One consequence due to the nature of unbound stores is that querying the shape
 of a previously unbound store can block the client's control flow for an
 obvious reason; to know the shape of the store whose shape was unknown at
-creation time, the client must wait until the updater task to finish. However,
+creation time, the client must wait until the updater task finishes. However,
 passing a previously unbound store to a downstream operation can be
 non-blocking, as long as the operation requires no changes in the partitioning
 and mapping for the store.
@@ -96,7 +96,7 @@ StorePartition
 
 A ``LogicalStorePartition`` is an object that represents a partitioned state of a
 store. A store partition is a name of a collection of `sub-stores`, each of
-which contains to a subset of elements in the store. Sub-stores in a store
+which contains a subset of elements in the store. Sub-stores in a store
 partition are uniquely identified by their `colors`, and a set of all colors
 of a given store partition is called a `color space`.
 

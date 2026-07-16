@@ -47,7 +47,7 @@ namespace legate {
  * }
  * @endcode
  *
- * The problem are the modulus and div commands. Modern compilers are seemingly unable to hoist
+ * The problem is the modulus and div commands. Modern compilers are seemingly unable to hoist
  * those computations out of the loop and vectorize the code. So an equivalent loop over the
  * extents "normally":
  *
@@ -102,7 +102,7 @@ flatten(::cuda::std::mdspan<Element, Extent, Layout, Accessor> span) noexcept;
  *
  * The utility of this function is multi-fold:
  *
- * #. It allow efficient iteration over an mdspan of variable dimension.
+ * #. It allows efficient iteration over an mdspan of variable dimension.
  * #. It separates the iteration from the container. For example, if the user wanted to iterate
  *    over the intersection of multiple mdspans, they could compute the intersection of their
  *    extents, and use this function to generate the loops.

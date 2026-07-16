@@ -279,7 +279,7 @@ cdef class VariantInvoker:
 
         Notes
         -----
-        All parameters to ``func`` which are neither inputs, outputs, or
+        All parameters to ``func`` which are neither inputs, outputs, nor
         reductions, are automatically considered to be scalars.
 
         All user functions must return exactly ``None``, and all arguments

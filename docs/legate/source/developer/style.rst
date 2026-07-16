@@ -220,7 +220,7 @@ Functions
    value.
 
 #. For functions in header files, declarations and definitions must always be separate. If
-   the function is a template (or otherwise very very small), the definition should go in
+   the function is a template (or otherwise very, very small), the definition should go in
    the corresponding ``.inl``. If not, the definition should go in the ``.cc``. This also
    applies for any member functions of classes.
 
@@ -360,7 +360,7 @@ Variables
       short functions :ref:`rule <label_short_and_sweet_functions>`). There is no need to
       encode this in the name of the variable as well.
    #. Never use acronyms. You might know what "``dcv``" (dimension-less color vector)
-      means now, but nobody else does, and neither will you in 4 week's time.
+      means now, but nobody else does, and neither will you in 4 weeks' time.
    #. Use commonly understood names for common things. For example, ``for``-loop indices
       should almost always be ``i``, ``j``, or ``k``. If something returns an iterator, it
       should probably be called ``it``, not e.g. ``pos``, ``idx``, or ``finder``.
@@ -401,7 +401,7 @@ Variables
    above, Legate assumes all pointers (smart or otherwise) are non-null and point to a
    value.
 
-   The rationale for this is that compiler will warn about unchecked accesses to
+   The rationale for this is that the compiler will warn about unchecked accesses to
    ``std::optional<T>`` (which is undefined behavior if the optional does not contain a
    value), while they won't complain about NULL-pointer dereferences. ``std::optional`` is
    also more explicit and self-documenting. It tells the reader unambiguously that "this

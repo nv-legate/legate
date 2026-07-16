@@ -16,7 +16,7 @@
 
 /**
  * @file
- * @brief Interface for KVikIO I/O
+ * @brief Interface for KvikIO I/O
  */
 
 namespace legate {

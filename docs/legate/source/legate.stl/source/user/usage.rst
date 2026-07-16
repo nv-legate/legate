@@ -220,7 +220,7 @@ than STL ranges.
 Reductions
 ..........
 
-Reductions are algorithms on stores that reduces the stores' dimensionality by
+Reductions are algorithms on stores that reduce the stores' dimensionality by
 combining elements along a chosen axis via repeated application of a binary
 operation. In the Standard Template Library, the ``std::reduce`` and
 ``std::accumulate`` algorithms are both examples of reductions.
@@ -234,7 +234,7 @@ store using the familiar function objects from the Standard library like
 ``std::plus`` and ``std::minus``.
 
 Below is an example that does a row-wise reduction of a 2-D store using
-using ``std::plus``. It is described after the break.
+``std::plus``. It is described after the break.
 
 .. code-block:: c++
 

@@ -29,7 +29,7 @@ and use one of its bundled *MPI wrappers*.  There are two wrappers, one for
 OpenMPI and one for MPICH.  Most of the time this process works automatically
 and does not require user intervention.  However, in rare cases, the user may
 need to manually specify the MPI wrapper to use.  For example, the following
-error indicates that wrapper may have to be chosen explicitly
+error indicates that the wrapper may have to be chosen explicitly
 
 .. code-block:: bash
 
@@ -63,7 +63,7 @@ detection code.  So, when using this module, one must set the wrapper
 explicitly.  The ``mpich`` module, on the other hand, provides ``libmpi.so``, so
 the Legate MPI detection code will work without any user intervention.
 
-If neither of the pre-built wrappers work for your system, check
+If neither of the pre-built wrappers works for your system, check
 :ref:`installation_of_mpi_wrapper` for instructions on building the MPI wrapper
 from source.
 
@@ -86,7 +86,7 @@ Potential Issues
 ----------------
 
 Note that the framework of automatic detection and automatic support for
-networking depends on multiple dynamic loads of the MPI and the UCX libraries.  Sometimes, errors may occur when an incorrect or conflicting libraries are
+networking depends on multiple dynamic loads of the MPI and the UCX libraries.  Sometimes, errors may occur when incorrect or conflicting libraries are
 loaded.  If that happens and a crash occurs, Legate should print out a
 backtrace showing which versions of the different libraries were loaded.  If one
 of the libraries is loaded from a different location than expected, you can set
@@ -121,7 +121,7 @@ variables only for the specific Legate application you are running.
    12.5 through 13.0.  The Legate wheel was also tested on Perlmutter with the
    ``cray-mpich-abi`` module and the ``mpich`` modules.
 
-   However, because wheels are not as self contained as the Conda ecosystem, it is
+   However, because wheels are not as self-contained as the Conda ecosystem, it is
    possible that other configurations may not work as well.  If you encounter
    problems with the Legate wheels, visit the :ref:`overview-contact` page for
    more information on how to get help.`

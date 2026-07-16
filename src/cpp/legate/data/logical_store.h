@@ -91,7 +91,7 @@ class Runtime;
  * One consequence due to the nature of unbound stores is that querying the shape of a previously
  * unbound store can block the client's control flow for an obvious reason; to know the shape of
  * the `LogicalStore` whose `Shape` was unknown at creation time, the client must wait until the
- * updater task to finish. However, passing a previously unbound store to a downstream operation can
+ * updater task finishes. However, passing a previously unbound store to a downstream operation can
  * be non-blocking, as long as the operation requires no changes in the partitioning and mapping for
  * the `LogicalStore`.
  */
@@ -251,7 +251,7 @@ class LEGATE_EXPORT LogicalStore {
    * The output store is a view to the input store where the dimension `dim` is broadcasted to size
    * `dim_size`.
    *
-   * For example, For a 2D store `A`
+   * For example, for a 2D store `A`
    *
    * @code{.unparsed}
    * [[1, 2, 3]]

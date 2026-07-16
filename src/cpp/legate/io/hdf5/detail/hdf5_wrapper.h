@@ -88,7 +88,7 @@ class HDF5Object {
   HDF5Object& operator=(HDF5Object&&) noexcept;
 
   /**
-   * @brief Construct a HDF5 object.
+   * @brief Construct an HDF5 object.
    *
    * @param hid The HDF5 identifier for the constructed object.
    * @param closer The specific closing function for the constructed object, e.g. `H5Fclose()`.

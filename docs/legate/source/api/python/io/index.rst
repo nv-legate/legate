@@ -27,7 +27,7 @@ API
    from_file_batched
    to_file
 
-KVikIO
+KvikIO
 ======
 
 .. currentmodule:: legate.core.experimental.io.file_handle

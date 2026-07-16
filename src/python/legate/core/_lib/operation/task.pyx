@@ -413,7 +413,7 @@ cdef class AutoTask(Unconstructable):
 
         Raises
         ------
-        ValueError
+        TypeError
             If the stores don't have the same shape or only one of them is
             unbound
         """
@@ -532,7 +532,7 @@ cdef class ManualTask(Unconstructable):
         projection : tuple[SymbolicExpr, ...] | None
             The projection for the partition (if `arg` is a
             `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
-            argument is ignored.
+            the argument is ignored.
         is_key_partition: bool
             If `True`, the `arg` is used as the key partition for mapping this
             `ManualTask`. Ignored when the `arg` is a `LogicalStore`.
@@ -540,7 +540,7 @@ cdef class ManualTask(Unconstructable):
         Raises
         ------
         TypeError
-            If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
+            If `arg` is neither a `LogicalStore` nor a `LogicalStorePartition`.
         """
         cdef std_optional[_SymbolicPoint] proj
 
@@ -577,7 +577,7 @@ cdef class ManualTask(Unconstructable):
         projection : tuple[SymbolicExpr, ...] | None
             The projection for the partition (if `arg` is a
             `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
-            argument is ignored.
+            the argument is ignored.
         is_key_partition: bool
             If `True`, the `arg` is used as the key partition for mapping this
             `ManualTask`. Ignored when the `arg` is a `LogicalStore`.
@@ -585,7 +585,7 @@ cdef class ManualTask(Unconstructable):
         Raises
         ------
         TypeError
-            If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
+            If `arg` is neither a `LogicalStore` nor a `LogicalStorePartition`.
         """
         cdef std_optional[_SymbolicPoint] proj
 
@@ -625,15 +625,15 @@ cdef class ManualTask(Unconstructable):
         projection : tuple[SymbolicExpr, ...] | None
             The projection for the partition (if `arg` is a
             `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
-            argument is ignored.
+            the argument is ignored.
         is_key_partition: bool
             If `True`, the `arg` is used as the key partition for mapping this
             `ManualTask`. Ignored when the `arg` is a `LogicalStore`.
 
         Raises
         ------
-        TypeError
-            If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
+        ValueError
+            If `arg` is neither a `LogicalStore` nor a `LogicalStorePartition`.
         """
         cdef std_optional[_SymbolicPoint] proj
 

@@ -66,7 +66,6 @@ class LEGATE_EXPORT Library {
    */
   [[nodiscard]] std::string_view get_task_name(LocalTaskID local_task_id) const;
   /**
-   * @brief Registers a library specific reduction operator.
    *
    * The type parameter `REDOP` points to a class that implements a reduction operator.
    * Each reduction operator class has the following structure:

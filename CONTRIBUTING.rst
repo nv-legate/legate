@@ -31,7 +31,7 @@ The Legalese: Developer Certificate of Origin
 
 Legate is released under the `Apache license, version 2.0`_ and is free to use,
 modify, and redistribute.  To ensure that the license can be exercised without
-encumbrance, we ask you that you only contribute your own work or work to which you
+encumbrance, we ask that you only contribute your own work or work to which you
 have the intellectual rights.  To that end, we employ the Developer's Certificate
 of Origin (DCO), which is the lightweight mechanism for you to certify that you are
 legally able to make your contribution. Here is the full text of the certificate
@@ -102,7 +102,7 @@ As we suggested at the beginning of this document, it will be really helpful to
 start with an issue unless your proposed change is really trivial.  An issue will
 help to save work in the review process (e.g., maybe somebody is already working on
 exactly the same thing you want to work on).  After you open your pull request
-(PR), there usually will be a community feedback that often will require further
+(PR), there usually will be community feedback that often will require further
 changes to your contribution (the usual open-source process).  Usually, this will
 conclude in the PR being merged by a maintainer, but on rare occasions a PR may be
 rejected.  This may happen, for example, if the PR appears abandoned (no response

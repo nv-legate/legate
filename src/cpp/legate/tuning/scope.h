@@ -210,7 +210,7 @@ class LEGATE_EXPORT Scope {
   /**
    * @brief Returns the task priority of the current scope
    *
-   * return Current task priority
+   * @return Current task priority
    */
   [[nodiscard]] static std::int32_t priority();
   /**

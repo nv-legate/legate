@@ -545,7 +545,7 @@ cdef class Runtime(Unconstructable):
         Any
             If thrown, the exception raised by the task.
         TypeError
-            If the operation is neither an `AutoTask` or `ManualTask`
+            If the operation is neither an `AutoTask` nor a `ManualTask`
         """
         if isinstance(op, AutoTask):
             with nogil:
@@ -1131,7 +1131,7 @@ def track_provenance(
     Returns
     -------
     Decorator
-        Function that takes a function and returns a one with provenance
+        Function that takes a function and returns one with provenance
         tracking
 
     See Also

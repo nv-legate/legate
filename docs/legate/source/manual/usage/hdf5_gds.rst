@@ -40,7 +40,7 @@ it, you can use the following flag.
 Read Example
 ------------
 
-Below is the output of an example python program which iterates all the datasets in a HDF5
+Below is the output of an example Python program that iterates over all datasets in an HDF5
 file and reads the data. The source code for the example may be found at
 https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/read.py.
 
@@ -113,7 +113,7 @@ Write Example
 
 The write example can be found at https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/write.py.
 
-The example writes data to a HDF5 file and measures the throughput.
+The example writes data to an HDF5 file and measures the throughput.
 
 Example Usage
 -------------

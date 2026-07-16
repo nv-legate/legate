@@ -291,7 +291,7 @@ class LEGATE_EXPORT ManualTask {
   /**
    * @brief Adds a store to the task as input
    *
-   * The store will be unpartitioned but broadcasted to all the tasks
+   * The store will be unpartitioned but broadcast to all tasks
    *
    * @param store A store to add to the task as input
    */
@@ -311,7 +311,7 @@ class LEGATE_EXPORT ManualTask {
   /**
    * @brief Adds a store to the task as output
    *
-   * The store will be unpartitioned but broadcasted to all the tasks
+   * The store will be unpartitioned but broadcast to all tasks
    *
    * @param store A store to add to the task as output
    */
@@ -331,7 +331,7 @@ class LEGATE_EXPORT ManualTask {
   /**
    * @brief Adds a store to the task for reductions
    *
-   * The store will be unpartitioned but broadcasted to all the tasks
+   * The store will be unpartitioned but broadcast to all tasks
    *
    * @param store A store to add to the task for reductions
    * @param redop_kind ID of the reduction operator to use. The store's type must support the
@@ -343,7 +343,7 @@ class LEGATE_EXPORT ManualTask {
   /**
    * @brief Adds a store to the task for reductions
    *
-   * The store will be unpartitioned but broadcasted to all the tasks
+   * The store will be unpartitioned but broadcast to all tasks
    *
    * @param store A store to add to the task for reductions
    * @param redop_kind ID of the reduction operator to use. The store's type must support the

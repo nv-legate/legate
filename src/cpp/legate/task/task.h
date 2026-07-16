@@ -47,7 +47,7 @@ class TaskConfig;
  * Tasks must have at least one variant, and all task variants must be semantically equivalent
  * (modulo some minor rounding errors due to floating point imprecision).
  *
- * Each task class must also have a type alias `Registrar` that points to a library specific
+ * Each task class must also have a type alias `Registrar` that points to a library-specific
  * registrar class. (See legate::TaskRegistrar for details.)
  *
  * Tasks may also declare the following static members, which are used to populate defaults and

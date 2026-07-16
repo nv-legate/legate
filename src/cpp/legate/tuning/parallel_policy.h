@@ -62,7 +62,7 @@ enum class StreamingMode : std::uint8_t {
    * single group.
    *
    * This mode allows the runtime to break the tasks in a streaming scope into
-   * multiple groups and add mapping fences between after every group. Users can
+   * multiple groups and add mapping fences between groups. Users can
    * add this mode when it is not guaranteed or required that all tasks in the
    * scope are streamed as one group. This leaves some memory savings on the table
    * due to splitting the scope, but potentially allows third party library code to
