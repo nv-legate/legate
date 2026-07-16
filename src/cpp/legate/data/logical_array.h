@@ -411,7 +411,7 @@ class LEGATE_EXPORT ListLogicalArray : public LogicalArray {
    * @brief Returns the sub-array for descriptors. Each element is a `Rect<1>` of start and end
    * indices for each subregion in `vardata`.
    *
-   * @return Sub-array's for descriptors.
+   * @return Sub-arrays for descriptors.
    */
   [[nodiscard]] LogicalArray descriptor() const;
 

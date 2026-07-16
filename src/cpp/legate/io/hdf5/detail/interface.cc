@@ -119,7 +119,7 @@ namespace {
 }
 
 /**
- * @brief Create a LogicalArray from a HDF5 dataset and shape.
+ * @brief Create a LogicalArray from an HDF5 dataset and shape.
  *
  * @param dataset The HDF5 dataset.
  * @param shape The shape of the dataset.

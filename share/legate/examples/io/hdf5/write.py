@@ -165,8 +165,8 @@ def benchmark_write(
     wall_start = pytime.time()
 
     # Creates an array with the given type and shape and fill it with a
-    # constant value of 1. This array is written to a HDF5 file with
-    # the given name and dataset name. Legate will create a HDF5
+    # constant value of 1. This array is written to an HDF5 file with
+    # the given name and dataset name. Legate will create an HDF5
     # virtual dataset on disk for the dataset.
     array = runtime.create_array(dtype=legate_dtype, shape=shape)
 

@@ -130,7 +130,7 @@ cdef class SymbolicExpr(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the expression.
+            The human-readable representation of the expression.
         """
         return self._handle.to_string().decode()
 
@@ -141,7 +141,7 @@ cdef class SymbolicExpr(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the expression.
+            The human-readable representation of the expression.
         """
         return str(self)
 

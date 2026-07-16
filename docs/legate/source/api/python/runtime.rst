@@ -22,7 +22,7 @@ other kinds of operations.
 Annotation
 ----------
 
-An ``Annotation`` is a context manager to set library specific annotations that
+An ``Annotation`` is a context manager to set library-specific annotations that
 are to be attached to operations issued within a scope. A typical usage of
 ``Annotation`` would look like this:
 

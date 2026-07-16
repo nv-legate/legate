@@ -16,7 +16,7 @@ What languages does the Legate API have bindings for?
 Do I have to build drop-in replacement libraries?
     No! While we've chosen to provide drop-in replacement libraries for
     popular Python libraries to illustrate the benefits of Legate, you
-    are both welcomed and encouraged to develop your own libraries on top
+    are both welcome and encouraged to develop your own libraries on top
     of Legate. We promise that they will compose well with other existing
     Legate libraries.
 
@@ -33,7 +33,7 @@ Does Legate interoperate with [other distributed runtime]?
     interoperability with those other systems will destroy the very essence
     of what Legate is and significantly dilute its benefits. All that being
     said, Legion does provide some means of doing stop-the-world exchanges
-    with other runtime system running concurrently in the same processes.
+    with other runtime systems running concurrently in the same processes.
     If you are interested in pursuing this approach please open an issue
     on the `Legion github issue tracker <https://github.com/StanfordLegion/legion/issues>`_
     as it will be almost entirely orthogonal to how you use Legate.

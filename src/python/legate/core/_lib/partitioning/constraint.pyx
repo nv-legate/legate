@@ -41,7 +41,7 @@ cdef class Variable(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the variable.
+            The human-readable representation of the variable.
         """
         return self._handle.to_string().decode()
 
@@ -52,7 +52,7 @@ cdef class Variable(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the variable.
+            The human-readable representation of the variable.
         """
         return str(self)
 
@@ -71,7 +71,7 @@ cdef class Constraint(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the constraint.
+            The human-readable representation of the constraint.
         """
         return self._handle.to_string().decode()
 
@@ -82,7 +82,7 @@ cdef class Constraint(Unconstructable):
         Returns
         -------
         str
-            The human readable representation of the constraint.
+            The human-readable representation of the constraint.
         """
         return str(self)
 

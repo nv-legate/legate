@@ -59,7 +59,7 @@ cdef class PyTask:
             The list of constraints which are to be applied to the arguments of
             ``func``, if any. Defaults to no constraints.
         invoker
-            The invoker used to store the signature and marshall arguments to
+            The invoker used to store the signature and marshal arguments to
             and manage invoking the user variants. Defaults to constructing the
             invoker from ``func``.
         library

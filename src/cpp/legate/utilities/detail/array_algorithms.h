@@ -27,7 +27,7 @@ template <typename T>
 
 // NOLINTBEGIN(readability-redundant-declaration)
 /**
- * @brief Detect if the specified mapping is injective for a container of a particular size..
+ * @brief Detect if the specified mapping is injective for a container of a particular size.
  *
  * @param container_size The size of the container to be mapped.
  * @param mapping The mapping to apply.
@@ -41,7 +41,7 @@ LEGATE_EXPORT void assert_valid_mapping(std::size_t container_size,
 // NOLINTEND(readability-redundant-declaration)
 
 /**
- * @brief Create a copy of the container my mapping the current values via the supplied mapping.
+ * @brief Create a copy of the container by mapping the current values via the supplied mapping.
  *
  * @param container The array to copy.
  * @param mapping The index mapping.
@@ -93,7 +93,7 @@ template <typename F, typename T, typename... Tn>
 [[nodiscard]] bool array_any_of(F&& func, const T& arr, const Tn&... rest);
 
 /**
- * @brief Assert that a position is within th bounds of an array.
+ * @brief Assert that a position is within the bounds of an array.
  *
  * @param container_size The size of the array.
  * @param pos The position to check.

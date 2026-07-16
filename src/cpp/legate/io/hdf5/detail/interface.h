@@ -17,7 +17,7 @@ namespace legate::io::hdf5::detail {
                                      std::string_view dataset_name);
 
 /**
- * @brief Write a LogicalArray to disk as a HDF5 dataset.
+ * @brief Write a LogicalArray to disk as an HDF5 dataset.
  *
  * See `legate::io::hdf5::to_file()` for further discussion on the semantics of this
  * routine. This 2-step exists purely to isolate the HDF5-specific symbols from the interface

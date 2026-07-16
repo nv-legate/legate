@@ -195,7 +195,7 @@ various flags.
 Python
 ======
 
-The python tests are invoked directly via ``pytest``. As such, you must install a set of
+The Python tests are invoked directly via ``pytest``. As such, you must install a set of
 pre-requisite Python packages before you can run them (note the following list may not be
 complete):
 

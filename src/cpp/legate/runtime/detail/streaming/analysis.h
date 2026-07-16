@@ -41,7 +41,7 @@ class Operation;
  * 1. Find each discard operation and note the store...
  * 2. Find the last task (within the stream) which used the discarded store, and...
  * 3. Mark the store for that particular task with `LEGION_DISCARD_OUTPUT_MASK`, so that Legion
- *    knows it can eargerly collect the memory of the store immediately after the task
+ *    knows it can eagerly collect the memory of the store immediately after the task
  *    finishes.
  *
  * Together, these transformations have the effect of "moving" the discarding of a store

@@ -1296,7 +1296,7 @@ cdef class Runtime(Unconstructable):
         creation of "bloated" instances encompassing multiple slices of a
         store. This means that the runtime will construct bloated instances
         incrementally and completely only when it sees all the slices,
-        resulting in intermediate instances that (temporarily) increases the
+        resulting in intermediate instances that (temporarily) increase the
         memory footprint. This function can be used to give the runtime a hint
         ahead of time about the bloated instances, which would be reused by the
         downstream tasks without going through the same incremental process.
@@ -1682,7 +1682,7 @@ def track_provenance(
     Returns
     -------
     Decorator
-        Function that takes a function and returns a one with provenance
+        Function that takes a function and returns one with provenance
         tracking
 
     See Also

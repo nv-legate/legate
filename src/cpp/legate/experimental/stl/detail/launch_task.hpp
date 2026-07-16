@@ -1326,7 +1326,7 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *       - `align(outputs[0], inputs)` - aligns the first output with all the inputs
  *       - `align(outputs, inputs[1])` - aligns all the outputs with the second input
  *       - `align(reduction, inputs[0])` - aligns the reduction store with the first input
- *       - `align(reduction, inputs)` - aligns the reduction store with all the input
+ *       - `align(reduction, inputs)` - aligns the reduction store with all the inputs
  *       - `align(inputs)` - aligns all the inputs with each other
  *       - `align(outputs)` - aligns all the outputs with each other
  *
