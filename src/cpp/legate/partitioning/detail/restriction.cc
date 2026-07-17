@@ -230,15 +230,19 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Restrictions::embed_to_color_shape(
   const Legion::Domain& domain) const
 {
   auto result = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
-  auto idx    = std::uint32_t{0};
+  // `idx` walks the (pruned) launch domain, which has an axis only for each non-restricted store
+  // dimension; restricted (FORBID) dimensions are not partitioned and get a single color. We append
+  // one entry per store dimension in order, so each dimension's color extent lands in its own slot.
+  auto idx = std::uint32_t{0};
 
   result.reserve(dimension_restrictions_().size());
-  for (auto&& [dim, restriction] : enumerate(dimension_restrictions_())) {
+  for (auto&& restriction : dimension_restrictions_()) {
     if (restriction == Restriction::FORBID) {
-      result[dim] = 1;
+      result.push_back(1);
       continue;
     }
-    result[idx] = domain.rect_data[idx + domain.dim] - domain.rect_data[idx] + 1;
+    result.push_back(
+      static_cast<std::uint64_t>(domain.rect_data[idx + domain.dim] - domain.rect_data[idx] + 1));
     ++idx;
   }
 

@@ -294,22 +294,20 @@ void run_example()
   // Each store is created *unbound*: only its type and dimensionality are known up front. The
   // producer tasks give them a shape by binding a buffer (one piece per rank).
   auto store1 = runtime->create_store(legate::int64(), DIM);
-  // auto store2 = runtime->create_store(legate::int64(), DIM);
-  // auto store3 = runtime->create_store(legate::int64(), DIM);
+  auto store2 = runtime->create_store(legate::int64(), DIM);
+  auto store3 = runtime->create_store(legate::int64(), DIM);
 
   // base=1000: create_output_buffer(bind=true); base=2000: bind_data; base=3000: TaskLocalBuffer.
   produce_and_check<ProduceBoundBufferTask>(runtime, library, store1, NUM, BASE_BOUND_BUFFER);
-  // produce_and_check<ProduceViaBindDataTask>(runtime, library, store2, NUM, BASE_BIND_DATA);
-  // produce_and_check<ProduceViaTaskLocalBufferTask>(runtime, library, store3, NUM,
-  // BASE_TASK_LOCAL);
+  produce_and_check<ProduceViaBindDataTask>(runtime, library, store2, NUM, BASE_BIND_DATA);
+  produce_and_check<ProduceViaTaskLocalBufferTask>(runtime, library, store3, NUM, BASE_TASK_LOCAL);
 
   // Gather each store onto every rank and validate the fully-stitched contents (exercises the
   // Opaque -> NoPartition all-gather copy path).
   check_whole(runtime, library, store1, BASE_BOUND_BUFFER, total);
-  // check_whole(runtime, library, store2, BASE_BIND_DATA, total);
-  // check_whole(runtime, library, store3, BASE_TASK_LOCAL, total);
+  check_whole(runtime, library, store2, BASE_BIND_DATA, total);
+  check_whole(runtime, library, store3, BASE_TASK_LOCAL, total);
 
-  /*
   // A 2D unbound store, to exercise multi-dimensional buffer strides through the binding path.
   // Pieces are concatenated along the rows: the global store is (nranks * ROWS) x COLS.
   constexpr std::uint64_t ROWS   = 4;
@@ -319,9 +317,11 @@ void run_example()
   {
     auto producer = runtime->create_task(library, ProduceBound2DTask::TASK_CONFIG.task_id());
 
-    producer.add_output(store2d);
-    auto part = producer.add_output(runtime->create_store(legate::Shape{100, 100},
-  legate::int64())); producer.add_constraint(legate::broadcast(part, {1}));
+    auto part1 = producer.add_output(store2d);
+    auto part2 =
+      producer.add_output(runtime->create_store(legate::Shape{100, 100}, legate::int64()));
+    producer.add_constraint(legate::broadcast(part1, {1}));
+    producer.add_constraint(legate::broadcast(part2, {1}));
     producer.add_scalar_arg(legate::Scalar{ROWS});
     producer.add_scalar_arg(legate::Scalar{COLS});
     producer.add_scalar_arg(legate::Scalar{BASE_2D});
@@ -333,17 +333,15 @@ void run_example()
     checker.add_scalar_arg(legate::Scalar{BASE_2D});
     runtime->submit(std::move(checker));
   }
-  */
 
   expect_extents(store1, {total}, "store1");
-  // expect_extents(store2, {total}, "store2");
-  // expect_extents(store3, {total}, "store3");
-  // expect_extents(store2d, {nranks * ROWS, COLS}, "store2d");
+  expect_extents(store2, {total}, "store2");
+  expect_extents(store3, {total}, "store3");
+  expect_extents(store2d, {nranks * ROWS, COLS}, "store2d");
 
-  // std::cout << "output_binding: all checks passed across " << nranks
-  //           << " rank(s); 1D global shape (" << total << "), 2D global shape (" << (nranks *
-  //           ROWS)
-  //           << ", " << COLS << ")\n";
+  std::cout << "output_binding: all checks passed across " << nranks
+            << " rank(s); 1D global shape (" << total << "), 2D global shape (" << (nranks * ROWS)
+            << ", " << COLS << ")\n";
 }
 
 }  // namespace

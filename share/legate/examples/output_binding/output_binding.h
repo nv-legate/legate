@@ -77,7 +77,7 @@ class ProduceBound2DTask : public legate::LegateTask<ProduceBound2DTask> {
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{5}}
       .with_variant_options(legate::VariantOptions{}.with_has_allocations(true))
-      .with_signature(legate::TaskSignature{}.outputs(1).scalars(3));
+      .with_signature(legate::TaskSignature{}.outputs(2).scalars(3));
 
   static void cpu_variant(legate::TaskContext context);
 };
