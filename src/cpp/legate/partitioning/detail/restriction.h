@@ -155,6 +155,9 @@ class Restrictions {
 
   [[nodiscard]] Legion::Domain embed(const Legion::Domain& domain) const;
 
+  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> embed_to_color_shape(
+    const Legion::Domain& domain) const;
+
   [[nodiscard]] std::size_t count_restricted() const;
 
   [[nodiscard]] SymbolicPoint to_projection() const;

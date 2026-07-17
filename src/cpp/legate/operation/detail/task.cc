@@ -327,6 +327,39 @@ template <bool WRITE>
                                          SmallVector<InternalSharedPtr<Scalar>>{task->scalars()});
 }
 
+// After the task body has bound a buffer to each unbound output on every rank, stitch the per-rank
+// pieces into a single global store. This is a collective (it all-gathers the per-rank piece
+// domains), so every rank participating in the launch must reach it; a still-`unbound()` output is
+// one whose global partition has not been resolved yet (in single-rank execution Storage::bind
+// finishes the binding directly and task_index is empty, so this is a no-op there).
+void post_process_unbound_stores(bool is_single_task,
+                                 const TaskBase* task,
+                                 const Strategy& strategy)
+{
+  if (is_single_task) {
+    for (auto&& [store, _] : task->outputs()) {
+      if (!store->unbound()) {
+        continue;
+      }
+      store->finalize_unbound();
+    }
+  }
+
+  const auto maybe_task_index = strategy.task_index();
+
+  if (!maybe_task_index.has_value()) {
+    return;
+  }
+
+  for (auto&& [store, variable] : task->outputs()) {
+    if (!store->unbound()) {
+      continue;
+    }
+    store->finalize_unbound_partitioned(
+      strategy[*variable], strategy.find_store_projection(*variable), *maybe_task_index);
+  }
+}
+
 }  // namespace
 
 void LogicalTask::launch_task_(Strategy* p_strategy)
@@ -365,12 +398,13 @@ void LogicalTask::launch_task_(Strategy* p_strategy)
 
   if (variant_code != VariantCode::GPU) {
     execute_task();
-    return;
+  } else {
+    const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
+
+    execute_task();
   }
 
-  const cuda::detail::AutoPrimaryContext ctx{Runtime::get_runtime().get_current_cuda_device()};
-
-  execute_task();
+  post_process_unbound_stores(maybe_ctx->is_single_task(), this, *p_strategy);
 }
 
 ////////////////////////////////////////////////////
@@ -413,7 +447,7 @@ const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
 void AutoTask::add_input(InternalSharedPtr<LogicalStore> store, const Variable* partition_symbol)
 {
   if (store->unbound()) {
-    throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used as input"};
+    throw TracedException<std::invalid_argument>{"Unbound stores cannot be used as input"};
   }
 
   auto& arg = inputs_.emplace_back(std::move(store), partition_symbol);
@@ -434,7 +468,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalStore> store,
                              bool store_has_identity)
 {
   if (store->unbound()) {
-    throw TracedException<std::invalid_argument>{"Unbound store cannot be used for reductions"};
+    throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reductions"};
   }
 
   LEGATE_ASSERT(!store->type()->variable_size());

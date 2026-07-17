@@ -89,8 +89,8 @@ class Storage {
 
   [[nodiscard]] std::uint64_t id() const;
   [[nodiscard]] bool unbound() const;
-  [[nodiscard]] bool deferred_bound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
+  [[nodiscard]] const Domain& domain() const;
   [[nodiscard]] Span<const std::uint64_t> extents() const;
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
@@ -138,17 +138,36 @@ class Storage {
   void set_inline_storage(InternalSharedPtr<InlineStorage> storage_data);
 
   /**
-   * @brief Binds a previously unbound storage to a concrete inline storage and domain.
+   * @brief Binds a previously unbound storage to a concrete inline storage and (zero-based) domain.
    *
-   * Valid only when this storage is unbound. After this call the storage is bound: its shape
-   * becomes READY with extents derived from @p domain, its domain is set, its backing
-   * `InlineStorage` is @p storage_data, and it is given a trivial key partition. This is the
-   * single-rank realization of a task binding a buffer to an unbound store.
+   * Valid only when this storage is unbound. In single-rank execution the whole store is produced
+   * at once, so this immediately finishes the binding: the shape becomes READY with extents derived
+   * from @p domain, its domain is set, its backing `InlineStorage` is @p storage_data, and it is
+   * given a trivial (no-)partition. In multi-rank execution the rank only produced its own piece,
+   * so this records the local piece but leaves the storage "pending" (still unbound); the global
+   * shape and the (Opaque) key partition are set later by `finalize_unbound_partitioned` once every
+   * rank has bound a buffer.
    *
    * @param storage_data The inline storage produced by the task.
-   * @param domain The domain (extents) that the store should span over @p storage_data.
+   * @param domain The zero-based domain (extents) of the produced piece.
    */
   void bind(InternalSharedPtr<InlineStorage> storage_data, const Domain& domain);
+
+  void finalize_unbound();
+
+  /**
+   * @brief Complete a multi-rank unbound binding once all ranks' pieces are known.
+   *
+   * Sets the global shape, re-bases this rank's local piece into its global sub-domain, records the
+   * whole-store domain, and installs the given (Opaque) key partition.
+   *
+   * @param global_extents      The stitched-together global extents of the store.
+   * @param local_global_domain This rank's piece expressed in global coordinates.
+   * @param key_partition       The completed Opaque partition describing all ranks' pieces.
+   */
+  void finalize_unbound_partitioned(SmallVector<std::uint64_t, LEGATE_MAX_DIM> global_extents,
+                                    const Domain& local_global_domain,
+                                    InternalSharedPtr<Partition> key_partition);
 
   [[nodiscard]] Restrictions compute_restrictions() const;
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
@@ -160,7 +179,6 @@ class Storage {
 
  private:
   std::uint64_t storage_id_{};
-  bool unbound_{};
   InternalSharedPtr<Shape> shape_{};
   Domain domain_{};
   std::uint32_t field_size_{};

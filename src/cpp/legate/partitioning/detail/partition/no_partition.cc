@@ -6,14 +6,17 @@
 
 #include <legate/partitioning/detail/partition/no_partition.h>
 
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
+#include <numeric>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace legate::detail {
 
@@ -34,6 +37,15 @@ Span<const std::uint64_t> NoPartition::color_shape() const
 }
 
 bool NoPartition::is_equi_size(const Domain&) const { return true; }
+
+std::vector<std::uint64_t> NoPartition::compute_device_ids(const DomainPoint&) const
+{
+  // The whole (single) region is replicated on every device.
+  std::vector<std::uint64_t> result(Runtime::get_runtime().node_count());
+
+  std::iota(result.begin(), result.end(), std::uint64_t{0});
+  return result;
+}
 
 Legion::Domain NoPartition::launch_domain() const
 {

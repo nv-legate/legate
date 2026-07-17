@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace legate::detail {
 
@@ -81,6 +82,15 @@ class NoPartition final : public Partition {
   [[nodiscard]] Domain launch_domain() const override;
 
   [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
+
+  /**
+   * @copydoc Partition::compute_device_ids()
+   *
+   * A `NoPartition` places the whole (single) region on every device, so this returns every device
+   * id in the machine.
+   */
+  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(
+    const DomainPoint& color) const override;
 
   [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
 

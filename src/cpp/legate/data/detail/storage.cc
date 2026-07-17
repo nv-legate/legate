@@ -46,11 +46,10 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
                  std::uint32_t field_size,
                  std::string_view provenance)
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
-    unbound_{shape->unbound()},
     shape_{std::move(shape)},
     // An unbound store has no known extents yet (reading them would throw); its domain stays empty
     // until a task binds a buffer to it (see Storage::bind).
-    domain_{unbound_ ? Domain{} : to_domain(shape_->extents())},
+    domain_{unbound() ? Domain{} : to_domain(shape_->extents())},
     field_size_{field_size},
     provenance_{std::move(provenance)}
 {
@@ -111,8 +110,6 @@ bool Storage::is_mapped() const
   // TODO(wonchanl): Need a v2 implementation
   return false;
 }
-
-void Storage::set_bound(bool bound) { unbound_ = !bound; }
 
 std::tuple<InternalSharedPtr<InlineStorage>, Domain, bool>
 Storage::map(  // NOLINT(readability-make-member-function-const)
@@ -350,22 +347,44 @@ void Storage::bind(InternalSharedPtr<InlineStorage> storage_data, const Domain& 
 {
   LEGATE_CHECK(unbound());
 
-  // The store's extents become known from the bound buffer's domain, so the shape transitions to
-  // READY and the storage's domain is recorded.
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents;
-
-  extents.reserve(static_cast<std::size_t>(domain.dim));
+  // A buffer bound to an unbound store must be zero-based: the store's extents are derived from the
+  // buffer domain assuming its origin is (0, ..., 0).
   for (std::int32_t i = 0; i < domain.dim; ++i) {
-    extents.push_back(static_cast<std::uint64_t>(domain.hi()[i] - domain.lo()[i] + 1));
+    LEGATE_CHECK(domain.lo()[i] == 0);
+  }
+
+  storage_data_ = std::move(storage_data);
+  domain_       = domain;
+}
+
+void Storage::finalize_unbound()
+{
+  auto lo      = domain_.lo();
+  auto hi      = domain_.hi();
+  auto extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
+
+  extents.reserve(static_cast<std::size_t>(domain_.dim));
+  for (std::int32_t i = 0; i < domain_.dim; ++i) {
+    extents.push_back(static_cast<std::uint64_t>(hi[i] - lo[i] + 1));
   }
   shape_->bind_extents(std::move(extents));
-
-  domain_       = domain;
-  storage_data_ = std::move(storage_data);
-  unbound_      = false;
-  // Single-rank: the whole store is produced at once, so a trivial (no-)partition covers it. This
-  // makes downstream mappings take the "subsumes" fast path and read the bound storage in place.
   set_key_partition(create_no_partition());
+}
+
+void Storage::finalize_unbound_partitioned(
+  SmallVector<std::uint64_t, LEGATE_MAX_DIM> global_extents,
+  const Domain& local_global_domain,
+  InternalSharedPtr<Partition> key_partition)
+{
+  LEGATE_CHECK(unbound());
+
+  shape_->bind_extents(std::move(global_extents));
+  domain_ = to_domain(shape_->extents());
+  // Re-base this rank's local (zero-based) piece so its domain is the global sub-domain. The copy
+  // engine assumes a storage's data at global coordinate `domain.lo()` maps to element 0, which is
+  // exactly what re-basing produces here.
+  storage_data_->rebase(local_global_domain);
+  set_key_partition(std::move(key_partition));
 }
 
 Restrictions Storage::compute_restrictions() const { return Restrictions{dim()}; }

@@ -67,7 +67,6 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
 
   [[nodiscard]] bool unbound() const;
-  [[nodiscard]] bool deferred_bound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
   [[nodiscard]] Span<const std::uint64_t> extents() const;
   [[nodiscard]] std::size_t volume() const;
@@ -162,6 +161,25 @@ class LogicalStore {
    * @param domain The domain the store should span over @p storage.
    */
   void bind_buffer(InternalSharedPtr<InlineStorage> storage, const Domain& domain);
+
+  void finalize_unbound();
+
+  /**
+   * @brief Finalize a multi-rank unbound store after every rank has bound its piece.
+   *
+   * All-gathers each rank's produced piece (its color and local extents), stitches the pieces into
+   * a single global store via dimension-wise prefix sums, fills the placeholder @p partition (an
+   * `Opaque`) with the per-color global sub-domains, sets the store's global shape/domain, and
+   * installs the completed partition as the store's key partition. Must be called collectively by
+   * every rank participating in the producing task's launch.
+   *
+   * @param partition        The placeholder `Opaque` partition assigned during partitioning.
+   * @param store_projection The store's projection (maps the launch point to its color).
+   * @param task_index       This rank's launch point.
+   */
+  void finalize_unbound_partitioned(const InternalSharedPtr<Partition>& partition,
+                                    const SymbolicPoint& store_projection,
+                                    const DomainPoint& task_index);
 
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);

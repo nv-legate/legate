@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 namespace legate::detail {
 
@@ -100,6 +101,18 @@ class Partition {
   [[nodiscard]] virtual Domain launch_domain() const = 0;
 
   [[nodiscard]] virtual DomainPoint compute_color(std::uint64_t device_id) const = 0;
+
+  /**
+   * @brief Compute the device ids a given color is mapped to.
+   *
+   * A color may map to more than one device id when the partition replicates the piece.
+   *
+   * @param color The piece color.
+   *
+   * @return The device ids holding the piece with the given color.
+   */
+  [[nodiscard]] virtual std::vector<std::uint64_t> compute_device_ids(
+    const DomainPoint& color) const = 0;
 
   [[nodiscard]] virtual Domain shard(const Domain& domain, const DomainPoint& color) const = 0;
 

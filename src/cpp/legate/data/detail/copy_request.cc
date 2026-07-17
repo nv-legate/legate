@@ -543,9 +543,15 @@ void reorder_elements_gpu_(std::uint32_t field_size,
   field_size_dispatch(field_size, ReorderElementsGPU{}, target, source, tiling, stream);
 }
 
+// Computes, for this device's `from` piece, the overlapping sub-domains with every device's `to`
+// piece, indexed by the destination device id. Works for any pair of partitions (`Tiling`,
+// `Opaque`, or `NoPartition`): the `from`/`to` pieces are obtained through the polymorphic
+// `compute_color`/`shard`/`compute_device_ids` interface and the color space is enumerated via
+// `launch_domain()`. A partition with no color space (`NoPartition`) is treated as a single piece
+// covering the whole store on every device.
 std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
-find_all_intersections(const Tiling* from,
-                       const Tiling* to,
+find_all_intersections(const Partition* from,
+                       const Partition* to,
                        const Domain& from_domain,
                        const Domain& to_domain)
 {
@@ -556,31 +562,54 @@ find_all_intersections(const Tiling* from,
   auto intersection_strides    = SmallVector<DomainPoint>(tags::size_tag, device_count, {});
   auto intersection_counts     = SmallVector<int>(tags::size_tag, device_count, {});
 
-  // The color of the source tile this device owns. A device that the `from` mesh does not map to
-  // (e.g. one outside a partially-replicated mesh) owns no tile and has nothing to exchange.
-  const auto my_color = from->compute_color(my_device_id);
+  // This device's `from` piece, clipped to the `to` store's domain.
+  Domain from_tile_domain;
 
-  if (my_color.dim == 0) {
-    return {Domain{}, intersection_subdomains, intersection_strides, intersection_counts};
+  if (from->has_color_shape()) {
+    // A device that the `from` partition does not map to (e.g. one outside a partially-replicated
+    // mesh) owns no piece and has nothing to exchange.
+    const auto my_color = from->compute_color(my_device_id);
+
+    if (my_color.dim == 0) {
+      return {Domain{}, intersection_subdomains, intersection_strides, intersection_counts};
+    }
+    from_tile_domain = from->shard(from_domain, my_color).intersection(to_domain);
+  } else {
+    // No color space: the whole store lives on this device.
+    from_tile_domain = from_domain.intersection(to_domain);
   }
 
-  const auto from_tile_domain = from->shard(from_domain, my_color).intersection(to_domain);
-  const auto intersection_colors =
-    Domain{(from_tile_domain.lo() - to->offsets_dp()) / to->tile_shape_dp(),
-           (from_tile_domain.hi() - to->offsets_dp()) / to->tile_shape_dp()};
+  if (from_tile_domain.get_volume() == 0) {
+    return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};
+  }
 
-  for (Domain::DomainPointIterator it{intersection_colors, false}; it; ++it) {
-    const auto subdomain = to->shard(from_tile_domain, it.p);
-    const auto strides   = calculate_strides(subdomain);
-    const auto count     = static_cast<int>(subdomain.get_volume());
+  // Records the overlap of `from_tile_domain` with the `to` piece of a given color. A destination
+  // color may be held by more than one device when `to` replicates the piece; the same subdomain is
+  // exchanged with each of them.
+  const auto record = [&](const DomainPoint& color, const Domain& piece) {
+    const auto subdomain = piece.intersection(from_tile_domain);
 
-    // A destination color may be held by more than one device when `to` replicates the tile; the
-    // same subdomain is exchanged with each of them.
-    for (const auto to_device_id : to->compute_device_ids(it.p)) {
+    if (subdomain.get_volume() == 0) {
+      return;
+    }
+
+    const auto strides = calculate_strides(subdomain);
+    const auto count   = static_cast<int>(subdomain.get_volume());
+
+    for (const auto to_device_id : to->compute_device_ids(color)) {
       intersection_subdomains[to_device_id] = subdomain;
       intersection_strides[to_device_id]    = strides;
       intersection_counts[to_device_id]     = count;
     }
+  };
+
+  if (to->has_color_shape()) {
+    for (Domain::DomainPointIterator it{to->launch_domain(), false}; it; ++it) {
+      record(it.p, to->shard(to_domain, it.p));
+    }
+  } else {
+    // No color space: a single piece (the whole store) held on every device.
+    record(DomainPoint{}, to_domain);
   }
 
   return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};
@@ -701,17 +730,19 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
 
 void CopyRequest::shuffle_(VariantCode variant_code) const
 {
-  // If the source_partition_ was a NoPartition, the subsumption check would have passed.
-  LEGATE_ASSERT(dynamic_cast<Tiling*>(source_partition_.get()));
+  // The source partition always has a color shape (a NoPartition source would have been resolved by
+  // the subsumption check). Both partitions are handled polymorphically, so this works for any of
+  // Tiling/Opaque as source and Tiling/Opaque/NoPartition as target.
+  LEGATE_ASSERT(source_partition_->has_color_shape());
 
-  const auto* source_tiling = static_cast<Tiling*>(source_partition_.get());
-  const auto* target_tiling = static_cast<Tiling*>(target_partition_.get());
-  const auto device_count   = Runtime::get_runtime().node_count();
+  const auto* source      = source_partition_.get();
+  const auto* target      = target_partition_.get();
+  const auto device_count = Runtime::get_runtime().node_count();
 
   auto&& [send_domain, send_subdomains, send_strides, send_counts] =
-    find_all_intersections(source_tiling, target_tiling, source_domain_, target_domain_);
+    find_all_intersections(source, target, source_domain_, target_domain_);
   auto&& [recv_domain, recv_subdomains, recv_strides, recv_counts] =
-    find_all_intersections(target_tiling, source_tiling, target_domain_, source_domain_);
+    find_all_intersections(target, source, target_domain_, source_domain_);
 
   const auto& source_domain = source_->domain();
   const auto& target_domain = target_->domain();
@@ -723,9 +754,9 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     std::stringstream ss{};
 
     ss << "SHUFFLE(storage_id: " << storage_id_ << ")\n";
-    ss << "  from: " << source_tiling->to_string() << "\n";
+    ss << "  from: " << source->to_string() << "\n";
     ss << "    domain: " << source_domain_ << "\n";
-    ss << "  to: " << target_tiling->to_string() << "\n";
+    ss << "  to: " << target->to_string() << "\n";
     ss << "    domain: " << target_domain_ << "\n";
     ss << "  intersections:\n";
     for (auto&& [to, send_subdomain] : enumerate(send_subdomains)) {
@@ -744,10 +775,6 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   }
 
   if (variant_code == VariantCode::CPU) {
-    // For CPU shuffle, we allocate contiguous transfer buffers to match the all-to-all API
-    InlineStorage send_buffer{send_domain, field_size_, source_->target()};
-    InlineStorage recv_buffer{recv_domain, field_size_, target_->target()};
-
     SmallVector<int> recv_offsets(tags::size_tag, device_count, 0);
     SmallVector<int> send_offsets(tags::size_tag, device_count, 0);
 
@@ -756,12 +783,21 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
       send_offsets[idx] = send_offsets[idx - 1] + send_counts[idx - 1];
     }
 
-    LEGATE_ASSERT(
-      send_domain.get_volume() ==
-      static_cast<std::size_t>(send_offsets[device_count - 1] + send_counts[device_count - 1]));
-    LEGATE_ASSERT(
-      recv_domain.get_volume() ==
-      static_cast<std::size_t>(recv_offsets[device_count - 1] + recv_counts[device_count - 1]));
+    const auto send_total = send_offsets[device_count - 1] + send_counts[device_count - 1];
+    const auto recv_total = recv_offsets[device_count - 1] + recv_counts[device_count - 1];
+
+    // The receive side always tiles the target piece disjointly, so its total equals that piece.
+    LEGATE_ASSERT(recv_domain.get_volume() == static_cast<std::size_t>(recv_total));
+
+    // For CPU shuffle, we allocate contiguous transfer buffers to match the all-to-all API. The
+    // buffers are laid out as one chunk per peer (prefix-sum offsets). When a source piece is
+    // broadcast to several peers (e.g. gathering an Opaque partition into a replicated target) the
+    // same elements are packed once per destination, so the send buffer is sized by the total
+    // element count rather than the (single-piece) source domain.
+    InlineStorage send_buffer{
+      Domain{Rect<1>{0, std::max(send_total, 1) - 1}}, field_size_, source_->target()};
+    InlineStorage recv_buffer{
+      Domain{Rect<1>{0, std::max(recv_total, 1) - 1}}, field_size_, target_->target()};
 
     copy_to_send_buffer_cpu_(field_size_,
                              send_buffer,

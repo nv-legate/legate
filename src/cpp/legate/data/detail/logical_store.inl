@@ -17,8 +17,6 @@ namespace legate::detail {
 
 inline bool LogicalStore::unbound() const { return get_storage()->unbound(); }
 
-inline bool LogicalStore::deferred_bound() const { return get_storage()->deferred_bound(); }
-
 inline const InternalSharedPtr<Shape>& LogicalStore::shape() const { return shape_; }
 
 inline Span<const std::uint64_t> LogicalStore::extents() const { return shape()->extents(); }

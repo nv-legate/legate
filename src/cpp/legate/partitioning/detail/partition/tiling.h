@@ -185,7 +185,8 @@ class Tiling final : public Partition {
    *
    * @return The device ids holding the tile.
    */
-  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(const DomainPoint& color) const;
+  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(
+    const DomainPoint& color) const override;
 
   /**
    * @brief Return the device mesh the tiles are mapped onto.

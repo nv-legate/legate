@@ -339,6 +339,7 @@ target_sources(
     legate/partitioning/detail/device_mesh.cc
     legate/partitioning/detail/partition.cc
     legate/partitioning/detail/partition/no_partition.cc
+    legate/partitioning/detail/partition/opaque.cc
     legate/partitioning/detail/partition/tiling.cc
     legate/partitioning/detail/partitioner.cc
     legate/partitioning/detail/restriction.cc

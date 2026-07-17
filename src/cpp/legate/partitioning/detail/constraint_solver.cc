@@ -102,9 +102,9 @@ void ConstraintSolver::solve_constraints()
   for (auto&& symb : all_symbols) {
     // TODO(wonchanl): partition symbols can be independent of any stores of the operation
     // (e.g., when a symbol subsumes a union of two other symbols)
-    auto store  = symb->operation()->find_store(symb);
-    auto& entry = entries.emplace_back(
-      store->deferred_bound(), symb, store->compute_restrictions(is_output(*symb)));
+    auto store = symb->operation()->find_store(symb);
+    auto& entry =
+      entries.emplace_back(store->unbound(), symb, store->compute_restrictions(is_output(*symb)));
     table.insert({*symb, &entry});
     is_dependent_.insert({*symb, false});
   }

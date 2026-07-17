@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/comm/coll.h>
 #include <legate/data/detail/data_movement_requests.h>
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/physical_store.h>
@@ -23,6 +24,7 @@
 #include <legate/operation/projection.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
+#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
@@ -427,6 +429,140 @@ void LogicalStore::bind_buffer(InternalSharedPtr<InlineStorage> storage, const D
   domain_ = domain;
 }
 
+void LogicalStore::finalize_unbound()
+{
+  get_storage()->finalize_unbound();
+  domain_ = get_storage()->domain();
+}
+
+void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partition>& partition,
+                                                const SymbolicPoint& store_projection,
+                                                const DomainPoint& task_index)
+{
+  auto* const opaque = dynamic_cast<Opaque*>(partition.get());
+
+  LEGATE_CHECK(opaque != nullptr);
+
+  auto&& runtime        = Runtime::get_runtime();
+  const auto node_count = runtime.node_count();
+  const auto my_node    = runtime.node_id();
+  const auto color      = compute_color(store_projection, task_index);
+  // `domain_` currently holds this rank's local (zero-based) piece (set by bind_buffer).
+  const auto local_domain = domain_;
+  const auto store_dim    = local_domain.dim;
+
+  // Fixed-size record laid out as int64s so a single all-gather exchanges every rank's piece:
+  //   [ color.dim, color[0..MAXD), ext.dim, ext[0..MAXD) ]
+  constexpr std::size_t MAXD = LEGATE_MAX_DIM;
+  constexpr std::size_t REC  = 2 + (2 * MAXD);
+
+  auto send = std::vector<std::int64_t>(REC, 0);
+
+  send[0] = color.dim;
+  for (std::int32_t i = 0; i < color.dim; ++i) {
+    send[1 + static_cast<std::size_t>(i)] = color[i];
+  }
+  send[1 + MAXD] = store_dim;
+  for (std::int32_t i = 0; i < store_dim; ++i) {
+    send[2 + MAXD + static_cast<std::size_t>(i)] = local_domain.hi()[i] - local_domain.lo()[i] + 1;
+  }
+
+  auto recv = std::vector<std::int64_t>(REC * node_count, 0);
+
+  legate::comm::coll::collAllgather(send.data(),
+                                    recv.data(),
+                                    static_cast<int>(REC),
+                                    legate::comm::coll::CollDataType::CollInt64,
+                                    runtime.get_cpu_comm());
+
+  // Parse each rank's color and local extents.
+  auto colors  = SmallVector<DomainPoint>(tags::size_tag, node_count, DomainPoint{});
+  auto extents = SmallVector<DomainPoint>(tags::size_tag, node_count, DomainPoint{});
+
+  for (std::uint32_t d = 0; d < node_count; ++d) {
+    const auto* const rec = &recv[d * REC];
+
+    colors[d].dim = static_cast<std::int32_t>(rec[0]);
+    for (std::int32_t i = 0; i < colors[d].dim; ++i) {
+      colors[d][i] = rec[1 + static_cast<std::size_t>(i)];
+    }
+    extents[d].dim = static_cast<std::int32_t>(rec[1 + MAXD]);
+    for (std::int32_t i = 0; i < extents[d].dim; ++i) {
+      extents[d][i] = rec[2 + MAXD + static_cast<std::size_t>(i)];
+    }
+  }
+
+  // Dimension-wise prefix sums. For each color dimension `d` the pieces are concatenated along
+  // store dimension `d`; the remaining store dimensions carry a common extent. `ext_tables[d][k]`
+  // is the extent of the pieces whose color is `k` along dimension `d`.
+  const auto color_shape = opaque->color_shape();
+  const auto color_dim   = static_cast<std::int32_t>(color_shape.size());
+  auto ext_tables        = std::vector<std::vector<std::int64_t>>(color_dim);
+  auto common_ext        = std::vector<std::int64_t>(store_dim, -1);
+
+  for (std::int32_t d = 0; d < color_dim; ++d) {
+    ext_tables[d].assign(color_shape[d], -1);
+  }
+  for (std::uint32_t r = 0; r < node_count; ++r) {
+    for (std::int32_t d = 0; d < store_dim; ++d) {
+      const auto ext = extents[r][d];
+
+      if (d < color_dim) {
+        auto& slot = ext_tables[d][colors[r][d]];
+
+        LEGATE_CHECK(slot < 0 || slot == ext);
+        slot = ext;
+      } else {
+        LEGATE_CHECK(common_ext[d] < 0 || common_ext[d] == ext);
+        common_ext[d] = ext;
+      }
+    }
+  }
+
+  // Per-color prefix-sum offsets and the stitched global extents.
+  auto offset_tables  = std::vector<std::vector<std::int64_t>>(color_dim);
+  auto global_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>(tags::size_tag, store_dim, 0);
+
+  for (std::int32_t d = 0; d < color_dim; ++d) {
+    offset_tables[d].assign(color_shape[d], 0);
+
+    std::int64_t running = 0;
+
+    for (std::uint64_t k = 0; k < color_shape[d]; ++k) {
+      offset_tables[d][k] = running;
+      running += std::max<std::int64_t>(ext_tables[d][k], 0);
+    }
+    global_extents[d] = static_cast<std::uint64_t>(running);
+  }
+  for (std::int32_t d = color_dim; d < store_dim; ++d) {
+    global_extents[d] = static_cast<std::uint64_t>(std::max<std::int64_t>(common_ext[d], 0));
+  }
+
+  // Each rank's piece placed at its global offset.
+  auto domains = SmallVector<Domain>(tags::size_tag, node_count, Domain{});
+
+  for (std::uint32_t r = 0; r < node_count; ++r) {
+    DomainPoint lo;
+    DomainPoint hi;
+
+    lo.dim = hi.dim = store_dim;
+    for (std::int32_t d = 0; d < store_dim; ++d) {
+      const auto offset = (d < color_dim) ? offset_tables[d][colors[r][d]] : std::int64_t{0};
+
+      lo[d] = offset;
+      hi[d] = offset + extents[r][d] - 1;
+    }
+    domains[r] = Domain{lo, hi};
+  }
+
+  const auto my_global_domain = domains[my_node];
+
+  opaque->fill(std::move(colors), std::move(domains));
+  get_storage()->finalize_unbound_partitioned(
+    std::move(global_extents), my_global_domain, partition);
+  domain_ = to_domain(shape()->extents());
+}
+
 void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partition)
 {
   DataMovementRequests requests{};
@@ -591,7 +727,7 @@ std::string LogicalStore::to_string() const
 {
   auto result = fmt::format("Store({}) {{shape: ", store_id_);
 
-  if (unbound() || deferred_bound()) {
+  if (unbound()) {
     fmt::format_to(std::back_inserter(result), "(unbound)");
   } else {
     fmt::format_to(std::back_inserter(result), "{}", extents());

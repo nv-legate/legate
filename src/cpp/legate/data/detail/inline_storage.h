@@ -65,6 +65,19 @@ class InlineStorage {
   [[nodiscard]] const Domain& domain() const;
 
   /**
+   * @brief Re-interpret the same allocation as spanning a different domain of equal volume.
+   *
+   * The affine layout (base pointer and strides) is derived purely from the domain, so changing
+   * the domain re-bases the storage without touching the underlying memory. This is used to
+   * relocate a zero-based buffer bound to an unbound store into its global sub-domain (offset)
+   * within the fully-formed store, so the copy engine sees the same global-coordinate convention
+   * it uses for tiled storages.
+   *
+   * @param domain The new domain. Must have the same volume as the current one.
+   */
+  void rebase(const Domain& domain);
+
+  /**
    * @brief Returns the memory kind of the inline storage.
    */
   [[nodiscard]] mapping::StoreTarget target() const;

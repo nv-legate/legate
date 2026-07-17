@@ -48,8 +48,8 @@ void Alignment::validate() const
   auto&& lhs_store = lhs_->operation()->find_store(lhs_);
   auto&& rhs_store = rhs_->operation()->find_store(rhs_);
 
-  auto lhs_store_unbound = lhs_store->deferred_bound();
-  auto rhs_store_unbound = rhs_store->deferred_bound();
+  auto lhs_store_unbound = lhs_store->unbound();
+  auto rhs_store_unbound = rhs_store->unbound();
 
   if (lhs_store_unbound != rhs_store_unbound) {
     throw TracedException<std::invalid_argument>{

@@ -14,7 +14,9 @@
 #include <legate/partitioning/detail/launch_domain_resolver.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
+#include <legate/partitioning/detail/partition/opaque.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/small_vector.h>
 
 #include <algorithm>
 #include <tuple>
@@ -25,30 +27,24 @@ namespace legate::detail {
 
 namespace {
 
-/*
- * We filter all unbounded stores and for each of them create a placeholder
- * Opaque partition. The partition will be filled with needed information like
- * the IndexSpace, launch domain etc after the task using the unbounded store
- * is submitted to Legion in post_process_unbounded_store.
- */
-// TODO(wonchanl): Need a v2 implementation
-std::vector<const Variable*> create_fields_for_unbound_stores(const ConstraintSolver& solver,
-                                                              Strategy*)
+void create_partition_for_bound_stores_(const Operation* op,
+                                        const ConstraintSolver& solver,
+                                        Strategy* strategy)
 {
-  auto partition_symbols = solver.partition_symbols();
-  auto ret               = std::vector<const Variable*>{};
+  std::vector<const Variable*> symbols_for_bound_stores{};
 
-  ret.reserve(partition_symbols.size());
-  std::copy(partition_symbols.begin(), partition_symbols.end(), std::back_inserter(ret));
+  symbols_for_bound_stores.reserve(solver.partition_symbols().size());
 
-  return ret;
-}
+  for (auto&& equiv_class : solver.equivalence_classes()) {
+    if (equiv_class.IS_UNBOUND) {
+      continue;
+    }
+    // A bound store: leave it for key-partition creation.
+    symbols_for_bound_stores.insert(symbols_for_bound_stores.end(),
+                                    equiv_class.partition_symbols.begin(),
+                                    equiv_class.partition_symbols.end());
+  }
 
-void create_partition_for_bound_stores(const Operation* op,
-                                       std::vector<const Variable*> remaining_symbols,
-                                       const ConstraintSolver& solver,
-                                       Strategy* strategy)
-{
   const auto comparison_key = [&solver, &op](const Variable& part_symb) {
     auto&& store            = op->find_store(&part_symb);
     const auto has_key_part = store->has_key_partition(
@@ -58,13 +54,13 @@ void create_partition_for_bound_stores(const Operation* op,
     return std::make_tuple(store->storage_size(), has_key_part, solver.find_access_mode(part_symb));
   };
 
-  std::stable_sort(remaining_symbols.begin(),
-                   remaining_symbols.end(),
+  std::stable_sort(symbols_for_bound_stores.begin(),
+                   symbols_for_bound_stores.end(),
                    [&comparison_key](const Variable* part_symb_a, const Variable* part_symb_b) {
                      return comparison_key(*part_symb_a) > comparison_key(*part_symb_b);
                    });
 
-  for (const auto* part_symb : remaining_symbols) {
+  for (const auto* part_symb : symbols_for_bound_stores) {
     if (strategy->has_assignment(*part_symb) || solver.is_dependent(*part_symb)) {
       continue;
     }
@@ -74,9 +70,9 @@ void create_partition_for_bound_stores(const Operation* op,
 
     auto partition = op->find_store(part_symb)->find_or_create_key_partition(
       op->machine(), op->parallel_policy(), restrictions);
+    LEGATE_ASSERT(partition != nullptr);
 
     strategy->record_key_partition({}, *part_symb);
-    LEGATE_ASSERT(partition != nullptr);
     for (const auto* symb : equiv_class) {
       strategy->insert(*symb, partition);
     }
@@ -85,19 +81,19 @@ void create_partition_for_bound_stores(const Operation* op,
   solver.solve_dependent_constraints(strategy);
 }
 
-void resolve_launch_domain_and_store_projections(const Operation* operation,
-                                                 const ConstraintSolver& solver,
-                                                 Strategy* strategy)
+void resolve_launch_domain_and_store_projections_(const Operation* operation,
+                                                  const ConstraintSolver& solver,
+                                                  Strategy* strategy)
 {
   LaunchDomainResolver domain_resolver{};
 
   for (auto&& equiv_class : solver.equivalence_classes()) {
     const auto* part_symb = equiv_class.partition_symbols.front();
 
-    if (auto&& store = operation->find_store(part_symb); store->deferred_bound()) {
+    if (equiv_class.IS_UNBOUND) {
       // We only consider "active" dimensions of a store when resolving the launch domain so that we
       // can allow unbound stores to have different numbers of dimensions from bound stores.
-      domain_resolver.record_unbound_store(store->dim() -
+      domain_resolver.record_unbound_store(operation->find_store(part_symb)->dim() -
                                            equiv_class.restrictions.count_restricted());
     } else if (auto&& partition = (*strategy)[*part_symb]; partition->has_color_shape()) {
       domain_resolver.record_launch_domain(
@@ -119,18 +115,29 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
   }
 
   for (auto&& equiv_class : solver.equivalence_classes()) {
+    auto projection = equiv_class.restrictions.to_projection();
+
     if (equiv_class.IS_UNBOUND) {
-      LEGATE_ABORT("Unbound stores are not supported yet");
+      auto partition = create_opaque(equiv_class.restrictions.embed_to_color_shape(launch_domain));
+
+      for (auto&& part_symb : equiv_class.partition_symbols) {
+        strategy->insert(*part_symb, partition);
+        strategy->insert_store_projection(Strategy::PrivateKey{}, *part_symb, projection);
+      }
+      continue;
     }
 
     const auto& partition = (*strategy)[*equiv_class.partition_symbols.front()];
 
+    // Unbound output stores get an identity projection: each launch point maps to the color of the
+    // piece it produces. The placeholder Opaque partition has a color shape, so this falls through
+    // to the generic projection logic below (its launch domain is 1D, so `infer_store_projection`
+    // yields the identity).
     if (!partition->has_color_shape()) {
       continue;
     }
 
     const auto& color_shape = partition->color_shape();
-    auto projection         = equiv_class.restrictions.to_projection();
 
     for (auto&& part_symb : equiv_class.partition_symbols) {
       auto&& store = operation->find_store(part_symb);
@@ -148,18 +155,6 @@ void resolve_launch_domain_and_store_projections(const Operation* operation,
         *part_symb,
         Partitioner::infer_store_projection(launch_domain, color_shape, store->transform()));
     }
-  }
-}
-
-void create_placeholder_partitions_for_unbound_stores(const Operation*,
-                                                      const ConstraintSolver& solver)
-{
-  for (auto&& equiv_class : solver.equivalence_classes()) {
-    if (!equiv_class.IS_UNBOUND) {
-      continue;
-    }
-
-    LEGATE_ABORT("Unbound stores are not supported yet");
   }
 }
 
@@ -181,16 +176,9 @@ Strategy Partitioner::partition_stores(Operation* op)
 
   auto strategy = Strategy{op};
 
-  // Copy the list of partition symbols as we will sort them inplace
-  auto remaining_symbols = create_fields_for_unbound_stores(solver, &strategy);
+  create_partition_for_bound_stores_(op, solver, &strategy);
 
-  create_partition_for_bound_stores(op, std::move(remaining_symbols), solver, &strategy);
-
-  resolve_launch_domain_and_store_projections(op, solver, &strategy);
-
-  if (strategy.launch_domain().is_valid()) {
-    create_placeholder_partitions_for_unbound_stores(op, solver);
-  }
+  resolve_launch_domain_and_store_projections_(op, solver, &strategy);
 
   strategy.dump();
 

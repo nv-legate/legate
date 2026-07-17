@@ -226,6 +226,25 @@ Legion::Domain Restrictions::embed(const Legion::Domain& domain) const
   return {new_lo, new_hi};
 }
 
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> Restrictions::embed_to_color_shape(
+  const Legion::Domain& domain) const
+{
+  auto result = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
+  auto idx    = std::uint32_t{0};
+
+  result.reserve(dimension_restrictions_().size());
+  for (auto&& [dim, restriction] : enumerate(dimension_restrictions_())) {
+    if (restriction == Restriction::FORBID) {
+      result[dim] = 1;
+      continue;
+    }
+    result[idx] = domain.rect_data[idx + domain.dim] - domain.rect_data[idx] + 1;
+    ++idx;
+  }
+
+  return result;
+}
+
 std::size_t Restrictions::count_restricted() const
 {
   return std::count_if(

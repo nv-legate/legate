@@ -138,6 +138,12 @@ InlineStorage::~InlineStorage()
 
 mapping::StoreTarget InlineStorage::target() const { return alloc_().target(); }
 
+void InlineStorage::rebase(const Domain& domain)
+{
+  LEGATE_CHECK(domain.get_volume() == domain_.get_volume());
+  domain_ = domain;
+}
+
 void* InlineStorage::data() { return alloc_().ptr(); }
 
 const void* InlineStorage::data() const { return alloc_().ptr(); }
