@@ -49,7 +49,7 @@ InternalSharedPtr<Partition> Opaque::bloat(Span<const std::uint64_t> /*low_offse
   throw TracedException<std::runtime_error>{"Bloating is not supported for opaque partitions"};
 }
 
-Legion::Domain Opaque::launch_domain() const { return to_domain(color_shape_); }
+Domain Opaque::launch_domain() const { return to_domain(color_shape_); }
 
 std::optional<std::uint64_t> Opaque::device_of_(const DomainPoint& color) const
 {

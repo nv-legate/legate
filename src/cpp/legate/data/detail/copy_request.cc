@@ -13,13 +13,15 @@
 #include <legate/data/detail/copy_util.h>
 #include <legate/data/detail/inline_storage.h>
 #include <legate/generated/fatbin/copy_request_fatbin.h>
+#include <legate/geometry/detail/device_domain_point.h>
+#include <legate/geometry/domain.h>
+#include <legate/geometry/domain_point.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/divmod.h>
 #include <legate/utilities/detail/enumerate.h>
-#include <legate/utilities/detail/geometry.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -58,6 +60,19 @@ Logger& log_copy()
   return log;
 }
 
+// Converts a DomainPoint into a trivially-copyable POD that can be passed by value into a CUDA
+// kernel (the SmallVector-backed DomainPoint cannot be memcpy'd into kernel parameter space).
+[[nodiscard]] DeviceDomainPoint to_device_domain_point(const DomainPoint& point)
+{
+  DeviceDomainPoint result;
+
+  result.dim = point.dim();
+  for (std::uint32_t idx = 0; idx < point.dim(); ++idx) {
+    result[idx] = point[idx];
+  }
+  return result;
+}
+
 template <typename Functor, typename... Fnargs>
 constexpr decltype(auto) field_size_dispatch(std::uint32_t field_size, Functor f, Fnargs&&... args)
 {
@@ -88,23 +103,23 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
   auto* target_ptr       = static_cast<VAL*>(target.data());
   const auto* source_ptr = static_cast<const VAL*>(source.data());
 
-  const auto target_strides = calculate_strides(to_shape(target.domain()));
+  const auto target_strides = target.domain().strides();
 
   const auto& tile_shape  = tiling->tile_shape_dp();
-  const auto tile_strides = calculate_strides(tile_shape);
-  const auto tile_volume  = calculate_volume(tile_shape);
+  const auto tile_strides = tile_shape.strides();
+  const auto tile_volume  = tile_shape.volume();
 
-  const auto& color_strides = calculate_strides(tiling->color_shape_dp());
+  const auto color_strides = tiling->color_shape_dp().strides();
 
   const auto target_lo = target.domain().lo();
 
-  for (Domain::DomainPointIterator it{target.domain(), false}; it; ++it) {
+  for (auto&& point : target.domain().iterate()) {
     // `target_idx` is relative to the target's origin, whereas the tile-major `source_idx` is
-    // computed from the global coordinate `it.p` (the tiling lives in the storage's global
+    // computed from the global coordinate `point` (the tiling lives in the storage's global
     // coordinate space). These differ whenever the target is offset (e.g. a slice).
-    const auto target_idx = inner_product(it.p - target_lo, target_strides);
-    const auto source_idx = inner_product(it.p % tile_shape, tile_strides) +
-                            inner_product(it.p / tile_shape, color_strides) * tile_volume;
+    const auto target_idx = (point - target_lo).dot(target_strides);
+    const auto source_idx = (point % tile_shape).dot(tile_strides) +
+                            (point / tile_shape).dot(color_strides) * tile_volume;
 
     target_ptr[target_idx] = source_ptr[source_idx];
   }
@@ -139,7 +154,7 @@ struct CopyToSendBufferCPU {
   {
     const auto node_count = Runtime::get_runtime().node_count();
     const auto* source_ptr =
-      static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
+      static_cast<const VAL*>(source.data()) - source_domain.lo().dot(source_strides);
 
     for (std::uint32_t idx = 0; idx < node_count; ++idx) {
       if (counts[idx] == 0) {
@@ -148,12 +163,11 @@ struct CopyToSendBufferCPU {
 
       const auto& target_subdomain = target_subdomains[idx];
       const auto& target_strides   = all_target_strides[idx];
-      auto* target_ptr             = static_cast<VAL*>(target.data()) + offsets[idx] -
-                                     inner_product(target_subdomain.lo(), target_strides);
+      auto* target_ptr =
+        static_cast<VAL*>(target.data()) + offsets[idx] - target_subdomain.lo().dot(target_strides);
 
-      for (Domain::DomainPointIterator it{target_subdomain, false}; it; ++it) {
-        target_ptr[inner_product(it.p, target_strides)] =
-          source_ptr[inner_product(it.p, source_strides)];
+      for (auto&& point : target_subdomain.iterate()) {
+        target_ptr[point.dot(target_strides)] = source_ptr[point.dot(source_strides)];
       }
     }
   }
@@ -194,8 +208,7 @@ struct CopyFromRecvBufferCPU {
   {
     const auto node_count = Runtime::get_runtime().node_count();
 
-    auto* target_ptr =
-      static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
+    auto* target_ptr = static_cast<VAL*>(target.data()) - target_domain.lo().dot(target_strides);
 
     for (std::uint32_t idx = 0; idx < node_count; ++idx) {
       if (counts[idx] == 0) {
@@ -205,11 +218,10 @@ struct CopyFromRecvBufferCPU {
       const auto& source_subdomain = source_subdomains[idx];
       const auto& source_strides   = all_source_strides[idx];
       const auto* source_ptr       = static_cast<const VAL*>(source.data()) + offsets[idx] -
-                                     inner_product(source_subdomain.lo(), source_strides);
+                                     source_subdomain.lo().dot(source_strides);
 
-      for (Domain::DomainPointIterator it{source_subdomain, /*fortran_order=*/false}; it; ++it) {
-        target_ptr[inner_product(it.p, target_strides)] =
-          source_ptr[inner_product(it.p, source_strides)];
+      for (auto&& point : source_subdomain.iterate()) {
+        target_ptr[point.dot(target_strides)] = source_ptr[point.dot(source_strides)];
       }
     }
   }
@@ -277,7 +289,7 @@ struct CopyToSendBufferGPU {
                                                         CopyToSendBufferKernelName<VAL>::value);
     const auto node_count = Runtime::get_runtime().node_count();
     const auto* source_ptr =
-      static_cast<const VAL*>(source.data()) - inner_product(source_domain.lo(), source_strides);
+      static_cast<const VAL*>(source.data()) - source_domain.lo().dot(source_strides);
 
     for (std::uint32_t idx = 0; idx < node_count; ++idx) {
       if (counts[idx] == 0) {
@@ -290,18 +302,17 @@ struct CopyToSendBufferGPU {
         continue;
       }
 
-      const auto& target_subdomain = target_subdomains[idx];
-      auto* target_ptr             = static_cast<VAL*>(target->data());
-      const auto* source_ptr_shifted =
-        source_ptr + inner_product(target_subdomain.lo(), source_strides);
+      const auto& target_subdomain   = target_subdomains[idx];
+      auto* target_ptr               = static_cast<VAL*>(target->data());
+      const auto* source_ptr_shifted = source_ptr + target_subdomain.lo().dot(source_strides);
 
       const auto num_blocks =
         (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
         LEGATE_THREADS_PER_BLOCK;
       auto count          = counts[idx];
-      auto target_extents = calculate_extents(target_subdomain);
+      auto target_extents = target_subdomain.extents();
 
-      if (source_domain.dim == 2) {
+      if (source_domain.dim() == 2) {
         api->mem_cpy_2d_async(target_ptr,
                               source_ptr_shifted,
                               target_extents[1] * sizeof(VAL),
@@ -312,8 +323,8 @@ struct CopyToSendBufferGPU {
         continue;
       }
 
-      FastDivmodU64 divmod{source_domain.dim == 2 ? static_cast<std::uint64_t>(target_extents[1])
-                                                  : 1};
+      FastDivmodU64 divmod{source_domain.dim() == 2 ? static_cast<std::uint64_t>(target_extents[1])
+                                                    : 1};
 
       api->launch_kernel(kern,
                          {num_blocks},
@@ -323,9 +334,9 @@ struct CopyToSendBufferGPU {
                          static_cast<void*>(target_ptr),
                          static_cast<const void*>(source_ptr_shifted),
                          count,
-                         target_extents,
+                         to_device_domain_point(target_extents),
                          divmod,
-                         source_strides);
+                         to_device_domain_point(source_strides));
     }
   }
 };
@@ -392,8 +403,7 @@ struct CopyFromRecvBufferGPU {
     CUkernel kern = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
                                                         CopyFromRecvBufferKernelName<VAL>::value);
 
-    auto* target_ptr =
-      static_cast<VAL*>(target.data()) - inner_product(target_domain.lo(), target_strides);
+    auto* target_ptr = static_cast<VAL*>(target.data()) - target_domain.lo().dot(target_strides);
 
     for (std::uint32_t idx = 0; idx < node_count; ++idx) {
       if (counts[idx] == 0) {
@@ -407,16 +417,16 @@ struct CopyFromRecvBufferGPU {
       }
 
       const auto& source_subdomain = source_subdomains[idx];
-      auto* target_ptr_shifted = target_ptr + inner_product(source_subdomain.lo(), target_strides);
-      const auto* source_ptr   = static_cast<const VAL*>(source->data());
+      auto* target_ptr_shifted     = target_ptr + source_subdomain.lo().dot(target_strides);
+      const auto* source_ptr       = static_cast<const VAL*>(source->data());
 
       const auto num_blocks =
         (static_cast<std::size_t>(counts[idx]) + LEGATE_THREADS_PER_BLOCK - 1) /
         LEGATE_THREADS_PER_BLOCK;
       auto count          = counts[idx];
-      auto source_extents = calculate_extents(source_subdomain);
+      auto source_extents = source_subdomain.extents();
 
-      if (target_domain.dim == 2) {
+      if (target_domain.dim() == 2) {
         api->mem_cpy_2d_async(target_ptr_shifted,
                               source_ptr,
                               target_strides[0] * sizeof(VAL),
@@ -427,8 +437,8 @@ struct CopyFromRecvBufferGPU {
         continue;
       }
 
-      FastDivmodU64 divmod{target_domain.dim == 2 ? static_cast<std::uint64_t>(source_extents[1])
-                                                  : 1};
+      FastDivmodU64 divmod{target_domain.dim() == 2 ? static_cast<std::uint64_t>(source_extents[1])
+                                                    : 1};
 
       api->launch_kernel(kern,
                          {num_blocks},
@@ -438,9 +448,9 @@ struct CopyFromRecvBufferGPU {
                          static_cast<void*>(target_ptr_shifted),
                          static_cast<const void*>(source_ptr),
                          count,
-                         source_extents,
+                         to_device_domain_point(source_extents),
                          divmod,
-                         target_strides);
+                         to_device_domain_point(target_strides));
     }
   }
 };
@@ -496,7 +506,7 @@ struct ReorderElementsGPU {
                   const Tiling* tiling,
                   CUstream stream)
   {
-    auto volume = target.domain().get_volume();
+    auto volume = target.domain().volume();
 
     if (volume == 0) {
       return;
@@ -508,12 +518,12 @@ struct ReorderElementsGPU {
     CUkernel kern      = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
                                                              ReorderElementsKernelName<VAL>::value);
 
-    auto target_extents      = calculate_extents(target.domain());
+    auto target_extents      = target.domain().extents();
     auto target_lo           = target.domain().lo();
     auto tile_shape          = tiling->tile_shape_dp();
-    auto tile_strides        = calculate_strides(tile_shape);
-    auto color_strides       = calculate_strides(tiling->color_shape_dp());
-    std::int64_t tile_volume = calculate_volume(tile_shape);
+    auto tile_strides        = tile_shape.strides();
+    auto color_strides       = tiling->color_shape_dp().strides();
+    std::int64_t tile_volume = tile_shape.volume();
 
     const auto num_blocks = (volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
 
@@ -525,11 +535,11 @@ struct ReorderElementsGPU {
                        target.data(),
                        source.data(),
                        volume,
-                       target_extents,
-                       target_lo,
-                       tile_shape,
-                       tile_strides,
-                       color_strides,
+                       to_device_domain_point(target_extents),
+                       to_device_domain_point(target_lo),
+                       to_device_domain_point(tile_shape),
+                       to_device_domain_point(tile_strides),
+                       to_device_domain_point(color_strides),
                        tile_volume);
   }
 };
@@ -570,7 +580,7 @@ find_all_intersections(const Partition* from,
     // mesh) owns no piece and has nothing to exchange.
     const auto my_color = from->compute_color(my_device_id);
 
-    if (my_color.dim == 0) {
+    if (my_color.dim() == 0) {
       return {Domain{}, intersection_subdomains, intersection_strides, intersection_counts};
     }
     from_tile_domain = from->shard(from_domain, my_color).intersection(to_domain);
@@ -579,7 +589,7 @@ find_all_intersections(const Partition* from,
     from_tile_domain = from_domain.intersection(to_domain);
   }
 
-  if (from_tile_domain.get_volume() == 0) {
+  if (from_tile_domain.volume() == 0) {
     return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};
   }
 
@@ -589,12 +599,12 @@ find_all_intersections(const Partition* from,
   const auto record = [&](const DomainPoint& color, const Domain& piece) {
     const auto subdomain = piece.intersection(from_tile_domain);
 
-    if (subdomain.get_volume() == 0) {
+    if (subdomain.volume() == 0) {
       return;
     }
 
-    const auto strides = calculate_strides(subdomain);
-    const auto count   = static_cast<int>(subdomain.get_volume());
+    const auto strides = subdomain.strides();
+    const auto count   = static_cast<int>(subdomain.volume());
 
     for (const auto to_device_id : to->compute_device_ids(color)) {
       intersection_subdomains[to_device_id] = subdomain;
@@ -604,8 +614,8 @@ find_all_intersections(const Partition* from,
   };
 
   if (to->has_color_shape()) {
-    for (Domain::DomainPointIterator it{to->launch_domain(), false}; it; ++it) {
-      record(it.p, to->shard(to_domain, it.p));
+    for (auto&& point : to->launch_domain().iterate()) {
+      record(point, to->shard(to_domain, point));
     }
   } else {
     // No color space: a single piece (the whole store) held on every device.
@@ -651,14 +661,14 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
     if (variant_code == VariantCode::CPU) {
       collAllgather(source_->data(),
                     dest.data(),
-                    static_cast<int>(source_->domain().get_volume()),
+                    static_cast<int>(source_->domain().volume()),
                     to_coll_data_type_(field_size_),
                     Runtime::get_runtime().get_cpu_comm());
     } else {
       LEGATE_CHECK(variant_code == VariantCode::GPU);
       LEGATE_CHECK_NCCL(ncclAllGather(source_->data(),
                                       dest.data(),
-                                      source_->domain().get_volume(),
+                                      source_->domain().volume(),
                                       to_nccl_data_type(field_size_),
                                       Runtime::get_runtime().get_gpu_comm(),
                                       Runtime::get_runtime().get_cuda_stream()));
@@ -672,7 +682,7 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
   // FIXME(wonchan): source_->domain() may not be the tile shape if source_ isn't a tight
   // allocation
   const auto gathered_volume = static_cast<std::int64_t>(Runtime::get_runtime().node_count()) *
-                               static_cast<std::int64_t>(source_->domain().get_volume());
+                               static_cast<std::int64_t>(source_->domain().volume());
 
   // We can all-gather directly into the target only when the tile-major layout produced by the
   // collective already coincides with the target's row-major layout. That is the case iff all of:
@@ -701,12 +711,12 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
 
   const auto target_lo  = target_->domain().lo();
   auto target_at_origin = true;
-  for (std::int32_t dim = 0; dim < target_lo.dim; ++dim) {
+  for (std::uint32_t dim = 0; dim < target_lo.dim(); ++dim) {
     target_at_origin = target_at_origin && (target_lo[dim] == 0);
   }
 
   if (stacked_along_first_dim && target_at_origin &&
-      target_->domain().get_volume() == static_cast<std::size_t>(gathered_volume)) {
+      target_->domain().volume() == static_cast<std::size_t>(gathered_volume)) {
     all_gather_fn(*target_);
     return;
   }
@@ -746,8 +756,8 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
   const auto& source_domain = source_->domain();
   const auto& target_domain = target_->domain();
-  const auto source_strides = calculate_strides(source_domain);
-  const auto target_strides = calculate_strides(target_domain);
+  const auto source_strides = source_domain.strides();
+  const auto target_strides = target_domain.strides();
 
   // TODO(wonchanl): Add an option to toggle this behavior
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -787,7 +797,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     const auto recv_total = recv_offsets[device_count - 1] + recv_counts[device_count - 1];
 
     // The receive side always tiles the target piece disjointly, so its total equals that piece.
-    LEGATE_ASSERT(recv_domain.get_volume() == static_cast<std::size_t>(recv_total));
+    LEGATE_ASSERT(recv_domain.volume() == static_cast<std::size_t>(recv_total));
 
     // For CPU shuffle, we allocate contiguous transfer buffers to match the all-to-all API. The
     // buffers are laid out as one chunk per peer (prefix-sum offsets). When a source piece is
@@ -844,7 +854,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
       continue;
     }
 
-    if (source_strides == calculate_strides(send_subdomain)) {
+    if (source_strides == send_subdomain.strides()) {
       send_buffers[idx] = std::make_pair<>(source_, false);
     } else {
       send_buffers[idx] = std::make_pair<>(
@@ -857,7 +867,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
       continue;
     }
 
-    if (target_strides == calculate_strides(recv_subdomain)) {
+    if (target_strides == recv_subdomain.strides()) {
       recv_buffers[idx] = std::make_pair<>(target_, false);
     } else {
       recv_buffers[idx] = std::make_pair<>(
@@ -891,7 +901,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
     if (!needs_copy) {
       send_buffer_ptr +=
-        inner_product(send_subdomain.lo() - source_->domain().lo(), source_strides) * field_size_;
+        (send_subdomain.lo() - source_->domain().lo()).dot(source_strides) * field_size_;
     }
     LEGATE_CHECK_NCCL(
       ncclSend(send_buffer_ptr, send_counts[idx], nccl_data_type, idx, comm, stream));
@@ -908,7 +918,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
     if (!needs_copy) {
       recv_buffer_ptr +=
-        inner_product(recv_subdomain.lo() - target_->domain().lo(), target_strides) * field_size_;
+        (recv_subdomain.lo() - target_->domain().lo()).dot(target_strides) * field_size_;
     }
     LEGATE_CHECK_NCCL(
       ncclRecv(recv_buffer_ptr, recv_counts[idx], nccl_data_type, idx, comm, stream));

@@ -34,7 +34,7 @@ bool RemapRequest::requires_host_sync() const
 
 void RemapRequest::perform(VariantCode /*variant_code*/) const
 {
-  const std::size_t volume    = std::max<>(std::size_t{1}, source_->domain().get_volume());
+  const std::size_t volume    = std::max<>(std::size_t{1}, source_->domain().volume());
   const std::size_t num_bytes = volume * field_size_;
 
   if (is_device_target(source_->target()) || is_device_target(target_->target())) {

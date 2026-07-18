@@ -110,7 +110,7 @@ void resolve_launch_domain_and_store_projections_(const Operation* operation,
   strategy->set_launch_domain(launch_domain);
 
   // If this is a sequential launch, store projections are all identity
-  if (!launch_domain.is_valid()) {
+  if (launch_domain.dim() == 0) {
     return;
   }
 
@@ -142,7 +142,7 @@ void resolve_launch_domain_and_store_projections_(const Operation* operation,
     for (auto&& part_symb : equiv_class.partition_symbols) {
       auto&& store = operation->find_store(part_symb);
 
-      if (equiv_class.has_restrictions && launch_domain.dim > 1) {
+      if (equiv_class.has_restrictions && launch_domain.dim() > 1) {
         // When the launch domain has more than one dimension, store projections can never be
         // delinearizing projections
         strategy->insert_store_projection(
@@ -208,12 +208,12 @@ SymbolicPoint Partitioner::infer_store_projection(
   const auto ndim = color_shape.size();
 
   // Easy case where the store and launch domain have the same number of dimensions
-  if (static_cast<std::size_t>(launch_domain.dim) == ndim) {
+  if (static_cast<std::size_t>(launch_domain.dim()) == ndim) {
     return transform->identity() ? SymbolicPoint{} : transform->invert(create_symbolic_point(ndim));
   }
 
   // If we're here, it means the launch domain has to be 1D due to mixed store dimensionalities
-  if (launch_domain.dim != 1) {
+  if (launch_domain.dim() != 1) {
     // This can happen only with ManualTasks, as AutoTasks don't get a multi-dimensional launch
     // domain when stores have different numbers of dimensions
     throw detail::TracedException<std::runtime_error>{

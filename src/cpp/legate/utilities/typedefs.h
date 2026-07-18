@@ -8,6 +8,8 @@
 
 #include <legate_defines.h>
 
+#include <legate/geometry/domain.h>
+#include <legate/geometry/domain_point.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <legion.h>
@@ -137,7 +139,7 @@ enum class GlobalRedopID : Legion::ReductionOpID {};
 /**
  * @brief Coordinate type.
  */
-using Legion::coord_t;
+using coord_t = std::int64_t;
 
 /**
  * @brief Type for multi-dimensional points.
@@ -162,22 +164,6 @@ using Point = Legion::Point<DIM, T>;
  */
 template <int DIM, typename T = coord_t>
 using Rect = Legion::Rect<DIM, T>;
-
-/**
- * @brief Dimension-erased type for multi-dimensional points.
- *
- * For a complete definition, see
- * [Legion::DomainPoint](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L127-L253).
- */
-using Legion::DomainPoint;
-
-/**
- * @brief Dimension-erased type for multi-dimensional rectangles.
- *
- * For a complete definition, see
- * [Legion::Domain](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L255-L543).
- */
-using Legion::Domain;
 
 /** @} */  // end of geometry
 

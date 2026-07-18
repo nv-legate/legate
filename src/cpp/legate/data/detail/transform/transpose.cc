@@ -43,15 +43,19 @@ Transpose::Transpose(SmallVector<std::int32_t, LEGATE_MAX_DIM>&& axes) : axes_{s
 
 Domain Transpose::transform(const Domain& domain) const
 {
-  Domain output;
+  const auto ndim = domain.dim();
+  auto lo         = DomainPoint::zeroes(ndim);
+  auto hi         = DomainPoint::zeroes(ndim);
+  auto&& in_lo    = domain.lo();
+  auto&& in_hi    = domain.hi();
 
-  output.dim = domain.dim;
-  for (std::int32_t out_dim = 0; out_dim < output.dim; ++out_dim) {
-    auto in_dim                            = axes_[out_dim];
-    output.rect_data[out_dim]              = domain.rect_data[in_dim];
-    output.rect_data[out_dim + output.dim] = domain.rect_data[in_dim + domain.dim];
+  for (std::uint32_t out_dim = 0; out_dim < ndim; ++out_dim) {
+    const auto in_dim = axes_[static_cast<std::size_t>(out_dim)];
+
+    lo[out_dim] = in_lo[in_dim];
+    hi[out_dim] = in_hi[in_dim];
   }
-  return output;
+  return {std::move(lo), std::move(hi)};
 }
 
 Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) const

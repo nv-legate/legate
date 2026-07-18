@@ -52,15 +52,14 @@ namespace {
 // Domain spanning `[0, extents)` in every dimension.
 [[nodiscard]] Domain extents_to_domain(const DomainPoint& extents)
 {
-  DomainPoint lo;
-  DomainPoint hi;
+  auto lo = DomainPoint::zeroes(extents.dim());
+  auto hi = DomainPoint::zeroes(extents.dim());
 
-  lo.dim = hi.dim = extents.dim;
-  for (std::int32_t i = 0; i < extents.dim; ++i) {
+  for (std::uint32_t i = 0; i < extents.dim(); ++i) {
     lo[i] = 0;
     hi[i] = extents[i] - 1;
   }
-  return Domain{lo, hi};
+  return Domain{std::move(lo), std::move(hi)};
 }
 
 }  // namespace
@@ -69,7 +68,7 @@ TaskLocalBuffer PhysicalStore::create_output_buffer(const DomainPoint& extents,
                                                     bool bind_buffer) const
 {
   return double_dispatch(
-    extents.dim, type().code(), CreateBuffer{}, *this, type(), extents, bind_buffer);
+    extents.dim(), type().code(), CreateBuffer{}, *this, type(), extents, bind_buffer);
 }
 
 void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,

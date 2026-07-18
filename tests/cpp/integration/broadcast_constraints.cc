@@ -57,7 +57,7 @@ struct TesterForUnboundStoresTask : public legate::LegateTask<TesterForUnboundSt
     const auto hi        = domain.hi();
 
     ASSERT_EQ((hi[0] - lo[0] + 1) * (hi[1] - lo[1] + 1), num_procs);
-    for (std::int32_t dim = 2; dim < domain.dim; ++dim) {
+    for (std::uint32_t dim = 2; dim < domain.dim(); ++dim) {
       ASSERT_EQ(lo[dim], 0);
       ASSERT_EQ(hi[dim], 0);
     }

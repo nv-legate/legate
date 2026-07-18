@@ -18,13 +18,10 @@
 // the names collide with legate::detail, such as Task and Operation
 enum legion_privilege_mode_t : std::uint32_t;  // NOLINT(readability-identifier-naming)
 
-namespace Legion {  // NOLINT(readability-identifier-naming)
+namespace legate {
 
 class DomainPoint;
-
-}  // namespace Legion
-
-namespace legate {
+class Domain;
 
 enum class LocalTaskID : std::int64_t;
 enum class GlobalTaskID : unsigned int /* A.K.A. Legion::TaskID */;
@@ -223,7 +220,10 @@ struct formatter<legion_privilege_mode_t> : formatter<std::string_view> {
 };
 
 template <>
-struct formatter<Legion::DomainPoint> : ostream_formatter {};
+struct formatter<legate::DomainPoint> : ostream_formatter {};
+
+template <>
+struct formatter<legate::Domain> : ostream_formatter {};
 
 template <>
 struct formatter<legate::StreamingMode> : formatter<std::string_view> {

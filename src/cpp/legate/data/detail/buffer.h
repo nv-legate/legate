@@ -48,7 +48,7 @@ class TaskLocalBuffer {
   /**
    * @return The dimension of the buffer
    */
-  [[nodiscard]] std::int32_t dim() const;
+  [[nodiscard]] std::uint32_t dim() const;
 
   /**
    * @return The shape of the buffer.

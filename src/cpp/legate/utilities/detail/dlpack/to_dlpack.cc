@@ -289,12 +289,8 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
  */
 [[nodiscard]] std::unique_ptr<std::int64_t[]> make_shape(const Domain& domain)
 {
-  const auto dim = domain.get_dim();
+  const auto dim = domain.dim();
 
-  if (dim < 0) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Invalid domain dimension: {}, must be >=0", dim)};
-  }
   // We still need to have *something* for 0-D, since we cannot guarantee that other
   // implementations handle a nullptr here properly
   if (dim == 0) {
@@ -308,8 +304,8 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
   auto&& lo = domain.lo();
   auto ret  = std::make_unique<std::int64_t[]>(static_cast<std::size_t>(dim));
 
-  for (auto i = 0; i < dim; ++i) {
-    ret[i] = std::max(hi[i] - lo[i] + 1, coord_t{0});
+  for (std::uint32_t i = 0; i < dim; ++i) {
+    ret[i] = std::max(hi[i] - lo[i] + 1, std::int64_t{0});
   }
   return ret;
 }

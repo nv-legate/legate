@@ -16,25 +16,29 @@
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <utility>
 
 namespace legate::detail {
 
 Domain Promote::transform(const Domain& input) const
 {
-  Domain output;
+  const auto out_ndim = input.dim() + 1;
+  auto lo             = DomainPoint::zeroes(out_ndim);
+  auto hi             = DomainPoint::zeroes(out_ndim);
+  auto&& in_lo        = input.lo();
+  auto&& in_hi        = input.hi();
 
-  output.dim = input.dim + 1;
-  for (std::int32_t out_dim = 0, in_dim = 0; out_dim < output.dim; ++out_dim) {
-    if (out_dim == extra_dim_) {
-      output.rect_data[out_dim]              = 0;
-      output.rect_data[out_dim + output.dim] = dim_size_ - 1;
+  for (std::uint32_t out_dim = 0, in_dim = 0; out_dim < out_ndim; ++out_dim) {
+    if (static_cast<std::int32_t>(out_dim) == extra_dim_) {
+      lo[out_dim] = 0;
+      hi[out_dim] = dim_size_ - 1;
     } else {
-      output.rect_data[out_dim]              = input.rect_data[in_dim];
-      output.rect_data[out_dim + output.dim] = input.rect_data[in_dim + input.dim];
+      lo[out_dim] = in_lo[in_dim];
+      hi[out_dim] = in_hi[in_dim];
       ++in_dim;
     }
   }
-  return output;
+  return {std::move(lo), std::move(hi)};
 }
 
 Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) const

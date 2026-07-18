@@ -38,7 +38,7 @@ struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> 
     auto extents2 = shape2.hi - shape2.lo + legate::Point<3>::ONES();
 
     // The launch domain is 1D when array partitions have different color shapes
-    EXPECT_EQ(context.get_launch_domain().dim, 1);
+    EXPECT_EQ(context.get_launch_domain().dim(), 1);
     // The partitioner favors dimensions of bigger extents over smaller ones
     EXPECT_EQ(extents1[0], SMALL_EXTENT);
     EXPECT_EQ(extents1[2], SMALL_EXTENT);
@@ -67,7 +67,7 @@ struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
     auto extents2 = shape2.hi - shape2.lo + legate::Point<3>::ONES();
 
     // The launch domain is 1D when array partitions have different color shapes
-    EXPECT_EQ(context.get_launch_domain().dim, 1);
+    EXPECT_EQ(context.get_launch_domain().dim(), 1);
     // The partitioner favors dimensions of bigger extents over smaller ones
     EXPECT_EQ(extents1[1], SMALL_EXTENT);
     EXPECT_EQ(extents2[2], SMALL_EXTENT);

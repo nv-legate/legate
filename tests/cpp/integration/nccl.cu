@@ -34,7 +34,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     }
     auto comm = context.communicators().at(0).get<ncclComm_t*>();
 
-    const std::size_t num_tasks = context.get_launch_domain().get_volume();
+    const std::size_t num_tasks = context.get_launch_domain().volume();
 
     auto recv_buffer =
       legate::create_buffer<std::uint64_t>(num_tasks, legate::Memory::Kind::GPU_FB_MEM);

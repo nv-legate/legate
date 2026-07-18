@@ -40,7 +40,7 @@ DomainPoint TileReadWriteFn::get_tile_coord_(const DomainPoint& task_index,
 {
   auto ret = task_index;
 
-  for (int i = 0; i < task_index.dim; ++i) {
+  for (std::uint32_t i = 0; i < task_index.dim(); ++i) {
     ret[i] += static_cast<coord_t>(tile_start[i]);
   }
   return ret;
@@ -53,7 +53,7 @@ std::filesystem::path TileReadWriteFn::get_file_path_(std::string_view dirpath,
   return fmt::format("{}{}{}",
                      dirpath,
                      std::filesystem::path::preferred_separator,
-                     fmt::join(tile_coord.point_data, tile_coord.point_data + tile_coord.dim, "."));
+                     fmt::join(tile_coord.begin(), tile_coord.end(), "."));
 }
 
 // ==========================================================================================

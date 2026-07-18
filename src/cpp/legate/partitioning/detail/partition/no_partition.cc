@@ -47,7 +47,7 @@ std::vector<std::uint64_t> NoPartition::compute_device_ids(const DomainPoint&) c
   return result;
 }
 
-Legion::Domain NoPartition::launch_domain() const
+Domain NoPartition::launch_domain() const
 {
   throw TracedException<std::invalid_argument>{"NoPartition has no launch domain"};
 }

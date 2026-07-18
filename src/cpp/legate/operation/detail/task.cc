@@ -23,7 +23,6 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
-#include <legate/task/detail/task.h>
 #include <legate/task/detail/task_context.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/detail/variant_info.h>
@@ -547,14 +546,6 @@ ManualTask::ManualTask(const Library& library,
   : LogicalTask{library, variant_info, task_id, unique_id, priority, std::move(machine)},
     strategy_{make_internal_shared<Strategy>(this)}
 {
-  if (Runtime::get_runtime().config().enable_inline_task_launch() &&
-      launch_domain.get_volume() > 1) {
-    LEGATE_ABORT(
-      fmt::format("ManualTask with inline task launch requires a single-point launch domain. "
-                  "Instead, got domain with volume {}",
-                  launch_domain.get_volume()));
-  }
-
   strategy_->set_launch_domain(launch_domain);
 }
 

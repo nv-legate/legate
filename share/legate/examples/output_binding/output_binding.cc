@@ -32,7 +32,7 @@ constexpr std::int64_t BASE_TASK_LOCAL   = 3000;
 {
   const auto& task_index = context.get_task_index();
 
-  return task_index.dim > 0 ? static_cast<std::uint64_t>(task_index[0]) : 0;
+  return task_index.dim() > 0 ? static_cast<std::uint64_t>(task_index[0]) : 0;
 }
 
 [[noreturn]] void fail(const std::string& message)

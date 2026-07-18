@@ -183,57 +183,57 @@ Restrictions::prune_dimensions(Span<const std::uint64_t> shape) const
   return {std::move(temp_shape), std::move(temp_dims), volume};
 }
 
-Legion::Domain Restrictions::prune_dimensions(const Legion::Domain& domain) const
+Domain Restrictions::prune_dimensions(const Domain& domain) const
 {
-  auto new_lo   = Legion::DomainPoint{};
-  auto new_hi   = Legion::DomainPoint{};
-  auto new_ndim = std::uint32_t{0};
+  auto new_lo = SmallVector<std::int64_t, LEGATE_MAX_DIM>{};
+  auto new_hi = SmallVector<std::int64_t, LEGATE_MAX_DIM>{};
+  auto&& lo   = domain.lo();
+  auto&& hi   = domain.hi();
 
   for (auto&& [dim, restriction] : enumerate(dimension_restrictions_())) {
     if (restriction == Restriction::FORBID) {
       continue;
     }
-    new_lo[new_ndim] = domain.rect_data[dim];
-    new_hi[new_ndim] = domain.rect_data[dim + domain.dim];
-    ++new_ndim;
+    new_lo.push_back(lo[dim]);
+    new_hi.push_back(hi[dim]);
   }
 
-  new_lo.dim = static_cast<std::int32_t>(new_ndim);
-  new_hi.dim = static_cast<std::int32_t>(new_ndim);
-
-  return {new_lo, new_hi};
+  return {DomainPoint{std::move(new_lo)}, DomainPoint{std::move(new_hi)}};
 }
 
-Legion::Domain Restrictions::embed(const Legion::Domain& domain) const
+Domain Restrictions::embed(const Domain& domain) const
 {
-  auto new_lo = Legion::DomainPoint{};
-  auto new_hi = Legion::DomainPoint{};
-  auto idx    = std::uint32_t{0};
+  const auto ndim = static_cast<std::int32_t>(dimension_restrictions_().size());
+  auto new_lo     = DomainPoint::zeroes(ndim);
+  auto new_hi     = DomainPoint::zeroes(ndim);
+  auto&& lo       = domain.lo();
+  auto&& hi       = domain.hi();
+  auto idx        = std::int32_t{0};
 
-  new_lo.dim = static_cast<std::int32_t>(dimension_restrictions_().size());
-  new_hi.dim = static_cast<std::int32_t>(dimension_restrictions_().size());
   for (auto&& [dim, restriction] : enumerate(dimension_restrictions_())) {
     if (restriction == Restriction::FORBID) {
       new_lo[dim] = 0;
       new_hi[dim] = 0;
       continue;
     }
-    new_lo[dim] = domain.rect_data[idx];
-    new_hi[dim] = domain.rect_data[idx + domain.dim];
+    new_lo[dim] = lo[idx];
+    new_hi[dim] = hi[idx];
     ++idx;
   }
 
-  return {new_lo, new_hi};
+  return {std::move(new_lo), std::move(new_hi)};
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Restrictions::embed_to_color_shape(
-  const Legion::Domain& domain) const
+  const Domain& domain) const
 {
   auto result = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
   // `idx` walks the (pruned) launch domain, which has an axis only for each non-restricted store
   // dimension; restricted (FORBID) dimensions are not partitioned and get a single color. We append
   // one entry per store dimension in order, so each dimension's color extent lands in its own slot.
-  auto idx = std::uint32_t{0};
+  auto idx  = std::int32_t{0};
+  auto&& lo = domain.lo();
+  auto&& hi = domain.hi();
 
   result.reserve(dimension_restrictions_().size());
   for (auto&& restriction : dimension_restrictions_()) {
@@ -241,8 +241,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> Restrictions::embed_to_color_shape(
       result.push_back(1);
       continue;
     }
-    result.push_back(
-      static_cast<std::uint64_t>(domain.rect_data[idx + domain.dim] - domain.rect_data[idx] + 1));
+    result.push_back(static_cast<std::uint64_t>(hi[idx] - lo[idx] + 1));
     ++idx;
   }
 

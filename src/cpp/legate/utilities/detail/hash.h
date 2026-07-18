@@ -9,8 +9,7 @@
 #include <legate/utilities/hash.h>
 #include <legate/utilities/typedefs.h>
 
-#include <legion.h>
-
+#include <cstdint>
 #include <functional>
 #include <tuple>
 #include <type_traits>
@@ -44,22 +43,25 @@ struct std::hash<legate::Domain> {
   [[nodiscard]] std::size_t operator()(const legate::Domain& domain) const noexcept
   {
     std::size_t result = 0;
-    for (std::int32_t idx = 0; idx < 2 * domain.dim; ++idx) {
-      legate::hash_combine(result, domain.rect_data[idx]);
+    auto&& lo          = domain.lo();
+    auto&& hi          = domain.hi();
+
+    for (std::uint32_t idx = 0; idx < domain.dim(); ++idx) {
+      legate::hash_combine(result, lo[idx]);
+      legate::hash_combine(result, hi[idx]);
     }
     return result;
   }
 };
 
-// Legion currently does not provide a hash function for DomainPoint class.
-// We'll remove this once Legion starts providing that,
 template <>
-struct std::hash<Legion::DomainPoint> {
-  [[nodiscard]] std::size_t operator()(const Legion::DomainPoint& domain_point) const noexcept
+struct std::hash<legate::DomainPoint> {
+  [[nodiscard]] std::size_t operator()(const legate::DomainPoint& domain_point) const noexcept
   {
     std::size_t result = 0;
-    for (std::int32_t idx = 0; idx < domain_point.dim; ++idx) {
-      legate::hash_combine(result, domain_point.point_data[idx]);
+
+    for (std::uint32_t idx = 0; idx < domain_point.dim(); ++idx) {
+      legate::hash_combine(result, domain_point[idx]);
     }
     return result;
   }

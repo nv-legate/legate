@@ -22,20 +22,10 @@ namespace legate::detail {
 
 Domain PhysicalStore::domain() const
 {
-  // Reference the domain over the root storage as inline storages do not use
-  // sub-storages/storage partitions.
-  Domain result = domain_;
-
-  // The backing Future or RegionField of any LogicalStorage with an empty shape (e.g. (), (1,0,3))
-  // will actually have the 1d Domain <0>..<0>. Therefore, if we ever see this Domain on a Future or
-  // RegionField, we can't assume it's the "true" one.
-  const bool maybe_fake_domain = result.get_dim() == 1 && result.lo() == 0 && result.hi() == 0;
-
-  if (transformed()) {
-    result = transform_->transform(result);
+  if (!transformed()) {
+    return domain_;
   }
-  LEGATE_CHECK(result.get_dim() == dim() || maybe_fake_domain);
-  return result;
+  return transform_->transform(domain_);
 }
 
 InlineAllocation PhysicalStore::get_inline_allocation() const
@@ -120,16 +110,15 @@ void PhysicalStore::bind_empty_data()
   LEGATE_CHECK(unbound_);
 
   const auto ndim = dim_ == 0 ? std::int32_t{1} : dim_;
-  DomainPoint lo;
-  DomainPoint hi;
+  auto lo         = DomainPoint::zeroes(ndim);
+  auto hi         = DomainPoint::zeroes(ndim);
 
-  lo.dim = hi.dim = ndim;
   for (std::int32_t i = 0; i < ndim; ++i) {
     lo[i] = 0;
     hi[i] = -1;  // hi < lo => zero-volume (empty) domain
   }
 
-  const Domain empty{lo, hi};
+  const Domain empty{std::move(lo), std::move(hi)};
 
   bind_data(create_output_buffer_storage(empty), empty);
 }

@@ -347,13 +347,12 @@ namespace {
 
 DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoint& task_index)
 {
-  if (store_projection.empty() || task_index.dim == 0) {
+  if (store_projection.empty() || task_index.dim() == 0) {
     return task_index;
   }
 
-  DomainPoint result{};
+  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(store_projection.size()));
 
-  result.dim = static_cast<std::int32_t>(store_projection.size());
   for (auto&& [dim, expr] : enumerate(store_projection)) {
     result[dim] = expr.compute_coordinate(task_index);
   }
@@ -403,7 +402,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
                                                                 inverted,
                                                                 color,
                                                                 machine.preferred_store_target(),
-                                                                launch_domain.is_valid(),
+                                                                launch_domain.dim() == 0,
                                                                 type_,
                                                                 op_kind,
                                                                 store_has_identity,
@@ -449,7 +448,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   const auto color      = compute_color(store_projection, task_index);
   // `domain_` currently holds this rank's local (zero-based) piece (set by bind_buffer).
   const auto local_domain = domain_;
-  const auto store_dim    = local_domain.dim;
+  const auto store_dim    = local_domain.dim();
 
   // Fixed-size record laid out as int64s so a single all-gather exchanges every rank's piece:
   //   [ color.dim, color[0..MAXD), ext.dim, ext[0..MAXD) ]
@@ -458,12 +457,12 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
 
   auto send = std::vector<std::int64_t>(REC, 0);
 
-  send[0] = color.dim;
-  for (std::int32_t i = 0; i < color.dim; ++i) {
+  send[0] = color.dim();
+  for (std::uint32_t i = 0; i < color.dim(); ++i) {
     send[1 + static_cast<std::size_t>(i)] = color[i];
   }
   send[1 + MAXD] = store_dim;
-  for (std::int32_t i = 0; i < store_dim; ++i) {
+  for (std::uint32_t i = 0; i < store_dim; ++i) {
     send[2 + MAXD + static_cast<std::size_t>(i)] = local_domain.hi()[i] - local_domain.lo()[i] + 1;
   }
 
@@ -482,12 +481,12 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   for (std::uint32_t d = 0; d < node_count; ++d) {
     const auto* const rec = &recv[d * REC];
 
-    colors[d].dim = static_cast<std::int32_t>(rec[0]);
-    for (std::int32_t i = 0; i < colors[d].dim; ++i) {
+    colors[d] = DomainPoint::zeroes(static_cast<std::int32_t>(rec[0]));
+    for (std::uint32_t i = 0; i < colors[d].dim(); ++i) {
       colors[d][i] = rec[1 + static_cast<std::size_t>(i)];
     }
-    extents[d].dim = static_cast<std::int32_t>(rec[1 + MAXD]);
-    for (std::int32_t i = 0; i < extents[d].dim; ++i) {
+    extents[d] = DomainPoint::zeroes(static_cast<std::int32_t>(rec[1 + MAXD]));
+    for (std::uint32_t i = 0; i < extents[d].dim(); ++i) {
       extents[d][i] = rec[2 + MAXD + static_cast<std::size_t>(i)];
     }
   }
@@ -496,15 +495,15 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   // store dimension `d`; the remaining store dimensions carry a common extent. `ext_tables[d][k]`
   // is the extent of the pieces whose color is `k` along dimension `d`.
   const auto color_shape = opaque->color_shape();
-  const auto color_dim   = static_cast<std::int32_t>(color_shape.size());
+  const auto color_dim   = color_shape.size();
   auto ext_tables        = std::vector<std::vector<std::int64_t>>(color_dim);
   auto common_ext        = std::vector<std::int64_t>(store_dim, -1);
 
-  for (std::int32_t d = 0; d < color_dim; ++d) {
+  for (std::uint32_t d = 0; d < color_dim; ++d) {
     ext_tables[d].assign(color_shape[d], -1);
   }
   for (std::uint32_t r = 0; r < node_count; ++r) {
-    for (std::int32_t d = 0; d < store_dim; ++d) {
+    for (std::uint32_t d = 0; d < store_dim; ++d) {
       const auto ext = extents[r][d];
 
       if (d < color_dim) {
@@ -523,7 +522,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   auto offset_tables  = std::vector<std::vector<std::int64_t>>(color_dim);
   auto global_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>(tags::size_tag, store_dim, 0);
 
-  for (std::int32_t d = 0; d < color_dim; ++d) {
+  for (std::uint32_t d = 0; d < color_dim; ++d) {
     offset_tables[d].assign(color_shape[d], 0);
 
     std::int64_t running = 0;
@@ -534,7 +533,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
     }
     global_extents[d] = static_cast<std::uint64_t>(running);
   }
-  for (std::int32_t d = color_dim; d < store_dim; ++d) {
+  for (std::uint32_t d = color_dim; d < store_dim; ++d) {
     global_extents[d] = static_cast<std::uint64_t>(std::max<std::int64_t>(common_ext[d], 0));
   }
 
@@ -542,17 +541,16 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   auto domains = SmallVector<Domain>(tags::size_tag, node_count, Domain{});
 
   for (std::uint32_t r = 0; r < node_count; ++r) {
-    DomainPoint lo;
-    DomainPoint hi;
+    auto lo = DomainPoint::zeroes(store_dim);
+    auto hi = DomainPoint::zeroes(store_dim);
 
-    lo.dim = hi.dim = store_dim;
-    for (std::int32_t d = 0; d < store_dim; ++d) {
+    for (std::uint32_t d = 0; d < store_dim; ++d) {
       const auto offset = (d < color_dim) ? offset_tables[d][colors[r][d]] : std::int64_t{0};
 
       lo[d] = offset;
       hi[d] = offset + extents[r][d] - 1;
     }
-    domains[r] = Domain{lo, hi};
+    domains[r] = Domain{std::move(lo), std::move(hi)};
   }
 
   const auto my_global_domain = domains[my_node];

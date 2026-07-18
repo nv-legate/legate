@@ -40,7 +40,10 @@ coord_t LinearizeFn::operator()(const DomainPoint& lo,
 
 std::size_t linearize(const DomainPoint& lo, const DomainPoint& hi, const DomainPoint& point)
 {
-  return static_cast<std::size_t>(dim_dispatch(point.dim, LinearizeFn{}, lo, hi, point));
+  if (point.dim() == 0) {
+    return 0;
+  }
+  return static_cast<std::size_t>(dim_dispatch(point.dim(), LinearizeFn{}, lo, hi, point));
 }
 
 namespace {
@@ -58,10 +61,10 @@ DomainPoint DelinearizeFn::operator()(const DomainPoint& lo,
                                       const DomainPoint& hi,
                                       coord_t idx) const
 {
-  DomainPoint point;
-
-  point.dim = DIM;
   static_assert(DIM >= 1);
+
+  auto point = DomainPoint::zeroes(DIM);
+
   for (std::int32_t dim = DIM - 1; dim >= 0; --dim) {
     const auto udim   = static_cast<std::uint32_t>(dim);
     const auto extent = hi[udim] - lo[udim] + 1;
@@ -76,7 +79,10 @@ DomainPoint DelinearizeFn::operator()(const DomainPoint& lo,
 
 DomainPoint delinearize(const DomainPoint& lo, const DomainPoint& hi, std::size_t idx)
 {
-  return dim_dispatch(lo.dim, DelinearizeFn{}, lo, hi, static_cast<coord_t>(idx));
+  if (lo.dim() == 0) {
+    return DomainPoint{};
+  }
+  return dim_dispatch(lo.dim(), DelinearizeFn{}, lo, hi, static_cast<coord_t>(idx));
 }
 
 }  // namespace legate::detail

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/utilities/typedefs.h>
-
+#include <cstddef>
 #include <cstdint>
 
 namespace legate::detail {

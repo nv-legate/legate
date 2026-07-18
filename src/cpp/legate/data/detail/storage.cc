@@ -124,7 +124,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   LEGATE_CHECK(!unbound());
 
   // TODO(wonchanl): Better way to check invalid colors
-  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
+  auto sub_domain = color.dim() != 0 ? partition->shard(domain, color) : domain;
 
   // The canonical ("active") storage stays put on its own memory (by default the rank's GPU). When
   // the task runs on a different memory, it operates on a redundant copy on `target` instead, and
@@ -184,7 +184,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
       register_remap_copy_out();
     }
 
-    LEGATE_ASSERT(sub_domain.dim == 0 || sub_domain.get_volume() == 0 ||
+    LEGATE_ASSERT(sub_domain.dim() == 0 || sub_domain.volume() == 0 ||
                   active->domain().intersection(sub_domain) == sub_domain);
 
     return {active, sub_domain, true};
@@ -271,7 +271,7 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   LEGATE_ASSERT(!unbound());
 
   // TODO(wonchanl): Better way to check invalid colors
-  auto sub_domain = color.dim != 0 ? partition->shard(domain, color) : domain;
+  auto sub_domain = color.dim() != 0 ? partition->shard(domain, color) : domain;
 
   // Reducing directly into the canonical storage is only valid when it already lives on the memory
   // the reduction task runs on. Otherwise the task would reduce into a redundant copy on `target`
@@ -317,7 +317,7 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
     // Initialize the per-task scratch with the reduction identity so that ranks that don't write
     // to a given cell don't perturb the final reduction result.
     fill_with_reduction_identity(
-      reduction_buffer->data(), domain.get_volume(), target, type->code, op_kind);
+      reduction_buffer->data(), domain.volume(), target, type->code, op_kind);
 
     requests->register_reduction(ReductionRequest{
       reduction_buffer, storage_data_, partition, *key_partition_, domain, type, op_kind});
@@ -349,7 +349,7 @@ void Storage::bind(InternalSharedPtr<InlineStorage> storage_data, const Domain& 
 
   // A buffer bound to an unbound store must be zero-based: the store's extents are derived from the
   // buffer domain assuming its origin is (0, ..., 0).
-  for (std::int32_t i = 0; i < domain.dim; ++i) {
+  for (std::uint32_t i = 0; i < domain.dim(); ++i) {
     LEGATE_CHECK(domain.lo()[i] == 0);
   }
 
@@ -363,8 +363,8 @@ void Storage::finalize_unbound()
   auto hi      = domain_.hi();
   auto extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
 
-  extents.reserve(static_cast<std::size_t>(domain_.dim));
-  for (std::int32_t i = 0; i < domain_.dim; ++i) {
+  extents.reserve(static_cast<std::size_t>(domain_.dim()));
+  for (std::uint32_t i = 0; i < domain_.dim(); ++i) {
     extents.push_back(static_cast<std::uint64_t>(hi[i] - lo[i] + 1));
   }
   shape_->bind_extents(std::move(extents));

@@ -62,8 +62,7 @@ namespace {
  */
 [[nodiscard]] DomainPoint parse_to_domain_point(std::string_view sv)
 {
-  DomainPoint ret{};
-  std::uint32_t dim = 0;
+  legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords{};
 
   while (!sv.empty()) {
     const auto off = sv.find('_');
@@ -85,15 +84,14 @@ namespace {
         fmt::format("Unknown error parsing {}, found {} ({})", sv, sub, std::make_error_code(ec)));
     }
 
-    ret[dim++] = coord;
+    coords.push_back(static_cast<std::int64_t>(coord));
 
     sv.remove_prefix(sub.size());
     if (!sv.empty() && sv.front() == '_') {
       sv.remove_prefix(1);
     }
   }
-  ret.dim = static_cast<std::int32_t>(dim);
-  return ret;
+  return DomainPoint{std::move(coords)};
 }
 
 /**
@@ -133,27 +131,14 @@ namespace {
 }
 
 /**
- * @brief For all intents and purposes, a Domain, except that it just holds lo and hi directly,
- * because Domain returns these by copy (as they are stored in interleaved form).
- *
- * Since we parse lo and hi separately from the file it makes no sense to needlessly tangle
- * then untangle them.
- */
-class UnwrappedDomain {
- public:
-  DomainPoint lo{};
-  DomainPoint hi{};
-};
-
-/**
  * @brief Parse relevant information from a potential partial VDS file.
  *
  * @param path The full path to a file potentially written by the HDF5WriteVDS task.
  *
  * @return The domain of the sub-tile if `path` is a valid sub-file, `std::nullopt` otherwise.
  */
-[[nodiscard]] std::optional<UnwrappedDomain> parse_sub_vds_file(const std::filesystem::path& path,
-                                                                const Domain& launch_domain)
+[[nodiscard]] std::optional<Domain> parse_sub_vds_file(const std::filesystem::path& path,
+                                                       const Domain& launch_domain)
 {
   static const auto sub_file_regex =
     std::regex{R"(([\d_]+)_lo_([\d_]+)_hi_([\d_]+))", std::regex::optimize};
@@ -180,11 +165,8 @@ class UnwrappedDomain {
     return std::nullopt;
   }
 
-  auto ret = UnwrappedDomain{/* lo */ get_domain_point(cm[2]),
-                             /* hi */ get_domain_point(cm[3])};
-
-  LEGATE_CHECK(ret.lo.get_dim() == ret.hi.get_dim());
-  return ret;
+  return Domain{/* lo */ get_domain_point(cm[2]),
+                /* hi */ get_domain_point(cm[3])};
 }
 
 }  // namespace
@@ -279,13 +261,13 @@ class UnwrappedDomain {
       src_dtype = file.data_set(dset_name).type();
     }
 
-    LEGATE_CHECK(sub_domain->lo.get_dim() == static_cast<int>(start.size()));
-    LEGATE_CHECK(sub_domain->lo.get_dim() == static_cast<int>(extents.size()));
+    LEGATE_CHECK(sub_domain->lo().dim() == start.size());
+    LEGATE_CHECK(sub_domain->lo().dim() == extents.size());
 
-    for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(sub_domain->lo.get_dim()); ++i) {
-      start[i] = static_cast<hsize_t>(sub_domain->lo[i]);
+    for (std::uint32_t i = 0; i < static_cast<std::uint32_t>(sub_domain->lo().dim()); ++i) {
+      start[i] = static_cast<hsize_t>(sub_domain->lo()[i]);
       extents[i] =
-        static_cast<hsize_t>(std::max(sub_domain->hi[i] - sub_domain->lo[i] + 1, coord_t{0}));
+        static_cast<hsize_t>(std::max(sub_domain->hi()[i] - sub_domain->lo()[i] + 1, coord_t{0}));
     }
 
     vds_space.select_hyperslab(wrapper::HDF5DataSpace::SelectMode::SELECT_SET, start, extents);

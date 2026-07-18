@@ -13,7 +13,6 @@
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/enumerate.h>
-#include <legate/utilities/detail/geometry.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
@@ -171,12 +170,15 @@ InternalSharedPtr<Partition> Tiling::bloat(Span<const std::uint64_t> low_offsets
 
 bool Tiling::is_equi_size(const Domain& domain) const
 {
-  for (std::int32_t dim = 0; dim < domain.dim; ++dim) {
+  auto&& lo = domain.lo();
+  auto&& hi = domain.hi();
+
+  for (std::uint32_t dim = 0; dim < domain.dim(); ++dim) {
     const auto offset   = offsets()[dim];
     const auto tile_ext = tile_shape()[dim];
-    const auto lo_incl  = domain.rect_data[dim] + offset;
-    const auto hi_excl  = std::min<std::int64_t>(domain.rect_data[dim + domain.dim] + offset + 1,
-                                                 color_shape_dp()[dim] * tile_ext);
+    const auto lo_incl  = lo[dim] + offset;
+    const auto hi_excl =
+      std::min<std::int64_t>(hi[dim] + offset + 1, color_shape_dp()[dim] * tile_ext);
 
     if ((hi_excl - lo_incl) % tile_ext != 0) {
       return false;
@@ -186,7 +188,7 @@ bool Tiling::is_equi_size(const Domain& domain) const
   return true;
 }
 
-Legion::Domain Tiling::launch_domain() const { return to_domain(color_shape_); }
+Domain Tiling::launch_domain() const { return to_domain(color_shape_); }
 
 std::string Tiling::to_string() const
 {
@@ -233,14 +235,13 @@ DomainPoint Tiling::compute_color(std::uint64_t device_id) const
   const auto grid = device_mesh_.grid_point(device_id);
 
   // A device that the mesh does not map to holds no tile of this partition.
-  if (grid.dim == 0) {
+  if (grid.dim() == 0) {
     return DomainPoint{};
   }
 
-  DomainPoint result;
+  auto result = DomainPoint::zeroes(color_shape_dp_.dim());
 
-  result.dim = color_shape_dp_.dim;
-  for (std::int32_t c = 0; c < result.dim; ++c) {
+  for (std::uint32_t c = 0; c < result.dim(); ++c) {
     const auto m = color_to_mesh_[c];
 
     // Color dimensions that do not select a mesh dimension are not distributed; their coordinate
@@ -254,21 +255,24 @@ DomainPoint Tiling::compute_color(std::uint64_t device_id) const
 std::vector<std::uint64_t> Tiling::compute_device_ids(const DomainPoint& color) const
 {
   auto submesh = to_domain(device_mesh().shape());
+  auto lo      = submesh.lo();
+  auto hi      = submesh.hi();
 
   for (const auto& [color_dim, mesh_dim] : enumerate(color_to_mesh_)) {
     if (mesh_dim < 0) {
       continue;
     }
-    submesh.rect_data[mesh_dim]               = color[color_dim];
-    submesh.rect_data[mesh_dim + submesh.dim] = color[color_dim];
+    lo[mesh_dim] = color[color_dim];
+    hi[mesh_dim] = color[color_dim];
   }
+  submesh = Domain{std::move(lo), std::move(hi)};
 
   // Enumerate every combination of the replication axes, emitting one device id per combination.
   std::vector<std::uint64_t> result{};
 
-  result.reserve(submesh.get_volume());
-  for (Domain::DomainPointIterator it{submesh, false}; it; ++it) {
-    result.push_back(device_mesh_.device_id(*it));
+  result.reserve(submesh.volume());
+  for (auto&& point : submesh.iterate()) {
+    result.push_back(device_mesh_.device_id(point));
   }
 
   return result;
@@ -276,20 +280,22 @@ std::vector<std::uint64_t> Tiling::compute_device_ids(const DomainPoint& color) 
 
 Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
 {
-  if (!domain.is_valid()) {
+  if (domain.dim() == 0) {
     LEGATE_ASSERT(tile_shape().empty());
     return domain;
   }
 
   auto new_lo = color * tile_shape_dp_ + offsets_dp_;
   auto new_hi = new_lo + tile_shape_dp_;
+  auto&& lo   = domain.lo();
+  auto&& hi   = domain.hi();
 
-  for (std::int32_t dim = 0; dim < new_hi.dim; ++dim) {
-    new_lo[dim] = std::max(domain.rect_data[dim], new_lo[dim]);
-    new_hi[dim] = std::min(new_hi[dim] - 1, domain.rect_data[dim + domain.dim]);
+  for (std::uint32_t dim = 0; dim < new_hi.dim(); ++dim) {
+    new_lo[dim] = std::max(lo[dim], new_lo[dim]);
+    new_hi[dim] = std::min(new_hi[dim] - 1, hi[dim]);
   }
 
-  return {new_lo, new_hi};
+  return {std::move(new_lo), std::move(new_hi)};
 }
 
 bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) const

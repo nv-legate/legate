@@ -384,7 +384,6 @@ target_sources(
     legate/task/task_signature.cc
     legate/task/task_config.cc
     legate/task/detail/task_context.cc
-    legate/task/detail/task.cc
     legate/task/detail/variant_info.cc
     legate/task/detail/task_info.cc
     legate/tuning/parallel_policy.cc
@@ -405,7 +404,8 @@ target_sources(
     legate/utilities/detail/env.cc
     legate/utilities/detail/tuple.cc
     legate/utilities/detail/formatters.cc
-    legate/utilities/detail/geometry.cc
+    legate/geometry/domain.cc
+    legate/geometry/domain_point.cc
     legate/utilities/detail/traced_exception.cc
     legate/utilities/detail/zip.cc
     legate/utilities/detail/linearize.cc
@@ -905,6 +905,15 @@ install(
 
 install(
   FILES
+    legate/geometry/domain.h
+    legate/geometry/domain.inl
+    legate/geometry/domain_point.h
+    legate/geometry/domain_point.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/geometry
+)
+
+install(
+  FILES
     legate/utilities/dispatch.h
     legate/utilities/hash.h
     legate/utilities/machine.h
@@ -937,6 +946,8 @@ install(
     legate/utilities/detail/compressed_pair.h
     legate/utilities/detail/shared_ptr_control_block.h
     legate/utilities/detail/shared_ptr_control_block.inl
+    legate/utilities/detail/small_vector.h
+    legate/utilities/detail/small_vector.inl
     legate/utilities/detail/type_traits.h
     legate/utilities/detail/zip.h
     legate/utilities/detail/zip.inl

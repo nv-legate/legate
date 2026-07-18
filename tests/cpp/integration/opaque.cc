@@ -62,7 +62,7 @@ struct Tester : public legate::LegateTask<Tester> {
       return;
     }
 
-    ASSERT_EQ(context.get_launch_domain().get_volume(), NUM_TASKS);
+    ASSERT_EQ(context.get_launch_domain().volume(), NUM_TASKS);
 
     auto task_idx = context.get_task_index()[0];
     auto outputs  = context.outputs();

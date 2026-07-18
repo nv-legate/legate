@@ -348,7 +348,6 @@ set(
   non_reentrant/wo_runtime/exception/terminate_handler.cc
   non_reentrant/wo_runtime/exception/traced_exception.cc
   non_reentrant/wo_runtime/init/init.cc
-  non_reentrant/wo_runtime/inline_launch/basic.cc
   non_reentrant/wo_runtime/inline_storage/basic.cc
   non_reentrant/wo_runtime/machine/local_machine.cc
 )

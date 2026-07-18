@@ -12,7 +12,7 @@ namespace legate::detail {
 
 inline const InternalSharedPtr<Type>& TaskLocalBuffer::type() const { return type_; }
 
-inline std::int32_t TaskLocalBuffer::dim() const { return domain().get_dim(); }
+inline std::uint32_t TaskLocalBuffer::dim() const { return domain().dim(); }
 
 inline const Domain& TaskLocalBuffer::domain() const { return domain_; }
 

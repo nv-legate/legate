@@ -122,7 +122,7 @@ class CPUAllreduceTypedTester : public legate::LegateTask<CPUAllreduceTypedTeste
     }
 
     auto comm             = context.communicator(0).get<legate::comm::coll::CollComm>();
-    const auto num_tasks  = context.get_launch_domain().get_volume();
+    const auto num_tasks  = context.get_launch_domain().volume();
     const auto task_index = comm->global_rank;
 
     test_sum(comm, static_cast<std::int64_t>(num_tasks), task_index);

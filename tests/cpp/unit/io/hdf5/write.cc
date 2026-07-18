@@ -31,11 +31,13 @@ namespace {
 
 [[nodiscard]] legate::DomainPoint to_point(legate::Span<const std::uint64_t> point)
 {
-  legate::DomainPoint ret{};
-
   LEGATE_CHECK(point.size() < std::numeric_limits<int>::max());
-  ret.dim = static_cast<int>(point.size());
-  std::copy_n(point.begin(), point.size(), ret.point_data);
+
+  auto ret = legate::DomainPoint::zeroes(static_cast<std::int32_t>(point.size()));
+
+  for (std::uint32_t idx = 0; idx < ret.dim(); ++idx) {
+    ret[idx] = static_cast<std::int64_t>(point[idx]);
+  }
   return ret;
 }
 
@@ -118,13 +120,8 @@ class IotaTask : public legate::LegateTask<IotaTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     const auto global_shape = to_point(context.scalar(0).values<std::uint64_t>());
-    const auto zero         = [&] {
-      legate::DomainPoint pt{};
-
-      pt.dim = global_shape.get_dim();
-      return pt;
-    }();
-    auto store = context.output(0);
+    const auto zero         = legate::DomainPoint::zeroes(global_shape.dim());
+    auto store              = context.output(0);
 
     double_dispatch_with_binary(store.dim(), store.code(), Iota{}, zero, global_shape, &store);
   }

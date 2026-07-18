@@ -12,7 +12,6 @@
 #include <legate/data/detail/external_allocation.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/utilities/detail/geometry.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -116,7 +115,7 @@ InlineStorage::InlineStorage(const Domain& domain,
   : domain_{domain},
     field_size_{field_size},
     allocation_{
-      make_external_alloc(target, std::max<>(domain.get_volume(), std::size_t{1}) * field_size)}
+      make_external_alloc(target, std::max<>(domain.volume(), std::size_t{1}) * field_size)}
 {
 }
 
@@ -140,7 +139,7 @@ mapping::StoreTarget InlineStorage::target() const { return alloc_().target(); }
 
 void InlineStorage::rebase(const Domain& domain)
 {
-  LEGATE_CHECK(domain.get_volume() == domain_.get_volume());
+  LEGATE_ASSERT(domain.volume() == domain_.volume());
   domain_ = domain;
 }
 
@@ -155,22 +154,19 @@ std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> InlineStorage::base
   // starts at the domain's lower bound, so the base (address of coordinate zero) and per-dimension
   // byte strides follow directly from the domain and field size.
   static const Domain for_0d = []() noexcept {
-    Domain result;
-
-    result.dim = 1;
-    return result;
+    return Domain{DomainPoint::zeroes(1), DomainPoint::zeroes(1)};
   }();
-  const auto& dm             = domain_.dim == 0 ? for_0d : domain_;
-  const auto element_strides = calculate_strides(dm);
+  const auto& dm             = domain_.dim() == 0 ? for_0d : domain_;
+  const auto element_strides = dm.strides();
 
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> byte_strides;
 
-  byte_strides.reserve(dm.dim);
-  for (std::int32_t i = 0; i < dm.dim; ++i) {
+  byte_strides.reserve(static_cast<std::size_t>(dm.dim()));
+  for (std::uint32_t i = 0; i < dm.dim(); ++i) {
     byte_strides.push_back(static_cast<std::uint64_t>(element_strides[i]) * field_size_);
   }
-  auto* const base = static_cast<std::int8_t*>(alloc_().ptr()) -
-                     (inner_product(dm.lo(), element_strides) * field_size_);
+  auto* const base =
+    static_cast<std::int8_t*>(alloc_().ptr()) - (dm.lo().dot(element_strides) * field_size_);
 
   return {static_cast<void*>(base), std::move(byte_strides)};
 }

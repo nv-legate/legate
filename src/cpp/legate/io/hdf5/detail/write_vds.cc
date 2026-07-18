@@ -44,8 +44,7 @@ struct formatter<FlatDomainPoint> : public formatter<string_view> {
   {
     const auto& point = value.dp;
 
-    return format_to(
-      ctx.out(), "{}", fmt::join(point.point_data, point.point_data + point.dim, "_"));
+    return format_to(ctx.out(), "{}", fmt::join(point.begin(), point.end(), "_"));
   }
 };
 
@@ -242,9 +241,8 @@ void task_body(const legate::TaskContext& context, bool is_device)
 
     // If this was a single task, the launch domain and task index would not be valid, so here we
     // create fake ones with the expected number of dimensions.
-    DomainPoint dummy_task_index{};
+    auto dummy_task_index = DomainPoint::zeroes(static_cast<std::int32_t>(store.dim()));
 
-    dummy_task_index.dim = store.dim();
     return {Domain{dummy_task_index, dummy_task_index}, dummy_task_index};
   }();
   const auto index_filepath = make_filepath(base_dir, index_point, store.domain());

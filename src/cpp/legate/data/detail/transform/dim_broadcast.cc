@@ -15,24 +15,28 @@
 
 #include <cstdint>
 #include <iostream>
+#include <utility>
 
 namespace legate::detail {
 
 Domain DimBroadcast::transform(const Domain& input) const
 {
-  Domain output;
+  const auto ndim = input.dim();
+  auto lo         = DomainPoint::zeroes(ndim);
+  auto hi         = DomainPoint::zeroes(ndim);
+  auto&& in_lo    = input.lo();
+  auto&& in_hi    = input.hi();
 
-  output.dim = input.dim;
-  for (std::int32_t dim = 0; dim < output.dim; ++dim) {
-    if (dim == dim_) {
-      output.rect_data[dim]              = 0;
-      output.rect_data[dim + output.dim] = static_cast<coord_t>(dim_size_) - 1;
+  for (std::uint32_t dim = 0; dim < ndim; ++dim) {
+    if (static_cast<std::int32_t>(dim) == dim_) {
+      lo[dim] = 0;
+      hi[dim] = static_cast<std::int64_t>(dim_size_) - 1;
     } else {
-      output.rect_data[dim]              = input.rect_data[dim];
-      output.rect_data[dim + output.dim] = input.rect_data[dim + input.dim];
+      lo[dim] = in_lo[dim];
+      hi[dim] = in_hi[dim];
     }
   }
-  return output;
+  return {std::move(lo), std::move(hi)};
 }
 
 Legion::DomainAffineTransform DimBroadcast::inverse_transform(std::int32_t in_dim) const

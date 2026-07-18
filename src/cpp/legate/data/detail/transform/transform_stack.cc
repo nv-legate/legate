@@ -157,7 +157,7 @@ void TransformStack::pack(BufferBuilder& buffer) const
   }
 }
 
-Legion::Domain TransformStack::transform(const Legion::Domain& input) const
+Domain TransformStack::transform(const Domain& input) const
 {
   LEGATE_ASSERT(transform_ != nullptr);
   return transform_->transform(parent_->identity() ? input : parent_->transform(input));

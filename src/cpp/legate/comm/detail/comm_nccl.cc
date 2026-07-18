@@ -32,8 +32,6 @@
 
 namespace legate::detail {
 
-void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
-
 namespace comm::nccl {
 
 namespace {

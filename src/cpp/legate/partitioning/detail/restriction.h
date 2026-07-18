@@ -151,12 +151,12 @@ class Restrictions {
    *
    * @return The domain with FORBIDden dimensions pruned out.
    */
-  [[nodiscard]] Legion::Domain prune_dimensions(const Legion::Domain& domain) const;
+  [[nodiscard]] Domain prune_dimensions(const Domain& domain) const;
 
-  [[nodiscard]] Legion::Domain embed(const Legion::Domain& domain) const;
+  [[nodiscard]] Domain embed(const Domain& domain) const;
 
   [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> embed_to_color_shape(
-    const Legion::Domain& domain) const;
+    const Domain& domain) const;
 
   [[nodiscard]] std::size_t count_restricted() const;
 

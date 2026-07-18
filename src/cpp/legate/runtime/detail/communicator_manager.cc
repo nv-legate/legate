@@ -20,10 +20,10 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
                                                       const Domain& launch_domain,
                                                       Legion::ProjectionID proj_id)
 {
-  if (launch_domain.dim == 1) {
+  if (launch_domain.dim() == 1) {
     // 1-D consumer launches read futures by raw point coordinate, no reshape
     // and so no key-store projection is involved.
-    return find_or_create_(target, range, launch_domain.get_volume());
+    return find_or_create_(target, range, launch_domain.volume());
   }
 
   AliasKey key{std::tuple{launch_domain, proj_id}, target, range};
@@ -32,7 +32,7 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
     return finder->second;
   }
 
-  auto communicator = find_or_create_(target, range, launch_domain.get_volume());
+  auto communicator = find_or_create_(target, range, launch_domain.volume());
   communicator      = transform_(communicator, launch_domain, proj_id);
   nd_aliases_.insert({std::move(key), communicator});
   return communicator;

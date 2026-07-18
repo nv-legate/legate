@@ -14,27 +14,26 @@
 
 namespace legate::detail {
 
-namespace {
-
-template <typename T>
-void set_min_optional(const T& value, bool* on_change_flag, std::optional<T>* opt)
-{
-  if (opt->has_value()) {
-    if (*opt != value) {
-      *on_change_flag = true;
-    }
-    *opt = std::min(value, **opt);
-  } else {
-    opt->emplace(value);
-  }
-}
-
-}  // namespace
-
 void LaunchDomainResolver::record_launch_domain(const Domain& launch_domain)
 {
-  set_min_optional(launch_domain, &must_be_1d_, &launch_domain_);
-  set_min_optional(launch_domain.get_volume(), &must_be_sequential_, &launch_volume_);
+  const auto new_volume = launch_domain.volume();
+
+  if (!launch_volume_.has_value()) {
+    LEGATE_ASSERT(!launch_domain_.has_value());
+    launch_volume_.emplace(new_volume);
+    launch_domain_.emplace(launch_domain);
+    return;
+  }
+
+  if (*launch_volume_ != new_volume) {
+    must_be_sequential_ = true;
+    return;
+  }
+
+  LEGATE_ASSERT(launch_domain_.has_value());
+  if (*launch_domain_ != launch_domain) {
+    must_be_1d_ = true;
+  }
 }
 
 void LaunchDomainResolver::record_unbound_store(std::uint32_t unbound_dim)
@@ -71,7 +70,7 @@ Domain LaunchDomainResolver::resolve_launch_domain() const
 
   const auto& launch_domain = *launch_domain_;
 
-  if (unbound_dim_.has_value() && launch_domain.dim != static_cast<int>(*unbound_dim_)) {
+  if (unbound_dim_.has_value() && launch_domain.dim() != *unbound_dim_) {
     return {};
   }
   return launch_domain;

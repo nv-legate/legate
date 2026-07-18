@@ -13,15 +13,18 @@
 
 #include <cstdint>
 #include <iostream>
+#include <utility>
 
 namespace legate::detail {
 
 Domain Shift::transform(const Domain& input) const
 {
-  auto result = input;
-  result.rect_data[dim_] += offset_;
-  result.rect_data[dim_ + result.dim] += offset_;
-  return result;
+  auto lo = input.lo();
+  auto hi = input.hi();
+
+  lo[dim_] += offset_;
+  hi[dim_] += offset_;
+  return {std::move(lo), std::move(hi)};
 }
 
 Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) const

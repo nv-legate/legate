@@ -112,7 +112,7 @@ template <>
 LEGATE_EXPORT std::string Scalar::value<std::string>() const;
 
 template <>
-LEGATE_EXPORT Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const;
+LEGATE_EXPORT DomainPoint Scalar::value<DomainPoint>() const;
 
 template <typename VAL>
 Span<const VAL> Scalar::values() const

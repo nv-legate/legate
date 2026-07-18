@@ -24,7 +24,7 @@ void validate(legate::TaskContext context)
     return;
   }
 
-  const auto num_tasks  = context.get_launch_domain().get_volume();
+  const auto num_tasks  = context.get_launch_domain().volume();
   const auto to_compare = context.scalars().at(0).value<std::int32_t>();
   EXPECT_EQ(to_compare, num_tasks);
 }

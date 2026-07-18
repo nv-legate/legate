@@ -185,12 +185,12 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 
     switch (hint) {
       case legate::ImageComputationHint::NO_HINT: {
-        EXPECT_TRUE(context.is_single_task() || range.get_volume() <= 1 || !range.dense());
+        EXPECT_TRUE(context.is_single_task() || range.volume() <= 1);
         break;
       }
       case legate::ImageComputationHint::MIN_MAX:
       case legate::ImageComputationHint::FIRST_LAST: {
-        EXPECT_TRUE(range.dense());
+        break;
       }
     }
 
@@ -205,8 +205,8 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 
     if (context.get_task_index() == context.get_launch_domain().lo()) {
       logger().debug() << "== Image received in task 0 ==";
-      for (legate::Domain::DomainPointIterator it{range}; it; ++it) {
-        logger().debug() << "  " << *it;
+      for (auto&& point : range.iterate()) {
+        logger().debug() << "  " << point;
       }
       logger().debug() << "==============================";
     }

@@ -22,15 +22,14 @@ Domain to_domain(Span<const std::uint64_t> shape)
     return {0, 0};
   }
 
-  const auto ndim = static_cast<std::uint32_t>(shape.size());
-  Domain domain;
+  const auto ndim = static_cast<std::int32_t>(shape.size());
+  auto lo         = DomainPoint::zeroes(ndim);
+  auto hi         = DomainPoint::zeroes(ndim);
 
-  domain.dim = static_cast<int>(ndim);
-  for (std::uint32_t idx = 0; idx < ndim; ++idx) {
-    domain.rect_data[idx]        = 0;
-    domain.rect_data[idx + ndim] = static_cast<coord_t>(shape[idx]) - 1;
+  for (std::int32_t idx = 0; idx < ndim; ++idx) {
+    hi[idx] = static_cast<std::int64_t>(shape[idx]) - 1;
   }
-  return domain;
+  return {std::move(lo), std::move(hi)};
 }
 
 Domain to_maybe_empty_domain(Span<const std::uint64_t> shape)
@@ -47,27 +46,16 @@ Domain to_maybe_empty_domain(Span<const std::uint64_t> shape)
 
 DomainPoint to_domain_point(Span<const std::uint64_t> shape)
 {
-  const auto ndim = static_cast<std::uint32_t>(shape.size());
-  DomainPoint point;
+  const auto ndim = static_cast<std::int32_t>(shape.size());
+  auto point      = DomainPoint::zeroes(ndim);
 
-  point.dim = static_cast<int>(ndim);
-  for (std::uint32_t idx = 0; idx < ndim; ++idx) {
-    point[idx] = static_cast<coord_t>(shape[idx]);
+  for (std::int32_t idx = 0; idx < ndim; ++idx) {
+    point[idx] = static_cast<std::int64_t>(shape[idx]);
   }
   return point;
 }
 
-DomainPoint to_domain_point(Span<const std::int64_t> shape)
-{
-  const auto ndim = static_cast<std::uint32_t>(shape.size());
-  DomainPoint point;
-
-  point.dim = static_cast<int>(ndim);
-  for (std::uint32_t idx = 0; idx < ndim; ++idx) {
-    point[idx] = static_cast<coord_t>(shape[idx]);
-  }
-  return point;
-}
+DomainPoint to_domain_point(Span<const std::int64_t> shape) { return DomainPoint{shape}; }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Domain& domain)
 {
@@ -75,8 +63,8 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Domain& domain)
   auto&& lo = domain.lo();
   auto&& hi = domain.hi();
 
-  result.reserve(domain.dim);
-  for (std::int32_t idx = 0; idx < domain.dim; ++idx) {
+  result.reserve(static_cast<std::size_t>(domain.dim()));
+  for (std::uint32_t idx = 0; idx < domain.dim(); ++idx) {
     result.emplace_back(hi[idx] - lo[idx] + 1);
   }
   return result;

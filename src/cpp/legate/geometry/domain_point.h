@@ -1,0 +1,171 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights
+ * reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#pragma once
+
+#include <legate_defines.h>
+
+#include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/span.h>
+
+#include <realm/point.h>
+
+#include <cstdint>
+#include <iosfwd>
+#include <type_traits>
+
+/**
+ * @file
+ * @brief Class definition for legate::DomainPoint
+ */
+
+namespace legate {
+
+/**
+ * @addtogroup geometry
+ * @{
+ */
+
+/**
+ * @brief A dimension-erased, multi-dimensional point.
+ */
+class LEGATE_EXPORT DomainPoint {
+ public:
+  /**
+   * @brief The maximum number of dimensions a `DomainPoint` may have.
+   */
+  static constexpr std::int32_t MAX_DIM = LEGATE_MAX_DIM;
+
+  /**
+   * @brief Constructs an empty (0-dimensional) point.
+   */
+  DomainPoint() = default;
+  /**
+   * @brief Constructs a 1-dimensional point holding a single coordinate.
+   *
+   * @param index The coordinate value.
+   */
+  DomainPoint(std::int64_t index);  // NOLINT(google-explicit-constructor)
+  /**
+   * @brief Constructs a point from a vector of coordinates.
+   *
+   * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
+   */
+  explicit DomainPoint(detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords);
+  /**
+   * @brief Constructs a point from a span of coordinates.
+   *
+   * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
+   */
+  explicit DomainPoint(Span<const std::int64_t> coords);
+  /**
+   * @brief Constructs a point from a `legate::Point` (a.k.a. `Realm::Point`).
+   *
+   * @param point The point to convert from.
+   */
+  template <int DIM, typename T>
+  DomainPoint(const Realm::Point<DIM, T>& point);  // NOLINT(google-explicit-constructor)
+
+  /**
+   * @brief Converts this point to a `legate::Point` (a.k.a. `Realm::Point`).
+   *
+   * The requested dimensionality must match `dim()`.
+   */
+  template <int DIM, typename T>
+  operator Realm::Point<DIM, T>() const;  // NOLINT(google-explicit-constructor)
+
+  template <int DIM, typename T>
+  DomainPoint& operator=(const Realm::Point<DIM, T>& point);
+
+  /**
+   * @return The dimensionality of the point.
+   */
+  [[nodiscard]] std::uint32_t dim() const;
+
+  // ==-- Utility methods (formerly free functions in geometry.h) --==
+
+  /**
+   * @brief Computes the inner (dot) product of this point with another.
+   *
+   * @param other The other point. Must have the same dimensionality as this point.
+   *
+   * @return The inner product.
+   */
+  [[nodiscard]] std::int64_t dot(const DomainPoint& other) const;
+
+  /**
+   * @brief Computes the volume of a shape described by this point.
+   *
+   * @return The product of all coordinates.
+   */
+  [[nodiscard]] std::int64_t volume() const;
+
+  /**
+   * @brief Computes the (C-order) strides for a shape described by this point.
+   *
+   * @return A point whose coordinates are the strides for each dimension.
+   */
+  [[nodiscard]] DomainPoint strides() const;
+
+  [[nodiscard]] bool operator==(const DomainPoint& rhs) const;
+  [[nodiscard]] bool operator!=(const DomainPoint& rhs) const;
+
+  [[nodiscard]] DomainPoint operator+(std::int64_t scalar) const;
+  [[nodiscard]] DomainPoint operator+(const DomainPoint& rhs) const;
+  DomainPoint& operator+=(std::int64_t scalar);
+  DomainPoint& operator+=(const DomainPoint& rhs);
+
+  [[nodiscard]] DomainPoint operator-(std::int64_t scalar) const;
+  [[nodiscard]] DomainPoint operator-(const DomainPoint& rhs) const;
+  DomainPoint& operator-=(std::int64_t scalar);
+  DomainPoint& operator-=(const DomainPoint& rhs);
+
+  [[nodiscard]] DomainPoint operator*(std::int64_t scalar) const;
+  [[nodiscard]] DomainPoint operator*(const DomainPoint& rhs) const;
+  DomainPoint& operator*=(std::int64_t scalar);
+  DomainPoint& operator*=(const DomainPoint& rhs);
+
+  [[nodiscard]] DomainPoint operator/(std::int64_t scalar) const;
+  [[nodiscard]] DomainPoint operator/(const DomainPoint& rhs) const;
+  DomainPoint& operator/=(std::int64_t scalar);
+  DomainPoint& operator/=(const DomainPoint& rhs);
+
+  [[nodiscard]] DomainPoint operator%(std::int64_t scalar) const;
+  [[nodiscard]] DomainPoint operator%(const DomainPoint& rhs) const;
+  DomainPoint& operator%=(std::int64_t scalar);
+  DomainPoint& operator%=(const DomainPoint& rhs);
+
+  template <typename Index, typename = std::enable_if_t<std::is_integral_v<Index>>>
+  [[nodiscard]] std::int64_t& operator[](Index index);
+  template <typename Index, typename = std::enable_if_t<std::is_integral_v<Index>>>
+  [[nodiscard]] const std::int64_t& operator[](Index index) const;
+
+  /**
+   * @brief Creates a zero-filled point of the given dimensionality.
+   *
+   * @param ndim The dimensionality of the point.
+   *
+   * @return The newly created point.
+   */
+  [[nodiscard]] static DomainPoint zeroes(std::int32_t ndim);
+
+  // ==-- Iteration over coordinates --==
+
+  [[nodiscard]] const std::int64_t* begin() const;
+  [[nodiscard]] const std::int64_t* end() const;
+
+ private:
+  detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coordinates_{};
+};
+
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& os, const DomainPoint& point);
+
+/** @} */  // end of geometry
+
+}  // namespace legate
+
+#include <legate/geometry/domain_point.inl>

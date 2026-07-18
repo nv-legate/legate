@@ -28,7 +28,7 @@ namespace legate::detail {
 
 std::optional<DomainPoint> Strategy::task_index() const
 {
-  if (!launch_domain().is_valid()) {
+  if (launch_domain().dim() == 0) {
     return std::make_optional<DomainPoint>();
   }
 
@@ -66,7 +66,7 @@ void Strategy::dump() const
     return;
   }
   log_legate_partitioner().debug() << "===== Solution =====";
-  if (!launch_domain_.is_valid()) {
+  if (launch_domain_.dim() == 0) {
     log_legate_partitioner().debug()
       << operation_->to_string(true /*show_provenance*/) << ": (sequential)";
   } else {

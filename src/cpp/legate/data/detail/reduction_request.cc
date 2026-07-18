@@ -17,7 +17,6 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/type_traits.h>
 #include <legate/type/types.h>
-#include <legate/utilities/detail/geometry.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/dispatch.h>
 
@@ -264,7 +263,7 @@ void ReductionRequest::perform(VariantCode variant_code) const
 {
   const auto target_partitioned       = target_partition_->has_color_shape();
   const auto source_partitioned       = source_partition_->has_color_shape();
-  const auto source_covers_full_store = source_->domain().get_volume() == sub_domain_.get_volume();
+  const auto source_covers_full_store = source_->domain().volume() == sub_domain_.volume();
 
   // Replicated target: every rank holds a full-size partial that must be combined across ranks.
   if (!target_partitioned && source_covers_full_store) {
@@ -298,22 +297,22 @@ void ReductionRequest::perform(VariantCode variant_code) const
 void ReductionRequest::reduce_to_tiled_target_(VariantCode variant_code) const
 {
   const auto target_domain = target_->domain();
-  const auto count         = target_domain.get_volume();
+  const auto count         = target_domain.volume();
 
   if (count == 0) {
     return;
   }
 
   const auto source_domain  = source_->domain();
-  const auto source_strides = calculate_strides(source_domain);
-  const auto source_extents = calculate_extents(source_domain);
-  const auto target_extents = calculate_extents(target_domain);
+  const auto source_strides = source_domain.strides();
+  const auto source_extents = source_domain.extents();
+  const auto target_extents = target_domain.extents();
 
   // The target tile occupies a contiguous run of the row-major source only when it spans the full
   // extent of every dimension but the outermost (true for the 1-D reduction stores handled here,
   // and for tilings along the outermost dimension). Refuse the strided case loudly rather than
   // silently corrupting data.
-  for (std::int32_t dim = 1; dim < source_domain.dim; ++dim) {
+  for (std::uint32_t dim = 1; dim < source_domain.dim(); ++dim) {
     if (target_extents[dim] != source_extents[dim]) {
       throw TracedException<std::runtime_error>{
         "Reduction into a non-contiguous tile of the target is not yet supported"};
@@ -322,7 +321,7 @@ void ReductionRequest::reduce_to_tiled_target_(VariantCode variant_code) const
 
   // This rank's tile lives at its global coordinates within the full-size source buffer.
   const auto field_size    = type_->size();
-  const auto source_offset = inner_product(target_domain.lo() - source_domain.lo(), source_strides);
+  const auto source_offset = (target_domain.lo() - source_domain.lo()).dot(source_strides);
   const auto num_bytes     = count * field_size;
   const auto* source_ptr =
     static_cast<const std::int8_t*>(source_->data()) + (source_offset * field_size);
@@ -348,7 +347,7 @@ void ReductionRequest::all_reduce_(VariantCode variant_code) const
     // TODO(wonchanl): Error checking
     ncclAllReduce(source_->data(),
                   target_->data(),
-                  std::max<>(source_->domain().get_volume(), std::size_t{1}),
+                  std::max<>(source_->domain().volume(), std::size_t{1}),
                   to_nccl_data_type(type_->code),
                   to_nccl_red_op(op_kind_),
                   Runtime::get_runtime().get_gpu_comm(),
@@ -360,7 +359,7 @@ void ReductionRequest::all_reduce_(VariantCode variant_code) const
 
   collAllreduce(source_->data(),
                 target_->data(),
-                std::max<>(static_cast<int>(source_->domain().get_volume()), 1),
+                std::max<>(static_cast<int>(source_->domain().volume()), 1),
                 to_coll_data_type_(type_->code),
                 op_kind_,
                 Runtime::get_runtime().get_cpu_comm());

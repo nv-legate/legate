@@ -36,7 +36,7 @@ class CPUCommunicatorAllGatherTester : public legate::LegateTask<CPUCommunicator
 
     auto comm                    = context.communicator(0).get<legate::comm::coll::CollComm>();
     constexpr std::int64_t value = 12345;
-    const auto num_tasks         = context.get_launch_domain().get_volume();
+    const auto num_tasks         = context.get_launch_domain().volume();
     std::vector<std::int64_t> recv_buffer(num_tasks, 0);
 
     collAllgather(
@@ -232,7 +232,7 @@ class CPUAllreduceTester : public legate::LegateTask<CPUAllreduceTester> {
     }
 
     auto comm             = context.communicator(0).get<legate::comm::coll::CollComm>();
-    const auto num_tasks  = context.get_launch_domain().get_volume();
+    const auto num_tasks  = context.get_launch_domain().volume();
     const auto task_index = comm->global_rank;
 
     test_sum(comm, static_cast<std::int64_t>(num_tasks), task_index);
@@ -262,7 +262,7 @@ class CPUCommunicatorAlltoallTester : public legate::LegateTask<CPUCommunicatorA
     }
 
     auto comm            = context.communicator(0).get<legate::comm::coll::CollComm>();
-    const auto num_tasks = context.get_launch_domain().get_volume();
+    const auto num_tasks = context.get_launch_domain().volume();
     const auto my_rank   = comm->global_rank;
 
     // Each rank sends its rank value to all other ranks
@@ -305,7 +305,7 @@ class CPUCommunicatorAlltoallvTester : public legate::LegateTask<CPUCommunicator
     }
 
     auto comm            = context.communicator(0).get<legate::comm::coll::CollComm>();
-    const auto num_tasks = context.get_launch_domain().get_volume();
+    const auto num_tasks = context.get_launch_domain().volume();
     const auto my_rank   = comm->global_rank;
 
     // Each rank R sends (R+1) elements to each destination

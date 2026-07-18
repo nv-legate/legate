@@ -98,16 +98,9 @@ std::string Scalar::value() const
 }
 
 template <>
-Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
+DomainPoint Scalar::value<DomainPoint>() const
 {
-  Legion::DomainPoint result;
-  const auto span = values<std::int64_t>();
-
-  result.dim = static_cast<decltype(result.dim)>(span.size());
-  for (auto idx = 0; idx < result.dim; ++idx) {
-    result[idx] = span[idx];
-  }
-  return result;
+  return DomainPoint{values<std::int64_t>()};
 }
 
 const void* Scalar::ptr() const { return impl_->data(); }

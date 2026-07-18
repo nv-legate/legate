@@ -60,7 +60,7 @@ GlobalTaskID TaskContext::task_id() const noexcept
   return op_task_->library().get_task_id(op_task_->local_task_id());
 }
 
-bool TaskContext::is_single_task() const noexcept { return !launch_domain_.is_valid(); }
+bool TaskContext::is_single_task() const noexcept { return launch_domain_.dim() == 0; }
 
 const DomainPoint& TaskContext::get_task_index() const noexcept { return task_index_; }
 
