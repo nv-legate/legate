@@ -17,15 +17,13 @@ inline Domain::iterator::reference Domain::iterator::operator*() const { return 
 
 inline Domain::iterator::pointer Domain::iterator::operator->() const { return &point_; }
 
-inline const DomainPoint& Domain::iterator::lo() const { return lo_.get(); }
+inline const DomainPoint& Domain::iterator::lo() const { return lo_; }
 
-inline const DomainPoint& Domain::iterator::hi() const { return hi_.get(); }
+inline const DomainPoint& Domain::iterator::hi() const { return hi_; }
 
 // ==========================================================================================
 
-inline Domain::Iterable::Iterable(std::reference_wrapper<const DomainPoint> lo,
-                                  std::reference_wrapper<const DomainPoint> hi,
-                                  bool fortran_order)
+inline Domain::Iterable::Iterable(DomainPoint lo, DomainPoint hi, bool fortran_order)
   : lo_{std::move(lo)}, hi_{std::move(hi)}, fortran_order_{fortran_order}
 {
 }

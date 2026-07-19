@@ -16,13 +16,10 @@
 
 namespace legate {
 
-Domain::iterator::iterator(std::reference_wrapper<const DomainPoint> lo_dp,
-                           std::reference_wrapper<const DomainPoint> hi_dp,
-                           bool fortran_order,
-                           bool valid)
+Domain::iterator::iterator(DomainPoint lo_dp, DomainPoint hi_dp, bool fortran_order, bool valid)
   : lo_{std::move(lo_dp)},
     hi_{std::move(hi_dp)},
-    point_{lo()},
+    point_{lo_},
     fortran_order_{fortran_order},
     valid_{valid}
 {

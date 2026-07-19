@@ -15,7 +15,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <iosfwd>
 #include <iterator>
 
@@ -54,10 +53,7 @@ class LEGATE_EXPORT Domain {
     using pointer           = const DomainPoint*;
     using reference         = const DomainPoint&;
 
-    iterator(std::reference_wrapper<const DomainPoint> lo,
-             std::reference_wrapper<const DomainPoint> hi,
-             bool fortran_order,
-             bool valid = true);
+    iterator(DomainPoint lo, DomainPoint hi, bool fortran_order, bool valid = true);
 
     [[nodiscard]] reference operator*() const;
     [[nodiscard]] pointer operator->() const;
@@ -72,8 +68,8 @@ class LEGATE_EXPORT Domain {
    private:
     void step_();
 
-    std::reference_wrapper<const DomainPoint> lo_;
-    std::reference_wrapper<const DomainPoint> hi_;
+    DomainPoint lo_{};
+    DomainPoint hi_{};
     DomainPoint point_{};
     bool fortran_order_{false};
     bool valid_{false};
@@ -84,16 +80,14 @@ class LEGATE_EXPORT Domain {
    */
   class Iterable {
    public:
-    Iterable(std::reference_wrapper<const DomainPoint> lo,
-             std::reference_wrapper<const DomainPoint> hi,
-             bool fortran_order);
+    Iterable(DomainPoint lo, DomainPoint hi, bool fortran_order);
 
     [[nodiscard]] iterator begin() const;
     [[nodiscard]] iterator end() const;
 
    private:
-    std::reference_wrapper<const DomainPoint> lo_;
-    std::reference_wrapper<const DomainPoint> hi_;
+    DomainPoint lo_{};
+    DomainPoint hi_{};
     bool fortran_order_{false};
   };
 
