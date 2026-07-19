@@ -402,7 +402,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
                                                                 inverted,
                                                                 color,
                                                                 machine.preferred_store_target(),
-                                                                launch_domain.dim() == 0,
+                                                                launch_domain.dim() != 0,
                                                                 type_,
                                                                 op_kind,
                                                                 store_has_identity,
