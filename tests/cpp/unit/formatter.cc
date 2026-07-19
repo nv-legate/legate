@@ -224,8 +224,8 @@ INSTANTIATE_TEST_SUITE_P(
 template <typename>
 using FormatID = ::testing::Test;
 
-using IDTypeList = ::testing::
-  Types<legate::LocalTaskID, legate::GlobalTaskID, legate::LocalRedopID, legate::GlobalRedopID>;
+using IDTypeList =
+  ::testing::Types<legate::LocalTaskID, legate::LocalRedopID, legate::GlobalRedopID>;
 
 TYPED_TEST_SUITE(FormatID, IDTypeList, );
 

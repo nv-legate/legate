@@ -5,11 +5,10 @@
 from ..data.physical_store import PhysicalStore
 from ..data.scalar import Scalar
 from ..mapping.machine import Machine
-from ..utilities.typedefs import Domain, DomainPoint, GlobalTaskID, VariantCode
+from ..utilities.typedefs import Domain, DomainPoint, VariantCode
 from ..utilities.unconstructable import Unconstructable
 
 class TaskContext(Unconstructable):
-    def get_task_id(self) -> GlobalTaskID: ...
     def get_variant_kind(self) -> VariantCode: ...
     @property
     def inputs(self) -> tuple[PhysicalStore, ...]: ...

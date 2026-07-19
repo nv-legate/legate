@@ -86,12 +86,6 @@ format_context::iterator formatter<legate::LocalTaskID>::format(legate::LocalTas
   return formatter<std::underlying_type_t<legate::LocalTaskID>>::format(fmt::underlying(id), ctx);
 }
 
-format_context::iterator formatter<legate::GlobalTaskID>::format(legate::GlobalTaskID id,
-                                                                 format_context& ctx) const
-{
-  return formatter<std::underlying_type_t<legate::GlobalTaskID>>::format(fmt::underlying(id), ctx);
-}
-
 format_context::iterator formatter<legate::LocalRedopID>::format(legate::LocalRedopID id,
                                                                  format_context& ctx) const
 {

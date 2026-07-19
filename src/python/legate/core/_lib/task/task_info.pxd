@@ -10,7 +10,6 @@ from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..utilities.typedefs cimport (
     VariantCode,
     VariantImpl,
-    _GlobalTaskID,
     _LocalTaskID,
 )
 from ..utilities.unconstructable cimport Unconstructable
@@ -48,7 +47,7 @@ cdef class TaskInfo(Unconstructable):
         list[tuple[VariantCode, object]] variants
     )
     cdef void validate_registered_py_variants(self)
-    cdef void register_global_variant_callbacks(self, _GlobalTaskID)
+    cdef void register_variant_callbacks(self, str library_name)
     cdef _LocalTaskID get_local_id(self)
     cpdef bool has_variant(self, VariantCode)
     cdef void add_variant_config(

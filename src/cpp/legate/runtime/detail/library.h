@@ -73,13 +73,10 @@ class Library {
    */
   [[nodiscard]] ZStringView get_library_name() const;
 
-  [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
   [[nodiscard]] GlobalRedopID get_reduction_op_id(LocalRedopID local_redop_id) const;
 
-  [[nodiscard]] LocalTaskID get_local_task_id(GlobalTaskID task_id) const;
   [[nodiscard]] LocalRedopID get_local_reduction_op_id(GlobalRedopID redop_id) const;
 
-  [[nodiscard]] bool valid_task_id(GlobalTaskID task_id) const;
   [[nodiscard]] bool valid_reduction_op_id(GlobalRedopID redop_id) const;
 
   [[nodiscard]] LocalTaskID get_new_task_id();

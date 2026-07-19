@@ -13,7 +13,6 @@ from .utils cimport tuple_from_iterable
 from .tuple cimport _tuple
 
 LocalTaskID = NewType("LocalTaskID", int)
-GlobalTaskID = NewType("GlobalTaskID", int)
 
 LocalRedopID = NewType("LocalRedopID", int)
 GlobalRedopID = NewType("GlobalRedopID", int)
@@ -27,7 +26,7 @@ cdef _DomainPoint domain_point_from_iterable(object iterable):
     return _to_domain_point(tup)
 
 cdef DomainPoint_t domain_point_to_py(const _DomainPoint& point):
-    cdef int dim = point.get_dim()
+    cdef int dim = point.dim()
     cdef int i
     cdef std_vector[uint64_t] vec
 

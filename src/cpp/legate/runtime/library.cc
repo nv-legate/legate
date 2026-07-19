@@ -15,27 +15,15 @@ std::string_view Library::get_library_name() const
   return impl()->get_library_name().as_string_view();
 }
 
-GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
-{
-  return impl()->get_task_id(local_task_id);
-}
-
 GlobalRedopID Library::get_reduction_op_id(LocalRedopID local_redop_id) const
 {
   return impl()->get_reduction_op_id(local_redop_id);
-}
-
-LocalTaskID Library::get_local_task_id(GlobalTaskID task_id) const
-{
-  return impl()->get_local_task_id(task_id);
 }
 
 LocalRedopID Library::get_local_reduction_op_id(GlobalRedopID redop_id) const
 {
   return impl()->get_local_reduction_op_id(redop_id);
 }
-
-bool Library::valid_task_id(GlobalTaskID task_id) const { return impl()->valid_task_id(task_id); }
 
 bool Library::valid_reduction_op_id(GlobalRedopID redop_id) const
 {

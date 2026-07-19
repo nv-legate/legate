@@ -9,12 +9,7 @@ from ..task.task_context cimport _TaskContext
 
 
 cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
-    ctypedef unsigned int _Legion_TaskID "Legion::TaskID"
-
     cdef enum class _LocalTaskID "legate::LocalTaskID" (int64_t):
-        pass
-
-    cdef enum class _GlobalTaskID "legate::GlobalTaskID" (_Legion_TaskID):
         pass
 
     ctypedef int _Legion_ReductionOpID "Legion::ReductionOpID"
@@ -30,7 +25,7 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
     cdef cppclass _DomainPoint "legate::DomainPoint":
         _DomainPoint() except+
         _DomainPoint(int64_t) except+
-        int32_t get_dim() except+
+        int32_t dim() except+
         int64_t& operator[](int32_t) except+
         bool operator==(const _DomainPoint&) except+
         _DomainPoint operator-(const _DomainPoint&) except+
@@ -40,7 +35,7 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
     cdef cppclass _Domain "legate::Domain":
         _Domain() except+
         _Domain(const _DomainPoint&, const _DomainPoint&) except+
-        int32_t get_dim() except+
+        int32_t dim() except+
         _DomainPoint lo() except+
         _DomainPoint hi() except+
         bool operator==(const _Domain&) except+

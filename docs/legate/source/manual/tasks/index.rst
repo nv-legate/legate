@@ -62,9 +62,6 @@ a task has been registered with it (e.g. there can be multiple tasks with ``Loca
 tasks. This allows libraries to keep an enumeration of their tasks without concern of ID
 collision in a multi-library application.
 
-Each task is also allocated a globally unique identifier ``legate::GlobalTaskID``, but
-users are discouraged from using this directly.
-
 .. _sec_tasks_task_variants:
 
 Task Variants

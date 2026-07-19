@@ -2,37 +2,46 @@
 # All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+from libc.stdint cimport int64_t
 from libcpp cimport bool
 from libcpp.string cimport string as std_string
 
 from ..._lib.task.task_context cimport _TaskContext, TaskContext
 from ..._lib.task.task_info cimport _TaskInfo
 from ..._lib.runtime.library cimport _Library
-from ..._lib.utilities.typedefs cimport VariantImpl
+from ..._lib.utilities.typedefs cimport _LocalTaskID, VariantImpl
 from ..._lib.utilities.abort cimport LEGATE_ABORT
 
 import gc
 from sys import settrace, gettrace
 
-cdef dict[_GlobalTaskID, dict[VariantCode, object]] _gid_to_variant_callbacks = {}
+# Maps a task's identity -- the (library name, local task id) pair, which is
+# unique across the entire program -- to its per-variant Python callbacks.
+cdef dict _task_variant_callbacks = {}
 
-cdef void register_variants(_GlobalTaskID global_task_id, dict variants):
-    if global_task_id in _gid_to_variant_callbacks:
+cdef void register_variants(
+    str library_name, _LocalTaskID local_task_id, dict variants
+):
+    cdef tuple key = (library_name, <int64_t> local_task_id)
+
+    if key in _task_variant_callbacks:
         m = (
             "Already registered task "  # pragma: no cover
-            f"(global id: {global_task_id})"  # pragma: no cover
+            f"(library: {library_name}, local id: {key[1]})"  # pragma: no cover
         )
         raise AssertionError(m)  # pragma: no cover
 
-    _gid_to_variant_callbacks[global_task_id] = variants
+    _task_variant_callbacks[key] = variants
 
 
 cdef void py_variant_inner(TaskContext ctx):
-    cdef _GlobalTaskID global_task_id = ctx.get_task_id()
-    cdef dict variant_callbacks = _gid_to_variant_callbacks.get(global_task_id)
+    cdef tuple key = (
+        ctx.get_library_name(), <int64_t> ctx.get_local_task_id()
+    )
+    cdef dict variant_callbacks = _task_variant_callbacks.get(key)
 
     assert variant_callbacks is not None, (
-        f"Task (global task id {global_task_id}) "  # pragma: no cover
+        f"Task (library: {key[0]}, local id: {key[1]}) "  # pragma: no cover
         "did not have any variant callbacks registered"
     )
 
@@ -40,7 +49,7 @@ cdef void py_variant_inner(TaskContext ctx):
     cdef object py_callback = variant_callbacks.get(variant_kind)
 
     assert py_callback is not None, (
-        f"Task (global task id {global_task_id}) "  # pragma: no cover
+        f"Task (library: {key[0]}, local id: {key[1]}) "  # pragma: no cover
         "did not have a variant "
         f"registered for variant kind: {variant_kind}"  # pragma: no cover
     )

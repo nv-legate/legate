@@ -11,7 +11,7 @@ from ..data.physical_store cimport PhysicalStore, _PhysicalStore
 from ..data.scalar cimport Scalar, _Scalar
 from ..utilities.typedefs cimport (
     VariantCode,
-    _GlobalTaskID,
+    _LocalTaskID,
     _Domain,
     _DomainPoint
 )
@@ -23,7 +23,8 @@ from ..._ext.cython_libcpp.string_view cimport std_string_view
 
 cdef extern from "legate/task/task_context.h" namespace "legate" nogil:
     cdef cppclass _TaskContext "legate::TaskContext":
-        _GlobalTaskID task_id() except+
+        _LocalTaskID task_id() except+
+        std_string_view library_name() except+
         VariantCode variant_kind() except+
 
         _PhysicalStore input(uint32_t) except+
@@ -57,7 +58,8 @@ cdef class TaskContext(Unconstructable):
     # the defacto constructor
     @staticmethod
     cdef TaskContext from_handle(_TaskContext* ptr)
-    cpdef _GlobalTaskID get_task_id(self)
+    cdef _LocalTaskID get_task_id(self)
+    cdef str get_library_name(self)
     cpdef VariantCode get_variant_kind(self)
     cpdef bool is_single_task(self)
     cpdef bool can_raise_exception(self)

@@ -6,7 +6,6 @@ from enum import IntEnum
 from typing import NamedTuple, NewType, TypeAlias, cast
 
 LocalTaskID = NewType("LocalTaskID", int)
-GlobalTaskID = NewType("GlobalTaskID", int)
 
 LocalRedopID = NewType("LocalRedopID", int)
 GlobalRedopID = NewType("GlobalRedopID", int)

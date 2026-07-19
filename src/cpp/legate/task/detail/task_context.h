@@ -39,7 +39,8 @@ class TaskContext {
   [[nodiscard]] Span<const InternalSharedPtr<Scalar>> scalars() const noexcept;
   [[nodiscard]] Span<const legate::comm::Communicator> communicators() const noexcept;
 
-  [[nodiscard]] GlobalTaskID task_id() const noexcept;
+  [[nodiscard]] LocalTaskID task_id() const noexcept;
+  [[nodiscard]] std::string_view library_name() const noexcept;
   [[nodiscard]] bool is_single_task() const noexcept;
   [[nodiscard]] const DomainPoint& get_task_index() const noexcept;
   [[nodiscard]] const Domain& get_launch_domain() const noexcept;

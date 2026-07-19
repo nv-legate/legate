@@ -29,7 +29,9 @@ namespace {
 
 }  // namespace
 
-GlobalTaskID TaskContext::task_id() const noexcept { return impl()->task_id(); }
+LocalTaskID TaskContext::task_id() const noexcept { return impl()->task_id(); }
+
+std::string_view TaskContext::library_name() const noexcept { return impl()->library_name(); }
 
 VariantCode TaskContext::variant_kind() const noexcept { return impl()->variant_kind(); }
 

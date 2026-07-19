@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from legate.core import ResourceConfig, get_legate_runtime
+from legate.core import get_legate_runtime
 
 
 class TestLibrary:
@@ -16,14 +16,6 @@ class TestLibrary:
         assert lib.name == lib_name
         # just touching for code coverage
         _ = lib.raw_handle
-
-    def test_get_task_id(self) -> None:
-        runtime = get_legate_runtime()
-        lib, _ = runtime.find_or_create_library(
-            "test_get_task_ids", config=ResourceConfig(max_dyn_tasks=1)
-        )
-        local_id = lib.get_new_task_id()
-        assert isinstance(lib.get_task_id(local_id), int)
 
     def test_get_reduction_op_id(self) -> None:
         lib = get_legate_runtime().create_library("test_get_reduction_op_id")

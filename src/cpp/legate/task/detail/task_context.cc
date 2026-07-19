@@ -55,9 +55,11 @@ TaskContext::TaskContext(VariantCode variant_code,
   }
 }
 
-GlobalTaskID TaskContext::task_id() const noexcept
+LocalTaskID TaskContext::task_id() const noexcept { return op_task_->local_task_id(); }
+
+std::string_view TaskContext::library_name() const noexcept
 {
-  return op_task_->library().get_task_id(op_task_->local_task_id());
+  return op_task_->library().get_library_name().as_string_view();
 }
 
 bool TaskContext::is_single_task() const noexcept { return launch_domain_.dim() == 0; }

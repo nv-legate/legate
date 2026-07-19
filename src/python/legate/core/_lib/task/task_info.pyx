@@ -15,7 +15,7 @@ from ..._ext.task.python_task cimport (
 
 from ..runtime.library cimport Library
 from ..runtime.runtime cimport get_legate_runtime
-from ..utilities.typedefs cimport VariantCode, _GlobalTaskID
+from ..utilities.typedefs cimport VariantCode
 from ..utilities.unconstructable cimport Unconstructable
 from .task_config cimport TaskConfig
 
@@ -35,11 +35,10 @@ cdef class TaskInfo(Unconstructable):
                 f"Task (local id: {self.get_local_id()}) has no variants!"
             )
 
-    cdef void register_global_variant_callbacks(
-        self,
-        _GlobalTaskID global_task_id
-    ):
-        register_variants(global_task_id, self._registered_variants)
+    cdef void register_variant_callbacks(self, str library_name):
+        register_variants(
+            library_name, self.get_local_id(), self._registered_variants
+        )
         self._registered_variants = {}
 
     cdef _LocalTaskID get_local_id(self):

@@ -74,34 +74,18 @@ using Legion::TunableID;
 /**
  * @brief Integer type representing a `Library`-local task ID.
  *
- * All tasks are uniquely identifiable via a "task ID". These task ID's come in 2 flavors:
- * global and local. When a task is registered to a `Library`, the task must declare a unique
- * "local" task ID (`LocalTaskID`) within that `Library`. This task ID must not coincide with
- * any other task ID within that `Library`. After registration, the task is also assigned a
- * "global" ID (`GlobalTaskID`) which is guaranteed to be unique across the entire program.
- *
- * `GlobalTaskID`s may therefore be used to refer to tasks registered to other `Library`s or to
- * refer to the task when interfacing with Legion.
+ * All tasks in a `Library` are uniquely identifiable via a "task ID". When a task is registered to
+ * a `Library`, the task must declare a unique "local" task ID (`LocalTaskID`) within that
+ * `Library`.  This task ID must not coincide with any other task ID within that `Library`.
  *
  * For example, consider a task `Foo`:
  * @snippet unit/library.cc Foo declaration
- * And two `Library`s, `bar` and `baz`:
+ * And a `Library` `bar`:
  * @snippet unit/library.cc TaskID registration
  *
- * @see GlobalTaskID Library Library::get_task_id()
+ * @see Library
  */
 enum class LocalTaskID : std::int64_t {};
-
-/**
- * @brief Integer type representing a global task ID.
- *
- * `GlobalTaskID`s may be used to refer to tasks registered to other `Library`s or to refer to
- * the task when interfacing with Legion. See `LocalTaskID` for further discussion on task ID's
- * and task registration.
- *
- * @see LocalTaskID Library Library::get_local_task_id()
- */
-enum class GlobalTaskID : Legion::TaskID {};
 
 /**
  * @brief Integer type representing a `Library`-local reduction operator ID.
@@ -184,16 +168,6 @@ using Rect = Legion::Rect<DIM, T>;
 template <int DIM, typename T = coord_t>
 using PointInRectIterator = Legion::PointInRectIterator<DIM, T>;
 
-/**
- * @brief Iterator that iterates all points in a given `legate::Domain`.
- *
- * See
- * [Legion::PointInDomainIterator](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L599-L622)
- * for a complete definition.
- */
-template <int DIM, typename T = coord_t>
-using PointInDomainIterator = Legion::PointInDomainIterator<DIM, T>;
-
 /** @} */  // end of iterator
 
 // Machine
@@ -252,11 +226,3 @@ namespace cuda::detail {
 }  // namespace cuda::detail
 
 }  // namespace legate
-
-// backwards-compat workaround, should not use
-[[deprecated("since 24.11: using legate::VariantCode::CPU instead")]] inline constexpr auto
-  LEGATE_CPU_VARIANT = legate::VariantCode::CPU;
-[[deprecated("since 24.11: using legate::VariantCode::GPU instead")]] inline constexpr auto
-  LEGATE_GPU_VARIANT = legate::VariantCode::GPU;
-[[deprecated("since 24.11: using legate::VariantCode::OMP instead")]] inline constexpr auto
-  LEGATE_OMP_VARIANT = legate::VariantCode::OMP;

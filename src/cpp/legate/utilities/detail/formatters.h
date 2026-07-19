@@ -24,7 +24,6 @@ class DomainPoint;
 class Domain;
 
 enum class LocalTaskID : std::int64_t;
-enum class GlobalTaskID : unsigned int /* A.K.A. Legion::TaskID */;
 enum class VariantCode : unsigned int /* A.K.A. Legion::VariantID */;
 
 enum class LocalRedopID : std::int64_t;
@@ -123,11 +122,6 @@ struct formatter<legate::VariantCode> : formatter<std::string_view> {
 template <>
 struct formatter<legate::LocalTaskID> : formatter<std::underlying_type_t<legate::LocalTaskID>> {
   format_context::iterator format(legate::LocalTaskID id, format_context& ctx) const;
-};
-
-template <>
-struct formatter<legate::GlobalTaskID> : formatter<std::underlying_type_t<legate::GlobalTaskID>> {
-  format_context::iterator format(legate::GlobalTaskID id, format_context& ctx) const;
 };
 
 template <>

@@ -33,16 +33,13 @@ cdef class TaskContext(Unconstructable):
         result._scalars = None
         return result
 
-    cpdef _GlobalTaskID get_task_id(self):
-        r"""
-        Get the global task ID.
-
-        Returns
-        -------
-        GlobalTaskID
-            The global task ID for this task.
-        """
+    cdef _LocalTaskID get_task_id(self):
         return self._handle.task_id()
+
+    cdef str get_library_name(self):
+        cdef std_string_view sv = self._handle.library_name()
+
+        return str_from_string_view(sv)
 
     cpdef VariantCode get_variant_kind(self):
         r"""

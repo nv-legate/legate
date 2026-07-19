@@ -9,7 +9,6 @@ from ..task.task_info cimport TaskInfo, _TaskInfo
 from ..type.types cimport Type, _Type
 from ..utilities.typedefs cimport (
     _GlobalRedopID,
-    _GlobalTaskID,
     _LocalRedopID,
     _LocalTaskID,
 )
@@ -23,7 +22,6 @@ cdef extern from "legate/runtime/library.h" namespace "legate" nogil:
         _Library(const _Library&) except+
         std_string_view get_library_name() except+
         _LocalTaskID get_new_task_id() except+
-        _GlobalTaskID get_task_id(_LocalTaskID) except+
         _GlobalRedopID get_reduction_op_id(_LocalRedopID) except+
         void register_task(_LocalTaskID, const _TaskInfo&) except+
 
@@ -35,8 +33,7 @@ cdef class Library(Unconstructable):
     cdef Library from_handle(_Library)
 
     cpdef _LocalTaskID get_new_task_id(self)
-    cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id)
     cpdef _GlobalRedopID get_reduction_op_id(
         self, _LocalRedopID local_redop_id
     )
-    cpdef _GlobalTaskID register_task(self, TaskInfo task_info)
+    cpdef _LocalTaskID register_task(self, TaskInfo task_info)

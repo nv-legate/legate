@@ -4,7 +4,7 @@
 
 from libc.stdint cimport uintptr_t
 
-from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
+from ..utilities.typedefs cimport _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 
 from ..._ext.cython_libcpp.string_view cimport str_from_string_view
@@ -40,22 +40,6 @@ cdef class Library(Unconstructable):
         """
         return self._handle.get_new_task_id()
 
-    cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id):
-        r"""
-        Convert a global task ID to a local task ID.
-
-        Parameters
-        ----------
-        local_task_id : LocalTaskID | int
-            The local task ID to convert.
-
-        Returns
-        -------
-        GlobalTaskID
-            The global task ID.
-        """
-        return self._handle.get_task_id(local_task_id)
-
     cpdef _GlobalRedopID get_reduction_op_id(
         self, _LocalRedopID local_redop_id
     ):
@@ -74,7 +58,7 @@ cdef class Library(Unconstructable):
         """
         return self._handle.get_reduction_op_id(local_redop_id)
 
-    cpdef _GlobalTaskID register_task(self, TaskInfo task_info):
+    cpdef _LocalTaskID register_task(self, TaskInfo task_info):
         r"""
         Register a task with the library.
 
@@ -85,8 +69,8 @@ cdef class Library(Unconstructable):
 
         Returns
         -------
-        GlobalTaskID
-            The global task ID of the task.
+        LocalTaskID
+            The local task ID of the task.
 
         Raises
         ------
@@ -101,10 +85,8 @@ cdef class Library(Unconstructable):
         with nogil:
             self._handle.register_task(local_task_id, task_info._handle)
 
-        cdef _GlobalTaskID global_task_id = self.get_task_id(local_task_id)
-
-        task_info.register_global_variant_callbacks(global_task_id)
-        return global_task_id
+        task_info.register_variant_callbacks(self.name)
+        return local_task_id
 
     @property
     def raw_handle(self) -> uintptr_t:

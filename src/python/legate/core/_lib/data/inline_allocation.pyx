@@ -103,7 +103,7 @@ cdef class InlineAllocation(Unconstructable):
     cdef tuple _compute_shape(const _Domain& domain):
         cdef _DomainPoint lo = domain.lo()
         cdef _DomainPoint hi = domain.hi()
-        cdef int32_t ndim = domain.get_dim()
+        cdef int32_t ndim = domain.dim()
         cdef int32_t i = 0
         cdef tuple ret = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))
 

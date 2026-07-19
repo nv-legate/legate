@@ -42,11 +42,17 @@ namespace legate {
 class LEGATE_EXPORT TaskContext {
  public:
   /**
-   * @brief Returns the global ID of the task
+   * @brief Returns the `Library`-local ID of the task
    *
-   * @return The global task id
+   * @return The local task id
    */
-  [[nodiscard]] GlobalTaskID task_id() const noexcept;
+  [[nodiscard]] LocalTaskID task_id() const noexcept;
+  /**
+   * @brief Returns the name of the `Library` the task belongs to
+   *
+   * @return The library name
+   */
+  [[nodiscard]] std::string_view library_name() const noexcept;
   /**
    * @brief Returns the Legate variant kind of the task
    *
