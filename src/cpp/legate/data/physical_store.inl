@@ -241,12 +241,12 @@ ACC PhysicalStore::create_region_instance_accessor_(const Rect<DIM>& bounds,
   auto&& [base, byte_strides] = get_base_and_strides_();
   const auto lo               = shape<DIM>().lo;
 
-  std::array<std::size_t, DIM> strides{};
+  Point<DIM> strides;
 
   for (std::int32_t i = 0; i < DIM; ++i) {
-    strides[i] = byte_strides[i] / sizeof(T);
+    strides[i] = static_cast<coord_t>(byte_strides[i] / sizeof(T));
   }
-  return ACC{static_cast<T*>(base), lo, strides.data()};
+  return ACC{static_cast<T*>(base), lo, strides};
 }
 
 template <typename ACC, typename T, std::int32_t DIM>
@@ -263,12 +263,12 @@ ACC PhysicalStore::create_region_instance_reduction_accessor_(const Rect<DIM>& b
   auto&& [base, byte_strides] = get_base_and_strides_();
   const auto lo               = shape<DIM>().lo;
 
-  std::array<std::size_t, DIM> strides{};
+  Point<DIM> strides;
 
   for (std::int32_t i = 0; i < DIM; ++i) {
-    strides[i] = byte_strides[i] / sizeof(ELEM);
+    strides[i] = static_cast<coord_t>(byte_strides[i] / sizeof(ELEM));
   }
-  return ACC{static_cast<ELEM*>(base), lo, strides.data()};
+  return ACC{static_cast<ELEM*>(base), lo, strides};
 }
 
 inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }

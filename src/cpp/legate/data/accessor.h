@@ -25,12 +25,14 @@ class AccessorBase {
  public:
   AccessorBase() = default;
 
-  // `origin` points to the element at `lo`; `strides` are in elements.
+  // `origin` points to the element at `lo`; `strides` are in elements. The base
+  // pointer is translated back to the (virtual) element at the coordinate origin
+  // so that `offset()` needs no per-call subtraction of `lo`.
   LEGATE_HOST_DEVICE AccessorBase(ELEM* origin,
                                   const legate::Point<DIM>& lo,
-                                  const std::size_t strides[DIM]);
+                                  const legate::Point<DIM>& strides);
 
-  // Element offset (in elements) of `p` relative to the accessor's origin.
+  // Element offset (in elements) of `p` relative to the coordinate origin.
   LEGATE_HOST_DEVICE std::int64_t offset(const legate::Point<DIM>& p) const;
 
   LEGATE_HOST_DEVICE ELEM* ptr(const legate::Point<DIM>& p) const;
@@ -53,8 +55,7 @@ class AccessorBase {
 
  protected:
   ELEM* base_{nullptr};
-  legate::Point<DIM> lo_{};
-  std::size_t strides_[DIM]{};
+  legate::Point<DIM> strides_{};
 };
 
 }  // namespace detail

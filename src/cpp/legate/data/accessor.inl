@@ -19,12 +19,16 @@ namespace detail {
 template <typename ELEM, int DIM>
 LEGATE_HOST_DEVICE AccessorBase<ELEM, DIM>::AccessorBase(ELEM* origin,
                                                          const legate::Point<DIM>& lo,
-                                                         const std::size_t strides[DIM])
-  : base_{origin}, lo_{lo}
+                                                         const legate::Point<DIM>& strides)
+  : strides_{strides}
 {
+  // Translate the base pointer from the element at `lo` back to the (virtual)
+  // element at the coordinate origin, so `offset()` is a plain dot product.
+  std::int64_t lo_offset = 0;
   for (int i = 0; i < DIM; ++i) {
-    strides_[i] = strides[i];
+    lo_offset += static_cast<std::int64_t>(lo[i]) * static_cast<std::int64_t>(strides_[i]);
   }
+  base_ = origin - lo_offset;
 }
 
 template <typename ELEM, int DIM>
@@ -32,7 +36,7 @@ LEGATE_HOST_DEVICE std::int64_t AccessorBase<ELEM, DIM>::offset(const legate::Po
 {
   std::int64_t off = 0;
   for (int i = 0; i < DIM; ++i) {
-    off += static_cast<std::int64_t>(p[i] - lo_[i]) * static_cast<std::int64_t>(strides_[i]);
+    off += static_cast<std::int64_t>(p[i]) * static_cast<std::int64_t>(strides_[i]);
   }
   return off;
 }
@@ -54,7 +58,7 @@ LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Rect<DIM>& r
                                                       std::size_t strides[DIM]) const
 {
   for (int i = 0; i < DIM; ++i) {
-    strides[i] = strides_[i];
+    strides[i] = static_cast<std::size_t>(strides_[i]);
   }
   return ptr(r.lo);
 }
@@ -77,7 +81,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_row_major(
   std::size_t expected = 1;
   for (int i = DIM - 1; i >= 0; --i) {
     const std::size_t extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
-    if (extent > 1 && strides_[i] != expected) {
+    if (extent > 1 && static_cast<std::size_t>(strides_[i]) != expected) {
       return false;
     }
     expected *= extent;
@@ -92,7 +96,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_col_major(
   std::size_t expected = 1;
   for (int i = 0; i < DIM; ++i) {
     const std::size_t extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
-    if (extent > 1 && strides_[i] != expected) {
+    if (extent > 1 && static_cast<std::size_t>(strides_[i]) != expected) {
       return false;
     }
     expected *= extent;
@@ -112,7 +116,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_arbitrary(
   for (int i = 0; i < DIM; ++i) {
     const std::size_t extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
     if (extent > 1) {
-      strides[n] = strides_[i];
+      strides[n] = static_cast<std::size_t>(strides_[i]);
       extents[n] = extent;
       ++n;
     }
