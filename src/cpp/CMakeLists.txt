@@ -778,6 +778,7 @@ install(
 install(
   FILES
     legate/data/accessor.h
+    legate/data/accessor.inl
     legate/data/allocator.h
     legate/data/allocator.inl
     legate/data/buffer.h
@@ -947,6 +948,8 @@ install(
 
 install(
   FILES
+    legate/utilities/detail/array_algorithms.h
+    legate/utilities/detail/array_algorithms.inl
     legate/utilities/detail/compressed_pair.h
     legate/utilities/detail/shared_ptr_control_block.h
     legate/utilities/detail/shared_ptr_control_block.inl
