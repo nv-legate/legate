@@ -52,10 +52,10 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
     }
 
     auto acc = output.read_write_accessor<std::int64_t, 2>(shape);
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      auto p = *it;
+    for (auto&& point : shape.iterate()) {
+      auto p = point;
       EXPECT_EQ(acc[p], 123);
-      acc[*it] = (p[0] + 1) + ((p[1] + 1) * 1000);
+      acc[point] = (p[0] + 1) + ((p[1] + 1) * 1000);
     }
   }
 };
@@ -97,8 +97,8 @@ void test_inout()
     auto p_out = store.get_physical_store();
     auto acc   = p_out.read_accessor<std::int64_t, 2>();
     auto shape = p_out.shape<2>();
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      auto p = *it;
+    for (auto&& point : shape.iterate()) {
+      auto p = point;
       EXPECT_EQ(acc[p], (p[0] + 1) + ((p[1] + 1) * 1000));
     }
   }

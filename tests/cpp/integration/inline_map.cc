@@ -27,8 +27,8 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
     auto output = context.output(0);
     auto shape  = output.shape<1>();
     auto acc    = output.read_write_accessor<std::int64_t, 1>(shape);
-    for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-      acc[*it] += 1;
+    for (auto&& point : shape.iterate()) {
+      acc[point] += 1;
     }
   }
 };

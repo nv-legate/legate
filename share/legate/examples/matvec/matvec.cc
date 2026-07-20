@@ -23,8 +23,8 @@ void InitTask<DIM>::cpu_variant(legate::TaskContext context)
 
   auto accessor = store.write_accessor<std::int32_t, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    accessor[*it] = value;
+  for (auto&& point : shape.iterate()) {
+    accessor[point] = value;
   }
 }
 
@@ -39,8 +39,8 @@ void MatVecTask::cpu_variant(legate::TaskContext context)
   const auto rhs2_acc        = rhs2.read_accessor<std::int32_t, DIM>();
   auto lhs_acc = lhs.reduce_accessor<legate::SumReduction<std::int32_t>, /*exclusive=*/true, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    lhs_acc.reduce(*it, rhs1_acc[*it] * rhs2_acc[*it]);
+  for (auto&& point : shape.iterate()) {
+    lhs_acc.reduce(point, rhs1_acc[point] * rhs2_acc[point]);
   }
 }
 
@@ -53,10 +53,10 @@ void CheckTask::cpu_variant(legate::TaskContext context)
   const auto acc             = result.read_accessor<std::int32_t, DIM>();
 
   bool all_correct = true;
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    if (acc[*it] != expected) {
-      std::cerr << "Error at position " << (*it)[0] << ": expected " << expected << ", got "
-                << acc[*it] << "\n";
+  for (auto&& point : shape.iterate()) {
+    if (acc[point] != expected) {
+      std::cerr << "Error at position " << point[0] << ": expected " << expected << ", got "
+                << acc[point] << "\n";
       all_correct = false;
     }
   }

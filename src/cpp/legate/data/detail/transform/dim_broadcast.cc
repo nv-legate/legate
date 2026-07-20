@@ -39,29 +39,6 @@ Domain DimBroadcast::transform(const Domain& input) const
   return {std::move(lo), std::move(hi)};
 }
 
-Legion::DomainAffineTransform DimBroadcast::inverse_transform(std::int32_t in_dim) const
-{
-  LEGATE_CHECK(dim_ < in_dim);
-  const auto out_dim = in_dim;
-  Legion::DomainAffineTransform result;
-
-  result.transform.m = out_dim;
-  result.transform.n = in_dim;
-  for (std::int32_t i = 0; i < result.transform.m; ++i) {
-    for (std::int32_t j = 0; j < result.transform.n; ++j) {
-      result.transform.matrix[(i * in_dim) + j] = static_cast<std::int32_t>(i == j);
-    }
-  }
-  result.transform.matrix[(dim_ * in_dim) + dim_] = 0;
-
-  result.offset.dim = out_dim;
-  for (std::int32_t i = 0; i < result.transform.m; ++i) {
-    result.offset[i] = 0;
-  }
-
-  return result;
-}
-
 Restrictions DimBroadcast::convert(Restrictions restrictions, bool forbid_fake_dim) const
 {
   return std::move(restrictions)

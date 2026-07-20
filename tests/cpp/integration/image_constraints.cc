@@ -78,14 +78,14 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       const std::int64_t diff = ascending ? 1 : -1;
       auto idx                = static_cast<std::int64_t>(ascending ? 0 : vol - 1);
 
-      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+      for (auto&& point : shape.iterate()) {
         auto lo = delinearize(idx, vol, extents);
         auto hi = lo + legate::Point<TGT_DIM>::ONES();
 
         if (in_bounds(hi)) {
-          acc[*it] = legate::Rect<TGT_DIM>{lo, hi};
+          acc[point] = legate::Rect<TGT_DIM>{lo, hi};
         } else {
-          acc[*it] = legate::Rect<TGT_DIM>{lo, lo};
+          acc[point] = legate::Rect<TGT_DIM>{lo, lo};
         }
         idx += diff;
       }
@@ -106,8 +106,8 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       const std::int64_t diff = ascending ? 1 : -1;
       auto idx                = static_cast<std::int64_t>(ascending ? 0 : vol - 1);
 
-      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-        acc[*it] = delinearize(idx, vol, extents);
+      for (auto&& point : shape.iterate()) {
+        acc[point] = delinearize(idx, vol, extents);
         idx += diff;
       }
     }
@@ -151,10 +151,10 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
       }
 
       auto acc = func.read_accessor<legate::Rect<TGT_DIM>, DIM>();
-      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-        auto rect = acc[*it];
-        for (legate::PointInRectIterator<TGT_DIM> rit(rect); rit.valid(); ++rit) {
-          EXPECT_TRUE(range.contains(*rit));
+      for (auto&& point : shape.iterate()) {
+        auto rect = acc[point];
+        for (auto&& sub_point : rect.iterate()) {
+          EXPECT_TRUE(range.contains(sub_point));
         }
       }
     }
@@ -170,8 +170,8 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
       }
 
       auto acc = func.read_accessor<legate::Point<TGT_DIM>, DIM>();
-      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-        auto p = acc[*it];
+      for (auto&& point : shape.iterate()) {
+        auto p = acc[point];
         EXPECT_TRUE(range.contains(p));
       }
     }

@@ -48,7 +48,7 @@ class ReduceFn {
     auto&& acc       = store.reduce_accessor<legate::SumReduction<T>, true, DIM>();
     auto&& red_shape = store.shape<DIM>();
 
-    for (legate::PointInRectIterator<1> it{in_shape}; it.valid(); ++it) {
+    for ([[maybe_unused]] auto&& point : in_shape.iterate()) {
       acc[red_shape.lo].reduce(scalar.value<T>());
     }
   }

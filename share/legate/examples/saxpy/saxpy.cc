@@ -29,9 +29,9 @@ void InitTask::cpu_variant(legate::TaskContext context)
   auto accessor = store.write_accessor<std::int32_t, DIM>();
 
   // Iterate over each point in the 2D domain (dense rectangular iteration)
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+  for (auto&& point : shape.iterate()) {
     // Perform the element-wise SAXPY operation: output = x + y
-    accessor[*it] = value;
+    accessor[point] = value;
   }
 }
 
@@ -64,9 +64,9 @@ void SAXPYTask::cpu_variant(legate::TaskContext context)
   auto output_accessor = output_store.write_accessor<std::int32_t, DIM>();
 
   // Iterate over each point in the 2D domain (dense rectangular iteration)
-  for (legate::PointInRectIterator<DIM> it{x_shape}; it.valid(); ++it) {
+  for (auto&& point : x_shape.iterate()) {
     // Perform the element-wise SAXPY operation: output = x + y
-    output_accessor[*it] = x_accessor[*it] + y_accessor[*it] + (*it)[0];
+    output_accessor[point] = x_accessor[point] + y_accessor[point] + point[0];
   }
 }
 
@@ -81,10 +81,10 @@ void CheckTask::cpu_variant(legate::TaskContext context)
   std::cerr << "Check " << shape << "\n";
 
   bool all_correct = true;
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    if (acc[*it] != expected + (*it)[0]) {
-      std::cerr << "Error at position (" << (*it)[0] << "," << (*it)[1] << "): expected "
-                << expected << ", got " << acc[*it] << "\n";
+  for (auto&& point : shape.iterate()) {
+    if (acc[point] != expected + point[0]) {
+      std::cerr << "Error at position (" << point[0] << "," << point[1] << "): expected "
+                << expected << ", got " << acc[point] << "\n";
       all_correct = false;
     }
   }

@@ -23,7 +23,6 @@ class Transpose final : public StoreTransform {
   explicit Transpose(SmallVector<std::int32_t, LEGATE_MAX_DIM>&& axes);
 
   [[nodiscard]] Domain transform(const Domain& domain) const override;
-  [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
 
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;

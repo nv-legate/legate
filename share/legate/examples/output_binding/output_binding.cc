@@ -122,14 +122,14 @@ void CheckTask::cpu_variant(legate::TaskContext context)
 
   // The accessor is indexed in global coordinates, so the element at global position p must be
   // base + p regardless of which rank produced (or now reads) that position.
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    const auto expected = base + (*it)[0];
+  for (auto&& point : shape.iterate()) {
+    const auto expected = base + point[0];
 
-    if (acc[*it] != expected) {
+    if (acc[point] != expected) {
       std::stringstream ss;
 
-      ss << "output_binding CheckTask (base=" << base << ") mismatch at " << (*it)[0]
-         << ": expected " << expected << ", got " << acc[*it];
+      ss << "output_binding CheckTask (base=" << base << ") mismatch at " << point[0]
+         << ": expected " << expected << ", got " << acc[point];
       fail(std::move(ss).str());
     }
   }
@@ -169,14 +169,14 @@ void Check2DTask::cpu_variant(legate::TaskContext context)
   const auto cols             = shape.hi[1] - shape.lo[1] + 1;
   auto acc                    = input.read_accessor<std::int64_t, DIM2>();
 
-  for (legate::PointInRectIterator<DIM2> it{shape}; it.valid(); ++it) {
-    const auto expected = base + ((*it)[0] * cols) + (*it)[1];
+  for (auto&& point : shape.iterate()) {
+    const auto expected = base + (point[0] * cols) + point[1];
 
-    if (acc[*it] != expected) {
+    if (acc[point] != expected) {
       std::stringstream ss;
 
-      ss << "output_binding Check2DTask (base=" << base << ") mismatch at (" << (*it)[0] << ','
-         << (*it)[1] << "): expected " << expected << ", got " << acc[*it];
+      ss << "output_binding Check2DTask (base=" << base << ") mismatch at (" << point[0] << ','
+         << point[1] << "): expected " << expected << ", got " << acc[point];
       fail(std::move(ss).str());
     }
   }
@@ -198,14 +198,14 @@ void CheckWholeTask::cpu_variant(legate::TaskContext context)
     fail(std::move(ss).str());
   }
 
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    const auto expected = base + (*it)[0];
+  for (auto&& point : shape.iterate()) {
+    const auto expected = base + point[0];
 
-    if (acc[*it] != expected) {
+    if (acc[point] != expected) {
       std::stringstream ss;
 
-      ss << "output_binding CheckWholeTask (base=" << base << ") mismatch at " << (*it)[0]
-         << ": expected " << expected << ", got " << acc[*it];
+      ss << "output_binding CheckWholeTask (base=" << base << ") mismatch at " << point[0]
+         << ": expected " << expected << ", got " << acc[point];
       fail(std::move(ss).str());
     }
   }

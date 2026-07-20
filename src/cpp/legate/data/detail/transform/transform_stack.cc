@@ -163,33 +163,6 @@ Domain TransformStack::transform(const Domain& input) const
   return transform_->transform(parent_->identity() ? input : parent_->transform(input));
 }
 
-namespace {
-
-Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
-                                      const Legion::DomainAffineTransform& rhs)
-{
-  Legion::DomainAffineTransform result;
-  result.transform = lhs.transform * rhs.transform;
-  result.offset    = lhs.transform * rhs.offset + lhs.offset;
-  return result;
-}
-
-}  // namespace
-
-Legion::DomainAffineTransform TransformStack::inverse_transform(std::int32_t in_dim) const
-{
-  LEGATE_ASSERT(transform_ != nullptr);
-  auto result  = transform_->inverse_transform(in_dim);
-  auto out_dim = transform_->target_ndim(in_dim);
-
-  if (parent_->identity()) {
-    return result;
-  }
-
-  auto parent = parent_->inverse_transform(out_dim);
-  return combine(parent, result);
-}
-
 void TransformStack::print(std::ostream& out) const
 {
   if (identity()) {

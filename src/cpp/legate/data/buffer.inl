@@ -62,7 +62,7 @@ TaskLocalBuffer::TaskLocalBuffer(const Buffer<T, DIM>& buf)
 template <typename T, std::int32_t DIM>
 TaskLocalBuffer::operator Buffer<T, DIM>() const
 {
-  return Buffer<T, DIM>{storage_(), domain().bounds<DIM, coord_t>()};
+  return Buffer<T, DIM>{storage_(), domain().bounds<DIM>()};
 }
 
 inline const SharedPtr<detail::TaskLocalBuffer>& TaskLocalBuffer::impl() const { return impl_; }
@@ -93,13 +93,13 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory mem, std::size_
 template <typename VAL>
 Buffer<VAL> create_buffer(std::size_t size, Memory::Kind kind, std::size_t alignment)
 {
-  return create_buffer<VAL, 1>(Point<1>{size}, kind, alignment);
+  return create_buffer<VAL, 1>(Point<1>{static_cast<std::int64_t>(size)}, kind, alignment);
 }
 
 template <typename VAL>
 Buffer<VAL> create_buffer(std::size_t size, Memory mem, std::size_t alignment)
 {
-  return create_buffer<VAL, 1>(Point<1>{size}, mem, alignment);
+  return create_buffer<VAL, 1>(Point<1>{static_cast<std::int64_t>(size)}, mem, alignment);
 }
 
 }  // namespace legate

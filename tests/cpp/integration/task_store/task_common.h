@@ -71,20 +71,20 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
     switch (data_mode) {
       case TaskDataMode::INPUT: {
         auto acc = store.read_accessor<std::int32_t, DIM>();
-        for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-          EXPECT_EQ(acc[*it], value);
+        for (auto&& point : shape.iterate()) {
+          EXPECT_EQ(acc[point], value);
         }
       } break;
       case TaskDataMode::OUTPUT: {
         auto acc = store.write_accessor<std::int32_t, DIM>();
-        for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-          acc[*it] = value;
+        for (auto&& point : shape.iterate()) {
+          acc[point] = value;
         }
       } break;
       case TaskDataMode::REDUCTION: {
         auto acc = store.reduce_accessor<legate::SumReduction<std::int32_t>, true, DIM>();
-        for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-          acc[*it].reduce(value);
+        for (auto&& point : shape.iterate()) {
+          acc[point].reduce(value);
         }
       } break;
     }
@@ -117,8 +117,8 @@ struct VerifyOutputBody {
       return;
     }
     auto acc = store.read_accessor<std::int32_t, DIM>(shape);
-    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-      EXPECT_EQ(acc[*it], expected_value);
+    for (auto&& point : shape.iterate()) {
+      EXPECT_EQ(acc[point], expected_value);
     }
   }
 };

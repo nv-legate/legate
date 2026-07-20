@@ -45,7 +45,7 @@ void KvikioReadWriteFn::operator()(const legate::TaskContext& context,
   using DTYPE = legate::type_of_t<CODE>;
 
   const auto nbytes = volume * sizeof(DTYPE);
-  const auto offset = static_cast<std::size_t>(shape.lo) * sizeof(DTYPE);
+  const auto offset = static_cast<std::size_t>(shape.lo[0]) * sizeof(DTYPE);
   static_assert(
     !std::is_constructible_v<::legate_kvikio::FileHandle, std::string_view, const std::string&>,
     "can use std::string_view as filepath argument instead of std::string");

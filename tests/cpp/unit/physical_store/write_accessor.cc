@@ -50,9 +50,9 @@ class WriteAccessorFn {
     if (!op_shape_empty) {
       const auto legion_acc = store.write_accessor<T, DIM>();
 
-      for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
-        legion_acc[*it] = LEGION_ACC_INIT_VAL;
-        ASSERT_EQ(legion_acc[*it], LEGION_ACC_INIT_VAL);
+      for (auto&& point : op_shape.iterate()) {
+        legion_acc[point] = LEGION_ACC_INIT_VAL;
+        ASSERT_EQ(legion_acc[point], LEGION_ACC_INIT_VAL);
         ++legion_acc_it;
       }
     }
@@ -79,8 +79,8 @@ class WriteAccessorFn {
     if (!op_shape_empty) {
       const auto legion_acc = store.write_accessor<T, DIM>();
 
-      for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
-        ASSERT_EQ(legion_acc[*it], SPAN_ACC_INIT_VAL);
+      for (auto&& point : op_shape.iterate()) {
+        ASSERT_EQ(legion_acc[point], SPAN_ACC_INIT_VAL);
       }
     }
 
@@ -90,10 +90,10 @@ class WriteAccessorFn {
     if (!bounds_empty) {
       const auto legion_acc = store.write_accessor<T, DIM>(bounds);
 
-      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-        ASSERT_EQ(legion_acc[*it], SPAN_ACC_INIT_VAL);
-        legion_acc[*it] = LEGION_ACC_BOUNDS_INIT_VAL;
-        ASSERT_EQ(legion_acc[*it], LEGION_ACC_BOUNDS_INIT_VAL);
+      for (auto&& point : bounds.iterate()) {
+        ASSERT_EQ(legion_acc[point], SPAN_ACC_INIT_VAL);
+        legion_acc[point] = LEGION_ACC_BOUNDS_INIT_VAL;
+        ASSERT_EQ(legion_acc[point], LEGION_ACC_BOUNDS_INIT_VAL);
         ++legion_acc_it;
       }
     }
@@ -120,8 +120,8 @@ class WriteAccessorFn {
     if (!bounds_empty) {
       const auto legion_acc = store.write_accessor<T, DIM>(bounds);
 
-      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-        ASSERT_EQ(legion_acc[*it], SPAN_ACC_BOUNDS_INIT_VAL);
+      for (auto&& point : bounds.iterate()) {
+        ASSERT_EQ(legion_acc[point], SPAN_ACC_BOUNDS_INIT_VAL);
       }
     }
 
@@ -329,7 +329,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, InvalidDim)
 
   ASSERT_THROW(static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM, std::int16_t>{{0, 0, 0}, {0, 0, 0}};
+  auto bounds = legate::Rect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
@@ -347,7 +347,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, InvalidType)
 
   ASSERT_THROW(static_cast<void>(store.write_accessor<std::uint64_t, DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<DIM, std::uint16_t>{{0, 0}, {0, 0}};
+  auto bounds = legate::Rect<DIM>{{0, 0}, {0, 0}};
 
   ASSERT_THROW(static_cast<void>(store.write_accessor<std::int64_t, DIM, VALIDATE_TYPE>(bounds)),
                std::invalid_argument);

@@ -47,8 +47,8 @@ class InitTask : public legate::LegateTask<InitTask> {
 
     // Mark each element with task index
     const auto value = static_cast<std::int32_t>((task_index[0] * 1000) + task_index[1]);
-    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-      acc[*it] += value;
+    for (auto&& point : shape.iterate()) {
+      acc[point] += value;
     }
   }
 };
@@ -76,8 +76,8 @@ class VerificationTask : public legate::LegateTask<VerificationTask> {
     auto acc         = input.read_accessor<std::int32_t, DIM>();
 
     bool all_correct = true;
-    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-      const auto point      = *it;
+    for (auto&& it_point : shape.iterate()) {
+      const auto point      = it_point;
       std::int32_t expected = 0;
       if (point[0] < 4 && point[1] > 3) {
         expected = 1;

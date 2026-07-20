@@ -24,8 +24,8 @@ void InitTask::cpu_variant(legate::TaskContext context)
 
   auto accessor = store.write_accessor<std::uint64_t, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    accessor[*it] = value;
+  for (auto&& point : shape.iterate()) {
+    accessor[point] = value;
   }
 }
 
@@ -41,8 +41,8 @@ void ReductionTask::cpu_variant(legate::TaskContext context)
   auto in_acc  = input.read_accessor<std::uint64_t, DIM>();
   auto red_acc = output.reduce_accessor<legate::SumReduction<std::uint64_t>, false, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    red_acc.reduce(0, in_acc[*it]);
+  for (auto&& point : shape.iterate()) {
+    red_acc.reduce(0, in_acc[point]);
   }
 }
 

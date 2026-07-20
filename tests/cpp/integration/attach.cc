@@ -35,14 +35,14 @@ void increment_physical_store(const legate::PhysicalStore& store, std::int32_t d
   if (dim == 1) {
     auto shape = store.shape<1>();
     auto acc   = store.read_write_accessor<std::int64_t, 1, true>(shape);
-    for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-      acc[*it] += 1;
+    for (auto&& point : shape.iterate()) {
+      acc[point] += 1;
     }
   } else {
     auto shape = store.shape<2>();
     auto acc   = store.read_write_accessor<std::int64_t, 2, true>(shape);
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      acc[*it] += 1;
+    for (auto&& point : shape.iterate()) {
+      acc[point] += 1;
     }
   }
 }

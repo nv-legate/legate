@@ -33,8 +33,8 @@ class ReadAccessorFn {
     if (!op_shape_empty) {
       const auto legion_read_acc = store.read_accessor<T, DIM>();
 
-      for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
-        ASSERT_EQ(legion_read_acc[*it], value);
+      for (auto&& point : op_shape.iterate()) {
+        ASSERT_EQ(legion_read_acc[point], value);
         ++legion_acc_it;
       }
     }
@@ -66,8 +66,8 @@ class ReadAccessorFn {
     if (!bounds_empty) {
       const auto legion_read_acc = store.read_accessor<T, DIM>();
 
-      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-        ASSERT_EQ(legion_read_acc[*it], value);
+      for (auto&& point : bounds.iterate()) {
+        ASSERT_EQ(legion_read_acc[point], value);
         ++legion_acc_it;
       }
     }
@@ -312,7 +312,7 @@ TEST_F(PhysicalStoreReadAccessorUnit, InvalidDim)
 
   ASSERT_THROW(static_cast<void>(store.read_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM, std::int16_t>{{0, 0, 0}, {0, 0, 0}};
+  auto bounds = legate::Rect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(store.read_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
@@ -330,7 +330,7 @@ TEST_F(PhysicalStoreReadAccessorUnit, InvalidType)
 
   ASSERT_THROW(static_cast<void>(store.read_accessor<std::int32_t, DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<DIM, std::uint16_t>{{0, 0}, {0, 0}};
+  auto bounds = legate::Rect<DIM>{{0, 0}, {0, 0}};
 
   ASSERT_THROW(static_cast<void>(store.read_accessor<std::uint32_t, DIM, VALIDATE_TYPE>(bounds)),
                std::invalid_argument);

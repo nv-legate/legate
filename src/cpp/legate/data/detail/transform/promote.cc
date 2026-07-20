@@ -41,36 +41,6 @@ Domain Promote::transform(const Domain& input) const
   return {std::move(lo), std::move(hi)};
 }
 
-Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) const
-{
-  LEGATE_CHECK(extra_dim_ < in_dim);
-  const auto out_dim = in_dim - 1;
-  Legion::DomainAffineTransform result;
-
-  result.transform.m = std::max<std::int32_t>(out_dim, 1);
-  result.transform.n = in_dim;
-  for (std::int32_t i = 0; i < result.transform.m; ++i) {
-    for (std::int32_t j = 0; j < result.transform.n; ++j) {
-      result.transform.matrix[(i * in_dim) + j] = 0;
-    }
-  }
-
-  if (out_dim > 0) {
-    for (std::int32_t j = 0, i = 0; j < result.transform.n; ++j) {
-      if (j != extra_dim_) {
-        result.transform.matrix[(i++ * in_dim) + j] = 1;
-      }
-    }
-  }
-
-  result.offset.dim = std::max<std::int32_t>(out_dim, 1);
-  for (std::int32_t i = 0; i < result.transform.m; ++i) {
-    result.offset[i] = 0;
-  }
-
-  return result;
-}
-
 Restrictions Promote::convert(Restrictions restrictions, bool forbid_fake_dim) const
 {
   return std::move(restrictions)

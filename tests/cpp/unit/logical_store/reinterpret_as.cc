@@ -43,8 +43,8 @@ class Writer : public legate::LegateTask<Writer> {
       const auto shape = store->shape<DIM>();
       const auto acc   = store->write_accessor<std::int32_t, DIM>();
 
-      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-        acc[*it] = INT_VAL;
+      for (auto&& point : shape.iterate()) {
+        acc[point] = INT_VAL;
       }
     }
   };
@@ -77,8 +77,8 @@ class Reader : public legate::LegateTask<Reader> {
       // not result in the compilers actually generating the conversion, since type-punning
       // with reinterpret_cast is UB.
       std::memcpy(&float_val, &INT_VAL, sizeof(float_val));
-      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-        ASSERT_EQ(acc[*it], float_val);
+      for (auto&& point : shape.iterate()) {
+        ASSERT_EQ(acc[point], float_val);
       }
     }
   };
@@ -160,8 +160,8 @@ TEST_F(ReinterpretAs, Example)
   // result in the compilers generating the conversion, since type-punning with
   // reinterpret_cast is UB.
   std::memcpy(&interp_value, &minus_one, sizeof(minus_one));
-  for (auto it = legate::PointInRectIterator<1>{phys_store.shape<1>()}; it.valid(); ++it) {
-    ASSERT_EQ(acc[*it], interp_value);
+  for (auto&& point : phys_store.shape<1>().iterate()) {
+    ASSERT_EQ(acc[point], interp_value);
   }
   /// [Reinterpret store data]
 }

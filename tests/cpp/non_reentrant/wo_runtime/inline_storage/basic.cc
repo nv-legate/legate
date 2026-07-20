@@ -324,8 +324,8 @@ TEST_F(InlineStorageUnit, TransformedReadAccessor)
   const auto acc   = phys.read_accessor<std::int32_t, 2>();
   const auto shape = phys.shape<2>();
 
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    ASSERT_EQ(acc[*it], VALUE);
+  for (auto&& point : shape.iterate()) {
+    ASSERT_EQ(acc[point], VALUE);
   }
 }
 
@@ -346,8 +346,8 @@ TEST_F(InlineStorageUnit, TransformedWriteAccessor)
     const auto acc   = phys.write_accessor<std::int32_t, 2>();
     const auto shape = phys.shape<2>();
 
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      acc[*it] = VALUE;
+    for (auto&& point : shape.iterate()) {
+      acc[point] = VALUE;
     }
   }
 
@@ -355,8 +355,8 @@ TEST_F(InlineStorageUnit, TransformedWriteAccessor)
     const auto read_acc = phys.read_accessor<std::int32_t, 2>();
     const auto shape    = phys.shape<2>();
 
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      ASSERT_EQ(read_acc[*it], VALUE);
+    for (auto&& point : shape.iterate()) {
+      ASSERT_EQ(read_acc[point], VALUE);
     }
   }
 }
@@ -378,18 +378,18 @@ TEST_F(InlineStorageUnit, TransformedReadWriteAccessor)
   const auto acc   = phys.read_write_accessor<std::int32_t, 2>();
   const auto shape = phys.shape<2>();
 
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    ASSERT_EQ(acc[*it], INIT_VALUE);
+  for (auto&& point : shape.iterate()) {
+    ASSERT_EQ(acc[point], INIT_VALUE);
   }
 
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    acc[*it] = acc[*it] + DELTA;
+  for (auto&& point : shape.iterate()) {
+    acc[point] = acc[point] + DELTA;
   }
 
   // promote(extra_dim=0, dim_size=2) aliases (0,j) and (1,j) to the same underlying element,
   // so each element receives DELTA twice when iterating the full 2D shape.
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    ASSERT_EQ(acc[*it], INIT_VALUE + (2 * DELTA));
+  for (auto&& point : shape.iterate()) {
+    ASSERT_EQ(acc[point], INIT_VALUE + (2 * DELTA));
   }
 }
 
@@ -410,8 +410,8 @@ TEST_F(InlineStorageUnit, ReduceAccessor)
     const auto acc   = phys.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();
     const auto shape = phys.shape<2>();
 
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      acc.reduce(*it, RED_VALUE);
+    for (auto&& point : shape.iterate()) {
+      acc.reduce(point, RED_VALUE);
     }
   }
 
@@ -419,8 +419,8 @@ TEST_F(InlineStorageUnit, ReduceAccessor)
     const auto read_acc = phys.read_accessor<std::int32_t, 2>();
     const auto shape    = phys.shape<2>();
 
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      ASSERT_EQ(read_acc[*it], INIT_VALUE + RED_VALUE);
+    for (auto&& point : shape.iterate()) {
+      ASSERT_EQ(read_acc[point], INIT_VALUE + RED_VALUE);
     }
   }
 }
@@ -443,8 +443,8 @@ TEST_F(InlineStorageUnit, TransformedReduceAccessor)
     const auto acc   = phys.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();
     const auto shape = phys.shape<2>();
 
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      acc.reduce(*it, RED_VALUE);
+    for (auto&& point : shape.iterate()) {
+      acc.reduce(point, RED_VALUE);
     }
   }
 
@@ -454,8 +454,8 @@ TEST_F(InlineStorageUnit, TransformedReduceAccessor)
 
     // promote(extra_dim=0, dim_size=2) aliases (0,j) and (1,j) to the same underlying element,
     // so each element receives RED_VALUE twice when iterating the full 2D shape.
-    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-      ASSERT_EQ(read_acc[*it], INIT_VALUE + (2 * RED_VALUE));
+    for (auto&& point : shape.iterate()) {
+      ASSERT_EQ(read_acc[point], INIT_VALUE + (2 * RED_VALUE));
     }
   }
 }

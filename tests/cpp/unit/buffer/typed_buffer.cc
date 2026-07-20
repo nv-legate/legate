@@ -34,7 +34,8 @@ class BufferFn {
         break;
       }
       default: {
-        auto buffer = legate::create_buffer<T, DIM>(legate::Point<DIM>{bytes}, kind, alignment);
+        auto buffer = legate::create_buffer<T, DIM>(
+          legate::Point<DIM>{static_cast<legate::coord_t>(bytes)}, kind, alignment);
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
         EXPECT_EQ(buffer.memory_kind(),
                   kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM

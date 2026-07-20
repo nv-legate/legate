@@ -22,8 +22,6 @@ class Transform {
   virtual ~Transform() = default;
 
   [[nodiscard]] virtual Domain transform(const Domain& input) const = 0;
-  [[nodiscard]] virtual Legion::DomainAffineTransform inverse_transform(
-    std::int32_t in_dim) const = 0;
 
   [[nodiscard]] virtual Restrictions convert(Restrictions restrictions,
                                              bool forbid_fake_dim) const = 0;

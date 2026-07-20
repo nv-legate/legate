@@ -35,11 +35,11 @@ namespace legate::detail {
  * auto shape = store.shape<DIM>();
  * auto *buf  = new int[shape.volume()];
  *
- * for (auto it = legate::PointInRectIterator<DIM>{shape}; it.valid(); ++it) {
- *   auto local_idx = legate::linearize(shape.lo, shape.hi, *it);
- *   // local_idx contains the 0-based index of *it, regardless of how the task was
+ * for (auto&& point : shape.iterate()) {
+ *   auto local_idx = legate::linearize(shape.lo, shape.hi, point);
+ *   // local_idx contains the 0-based index of point, regardless of how the task was
  *   // parallelized
- *   buf[local_idx] = accessor[*it];
+ *   buf[local_idx] = accessor[point];
  * }
  * @endcode
  *

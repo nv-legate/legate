@@ -27,27 +27,6 @@ Domain Shift::transform(const Domain& input) const
   return {std::move(lo), std::move(hi)};
 }
 
-Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) const
-{
-  LEGATE_CHECK(dim_ < in_dim);
-  const auto out_dim = in_dim;
-  Legion::DomainAffineTransform result;
-
-  result.transform.m = out_dim;
-  result.transform.n = in_dim;
-  for (std::int32_t i = 0; i < out_dim; ++i) {
-    for (std::int32_t j = 0; j < in_dim; ++j) {
-      result.transform.matrix[(i * in_dim) + j] = static_cast<coord_t>(i == j);
-    }
-  }
-
-  result.offset.dim = out_dim;
-  for (std::int32_t i = 0; i < out_dim; ++i) {
-    result.offset[i] = i == dim_ ? -offset_ : 0;
-  }
-  return result;
-}
-
 SmallVector<std::int64_t, LEGATE_MAX_DIM> Shift::convert_point(
   SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
 {

@@ -55,8 +55,8 @@ class CopyTask : public legate::LegateTask<CopyTask> {
     auto in_acc  = input.read_accessor<std::int64_t, 1>();
     auto out_acc = output.write_accessor<std::int64_t, 1>();
 
-    for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-      out_acc[*it] = in_acc[*it] + value;
+    for (auto&& point : shape.iterate()) {
+      out_acc[point] = in_acc[point] + value;
     }
   }
 };
@@ -162,8 +162,8 @@ TEST_F(LogicalStoreTransform, DISABLED_OpaqueShouldBeRejected)
   auto acc   = store.read_accessor<std::int64_t, 2>();
   auto shape = store.shape<2>();
 
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it] - (*it)[1], VAL);
+  for (auto&& point : shape.iterate()) {
+    EXPECT_EQ(acc[point] - point[1], VAL);
   }
 }
 

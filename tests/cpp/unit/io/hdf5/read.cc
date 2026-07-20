@@ -278,8 +278,8 @@ class Verify2DTask : public legate::LegateTask<Verify2DTask> {
     const auto shape        = store.shape<2>();
     const auto acc          = store.read_accessor<float, 2>();
 
-    for (auto it = legate::PointInRectIterator<2>{shape}; it.valid(); ++it) {
-      const auto point = *it;
+    for (auto&& it_point : shape.iterate()) {
+      const auto point = it_point;
 
       // we should be tiling only on the slow dimension
       const auto global_index = (point[0] * global_y_dim) + point[1];
@@ -306,8 +306,8 @@ class Verify3DTask : public legate::LegateTask<Verify3DTask> {
     const auto shape        = store.shape<3>();
     const auto acc          = store.read_accessor<float, 3>();
 
-    for (auto it = legate::PointInRectIterator<3>{shape}; it.valid(); ++it) {
-      const auto point = *it;
+    for (auto&& it_point : shape.iterate()) {
+      const auto point = it_point;
       const auto global_index =
         (point[0] * global_y_dim * global_z_dim) + (point[1] * global_z_dim) + point[2];
 
@@ -332,8 +332,8 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
     const auto shape = store.shape<DIM>();
     const auto acc   = store.read_accessor<OpaqueType, DIM, /* VALIDATE_TYPE */ false>();
 
-    for (auto it = legate::PointInRectIterator<DIM>{shape}; it.valid(); ++it) {
-      ASSERT_EQ(acc[*it], MAGIC_BYTE);
+    for (auto&& point : shape.iterate()) {
+      ASSERT_EQ(acc[point], MAGIC_BYTE);
     }
   }
 };

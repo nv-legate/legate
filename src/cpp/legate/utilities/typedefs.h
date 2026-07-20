@@ -10,6 +10,8 @@
 
 #include <legate/geometry/domain.h>
 #include <legate/geometry/domain_point.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <legion.h>
@@ -125,29 +127,8 @@ enum class GlobalRedopID : Legion::ReductionOpID {};
  */
 using coord_t = std::int64_t;
 
-/**
- * @brief Type for multi-dimensional points.
- *
- * Point objects support index expressions; they can be accessed like a statically-sized array.
- * Point objects also support usual arithmetic operators and a dot operator.
- *
- * For a complete definition, see
- * [Realm::Point](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L46-L124).
- */
-template <int DIM, typename T = coord_t>
-using Point = Legion::Point<DIM, T>;
-
-/**
- * @brief Type for multi-dimensional rectangles.
- *
- * Each rectangle consists of two legate::Point objects, one for the lower
- * bounds (`.lo`) and one for the upper bounds (`.hi`).
- *
- * For a complete definition, see
- * [Realm::Rect](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L126-L212).
- */
-template <int DIM, typename T = coord_t>
-using Rect = Legion::Rect<DIM, T>;
+// `legate::Point` and `legate::Rect` are defined natively in <legate/geometry/point.h> and
+// <legate/geometry/rect.h> (included above).
 
 /** @} */  // end of geometry
 
@@ -158,15 +139,8 @@ using Rect = Legion::Rect<DIM, T>;
  * @{
  */
 
-/**
- * @brief Iterator that iterates all points in a given `legate::Rect`.
- *
- * See
- * [Realm::PointInRectIterator](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L239-L255)
- * for a complete definition.
- */
-template <int DIM, typename T = coord_t>
-using PointInRectIterator = Legion::PointInRectIterator<DIM, T>;
+// To iterate over the points of a `legate::Rect`, use `legate::Rect::iterate()`
+// (see <legate/geometry/rect.h>).
 
 /** @} */  // end of iterator
 

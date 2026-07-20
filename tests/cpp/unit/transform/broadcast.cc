@@ -32,32 +32,6 @@ TEST_F(TransformBroadcastUnit, BroadcastTransformDomain)
   ASSERT_EQ(domain, expected);
 }
 
-TEST_F(TransformBroadcastUnit, BroadcastInverseTransform)
-{
-  auto transform        = legate::make_internal_shared<legate::detail::DimBroadcast>(1, EXT);
-  auto affine_transform = transform->inverse_transform(3);
-  Legion::DomainAffineTransform expected{};
-
-  // The affine transform should look like this:
-  //
-  // | 1 0 0 |       | 0 |
-  // | 0 0 0 | * p + | 0 |
-  // | 0 0 1 |       | 0 |
-  expected.transform.m = 3;
-  expected.transform.n = 3;
-  expected.offset.dim  = 3;
-  for (std::int32_t idx = 0; idx < expected.transform.m * expected.transform.n; ++idx) {
-    expected.transform.matrix[idx] = 0;
-  }
-  for (std::int32_t idx = 0; idx < expected.offset.dim; ++idx) {
-    expected.offset[idx] = 0;
-  }
-  expected.transform.matrix[0] = 1;
-  expected.transform.matrix[8] = 1;
-
-  ASSERT_EQ(affine_transform, expected);
-}
-
 TEST_F(TransformBroadcastUnit, BroadcastConvertRestrictions)
 {
   auto transform    = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);

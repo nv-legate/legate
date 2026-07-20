@@ -45,10 +45,10 @@ class AccessStoreFn {
     auto value  = context.scalar(0).value<T>();
     auto rw_acc = p_store.read_write_accessor<T, DIM>();
 
-    for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-      ASSERT_EQ(rw_acc[*it], static_cast<T>(value));
-      rw_acc[*it] = static_cast<T>(INIT_VALUE);
-      ASSERT_EQ(rw_acc[*it], static_cast<T>(INIT_VALUE));
+    for (auto&& point : shape.iterate()) {
+      ASSERT_EQ(rw_acc[point], static_cast<T>(value));
+      rw_acc[point] = static_cast<T>(INIT_VALUE);
+      ASSERT_EQ(rw_acc[point], static_cast<T>(INIT_VALUE));
     }
   }
 };
@@ -197,11 +197,11 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
 
   // auto acc = p_store.read_write_accessor<std::uint64_t, 1>();
 
-  for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
+  for ([[maybe_unused]] auto&& point : shape.iterate()) {
     // TODO(issue 464)
-    // ASSERT_EQ(acc[*it], INIT_VALUE);
-    // acc[*it] = INIT_VALUE - 1;
-    // ASSERT_EQ(acc[*it], INIT_VALUE - 1);
+    // ASSERT_EQ(acc[point], INIT_VALUE);
+    // acc[point] = INIT_VALUE - 1;
+    // ASSERT_EQ(acc[point], INIT_VALUE - 1);
   }
 
   store.detach();
@@ -232,8 +232,9 @@ TEST_F(IndexAttach, CPU)
   auto acc     = p_store.read_accessor<std::int64_t, 1>();
   auto shape   = p_store.shape<1>();
 
-  for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-    ASSERT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
+  for (auto&& point : shape.iterate()) {
+    ASSERT_EQ(acc[point],
+              (static_cast<std::size_t>((point)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
   }
 
   store.detach();
@@ -287,8 +288,9 @@ TEST_F(IndexAttach, GPU)
   auto acc     = p_store.read_accessor<std::int64_t, 1>();
   auto shape   = p_store.shape<1>();
 
-  for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-    ASSERT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
+  for (auto&& point : shape.iterate()) {
+    ASSERT_EQ(acc[point],
+              (static_cast<std::size_t>((point)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
   }
 
   store.detach();

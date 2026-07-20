@@ -52,8 +52,8 @@ class ReduceAccessorFn {
     if (!op_shape_empty) {
       const auto reduce_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
 
-      for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
-        const legate::Point<DIM> pos{*it};
+      for (auto&& point : op_shape.iterate()) {
+        const legate::Point<DIM> pos{point};
 
         reduce_acc.reduce(pos, LEGION_ACC_INIT_VAL);
         ++legion_acc_it;
@@ -90,8 +90,8 @@ class ReduceAccessorFn {
     if (!bounds_empty) {
       const auto legion_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
 
-      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-        const legate::Point<DIM> pos{*it};
+      for (auto&& point : bounds.iterate()) {
+        const legate::Point<DIM> pos{point};
 
         legion_acc.reduce(pos, LEGION_ACC_BOUNDS_INIT_VAL);
         ++legion_acc_it;
@@ -332,7 +332,7 @@ TEST_F(PhysicalStoreReduceAccessorUnit, InvalidDim)
       store
         .reduce_accessor<legate::SumReduction<std::int16_t>, true, INVALID_DIM, VALIDATE_TYPE>()),
     std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM, std::int16_t>{{0, 0, 0}, {0, 0, 0}};
+  auto bounds = legate::Rect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(
@@ -354,7 +354,7 @@ TEST_F(PhysicalStoreReduceAccessorUnit, InvalidType)
     static_cast<void>(
       store.reduce_accessor<legate::SumReduction<std::int8_t>, true, DIM, VALIDATE_TYPE>()),
     std::invalid_argument);
-  auto bounds = legate::Rect<DIM, std::uint16_t>{{0, 0}, {0, 0}};
+  auto bounds = legate::Rect<DIM>{{0, 0}, {0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(

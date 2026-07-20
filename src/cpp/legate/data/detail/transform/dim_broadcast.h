@@ -39,17 +39,6 @@ class DimBroadcast final : public StoreTransform {
    * same size as the input.
    */
   [[nodiscard]] Domain transform(const Domain& input) const override;
-  /**
-   * @brief Construct an inverse transform matrix for this `DimBroadcast`.
-   *
-   * The inverse transform matrix is an `in_dim`x`in_dim` diagonal matrix where the `dim_`-th
-   * diagonal element is 0 and all the other diagonal elements are 1.
-   *
-   * @param in_dim The number of dimensions of an input
-   *
-   * @return A `Legion::DomainAffineTransform` that implements this broadcasting
-   */
-  [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
 
   /**
    * @brief Convert `Restrictions`.

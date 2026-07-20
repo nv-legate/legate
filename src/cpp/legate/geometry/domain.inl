@@ -40,24 +40,23 @@ inline Domain::iterator Domain::Iterable::end() const
 
 // ==========================================================================================
 
-template <int DIM, typename T>
-Domain::Domain(const Realm::Rect<DIM, T>& rect) : lo_{rect.lo}, hi_{rect.hi}
+template <int DIM>
+Domain::Domain(const Rect<DIM>& rect) : lo_{rect.lo}, hi_{rect.hi}
 {
 }
 
-template <int DIM, typename T>
-Realm::Rect<DIM, T> Domain::bounds() const
+template <int DIM>
+Rect<DIM> Domain::bounds() const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   LEGATE_ASSERT(DIM == dim());
-  return Realm::Rect<DIM, T>{static_cast<Realm::Point<DIM, T>>(lo_),
-                             static_cast<Realm::Point<DIM, T>>(hi_)};
+  return Rect<DIM>{static_cast<Point<DIM>>(lo_), static_cast<Point<DIM>>(hi_)};
 }
 
-template <int DIM, typename T>
-Domain::operator Realm::Rect<DIM, T>() const
+template <int DIM>
+Domain::operator Rect<DIM>() const
 {
-  return bounds<DIM, T>();
+  return bounds<DIM>();
 }
 
 inline std::uint32_t Domain::dim() const { return lo_.dim(); }

@@ -909,6 +909,10 @@ install(
     legate/geometry/domain.inl
     legate/geometry/domain_point.h
     legate/geometry/domain_point.inl
+    legate/geometry/point.h
+    legate/geometry/point.inl
+    legate/geometry/rect.h
+    legate/geometry/rect.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/geometry
 )
 

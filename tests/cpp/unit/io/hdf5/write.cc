@@ -109,10 +109,10 @@ class IotaTask : public legate::LegateTask<IotaTask> {
       const auto acc =
         store->write_accessor<T, DIM, /* VALIDATE_TYPE */ CODE != legate::Type::Code::BINARY>();
 
-      for (auto it = legate::PointInRectIterator<DIM>{shape}; it.valid(); ++it) {
-        const auto lin_idx = legate::detail::linearize(lo, hi, *it);
+      for (auto&& point : shape.iterate()) {
+        const auto lin_idx = legate::detail::linearize(lo, hi, point);
 
-        acc[*it] = static_cast<T>(lin_idx);
+        acc[point] = static_cast<T>(lin_idx);
       }
     }
   };

@@ -22,8 +22,8 @@ void InitTask::cpu_variant(legate::TaskContext context)
 
   auto accessor = store.write_accessor<std::int32_t, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    accessor[*it] = value + (*it)[0];
+  for (auto&& point : shape.iterate()) {
+    accessor[point] = value + point[0];
   }
 }
 
@@ -45,8 +45,8 @@ void AddTask::cpu_variant(legate::TaskContext context)
   auto y_accessor      = y_input_store.read_accessor<std::int32_t, DIM>();
   auto output_accessor = output_store.write_accessor<std::int32_t, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{x_shape}; it.valid(); ++it) {
-    output_accessor[*it] = x_accessor[*it] + y_accessor[*it];
+  for (auto&& point : x_shape.iterate()) {
+    output_accessor[point] = x_accessor[point] + y_accessor[point];
   }
 }
 
@@ -59,8 +59,8 @@ void CopyTask::cpu_variant(legate::TaskContext context)
   const auto in_acc          = input.read_accessor<std::int32_t, DIM>();
   auto out_acc               = output.write_accessor<std::int32_t, DIM>();
 
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    out_acc[*it] = in_acc[*it];
+  for (auto&& point : shape.iterate()) {
+    out_acc[point] = in_acc[point];
   }
 }
 
@@ -75,10 +75,10 @@ void CheckTask::cpu_variant(legate::TaskContext context)
 
   std::cerr << shape << std::endl;
   bool all_correct = true;
-  for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-    if (acc[*it] != expected + ((*it)[0] + offset) * 2) {
-      std::cerr << "Error at position (" << (*it)[0] << "," << (*it)[1] << "): expected "
-                << expected << ", got " << acc[*it] << "\n";
+  for (auto&& point : shape.iterate()) {
+    if (acc[point] != expected + (point[0] + offset) * 2) {
+      std::cerr << "Error at position (" << point[0] << "," << point[1] << "): expected "
+                << expected << ", got " << acc[point] << "\n";
       all_correct = false;
     }
   }

@@ -58,30 +58,6 @@ Domain Transpose::transform(const Domain& domain) const
   return {std::move(lo), std::move(hi)};
 }
 
-Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) const
-{
-  Legion::DomainAffineTransform result;
-
-  result.transform.m = in_dim;
-  result.transform.n = in_dim;
-  for (std::int32_t i = 0; i < in_dim; ++i) {
-    for (std::int32_t j = 0; j < in_dim; ++j) {
-      result.transform.matrix[(i * in_dim) + j] = 0;
-    }
-  }
-
-  for (std::int32_t j = 0; j < in_dim; ++j) {
-    result.transform.matrix[(axes_[j] * in_dim) + j] = 1;
-  }
-
-  result.offset.dim = in_dim;
-  for (std::int32_t i = 0; i < in_dim; ++i) {
-    result.offset[i] = 0;
-  }
-
-  return result;
-}
-
 Restrictions Transpose::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
   return std::move(restrictions)

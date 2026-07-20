@@ -91,8 +91,8 @@ template <std::int32_t DIM>
   }
 
   auto val_acc = input.read_accessor<std::int64_t, DIM>(shape);
-  for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-    EXPECT_EQ(val_acc[*it], value);
+  for (auto&& point : shape.iterate()) {
+    EXPECT_EQ(val_acc[point], value);
   }
 }
 
@@ -121,8 +121,8 @@ template <std::int32_t DIM>
   auto acc         = input.read_accessor<std::int64_t, DIM>(shape);
   auto v_in_slice  = value_in_slice.value<std::int64_t>();
   auto v_out_slice = value_outside_slice.value<std::int64_t>();
-  for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], in_slice(*it) ? v_in_slice : v_out_slice);
+  for (auto&& point : shape.iterate()) {
+    EXPECT_EQ(acc[point], in_slice(point) ? v_in_slice : v_out_slice);
   }
 }
 

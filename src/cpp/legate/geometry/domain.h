@@ -9,9 +9,8 @@
 #include <legate_defines.h>
 
 #include <legate/geometry/domain_point.h>
+#include <legate/geometry/rect.h>
 #include <legate/utilities/detail/doxygen.h>
-
-#include <realm/point.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -110,28 +109,28 @@ class LEGATE_EXPORT Domain {
   Domain(DomainPoint lo, DomainPoint hi);
 
   /**
-   * @brief Constructs a domain from a `legate::Rect` (a.k.a. `Realm::Rect`).
+   * @brief Constructs a domain from a `legate::Rect`
    *
    * @param rect The rectangle to convert from.
    */
-  template <int DIM, typename T>
-  Domain(const Realm::Rect<DIM, T>& rect);  // NOLINT(google-explicit-constructor)
+  template <int DIM>
+  Domain(const Rect<DIM>& rect);  // NOLINT(google-explicit-constructor)
 
   /**
-   * @brief Converts this domain to a `legate::Rect` (a.k.a. `Realm::Rect`).
+   * @brief Converts this domain to a `legate::Rect`
    *
    * The requested dimensionality must match `dim()`.
    */
-  template <int DIM, typename T>
-  operator Realm::Rect<DIM, T>() const;  // NOLINT(google-explicit-constructor)
+  template <int DIM>
+  operator Rect<DIM>() const;  // NOLINT(google-explicit-constructor)
 
   /**
-   * @brief Returns the bounds of this domain as a `legate::Rect` (a.k.a. `Realm::Rect`).
+   * @brief Returns the bounds of this domain as a `legate::Rect`
    *
    * The requested dimensionality must match `dim()`.
    */
-  template <int DIM, typename T>
-  [[nodiscard]] Realm::Rect<DIM, T> bounds() const;
+  template <int DIM>
+  [[nodiscard]] Rect<DIM> bounds() const;
 
   [[nodiscard]] bool operator==(const Domain& rhs) const;
   [[nodiscard]] bool operator!=(const Domain& rhs) const;

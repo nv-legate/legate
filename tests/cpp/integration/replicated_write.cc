@@ -32,8 +32,8 @@ class WriterTask : public legate::LegateTask<WriterTask> {
     for (auto& output : outputs) {
       auto shape = output.shape<2>();
       auto acc   = output.write_accessor<std::int64_t, 2>();
-      for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-        acc[*it] = 42;
+      for (auto&& point : shape.iterate()) {
+        acc[point] = 42;
       }
     }
   }
@@ -82,8 +82,8 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
         return;
       }
       auto acc = input.read_accessor<std::int64_t, 2>();
-      for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-        EXPECT_EQ(acc[*it], 42);
+      for (auto&& point : shape.iterate()) {
+        EXPECT_EQ(acc[point], 42);
       }
     }
   }
@@ -154,8 +154,8 @@ void validate_output_inline(const legate::LogicalStore& store)
   auto p_store = store.get_physical_store();
   auto shape   = p_store.shape<2>();
   auto acc     = p_store.read_accessor<std::int64_t, 2>();
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], 42);
+  for (auto&& point : shape.iterate()) {
+    EXPECT_EQ(acc[point], 42);
   }
 }
 

@@ -55,8 +55,8 @@ void hello_cpu_variant(legate::TaskContext& context)
   }
 
   auto acc = output.write_accessor<std::int64_t, 2>(shape);
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    acc[*it] = (*it)[0] + ((*it)[1] * 1000);
+  for (auto&& point : shape.iterate()) {
+    acc[point] = (point)[0] + ((point)[1] * 1000);
   }
 }
 
@@ -106,8 +106,8 @@ void validate_store(const legate::LogicalStore& store)
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<std::int64_t, 2>();
   auto shape   = p_store.shape<2>();
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], (*it)[0] + ((*it)[1] * 1000));
+  for (auto&& point : shape.iterate()) {
+    EXPECT_EQ(acc[point], (point)[0] + ((point)[1] * 1000));
   }
 }
 

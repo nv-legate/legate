@@ -198,7 +198,7 @@ Rect<DIM> PhysicalStore::shape() const
   static_assert(DIM <= LEGATE_MAX_DIM);
   check_shape_dimension_(DIM);
   if (dim() > 0) {
-    return domain().bounds<DIM, coord_t>();
+    return domain().bounds<DIM>();
   }
 
   auto p = Point<DIM>::ZEROES();

@@ -45,8 +45,8 @@ void validate_store(const legate::LogicalStore& store)
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<std::int64_t, 2>();
   auto shape   = p_store.shape<2>();
-  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    auto p = *it;
+  for (auto&& point : shape.iterate()) {
+    auto p = point;
     EXPECT_EQ(acc[p], p[0] + (p[1] * 1000));
   }
 }

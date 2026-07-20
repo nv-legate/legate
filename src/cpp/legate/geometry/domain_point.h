@@ -8,11 +8,10 @@
 
 #include <legate_defines.h>
 
+#include <legate/geometry/point.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/span.h>
-
-#include <realm/point.h>
 
 #include <cstdint>
 #include <iosfwd>
@@ -63,23 +62,23 @@ class LEGATE_EXPORT DomainPoint {
    */
   explicit DomainPoint(Span<const std::int64_t> coords);
   /**
-   * @brief Constructs a point from a `legate::Point` (a.k.a. `Realm::Point`).
+   * @brief Constructs a point from a `legate::Point`.
    *
    * @param point The point to convert from.
    */
-  template <int DIM, typename T>
-  DomainPoint(const Realm::Point<DIM, T>& point);  // NOLINT(google-explicit-constructor)
+  template <int DIM>
+  DomainPoint(const Point<DIM>& point);  // NOLINT(google-explicit-constructor)
 
   /**
-   * @brief Converts this point to a `legate::Point` (a.k.a. `Realm::Point`).
+   * @brief Converts this point to a `legate::Point`.
    *
    * The requested dimensionality must match `dim()`.
    */
-  template <int DIM, typename T>
-  operator Realm::Point<DIM, T>() const;  // NOLINT(google-explicit-constructor)
+  template <int DIM>
+  operator Point<DIM>() const;  // NOLINT(google-explicit-constructor)
 
-  template <int DIM, typename T>
-  DomainPoint& operator=(const Realm::Point<DIM, T>& point);
+  template <int DIM>
+  DomainPoint& operator=(const Point<DIM>& point);
 
   /**
    * @return The dimensionality of the point.

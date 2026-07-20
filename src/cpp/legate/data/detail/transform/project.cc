@@ -39,39 +39,6 @@ Domain Project::transform(const Domain& input) const
   return {std::move(lo), std::move(hi)};
 }
 
-Legion::DomainAffineTransform Project::inverse_transform(std::int32_t in_dim) const
-{
-  auto out_dim = in_dim + 1;
-  LEGATE_CHECK(dim_ < out_dim);
-  Legion::DomainAffineTransform result;
-
-  result.transform.m = out_dim;
-  if (in_dim == 0) {
-    result.transform.n         = out_dim;
-    result.transform.matrix[0] = 0;
-  } else {
-    result.transform.n = in_dim;
-    for (std::int32_t i = 0; i < out_dim; ++i) {
-      for (std::int32_t j = 0; j < in_dim; ++j) {
-        result.transform.matrix[(i * in_dim) + j] = 0;
-      }
-    }
-
-    for (std::int32_t i = 0, j = 0; i < out_dim; ++i) {
-      if (i != dim_) {
-        result.transform.matrix[(i * in_dim) + j++] = 1;
-      }
-    }
-  }
-
-  result.offset.dim = out_dim;
-  for (std::int32_t i = 0; i < out_dim; ++i) {
-    result.offset[i] = i == dim_ ? coord_ : 0;
-  }
-
-  return result;
-}
-
 Restrictions Project::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
   return std::move(restrictions)

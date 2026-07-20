@@ -15,8 +15,8 @@ namespace legate {
 
 inline DomainPoint::DomainPoint(std::int64_t index) { coordinates_.push_back(index); }
 
-template <int DIM, typename T>
-DomainPoint::DomainPoint(const Realm::Point<DIM, T>& point)
+template <int DIM>
+DomainPoint::DomainPoint(const Point<DIM>& point)
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   coordinates_.reserve(DIM);
@@ -25,22 +25,22 @@ DomainPoint::DomainPoint(const Realm::Point<DIM, T>& point)
   }
 }
 
-template <int DIM, typename T>
-DomainPoint::operator Realm::Point<DIM, T>() const
+template <int DIM>
+DomainPoint::operator Point<DIM>() const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   LEGATE_ASSERT(DIM == static_cast<int>(dim()));
 
-  Realm::Point<DIM, T> result;
+  Point<DIM> result;
 
   for (std::int32_t idx = 0; idx < DIM; ++idx) {
-    result[idx] = static_cast<T>(coordinates_[idx]);
+    result[idx] = coordinates_[idx];
   }
   return result;
 }
 
-template <int DIM, typename T>
-DomainPoint& DomainPoint::operator=(const Realm::Point<DIM, T>& point)
+template <int DIM>
+DomainPoint& DomainPoint::operator=(const Point<DIM>& point)
 {
   *this = DomainPoint{point};
   return *this;

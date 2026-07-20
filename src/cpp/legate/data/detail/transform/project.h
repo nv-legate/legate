@@ -23,7 +23,6 @@ class Project final : public StoreTransform {
   Project(std::int32_t dim, std::int64_t coord);
 
   [[nodiscard]] Domain transform(const Domain& input) const override;
-  [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
 
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
