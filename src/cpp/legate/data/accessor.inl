@@ -19,26 +19,17 @@ namespace detail {
 template <typename ELEM, int DIM>
 LEGATE_HOST_DEVICE AccessorBase<ELEM, DIM>::AccessorBase(ELEM* origin,
                                                          const legate::Point<DIM>& lo,
-                                                         const legate::Point<DIM>& strides)
-  : strides_{strides}
-{
+                                                         legate::Point<DIM> strides)
   // Translate the base pointer from the element at `lo` back to the (virtual)
   // element at the coordinate origin, so `offset()` is a plain dot product.
-  std::int64_t lo_offset = 0;
-  for (int i = 0; i < DIM; ++i) {
-    lo_offset += static_cast<std::int64_t>(lo[i]) * static_cast<std::int64_t>(strides_[i]);
-  }
-  base_ = origin - lo_offset;
+  : base_{origin - lo.dot(strides)}, strides_{std::move(strides)}
+{
 }
 
 template <typename ELEM, int DIM>
 LEGATE_HOST_DEVICE std::int64_t AccessorBase<ELEM, DIM>::offset(const legate::Point<DIM>& p) const
 {
-  std::int64_t off = 0;
-  for (int i = 0; i < DIM; ++i) {
-    off += static_cast<std::int64_t>(p[i]) * static_cast<std::int64_t>(strides_[i]);
-  }
-  return off;
+  return p.dot(strides_);
 }
 
 template <typename ELEM, int DIM>

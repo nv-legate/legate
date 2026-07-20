@@ -8,6 +8,8 @@
 
 #include <legate_defines.h>
 
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstddef>
@@ -30,7 +32,7 @@ class AccessorBase {
   // so that `offset()` needs no per-call subtraction of `lo`.
   LEGATE_HOST_DEVICE AccessorBase(ELEM* origin,
                                   const legate::Point<DIM>& lo,
-                                  const legate::Point<DIM>& strides);
+                                  legate::Point<DIM> strides);
 
   // Element offset (in elements) of `p` relative to the coordinate origin.
   LEGATE_HOST_DEVICE std::int64_t offset(const legate::Point<DIM>& p) const;

@@ -53,16 +53,16 @@ void ProduceBoundBufferTask::cpu_variant(legate::TaskContext context)
   // A temporary scratch buffer that is *not* bound to any store: this exercises the plain
   // create_buffer path (intra-task allocation). We fill it, read it back, and use it below. This
   // is a CPU task, so the buffer is allocated in system memory.
-  auto scratch =
-    legate::create_buffer<std::int64_t, DIM>(legate::Point<DIM>{num}, legate::Memory::SYSTEM_MEM);
+  auto scratch = legate::create_buffer<std::int64_t, DIM>(
+    legate::Point<DIM>{static_cast<std::int64_t>(num)}, legate::Memory::SYSTEM_MEM);
 
   for (std::uint64_t i = 0; i < num; ++i) {
     scratch[legate::Point<DIM>{static_cast<legate::coord_t>(i)}] = static_cast<std::int64_t>(i);
   }
 
   // Create the output buffer and bind it to the (unbound) output store in a single call.
-  auto out_buf =
-    output.create_output_buffer<std::int64_t, DIM>(legate::Point<DIM>{num}, /*bind_buffer=*/true);
+  auto out_buf = output.create_output_buffer<std::int64_t, DIM>(
+    legate::Point<DIM>{static_cast<std::int64_t>(num)}, /*bind_buffer=*/true);
 
   for (std::uint64_t i = 0; i < num; ++i) {
     const auto p = legate::Point<DIM>{static_cast<legate::coord_t>(i)};
@@ -82,15 +82,15 @@ void ProduceViaBindDataTask::cpu_variant(legate::TaskContext context)
   const auto offset = static_cast<std::int64_t>(launch_rank(context) * num);
 
   // Create the buffer without binding, fill it, then bind it in a separate step.
-  auto buffer =
-    output.create_output_buffer<std::int64_t, DIM>(legate::Point<DIM>{num}, /*bind_buffer=*/false);
+  auto buffer = output.create_output_buffer<std::int64_t, DIM>(
+    legate::Point<DIM>{static_cast<std::int64_t>(num)}, /*bind_buffer=*/false);
 
   for (std::uint64_t i = 0; i < num; ++i) {
     buffer[legate::Point<DIM>{static_cast<legate::coord_t>(i)}] =
       base + offset + static_cast<std::int64_t>(i);
   }
 
-  output.bind_data(buffer, legate::Point<DIM>{num});
+  output.bind_data(buffer, legate::Point<DIM>{static_cast<std::int64_t>(num)});
 }
 
 void ProduceViaTaskLocalBufferTask::cpu_variant(legate::TaskContext context)
