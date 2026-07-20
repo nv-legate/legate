@@ -90,28 +90,12 @@ void Scope::trigger_exchange_side_effects(const ParallelPolicy& new_policy,
   // ParallelPolicy that may not affect Streaming and may not need to flush or
   // issue a mapping fence.
   if (new_policy != parallel_policy_) {
-    auto&& rt = Runtime::get_runtime();
-
     switch (change_kind) {
       case ChangeKind::SCOPE_BEG:
         check_policy_change_at_scope_begin(parallel_policy_, new_policy);
         break;
       case ChangeKind::SCOPE_END: break;
     }
-
-    if (new_policy.streaming() || parallel_policy_.streaming()) {
-      // Note, we want to issue this mapping fence if either the incoming or outgoing scope are
-      // streaming, because during scheduling window flushes, the streaming generation will
-      // change. See discussion in `BaseMapping::select_streaming_tasks_to_map()` for why this
-      // fence is needed.
-      rt.issue_mapping_fence();
-      // In a multi-rank run when we're inside a streaming scope we stop consensus matching
-      // discarded fields as that ends up flushing the current scheduling window and
-      // waits on existing matches. This results in breaking the streaming window. We issue
-      // a match at the end of a streaming scope in case there are outstanding matches
-      // that might have triggered inside the scope.
-    }
-    rt.flush_scheduling_window(/*streaming_scope_change=*/true);
   }
 }
 

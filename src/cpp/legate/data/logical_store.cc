@@ -78,9 +78,6 @@ LogicalStore LogicalStore::broadcast(std::int32_t dim, std::size_t dim_size) con
 
 std::optional<LogicalStorePartition> LogicalStore::get_partition() const
 {
-  // We need to flush the scheduling window to make sure the partition is up to date.
-  detail::Runtime::get_runtime().flush_scheduling_window();
-
   auto&& key_partition = impl()->get_current_key_partition();
 
   if (!key_partition.has_value()) {

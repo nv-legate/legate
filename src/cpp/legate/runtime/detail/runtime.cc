@@ -256,8 +256,6 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
     std::move(lhs), std::move(value), new_op_id(), scope().priority(), get_machine()));
 }
 
-void Runtime::flush_scheduling_window(bool) {}
-
 void Runtime::schedule_(std::deque<InternalSharedPtr<Operation>>* window)
 {
   // We should only execute the operations resident in the queue at the time of flush, no more,
@@ -807,9 +805,6 @@ std::int32_t Runtime::finish()
   for (auto it = callbacks_.begin(); it != callbacks_.end(); ++it) {
     (*it)();
   }
-
-  // Flush any outstanding operations before we tear down the runtime
-  flush_scheduling_window();
 
   // Need a fence to make sure all client operations come before the subsequent clean-up tasks
   issue_execution_fence();

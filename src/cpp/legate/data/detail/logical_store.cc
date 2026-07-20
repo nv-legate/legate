@@ -599,10 +599,6 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
                       ? legate::mapping::StoreTarget::SOCKETMEM
                       : legate::mapping::StoreTarget::SYSMEM);
 
-  // A physical allocation of this store is escaping to the user land for the first time,
-  // so we need to make sure all outstanding operations are launched
-  Runtime::get_runtime().flush_scheduling_window();
-
   DataMovementRequests requests{};
 
   auto&& [allocation, subdomain, _] = storage->map(domain_,

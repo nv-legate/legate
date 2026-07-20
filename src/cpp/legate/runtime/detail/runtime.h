@@ -109,16 +109,6 @@ class Runtime {
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
 
-  /**
-   * @brief Launch operations in Legate's queue.
-   *
-   * @param streaming_scope_change set to true when flush_scheduling_window is
-   * called due to entering or leaving a streaming scope.
-   *
-   * @throws std::invalid_argument if called during or at the end of a strict
-   * streaming scope.
-   */
-  void flush_scheduling_window(bool streaming_scope_change = false);
   void submit(InternalSharedPtr<Operation> op);
 
   /**

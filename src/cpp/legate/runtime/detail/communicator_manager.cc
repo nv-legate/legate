@@ -58,7 +58,6 @@ void CommunicatorFactory::destroy()
   //
   // This leads to the case where Legion sees the task submissions, but we don't, and so
   // `issue_execution_fence()` doesn't do anything because our queue is empty.
-  runtime.flush_scheduling_window();
   communicators_.clear();
   nd_aliases_.clear();
 }
