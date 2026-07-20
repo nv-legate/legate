@@ -23,18 +23,6 @@ namespace legate::detail {
 
 namespace {
 
-// TODO(wonchanl): Make these functions thread-safe
-std::int64_t generate_library_task_ids_(std::int64_t max_tasks)
-{
-  static auto base = std::int64_t{100};
-
-  const auto result = base;
-
-  base += max_tasks;
-
-  return result;
-}
-
 std::int64_t generate_library_reduction_ids_(std::int64_t max_reduction_ops)
 {
   static auto base = std::int64_t{100};
@@ -53,8 +41,7 @@ Library::Library(std::string library_name,
                  std::unique_ptr<mapping::Mapper> mapper,
                  std::map<VariantCode, VariantOptions> default_options)
   : library_name_{std::move(library_name)},
-    task_scope_{
-      generate_library_task_ids_(config.max_tasks), config.max_tasks, config.max_dyn_tasks},
+    task_scope_{0, config.max_tasks, config.max_dyn_tasks},
     redop_scope_{generate_library_reduction_ids_(config.max_reduction_ops),
                  config.max_reduction_ops},
     mapper_{std::move(mapper)},
