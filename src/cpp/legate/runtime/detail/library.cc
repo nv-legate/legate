@@ -23,9 +23,12 @@ namespace legate::detail {
 
 namespace {
 
-std::int64_t generate_library_reduction_ids_(std::int64_t max_reduction_ops)
+std::int64_t generate_library_reduction_ids(std::int64_t max_reduction_ops)
 {
-  static auto base = std::int64_t{100};
+  // Reduction op IDs below this value are reserved for the core library; per-library
+  // reduction ops are handed out starting from here.
+  constexpr auto FIRST_LIBRARY_REDUCTION_ID = std::int64_t{100};
+  static auto base                          = FIRST_LIBRARY_REDUCTION_ID;
 
   const auto result = base;
 
@@ -41,8 +44,8 @@ Library::Library(std::string library_name,
                  std::unique_ptr<mapping::Mapper> mapper,
                  std::map<VariantCode, VariantOptions> default_options)
   : library_name_{std::move(library_name)},
-    task_scope_{0, config.max_tasks, config.max_dyn_tasks},
-    redop_scope_{generate_library_reduction_ids_(config.max_reduction_ops),
+    task_scope_{/*base=*/0, config.max_tasks, config.max_dyn_tasks},
+    redop_scope_{generate_library_reduction_ids(config.max_reduction_ops),
                  config.max_reduction_ops},
     mapper_{std::move(mapper)},
     default_options_{std::move(default_options)}

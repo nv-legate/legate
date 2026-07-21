@@ -119,10 +119,10 @@ InlineStorage::InlineStorage(const Domain& domain,
 {
 }
 
-InlineStorage::InlineStorage(const Domain& domain,
+InlineStorage::InlineStorage(Domain domain,
                              std::uint32_t field_size,
                              const legate::ExternalAllocation& alloc)
-  : domain_{domain}, field_size_{field_size}, allocation_{alloc.impl()}
+  : domain_{std::move(domain)}, field_size_{field_size}, allocation_{alloc.impl()}
 {
 }
 

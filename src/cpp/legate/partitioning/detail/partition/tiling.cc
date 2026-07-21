@@ -287,26 +287,22 @@ bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) 
     return false;
   }
 
-  for (auto&& [my_tile_ext, color_ext, my_off, other_tile_ext, other_off] :
-       zip_equal(tile_shape(),
-                 color_shape(),
-                 offsets(),
-                 other_tiling->tile_shape(),
-                 other_tiling->offsets())) {
+  auto zipped = zip_equal(
+    tile_shape(), color_shape(), offsets(), other_tiling->tile_shape(), other_tiling->offsets());
+
+  return std::all_of(zipped.begin(), zipped.end(), [](const auto& dims) {
+    auto&& [my_tile_ext, color_ext, my_off, other_tile_ext, other_off] = dims;
+
     if (my_tile_ext == other_tile_ext && my_off == other_off) {
-      continue;
+      return true;
     }
     if (color_ext > 1) {
       return false;
     }
     // If this dimension isn't partitioned and the tile extents don't match, we can at least check
     // if the other tile is smaller than my tile for this dimension.
-    if (my_tile_ext + my_off < other_tile_ext + other_off) {
-      return false;
-    }
-  }
-
-  return true;
+    return my_tile_ext + my_off >= other_tile_ext + other_off;
+  });
 }
 
 std::size_t Tiling::hash() const

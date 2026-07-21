@@ -44,8 +44,8 @@ Transpose::Transpose(SmallVector<std::int32_t, LEGATE_MAX_DIM>&& axes) : axes_{s
 Domain Transpose::transform(const Domain& domain) const
 {
   const auto ndim = domain.dim();
-  auto lo         = DomainPoint::zeroes(ndim);
-  auto hi         = DomainPoint::zeroes(ndim);
+  auto lo         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
+  auto hi         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
   auto&& in_lo    = domain.lo();
   auto&& in_hi    = domain.hi();
 

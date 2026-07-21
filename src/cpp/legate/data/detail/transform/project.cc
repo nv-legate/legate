@@ -24,8 +24,8 @@ Domain Project::transform(const Domain& input) const
 {
   LEGATE_ASSERT(input.dim() > 0);
   const auto out_ndim = input.dim() - 1;
-  auto lo             = DomainPoint::zeroes(out_ndim);
-  auto hi             = DomainPoint::zeroes(out_ndim);
+  auto lo             = DomainPoint::zeroes(static_cast<std::int32_t>(out_ndim));
+  auto hi             = DomainPoint::zeroes(static_cast<std::int32_t>(out_ndim));
   auto&& in_lo        = input.lo();
   auto&& in_hi        = input.hi();
 

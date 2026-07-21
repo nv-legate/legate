@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <utility>
 
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
 #include <legate/runtime/detail/config.h>
@@ -30,16 +31,16 @@
 namespace legate::detail {
 
 TaskContext::TaskContext(VariantCode variant_code,
-                         const Domain& launch_domain,
-                         const DomainPoint& task_index,
+                         Domain launch_domain,
+                         DomainPoint task_index,
                          const TaskBase* task,
                          SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
                          SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
                          SmallVector<InternalSharedPtr<PhysicalStore>> reductions,
                          SmallVector<InternalSharedPtr<Scalar>> scalars)
   : variant_kind_{variant_code},
-    launch_domain_{launch_domain},
-    task_index_{task_index},
+    launch_domain_{std::move(launch_domain)},
+    task_index_{std::move(task_index)},
     op_task_{task},
     inputs_{std::move(inputs)},
     outputs_{std::move(outputs)},

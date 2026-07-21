@@ -45,16 +45,16 @@ class AccessorBase {
   LEGATE_HOST_DEVICE ELEM* ptr(const legate::Rect<DIM>& r, legate::Point<DIM>& strides) const;
 
   // True when every stride is zero, i.e. the store is a broadcast scalar.
-  LEGATE_HOST_DEVICE bool is_scalar() const;
+  [[nodiscard]] LEGATE_HOST_DEVICE bool is_scalar() const;
 
   // Dense-layout predicates, computed from the strides (mirroring the semantics
   // of Realm's AffineAccessor::is_dense_*). A dimension of extent 1 imposes no
   // constraint on its stride.
-  LEGATE_HOST_DEVICE bool is_dense_row_major(const legate::Rect<DIM>& r) const;
+  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_row_major(const legate::Rect<DIM>& r) const;
 
-  LEGATE_HOST_DEVICE bool is_dense_col_major(const legate::Rect<DIM>& r) const;
+  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_col_major(const legate::Rect<DIM>& r) const;
 
-  LEGATE_HOST_DEVICE bool is_dense_arbitrary(const legate::Rect<DIM>& r) const;
+  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_arbitrary(const legate::Rect<DIM>& r) const;
 
  protected:
   ELEM* base_{nullptr};
@@ -109,7 +109,7 @@ class AccessorRD : public detail::AccessorBase<typename REDOP::RHS, DIM> {
   // Proxy so that `acc[p] <<= value` performs the reduction.
   class ReductionProxy {
    public:
-    LEGATE_HOST_DEVICE ReductionProxy(RHS* target);
+    LEGATE_HOST_DEVICE explicit ReductionProxy(RHS* target);
 
     LEGATE_HOST_DEVICE void operator<<=(RHS value) const;
 

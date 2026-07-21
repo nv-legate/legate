@@ -22,8 +22,8 @@ namespace legate::detail {
 Domain DimBroadcast::transform(const Domain& input) const
 {
   const auto ndim = input.dim();
-  auto lo         = DomainPoint::zeroes(ndim);
-  auto hi         = DomainPoint::zeroes(ndim);
+  auto lo         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
+  auto hi         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
   auto&& in_lo    = input.lo();
   auto&& in_hi    = input.hi();
 

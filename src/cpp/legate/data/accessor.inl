@@ -77,7 +77,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_row_major(
 {
   std::size_t expected = 1;
   for (int i = DIM - 1; i >= 0; --i) {
-    const std::size_t extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
+    const auto extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
     if (extent > 1 && static_cast<std::size_t>(strides_[i]) != expected) {
       return false;
     }
@@ -92,7 +92,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_col_major(
 {
   std::size_t expected = 1;
   for (int i = 0; i < DIM; ++i) {
-    const std::size_t extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
+    const auto extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
     if (extent > 1 && static_cast<std::size_t>(strides_[i]) != expected) {
       return false;
     }
@@ -111,7 +111,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_arbitrary(
   std::size_t extents[DIM];
   int n = 0;
   for (int i = 0; i < DIM; ++i) {
-    const std::size_t extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
+    const auto extent = static_cast<std::size_t>(r.hi[i] - r.lo[i] + 1);
     if (extent > 1) {
       strides[n] = static_cast<std::size_t>(strides_[i]);
       extents[n] = extent;

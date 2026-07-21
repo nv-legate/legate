@@ -99,7 +99,7 @@ LogicalStore::LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
     shape_{make_internal_shared<Shape>(std::move(extents))},
     storage_{std::move(storage)},
     transform_{std::move(transform)},
-    domain_{domain}
+    domain_{std::move(domain)}
 {
   assert_fixed_storage_size(this->type());
   LEGATE_ASSERT(transform_ != nullptr);
@@ -291,7 +291,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
-  std::int32_t, SmallVector<std::uint64_t, LEGATE_MAX_DIM>)
+  std::int32_t, const SmallVector<std::uint64_t, LEGATE_MAX_DIM>&)
 {
   // TODO(wonchanl): V2 needs to subsume reshaping
   LEGATE_ABORT("No support for delinearization");
@@ -384,10 +384,10 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
   // beginning address of the store by inverting the store's lower bound to the storage's coordinate
   // space, and then translate the address back in the store's (transformed) coordinate space.
   auto store_begin     = static_cast<std::int8_t*>(storage_base) +
-                         storage_subdomain.lo().dot(storage_strides) * field_size;
+                         (storage_subdomain.lo().dot(storage_strides) * field_size);
   auto store_subdomain = transform.transform(storage_subdomain);
   auto store_strides   = transform.convert_strides(storage_strides);
-  auto store_base      = store_begin - store_subdomain.lo().dot(store_strides) * field_size;
+  auto store_base      = store_begin - (store_subdomain.lo().dot(store_strides) * field_size);
   return {store_base, std::move(store_strides), std::move(store_subdomain)};
 }
 
@@ -575,8 +575,8 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   auto domains = SmallVector<Domain>(tags::size_tag, node_count, Domain{});
 
   for (std::uint32_t r = 0; r < node_count; ++r) {
-    auto lo = DomainPoint::zeroes(store_dim);
-    auto hi = DomainPoint::zeroes(store_dim);
+    auto lo = DomainPoint::zeroes(static_cast<std::int32_t>(store_dim));
+    auto hi = DomainPoint::zeroes(static_cast<std::int32_t>(store_dim));
 
     for (std::uint32_t d = 0; d < store_dim; ++d) {
       const auto offset = (d < color_dim) ? offset_tables[d][colors[r][d]] : std::int64_t{0};
@@ -604,13 +604,14 @@ void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partiti
   const auto color  = new_key_partition->compute_color(Runtime::get_runtime().node_id());
   const auto target = get_storage()->target();
 
-  auto&& [new_inline_storage, _, __] = get_storage()->map(domain_,
-                                                          new_key_partition,
-                                                          color,
-                                                          target,
-                                                          /*is_read=*/true,
-                                                          /*is_transformed=*/false,
-                                                          &requests);
+  auto&& [new_inline_storage, mapped_domain, storage_created] =
+    get_storage()->map(domain_,
+                       new_key_partition,
+                       color,
+                       target,
+                       /*is_read=*/true,
+                       /*is_transformed=*/false,
+                       &requests);
 
   const auto variant_code =
     target == mapping::StoreTarget::FBMEM ? VariantCode::GPU : VariantCode::CPU;

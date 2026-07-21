@@ -9,6 +9,7 @@
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/zip.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <ostream>
 #include <utility>
@@ -28,11 +29,11 @@ DomainPoint::DomainPoint(Span<const std::int64_t> coords) : coordinates_{coords}
     detail::tags::size_tag, static_cast<std::size_t>(ndim), std::int64_t{0}}};
 }
 
-std::int64_t DomainPoint::dot(const DomainPoint& rhs) const
+std::int64_t DomainPoint::dot(const DomainPoint& other) const
 {
   std::int64_t result = 0;
 
-  for (auto&& [l, r] : detail::zip_equal(*this, rhs)) {
+  for (auto&& [l, r] : detail::zip_equal(*this, other)) {
     result += l * r;
   }
   return result;
@@ -50,7 +51,7 @@ std::int64_t DomainPoint::volume() const
 
 DomainPoint DomainPoint::strides() const
 {
-  auto result = DomainPoint::zeroes(dim());
+  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(dim()));
 
   if (dim() == 0) {
     return result;
@@ -58,7 +59,7 @@ DomainPoint DomainPoint::strides() const
 
   // TODO(wonchanl): C order is assumed but the layout can be arbitrary
   result[dim() - 1] = 1;
-  for (std::int32_t idx = dim() - 2; idx >= 0; --idx) {
+  for (std::int32_t idx = static_cast<std::int32_t>(dim()) - 2; idx >= 0; --idx) {
     const auto next = idx + 1;
 
     result[idx] = result[next] * coordinates_[next];
@@ -118,12 +119,7 @@ bool DomainPoint::operator==(const DomainPoint& rhs) const
   if (dim() != rhs.dim()) {
     return false;
   }
-  for (auto&& [l, r] : detail::zip_equal(*this, rhs)) {
-    if (l != r) {
-      return false;
-    }
-  }
-  return true;
+  return std::equal(begin(), end(), rhs.begin());
 }
 
 bool DomainPoint::operator!=(const DomainPoint& rhs) const { return !(*this == rhs); }

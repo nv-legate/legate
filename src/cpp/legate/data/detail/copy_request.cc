@@ -67,7 +67,7 @@ Logger& log_copy()
   DeviceDomainPoint result;
 
   result.dim = point.dim();
-  for (std::uint32_t idx = 0; idx < point.dim(); ++idx) {
+  for (std::int32_t idx = 0; idx < static_cast<std::int32_t>(point.dim()); ++idx) {
     result[idx] = point[idx];
   }
   return result;
@@ -98,7 +98,7 @@ constexpr decltype(auto) field_size_dispatch(std::uint32_t field_size, Functor f
 }
 
 template <typename VAL>
-void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, const Tiling* tiling)
+void cpu_reorder_elements(InlineStorage& target, const InlineStorage& source, const Tiling* tiling)
 {
   auto* target_ptr       = static_cast<VAL*>(target.data());
   const auto* source_ptr = static_cast<const VAL*>(source.data());
@@ -119,7 +119,7 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
     // coordinate space). These differ whenever the target is offset (e.g. a slice).
     const auto target_idx = (point - target_lo).dot(target_strides);
     const auto source_idx = (point % tile_shape).dot(tile_strides) +
-                            (point / tile_shape).dot(color_strides) * tile_volume;
+                            ((point / tile_shape).dot(color_strides) * tile_volume);
 
     target_ptr[target_idx] = source_ptr[source_idx];
   }
@@ -129,14 +129,14 @@ struct ReorderElementsCPU {
   template <typename VAL>
   void operator()(InlineStorage& target, const InlineStorage& source, const Tiling* tiling)
   {
-    cpu_reorder_elements_<VAL>(target, source, tiling);
+    cpu_reorder_elements<VAL>(target, source, tiling);
   }
 };
 
-void reorder_elements_cpu_(std::uint32_t field_size,
-                           InlineStorage& target,
-                           const InlineStorage& source,
-                           const Tiling* tiling)
+void reorder_elements_cpu(std::uint32_t field_size,
+                          InlineStorage& target,
+                          const InlineStorage& source,
+                          const Tiling* tiling)
 {
   field_size_dispatch(field_size, ReorderElementsCPU{}, target, source, tiling);
 }
@@ -173,15 +173,15 @@ struct CopyToSendBufferCPU {
   }
 };
 
-void copy_to_send_buffer_cpu_(std::uint32_t field_size,
-                              InlineStorage& target,
-                              const InlineStorage& source,
-                              const Domain& source_domain,
-                              const DomainPoint& source_strides,
-                              const SmallVector<Domain>& target_subdomains,
-                              const SmallVector<DomainPoint>& all_target_strides,
-                              const SmallVector<int>& counts,
-                              const SmallVector<int>& offsets)
+void copy_to_send_buffer_cpu(std::uint32_t field_size,
+                             InlineStorage& target,
+                             const InlineStorage& source,
+                             const Domain& source_domain,
+                             const DomainPoint& source_strides,
+                             const SmallVector<Domain>& target_subdomains,
+                             const SmallVector<DomainPoint>& all_target_strides,
+                             const SmallVector<int>& counts,
+                             const SmallVector<int>& offsets)
 {
   field_size_dispatch(field_size,
                       CopyToSendBufferCPU{},
@@ -227,15 +227,15 @@ struct CopyFromRecvBufferCPU {
   }
 };
 
-void copy_from_recv_buffer_cpu_(std::uint32_t field_size,
-                                InlineStorage& target,
-                                const Domain& target_domain,
-                                const DomainPoint& target_strides,
-                                const InlineStorage& source,
-                                const SmallVector<Domain>& source_subdomains,
-                                const SmallVector<DomainPoint>& all_source_strides,
-                                const SmallVector<int>& counts,
-                                const SmallVector<int>& offsets)
+void copy_from_recv_buffer_cpu(std::uint32_t field_size,
+                               InlineStorage& target,
+                               const Domain& target_domain,
+                               const DomainPoint& target_strides,
+                               const InlineStorage& source,
+                               const SmallVector<Domain>& source_subdomains,
+                               const SmallVector<DomainPoint>& all_source_strides,
+                               const SmallVector<int>& counts,
+                               const SmallVector<int>& offsets)
 {
   field_size_dispatch(field_size,
                       CopyFromRecvBufferCPU{},
@@ -341,7 +341,7 @@ struct CopyToSendBufferGPU {
   }
 };
 
-void copy_to_send_buffer_gpu_(
+void copy_to_send_buffer_gpu(
   std::uint32_t field_size,
   SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
   const InlineStorage& source,
@@ -455,7 +455,7 @@ struct CopyFromRecvBufferGPU {
   }
 };
 
-void copy_from_recv_buffer_gpu_(
+void copy_from_recv_buffer_gpu(
   std::uint32_t field_size,
   InlineStorage& target,
   const Domain& target_domain,
@@ -520,7 +520,7 @@ struct ReorderElementsGPU {
 
     auto target_extents      = target.domain().extents();
     auto target_lo           = target.domain().lo();
-    auto tile_shape          = tiling->tile_shape();
+    const auto& tile_shape   = tiling->tile_shape();
     auto tile_strides        = tile_shape.strides();
     auto color_strides       = tiling->color_shape().strides();
     std::int64_t tile_volume = tile_shape.volume();
@@ -544,11 +544,11 @@ struct ReorderElementsGPU {
   }
 };
 
-void reorder_elements_gpu_(std::uint32_t field_size,
-                           InlineStorage& target,
-                           const InlineStorage& source,
-                           const Tiling* tiling,
-                           CUstream stream)
+void reorder_elements_gpu(std::uint32_t field_size,
+                          InlineStorage& target,
+                          const InlineStorage& source,
+                          const Tiling* tiling,
+                          CUstream stream)
 {
   field_size_dispatch(field_size, ReorderElementsGPU{}, target, source, tiling, stream);
 }
@@ -729,10 +729,10 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
   const auto* tiling = static_cast<Tiling*>(source_partition_.get());
 
   if (variant_code == VariantCode::CPU) {
-    reorder_elements_cpu_(field_size_, *target_, tmp, tiling);
+    reorder_elements_cpu(field_size_, *target_, tmp, tiling);
   } else {
     LEGATE_CHECK(variant_code == VariantCode::GPU);
-    reorder_elements_gpu_(
+    reorder_elements_gpu(
       field_size_, *target_, tmp, tiling, Runtime::get_runtime().get_cuda_stream());
   }
 }
@@ -808,15 +808,15 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     InlineStorage recv_buffer{
       Domain{Rect<1>{0, std::max(recv_total, 1) - 1}}, field_size_, target_->target()};
 
-    copy_to_send_buffer_cpu_(field_size_,
-                             send_buffer,
-                             *source_,
-                             source_domain,
-                             source_strides,
-                             send_subdomains,
-                             send_strides,
-                             send_counts,
-                             send_offsets);
+    copy_to_send_buffer_cpu(field_size_,
+                            send_buffer,
+                            *source_,
+                            source_domain,
+                            source_strides,
+                            send_subdomains,
+                            send_strides,
+                            send_counts,
+                            send_offsets);
 
     collAlltoallv(send_buffer.data(),
                   send_counts.data(),
@@ -827,15 +827,15 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
                   to_coll_data_type_(field_size_),
                   Runtime::get_runtime().get_cpu_comm());
 
-    copy_from_recv_buffer_cpu_(field_size_,
-                               *target_,
-                               target_domain,
-                               target_strides,
-                               recv_buffer,
-                               recv_subdomains,
-                               recv_strides,
-                               recv_counts,
-                               recv_offsets);
+    copy_from_recv_buffer_cpu(field_size_,
+                              *target_,
+                              target_domain,
+                              target_strides,
+                              recv_buffer,
+                              recv_subdomains,
+                              recv_strides,
+                              recv_counts,
+                              recv_offsets);
 
     return;
   }
@@ -878,14 +878,14 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   const auto comm           = Runtime::get_runtime().get_gpu_comm();
   const auto nccl_data_type = to_nccl_data_type(field_size_);
 
-  copy_to_send_buffer_gpu_(field_size_,
-                           send_buffers,
-                           *source_,
-                           source_domain,
-                           source_strides,
-                           send_subdomains,
-                           send_counts,
-                           stream);
+  copy_to_send_buffer_gpu(field_size_,
+                          send_buffers,
+                          *source_,
+                          source_domain,
+                          source_strides,
+                          send_subdomains,
+                          send_counts,
+                          stream);
 
   LEGATE_CHECK_NCCL(ncclGroupStart());
 
@@ -925,14 +925,14 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
   LEGATE_CHECK_NCCL(ncclGroupEnd());
 
-  copy_from_recv_buffer_gpu_(field_size_,
-                             *target_,
-                             target_domain,
-                             target_strides,
-                             recv_buffers,
-                             recv_subdomains,
-                             recv_counts,
-                             stream);
+  copy_from_recv_buffer_gpu(field_size_,
+                            *target_,
+                            target_domain,
+                            target_strides,
+                            recv_buffers,
+                            recv_subdomains,
+                            recv_counts,
+                            stream);
 }
 
 }  // namespace legate::detail

@@ -48,9 +48,7 @@ class InlineStorage {
    * @param field_size The size of the field in bytes.
    * @param alloc The external allocation to use for the manually managed memory.
    */
-  InlineStorage(const Domain& domain,
-                std::uint32_t field_size,
-                const legate::ExternalAllocation& alloc);
+  InlineStorage(Domain domain, std::uint32_t field_size, const legate::ExternalAllocation& alloc);
 
   InlineStorage(InlineStorage&&) noexcept                 = default;
   InlineStorage& operator=(InlineStorage&&) noexcept      = default;

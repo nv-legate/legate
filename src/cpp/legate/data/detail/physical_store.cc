@@ -23,7 +23,7 @@ namespace legate::detail {
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
   const auto field_size = type_->size();
-  auto* const ptr = static_cast<std::int8_t*>(base()) + strides().dot(domain().lo()) * field_size;
+  auto* const ptr = static_cast<std::int8_t*>(base()) + (strides().dot(domain().lo()) * field_size);
 
   std::vector<std::size_t> byte_strides;
 

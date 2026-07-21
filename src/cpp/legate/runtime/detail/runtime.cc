@@ -292,7 +292,7 @@ void Runtime::schedule_(std::deque<InternalSharedPtr<Operation>>* window)
 
 void Runtime::clear_scheduling_window(PrivateKey) { operations_.clear(); }
 
-void Runtime::submit(InternalSharedPtr<Operation> op)
+void Runtime::submit(const InternalSharedPtr<Operation>& op)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << op->to_string(true /*show_provenance*/) << " submitted";
@@ -378,8 +378,8 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
 InternalSharedPtr<LogicalStore> Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,
-  InternalSharedPtr<ExternalAllocation> allocation,
-  InternalSharedPtr<mapping::detail::DimOrdering> /*ordering*/)
+  const InternalSharedPtr<ExternalAllocation>& allocation,
+  const InternalSharedPtr<mapping::detail::DimOrdering>& /*ordering*/) const
 {
   validate_store_shape(shape, type);
   LEGATE_CHECK(allocation->ptr());
@@ -403,7 +403,7 @@ Runtime::IndexAttachResult Runtime::create_store(
   const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
   InternalSharedPtr<Type> type,
   Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> /*allocations*/,
-  InternalSharedPtr<mapping::detail::DimOrdering> /*ordering*/)
+  const InternalSharedPtr<mapping::detail::DimOrdering>& /*ordering*/)
 {
   if (config().enable_inline_task_launch()) {
     throw TracedException<std::runtime_error>{
@@ -901,7 +901,7 @@ std::int32_t Runtime::finish()
     auto&& api = cuda::detail::get_cuda_driver_api();
 
     auto count              = api->device_get_count();
-    auto ordinal            = runtime.local_machine().node_id % count;
+    auto ordinal            = static_cast<std::int32_t>(runtime.local_machine().node_id % count);
     runtime.current_device_ = api->device_get(ordinal);
 
     static_cast<void>(api->device_primary_ctx_retain(runtime.current_device_));
@@ -931,12 +931,12 @@ std::int32_t Runtime::finish()
 
     mapping_table.reserve(local_machine.total_nodes);
     for (std::uint32_t node_id = 0; node_id < local_machine.total_nodes; ++node_id) {
-      mapping_table.push_back(node_id);
+      mapping_table.push_back(static_cast<int>(node_id));
     }
 
     network->comm_create(communicator.get(),
-                         local_machine.total_nodes,
-                         local_machine.node_id,
+                         static_cast<std::int32_t>(local_machine.total_nodes),
+                         static_cast<std::int32_t>(local_machine.node_id),
                          network->init_comm(),
                          mapping_table.data());
 
@@ -953,7 +953,7 @@ std::int32_t Runtime::finish()
 
     if (local_machine.node_id == 0) {
       // TODO(wonchanl): Error checking
-      ncclGetUniqueId(&comm_ids[0]);
+      ncclGetUniqueId(comm_ids.data());
     }
 
     network->all_gather(&comm_ids[local_machine.node_id],
@@ -965,8 +965,10 @@ std::int32_t Runtime::finish()
     const cuda::detail::AutoPrimaryContext ctx{runtime.get_current_cuda_device()};
 
     // TODO(wonchanl): Error checking
-    ncclCommInitRank(
-      &runtime.gpu_communicator_, local_machine.total_nodes, comm_ids[0], local_machine.node_id);
+    ncclCommInitRank(&runtime.gpu_communicator_,
+                     static_cast<std::int32_t>(local_machine.total_nodes),
+                     comm_ids[0],
+                     static_cast<std::int32_t>(local_machine.node_id));
   }
 
   legate::experimental::io::detail::register_tasks();

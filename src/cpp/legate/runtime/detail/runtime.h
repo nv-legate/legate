@@ -109,7 +109,7 @@ class Runtime {
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
 
-  void submit(InternalSharedPtr<Operation> op);
+  void submit(const InternalSharedPtr<Operation>& op);
 
   /**
    * @brief Give access to certain methods via this class.
@@ -146,8 +146,8 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
-    InternalSharedPtr<ExternalAllocation> allocation,
-    InternalSharedPtr<mapping::detail::DimOrdering> ordering);
+    const InternalSharedPtr<ExternalAllocation>& allocation,
+    const InternalSharedPtr<mapping::detail::DimOrdering>& ordering) const;
   using IndexAttachResult =
     std::pair<InternalSharedPtr<LogicalStore>, InternalSharedPtr<LogicalStorePartition>>;
   [[nodiscard]] IndexAttachResult create_store(
@@ -155,7 +155,7 @@ class Runtime {
     const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
     InternalSharedPtr<Type> type,
     Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
-    InternalSharedPtr<mapping::detail::DimOrdering> ordering);
+    const InternalSharedPtr<mapping::detail::DimOrdering>& ordering);
 
  private:
   static void check_dimensionality_(std::uint32_t dim);
@@ -242,7 +242,6 @@ class Runtime {
 
   std::uint64_t next_store_id_{1};
   std::uint64_t next_storage_id_{1};
-  std::size_t field_reuse_size_{1};
 
   // This could be a hash map, but kept as an ordered map just in case we may later support
   // library-specific shutdown callbacks that can launch tasks.

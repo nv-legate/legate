@@ -25,8 +25,8 @@ class TaskBase;
 class TaskContext {
  public:
   TaskContext(VariantCode variant_code,
-              const Domain& launch_domain,
-              const DomainPoint& task_index,
+              Domain launch_domain,
+              DomainPoint task_index,
               const TaskBase* task,
               SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
               SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
@@ -64,7 +64,7 @@ class TaskContext {
   [[nodiscard]] Span<const InternalSharedPtr<PhysicalStore>> get_scalar_stores_() const noexcept;
 
  private:
-  const VariantCode variant_kind_{};
+  const VariantCode variant_kind_;
   const Domain launch_domain_{};
   const DomainPoint task_index_{};
   const TaskBase* op_task_{};

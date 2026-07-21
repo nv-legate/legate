@@ -27,9 +27,9 @@ namespace legate::detail {
 
 namespace {
 
-void create_partition_for_bound_stores_(const Operation* op,
-                                        const ConstraintSolver& solver,
-                                        Strategy* strategy)
+void create_partition_for_bound_stores(const Operation* op,
+                                       const ConstraintSolver& solver,
+                                       Strategy* strategy)
 {
   std::vector<const Variable*> symbols_for_bound_stores{};
 
@@ -81,9 +81,9 @@ void create_partition_for_bound_stores_(const Operation* op,
   solver.solve_dependent_constraints(strategy);
 }
 
-void resolve_launch_domain_and_store_projections_(const Operation* operation,
-                                                  const ConstraintSolver& solver,
-                                                  Strategy* strategy)
+void resolve_launch_domain_and_store_projections(const Operation* operation,
+                                                 const ConstraintSolver& solver,
+                                                 Strategy* strategy)
 {
   LaunchDomainResolver domain_resolver{};
 
@@ -176,9 +176,9 @@ Strategy Partitioner::partition_stores(Operation* op)
 
   auto strategy = Strategy{op};
 
-  create_partition_for_bound_stores_(op, solver, &strategy);
+  create_partition_for_bound_stores(op, solver, &strategy);
 
-  resolve_launch_domain_and_store_projections_(op, solver, &strategy);
+  resolve_launch_domain_and_store_projections(op, solver, &strategy);
 
   strategy.dump();
 

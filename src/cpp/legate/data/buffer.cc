@@ -142,7 +142,7 @@ TaskLocalBuffer::TaskLocalBuffer(const Type& type,
 
 Type TaskLocalBuffer::type() const { return Type{impl()->type()}; }
 
-std::int32_t TaskLocalBuffer::dim() const { return impl()->dim(); }
+std::int32_t TaskLocalBuffer::dim() const { return static_cast<std::int32_t>(impl()->dim()); }
 
 const Domain& TaskLocalBuffer::domain() const { return impl()->domain(); }
 

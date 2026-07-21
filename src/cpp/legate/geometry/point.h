@@ -95,8 +95,8 @@ struct Point {
    * wherever a coordinate is expected.
    */
   template <int D = DIM, std::enable_if_t<D == 1, int> = 0>
-  [[nodiscard]] LEGATE_HOST_DEVICE operator value_type()
-    const;  // NOLINT(google-explicit-constructor)
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  [[nodiscard]] LEGATE_HOST_DEVICE operator value_type() const;
 
   [[nodiscard]] LEGATE_HOST_DEVICE value_type& operator[](int index);
   [[nodiscard]] LEGATE_HOST_DEVICE const value_type& operator[](int index) const;
