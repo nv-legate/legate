@@ -27,28 +27,19 @@ class Transpose final : public StoreTransform {
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const override;
-  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_strides(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const override;
+  [[nodiscard]] DomainPoint convert_color(DomainPoint color) const override;
+  [[nodiscard]] DomainPoint convert_color_shape(DomainPoint color_shape) const override;
+  [[nodiscard]] DomainPoint convert_point(DomainPoint point) const override;
+  [[nodiscard]] DomainPoint convert_extents(DomainPoint extents) const override;
+  [[nodiscard]] DomainPoint convert_strides(DomainPoint strides) const override;
 
   [[nodiscard]] SymbolicPoint invert(SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const override;
-  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
+  [[nodiscard]] DomainPoint invert_color(DomainPoint color) const override;
+  [[nodiscard]] DomainPoint invert_color_shape(DomainPoint color_shape) const override;
+  [[nodiscard]] DomainPoint invert_point(DomainPoint point) const override;
+  [[nodiscard]] DomainPoint invert_extents(DomainPoint extents) const override;
 
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;

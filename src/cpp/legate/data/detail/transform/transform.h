@@ -26,14 +26,10 @@ class Transform {
   [[nodiscard]] virtual Restrictions convert(Restrictions restrictions,
                                              bool forbid_fake_dim) const = 0;
 
-  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const = 0;
-  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const = 0;
-  [[nodiscard]] virtual SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const = 0;
-  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
+  [[nodiscard]] virtual DomainPoint convert_color(DomainPoint color) const             = 0;
+  [[nodiscard]] virtual DomainPoint convert_color_shape(DomainPoint color_shape) const = 0;
+  [[nodiscard]] virtual DomainPoint convert_point(DomainPoint point) const             = 0;
+  [[nodiscard]] virtual DomainPoint convert_extents(DomainPoint extents) const         = 0;
   /**
    * @brief Converts the per-dimension memory strides of the underlying storage to the strides
    * of the (possibly higher/lower-dimensional) transformed store.
@@ -46,20 +42,15 @@ class Transform {
    *
    * @return The strides expressed over the transformed store's dimensions.
    */
-  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_strides(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const = 0;
+  [[nodiscard]] virtual DomainPoint convert_strides(DomainPoint strides) const = 0;
 
   [[nodiscard]] virtual SymbolicPoint invert(SymbolicPoint point) const      = 0;
   [[nodiscard]] virtual Restrictions invert(Restrictions restrictions) const = 0;
 
-  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const = 0;
-  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const = 0;
-  [[nodiscard]] virtual SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const = 0;
-  [[nodiscard]] virtual SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const = 0;
+  [[nodiscard]] virtual DomainPoint invert_color(DomainPoint color) const             = 0;
+  [[nodiscard]] virtual DomainPoint invert_color_shape(DomainPoint color_shape) const = 0;
+  [[nodiscard]] virtual DomainPoint invert_point(DomainPoint point) const             = 0;
+  [[nodiscard]] virtual DomainPoint invert_extents(DomainPoint extents) const         = 0;
 
   virtual void pack(BufferBuilder& buffer) const = 0;
   virtual void print(std::ostream& out) const    = 0;

@@ -60,9 +60,7 @@ class Tiling final : public Partition {
    * @param color_shape The number of colors in each dimension.
    * @param offsets The number of entries to skip per dimension.
    */
-  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets);
+  Tiling(DomainPoint tile_shape, DomainPoint color_shape, DomainPoint offsets);
 
   /**
    * @brief Construct a Tiling partition with explicit strides.
@@ -75,10 +73,7 @@ class Tiling final : public Partition {
    * @param offsets     Origin offsets for the first tile.
    * @param strides     Spacing between tiles.
    */
-  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
+  Tiling(DomainPoint tile_shape, DomainPoint color_shape, DomainPoint offsets, DomainPoint strides);
 
   /**
    * @brief Construct a Tiling partition with an explicit device mesh.
@@ -95,10 +90,10 @@ class Tiling final : public Partition {
    * @param device_mesh   The device mesh the tiles are mapped onto.
    * @param color_to_mesh Mapping from color dimensions to mesh dimensions (`-1` for unmapped).
    */
-  Tiling(SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-         SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
-         SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides,
+  Tiling(DomainPoint tile_shape,
+         DomainPoint color_shape,
+         DomainPoint offsets,
+         DomainPoint strides,
          DeviceMesh device_mesh,
          SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh);
 
@@ -134,7 +129,7 @@ class Tiling final : public Partition {
   /**
    * @copydoc Partition::color_shape()
    */
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
+  [[nodiscard]] const DomainPoint& color_shape() const override;
 
   [[nodiscard]] bool is_equi_size(const Domain& domain) const override;
 
@@ -151,13 +146,9 @@ class Tiling final : public Partition {
   /**
    * @brief Return the tile shape used in this tiling.
    *
-   * @return A span describing the tile size per dimension.
+   * @return A point describing the tile size per dimension.
    */
-  [[nodiscard]] Span<const std::uint64_t> tile_shape() const;
-
-  [[nodiscard]] const DomainPoint& tile_shape_dp() const;
-  [[nodiscard]] const DomainPoint& color_shape_dp() const;
-  [[nodiscard]] const DomainPoint& offsets_dp() const;
+  [[nodiscard]] const DomainPoint& tile_shape() const;
 
   /**
    * @copydoc Partition::convert()
@@ -201,16 +192,16 @@ class Tiling final : public Partition {
   /**
    * @brief Return the offset of the first tile in each dimension.
    *
-   * @return A span of per-dimension offsets.
+   * @return A point of per-dimension offsets.
    */
-  [[nodiscard]] Span<const std::int64_t> offsets() const;
+  [[nodiscard]] const DomainPoint& offsets() const;
 
   /**
    * @brief Return the stride (spacing) between tiles.
    *
-   * @return A span of per-dimension strides.
+   * @return A point of per-dimension strides.
    */
-  [[nodiscard]] Span<const std::uint64_t> strides() const;
+  [[nodiscard]] const DomainPoint& strides() const;
 
   /**
    * @brief Compute a hash value for this tiling configuration.
@@ -224,35 +215,29 @@ class Tiling final : public Partition {
  private:
   void init_device_mesh_from_color_shape_();
 
-  bool overlapped_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
+  DomainPoint tile_shape_{};
+  DomainPoint color_shape_{};
+  DomainPoint offsets_{};
+  DomainPoint strides_{};
   DeviceMesh device_mesh_{};
   // color_to_mesh_[c] is the mesh dimension selected by color dimension c, or -1 if unmapped.
   SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh_{};
-  DomainPoint tile_shape_dp_{};
-  DomainPoint color_shape_dp_{};
-  DomainPoint offsets_dp_{};
 };
 
-[[nodiscard]] InternalSharedPtr<Partition> create_tiling(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets = {});
+[[nodiscard]] InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
+                                                         DomainPoint color_shape,
+                                                         DomainPoint offsets = {});
+
+[[nodiscard]] InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
+                                                         DomainPoint color_shape,
+                                                         DomainPoint offsets,
+                                                         DomainPoint strides);
 
 [[nodiscard]] InternalSharedPtr<Partition> create_tiling(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
-
-[[nodiscard]] InternalSharedPtr<Partition> create_tiling(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape,
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> offsets,
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides,
+  DomainPoint tile_shape,
+  DomainPoint color_shape,
+  DomainPoint offsets,
+  DomainPoint strides,
   DeviceMesh device_mesh,
   SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh);
 

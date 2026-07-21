@@ -53,41 +53,22 @@ Restrictions Project::convert(Restrictions restrictions, bool /*forbid_fake_dim*
       });
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint Project::convert_color(DomainPoint color) const { return color.removed(dim_); }
+
+DomainPoint Project::convert_color_shape(DomainPoint color_shape) const
 {
-  color.erase(color.begin() + dim_);
-  return color;
+  return color_shape.removed(dim_);
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
-{
-  color_shape.erase(color_shape.begin() + dim_);
-  return color_shape;
-}
+DomainPoint Project::convert_point(DomainPoint point) const { return point.removed(dim_); }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Project::convert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
-{
-  point.erase(point.begin() + dim_);
-  return point;
-}
+DomainPoint Project::convert_extents(DomainPoint extents) const { return extents.removed(dim_); }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
-{
-  extents.erase(extents.begin() + dim_);
-  return extents;
-}
-
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::convert_strides(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+DomainPoint Project::convert_strides(DomainPoint strides) const
 {
   // The projected dimension is fixed to a single coordinate; its stride is dropped from the
   // store (the fixed coordinate's contribution is folded into the base pointer instead).
-  strides.erase(strides.begin() + dim_);
-  return strides;
+  return strides.removed(dim_);
 }
 
 SymbolicPoint Project::invert(SymbolicPoint point) const
@@ -110,32 +91,21 @@ Restrictions Project::invert(Restrictions restrictions) const
       });
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::invert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint Project::invert_color(DomainPoint color) const
 {
-  color.insert(color.begin() + dim_, 0);
-  return color;
+  return color.inserted(dim_, /*value=*/0);
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::invert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
+DomainPoint Project::invert_color_shape(DomainPoint color_shape) const
 {
-  color_shape.insert(color_shape.begin() + dim_, 1);
-  return color_shape;
+  return color_shape.inserted(dim_, /*value=*/1);
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Project::invert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
-{
-  point.insert(point.begin() + dim_, coord_);
-  return point;
-}
+DomainPoint Project::invert_point(DomainPoint point) const { return point.inserted(dim_, coord_); }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Project::invert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
+DomainPoint Project::invert_extents(DomainPoint extents) const
 {
-  extents.insert(extents.begin() + dim_, 1);
-  return extents;
+  return extents.inserted(dim_, /*value=*/1);
 }
 
 void Project::pack(BufferBuilder& buffer) const

@@ -327,7 +327,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 
   auto partition = [&] {
     if (color_shape.has_value()) {
-      return create_tiling(std::move(tile_shape), std::move(*color_shape));
+      return create_tiling(to_domain_point(tile_shape), to_domain_point(*color_shape));
     }
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> tmp_color_shape;
 
@@ -337,7 +337,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
                    tile_shape.begin(),
                    std::back_inserter(tmp_color_shape),
                    [](std::uint64_t c, std::uint64_t t) { return (c + t - 1) / t; });
-    return create_tiling(std::move(tile_shape), std::move(tmp_color_shape));
+    return create_tiling(to_domain_point(tile_shape), to_domain_point(tmp_color_shape));
   }();
 
   return create_partition_(self, std::move(partition), /* complete */ true);
@@ -366,9 +366,8 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
 // physical store nor the accessors need to translate again.
 [[nodiscard]] PhysicalStoreLayout compute_store_layout(const InlineStorage& storage,
                                                        const TransformStack& transform,
-                                                       std::int32_t store_dim,
                                                        std::uint32_t field_size,
-                                                       const Domain& sub_domain)
+                                                       const Domain& storage_subdomain)
 {
   // Storage-space layout: base at the storage's coordinate origin, element strides over the
   // storage's dimensions.
@@ -377,39 +376,19 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
   // A non-transformed store (this covers every unbound and 0-D store) inherits the storage's layout
   // verbatim; its domain is just the mapped sub-domain.
   if (transform.identity()) {
-    return {storage_base, std::move(storage_strides), sub_domain};
+    return {storage_base, std::move(storage_strides), storage_subdomain};
   }
 
-  // Element strides re-expressed over the store's (possibly higher/lower-dimensional) dimensions.
-  // `convert_strides` inserts 0 for dimensions not backed by the storage (promoted/broadcast) and
-  // drops projected dimensions.
-  auto storage_strides_in = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
-
-  storage_strides_in.reserve(storage_strides.dim());
-  for (std::uint32_t i = 0; i < storage_strides.dim(); ++i) {
-    storage_strides_in.push_back(static_cast<std::uint64_t>(storage_strides[i]));
-  }
-
-  const auto converted = transform.convert_strides(std::move(storage_strides_in));
-  auto store_strides   = DomainPoint::zeroes(static_cast<std::int32_t>(converted.size()));
-
-  for (std::uint32_t i = 0; i < converted.size(); ++i) {
-    store_strides[i] = static_cast<std::int64_t>(converted[i]);
-  }
-
-  // The store's coordinate origin maps to the storage point `invert(0)`; fold that constant offset
-  // (a projection's fixed index, a shift's offset, ...) into the base pointer.
-  const auto storage_origin = transform.invert_point(SmallVector<std::int64_t, LEGATE_MAX_DIM>{
-    tags::size_tag, static_cast<std::size_t>(store_dim), std::int64_t{0}});
-  std::int64_t elem_off     = 0;
-
-  for (std::uint32_t i = 0; i < storage_origin.size(); ++i) {
-    elem_off += storage_origin[i] * storage_strides[i];
-  }
-  auto* const base =
-    static_cast<std::int8_t*>(storage_base) + (elem_off * static_cast<std::int64_t>(field_size));
-
-  return {static_cast<void*>(base), std::move(store_strides), transform.transform(sub_domain)};
+  // When the store is transformed, the storage_base needs to be re-adjusted so that it'd use the
+  // store's lower bound as the origin, not at the storage's. To do that, we first calculate the
+  // beginning address of the store by inverting the store's lower bound to the storage's coordinate
+  // space, and then translate the address back in the store's (transformed) coordinate space.
+  auto store_begin     = static_cast<std::int8_t*>(storage_base) +
+                         storage_subdomain.lo().dot(storage_strides) * field_size;
+  auto store_subdomain = transform.transform(storage_subdomain);
+  auto store_strides   = transform.convert_strides(storage_strides);
+  auto store_base      = store_begin - store_subdomain.lo().dot(store_strides) * field_size;
+  return {store_base, std::move(store_strides), std::move(store_subdomain)};
 }
 
 }  // namespace
@@ -430,8 +409,7 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
   auto&& [allocation, subdomain, subsumed] = get_storage()->map(
     domain_, inverted, color, machine.preferred_store_target(), is_read, transformed(), requests);
 
-  auto layout = compute_store_layout(
-    *allocation, *transform_, static_cast<std::int32_t>(dim()), type()->size(), subdomain);
+  auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
 
   return {make_internal_shared<PhysicalStore>(
             type(), LEGION_READ_WRITE, std::move(allocation), std::move(layout)),
@@ -462,8 +440,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
                                                                 store_has_identity,
                                                                 requests);
 
-  auto layout = compute_store_layout(
-    *allocation, *transform_, static_cast<std::int32_t>(dim()), type()->size(), subdomain);
+  auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
     type(), LEGION_REDUCE, std::move(allocation), std::move(layout));
@@ -584,7 +561,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
 
     std::int64_t running = 0;
 
-    for (std::uint64_t k = 0; k < color_shape[d]; ++k) {
+    for (std::int64_t k = 0; k < color_shape[d]; ++k) {
       offset_tables[d][k] = running;
       running += std::max<std::int64_t>(ext_tables[d][k], 0);
     }
@@ -670,8 +647,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   requests.perform_data_sync();
   requests.perform_copy_ins(VariantCode::CPU);
 
-  auto layout = compute_store_layout(
-    *allocation, *transform_, static_cast<std::int32_t>(dim()), type()->size(), subdomain);
+  auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
     type(), LEGION_READ_WRITE, std::move(allocation), std::move(layout));
@@ -725,7 +701,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 
   auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
 
-  return create_tiling(std::move(tile_shape), std::move(launch_shape));
+  return create_tiling(to_domain_point(tile_shape), to_domain_point(launch_shape));
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
@@ -754,7 +730,7 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
 void LogicalStore::set_key_partition(InternalSharedPtr<Partition> partition)
 {
   LEGATE_ASSERT(!transformed());
-  num_pieces_ = array_volume(partition->color_shape());
+  num_pieces_ = static_cast<std::uint32_t>(partition->color_shape().volume());
   get_storage()->set_key_partition(partition);
   key_partition_ = std::move(partition);
 }

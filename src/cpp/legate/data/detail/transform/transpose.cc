@@ -72,39 +72,24 @@ Restrictions Transpose::convert(Restrictions restrictions, bool /*forbid_fake_di
       });
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint Transpose::convert_color(DomainPoint color) const { return color.permuted(axes_); }
+
+DomainPoint Transpose::convert_color_shape(DomainPoint color_shape) const
 {
-  // No in-place available
-  return array_map(color, axes_);
+  return color_shape.permuted(axes_);
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
+DomainPoint Transpose::convert_point(DomainPoint point) const { return point.permuted(axes_); }
+
+DomainPoint Transpose::convert_extents(DomainPoint extents) const
 {
-  // No in-place available
-  return array_map(color_shape, axes_);
+  return extents.permuted(axes_);
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Transpose::convert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint Transpose::convert_strides(DomainPoint strides) const
 {
   // No in-place available
-  return array_map(point, axes_);
-}
-
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
-{
-  // No in-place available
-  return array_map(extents, axes_);
-}
-
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::convert_strides(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
-{
-  // No in-place available
-  return array_map(strides, axes_);
+  return strides.permuted(axes_);
 }
 
 SymbolicPoint Transpose::invert(SymbolicPoint point) const
@@ -127,32 +112,18 @@ Restrictions Transpose::invert(Restrictions restrictions) const
       });
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::invert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint Transpose::invert_color(DomainPoint color) const { return color.permuted(inverse_); }
+
+DomainPoint Transpose::invert_color_shape(DomainPoint color_shape) const
 {
-  // No in-place available
-  return array_map(color, inverse_);
+  return color_shape.permuted(inverse_);
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::invert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
-{
-  // No in-place available
-  return array_map(color_shape, inverse_);
-}
+DomainPoint Transpose::invert_point(DomainPoint point) const { return point.permuted(inverse_); }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Transpose::invert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint Transpose::invert_extents(DomainPoint extents) const
 {
-  // No in-place available
-  return array_map(point, inverse_);
-}
-
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Transpose::invert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
-{
-  // No in-place available
-  return array_map(extents, inverse_);
+  return extents.permuted(inverse_);
 }
 
 void Transpose::pack(BufferBuilder& buffer) const

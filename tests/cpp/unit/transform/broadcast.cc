@@ -5,6 +5,7 @@
  */
 
 #include <legate/data/detail/transform/dim_broadcast.h>
+#include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <gmock/gmock.h>
@@ -51,9 +52,10 @@ TEST_F(TransformBroadcastUnit, BroadcastConvertRestrictions)
 TEST_F(TransformBroadcastUnit, BroadcastConvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto color =
-    transform->convert_color(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 3});
-  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 3};
+  auto color     = transform->convert_color(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 3}));
+  auto expected  = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 3});
 
   ASSERT_EQ(color, expected);
   ASSERT_EQ(transform->target_ndim(1), 1);
@@ -68,9 +70,10 @@ TEST_F(TransformBroadcastUnit, BroadcastConvertColor)
 TEST_F(TransformBroadcastUnit, BroadcastConvertColorShape)
 {
   auto transform   = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto color_shape = transform->convert_color_shape(
+  auto color_shape = transform->convert_color_shape(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 2, 3}));
+  auto expected    = legate::detail::to_domain_point(
     legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 2, 3});
-  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 2, 3};
 
   ASSERT_EQ(color_shape, expected);
 }
@@ -78,9 +81,10 @@ TEST_F(TransformBroadcastUnit, BroadcastConvertColorShape)
 TEST_F(TransformBroadcastUnit, BroadcastConvertPoint)
 {
   auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto point =
-    transform->convert_point(legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 3, 2});
-  auto expected = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 3, 2};
+  auto point     = transform->convert_point(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 3, 2}));
+  auto expected  = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 3, 2});
 
   ASSERT_EQ(point, expected);
 }
@@ -88,9 +92,10 @@ TEST_F(TransformBroadcastUnit, BroadcastConvertPoint)
 TEST_F(TransformBroadcastUnit, BroadcastConvertExtents)
 {
   auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto extents =
-    transform->convert_extents(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 1, 3});
-  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3, 3};
+  auto extents   = transform->convert_extents(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 1, 3}));
+  auto expected  = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3, 3});
 
   ASSERT_EQ(extents, expected);
 }
@@ -133,9 +138,10 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertRestrictions)
 TEST_F(TransformBroadcastUnit, BroadcastInvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto color =
-    transform->invert_color(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2});
-  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 0};
+  auto color     = transform->invert_color(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2}));
+  auto expected  = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 0});
 
   ASSERT_EQ(color, expected);
 }
@@ -147,8 +153,8 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertColorNegative)
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     ASSERT_THAT(
       [&] {
-        static_cast<void>(
-          transform->invert_color(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1}));
+        static_cast<void>(transform->invert_color(legate::detail::to_domain_point(
+          legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1})));
       },
       ::testing::ThrowsMessage<std::out_of_range>(::testing::HasSubstr("inplace_vector::at")));
   }
@@ -157,9 +163,10 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertColorNegative)
 TEST_F(TransformBroadcastUnit, BroadcastInvertColorShape)
 {
   auto transform   = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto color_shape = transform->invert_color_shape(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 2, 3});
-  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 1, 3};
+  auto color_shape = transform->invert_color_shape(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 2, 3}));
+  auto expected    = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 1, 3});
 
   ASSERT_EQ(color_shape, expected);
 }
@@ -167,9 +174,10 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertColorShape)
 TEST_F(TransformBroadcastUnit, BroadcastInvertPoint)
 {
   auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto point =
-    transform->invert_point(legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 3, 2});
-  auto expected = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 0, 2};
+  auto point     = transform->invert_point(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 3, 2}));
+  auto expected  = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 0, 2});
 
   ASSERT_EQ(point, expected);
 }
@@ -177,9 +185,10 @@ TEST_F(TransformBroadcastUnit, BroadcastInvertPoint)
 TEST_F(TransformBroadcastUnit, BroadcastInvertExtents)
 {
   auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, 3);
-  auto extents =
-    transform->invert_extents(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3, 3});
-  auto expected = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 1, 3};
+  auto extents   = transform->invert_extents(legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3, 3}));
+  auto expected  = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 1, 3});
 
   ASSERT_EQ(extents, expected);
 }

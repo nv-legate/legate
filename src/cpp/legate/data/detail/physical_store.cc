@@ -20,30 +20,16 @@
 
 namespace legate::detail {
 
-Domain PhysicalStore::domain() const { return domain_; }
-
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
   const auto field_size = type_->size();
+  auto* const ptr = static_cast<std::int8_t*>(base()) + strides().dot(domain().lo()) * field_size;
 
-  // `InlineAllocation::ptr` addresses the store's lower bound (0-based consumers index from there),
-  // whereas `base_` is the store's coordinate origin. Shift by `lo` to recover the lower-bound
-  // address (a 0-D or 0-based store has `lo == 0`, so the two coincide).
-  auto&& lo             = domain_.lo();
-  std::int64_t elem_off = 0;
-
-  for (std::uint32_t i = 0; i < lo.dim(); ++i) {
-    elem_off += lo[i] * strides_[i];
-  }
-  auto* const ptr =
-    static_cast<std::int8_t*>(base_) + (elem_off * static_cast<std::int64_t>(field_size));
-
-  // `InlineAllocation` reports byte strides, so scale the element strides by the field size.
   std::vector<std::size_t> byte_strides;
 
-  byte_strides.reserve(strides_.dim());
-  for (std::uint32_t i = 0; i < strides_.dim(); ++i) {
-    byte_strides.push_back(static_cast<std::size_t>(strides_[i]) * field_size);
+  byte_strides.reserve(strides().size());
+  for (auto&& stride : strides()) {
+    byte_strides.push_back(static_cast<std::size_t>(stride * field_size));
   }
   return {static_cast<void*>(ptr), std::move(byte_strides), target()};
 }

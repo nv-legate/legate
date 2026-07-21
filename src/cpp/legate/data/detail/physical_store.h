@@ -86,7 +86,7 @@ class PhysicalStore {
    *
    * @return Store's domain as a Rect<DIM>
    */
-  [[nodiscard]] Domain domain() const;
+  [[nodiscard]] const Domain& domain() const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
   [[nodiscard]] mapping::StoreTarget target() const;
   [[nodiscard]] bool is_accessible(mapping::TaskTarget task_target) const;

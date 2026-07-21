@@ -48,6 +48,8 @@ inline std::int32_t PhysicalStore::dim() const { return dim_; }
 
 inline const InternalSharedPtr<Type>& PhysicalStore::type() const { return type_; }
 
+inline const Domain& PhysicalStore::domain() const { return domain_; }
+
 inline void* PhysicalStore::base() const { return base_; }
 
 inline const DomainPoint& PhysicalStore::strides() const { return strides_; }

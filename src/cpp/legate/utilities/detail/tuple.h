@@ -29,6 +29,17 @@ namespace legate::detail {
 [[nodiscard]] Domain to_domain(Span<const std::uint64_t> shape);
 
 /**
+ * @brief Converts a shape expressed as a `DomainPoint` to a domain `[0, shape - 1]`.
+ *
+ * @note If the shape is empty (0-dimensional), a 1D {0, 0} domain is returned.
+ *
+ * @param shape The shape to convert.
+ *
+ * @return The domain.
+ */
+[[nodiscard]] Domain to_domain(const DomainPoint& shape);
+
+/**
  * @brief Converts a shape to a domain.
  *
  * @note If the shape is empty, an empty domain {} is returned.

@@ -59,8 +59,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return Unmodified `color`
    */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] DomainPoint convert_color(DomainPoint color) const override;
   /**
    * @brief Convert a color shape.
    *
@@ -68,8 +67,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return Unmodified `color_shape`
    */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_color_shape(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const override;
+  [[nodiscard]] DomainPoint convert_color_shape(DomainPoint color_shape) const override;
   /**
    * @brief Convert a point.
    *
@@ -77,8 +75,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return Unmodified `point`
    */
-  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> convert_point(
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] DomainPoint convert_point(DomainPoint point) const override;
   /**
    * @brief Convert extents.
    *
@@ -86,8 +83,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `extents` with the `dim_`-th extent updated to `dim_size_`.
    */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_extents(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
+  [[nodiscard]] DomainPoint convert_extents(DomainPoint extents) const override;
   /**
    * @brief Convert strides.
    *
@@ -96,8 +92,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `strides` with the `dim_`-th stride updated to 0.
    */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> convert_strides(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const override;
+  [[nodiscard]] DomainPoint convert_strides(DomainPoint strides) const override;
   /**
    * @brief Invert a symbolic point.
    *
@@ -121,8 +116,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `color` with the `dim_`-th coordinate updated to 0.
    */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const override;
+  [[nodiscard]] DomainPoint invert_color(DomainPoint color) const override;
   /**
    * @brief Invert a color shape.
    *
@@ -130,8 +124,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `color_shape` with the `dim_`-th size updated to 0.
    */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_color_shape(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const override;
+  [[nodiscard]] DomainPoint invert_color_shape(DomainPoint color_shape) const override;
   /**
    * @brief Invert a point.
    *
@@ -139,8 +132,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `point` with the `dim_`-th coordinate updated to 0.
    */
-  [[nodiscard]] SmallVector<std::int64_t, LEGATE_MAX_DIM> invert_point(
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const override;
+  [[nodiscard]] DomainPoint invert_point(DomainPoint point) const override;
   /**
    * @brief Invert extents.
    *
@@ -148,8 +140,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `extents` with the `dim_`-th extent updated to 1.
    */
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> invert_extents(
-    SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const override;
+  [[nodiscard]] DomainPoint invert_extents(DomainPoint extents) const override;
 
   /**
    * @brief Serialize this `DimBroadcast` into the passed `buffer`.

@@ -105,11 +105,11 @@ void cpu_reorder_elements_(InlineStorage& target, const InlineStorage& source, c
 
   const auto target_strides = target.domain().strides();
 
-  const auto& tile_shape  = tiling->tile_shape_dp();
+  const auto& tile_shape  = tiling->tile_shape();
   const auto tile_strides = tile_shape.strides();
   const auto tile_volume  = tile_shape.volume();
 
-  const auto color_strides = tiling->color_shape_dp().strides();
+  const auto color_strides = tiling->color_shape().strides();
 
   const auto target_lo = target.domain().lo();
 
@@ -520,9 +520,9 @@ struct ReorderElementsGPU {
 
     auto target_extents      = target.domain().extents();
     auto target_lo           = target.domain().lo();
-    auto tile_shape          = tiling->tile_shape_dp();
+    auto tile_shape          = tiling->tile_shape();
     auto tile_strides        = tile_shape.strides();
-    auto color_strides       = tiling->color_shape_dp().strides();
+    auto color_strides       = tiling->color_shape().strides();
     std::int64_t tile_volume = tile_shape.volume();
 
     const auto num_blocks = (volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
@@ -632,8 +632,7 @@ void CopyRequest::perform(VariantCode variant_code) const
   LEGATE_CHECK(source_partition_->has_color_shape());
 
   if (source_partition_->is_equi_size(source_domain_) &&
-      (!target_partition_->has_color_shape() ||
-       (array_volume(target_partition_->color_shape()) == 1))) {
+      (!target_partition_->has_color_shape() || (target_partition_->color_shape().volume() == 1))) {
     all_gather_(variant_code);
   } else {
     shuffle_(variant_code);
@@ -703,7 +702,7 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
   // below.
   //
   // TODO(wonchan): need to check if the device mesh has C order as well
-  const auto color_shape       = source_partition_->color_shape();
+  const auto& color_shape      = source_partition_->color_shape();
   auto stacked_along_first_dim = true;
   for (std::size_t dim = 1; dim < color_shape.size(); ++dim) {
     stacked_along_first_dim = stacked_along_first_dim && (color_shape[dim] == 1);

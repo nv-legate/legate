@@ -23,7 +23,7 @@ class Partitioner {
 
   [[nodiscard]] static SymbolicPoint infer_store_projection(
     const Domain& launch_domain,
-    Span<const std::uint64_t> color_shape,
+    const DomainPoint& color_shape,
     const InternalSharedPtr<TransformStack>& transform);
 };
 

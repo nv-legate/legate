@@ -85,9 +85,9 @@ class Partition {
   /**
    * @brief Returns the shape (size) of the partition's color space.
    *
-   * @return A span of dimension sizes.
+   * @return A point whose coordinates are the color-space extents.
    */
-  [[nodiscard]] virtual Span<const std::uint64_t> color_shape() const = 0;
+  [[nodiscard]] virtual const DomainPoint& color_shape() const = 0;
 
   [[nodiscard]] virtual bool is_equi_size(const Domain& domain) const = 0;
 

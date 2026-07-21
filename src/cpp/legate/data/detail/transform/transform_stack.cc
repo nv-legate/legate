@@ -29,8 +29,7 @@ Restrictions TransformStack::convert(Restrictions restrictions, bool forbid_fake
     std::move(restrictions));
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint TransformStack::convert_color(DomainPoint color) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -39,8 +38,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_color(
     std::move(color));
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
+DomainPoint TransformStack::convert_color_shape(DomainPoint color_shape) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -49,8 +47,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_color_shape(
     std::move(color_shape));
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> TransformStack::convert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint TransformStack::convert_point(DomainPoint point) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -59,8 +56,7 @@ SmallVector<std::int64_t, LEGATE_MAX_DIM> TransformStack::convert_point(
     std::move(point));
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
+DomainPoint TransformStack::convert_extents(DomainPoint extents) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -69,8 +65,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_extents(
     std::move(extents));
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::convert_strides(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides) const
+DomainPoint TransformStack::convert_strides(DomainPoint strides) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -97,8 +92,7 @@ Restrictions TransformStack::invert(Restrictions restrictions) const
     std::move(restrictions));
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::invert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint TransformStack::invert_color(DomainPoint color) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -107,8 +101,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::invert_color(
     std::move(color));
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::invert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
+DomainPoint TransformStack::invert_color_shape(DomainPoint color_shape) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -127,8 +120,7 @@ SmallVector<std::int32_t, LEGATE_MAX_DIM> TransformStack::invert_dims(
     std::move(dims));
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> TransformStack::invert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint TransformStack::invert_point(DomainPoint point) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -137,8 +129,7 @@ SmallVector<std::int64_t, LEGATE_MAX_DIM> TransformStack::invert_point(
     std::move(point));
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> TransformStack::invert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
+DomainPoint TransformStack::invert_extents(DomainPoint extents) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {

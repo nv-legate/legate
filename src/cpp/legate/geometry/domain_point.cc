@@ -66,6 +66,40 @@ DomainPoint DomainPoint::strides() const
   return result;
 }
 
+DomainPoint DomainPoint::inserted(std::int32_t pos, std::int64_t value) const
+{
+  const auto new_dim = static_cast<std::int32_t>(dim()) + 1;
+  auto result        = DomainPoint::zeroes(new_dim);
+
+  for (std::int32_t i = 0, j = 0; i < new_dim; ++i) {
+    result[i] = (i == pos) ? value : coordinates_[j++];
+  }
+  return result;
+}
+
+DomainPoint DomainPoint::removed(std::int32_t pos) const
+{
+  const auto old_dim = static_cast<std::int32_t>(dim());
+  auto result        = DomainPoint::zeroes(old_dim - 1);
+
+  for (std::int32_t i = 0, j = 0; i < old_dim; ++i) {
+    if (i != pos) {
+      result[j++] = coordinates_[i];
+    }
+  }
+  return result;
+}
+
+DomainPoint DomainPoint::permuted(Span<const std::int32_t> axes) const
+{
+  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(axes.size()));
+
+  for (std::int32_t i = 0; i < static_cast<std::int32_t>(axes.size()); ++i) {
+    result[i] = coordinates_[static_cast<std::size_t>(axes[static_cast<std::size_t>(i)])];
+  }
+  return result;
+}
+
 std::ostream& operator<<(std::ostream& os, const DomainPoint& point)
 {
   os << '(';

@@ -31,7 +31,7 @@ InternalSharedPtr<Partition> NoPartition::bloat(Span<const std::uint64_t> /*low_
   return create_no_partition();
 }
 
-Span<const std::uint64_t> NoPartition::color_shape() const
+const DomainPoint& NoPartition::color_shape() const
 {
   throw TracedException<std::invalid_argument>{"NoPartition doesn't support color_shape"};
 }
