@@ -53,6 +53,14 @@ LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Rect<DIM>& r
 }
 
 template <typename ELEM, int DIM>
+LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Rect<DIM>& r,
+                                                      legate::Point<DIM>& strides) const
+{
+  strides = strides_;
+  return ptr(r.lo);
+}
+
+template <typename ELEM, int DIM>
 LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_scalar() const
 {
   for (int i = 0; i < DIM; ++i) {

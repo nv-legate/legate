@@ -42,6 +42,8 @@ class AccessorBase {
 
   LEGATE_HOST_DEVICE ELEM* ptr(const legate::Rect<DIM>& r, std::size_t strides[DIM]) const;
 
+  LEGATE_HOST_DEVICE ELEM* ptr(const legate::Rect<DIM>& r, legate::Point<DIM>& strides) const;
+
   // True when every stride is zero, i.e. the store is a broadcast scalar.
   LEGATE_HOST_DEVICE bool is_scalar() const;
 
