@@ -79,7 +79,7 @@ LEGATE_HOST_DEVICE typename Point<DIM>::value_type Point<DIM>::dot(const Point<D
 }
 
 template <int DIM>
-LEGATE_HOST_DEVICE constexpr Point<DIM> Point<DIM>::ZEROES()
+LEGATE_HOST_DEVICE constexpr Point<DIM> Point<DIM>::zeroes()
 {
   Point<DIM> result{};
 
@@ -90,7 +90,7 @@ LEGATE_HOST_DEVICE constexpr Point<DIM> Point<DIM>::ZEROES()
 }
 
 template <int DIM>
-LEGATE_HOST_DEVICE constexpr Point<DIM> Point<DIM>::ONES()
+LEGATE_HOST_DEVICE constexpr Point<DIM> Point<DIM>::ones()
 {
   Point<DIM> result{};
 

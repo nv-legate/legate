@@ -88,7 +88,7 @@ class ReadWriteAccessorFn {
       }
     }
 
-    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ones(), op_shape.hi};
     const auto bounds_empty = bounds.empty();
 
     if (!bounds_empty) {
@@ -137,9 +137,9 @@ class ReadWriteAccessorFn {
 
       ASSERT_EXIT(legion_acc[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(
-        legion_acc[(op_shape.hi + legate::Point<DIM>::ONES())], ::testing::ExitedWithCode{1}, "");
+        legion_acc[(op_shape.hi + legate::Point<DIM>::ones())], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(legion_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(legion_acc_bounds[(bounds.hi + legate::Point<DIM>::ONES())],
+      ASSERT_EXIT(legion_acc_bounds[(bounds.hi + legate::Point<DIM>::ones())],
                   ::testing::ExitedWithCode{1},
                   "");
     }

@@ -80,7 +80,7 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
       for (auto&& point : shape.iterate()) {
         auto lo = delinearize(idx, vol, extents);
-        auto hi = lo + legate::Point<TGT_DIM>::ONES();
+        auto hi = lo + legate::Point<TGT_DIM>::ones();
 
         if (in_bounds(hi)) {
           acc[point] = legate::Rect<TGT_DIM>{lo, hi};

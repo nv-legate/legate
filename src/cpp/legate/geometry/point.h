@@ -113,12 +113,12 @@ struct Point {
   /**
    * @brief Creates a point whose coordinates are all zero.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE static constexpr Point<DIM> ZEROES();
+  [[nodiscard]] LEGATE_HOST_DEVICE static constexpr Point<DIM> zeroes();
 
   /**
    * @brief Creates a point whose coordinates are all one.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE static constexpr Point<DIM> ONES();
+  [[nodiscard]] LEGATE_HOST_DEVICE static constexpr Point<DIM> ones();
 };
 
 template <int DIM>

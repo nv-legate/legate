@@ -176,7 +176,7 @@ template <typename T, std::int32_t DIM>
 Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
                                                    bool bind_buffer) const
 {
-  const auto bounds = Rect<DIM>{Point<DIM>::ZEROES(), extents - Point<DIM>::ONES()};
+  const auto bounds = Rect<DIM>{Point<DIM>::zeroes(), extents - Point<DIM>::ones()};
   auto buffer       = Buffer<T, DIM>{create_output_buffer_storage_(Domain{bounds}), bounds};
 
   if (bind_buffer) {
@@ -200,7 +200,7 @@ Rect<DIM> PhysicalStore::shape() const
     return domain().bounds<DIM>();
   }
 
-  auto p = Point<DIM>::ZEROES();
+  auto p = Point<DIM>::zeroes();
   return {p, p};
 }
 
@@ -214,7 +214,7 @@ VAL PhysicalStore::scalar() const
 template <typename T, std::int32_t DIM>
 void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 {
-  const auto bounds = Rect<DIM>{Point<DIM>::ZEROES(), extents - Point<DIM>::ONES()};
+  const auto bounds = Rect<DIM>{Point<DIM>::zeroes(), extents - Point<DIM>::ones()};
 
   bind_inline_storage_(buffer.get_storage(), Domain{bounds});
 }

@@ -84,7 +84,7 @@ class WriteAccessorFn {
       }
     }
 
-    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ones(), op_shape.hi};
     const auto bounds_empty = bounds.empty();
 
     if (!bounds_empty) {
@@ -133,9 +133,9 @@ class WriteAccessorFn {
 
       ASSERT_EXIT(write_acc[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(
-        write_acc[(op_shape.hi + legate::Point<DIM>::ONES())], ::testing::ExitedWithCode{1}, "");
+        write_acc[(op_shape.hi + legate::Point<DIM>::ones())], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(write_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(write_acc_bounds[(bounds.hi + legate::Point<DIM>::ONES())],
+      ASSERT_EXIT(write_acc_bounds[(bounds.hi + legate::Point<DIM>::ones())],
                   ::testing::ExitedWithCode{1},
                   "");
     }

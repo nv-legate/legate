@@ -79,7 +79,7 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory::Kind kind, std
     kind = find_memory_kind_for_executing_processor(/* host_accessible */ false);
   }
 
-  const auto bounds = Rect<DIM>{Point<DIM>::ZEROES(), extents - Point<DIM>::ONES()};
+  const auto bounds = Rect<DIM>{Point<DIM>::zeroes(), extents - Point<DIM>::ones()};
 
   return Buffer<VAL, DIM>{detail::create_buffer_storage(sizeof(VAL), Domain{bounds}, kind), bounds};
 }

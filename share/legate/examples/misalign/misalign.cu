@@ -56,7 +56,7 @@ void AddTask::gpu_variant(legate::TaskContext context)
   auto stream       = context.get_task_stream();
 
   const auto num_blocks = (volume + 127) / 128;
-  const auto extents    = x_shape.hi - x_shape.lo + legate::Point<3>::ONES();
+  const auto extents    = x_shape.hi - x_shape.lo + legate::Point<3>::ones();
 
   add_kernel<<<num_blocks, 128, 0, stream>>>(volume, extents, x_shape.lo, out_acc, x_acc, y_acc);
 }

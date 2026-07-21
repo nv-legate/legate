@@ -84,7 +84,7 @@ class ReduceAccessorFn {
       legion_acc_it = 0;
     }
 
-    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ones(), op_shape.hi};
     const auto bounds_empty = bounds.empty();
 
     if (!bounds_empty) {
@@ -132,12 +132,12 @@ class ReduceAccessorFn {
 
       ASSERT_EXIT(
         reduce_acc.reduce(exceeded_bounds, static_cast<T>(10)), ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(reduce_acc.reduce((op_shape.hi + legate::Point<DIM>::ONES()), INIT_VALUE),
+      ASSERT_EXIT(reduce_acc.reduce((op_shape.hi + legate::Point<DIM>::ones()), INIT_VALUE),
                   ::testing::ExitedWithCode{1},
                   "");
       ASSERT_EXIT(
         reduce_acc_bounds.reduce(exceeded_bounds, INIT_VALUE), ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(reduce_acc_bounds.reduce((bounds.hi + legate::Point<DIM>::ONES()), INIT_VALUE),
+      ASSERT_EXIT(reduce_acc_bounds.reduce((bounds.hi + legate::Point<DIM>::ones()), INIT_VALUE),
                   ::testing::ExitedWithCode{1},
                   "");
     }
