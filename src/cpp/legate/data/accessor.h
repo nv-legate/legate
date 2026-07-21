@@ -27,12 +27,11 @@ class AccessorBase {
  public:
   AccessorBase() = default;
 
-  // `origin` points to the element at `lo`; `strides` are in elements. The base
-  // pointer is translated back to the (virtual) element at the coordinate origin
-  // so that `offset()` needs no per-call subtraction of `lo`.
-  LEGATE_HOST_DEVICE AccessorBase(ELEM* origin,
-                                  const legate::Point<DIM>& lo,
-                                  legate::Point<DIM> strides);
+  // `base` points to the element at the store's coordinate origin (the point
+  // `(0, ..., 0)`); `strides` are in elements. The base pointer is already
+  // translated to the origin at store-creation time, so `offset()` is a plain
+  // dot product with no per-call subtraction of `lo`.
+  LEGATE_HOST_DEVICE AccessorBase(ELEM* base, legate::Point<DIM> strides);
 
   // Element offset (in elements) of `p` relative to the coordinate origin.
   LEGATE_HOST_DEVICE std::int64_t offset(const legate::Point<DIM>& p) const;

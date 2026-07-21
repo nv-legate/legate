@@ -12,6 +12,10 @@
 #include <legate/data/buffer.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/data/logical_store.h>
+#include <legate/geometry/domain.h>
+#include <legate/geometry/domain_point.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/mapping/mapping.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/dlpack/dlpack.h>
@@ -24,7 +28,6 @@
 
 #include <cuda/std/mdspan>
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -699,13 +702,6 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] bool valid() const;
 
   /**
-   * @brief Indicates whether the store is transformed in any way.
-   *
-   * @return `true` if the store is transformed, `false` otherwise
-   */
-  [[nodiscard]] bool transformed() const;
-
-  /**
    * @brief Indicates whether the store is an unbound store.
    *
    * The value DOES NOT indicate that the store has already assigned to a buffer; i.e., the store
@@ -779,8 +775,7 @@ class LEGATE_EXPORT PhysicalStore {
    * @return The accessor.
    */
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_region_instance_accessor_(const Rect<DIM>& bounds,
-                                                     bool validate_type) const;
+  [[nodiscard]] ACC create_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
 
   /**
    * @brief Create a reduction field accessor over the underlying data for a physical store
@@ -803,21 +798,21 @@ class LEGATE_EXPORT PhysicalStore {
    * @return The accessor.
    */
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_region_instance_reduction_accessor_(const Rect<DIM>& bounds,
-                                                               bool validate_type) const;
+  [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
 
   /**
-   * @brief Returns the base pointer and per-dimension byte strides used to construct an accessor
-   * over the underlying storage.
+   * @brief Returns the store's coordinate-origin base pointer and per-dimension element strides
+   * used to construct an accessor over the underlying storage.
    *
-   * The base pointer is the address of the element at the store's lower bound, and the strides
-   * (in bytes) are expressed over the store's dimensions, accounting for any store
-   * transformations. Only the first `dim()` entries of the returned array are meaningful.
+   * The base pointer is the address of the store's coordinate origin (the point `(0, ..., 0)`) and
+   * the strides are in element units over the store's dimensions. Any store transformation was
+   * folded in when the store was created, so no further translation is needed here.
    *
-   * @return The base pointer and byte strides.
+   * @return The base pointer and element strides.
    */
-  [[nodiscard]] std::pair<void*, std::array<std::size_t, LEGATE_MAX_DIM>> get_base_and_strides_()
-    const;
+  [[nodiscard]] void* base_() const;
+
+  [[nodiscard]] const DomainPoint& strides_() const;
 
   /**
    * @brief Allocates an inline storage for an output buffer of this (unbound) store spanning

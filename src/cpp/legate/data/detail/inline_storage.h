@@ -8,7 +8,6 @@
 
 #include <legate/data/external_allocation.h>
 #include <legate/mapping/mapping.h>
-#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
@@ -93,18 +92,17 @@ class InlineStorage {
   [[nodiscard]] const void* data() const;
 
   /**
-   * @brief Returns the base pointer and per-dimension byte strides of the storage's affine
+   * @brief Returns the base pointer and per-dimension element strides of the storage's affine
    * layout.
    *
    * The base pointer is the address of the element at the storage's coordinate origin (i.e. the
-   * point `(0, ..., 0)`), following the affine convention `addr(p) = base + sum(p[i] *
-   * strides[i])`. The strides are given in bytes and have as many entries as the storage
-   * domain's dimension (at least one).
+   * point `(0, ..., 0)`), following the affine convention `addr(p) = base + field_size * sum(p[i]
+   * * strides[i])`. The strides are given in elements (not bytes) and have as many entries as the
+   * storage domain's dimension (at least one).
    *
-   * @return A pair of the base pointer and the byte strides.
+   * @return A pair of the base pointer and the element strides.
    */
-  [[nodiscard]] std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> base_and_byte_strides()
-    const;
+  [[nodiscard]] std::pair<void*, DomainPoint> base_and_element_strides() const;
 
  private:
   [[nodiscard]] const legate::ExternalAllocation& alloc_() const;

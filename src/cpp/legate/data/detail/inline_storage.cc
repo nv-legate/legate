@@ -147,28 +147,13 @@ void* InlineStorage::data() { return alloc_().ptr(); }
 
 const void* InlineStorage::data() const { return alloc_().ptr(); }
 
-std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> InlineStorage::base_and_byte_strides()
-  const
+std::pair<void*, DomainPoint> InlineStorage::base_and_element_strides() const
 {
-  // Pure computation: the storage uses a C-ordered (row-major) affine layout whose allocation
-  // starts at the domain's lower bound, so the base (address of coordinate zero) and per-dimension
-  // byte strides follow directly from the domain and field size.
-  static const Domain for_0d = []() noexcept {
-    return Domain{DomainPoint::zeroes(1), DomainPoint::zeroes(1)};
-  }();
-  const auto& dm             = domain_.dim() == 0 ? for_0d : domain_;
-  const auto element_strides = dm.strides();
-
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> byte_strides;
-
-  byte_strides.reserve(static_cast<std::size_t>(dm.dim()));
-  for (std::uint32_t i = 0; i < dm.dim(); ++i) {
-    byte_strides.push_back(static_cast<std::uint64_t>(element_strides[i]) * field_size_);
-  }
+  auto element_strides = domain_.strides();
   auto* const base =
-    static_cast<std::int8_t*>(alloc_().ptr()) - (dm.lo().dot(element_strides) * field_size_);
+    static_cast<std::int8_t*>(alloc_().ptr()) - (domain_.lo().dot(element_strides) * field_size_);
 
-  return {static_cast<void*>(base), std::move(byte_strides)};
+  return {static_cast<void*>(base), std::move(element_strides)};
 }
 
 }  // namespace legate::detail

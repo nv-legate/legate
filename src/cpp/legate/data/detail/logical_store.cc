@@ -360,6 +360,58 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
   return result;
 }
 
+// Folds `transform` into `storage`'s affine layout to produce the store-space layout (the
+// coordinate-origin base pointer, element strides, and domain) that a `PhysicalStore` keeps. This
+// is where the storage-to-store translation happens, once, at store-creation time, so neither the
+// physical store nor the accessors need to translate again.
+[[nodiscard]] PhysicalStoreLayout compute_store_layout(const InlineStorage& storage,
+                                                       const TransformStack& transform,
+                                                       std::int32_t store_dim,
+                                                       std::uint32_t field_size,
+                                                       const Domain& sub_domain)
+{
+  // Storage-space layout: base at the storage's coordinate origin, element strides over the
+  // storage's dimensions.
+  auto&& [storage_base, storage_strides] = storage.base_and_element_strides();
+
+  // A non-transformed store (this covers every unbound and 0-D store) inherits the storage's layout
+  // verbatim; its domain is just the mapped sub-domain.
+  if (transform.identity()) {
+    return {storage_base, std::move(storage_strides), sub_domain};
+  }
+
+  // Element strides re-expressed over the store's (possibly higher/lower-dimensional) dimensions.
+  // `convert_strides` inserts 0 for dimensions not backed by the storage (promoted/broadcast) and
+  // drops projected dimensions.
+  auto storage_strides_in = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
+
+  storage_strides_in.reserve(storage_strides.dim());
+  for (std::uint32_t i = 0; i < storage_strides.dim(); ++i) {
+    storage_strides_in.push_back(static_cast<std::uint64_t>(storage_strides[i]));
+  }
+
+  const auto converted = transform.convert_strides(std::move(storage_strides_in));
+  auto store_strides   = DomainPoint::zeroes(static_cast<std::int32_t>(converted.size()));
+
+  for (std::uint32_t i = 0; i < converted.size(); ++i) {
+    store_strides[i] = static_cast<std::int64_t>(converted[i]);
+  }
+
+  // The store's coordinate origin maps to the storage point `invert(0)`; fold that constant offset
+  // (a projection's fixed index, a shift's offset, ...) into the base pointer.
+  const auto storage_origin = transform.invert_point(SmallVector<std::int64_t, LEGATE_MAX_DIM>{
+    tags::size_tag, static_cast<std::size_t>(store_dim), std::int64_t{0}});
+  std::int64_t elem_off     = 0;
+
+  for (std::uint32_t i = 0; i < storage_origin.size(); ++i) {
+    elem_off += storage_origin[i] * storage_strides[i];
+  }
+  auto* const base =
+    static_cast<std::int8_t*>(storage_base) + (elem_off * static_cast<std::int64_t>(field_size));
+
+  return {static_cast<void*>(base), std::move(store_strides), transform.transform(sub_domain)};
+}
+
 }  // namespace
 
 std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
@@ -378,10 +430,12 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
   auto&& [allocation, subdomain, subsumed] = get_storage()->map(
     domain_, inverted, color, machine.preferred_store_target(), is_read, transformed(), requests);
 
-  return {
-    make_internal_shared<PhysicalStore>(
-      shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain),
-    subsumed};
+  auto layout = compute_store_layout(
+    *allocation, *transform_, static_cast<std::int32_t>(dim()), type()->size(), subdomain);
+
+  return {make_internal_shared<PhysicalStore>(
+            type(), LEGION_READ_WRITE, std::move(allocation), std::move(layout)),
+          subsumed};
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
@@ -408,8 +462,11 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
                                                                 store_has_identity,
                                                                 requests);
 
+  auto layout = compute_store_layout(
+    *allocation, *transform_, static_cast<std::int32_t>(dim()), type()->size(), subdomain);
+
   return make_internal_shared<PhysicalStore>(
-    shape()->ndim(), type(), transform_, LEGION_REDUCE, std::move(allocation), subdomain);
+    type(), LEGION_REDUCE, std::move(allocation), std::move(layout));
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
@@ -419,7 +476,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
   LEGATE_ASSERT(unbound());
 
   return make_internal_shared<PhysicalStore>(
-    static_cast<std::int32_t>(dim()), type(), transform_, target, self);
+    static_cast<std::int32_t>(dim()), type(), target, self);
 }
 
 void LogicalStore::bind_buffer(InternalSharedPtr<InlineStorage> storage, const Domain& domain)
@@ -613,8 +670,11 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   requests.perform_data_sync();
   requests.perform_copy_ins(VariantCode::CPU);
 
+  auto layout = compute_store_layout(
+    *allocation, *transform_, static_cast<std::int32_t>(dim()), type()->size(), subdomain);
+
   return make_internal_shared<PhysicalStore>(
-    shape()->ndim(), type(), transform_, LEGION_READ_WRITE, std::move(allocation), subdomain);
+    type(), LEGION_READ_WRITE, std::move(allocation), std::move(layout));
 }
 
 // Just because all the member functions used are const, doesn't mean this function

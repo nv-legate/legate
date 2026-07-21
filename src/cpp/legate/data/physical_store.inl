@@ -126,7 +126,7 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
     check_accessor_type_<T>();
   }
 
-  return create_region_instance_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
+  return create_accessor_<AccessorRO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
@@ -140,7 +140,7 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
 
   check_write_access_();
 
-  return create_region_instance_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
+  return create_accessor_<AccessorWO<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
@@ -154,7 +154,7 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) c
 
   check_write_access_();
 
-  return create_region_instance_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
+  return create_accessor_<AccessorRW<T, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
@@ -169,8 +169,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
 
   check_reduction_access_();
 
-  return create_region_instance_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(
-    bounds, VALIDATE_TYPE);
+  return create_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(bounds, VALIDATE_TYPE);
 }
 
 template <typename T, std::int32_t DIM>
@@ -229,8 +228,7 @@ void PhysicalStore::check_accessor_type_() const
 }
 
 template <typename ACC, typename T, std::int32_t DIM>
-ACC PhysicalStore::create_region_instance_accessor_(const Rect<DIM>& bounds,
-                                                    bool validate_type) const
+ACC PhysicalStore::create_accessor_(const Rect<DIM>& bounds, bool validate_type) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   // Our accessors address absolutely and do not carry bounds, so `bounds` and `validate_type`
@@ -238,37 +236,13 @@ ACC PhysicalStore::create_region_instance_accessor_(const Rect<DIM>& bounds,
   static_cast<void>(bounds);
   static_cast<void>(validate_type);
 
-  auto&& [base, byte_strides] = get_base_and_strides_();
-  const auto lo               = shape<DIM>().lo;
+  if (const auto field_size = type().size(); field_size != sizeof(T)) {
+    Point<DIM> strides =
+      strides_() * static_cast<typename Point<DIM>::value_type>(field_size / sizeof(T));
 
-  Point<DIM> strides;
-
-  for (std::int32_t i = 0; i < DIM; ++i) {
-    strides[i] = static_cast<coord_t>(byte_strides[i] / sizeof(T));
+    return ACC{static_cast<T*>(base_()), std::move(strides)};
   }
-  return ACC{static_cast<T*>(base), lo, strides};
-}
-
-template <typename ACC, typename T, std::int32_t DIM>
-ACC PhysicalStore::create_region_instance_reduction_accessor_(const Rect<DIM>& bounds,
-                                                              bool validate_type) const
-{
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  static_cast<void>(bounds);
-  static_cast<void>(validate_type);
-
-  // The reduction accessor stores (and folds into) elements of the reduction op's RHS type.
-  using ELEM = typename ACC::RHS;
-
-  auto&& [base, byte_strides] = get_base_and_strides_();
-  const auto lo               = shape<DIM>().lo;
-
-  Point<DIM> strides;
-
-  for (std::int32_t i = 0; i < DIM; ++i) {
-    strides[i] = static_cast<coord_t>(byte_strides[i] / sizeof(ELEM));
-  }
-  return ACC{static_cast<ELEM*>(base), lo, strides};
+  return ACC{static_cast<T*>(base_()), strides_()};
 }
 
 inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }

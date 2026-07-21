@@ -17,12 +17,10 @@ namespace legate {
 namespace detail {
 
 template <typename ELEM, int DIM>
-LEGATE_HOST_DEVICE AccessorBase<ELEM, DIM>::AccessorBase(ELEM* origin,
-                                                         const legate::Point<DIM>& lo,
-                                                         legate::Point<DIM> strides)
-  // Translate the base pointer from the element at `lo` back to the (virtual)
-  // element at the coordinate origin, so `offset()` is a plain dot product.
-  : base_{origin - lo.dot(strides)}, strides_{std::move(strides)}
+LEGATE_HOST_DEVICE AccessorBase<ELEM, DIM>::AccessorBase(ELEM* base, legate::Point<DIM> strides)
+  // `base` already points at the coordinate origin, so `offset()` is a plain dot
+  // product of the access point with the strides.
+  : base_{base}, strides_{std::move(strides)}
 {
 }
 

@@ -13,30 +13,27 @@
 
 namespace legate::detail {
 
-inline PhysicalStore::PhysicalStore(std::int32_t dim,
-                                    InternalSharedPtr<Type> type,
-                                    InternalSharedPtr<detail::TransformStack> transform,
+inline PhysicalStore::PhysicalStore(InternalSharedPtr<Type> type,
                                     Legion::PrivilegeMode priv,
                                     InternalSharedPtr<InlineStorage> storage,
-                                    const Domain& domain)
-  : transform_{std::move(transform)},
-    type_{std::move(type)},
-    dim_{dim},
+                                    PhysicalStoreLayout layout)
+  : type_{std::move(type)},
+    dim_{static_cast<std::int32_t>(layout.domain.dim())},
     readable_{has_privilege(priv, LEGION_READ_PRIV)},
     writable_{has_privilege(priv, LEGION_WRITE_PRIV)},
     reducible_{has_privilege(priv, LEGION_REDUCE_PRIV)},
     inline_storage_{std::move(storage)},
-    domain_{domain}
+    base_{layout.base},
+    strides_{std::move(layout.strides)},
+    domain_{std::move(layout.domain)}
 {
 }
 
 inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    InternalSharedPtr<detail::TransformStack> transform,
                                     mapping::StoreTarget target,
                                     InternalSharedPtr<LogicalStore> originating_store)
-  : transform_{std::move(transform)},
-    type_{std::move(type)},
+  : type_{std::move(type)},
     dim_{dim},
     writable_{true},
     unbound_{true},
@@ -47,11 +44,13 @@ inline PhysicalStore::PhysicalStore(std::int32_t dim,
 
 inline bool PhysicalStore::valid() const { return true; }
 
-inline bool PhysicalStore::transformed() const { return !transform_->identity(); }
-
 inline std::int32_t PhysicalStore::dim() const { return dim_; }
 
 inline const InternalSharedPtr<Type>& PhysicalStore::type() const { return type_; }
+
+inline void* PhysicalStore::base() const { return base_; }
+
+inline const DomainPoint& PhysicalStore::strides() const { return strides_; }
 
 inline mapping::StoreTarget PhysicalStore::target() const
 {

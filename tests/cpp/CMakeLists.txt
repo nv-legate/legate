@@ -226,7 +226,6 @@ set(
   unit/physical_store/read_accessor.cc
   unit/physical_store/read_write_accessor.cc
   unit/physical_store/reduce_accessor.cc
-  unit/physical_store/transform.cc
   unit/physical_store/write_accessor.cc
   unit/redop/apply.cc
   unit/redop/complex.cc

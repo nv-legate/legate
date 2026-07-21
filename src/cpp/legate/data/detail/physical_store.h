@@ -7,7 +7,6 @@
 #pragma once
 
 #include <legate/data/detail/inline_storage.h>
-#include <legate/data/detail/transform/transform_stack.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -15,7 +14,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <optional>
 
 namespace legate::mapping {
 
@@ -27,14 +25,29 @@ namespace legate::detail {
 
 class LogicalStore;
 
+/**
+ * @brief The affine layout of a (possibly transformed) physical store.
+ *
+ * Computed once by the logic that creates a `PhysicalStore` (see `LogicalStore::map` and friends),
+ * by folding the originating store's transform stack into the backing `InlineStorage`'s layout. A
+ * `PhysicalStore` keeps this directly and no longer carries a transform stack.
+ */
+struct PhysicalStoreLayout {
+  // Address of the store's coordinate origin (the point (0, ..., 0)). Accessors index absolutely
+  // from here following `addr(p) = base + field_size * dot(p, strides)`.
+  void* base{};
+  // Per-dimension element strides (not bytes) over the store's (transformed) dimensions.
+  DomainPoint strides{};
+  // The store's (transformed) domain.
+  Domain domain{};
+};
+
 class PhysicalStore {
  public:
-  PhysicalStore(std::int32_t dim,
-                InternalSharedPtr<Type> type,
-                InternalSharedPtr<detail::TransformStack> transform,
+  PhysicalStore(InternalSharedPtr<Type> type,
                 Legion::PrivilegeMode priv,
                 InternalSharedPtr<InlineStorage> storage,
-                const Domain& domain);
+                PhysicalStoreLayout layout);
 
   /**
    * @brief Constructs a physical store for an unbound output store.
@@ -45,7 +58,6 @@ class PhysicalStore {
    *
    * @param dim The (declared) dimensionality of the unbound store.
    * @param type The element type of the store.
-   * @param transform The transform stack over the store.
    * @param target The memory kind the produced buffer should be allocated on (the store's mapping
    * decision).
    * @param originating_store The `LogicalStore` this physical store was mapped from, updated in
@@ -53,7 +65,6 @@ class PhysicalStore {
    */
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                InternalSharedPtr<detail::TransformStack> transform,
                 mapping::StoreTarget target,
                 InternalSharedPtr<LogicalStore> originating_store);
 
@@ -66,7 +77,6 @@ class PhysicalStore {
   ~PhysicalStore() = default;
 
   [[nodiscard]] bool valid() const;
-  [[nodiscard]] bool transformed() const;
 
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const InternalSharedPtr<Type>& type() const;
@@ -122,26 +132,25 @@ class PhysicalStore {
   void check_reduction_access() const;
 
   /**
-   * @brief Returns the base pointer and per-dimension byte strides for constructing an accessor
-   * over this store's (possibly transformed) domain.
+   * @brief Returns the address of the store's coordinate origin (the point `(0, ..., 0)`).
    *
-   * The base pointer is the address of the element at the store domain's lower bound, and the
-   * strides are expressed in bytes over the store's dimensions (i.e. `dim()` entries). Any
-   * store transformations are accounted for: strides are converted to the store's
-   * dimensionality via the transform stack, and coordinate offsets introduced by the transforms
-   * (projections, shifts, ...) are folded into the base pointer.
-   *
-   * @return A pair of the base pointer and the store-space byte strides.
+   * Accessors index absolutely from here following `addr(p) = base() + field_size * dot(p,
+   * strides())`. Any store transformation (projection, shift, ...) was already folded into this
+   * pointer when the store was created, so no further translation is needed.
    */
-  [[nodiscard]] std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> get_base_and_strides()
-    const;
+  [[nodiscard]] void* base() const;
 
- protected:
-  InternalSharedPtr<detail::TransformStack> transform_{};
-  InternalSharedPtr<Type> type_{};
+  /**
+   * @brief Returns the per-dimension element strides over the store's (transformed) dimensions.
+   *
+   * The strides are in element units (not bytes) and have `dim()` entries (at least one).
+   */
+  [[nodiscard]] const DomainPoint& strides() const;
 
  private:
   [[nodiscard]] const InternalSharedPtr<InlineStorage>& storage_() const;
+
+  InternalSharedPtr<Type> type_{};
 
   std::int32_t dim_{-1};
 
@@ -153,7 +162,14 @@ class PhysicalStore {
   // store that has not been bound to a buffer yet.
   InternalSharedPtr<InlineStorage> inline_storage_{};
 
-  // The domain over inline_storage_ that this store spans.
+  // The store's affine layout in its own (transformed) coordinate space, computed at
+  // store-creation time by folding the originating store's transform into `inline_storage_`'s
+  // layout (see `PhysicalStoreLayout`). `base_` is the address of the store's coordinate origin
+  // and `strides_` are element strides over the store's dimensions.
+  void* base_{};
+  DomainPoint strides_{};
+
+  // The store's (transformed) domain over its own coordinate space.
   Domain domain_{};
 
   // Unbound-store state. `unbound_` is true for an unbound store that has not been bound yet;

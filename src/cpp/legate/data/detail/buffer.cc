@@ -10,6 +10,7 @@
 #include <legate/data/inline_allocation.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -27,9 +28,18 @@ mapping::StoreTarget TaskLocalBuffer::memory_kind() const { return storage_->tar
 
 InlineAllocation TaskLocalBuffer::get_inline_allocation() const
 {
-  auto&& [base, byte_strides] = storage_->base_and_byte_strides();
+  // `InlineAllocation` reports byte strides, so scale the storage's element strides by the field
+  // size here (the storage keeps strides in element units).
+  auto&& [base, elem_strides] = storage_->base_and_element_strides();
+  const auto field_size       = type_->size();
 
-  return {base, std::vector<std::size_t>(byte_strides.begin(), byte_strides.end()), memory_kind()};
+  std::vector<std::size_t> byte_strides;
+
+  byte_strides.reserve(elem_strides.dim());
+  for (std::uint32_t i = 0; i < elem_strides.dim(); ++i) {
+    byte_strides.push_back(static_cast<std::size_t>(elem_strides[i]) * field_size);
+  }
+  return {base, std::move(byte_strides), memory_kind()};
 }
 
 }  // namespace legate::detail

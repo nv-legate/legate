@@ -50,13 +50,13 @@ InternalSharedPtr<InlineStorage> create_buffer_storage(std::uint32_t field_size,
 
 void inline_storage_layout(const InternalSharedPtr<InlineStorage>& storage,
                            void** base_out,
-                           std::uint64_t* byte_strides_out)
+                           std::uint64_t* element_strides_out)
 {
-  auto&& [base, byte_strides] = storage->base_and_byte_strides();
+  auto&& [base, element_strides] = storage->base_and_element_strides();
 
   *base_out = base;
-  for (std::size_t i = 0; i < byte_strides.size(); ++i) {
-    byte_strides_out[i] = byte_strides[i];
+  for (std::uint32_t i = 0; i < element_strides.dim(); ++i) {
+    element_strides_out[i] = static_cast<std::uint64_t>(element_strides[i]);
   }
 }
 

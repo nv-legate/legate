@@ -26,13 +26,13 @@ template <typename VAL, std::int32_t DIM>
 Buffer<VAL, DIM>::Buffer(InternalSharedPtr<detail::InlineStorage> storage, const Rect<DIM>& bounds)
   : storage_{std::move(storage)}, bounds_{bounds}
 {
-  void* base                                 = nullptr;
-  std::uint64_t byte_strides[LEGATE_MAX_DIM] = {};
+  void* base                                    = nullptr;
+  std::uint64_t element_strides[LEGATE_MAX_DIM] = {};
 
-  detail::inline_storage_layout(storage_, &base, byte_strides);
+  detail::inline_storage_layout(storage_, &base, element_strides);
   base_ = static_cast<VAL*>(base);
   for (std::int32_t i = 0; i < DIM; ++i) {
-    strides_[i] = static_cast<std::size_t>(byte_strides[i]) / sizeof(VAL);
+    strides_[i] = static_cast<std::size_t>(element_strides[i]);
   }
 }
 

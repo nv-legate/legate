@@ -54,19 +54,19 @@ class TaskLocalBuffer;
   std::uint32_t field_size, const Domain& bounds, Memory::Kind kind);
 
 /**
- * @brief Reads the base pointer and byte strides of an inline storage's affine layout.
+ * @brief Reads the base pointer and element strides of an inline storage's affine layout.
  *
  * `base_out` receives the address of the storage's coordinate origin (i.e. the point
- * `(0, ..., 0)`); `byte_strides_out` (which must have room for at least `LEGATE_MAX_DIM` entries)
- * receives the per-dimension byte strides.
+ * `(0, ..., 0)`); `element_strides_out` (which must have room for at least `LEGATE_MAX_DIM`
+ * entries) receives the per-dimension element strides (not bytes).
  *
  * @param storage The storage to inspect.
  * @param base_out Out-param for the base pointer.
- * @param byte_strides_out Out-param for the byte strides.
+ * @param element_strides_out Out-param for the element strides.
  */
 LEGATE_EXPORT void inline_storage_layout(const InternalSharedPtr<InlineStorage>& storage,
                                          void** base_out,
-                                         std::uint64_t* byte_strides_out);
+                                         std::uint64_t* element_strides_out);
 
 [[nodiscard]] LEGATE_EXPORT Memory::Kind get_memory_kind(
   const InternalSharedPtr<InlineStorage>& storage);

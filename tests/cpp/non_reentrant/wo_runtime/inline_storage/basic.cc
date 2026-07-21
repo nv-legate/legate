@@ -300,8 +300,6 @@ TEST_F(InlineStorageUnit, GetInlineAllocationTransformed)
   auto promoted   = store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   const auto phys = promoted.get_physical_store();
 
-  ASSERT_TRUE(phys.transformed());
-
   const auto alloc = phys.get_inline_allocation();
 
   ASSERT_NE(alloc.ptr, nullptr);
@@ -318,8 +316,6 @@ TEST_F(InlineStorageUnit, TransformedReadAccessor)
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();
-
-  ASSERT_TRUE(phys.transformed());
 
   const auto acc   = phys.read_accessor<std::int32_t, 2>();
   const auto shape = phys.shape<2>();
@@ -339,8 +335,6 @@ TEST_F(InlineStorageUnit, TransformedWriteAccessor)
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();
-
-  ASSERT_TRUE(phys.transformed());
 
   {
     const auto acc   = phys.write_accessor<std::int32_t, 2>();
@@ -373,8 +367,6 @@ TEST_F(InlineStorageUnit, TransformedReadWriteAccessor)
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();
 
-  ASSERT_TRUE(phys.transformed());
-
   const auto acc   = phys.read_write_accessor<std::int32_t, 2>();
   const auto shape = phys.shape<2>();
 
@@ -403,8 +395,6 @@ TEST_F(InlineStorageUnit, ReduceAccessor)
   runtime->issue_fill(store, legate::Scalar{INIT_VALUE});
 
   const auto phys = store.get_physical_store();
-
-  ASSERT_FALSE(phys.transformed());
 
   {
     const auto acc   = phys.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();
@@ -436,8 +426,6 @@ TEST_F(InlineStorageUnit, TransformedReduceAccessor)
 
   const auto promoted = store.promote(/*extra_dim=*/0, /*dim_size=*/2);
   const auto phys     = promoted.get_physical_store();
-
-  ASSERT_TRUE(phys.transformed());
 
   {
     const auto acc   = phys.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();

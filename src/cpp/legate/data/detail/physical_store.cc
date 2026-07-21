@@ -20,70 +20,32 @@
 
 namespace legate::detail {
 
-Domain PhysicalStore::domain() const
-{
-  if (!transformed()) {
-    return domain_;
-  }
-  return transform_->transform(domain_);
-}
+Domain PhysicalStore::domain() const { return domain_; }
 
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
-  // The base pointer and store-space byte strides are computed directly from the storage's
-  // allocation and the (possibly transformed) domain; no Realm region instance is involved.
-  auto&& [ptr, strides] = get_base_and_strides();
+  const auto field_size = type_->size();
 
-  return {ptr, std::vector<std::size_t>(strides.begin(), strides.end()), target()};
-}
+  // `InlineAllocation::ptr` addresses the store's lower bound (0-based consumers index from there),
+  // whereas `base_` is the store's coordinate origin. Shift by `lo` to recover the lower-bound
+  // address (a 0-D or 0-based store has `lo == 0`, so the two coincide).
+  auto&& lo             = domain_.lo();
+  std::int64_t elem_off = 0;
 
-std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> PhysicalStore::get_base_and_strides()
-  const
-{
-  // Base pointer (address of the storage's coordinate origin) and byte strides over the
-  // untransformed storage domain (one entry per storage dimension).
-  auto base_and_strides       = storage_()->base_and_byte_strides();
-  void* const base            = base_and_strides.first;
-  auto&& storage_strides      = base_and_strides.second;
-  const auto num_storage_dims = storage_strides.size();
-
-  const auto store_lo = domain().lo();
-
-  // The storage coordinate that the store's lower bound maps to, expressed over the storage's
-  // dimensions. For a transformed store, invert the transform stack so that coordinate offsets
-  // introduced by projections, shifts, etc. are folded into the point. Otherwise the store and
-  // storage coordinates coincide (this also covers 0-D stores, which are never transformed).
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> storage_point;
-
-  if (transformed()) {
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> store_point;
-
-    store_point.reserve(dim());
-    for (std::int32_t i = 0; i < dim(); ++i) {
-      store_point.push_back(store_lo[i]);
-    }
-    storage_point = transform_->invert_point(std::move(store_point));
-  } else {
-    storage_point.reserve(num_storage_dims);
-    for (std::size_t j = 0; j < num_storage_dims; ++j) {
-      storage_point.push_back(store_lo[static_cast<std::int32_t>(j)]);
-    }
+  for (std::uint32_t i = 0; i < lo.dim(); ++i) {
+    elem_off += lo[i] * strides_[i];
   }
+  auto* const ptr =
+    static_cast<std::int8_t*>(base_) + (elem_off * static_cast<std::int64_t>(field_size));
 
-  // origin = base + sum_j storage_point[j] * storage_strides[j]  (in bytes)
-  std::int64_t offset = 0;
+  // `InlineAllocation` reports byte strides, so scale the element strides by the field size.
+  std::vector<std::size_t> byte_strides;
 
-  for (std::size_t j = 0; j < num_storage_dims; ++j) {
-    offset += storage_point[j] * static_cast<std::int64_t>(storage_strides[j]);
+  byte_strides.reserve(strides_.dim());
+  for (std::uint32_t i = 0; i < strides_.dim(); ++i) {
+    byte_strides.push_back(static_cast<std::size_t>(strides_[i]) * field_size);
   }
-  auto* const origin = static_cast<std::int8_t*>(base) + offset;
-
-  // Re-express the storage's byte strides over the store's (possibly higher/lower-dimensional)
-  // domain.
-  auto store_strides = transformed() ? transform_->convert_strides(std::move(storage_strides))
-                                     : std::move(storage_strides);
-
-  return {origin, std::move(store_strides)};
+  return {static_cast<void*>(ptr), std::move(byte_strides), target()};
 }
 
 InternalSharedPtr<InlineStorage> PhysicalStore::create_output_buffer_storage(
@@ -98,7 +60,12 @@ void PhysicalStore::bind_data(InternalSharedPtr<InlineStorage> storage, const Do
   // Update the originating logical store in place so downstream operations observe the produced
   // data. This is the single-rank realization of the unbound-store "return" path.
   originating_store_->bind_buffer(storage, domain);
-  // Reflect the freshly bound data in this physical store as well.
+  // Unbound stores always have an identity transform (every transform op throws on an unbound
+  // store), so the store's affine layout is exactly the freshly bound storage's layout.
+  auto&& [base, strides] = storage->base_and_element_strides();
+
+  base_           = base;
+  strides_        = std::move(strides);
   inline_storage_ = std::move(storage);
   domain_         = domain;
   unbound_        = false;

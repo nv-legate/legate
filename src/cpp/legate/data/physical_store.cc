@@ -141,8 +141,6 @@ bool PhysicalStore::is_reducible() const { return impl()->is_reducible(); }
 
 bool PhysicalStore::valid() const { return impl() != nullptr && impl()->valid(); }
 
-bool PhysicalStore::transformed() const { return impl()->transformed(); }
-
 bool PhysicalStore::is_unbound_store() const { return impl()->is_unbound_store(); }
 
 mapping::StoreTarget PhysicalStore::target() const { return impl()->target(); }
@@ -172,16 +170,8 @@ void PhysicalStore::check_write_access_() const { impl()->check_write_access(); 
 
 void PhysicalStore::check_reduction_access_() const { impl()->check_reduction_access(); }
 
-std::pair<void*, std::array<std::size_t, LEGATE_MAX_DIM>> PhysicalStore::get_base_and_strides_()
-  const
-{
-  auto&& [base, strides] = impl()->get_base_and_strides();
-  std::array<std::size_t, LEGATE_MAX_DIM> result{};
+void* PhysicalStore::base_() const { return impl()->base(); }
 
-  for (std::size_t i = 0; i < strides.size(); ++i) {
-    result[i] = strides[i];
-  }
-  return {base, result};
-}
+const DomainPoint& PhysicalStore::strides_() const { return impl()->strides(); }
 
 }  // namespace legate

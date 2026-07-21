@@ -141,6 +141,9 @@ LEGATE_HOST_DEVICE Point<DIM>& operator*=(Point<DIM>& lhs, const Point<DIM>& rhs
 template <int DIM>
 [[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs, const Point<DIM>& rhs);
 template <int DIM>
+[[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs,
+                                                      typename Point<DIM>::value_type rhs);
+template <int DIM>
 LEGATE_HOST_DEVICE Point<DIM>& operator/=(Point<DIM>& lhs, const Point<DIM>& rhs);
 template <int DIM>
 [[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator%(const Point<DIM>& lhs, const Point<DIM>& rhs);

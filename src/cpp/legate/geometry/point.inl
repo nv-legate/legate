@@ -189,6 +189,17 @@ LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs, const Point<DIM>&
 }
 
 template <int DIM>
+LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs, typename Point<DIM>::value_type rhs)
+{
+  Point<DIM> result{};
+
+  for (int idx = 0; idx < DIM; ++idx) {
+    result[idx] = lhs[idx] / rhs;
+  }
+  return result;
+}
+
+template <int DIM>
 LEGATE_HOST_DEVICE Point<DIM>& operator/=(Point<DIM>& lhs, const Point<DIM>& rhs)
 {
   for (int idx = 0; idx < DIM; ++idx) {

@@ -119,7 +119,6 @@ TEST_F(PhysicalStoreInlineAllocationUnit, TransformedFutureStore)
   auto store         = promoted.get_physical_store();
   auto inline_alloc  = store.get_inline_allocation();
 
-  ASSERT_TRUE(store.transformed());
   ASSERT_NE(inline_alloc.ptr, nullptr);
   ASSERT_EQ(inline_alloc.strides.size(), store.dim());
   ASSERT_EQ(inline_alloc.strides.at(0), 0);
