@@ -247,7 +247,7 @@ class LEGATE_EXPORT Runtime {
    *
    * @return Logical store
    */
-  [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& shape = Shape{1});
+  [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& shape = Shape{});
   /**
    * @brief Creates a store by attaching to an existing allocation.
    *
