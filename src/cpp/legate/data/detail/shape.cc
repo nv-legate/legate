@@ -20,7 +20,7 @@
 namespace legate::detail {
 
 Shape::Shape(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents)
-  : state_{State::BOUND}, extents_(extents)
+  : state_{State::BOUND}, dim_{static_cast<std::uint32_t>(extents.size())}, extents_(extents)
 {
 }
 
