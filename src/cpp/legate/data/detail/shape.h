@@ -22,7 +22,6 @@ class Shape {
   enum class State : std::uint8_t {
     UNBOUND,
     BOUND,
-    READY,
   };
 
  public:
@@ -30,7 +29,6 @@ class Shape {
   explicit Shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& extents);
 
   [[nodiscard]] bool unbound() const;
-  [[nodiscard]] bool ready() const;
   [[nodiscard]] std::uint32_t ndim() const;
   [[nodiscard]] std::size_t volume();
   [[nodiscard]] Span<const std::uint64_t> extents();
@@ -41,9 +39,9 @@ class Shape {
    * @brief Binds this (previously unbound) shape to a concrete set of extents.
    *
    * Used when a task binds a buffer to an unbound store: the store's shape, which up to this
-   * point only knew its dimensionality, becomes fully known (READY) with the given extents. It
+   * point only knew its dimensionality, becomes fully known (BOUND) with the given extents. It
    * is legal to call this on a shape in any state as long as the dimensionality matches; the
-   * shape transitions directly to READY.
+   * shape transitions directly to BOUND.
    *
    * @param extents The now-known extents of the shape.
    */

@@ -20,7 +20,7 @@
 namespace legate::detail {
 
 Shape::Shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& extents)
-  : state_{State::READY},
+  : state_{State::BOUND},
     dim_{static_cast<std::uint32_t>(extents.size())},
     extents_{std::move(extents)}
 {
@@ -28,18 +28,7 @@ Shape::Shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& extents)
 
 Span<const std::uint64_t> Shape::extents()
 {
-  switch (state_) {
-    case State::UNBOUND: {
-      ensure_binding_();
-      [[fallthrough]];
-    }
-    case State::BOUND: {
-      break;
-    }
-    case State::READY: {
-      break;
-    }
-  }
+  ensure_binding_();
   return extents_;
 }
 
@@ -49,14 +38,13 @@ void Shape::copy_extents_from(const Shape& other)
 {
   LEGATE_CHECK(State::BOUND == state_);
   LEGATE_ASSERT(dim_ == other.dim_);
-  state_   = State::READY;
   extents_ = other.extents_;
 }
 
 void Shape::bind_extents(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents)
 {
   LEGATE_ASSERT(dim_ == extents.size());
-  state_   = State::READY;
+  state_   = State::BOUND;
   extents_ = std::move(extents);
 }
 
@@ -67,9 +55,6 @@ std::string Shape::to_string() const
       return fmt::format("Shape(unbound {}D)", dim_);
     }
     case State::BOUND: {
-      return fmt::format("Shape(bound {}D)", dim_);
-    }
-    case State::READY: {
       return fmt::format("Shape {}", extents_);
     }
   }
@@ -85,12 +70,6 @@ bool Shape::operator==(Shape& other)
     throw TracedException<std::invalid_argument>{
       "Illegal to access an uninitialized unbound store"};
   }
-  // If both shapes are in the bound state and their index spaces are the same, we can elide the
-  // blocking equivalence check
-  if (State::BOUND == state_ && State::BOUND == other.state_) {
-    return true;
-  }
-  // Otherwise, we have no choice but block waiting on the exact extents
   return std::equal(
     extents().begin(), extents().end(), other.extents().begin(), other.extents().end());
 }
