@@ -54,11 +54,11 @@ from ._lib.tuning.parallel_policy import ParallelPolicy, StreamingMode
 from ._lib.tuning.scope import Scope
 from ._lib.utilities.detail.dlpack.from_dlpack import from_dlpack
 from ._lib.utilities.typedefs import (
-    Domain,
-    DomainPoint,
     GlobalRedopID,
     LocalRedopID,
     LocalTaskID,
+    Point,
+    Rect,
     VariantCode,
 )
 from .data_interface import LegateDataInterface, as_logical_store
@@ -120,8 +120,6 @@ __all__ = (
     "AutoTask",
     "Constraint",
     "DimOrdering",
-    "Domain",
-    "DomainPoint",
     "EmptyMachineError",
     "ExternalAllocation",
     "FixedArrayType",
@@ -137,8 +135,10 @@ __all__ = (
     "Machine",
     "ManualTask",
     "PhysicalStore",
+    "Point",
     "ProcessorRange",
     "ProcessorSlice",
+    "Rect",
     "ReductionOpKind",
     "ResourceConfig",
     "Runtime",

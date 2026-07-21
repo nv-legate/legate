@@ -13,9 +13,9 @@
 #include <legate/data/detail/copy_util.h>
 #include <legate/data/detail/inline_storage.h>
 #include <legate/generated/fatbin/copy_request_fatbin.h>
-#include <legate/geometry/detail/device_domain_point.h>
-#include <legate/geometry/domain.h>
-#include <legate/geometry/domain_point.h>
+#include <legate/geometry/detail/device_point.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/runtime/detail/runtime.h>
@@ -61,11 +61,11 @@ Logger& log_copy()
   return log;
 }
 
-// Converts a DomainPoint into a trivially-copyable POD that can be passed by value into a CUDA
-// kernel (the SmallVector-backed DomainPoint cannot be memcpy'd into kernel parameter space).
-[[nodiscard]] DeviceDomainPoint to_device_domain_point(const DomainPoint& point)
+// Converts a Point into a trivially-copyable POD that can be passed by value into a CUDA
+// kernel (the SmallVector-backed Point cannot be memcpy'd into kernel parameter space).
+[[nodiscard]] DevicePoint to_device_domain_point(const Point& point)
 {
-  DeviceDomainPoint result;
+  DevicePoint result;
 
   result.dim = point.dim();
   for (std::int32_t idx = 0; idx < static_cast<std::int32_t>(point.dim()); ++idx) {
@@ -146,10 +146,10 @@ struct CopyToSendBufferCPU {
   template <typename VAL>
   void operator()(InlineStorage& target,
                   const InlineStorage& source,
-                  const Domain& source_domain,
-                  const DomainPoint& source_strides,
-                  const SmallVector<Domain>& target_subdomains,
-                  const SmallVector<DomainPoint>& all_target_strides,
+                  const Rect& source_domain,
+                  const Point& source_strides,
+                  const SmallVector<Rect>& target_subdomains,
+                  const SmallVector<Point>& all_target_strides,
                   const SmallVector<int>& counts,
                   const SmallVector<int>& offsets)
   {
@@ -177,10 +177,10 @@ struct CopyToSendBufferCPU {
 void copy_to_send_buffer_cpu(std::uint32_t field_size,
                              InlineStorage& target,
                              const InlineStorage& source,
-                             const Domain& source_domain,
-                             const DomainPoint& source_strides,
-                             const SmallVector<Domain>& target_subdomains,
-                             const SmallVector<DomainPoint>& all_target_strides,
+                             const Rect& source_domain,
+                             const Point& source_strides,
+                             const SmallVector<Rect>& target_subdomains,
+                             const SmallVector<Point>& all_target_strides,
                              const SmallVector<int>& counts,
                              const SmallVector<int>& offsets)
 {
@@ -199,11 +199,11 @@ void copy_to_send_buffer_cpu(std::uint32_t field_size,
 struct CopyFromRecvBufferCPU {
   template <typename VAL>
   void operator()(InlineStorage& target,
-                  const Domain& target_domain,
-                  const DomainPoint& target_strides,
+                  const Rect& target_domain,
+                  const Point& target_strides,
                   const InlineStorage& source,
-                  const SmallVector<Domain>& source_subdomains,
-                  const SmallVector<DomainPoint>& all_source_strides,
+                  const SmallVector<Rect>& source_subdomains,
+                  const SmallVector<Point>& all_source_strides,
                   const SmallVector<int>& counts,
                   const SmallVector<int>& offsets)
   {
@@ -230,11 +230,11 @@ struct CopyFromRecvBufferCPU {
 
 void copy_from_recv_buffer_cpu(std::uint32_t field_size,
                                InlineStorage& target,
-                               const Domain& target_domain,
-                               const DomainPoint& target_strides,
+                               const Rect& target_domain,
+                               const Point& target_strides,
                                const InlineStorage& source,
-                               const SmallVector<Domain>& source_subdomains,
-                               const SmallVector<DomainPoint>& all_source_strides,
+                               const SmallVector<Rect>& source_subdomains,
+                               const SmallVector<Point>& all_source_strides,
                                const SmallVector<int>& counts,
                                const SmallVector<int>& offsets)
 {
@@ -277,9 +277,9 @@ struct CopyToSendBufferGPU {
   template <typename VAL>
   void operator()(SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
                   const InlineStorage& source,
-                  const Domain& source_domain,
-                  const DomainPoint& source_strides,
-                  const SmallVector<Domain>& target_subdomains,
+                  const Rect& source_domain,
+                  const Point& source_strides,
+                  const SmallVector<Rect>& target_subdomains,
                   const SmallVector<int>& counts,
                   CUstream stream)
   {
@@ -346,9 +346,9 @@ void copy_to_send_buffer_gpu(
   std::uint32_t field_size,
   SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
   const InlineStorage& source,
-  const Domain& source_domain,
-  const DomainPoint& source_strides,
-  const SmallVector<Domain>& target_subdomains,
+  const Rect& source_domain,
+  const Point& source_strides,
+  const SmallVector<Rect>& target_subdomains,
   const SmallVector<int>& counts,
   CUstream stream)
 {
@@ -389,10 +389,10 @@ struct CopyFromRecvBufferKernelName<std::uint64_t> {
 struct CopyFromRecvBufferGPU {
   template <typename VAL>
   void operator()(InlineStorage& target,
-                  const Domain& target_domain,
-                  const DomainPoint& target_strides,
+                  const Rect& target_domain,
+                  const Point& target_strides,
                   const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
-                  const SmallVector<Domain>& source_subdomains,
+                  const SmallVector<Rect>& source_subdomains,
                   const SmallVector<int>& counts,
                   CUstream stream)
   {
@@ -459,10 +459,10 @@ struct CopyFromRecvBufferGPU {
 void copy_from_recv_buffer_gpu(
   std::uint32_t field_size,
   InlineStorage& target,
-  const Domain& target_domain,
-  const DomainPoint& target_strides,
+  const Rect& target_domain,
+  const Point& target_strides,
   const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
-  const SmallVector<Domain>& source_subdomains,
+  const SmallVector<Rect>& source_subdomains,
   const SmallVector<int>& counts,
   CUstream stream)
 {
@@ -560,21 +560,18 @@ void reorder_elements_gpu(std::uint32_t field_size,
 // `compute_color`/`shard`/`compute_device_ids` interface and the color space is enumerated via
 // `launch_domain()`. A partition with no color space (`NoPartition`) is treated as a single piece
 // covering the whole store on every device.
-std::tuple<Domain, SmallVector<Domain>, SmallVector<DomainPoint>, SmallVector<int>>
-find_all_intersections(const Partition* from,
-                       const Partition* to,
-                       const Domain& from_domain,
-                       const Domain& to_domain)
+std::tuple<Rect, SmallVector<Rect>, SmallVector<Point>, SmallVector<int>> find_all_intersections(
+  const Partition* from, const Partition* to, const Rect& from_domain, const Rect& to_domain)
 {
   const auto device_count = Runtime::get_runtime().node_count();
   const auto my_device_id = Runtime::get_runtime().node_id();
 
-  auto intersection_subdomains = SmallVector<Domain>(tags::size_tag, device_count, {});
-  auto intersection_strides    = SmallVector<DomainPoint>(tags::size_tag, device_count, {});
+  auto intersection_subdomains = SmallVector<Rect>(tags::size_tag, device_count, {});
+  auto intersection_strides    = SmallVector<Point>(tags::size_tag, device_count, {});
   auto intersection_counts     = SmallVector<int>(tags::size_tag, device_count, {});
 
   // This device's `from` piece, clipped to the `to` store's domain.
-  Domain from_tile_domain;
+  Rect from_tile_domain;
 
   if (from->has_color_shape()) {
     // A device that the `from` partition does not map to (e.g. one outside a partially-replicated
@@ -582,7 +579,7 @@ find_all_intersections(const Partition* from,
     const auto my_color = from->compute_color(my_device_id);
 
     if (my_color.dim() == 0) {
-      return {Domain{}, intersection_subdomains, intersection_strides, intersection_counts};
+      return {Rect{}, intersection_subdomains, intersection_strides, intersection_counts};
     }
     from_tile_domain = from->shard(from_domain, my_color).intersection(to_domain);
   } else {
@@ -597,7 +594,7 @@ find_all_intersections(const Partition* from,
   // Records the overlap of `from_tile_domain` with the `to` piece of a given color. A destination
   // color may be held by more than one device when `to` replicates the piece; the same subdomain is
   // exchanged with each of them.
-  const auto record = [&](const DomainPoint& color, const Domain& piece) {
+  const auto record = [&](const Point& color, const Rect& piece) {
     const auto subdomain = piece.intersection(from_tile_domain);
 
     if (subdomain.volume() == 0) {
@@ -620,7 +617,7 @@ find_all_intersections(const Partition* from,
     }
   } else {
     // No color space: a single piece (the whole store) held on every device.
-    record(DomainPoint{}, to_domain);
+    record(Point{}, to_domain);
   }
 
   return {from_tile_domain, intersection_subdomains, intersection_strides, intersection_counts};
@@ -721,7 +718,7 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
     return;
   }
 
-  InlineStorage tmp{Domain{Rect<1>{0, gathered_volume - 1}}, field_size_, target_->target()};
+  InlineStorage tmp{Rect{NDRect<1>{0, gathered_volume - 1}}, field_size_, target_->target()};
 
   all_gather_fn(tmp);
 
@@ -805,9 +802,9 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     // same elements are packed once per destination, so the send buffer is sized by the total
     // element count rather than the (single-piece) source domain.
     InlineStorage send_buffer{
-      Domain{Rect<1>{0, std::max(send_total, 1) - 1}}, field_size_, source_->target()};
+      Rect{NDRect<1>{0, std::max(send_total, 1) - 1}}, field_size_, source_->target()};
     InlineStorage recv_buffer{
-      Domain{Rect<1>{0, std::max(recv_total, 1) - 1}}, field_size_, target_->target()};
+      Rect{NDRect<1>{0, std::max(recv_total, 1) - 1}}, field_size_, target_->target()};
 
     copy_to_send_buffer_cpu(field_size_,
                             send_buffer,

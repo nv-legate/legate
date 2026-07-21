@@ -77,14 +77,14 @@ Scalar::Scalar(const tuple<T>& values) : Scalar{values.data()}
 }
 
 template <std::int32_t DIM>
-Scalar::Scalar(const Point<DIM>& point)
+Scalar::Scalar(const NDPoint<DIM>& point)
   : Scalar{create_impl_(point_type(DIM), &point, /* copy */ true), private_tag{}}
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
 }
 
 template <std::int32_t DIM>
-Scalar::Scalar(const Rect<DIM>& rect)
+Scalar::Scalar(const NDRect<DIM>& rect)
   : Scalar{create_impl_(rect_type(DIM), &rect, /* copy */ true), private_tag{}}
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
@@ -112,7 +112,7 @@ template <>
 LEGATE_EXPORT std::string Scalar::value<std::string>() const;
 
 template <>
-LEGATE_EXPORT DomainPoint Scalar::value<DomainPoint>() const;
+LEGATE_EXPORT Point Scalar::value<Point>() const;
 
 template <typename VAL>
 Span<const VAL> Scalar::values() const

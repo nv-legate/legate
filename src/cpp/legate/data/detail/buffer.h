@@ -38,7 +38,7 @@ class TaskLocalBuffer {
    */
   TaskLocalBuffer(InternalSharedPtr<InlineStorage> storage,
                   InternalSharedPtr<Type> type,
-                  const Domain& bounds);
+                  const Rect& bounds);
 
   /**
    * @return The type of the buffer.
@@ -53,7 +53,7 @@ class TaskLocalBuffer {
   /**
    * @return The shape of the buffer.
    */
-  [[nodiscard]] const Domain& domain() const;
+  [[nodiscard]] const Rect& domain() const;
 
   /**
    * @return The memory kind of the buffer.
@@ -78,7 +78,7 @@ class TaskLocalBuffer {
  private:
   InternalSharedPtr<InlineStorage> storage_{};
   InternalSharedPtr<Type> type_{};
-  Domain domain_{};
+  Rect domain_{};
 };
 
 }  // namespace legate::detail

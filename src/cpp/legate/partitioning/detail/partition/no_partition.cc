@@ -31,14 +31,14 @@ InternalSharedPtr<Partition> NoPartition::bloat(Span<const std::uint64_t> /*low_
   return create_no_partition();
 }
 
-const DomainPoint& NoPartition::color_shape() const
+const Point& NoPartition::color_shape() const
 {
   throw TracedException<std::invalid_argument>{"NoPartition doesn't support color_shape"};
 }
 
-bool NoPartition::is_equi_size(const Domain&) const { return true; }
+bool NoPartition::is_equi_size(const Rect&) const { return true; }
 
-std::vector<std::uint64_t> NoPartition::compute_device_ids(const DomainPoint&) const
+std::vector<std::uint64_t> NoPartition::compute_device_ids(const Point&) const
 {
   // The whole (single) region is replicated on every device.
   std::vector<std::uint64_t> result(Runtime::get_runtime().node_count());
@@ -47,7 +47,7 @@ std::vector<std::uint64_t> NoPartition::compute_device_ids(const DomainPoint&) c
   return result;
 }
 
-Domain NoPartition::launch_domain() const
+Rect NoPartition::launch_domain() const
 {
   throw TracedException<std::invalid_argument>{"NoPartition has no launch domain"};
 }

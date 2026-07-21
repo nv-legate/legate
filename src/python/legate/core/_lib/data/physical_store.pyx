@@ -52,10 +52,10 @@ cdef class PhysicalStore(Unconstructable):
     @property
     def domain(self) -> Domain_t:
         r"""
-        Get the `Domain` of the store.
+        Get the `Rect` of the store.
 
         :returns: The domain of the store.
-        :rtype: Domain
+        :rtype: Rect
         """
         return domain_to_py(self._handle.domain())
 

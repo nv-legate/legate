@@ -8,8 +8,8 @@
 
 #include <legate_defines.h>
 
-#include <legate/geometry/domain.h>
-#include <legate/geometry/domain_point.h>
+#include <legate/geometry/nd_point.h>
+#include <legate/geometry/nd_rect.h>
 #include <legate/geometry/point.h>
 #include <legate/geometry/rect.h>
 #include <legate/utilities/detail/doxygen.h>
@@ -112,8 +112,8 @@ enum class GlobalRedopID : Legion::ReductionOpID {};
  */
 using coord_t = std::int64_t;
 
-// `legate::Point` and `legate::Rect` are defined natively in <legate/geometry/point.h> and
-// <legate/geometry/rect.h> (included above).
+// `legate::NDPoint` and `legate::NDRect` are defined natively in <legate/geometry/nd_point.h> and
+// <legate/geometry/nd_rect.h> (included above).
 
 /** @} */  // end of geometry
 
@@ -124,8 +124,8 @@ using coord_t = std::int64_t;
  * @{
  */
 
-// To iterate over the points of a `legate::Rect`, use `legate::Rect::iterate()`
-// (see <legate/geometry/rect.h>).
+// To iterate over the points of a `legate::NDRect`, use `legate::NDRect::iterate()`
+// (see <legate/geometry/nd_rect.h>).
 
 /** @} */  // end of iterator
 

@@ -208,8 +208,8 @@ template <bool WRITE>
   const legate::mapping::detail::Machine& machine,
   const ParallelPolicy& parallel_policy,
   const Strategy& strategy,
-  const Domain& launch_domain,
-  const DomainPoint& task_index,
+  const Rect& launch_domain,
+  const Point& task_index,
   DataMovementRequests* data_requests)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
@@ -257,8 +257,8 @@ template <bool WRITE>
   Span<const std::pair<ReductionOpKind, bool>> reduction_ops,
   const legate::mapping::detail::Machine& machine,
   const Strategy& strategy,
-  const Domain& launch_domain,
-  const DomainPoint& task_index,
+  const Rect& launch_domain,
+  const Point& task_index,
   DataMovementRequests* data_requests)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
@@ -539,7 +539,7 @@ void AutoTask::launch(Strategy* p_strategy) { launch_task_(p_strategy); }
 ManualTask::ManualTask(const Library& library,
                        const VariantInfo& variant_info,
                        LocalTaskID task_id,
-                       const Domain& launch_domain,
+                       const Rect& launch_domain,
                        std::uint64_t unique_id,
                        std::int32_t priority,
                        mapping::detail::Machine machine)
@@ -549,7 +549,7 @@ ManualTask::ManualTask(const Library& library,
   strategy_->set_launch_domain(launch_domain);
 }
 
-const Domain& ManualTask::launch_domain() const { return strategy_->launch_domain(); }
+const Rect& ManualTask::launch_domain() const { return strategy_->launch_domain(); }
 
 void ManualTask::add_input(InternalSharedPtr<LogicalStore> store)
 {

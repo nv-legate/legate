@@ -107,7 +107,7 @@ class PhysicalStoreTask : public legate::LegateTask<PhysicalStoreTask> {
     ASSERT_EQ(input_span[0], PHYSICAL_TASK_INPUT_VALUE);
 
     output_span[0] = PHYSICAL_TASK_OUTPUT_VALUE;
-    red_acc.reduce(legate::Point<1>{0}, PHYSICAL_TASK_REDUCTION_VALUE);
+    red_acc.reduce(legate::NDPoint<1>{0}, PHYSICAL_TASK_REDUCTION_VALUE);
   }
 };
 

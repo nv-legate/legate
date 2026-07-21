@@ -12,7 +12,7 @@ namespace legate::detail {
 
 inline Shape::Shape(std::uint32_t dim) : dim_{dim} {}
 
-inline Shape::Shape(DomainPoint extents)
+inline Shape::Shape(Point extents)
   : state_{State::BOUND}, dim_{extents.dim()}, extents_{std::move(extents)}
 {
 }

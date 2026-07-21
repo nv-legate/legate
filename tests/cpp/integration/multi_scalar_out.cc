@@ -38,7 +38,7 @@ class ReduceFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(const legate::PhysicalStore& store,
                   const legate::Scalar& scalar,
-                  const legate::Rect<1>& in_shape) const
+                  const legate::NDRect<1>& in_shape) const
   {
     if (in_shape.empty()) {
       return;

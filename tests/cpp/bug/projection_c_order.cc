@@ -25,7 +25,7 @@ class Init : public legate::LegateTask<Init> {
     auto acc1 = context.output(0).write_accessor<std::int64_t, 3>();
     auto acc2 = context.output(1).write_accessor<std::int64_t*, 1, /* VALIDATE_TYPE */ false>();
 
-    acc2[0] = acc1.ptr(legate::Point<3>{0, 0, 0});
+    acc2[0] = acc1.ptr(legate::NDPoint<3>{0, 0, 0});
   }
 };
 
@@ -39,7 +39,7 @@ class Tester : public legate::LegateTask<Tester> {
     auto acc1 = context.input(0).read_accessor<std::int64_t, 2>();
     auto acc2 = context.input(1).read_accessor<std::int64_t*, 1, /* VALIDATE_TYPE */ false>();
 
-    ASSERT_EQ(acc2[0], acc1.ptr(legate::Point<2>{0, 0}));
+    ASSERT_EQ(acc2[0], acc1.ptr(legate::NDPoint<2>{0, 0}));
   }
 };
 

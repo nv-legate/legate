@@ -18,7 +18,7 @@ using Unravel = ::testing::Test;
 
 TEST_F(Unravel, Unravel1D)
 {
-  const auto rect    = legate::Rect<1>{legate::Point<1>{0}, legate::Point<1>{99}};
+  const auto rect    = legate::NDRect<1>{legate::NDPoint<1>{0}, legate::NDPoint<1>{99}};
   const auto unravel = legate::detail::Unravel<1>{rect};
   const auto volume  = 100;
 
@@ -27,103 +27,105 @@ TEST_F(Unravel, Unravel1D)
 
   // Check all unraveled points in 1D
   for (auto i = 0; i < volume; i++) {
-    ASSERT_EQ(unravel(i), (legate::Point<1>{i}));
+    ASSERT_EQ(unravel(i), (legate::NDPoint<1>{i}));
   }
 }
 
 TEST_F(Unravel, Unravel2D)
 {
-  const auto rect    = legate::Rect<2>{legate::Point<2>{-1, -2}, legate::Point<2>{1, 2}};
+  const auto rect    = legate::NDRect<2>{legate::NDPoint<2>{-1, -2}, legate::NDPoint<2>{1, 2}};
   const auto unravel = legate::detail::Unravel<2>{rect};
 
   ASSERT_EQ(unravel.volume(), 15);
   ASSERT_FALSE(unravel.empty());
 
   // Check some specific points in 2D - start, middle, end
-  ASSERT_EQ(unravel(0), (legate::Point<2>{-1, -2}));
-  ASSERT_EQ(unravel(8), (legate::Point<2>{0, 1}));
-  ASSERT_EQ(unravel(14), (legate::Point<2>{1, 2}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<2>{-1, -2}));
+  ASSERT_EQ(unravel(8), (legate::NDPoint<2>{0, 1}));
+  ASSERT_EQ(unravel(14), (legate::NDPoint<2>{1, 2}));
 }
 
 TEST_F(Unravel, Unravel3D)
 {
-  const auto rect    = legate::Rect<3>{legate::Point<3>{1, 2, 3}, legate::Point<3>{2, 3, 5}};
+  const auto rect    = legate::NDRect<3>{legate::NDPoint<3>{1, 2, 3}, legate::NDPoint<3>{2, 3, 5}};
   const auto unravel = legate::detail::Unravel<3>{rect};
 
   ASSERT_EQ(unravel.volume(), 12);
   ASSERT_FALSE(unravel.empty());
 
   // Check some specific points in 3D - start, middle, end
-  ASSERT_EQ(unravel(0), (legate::Point<3>{1, 2, 3}));
-  ASSERT_EQ(unravel(6), (legate::Point<3>{2, 2, 3}));
-  ASSERT_EQ(unravel(11), (legate::Point<3>{2, 3, 5}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<3>{1, 2, 3}));
+  ASSERT_EQ(unravel(6), (legate::NDPoint<3>{2, 2, 3}));
+  ASSERT_EQ(unravel(11), (legate::NDPoint<3>{2, 3, 5}));
 }
 
 TEST_F(Unravel, Unravel4D)
 {
   constexpr std::uint64_t volume = 16;  // 2^4
-  const auto rect    = legate::Rect<4>{legate::Point<4>{0, 1, 2, 3}, legate::Point<4>{1, 2, 3, 4}};
+  const auto rect =
+    legate::NDRect<4>{legate::NDPoint<4>{0, 1, 2, 3}, legate::NDPoint<4>{1, 2, 3, 4}};
   const auto unravel = legate::detail::Unravel<4>{rect};
 
   ASSERT_EQ(unravel.volume(), volume);
   ASSERT_FALSE(unravel.empty());
 
   // The last dimension varies fastest.
-  ASSERT_EQ(unravel(0), (legate::Point<4>{0, 1, 2, 3}));
-  ASSERT_EQ(unravel(1), (legate::Point<4>{0, 1, 2, 4}));
-  ASSERT_EQ(unravel(2), (legate::Point<4>{0, 1, 3, 3}));
-  ASSERT_EQ(unravel(4), (legate::Point<4>{0, 2, 2, 3}));
-  ASSERT_EQ(unravel(8), (legate::Point<4>{1, 1, 2, 3}));
-  ASSERT_EQ(unravel(volume - 1), (legate::Point<4>{1, 2, 3, 4}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<4>{0, 1, 2, 3}));
+  ASSERT_EQ(unravel(1), (legate::NDPoint<4>{0, 1, 2, 4}));
+  ASSERT_EQ(unravel(2), (legate::NDPoint<4>{0, 1, 3, 3}));
+  ASSERT_EQ(unravel(4), (legate::NDPoint<4>{0, 2, 2, 3}));
+  ASSERT_EQ(unravel(8), (legate::NDPoint<4>{1, 1, 2, 3}));
+  ASSERT_EQ(unravel(volume - 1), (legate::NDPoint<4>{1, 2, 3, 4}));
 }
 
 TEST_F(Unravel, SingleElement1D)
 {
-  const auto rect    = legate::Rect<1>{legate::Point<1>{1}, legate::Point<1>{1}};
+  const auto rect    = legate::NDRect<1>{legate::NDPoint<1>{1}, legate::NDPoint<1>{1}};
   const auto unravel = legate::detail::Unravel<1>{rect};
 
   ASSERT_EQ(unravel.volume(), 1);
   ASSERT_FALSE(unravel.empty());
 
-  ASSERT_EQ(unravel(0), (legate::Point<1>{1}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<1>{1}));
 }
 
 TEST_F(Unravel, SingleElement2D)
 {
-  const auto rect    = legate::Rect<2>{legate::Point<2>{2, 3}, legate::Point<2>{2, 3}};
+  const auto rect    = legate::NDRect<2>{legate::NDPoint<2>{2, 3}, legate::NDPoint<2>{2, 3}};
   const auto unravel = legate::detail::Unravel<2>{rect};
 
   ASSERT_EQ(unravel.volume(), 1);
   ASSERT_FALSE(unravel.empty());
 
-  ASSERT_EQ(unravel(0), (legate::Point<2>{2, 3}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<2>{2, 3}));
 }
 
 TEST_F(Unravel, SingleElement3D)
 {
-  const auto rect    = legate::Rect<3>{legate::Point<3>{-1, 2, 3}, legate::Point<3>{-1, 2, 3}};
+  const auto rect = legate::NDRect<3>{legate::NDPoint<3>{-1, 2, 3}, legate::NDPoint<3>{-1, 2, 3}};
   const auto unravel = legate::detail::Unravel<3>{rect};
 
   ASSERT_EQ(unravel.volume(), 1);
   ASSERT_FALSE(unravel.empty());
 
-  ASSERT_EQ(unravel(0), (legate::Point<3>{-1, 2, 3}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<3>{-1, 2, 3}));
 }
 
 TEST_F(Unravel, SingleElement4D)
 {
-  const auto rect = legate::Rect<4>{legate::Point<4>{-1, 2, 3, 4}, legate::Point<4>{-1, 2, 3, 4}};
+  const auto rect =
+    legate::NDRect<4>{legate::NDPoint<4>{-1, 2, 3, 4}, legate::NDPoint<4>{-1, 2, 3, 4}};
   const auto unravel = legate::detail::Unravel<4>{rect};
 
   ASSERT_EQ(unravel.volume(), 1);
   ASSERT_FALSE(unravel.empty());
 
-  ASSERT_EQ(unravel(0), (legate::Point<4>{-1, 2, 3, 4}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<4>{-1, 2, 3, 4}));
 }
 
 TEST_F(Unravel, Empty1D)
 {
-  const auto rect    = legate::Rect<1>{legate::Point<1>{1}, legate::Point<1>{0}};
+  const auto rect    = legate::NDRect<1>{legate::NDPoint<1>{1}, legate::NDPoint<1>{0}};
   const auto unravel = legate::detail::Unravel<1>{rect};
 
   ASSERT_EQ(unravel.volume(), 0);
@@ -132,7 +134,7 @@ TEST_F(Unravel, Empty1D)
 
 TEST_F(Unravel, Empty2D)
 {
-  const auto rect    = legate::Rect<2>{legate::Point<2>{1, 2}, legate::Point<2>{1, 1}};
+  const auto rect    = legate::NDRect<2>{legate::NDPoint<2>{1, 2}, legate::NDPoint<2>{1, 1}};
   const auto unravel = legate::detail::Unravel<2>{rect};
 
   ASSERT_EQ(unravel.volume(), 0);
@@ -141,7 +143,7 @@ TEST_F(Unravel, Empty2D)
 
 TEST_F(Unravel, Empty3D)
 {
-  const auto rect    = legate::Rect<3>{legate::Point<3>{1, 2, 3}, legate::Point<3>{0, 1, 2}};
+  const auto rect    = legate::NDRect<3>{legate::NDPoint<3>{1, 2, 3}, legate::NDPoint<3>{0, 1, 2}};
   const auto unravel = legate::detail::Unravel<3>{rect};
 
   ASSERT_EQ(unravel.volume(), 0);
@@ -150,7 +152,8 @@ TEST_F(Unravel, Empty3D)
 
 TEST_F(Unravel, Empty4D)
 {
-  const auto rect    = legate::Rect<4>{legate::Point<4>{1, 2, 3, 4}, legate::Point<4>{0, 1, 2, 3}};
+  const auto rect =
+    legate::NDRect<4>{legate::NDPoint<4>{1, 2, 3, 4}, legate::NDPoint<4>{0, 1, 2, 3}};
   const auto unravel = legate::detail::Unravel<4>{rect};
 
   ASSERT_EQ(unravel.volume(), 0);
@@ -160,7 +163,7 @@ TEST_F(Unravel, Empty4D)
 TEST_F(Unravel, Empty5D)
 {
   const auto rect =
-    legate::Rect<5>{legate::Point<5>{1, 2, 3, 4, 5}, legate::Point<5>{0, 1, 2, 3, 4}};
+    legate::NDRect<5>{legate::NDPoint<5>{1, 2, 3, 4, 5}, legate::NDPoint<5>{0, 1, 2, 3, 4}};
   const auto unravel = legate::detail::Unravel<5>{rect};
 
   ASSERT_EQ(unravel.volume(), 0);
@@ -170,7 +173,7 @@ TEST_F(Unravel, Empty5D)
 TEST_F(Unravel, Empty6D)
 {
   const auto rect =
-    legate::Rect<6>{legate::Point<6>{1, 2, 3, 4, 5, 6}, legate::Point<6>{0, 1, 2, 3, 4, 5}};
+    legate::NDRect<6>{legate::NDPoint<6>{1, 2, 3, 4, 5, 6}, legate::NDPoint<6>{0, 1, 2, 3, 4, 5}};
   const auto unravel = legate::detail::Unravel<6>{rect};
 
   ASSERT_EQ(unravel.volume(), 0);
@@ -181,28 +184,28 @@ TEST_F(Unravel, Unravel5D)
 {
   constexpr std::uint64_t volume = 32;  // 2^5
   const auto rect =
-    legate::Rect<5>{legate::Point<5>{0, 0, 0, 0, 0}, legate::Point<5>{1, 1, 1, 1, 1}};
+    legate::NDRect<5>{legate::NDPoint<5>{0, 0, 0, 0, 0}, legate::NDPoint<5>{1, 1, 1, 1, 1}};
   const auto unravel = legate::detail::Unravel<5>{rect};
 
   ASSERT_EQ(unravel.volume(), volume);
   ASSERT_FALSE(unravel.empty());
 
-  ASSERT_EQ(unravel(0), (legate::Point<5>{0, 0, 0, 0, 0}));
-  ASSERT_EQ(unravel(volume - 1), (legate::Point<5>{1, 1, 1, 1, 1}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<5>{0, 0, 0, 0, 0}));
+  ASSERT_EQ(unravel(volume - 1), (legate::NDPoint<5>{1, 1, 1, 1, 1}));
 }
 
 TEST_F(Unravel, Unravel6D)
 {
   constexpr std::uint64_t volume = 64;  // 2^6
   const auto rect =
-    legate::Rect<6>{legate::Point<6>{0, 0, 0, 0, 0, 0}, legate::Point<6>{1, 1, 1, 1, 1, 1}};
+    legate::NDRect<6>{legate::NDPoint<6>{0, 0, 0, 0, 0, 0}, legate::NDPoint<6>{1, 1, 1, 1, 1, 1}};
   const auto unravel = legate::detail::Unravel<6>{rect};
 
   ASSERT_EQ(unravel.volume(), volume);
   ASSERT_FALSE(unravel.empty());
 
-  ASSERT_EQ(unravel(0), (legate::Point<6>{0, 0, 0, 0, 0, 0}));
-  ASSERT_EQ(unravel(volume - 1), (legate::Point<6>{1, 1, 1, 1, 1, 1}));
+  ASSERT_EQ(unravel(0), (legate::NDPoint<6>{0, 0, 0, 0, 0, 0}));
+  ASSERT_EQ(unravel(volume - 1), (legate::NDPoint<6>{1, 1, 1, 1, 1, 1}));
 }
 
 }  // namespace unravel_test

@@ -64,7 +64,7 @@ void check_physical_store(const legate::PhysicalStore& store,
     for (std::uint64_t i = 0; i < SHAPE_2D()[0]; ++i) {
       for (std::uint64_t j = 0; j < SHAPE_2D()[1]; ++j) {
         const auto p =
-          legate::Point<2>{static_cast<legate::coord_t>(i), static_cast<legate::coord_t>(j)};
+          legate::NDPoint<2>{static_cast<legate::coord_t>(i), static_cast<legate::coord_t>(j)};
 
         EXPECT_EQ(acc[p], counter);
         ++counter;

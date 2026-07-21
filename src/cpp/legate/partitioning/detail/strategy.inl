@@ -10,9 +10,9 @@ inline Strategy::Strategy(const Operation* operation) : operation_{operation} {}
 
 inline bool Strategy::parallel() const { return launch_domain_.dim() == 0; }
 
-inline const Domain& Strategy::launch_domain() const { return launch_domain_; }
+inline const Rect& Strategy::launch_domain() const { return launch_domain_; }
 
-inline void Strategy::set_launch_domain(const Domain& launch_domain)
+inline void Strategy::set_launch_domain(const Rect& launch_domain)
 {
   launch_domain_ = launch_domain;
 }

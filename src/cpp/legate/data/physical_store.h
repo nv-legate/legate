@@ -12,8 +12,8 @@
 #include <legate/data/buffer.h>
 #include <legate/data/inline_allocation.h>
 #include <legate/data/logical_store.h>
-#include <legate/geometry/domain.h>
-#include <legate/geometry/domain_point.h>
+#include <legate/geometry/nd_point.h>
+#include <legate/geometry/nd_rect.h>
 #include <legate/geometry/point.h>
 #include <legate/geometry/rect.h>
 #include <legate/mapping/mapping.h>
@@ -238,7 +238,7 @@ class LEGATE_EXPORT PhysicalStore {
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
   [[nodiscard]] mdspan_type<const T, DIM> span_read_accessor(
-    const Rect<DIM>& bounds, std::size_t elem_size = sizeof(T)) const;
+    const NDRect<DIM>& bounds, std::size_t elem_size = sizeof(T)) const;
 
   /**
    * @brief Returns a write-only mdspan to the store over the selected domain.
@@ -283,7 +283,7 @@ class LEGATE_EXPORT PhysicalStore {
    * @return The mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor(const Rect<DIM>& bounds,
+  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor(const NDRect<DIM>& bounds,
                                                         std::size_t elem_size = sizeof(T));
 
   /**
@@ -318,7 +318,7 @@ class LEGATE_EXPORT PhysicalStore {
    * @return The mdspan accessor.
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor(const Rect<DIM>& bounds,
+  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor(const NDRect<DIM>& bounds,
                                                              std::size_t elem_size = sizeof(T));
 
   /**
@@ -358,7 +358,7 @@ class LEGATE_EXPORT PhysicalStore {
             std::int32_t DIM,
             bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
   [[nodiscard]] mdspan_type<typename Redop::LHS, DIM, detail::ReductionAccessor<Redop, EXCLUSIVE>>
-  span_reduce_accessor(const Rect<DIM>& bounds,
+  span_reduce_accessor(const NDRect<DIM>& bounds,
                        std::size_t elem_size = sizeof(typename Redop::LHS));
 
   /**
@@ -434,13 +434,13 @@ class LEGATE_EXPORT PhysicalStore {
    *
    * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
-   * @param bounds Domain within which accesses should be allowed. The actual bounds for valid
+   * @param bounds Rect within which accesses should be allowed. The actual bounds for valid
    * access are determined by an intersection between the store's domain and the bounds.
    *
    * @return A read-only accessor to the store
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] AccessorRO<T, DIM> read_accessor(const Rect<DIM>& bounds) const;
+  [[nodiscard]] AccessorRO<T, DIM> read_accessor(const NDRect<DIM>& bounds) const;
 
   /**
    * @brief Returns a write-only accessor to the store for the entire domain.
@@ -451,13 +451,13 @@ class LEGATE_EXPORT PhysicalStore {
    *
    * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
-   * @param bounds Domain within which accesses should be allowed. The actual bounds for valid
+   * @param bounds Rect within which accesses should be allowed. The actual bounds for valid
    * access are determined by an intersection between the store's domain and the bounds.
    *
    * @return A write-only accessor to the store
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds) const;
+  [[nodiscard]] AccessorWO<T, DIM> write_accessor(const NDRect<DIM>& bounds) const;
 
   /**
    * @brief Returns a read-write accessor to the store for the entire domain.
@@ -468,13 +468,13 @@ class LEGATE_EXPORT PhysicalStore {
    *
    * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
-   * @param bounds Domain within which accesses should be allowed. The actual bounds for valid
+   * @param bounds Rect within which accesses should be allowed. The actual bounds for valid
    * access are determined by an intersection between the store's domain and the bounds.
    *
    * @return A read-write accessor to the store
    */
   template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] AccessorRW<T, DIM> read_write_accessor(const Rect<DIM>& bounds) const;
+  [[nodiscard]] AccessorRW<T, DIM> read_write_accessor(const NDRect<DIM>& bounds) const;
 
   /**
    * @brief Returns a reduction accessor to the store for the entire domain.
@@ -488,7 +488,7 @@ class LEGATE_EXPORT PhysicalStore {
    *
    * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
-   * @param bounds Domain within which accesses should be allowed. The actual bounds for valid
+   * @param bounds Rect within which accesses should be allowed. The actual bounds for valid
    * access are determined by an intersection between the store's domain and the bounds.
    *
    * @return A reduction accessor to the store
@@ -499,7 +499,7 @@ class LEGATE_EXPORT PhysicalStore {
             bool EXCLUSIVE,
             std::int32_t DIM,
             bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
-  [[nodiscard]] AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(const Rect<DIM>& bounds) const;
+  [[nodiscard]] AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(const NDRect<DIM>& bounds) const;
 
   /**
    * @brief Returns the scalar value stored in the store.
@@ -528,7 +528,7 @@ class LEGATE_EXPORT PhysicalStore {
    * @return A \ref Buffer in which to write the output to.
    */
   template <typename T, std::int32_t DIM>
-  [[nodiscard]] Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents,
+  [[nodiscard]] Buffer<T, DIM> create_output_buffer(const NDPoint<DIM>& extents,
                                                     bool bind_buffer = false) const;
 
   /**
@@ -543,7 +543,7 @@ class LEGATE_EXPORT PhysicalStore {
    *
    * @return A `TaskLocalBuffer` in which to write the output to.
    */
-  [[nodiscard]] TaskLocalBuffer create_output_buffer(const DomainPoint& extents,
+  [[nodiscard]] TaskLocalBuffer create_output_buffer(const Point& extents,
                                                      bool bind_buffer = false) const;
 
   /**
@@ -560,7 +560,7 @@ class LEGATE_EXPORT PhysicalStore {
    * store.
    */
   template <typename T, std::int32_t DIM>
-  void bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const;
+  void bind_data(Buffer<T, DIM>& buffer, const NDPoint<DIM>& extents) const;
 
   /**
    * @brief Binds a `TaskLocalBuffer` to the store.
@@ -584,7 +584,7 @@ class LEGATE_EXPORT PhysicalStore {
    * the store (only thrown if `check_type` is `true`).
    */
   void bind_data(const TaskLocalBuffer& buffer,
-                 const DomainPoint& extents,
+                 const Point& extents,
                  bool check_type = false) const;
 
   /**
@@ -609,7 +609,7 @@ class LEGATE_EXPORT PhysicalStore {
    *
    * @snippet unit/physical_store/create_unbound_store.cc Bind an untyped buffer to an unbound store
    */
-  void bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const Point<1>& extents) const;
+  void bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const NDPoint<1>& extents) const;
 
   /**
    * @brief Makes the unbound store empty.
@@ -646,13 +646,13 @@ class LEGATE_EXPORT PhysicalStore {
    * @return Store's domain
    */
   template <std::int32_t DIM>
-  [[nodiscard]] Rect<DIM> shape() const;
+  [[nodiscard]] NDRect<DIM> shape() const;
   /**
-   * @brief Returns the store's `Domain`
+   * @brief Returns the store's `Rect`
    *
-   * @return Store's `Domain`
+   * @return Store's `Rect`
    */
-  [[nodiscard]] Domain domain() const;
+  [[nodiscard]] Rect domain() const;
 
   /**
    * @brief Returns a raw pointer and strides to the allocation
@@ -775,7 +775,7 @@ class LEGATE_EXPORT PhysicalStore {
    * @return The accessor.
    */
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
+  [[nodiscard]] ACC create_accessor_(const NDRect<DIM>& bounds, bool validate_type) const;
 
   /**
    * @brief Create a reduction field accessor over the underlying data for a physical store
@@ -798,7 +798,7 @@ class LEGATE_EXPORT PhysicalStore {
    * @return The accessor.
    */
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds, bool validate_type) const;
+  [[nodiscard]] ACC create_reduction_accessor_(const NDRect<DIM>& bounds, bool validate_type) const;
 
   /**
    * @brief Returns the store's coordinate-origin base pointer and per-dimension element strides
@@ -812,7 +812,7 @@ class LEGATE_EXPORT PhysicalStore {
    */
   [[nodiscard]] void* base_() const;
 
-  [[nodiscard]] const DomainPoint& strides_() const;
+  [[nodiscard]] const Point& strides_() const;
 
   /**
    * @brief Allocates an inline storage for an output buffer of this (unbound) store spanning
@@ -822,7 +822,7 @@ class LEGATE_EXPORT PhysicalStore {
    * touch `detail::InlineStorage` directly.
    */
   [[nodiscard]] InternalSharedPtr<detail::InlineStorage> create_output_buffer_storage_(
-    const Domain& bounds) const;
+    const Rect& bounds) const;
 
   /**
    * @brief Binds an inline storage (produced by the task as a buffer) to this unbound store.
@@ -833,7 +833,7 @@ class LEGATE_EXPORT PhysicalStore {
    * @throw std::invalid_argument If this store is not an unbound store.
    */
   void bind_inline_storage_(const InternalSharedPtr<detail::InlineStorage>& storage,
-                            const Domain& extents) const;
+                            const Rect& extents) const;
 
   SharedPtr<detail::PhysicalStore> impl_{};
   // This member exists purely to solve the temporary store problem. It is illegal for Physical

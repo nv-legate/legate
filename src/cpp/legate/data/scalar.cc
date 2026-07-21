@@ -98,9 +98,9 @@ std::string Scalar::value() const
 }
 
 template <>
-DomainPoint Scalar::value<DomainPoint>() const
+Point Scalar::value<Point>() const
 {
-  return DomainPoint{values<std::int64_t>()};
+  return Point{values<std::int64_t>()};
 }
 
 const void* Scalar::ptr() const { return impl_->data(); }

@@ -115,9 +115,9 @@ bool TaskContext::is_single_task() const { return impl()->is_single_task(); }
 
 bool TaskContext::can_raise_exception() const { return impl()->can_raise_exception(); }
 
-const DomainPoint& TaskContext::get_task_index() const { return impl()->get_task_index(); }
+const Point& TaskContext::get_task_index() const { return impl()->get_task_index(); }
 
-const Domain& TaskContext::get_launch_domain() const { return impl()->get_launch_domain(); }
+const Rect& TaskContext::get_launch_domain() const { return impl()->get_launch_domain(); }
 
 mapping::TaskTarget TaskContext::target() const
 {

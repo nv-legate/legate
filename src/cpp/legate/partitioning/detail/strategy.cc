@@ -26,15 +26,15 @@
 
 namespace legate::detail {
 
-std::optional<DomainPoint> Strategy::task_index() const
+std::optional<Point> Strategy::task_index() const
 {
   if (launch_domain().dim() == 0) {
-    return std::make_optional<DomainPoint>();
+    return std::make_optional<Point>();
   }
 
   const auto node_id = Runtime::get_runtime().node_id();
 
-  return std::make_optional<DomainPoint>(
+  return std::make_optional<Point>(
     delinearize(launch_domain().lo(), launch_domain().hi(), node_id));
 }
 

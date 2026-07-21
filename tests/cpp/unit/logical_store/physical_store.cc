@@ -25,7 +25,7 @@ TEST_F(LogicalStorePhysicalUnit, BoundStore)
   constexpr std::uint32_t DIM = 2;
 
   ASSERT_EQ(physical_store.dim(), DIM);
-  ASSERT_EQ(physical_store.shape<DIM>(), (legate::Rect<DIM>{{0, 0}, {3, 3}}));
+  ASSERT_EQ(physical_store.shape<DIM>(), (legate::NDRect<DIM>{{0, 0}, {3, 3}}));
   ASSERT_TRUE(physical_store.valid());
   ASSERT_EQ(physical_store.code(), legate::Type::Code::INT64);
 }
@@ -42,7 +42,7 @@ TEST_F(LogicalStorePhysicalUnit, EmptyShapeBoundStore)
   constexpr std::uint32_t DIM = 1;
 
   // shape of 0-D store
-  ASSERT_EQ(physical_store.shape<DIM>(), (legate::Rect<DIM>{0, 0}));
+  ASSERT_EQ(physical_store.shape<DIM>(), (legate::NDRect<DIM>{0, 0}));
   ASSERT_TRUE(physical_store.valid());
   ASSERT_EQ(physical_store.code(), legate::Type::Code::INT64);
 }
@@ -67,7 +67,7 @@ TEST_F(LogicalStorePhysicalUnit, ScalarStore)
   static constexpr std::uint32_t DIM = 1;
 
   ASSERT_EQ(physical_store.dim(), DIM);
-  ASSERT_EQ(physical_store.shape<DIM>(), (legate::Rect<DIM>{0, 0}));
+  ASSERT_EQ(physical_store.shape<DIM>(), (legate::NDRect<DIM>{0, 0}));
   ASSERT_TRUE(physical_store.valid());
   ASSERT_EQ(physical_store.code(), legate::Type::Code::INT32);
 }

@@ -34,9 +34,9 @@ class Strategy {
   Strategy& operator=(Strategy&&) noexcept = default;
 
   [[nodiscard]] bool parallel() const;
-  [[nodiscard]] const Domain& launch_domain() const;
-  void set_launch_domain(const Domain& launch_domain);
-  [[nodiscard]] std::optional<DomainPoint> task_index() const;
+  [[nodiscard]] const Rect& launch_domain() const;
+  void set_launch_domain(const Rect& launch_domain);
+  [[nodiscard]] std::optional<Point> task_index() const;
 
   void insert(const Variable& partition_symbol, InternalSharedPtr<Partition> partition);
   [[nodiscard]] bool has_assignment(const Variable& partition_symbol) const;
@@ -64,7 +64,7 @@ class Strategy {
 
  private:
   const Operation* operation_{};
-  Domain launch_domain_{};
+  Rect launch_domain_{};
   std::unordered_map<Variable, InternalSharedPtr<Partition>> assignments_{};
   std::unordered_map<Variable, SymbolicPoint> projections_{};
   std::optional<Variable> key_partition_{};

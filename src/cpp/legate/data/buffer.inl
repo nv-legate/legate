@@ -23,7 +23,8 @@ LEGATE_EXPORT void check_alignment(std::size_t alignment);
 }  // namespace detail
 
 template <typename VAL, std::int32_t DIM>
-Buffer<VAL, DIM>::Buffer(InternalSharedPtr<detail::InlineStorage> storage, const Rect<DIM>& bounds)
+Buffer<VAL, DIM>::Buffer(InternalSharedPtr<detail::InlineStorage> storage,
+                         const NDRect<DIM>& bounds)
   : storage_{std::move(storage)}, bounds_{bounds}
 {
   void* base                                    = nullptr;
@@ -44,7 +45,7 @@ LEGATE_EXPORT void check_type(const Type& ty, std::size_t size_of, std::size_t a
 
 template <typename T, std::int32_t DIM>
 TaskLocalBuffer::TaskLocalBuffer(const Buffer<T, DIM>& buf, const Type& type)
-  : TaskLocalBuffer{buf.get_storage(), type, Domain{buf.get_bounds()}}
+  : TaskLocalBuffer{buf.get_storage(), type, Rect{buf.get_bounds()}}
 {
   untyped_buffer_detail::check_type(type, sizeof(T), alignof(T));
 }
@@ -70,7 +71,9 @@ inline const SharedPtr<detail::TaskLocalBuffer>& TaskLocalBuffer::impl() const {
 // ==========================================================================================
 
 template <typename VAL, std::int32_t DIM>
-Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory::Kind kind, std::size_t alignment)
+Buffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
+                               Memory::Kind kind,
+                               std::size_t alignment)
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   detail::check_alignment(alignment);
@@ -79,13 +82,13 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory::Kind kind, std
     kind = find_memory_kind_for_executing_processor(/* host_accessible */ false);
   }
 
-  const auto bounds = Rect<DIM>{Point<DIM>::zeroes(), extents - Point<DIM>::ones()};
+  const auto bounds = NDRect<DIM>{NDPoint<DIM>::zeroes(), extents - NDPoint<DIM>::ones()};
 
-  return Buffer<VAL, DIM>{detail::create_buffer_storage(sizeof(VAL), Domain{bounds}, kind), bounds};
+  return Buffer<VAL, DIM>{detail::create_buffer_storage(sizeof(VAL), Rect{bounds}, kind), bounds};
 }
 
 template <typename VAL, std::int32_t DIM>
-Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory mem, std::size_t alignment)
+Buffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents, Memory mem, std::size_t alignment)
 {
   return create_buffer<VAL, DIM>(extents, mem.kind(), alignment);
 }
@@ -93,13 +96,13 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents, Memory mem, std::size_
 template <typename VAL>
 Buffer<VAL> create_buffer(std::size_t size, Memory::Kind kind, std::size_t alignment)
 {
-  return create_buffer<VAL, 1>(Point<1>{static_cast<std::int64_t>(size)}, kind, alignment);
+  return create_buffer<VAL, 1>(NDPoint<1>{static_cast<std::int64_t>(size)}, kind, alignment);
 }
 
 template <typename VAL>
 Buffer<VAL> create_buffer(std::size_t size, Memory mem, std::size_t alignment)
 {
-  return create_buffer<VAL, 1>(Point<1>{static_cast<std::int64_t>(size)}, mem, alignment);
+  return create_buffer<VAL, 1>(NDPoint<1>{static_cast<std::int64_t>(size)}, mem, alignment);
 }
 
 }  // namespace legate

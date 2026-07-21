@@ -39,11 +39,11 @@ enum TaskIDs : std::uint8_t {
 };
 
 template <std::int32_t DIM>
-legate::Point<DIM> delinearize(std::size_t index,
-                               std::size_t vol,
-                               const legate::Point<DIM>& extents)
+legate::NDPoint<DIM> delinearize(std::size_t index,
+                                 std::size_t vol,
+                                 const legate::NDPoint<DIM>& extents)
 {
-  legate::Point<DIM> result;
+  legate::NDPoint<DIM> result;
   for (std::int32_t dim = 0; dim < DIM; ++dim) {
     result[dim] = index * extents[dim] / vol;
   }
@@ -63,8 +63,8 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
                     bool ascending)
     {
       auto shape   = output.shape<DIM>();
-      auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
-      auto acc     = output.write_accessor<legate::Rect<TGT_DIM>, DIM>();
+      auto extents = extents_scalar.value<legate::NDPoint<TGT_DIM>>();
+      auto acc     = output.write_accessor<legate::NDRect<TGT_DIM>, DIM>();
 
       const auto vol = shape.volume();
       auto in_bounds = [&](const auto& point) {
@@ -80,12 +80,12 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
       for (auto&& point : shape.iterate()) {
         auto lo = delinearize(idx, vol, extents);
-        auto hi = lo + legate::Point<TGT_DIM>::ones();
+        auto hi = lo + legate::NDPoint<TGT_DIM>::ones();
 
         if (in_bounds(hi)) {
-          acc[point] = legate::Rect<TGT_DIM>{lo, hi};
+          acc[point] = legate::NDRect<TGT_DIM>{lo, hi};
         } else {
-          acc[point] = legate::Rect<TGT_DIM>{lo, lo};
+          acc[point] = legate::NDRect<TGT_DIM>{lo, lo};
         }
         idx += diff;
       }
@@ -99,8 +99,8 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
                     bool ascending)
     {
       auto shape   = output.shape<DIM>();
-      auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
-      auto acc     = output.write_accessor<legate::Point<TGT_DIM>, DIM>();
+      auto extents = extents_scalar.value<legate::NDPoint<TGT_DIM>>();
+      auto acc     = output.write_accessor<legate::NDPoint<TGT_DIM>, DIM>();
 
       const auto vol          = shape.volume();
       const std::int64_t diff = ascending ? 1 : -1;
@@ -143,14 +143,14 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 
   struct CheckRects {
     template <std::int32_t TGT_DIM>
-    void operator()(legate::PhysicalStore& func, const legate::Domain& range)
+    void operator()(legate::PhysicalStore& func, const legate::Rect& range)
     {
       auto shape = func.shape<DIM>();
       if (shape.empty()) {
         return;
       }
 
-      auto acc = func.read_accessor<legate::Rect<TGT_DIM>, DIM>();
+      auto acc = func.read_accessor<legate::NDRect<TGT_DIM>, DIM>();
       for (auto&& point : shape.iterate()) {
         auto rect = acc[point];
         for (auto&& sub_point : rect.iterate()) {
@@ -162,14 +162,14 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 
   struct CheckPoints {
     template <std::int32_t TGT_DIM>
-    void operator()(legate::PhysicalStore& func, const legate::Domain& range)
+    void operator()(legate::PhysicalStore& func, const legate::Rect& range)
     {
       auto shape = func.shape<DIM>();
       if (shape.empty()) {
         return;
       }
 
-      auto acc = func.read_accessor<legate::Point<TGT_DIM>, DIM>();
+      auto acc = func.read_accessor<legate::NDPoint<TGT_DIM>, DIM>();
       for (auto&& point : shape.iterate()) {
         auto p = acc[point];
         EXPECT_TRUE(range.contains(p));

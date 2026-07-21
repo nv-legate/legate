@@ -29,7 +29,7 @@ Restrictions TransformStack::convert(Restrictions restrictions, bool forbid_fake
     std::move(restrictions));
 }
 
-DomainPoint TransformStack::convert_color(DomainPoint color) const
+Point TransformStack::convert_color(Point color) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -38,7 +38,7 @@ DomainPoint TransformStack::convert_color(DomainPoint color) const
     std::move(color));
 }
 
-DomainPoint TransformStack::convert_color_shape(DomainPoint color_shape) const
+Point TransformStack::convert_color_shape(Point color_shape) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -47,7 +47,7 @@ DomainPoint TransformStack::convert_color_shape(DomainPoint color_shape) const
     std::move(color_shape));
 }
 
-DomainPoint TransformStack::convert_point(DomainPoint point) const
+Point TransformStack::convert_point(Point point) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -56,7 +56,7 @@ DomainPoint TransformStack::convert_point(DomainPoint point) const
     std::move(point));
 }
 
-DomainPoint TransformStack::convert_extents(DomainPoint extents) const
+Point TransformStack::convert_extents(Point extents) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -65,7 +65,7 @@ DomainPoint TransformStack::convert_extents(DomainPoint extents) const
     std::move(extents));
 }
 
-DomainPoint TransformStack::convert_strides(DomainPoint strides) const
+Point TransformStack::convert_strides(Point strides) const
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
@@ -92,7 +92,7 @@ Restrictions TransformStack::invert(Restrictions restrictions) const
     std::move(restrictions));
 }
 
-DomainPoint TransformStack::invert_color(DomainPoint color) const
+Point TransformStack::invert_color(Point color) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -101,7 +101,7 @@ DomainPoint TransformStack::invert_color(DomainPoint color) const
     std::move(color));
 }
 
-DomainPoint TransformStack::invert_color_shape(DomainPoint color_shape) const
+Point TransformStack::invert_color_shape(Point color_shape) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -120,7 +120,7 @@ SmallVector<std::int32_t, LEGATE_MAX_DIM> TransformStack::invert_dims(
     std::move(dims));
 }
 
-DomainPoint TransformStack::invert_point(DomainPoint point) const
+Point TransformStack::invert_point(Point point) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -129,7 +129,7 @@ DomainPoint TransformStack::invert_point(DomainPoint point) const
     std::move(point));
 }
 
-DomainPoint TransformStack::invert_extents(DomainPoint extents) const
+Point TransformStack::invert_extents(Point extents) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
@@ -148,7 +148,7 @@ void TransformStack::pack(BufferBuilder& buffer) const
   }
 }
 
-Domain TransformStack::transform(const Domain& input) const
+Rect TransformStack::transform(const Rect& input) const
 {
   LEGATE_ASSERT(transform_ != nullptr);
   return transform_->transform(parent_->identity() ? input : parent_->transform(input));

@@ -138,7 +138,7 @@ class LEGATE_EXPORT Task {
    *
    * @return Launch domain
    */
-  [[nodiscard]] const Domain& get_launch_domain() const;
+  [[nodiscard]] const Rect& get_launch_domain() const;
 
   explicit Task(const detail::Task* impl);
 

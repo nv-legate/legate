@@ -7,236 +7,74 @@
 #pragma once
 
 #include <legate/geometry/point.h>
+#include <legate/utilities/assert.h>
 
-#include <ostream>
+#include <utility>
 
 namespace legate {
 
-template <int DIM>
-template <int D, std::enable_if_t<D == 1, int>>
-LEGATE_HOST_DEVICE Point<DIM>::Point(value_type val)  // NOLINT(google-explicit-constructor)
+inline Point::Point(std::int64_t index) { coordinates_.push_back(index); }
+
+inline Point::Point(detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords)
+  : coordinates_{std::move(coords)}
 {
-  values[0] = val;
 }
 
+inline Point::Point(Span<const std::int64_t> coords) : coordinates_{coords} {}
+
 template <int DIM>
-template <int D, std::enable_if_t<(D > 1), int>>
-LEGATE_HOST_DEVICE Point<DIM>::Point(value_type val)
+Point::Point(const NDPoint<DIM>& point)
 {
-  for (int idx = 0; idx < DIM; ++idx) {
-    values[idx] = val;
+  static_assert(DIM <= LEGATE_MAX_DIM);
+  coordinates_.reserve(DIM);
+  for (std::int32_t idx = 0; idx < DIM; ++idx) {
+    coordinates_.push_back(static_cast<std::int64_t>(point[idx]));
   }
 }
 
 template <int DIM>
-template <typename Arg0,
-          typename Arg1,
-          typename... Args,
-          std::enable_if_t<(sizeof...(Args) + 2 <= DIM), int>>
-LEGATE_HOST_DEVICE Point<DIM>::Point(Arg0 val0, Arg1 val1, Args... vals)
-  : values{static_cast<value_type>(val0),
-           static_cast<value_type>(val1),
-           static_cast<value_type>(vals)...}
+Point::operator NDPoint<DIM>() const
 {
-}
+  static_assert(DIM <= LEGATE_MAX_DIM);
+  LEGATE_ASSERT(DIM == static_cast<int>(dim()));
 
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>::Point(const value_type* vals)
-{
-  for (int idx = 0; idx < DIM; ++idx) {
-    values[idx] = vals[idx];
-  }
-}
+  NDPoint<DIM> result;
 
-template <int DIM>
-template <int D, std::enable_if_t<D == 1, int>>
-LEGATE_HOST_DEVICE Point<DIM>::operator value_type() const  // NOLINT(google-explicit-constructor)
-{
-  return values[0];
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE typename Point<DIM>::value_type& Point<DIM>::operator[](int index)
-{
-  return values[index];
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE const typename Point<DIM>::value_type& Point<DIM>::operator[](int index) const
-{
-  return values[index];
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE typename Point<DIM>::value_type Point<DIM>::dot(const Point<DIM>& rhs) const
-{
-  value_type acc = values[0] * rhs[0];
-
-  for (int idx = 1; idx < DIM; ++idx) {
-    acc += values[idx] * rhs[idx];
-  }
-  return acc;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE constexpr Point<DIM> Point<DIM>::zeroes()
-{
-  Point<DIM> result{};
-
-  for (int idx = 0; idx < DIM; ++idx) {
-    result.values[idx] = 0;
+  for (std::int32_t idx = 0; idx < DIM; ++idx) {
+    result[idx] = coordinates_[idx];
   }
   return result;
 }
 
 template <int DIM>
-LEGATE_HOST_DEVICE constexpr Point<DIM> Point<DIM>::ones()
+Point& Point::operator=(const NDPoint<DIM>& point)
 {
-  Point<DIM> result{};
-
-  for (int idx = 0; idx < DIM; ++idx) {
-    result.values[idx] = 1;
-  }
-  return result;
+  *this = Point{point};
+  return *this;
 }
 
-template <int DIM>
-LEGATE_HOST_DEVICE bool operator==(const Point<DIM>& lhs, const Point<DIM>& rhs)
+inline std::uint32_t Point::dim() const { return static_cast<std::int32_t>(coordinates_.size()); }
+
+inline std::size_t Point::size() const { return coordinates_.size(); }
+
+inline bool Point::empty() const { return coordinates_.empty(); }
+
+template <typename Index, typename>
+std::int64_t& Point::operator[](Index index)
 {
-  for (int idx = 0; idx < DIM; ++idx) {
-    if (lhs[idx] != rhs[idx]) {
-      return false;
-    }
-  }
-  return true;
+  return coordinates_.at(static_cast<std::size_t>(index));
 }
 
-template <int DIM>
-LEGATE_HOST_DEVICE bool operator!=(const Point<DIM>& lhs, const Point<DIM>& rhs)
+template <typename Index, typename>
+const std::int64_t& Point::operator[](Index index) const
 {
-  return !(lhs == rhs);
+  return coordinates_.at(static_cast<std::size_t>(index));
 }
 
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM> operator+(const Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  Point<DIM> result{};
+/*static*/ inline Point Point::zeroes(std::int32_t ndim) { return full(ndim, 0); }
 
-  for (int idx = 0; idx < DIM; ++idx) {
-    result[idx] = lhs[idx] + rhs[idx];
-  }
-  return result;
-}
+inline const std::int64_t* Point::begin() const { return coordinates_.data(); }
 
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator+=(Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  for (int idx = 0; idx < DIM; ++idx) {
-    lhs[idx] += rhs[idx];
-  }
-  return lhs;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM> operator-(const Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  Point<DIM> result{};
-
-  for (int idx = 0; idx < DIM; ++idx) {
-    result[idx] = lhs[idx] - rhs[idx];
-  }
-  return result;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator-=(Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  for (int idx = 0; idx < DIM; ++idx) {
-    lhs[idx] -= rhs[idx];
-  }
-  return lhs;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM> operator*(const Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  Point<DIM> result{};
-
-  for (int idx = 0; idx < DIM; ++idx) {
-    result[idx] = lhs[idx] * rhs[idx];
-  }
-  return result;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator*=(Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  for (int idx = 0; idx < DIM; ++idx) {
-    lhs[idx] *= rhs[idx];
-  }
-  return lhs;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  Point<DIM> result{};
-
-  for (int idx = 0; idx < DIM; ++idx) {
-    result[idx] = lhs[idx] / rhs[idx];
-  }
-  return result;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs, typename Point<DIM>::value_type rhs)
-{
-  Point<DIM> result{};
-
-  for (int idx = 0; idx < DIM; ++idx) {
-    result[idx] = lhs[idx] / rhs;
-  }
-  return result;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator/=(Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  for (int idx = 0; idx < DIM; ++idx) {
-    lhs[idx] /= rhs[idx];
-  }
-  return lhs;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM> operator%(const Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  Point<DIM> result{};
-
-  for (int idx = 0; idx < DIM; ++idx) {
-    result[idx] = lhs[idx] % rhs[idx];
-  }
-  return result;
-}
-
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator%=(Point<DIM>& lhs, const Point<DIM>& rhs)
-{
-  for (int idx = 0; idx < DIM; ++idx) {
-    lhs[idx] %= rhs[idx];
-  }
-  return lhs;
-}
-
-template <int DIM>
-std::ostream& operator<<(std::ostream& os, const Point<DIM>& point)
-{
-  os << '<' << point[0];
-  for (int idx = 1; idx < DIM; ++idx) {
-    os << ',' << point[idx];
-  }
-  os << '>';
-  return os;
-}
+inline const std::int64_t* Point::end() const { return coordinates_.data() + coordinates_.size(); }
 
 }  // namespace legate

@@ -25,7 +25,7 @@ class ImageTestConfig {
 
 constexpr std::uint8_t DUMMY_IMAGE_TASK = 0;
 
-// A simple task that takes Point input and produces output
+// A simple task that takes NDPoint input and produces output
 // This will be used with image constraint to trigger FIND_BOUNDING_BOX
 template <std::int32_t DIM>
 class DummyImageTask : public legate::LegateTask<DummyImageTask<DIM>> {
@@ -49,7 +49,7 @@ class DummyImageTask : public legate::LegateTask<DummyImageTask<DIM>> {
     }
 
     // Read accessors to satisfy Legion requirements
-    static_cast<void>(domain_input.read_accessor<legate::Point<DIM>, 1>());
+    static_cast<void>(domain_input.read_accessor<legate::NDPoint<DIM>, 1>());
     static_cast<void>(range_input.read_accessor<std::int32_t, DIM>());
   }
 };
@@ -81,7 +81,7 @@ TEST_F(CoreMapperImageConstraintTest, FindBoundingBoxAllocationPoolSize)
   auto context               = runtime->find_library(ImageTestConfig::LIBRARY_NAME);
   constexpr std::int32_t DIM = 2;
 
-  // Create a larger Point store to force actual partitioning
+  // Create a larger NDPoint store to force actual partitioning
   // Use enough data to trigger partition creation
   const std::uint64_t num_points = 1000;
   const std::uint64_t range_size = 100;
@@ -89,7 +89,7 @@ TEST_F(CoreMapperImageConstraintTest, FindBoundingBoxAllocationPoolSize)
 
   // Initialize with varied point data to create non-trivial bounding boxes
   constexpr std::int32_t SHPAE_SIZE = 50;
-  runtime->issue_fill(domain_store, legate::Scalar{legate::Point<DIM>{SHPAE_SIZE, SHPAE_SIZE}});
+  runtime->issue_fill(domain_store, legate::Scalar{legate::NDPoint<DIM>{SHPAE_SIZE, SHPAE_SIZE}});
 
   // Create range store - larger to make partitioning meaningful
   auto range_store = runtime->create_store({range_size, range_size}, legate::int32());

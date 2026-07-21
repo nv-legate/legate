@@ -35,41 +35,38 @@
 
 namespace legate::detail {
 
-Tiling::Tiling(DomainPoint tile_shape, DomainPoint color_shape, DomainPoint offsets)
+Tiling::Tiling(Point tile_shape, Point color_shape, Point offsets)
   : tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
     offsets_{std::move(offsets)},
     strides_{tile_shape_}
 {
   if (offsets_.empty()) {
-    offsets_ = DomainPoint::zeroes(static_cast<std::int32_t>(tile_shape_.size()));
+    offsets_ = Point::zeroes(static_cast<std::int32_t>(tile_shape_.size()));
   }
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
   init_device_mesh_from_color_shape_();
 }
 
-Tiling::Tiling(DomainPoint tile_shape,
-               DomainPoint color_shape,
-               DomainPoint offsets,
-               DomainPoint strides)
+Tiling::Tiling(Point tile_shape, Point color_shape, Point offsets, Point strides)
   : tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
     offsets_{std::move(offsets)},
     strides_{std::move(strides)}
 {
   if (offsets_.empty()) {
-    offsets_ = DomainPoint::zeroes(static_cast<std::int32_t>(tile_shape_.size()));
+    offsets_ = Point::zeroes(static_cast<std::int32_t>(tile_shape_.size()));
   }
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
   init_device_mesh_from_color_shape_();
 }
 
-Tiling::Tiling(DomainPoint tile_shape,
-               DomainPoint color_shape,
-               DomainPoint offsets,
-               DomainPoint strides,
+Tiling::Tiling(Point tile_shape,
+               Point color_shape,
+               Point offsets,
+               Point strides,
                DeviceMesh device_mesh,
                SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh)
   : tile_shape_{std::move(tile_shape)},
@@ -80,7 +77,7 @@ Tiling::Tiling(DomainPoint tile_shape,
     color_to_mesh_{std::move(color_to_mesh)}
 {
   if (offsets_.empty()) {
-    offsets_ = DomainPoint::zeroes(static_cast<std::int32_t>(tile_shape_.size()));
+    offsets_ = Point::zeroes(static_cast<std::int32_t>(tile_shape_.size()));
   }
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
@@ -138,7 +135,7 @@ InternalSharedPtr<Partition> Tiling::bloat(Span<const std::uint64_t> low_offsets
     std::move(new_tile_shape), color_shape_, std::move(new_offsets), tile_shape());
 }
 
-bool Tiling::is_equi_size(const Domain& domain) const
+bool Tiling::is_equi_size(const Rect& domain) const
 {
   auto&& lo = domain.lo();
   auto&& hi = domain.hi();
@@ -158,7 +155,7 @@ bool Tiling::is_equi_size(const Domain& domain) const
   return true;
 }
 
-Domain Tiling::launch_domain() const { return to_domain(color_shape_); }
+Rect Tiling::launch_domain() const { return to_domain(color_shape_); }
 
 std::string Tiling::to_string() const
 {
@@ -198,16 +195,16 @@ InternalSharedPtr<Partition> Tiling::invert(
                        transform->invert_extents(strides()));
 }
 
-DomainPoint Tiling::compute_color(std::uint64_t device_id) const
+Point Tiling::compute_color(std::uint64_t device_id) const
 {
   const auto grid = device_mesh_.grid_point(device_id);
 
   // A device that the mesh does not map to holds no tile of this partition.
   if (grid.dim() == 0) {
-    return DomainPoint{};
+    return Point{};
   }
 
-  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(color_shape_.dim()));
+  auto result = Point::zeroes(static_cast<std::int32_t>(color_shape_.dim()));
 
   for (std::uint32_t c = 0; c < result.dim(); ++c) {
     const auto m = color_to_mesh_[c];
@@ -220,7 +217,7 @@ DomainPoint Tiling::compute_color(std::uint64_t device_id) const
   return result;
 }
 
-std::vector<std::uint64_t> Tiling::compute_device_ids(const DomainPoint& color) const
+std::vector<std::uint64_t> Tiling::compute_device_ids(const Point& color) const
 {
   auto submesh = to_domain(device_mesh().shape());
   auto lo      = submesh.lo();
@@ -233,7 +230,7 @@ std::vector<std::uint64_t> Tiling::compute_device_ids(const DomainPoint& color) 
     lo[mesh_dim] = color[color_dim];
     hi[mesh_dim] = color[color_dim];
   }
-  submesh = Domain{std::move(lo), std::move(hi)};
+  submesh = Rect{std::move(lo), std::move(hi)};
 
   // Enumerate every combination of the replication axes, emitting one device id per combination.
   std::vector<std::uint64_t> result{};
@@ -246,7 +243,7 @@ std::vector<std::uint64_t> Tiling::compute_device_ids(const DomainPoint& color) 
   return result;
 }
 
-Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
+Rect Tiling::shard(const Rect& domain, const Point& color) const
 {
   if (domain.dim() == 0) {
     LEGATE_ASSERT(tile_shape().empty());
@@ -266,7 +263,7 @@ Domain Tiling::shard(const Domain& domain, const DomainPoint& color) const
   return {std::move(new_lo), std::move(new_hi)};
 }
 
-bool Tiling::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) const
+bool Tiling::subsumes(const Rect&, const InternalSharedPtr<Partition>& other) const
 {
   const auto* other_tiling = dynamic_cast<const Tiling*>(other.get());
 
@@ -312,9 +309,9 @@ std::size_t Tiling::hash() const
 
 // ==========================================================================================
 
-InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
-                                           DomainPoint color_shape,
-                                           DomainPoint offsets /*= {}*/)
+InternalSharedPtr<Partition> create_tiling(Point tile_shape,
+                                           Point color_shape,
+                                           Point offsets /*= {}*/)
 {
   if (tile_shape.empty()) {
     return create_no_partition();
@@ -323,10 +320,10 @@ InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
     std::move(tile_shape), std::move(color_shape), std::move(offsets));
 }
 
-InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
-                                           DomainPoint color_shape,
-                                           DomainPoint offsets,
-                                           DomainPoint strides)
+InternalSharedPtr<Partition> create_tiling(Point tile_shape,
+                                           Point color_shape,
+                                           Point offsets,
+                                           Point strides)
 {
   if (tile_shape.empty()) {
     return create_no_partition();
@@ -335,10 +332,10 @@ InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
     std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));
 }
 
-InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
-                                           DomainPoint color_shape,
-                                           DomainPoint offsets,
-                                           DomainPoint strides,
+InternalSharedPtr<Partition> create_tiling(Point tile_shape,
+                                           Point color_shape,
+                                           Point offsets,
+                                           Point strides,
                                            DeviceMesh device_mesh,
                                            SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh)
 {

@@ -54,7 +54,7 @@ class AlignOfPointType {
   template <std::int32_t NDIM>
   std::size_t operator()() const
   {
-    return alignof(Point<NDIM>);
+    return alignof(NDPoint<NDIM>);
   }
 };
 

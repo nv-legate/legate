@@ -33,7 +33,7 @@ class CommunicatorFactory {
 
   [[nodiscard]] Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
                                                  const mapping::ProcessorRange& range,
-                                                 const Domain& launch_domain,
+                                                 const Rect& launch_domain,
                                                  Legion::ProjectionID proj_id = 0);
   void destroy();
 
@@ -42,7 +42,7 @@ class CommunicatorFactory {
                                                   const mapping::ProcessorRange& range,
                                                   std::uint32_t num_tasks);
   [[nodiscard]] Legion::FutureMap transform_(const Legion::FutureMap& communicator,
-                                             const Domain& launch_domain,
+                                             const Rect& launch_domain,
                                              Legion::ProjectionID proj_id);
 
  public:
@@ -73,7 +73,7 @@ class CommunicatorFactory {
   // Distinct invertible KEY_STORE projections can produce different N-D
   // communicator reshapes for the same launch domain, so the alias cache
   // must distinguish them.
-  using AliasKey = CacheKey<std::tuple<Domain, Legion::ProjectionID>>;
+  using AliasKey = CacheKey<std::tuple<Rect, Legion::ProjectionID>>;
 
   std::unordered_map<CommKey, Legion::FutureMap, hasher<CommKey>> communicators_{};
   std::unordered_map<AliasKey, Legion::FutureMap, hasher<AliasKey>> nd_aliases_{};

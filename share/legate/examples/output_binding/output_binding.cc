@@ -54,18 +54,18 @@ void ProduceBoundBufferTask::cpu_variant(legate::TaskContext context)
   // create_buffer path (intra-task allocation). We fill it, read it back, and use it below. This
   // is a CPU task, so the buffer is allocated in system memory.
   auto scratch = legate::create_buffer<std::int64_t, DIM>(
-    legate::Point<DIM>{static_cast<std::int64_t>(num)}, legate::Memory::SYSTEM_MEM);
+    legate::NDPoint<DIM>{static_cast<std::int64_t>(num)}, legate::Memory::SYSTEM_MEM);
 
   for (std::uint64_t i = 0; i < num; ++i) {
-    scratch[legate::Point<DIM>{static_cast<legate::coord_t>(i)}] = static_cast<std::int64_t>(i);
+    scratch[legate::NDPoint<DIM>{static_cast<legate::coord_t>(i)}] = static_cast<std::int64_t>(i);
   }
 
   // Create the output buffer and bind it to the (unbound) output store in a single call.
   auto out_buf = output.create_output_buffer<std::int64_t, DIM>(
-    legate::Point<DIM>{static_cast<std::int64_t>(num)}, /*bind_buffer=*/true);
+    legate::NDPoint<DIM>{static_cast<std::int64_t>(num)}, /*bind_buffer=*/true);
 
   for (std::uint64_t i = 0; i < num; ++i) {
-    const auto p = legate::Point<DIM>{static_cast<legate::coord_t>(i)};
+    const auto p = legate::NDPoint<DIM>{static_cast<legate::coord_t>(i)};
 
     out_buf[p] = base + offset + scratch[p];
   }
@@ -83,14 +83,14 @@ void ProduceViaBindDataTask::cpu_variant(legate::TaskContext context)
 
   // Create the buffer without binding, fill it, then bind it in a separate step.
   auto buffer = output.create_output_buffer<std::int64_t, DIM>(
-    legate::Point<DIM>{static_cast<std::int64_t>(num)}, /*bind_buffer=*/false);
+    legate::NDPoint<DIM>{static_cast<std::int64_t>(num)}, /*bind_buffer=*/false);
 
   for (std::uint64_t i = 0; i < num; ++i) {
-    buffer[legate::Point<DIM>{static_cast<legate::coord_t>(i)}] =
+    buffer[legate::NDPoint<DIM>{static_cast<legate::coord_t>(i)}] =
       base + offset + static_cast<std::int64_t>(i);
   }
 
-  output.bind_data(buffer, legate::Point<DIM>{static_cast<std::int64_t>(num)});
+  output.bind_data(buffer, legate::NDPoint<DIM>{static_cast<std::int64_t>(num)});
 }
 
 void ProduceViaTaskLocalBufferTask::cpu_variant(legate::TaskContext context)
@@ -101,14 +101,14 @@ void ProduceViaTaskLocalBufferTask::cpu_variant(legate::TaskContext context)
   const auto offset = static_cast<std::int64_t>(launch_rank(context) * num);
 
   // The type-erased create_output_buffer path returns a TaskLocalBuffer, binding it to the store.
-  auto tl_buffer = output.create_output_buffer(
-    legate::DomainPoint{static_cast<legate::coord_t>(num)}, /*bind_buffer=*/true);
+  auto tl_buffer = output.create_output_buffer(legate::Point{static_cast<legate::coord_t>(num)},
+                                               /*bind_buffer=*/true);
 
   // Recover a typed view to write into it.
   auto buffer = static_cast<legate::Buffer<std::int64_t, DIM>>(tl_buffer);
 
   for (std::uint64_t i = 0; i < num; ++i) {
-    buffer[legate::Point<DIM>{static_cast<legate::coord_t>(i)}] =
+    buffer[legate::NDPoint<DIM>{static_cast<legate::coord_t>(i)}] =
       base + offset + static_cast<std::int64_t>(i);
   }
 }
@@ -146,15 +146,15 @@ void ProduceBound2DTask::cpu_variant(legate::TaskContext context)
   const auto row_offset = launch_rank(context) * rows;
 
   auto buffer = output.create_output_buffer<std::int64_t, DIM2>(
-    legate::Point<DIM2>{static_cast<legate::coord_t>(rows), static_cast<legate::coord_t>(cols)},
+    legate::NDPoint<DIM2>{static_cast<legate::coord_t>(rows), static_cast<legate::coord_t>(cols)},
     /*bind_buffer=*/true);
 
   for (std::uint64_t i = 0; i < rows; ++i) {
     const auto global_row = row_offset + i;
 
     for (std::uint64_t j = 0; j < cols; ++j) {
-      buffer[legate::Point<DIM2>{static_cast<legate::coord_t>(i),
-                                 static_cast<legate::coord_t>(j)}] =
+      buffer[legate::NDPoint<DIM2>{static_cast<legate::coord_t>(i),
+                                   static_cast<legate::coord_t>(j)}] =
         base + static_cast<std::int64_t>((global_row * cols) + j);
     }
   }

@@ -37,7 +37,7 @@ struct Initializer : public legate::LegateTask<Initializer> {
     for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       const auto& output = outputs.at(idx);
       static_cast<void>(output.create_output_buffer<std::int32_t, 1>(
-        legate::Point<1>{task_idx + (10 * (idx + 1))}, /*bind_buffer=*/true));
+        legate::NDPoint<1>{task_idx + (10 * (idx + 1))}, /*bind_buffer=*/true));
     }
   }
 };

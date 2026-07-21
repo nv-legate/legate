@@ -190,13 +190,13 @@ class LEGATE_EXPORT TaskContext {
    *
    * @return The point of the task
    */
-  [[nodiscard]] const DomainPoint& get_task_index() const;
+  [[nodiscard]] const Point& get_task_index() const;
   /**
    * @brief Returns the task group's launch domain. A single task returns an empty domain
    *
    * @return The task group's launch domain
    */
-  [[nodiscard]] const Domain& get_launch_domain() const;
+  [[nodiscard]] const Rect& get_launch_domain() const;
   /**
    * @brief Returns the kind of processor executing this task
    *

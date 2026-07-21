@@ -43,7 +43,7 @@ class DeviceMesh {
    *
    * @param shape The extents of the device grid.
    */
-  explicit DeviceMesh(DomainPoint shape);
+  explicit DeviceMesh(Point shape);
 
   /**
    * @brief Construct a mesh from an explicit shape and strides.
@@ -51,10 +51,10 @@ class DeviceMesh {
    * @param shape   The extents of the device grid.
    * @param strides The per-dimension strides used to linearize a grid coordinate into a device id.
    */
-  DeviceMesh(DomainPoint shape, DomainPoint strides);
+  DeviceMesh(Point shape, Point strides);
 
-  [[nodiscard]] const DomainPoint& shape() const;
-  [[nodiscard]] const DomainPoint& strides() const;
+  [[nodiscard]] const Point& shape() const;
+  [[nodiscard]] const Point& strides() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool empty() const;
 
@@ -70,17 +70,17 @@ class DeviceMesh {
    *
    * @return The device id `sum_d(strides[d] * grid_point[d])`.
    */
-  [[nodiscard]] std::uint64_t device_id(const DomainPoint& grid_point) const;
+  [[nodiscard]] std::uint64_t device_id(const Point& grid_point) const;
 
   /**
    * @brief Invert the linearization: recover the grid coordinate mapping to `device_id`.
    *
    * @param device_id A device id.
    *
-   * @return The grid coordinate that this mesh maps to `device_id`, or an empty `DomainPoint`
+   * @return The grid coordinate that this mesh maps to `device_id`, or an empty `Point`
    * (`dim == 0`) if no grid coordinate maps to it.
    */
-  [[nodiscard]] DomainPoint grid_point(std::uint64_t device_id) const;
+  [[nodiscard]] Point grid_point(std::uint64_t device_id) const;
 
   /**
    * @brief Whether `device_id` is produced by some grid coordinate of this mesh.
@@ -103,8 +103,8 @@ class DeviceMesh {
   [[nodiscard]] std::string to_string() const;
 
  private:
-  DomainPoint shape_{};
-  DomainPoint strides_{};
+  Point shape_{};
+  Point strides_{};
 };
 
 }  // namespace legate::detail

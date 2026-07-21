@@ -16,17 +16,17 @@ namespace legate::detail {
 
 class LaunchDomainResolver {
  public:
-  void record_launch_domain(const Domain& launch_domain);
+  void record_launch_domain(const Rect& launch_domain);
   void record_unbound_store(std::uint32_t unbound_dim);
   void set_must_be_sequential(bool must_be_sequential);
 
-  [[nodiscard]] Domain resolve_launch_domain() const;
+  [[nodiscard]] Rect resolve_launch_domain() const;
 
  private:
   bool must_be_sequential_{};
   bool must_be_1d_{};
   std::optional<std::uint32_t> unbound_dim_{};
-  std::optional<Domain> launch_domain_{};
+  std::optional<Rect> launch_domain_{};
   std::optional<std::size_t> launch_volume_{};
 };
 

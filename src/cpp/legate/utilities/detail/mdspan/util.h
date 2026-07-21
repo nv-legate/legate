@@ -18,7 +18,7 @@
 namespace legate::detail::mdspan_detail {
 
 template <std::int32_t DIM, std::size_t... Is>
-[[nodiscard]] ::cuda::std::array<coord_t, DIM> to_array(const Point<DIM>& point,
+[[nodiscard]] ::cuda::std::array<coord_t, DIM> to_array(const NDPoint<DIM>& point,
                                                         std::index_sequence<Is...>)
 {
   static_assert(DIM == sizeof...(Is));
@@ -26,13 +26,13 @@ template <std::int32_t DIM, std::size_t... Is>
 }
 
 template <std::int32_t DIM>
-[[nodiscard]] ::cuda::std::array<coord_t, DIM> to_array(const Point<DIM>& point)
+[[nodiscard]] ::cuda::std::array<coord_t, DIM> to_array(const NDPoint<DIM>& point)
 {
   return to_array(point, std::make_index_sequence<DIM>{});
 }
 
 template <std::int32_t DIM, std::size_t... Is>
-[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const Point<DIM>& point,
+[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const NDPoint<DIM>& point,
                                                                   std::index_sequence<Is...>)
 {
   static_assert(DIM == sizeof...(Is));
@@ -40,13 +40,13 @@ template <std::int32_t DIM, std::size_t... Is>
 }
 
 template <std::int32_t DIM>
-[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const Point<DIM>& point)
+[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const NDPoint<DIM>& point)
 {
   return dynamic_extents(point, std::make_index_sequence<DIM>{});
 }
 
 template <std::int32_t DIM, std::size_t... Is>
-[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const Rect<DIM>& rect,
+[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const NDRect<DIM>& rect,
                                                                   std::index_sequence<Is...>)
 {
   static_assert(DIM == sizeof...(Is));
@@ -56,7 +56,7 @@ template <std::int32_t DIM, std::size_t... Is>
 }
 
 template <std::int32_t DIM>
-[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const Rect<DIM>& rect)
+[[nodiscard]] ::cuda::std::dextents<coord_t, DIM> dynamic_extents(const NDRect<DIM>& rect)
 {
   return dynamic_extents(rect, std::make_index_sequence<DIM>{});
 }

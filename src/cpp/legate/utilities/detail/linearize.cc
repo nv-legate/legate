@@ -18,15 +18,11 @@ namespace {
 class LinearizeFn {
  public:
   template <std::int32_t DIM>
-  [[nodiscard]] coord_t operator()(const DomainPoint& lo,
-                                   const DomainPoint& hi,
-                                   const DomainPoint& point) const;
+  [[nodiscard]] coord_t operator()(const Point& lo, const Point& hi, const Point& point) const;
 };
 
 template <std::int32_t DIM>
-coord_t LinearizeFn::operator()(const DomainPoint& lo,
-                                const DomainPoint& hi,
-                                const DomainPoint& point) const
+coord_t LinearizeFn::operator()(const Point& lo, const Point& hi, const Point& point) const
 {
   coord_t idx = 0;
 
@@ -38,7 +34,7 @@ coord_t LinearizeFn::operator()(const DomainPoint& lo,
 
 }  // namespace
 
-std::size_t linearize(const DomainPoint& lo, const DomainPoint& hi, const DomainPoint& point)
+std::size_t linearize(const Point& lo, const Point& hi, const Point& point)
 {
   if (point.dim() == 0) {
     return 0;
@@ -51,19 +47,15 @@ namespace {
 class DelinearizeFn {
  public:
   template <std::int32_t DIM>
-  [[nodiscard]] DomainPoint operator()(const DomainPoint& lo,
-                                       const DomainPoint& hi,
-                                       coord_t idx) const;
+  [[nodiscard]] Point operator()(const Point& lo, const Point& hi, coord_t idx) const;
 };
 
 template <std::int32_t DIM>
-DomainPoint DelinearizeFn::operator()(const DomainPoint& lo,
-                                      const DomainPoint& hi,
-                                      coord_t idx) const
+Point DelinearizeFn::operator()(const Point& lo, const Point& hi, coord_t idx) const
 {
   static_assert(DIM >= 1);
 
-  auto point = DomainPoint::zeroes(DIM);
+  auto point = Point::zeroes(DIM);
 
   for (std::int32_t dim = DIM - 1; dim >= 0; --dim) {
     const auto udim   = static_cast<std::uint32_t>(dim);
@@ -77,10 +69,10 @@ DomainPoint DelinearizeFn::operator()(const DomainPoint& lo,
 
 }  // namespace
 
-DomainPoint delinearize(const DomainPoint& lo, const DomainPoint& hi, std::size_t idx)
+Point delinearize(const Point& lo, const Point& hi, std::size_t idx)
 {
   if (lo.dim() == 0) {
-    return DomainPoint{};
+    return Point{};
   }
   return dim_dispatch(lo.dim(), DelinearizeFn{}, lo, hi, static_cast<coord_t>(idx));
 }

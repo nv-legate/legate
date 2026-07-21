@@ -29,13 +29,13 @@ void for_each_in_extent(const ::cuda::std::extents<IndexType, Extents...>& exten
 }
 
 template <std::int32_t DIM, typename F>
-void for_each_in_extent(const Point<DIM>& point, F&& fn)
+void for_each_in_extent(const NDPoint<DIM>& point, F&& fn)
 {
   for_each_in_extent(detail::mdspan_detail::dynamic_extents(point), std::forward<F>(fn));
 }
 
 template <std::int32_t DIM, typename F>
-void for_each_in_extent(const Rect<DIM>& rect, F&& fn)
+void for_each_in_extent(const NDRect<DIM>& rect, F&& fn)
 {
   for_each_in_extent(detail::mdspan_detail::dynamic_extents(rect), std::forward<F>(fn));
 }

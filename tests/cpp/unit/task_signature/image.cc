@@ -32,10 +32,10 @@ enum TaskIDs : std::uint8_t {
   auto* runtime   = legate::Runtime::get_runtime();
   auto data_store = runtime->create_store(legate::Shape{3}, legate::point_type(1));
 
-  auto accessor = data_store.get_physical_store().write_accessor<legate::Point<1>, 1>();
-  accessor[0]   = legate::Point<1>{0};
-  accessor[1]   = legate::Point<1>{1};
-  accessor[2]   = legate::Point<1>{2};
+  auto accessor = data_store.get_physical_store().write_accessor<legate::NDPoint<1>, 1>();
+  accessor[0]   = legate::NDPoint<1>{0};
+  accessor[1]   = legate::NDPoint<1>{1};
+  accessor[2]   = legate::NDPoint<1>{2};
 
   return data_store;
 }

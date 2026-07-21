@@ -31,8 +31,8 @@
 namespace legate::detail {
 
 TaskContext::TaskContext(VariantCode variant_code,
-                         Domain launch_domain,
-                         DomainPoint task_index,
+                         Rect launch_domain,
+                         Point task_index,
                          const TaskBase* task,
                          SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
                          SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
@@ -65,9 +65,9 @@ std::string_view TaskContext::library_name() const noexcept
 
 bool TaskContext::is_single_task() const noexcept { return launch_domain_.dim() == 0; }
 
-const DomainPoint& TaskContext::get_task_index() const noexcept { return task_index_; }
+const Point& TaskContext::get_task_index() const noexcept { return task_index_; }
 
-const Domain& TaskContext::get_launch_domain() const noexcept { return launch_domain_; }
+const Rect& TaskContext::get_launch_domain() const noexcept { return launch_domain_; }
 
 std::string_view TaskContext::get_provenance() const noexcept
 {

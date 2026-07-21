@@ -144,8 +144,8 @@ class LEGATE_EXPORT StaticDeterminationError : public std::invalid_argument {
 // * Primitive types: [0x00, 0x0E]
 // * Binary types: [0x000001, 0x0FFFFF] <+> [0x0F]
 // * Fixed-size array types: [0x01, 0xFF] <+> [0x00, 0x0E]
-// * Point types: [_BASE_POINT_TYPE_UID + 1, _BASE_POINT_TYPE_UID + LEGATE_MAX_DIM]
-// * Rect types: [_BASE_RECT_TYPE_UID + 1, _BASE_RECT_TYPE_UID + LEGATE_MAX_DIM]
+// * NDPoint types: [_BASE_POINT_TYPE_UID + 1, _BASE_POINT_TYPE_UID + LEGATE_MAX_DIM]
+// * NDRect types: [_BASE_RECT_TYPE_UID + 1, _BASE_RECT_TYPE_UID + LEGATE_MAX_DIM]
 //
 // where the <+> operator is a pairwise concatenation
 constexpr std::uint32_t TYPE_CODE_OFFSET     = 8;
@@ -564,7 +564,7 @@ InternalSharedPtr<Type> null_type()
 
 InternalSharedPtr<Type> domain_type()
 {
-  static const auto result = detail::binary_type(sizeof(Domain));
+  static const auto result = detail::binary_type(sizeof(Rect));
   return result;
 }
 

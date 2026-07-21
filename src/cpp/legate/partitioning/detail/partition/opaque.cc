@@ -49,9 +49,9 @@ InternalSharedPtr<Partition> Opaque::bloat(Span<const std::uint64_t> /*low_offse
   throw TracedException<std::runtime_error>{"Bloating is not supported for opaque partitions"};
 }
 
-Domain Opaque::launch_domain() const { return to_domain(color_shape_); }
+Rect Opaque::launch_domain() const { return to_domain(color_shape_); }
 
-std::optional<std::uint64_t> Opaque::device_of_(const DomainPoint& color) const
+std::optional<std::uint64_t> Opaque::device_of_(const Point& color) const
 {
   for (auto&& [device_id, my_color] : enumerate(colors_)) {
     if (my_color == color) {
@@ -61,7 +61,7 @@ std::optional<std::uint64_t> Opaque::device_of_(const DomainPoint& color) const
   return std::nullopt;
 }
 
-DomainPoint Opaque::compute_color(std::uint64_t device_id) const
+Point Opaque::compute_color(std::uint64_t device_id) const
 {
   if (device_id >= colors_.size()) {
     return {};
@@ -69,7 +69,7 @@ DomainPoint Opaque::compute_color(std::uint64_t device_id) const
   return colors_[device_id];
 }
 
-std::vector<std::uint64_t> Opaque::compute_device_ids(const DomainPoint& color) const
+std::vector<std::uint64_t> Opaque::compute_device_ids(const Point& color) const
 {
   if (const auto device_id = device_of_(color); device_id.has_value()) {
     return {*device_id};
@@ -77,7 +77,7 @@ std::vector<std::uint64_t> Opaque::compute_device_ids(const DomainPoint& color) 
   return {};
 }
 
-Domain Opaque::shard(const Domain& domain, const DomainPoint& color) const
+Rect Opaque::shard(const Rect& domain, const Point& color) const
 {
   if (const auto device_id = device_of_(color); device_id.has_value()) {
     return domains_[*device_id];
@@ -86,7 +86,7 @@ Domain Opaque::shard(const Domain& domain, const DomainPoint& color) const
   return domain;
 }
 
-bool Opaque::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) const
+bool Opaque::subsumes(const Rect&, const InternalSharedPtr<Partition>& other) const
 {
   if (other.get() == this) {
     return true;
@@ -132,7 +132,7 @@ InternalSharedPtr<Partition> Opaque::invert(
     "An opaque partition cannot be inverted through a non-identity transformation"};
 }
 
-void Opaque::fill(SmallVector<DomainPoint> colors, SmallVector<Domain> domains)
+void Opaque::fill(SmallVector<Point> colors, SmallVector<Rect> domains)
 {
   LEGATE_ASSERT(colors.size() == domains.size());
   colors_  = std::move(colors);
@@ -142,7 +142,7 @@ void Opaque::fill(SmallVector<DomainPoint> colors, SmallVector<Domain> domains)
 
 // ==========================================================================================
 
-InternalSharedPtr<Opaque> create_opaque(DomainPoint color_shape)
+InternalSharedPtr<Opaque> create_opaque(Point color_shape)
 {
   return make_internal_shared<Opaque>(std::move(color_shape));
 }

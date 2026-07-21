@@ -76,8 +76,8 @@ TEST_F(ManualTaskWithProj, All)
   }
   // With a launch domain
   {
-    const legate::Domain launch_domain{legate::Point<2>{1, 1},
-                                       legate::Point<2>{N_TILES_PER_DIM - 1, N_TILES_PER_DIM - 1}};
+    const legate::Rect launch_domain{legate::NDPoint<2>{1, 1},
+                                     legate::NDPoint<2>{N_TILES_PER_DIM - 1, N_TILES_PER_DIM - 1}};
     auto task = runtime->create_task(library, ProjTesterTask::TASK_CONFIG.task_id(), launch_domain);
     task.add_input(row_wise, legate::SymbolicPoint{legate::dimension(0), legate::constant(0)});
     task.add_input(col_wise, legate::SymbolicPoint{legate::constant(0), legate::dimension(1)});

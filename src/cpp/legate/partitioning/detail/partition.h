@@ -87,9 +87,9 @@ class Partition {
    *
    * @return A point whose coordinates are the color-space extents.
    */
-  [[nodiscard]] virtual const DomainPoint& color_shape() const = 0;
+  [[nodiscard]] virtual const Point& color_shape() const = 0;
 
-  [[nodiscard]] virtual bool is_equi_size(const Domain& domain) const = 0;
+  [[nodiscard]] virtual bool is_equi_size(const Rect& domain) const = 0;
 
   /**
    * @brief Returns the launch domain associated with this partition.
@@ -98,9 +98,9 @@ class Partition {
    *
    * @note Only valid if has_launch_domain() is true.
    */
-  [[nodiscard]] virtual Domain launch_domain() const = 0;
+  [[nodiscard]] virtual Rect launch_domain() const = 0;
 
-  [[nodiscard]] virtual DomainPoint compute_color(std::uint64_t device_id) const = 0;
+  [[nodiscard]] virtual Point compute_color(std::uint64_t device_id) const = 0;
 
   /**
    * @brief Compute the device ids a given color is mapped to.
@@ -111,12 +111,11 @@ class Partition {
    *
    * @return The device ids holding the piece with the given color.
    */
-  [[nodiscard]] virtual std::vector<std::uint64_t> compute_device_ids(
-    const DomainPoint& color) const = 0;
+  [[nodiscard]] virtual std::vector<std::uint64_t> compute_device_ids(const Point& color) const = 0;
 
-  [[nodiscard]] virtual Domain shard(const Domain& domain, const DomainPoint& color) const = 0;
+  [[nodiscard]] virtual Rect shard(const Rect& domain, const Point& color) const = 0;
 
-  [[nodiscard]] virtual bool subsumes(const Domain& domain,
+  [[nodiscard]] virtual bool subsumes(const Rect& domain,
                                       const InternalSharedPtr<Partition>& other) const = 0;
 
   /**

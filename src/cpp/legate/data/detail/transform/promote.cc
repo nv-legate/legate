@@ -20,11 +20,11 @@
 
 namespace legate::detail {
 
-Domain Promote::transform(const Domain& input) const
+Rect Promote::transform(const Rect& input) const
 {
   const auto out_ndim = input.dim() + 1;
-  auto lo             = DomainPoint::zeroes(static_cast<std::int32_t>(out_ndim));
-  auto hi             = DomainPoint::zeroes(static_cast<std::int32_t>(out_ndim));
+  auto lo             = Point::zeroes(static_cast<std::int32_t>(out_ndim));
+  auto hi             = Point::zeroes(static_cast<std::int32_t>(out_ndim));
   auto&& in_lo        = input.lo();
   auto&& in_hi        = input.hi();
 
@@ -56,27 +56,21 @@ Restrictions Promote::convert(Restrictions restrictions, bool forbid_fake_dim) c
       });
 }
 
-DomainPoint Promote::convert_color(DomainPoint color) const
-{
-  return color.inserted(extra_dim_, /*value=*/0);
-}
+Point Promote::convert_color(Point color) const { return color.inserted(extra_dim_, /*value=*/0); }
 
-DomainPoint Promote::convert_color_shape(DomainPoint color_shape) const
+Point Promote::convert_color_shape(Point color_shape) const
 {
   return color_shape.inserted(extra_dim_, /*value=*/1);
 }
 
-DomainPoint Promote::convert_point(DomainPoint point) const
-{
-  return point.inserted(extra_dim_, /*value=*/0);
-}
+Point Promote::convert_point(Point point) const { return point.inserted(extra_dim_, /*value=*/0); }
 
-DomainPoint Promote::convert_extents(DomainPoint extents) const
+Point Promote::convert_extents(Point extents) const
 {
   return extents.inserted(extra_dim_, dim_size_);
 }
 
-DomainPoint Promote::convert_strides(DomainPoint strides) const
+Point Promote::convert_strides(Point strides) const
 {
   // The promoted dimension is not backed by the storage, so moving along it does not move in
   // memory: its stride is 0.
@@ -103,19 +97,16 @@ Restrictions Promote::invert(Restrictions restrictions) const
       });
 }
 
-DomainPoint Promote::invert_color(DomainPoint color) const { return color.removed(extra_dim_); }
+Point Promote::invert_color(Point color) const { return color.removed(extra_dim_); }
 
-DomainPoint Promote::invert_color_shape(DomainPoint color_shape) const
+Point Promote::invert_color_shape(Point color_shape) const
 {
   return color_shape.removed(extra_dim_);
 }
 
-DomainPoint Promote::invert_point(DomainPoint point) const { return point.removed(extra_dim_); }
+Point Promote::invert_point(Point point) const { return point.removed(extra_dim_); }
 
-DomainPoint Promote::invert_extents(DomainPoint extents) const
-{
-  return extents.removed(extra_dim_);
-}
+Point Promote::invert_extents(Point extents) const { return extents.removed(extra_dim_); }
 
 void Promote::pack(BufferBuilder& buffer) const
 {

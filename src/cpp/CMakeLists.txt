@@ -404,8 +404,8 @@ target_sources(
     legate/utilities/detail/env.cc
     legate/utilities/detail/tuple.cc
     legate/utilities/detail/formatters.cc
-    legate/geometry/domain.cc
-    legate/geometry/domain_point.cc
+    legate/geometry/rect.cc
+    legate/geometry/point.cc
     legate/utilities/detail/traced_exception.cc
     legate/utilities/detail/zip.cc
     legate/utilities/detail/linearize.cc
@@ -906,14 +906,14 @@ install(
 
 install(
   FILES
-    legate/geometry/domain.h
-    legate/geometry/domain.inl
-    legate/geometry/domain_point.h
-    legate/geometry/domain_point.inl
-    legate/geometry/point.h
-    legate/geometry/point.inl
     legate/geometry/rect.h
     legate/geometry/rect.inl
+    legate/geometry/point.h
+    legate/geometry/point.inl
+    legate/geometry/nd_point.h
+    legate/geometry/nd_point.inl
+    legate/geometry/nd_rect.h
+    legate/geometry/nd_rect.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/geometry
 )
 

@@ -180,7 +180,7 @@ class LEGATE_EXPORT Runtime {
    */
   [[nodiscard]] ManualTask create_task(Library library,
                                        LocalTaskID task_id,
-                                       const Domain& launch_domain);
+                                       const Rect& launch_domain);
   /**
    * @brief Fills a given store with a constant
    *

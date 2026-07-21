@@ -21,15 +21,15 @@ class Transform {
  public:
   virtual ~Transform() = default;
 
-  [[nodiscard]] virtual Domain transform(const Domain& input) const = 0;
+  [[nodiscard]] virtual Rect transform(const Rect& input) const = 0;
 
   [[nodiscard]] virtual Restrictions convert(Restrictions restrictions,
                                              bool forbid_fake_dim) const = 0;
 
-  [[nodiscard]] virtual DomainPoint convert_color(DomainPoint color) const             = 0;
-  [[nodiscard]] virtual DomainPoint convert_color_shape(DomainPoint color_shape) const = 0;
-  [[nodiscard]] virtual DomainPoint convert_point(DomainPoint point) const             = 0;
-  [[nodiscard]] virtual DomainPoint convert_extents(DomainPoint extents) const         = 0;
+  [[nodiscard]] virtual Point convert_color(Point color) const             = 0;
+  [[nodiscard]] virtual Point convert_color_shape(Point color_shape) const = 0;
+  [[nodiscard]] virtual Point convert_point(Point point) const             = 0;
+  [[nodiscard]] virtual Point convert_extents(Point extents) const         = 0;
   /**
    * @brief Converts the per-dimension memory strides of the underlying storage to the strides
    * of the (possibly higher/lower-dimensional) transformed store.
@@ -42,15 +42,15 @@ class Transform {
    *
    * @return The strides expressed over the transformed store's dimensions.
    */
-  [[nodiscard]] virtual DomainPoint convert_strides(DomainPoint strides) const = 0;
+  [[nodiscard]] virtual Point convert_strides(Point strides) const = 0;
 
   [[nodiscard]] virtual SymbolicPoint invert(SymbolicPoint point) const      = 0;
   [[nodiscard]] virtual Restrictions invert(Restrictions restrictions) const = 0;
 
-  [[nodiscard]] virtual DomainPoint invert_color(DomainPoint color) const             = 0;
-  [[nodiscard]] virtual DomainPoint invert_color_shape(DomainPoint color_shape) const = 0;
-  [[nodiscard]] virtual DomainPoint invert_point(DomainPoint point) const             = 0;
-  [[nodiscard]] virtual DomainPoint invert_extents(DomainPoint extents) const         = 0;
+  [[nodiscard]] virtual Point invert_color(Point color) const             = 0;
+  [[nodiscard]] virtual Point invert_color_shape(Point color_shape) const = 0;
+  [[nodiscard]] virtual Point invert_point(Point point) const             = 0;
+  [[nodiscard]] virtual Point invert_extents(Point extents) const         = 0;
 
   virtual void pack(BufferBuilder& buffer) const = 0;
   virtual void print(std::ostream& out) const    = 0;

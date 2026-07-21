@@ -90,7 +90,7 @@ class Storage {
   [[nodiscard]] std::uint64_t id() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
-  [[nodiscard]] const Domain& domain() const;
+  [[nodiscard]] const Rect& domain() const;
   [[nodiscard]] Span<const std::uint64_t> extents() const;
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
@@ -111,18 +111,18 @@ class Storage {
 
   void set_bound(bool bound);
 
-  [[nodiscard]] std::tuple<InternalSharedPtr<InlineStorage>, Domain, bool> map(
-    const Domain& domain,
+  [[nodiscard]] std::tuple<InternalSharedPtr<InlineStorage>, Rect, bool> map(
+    const Rect& domain,
     const InternalSharedPtr<Partition>& partition,
-    const DomainPoint& color,
+    const Point& color,
     legate::mapping::StoreTarget target,
     bool is_read,
     bool is_transformed,
     DataMovementRequests* requests);
-  [[nodiscard]] std::pair<InternalSharedPtr<InlineStorage>, Domain> map_reduction(
-    const Domain& domain,
+  [[nodiscard]] std::pair<InternalSharedPtr<InlineStorage>, Rect> map_reduction(
+    const Rect& domain,
     const InternalSharedPtr<Partition>& partition,
-    const DomainPoint& color,
+    const Point& color,
     legate::mapping::StoreTarget target,
     bool is_parallel,
     const InternalSharedPtr<Type>& type,
@@ -151,7 +151,7 @@ class Storage {
    * @param storage_data The inline storage produced by the task.
    * @param domain The zero-based domain (extents) of the produced piece.
    */
-  void bind(InternalSharedPtr<InlineStorage> storage_data, const Domain& domain);
+  void bind(InternalSharedPtr<InlineStorage> storage_data, const Rect& domain);
 
   void finalize_unbound();
 
@@ -165,8 +165,8 @@ class Storage {
    * @param local_global_domain This rank's piece expressed in global coordinates.
    * @param key_partition       The completed Opaque partition describing all ranks' pieces.
    */
-  void finalize_unbound_partitioned(DomainPoint global_extents,
-                                    const Domain& local_global_domain,
+  void finalize_unbound_partitioned(Point global_extents,
+                                    const Rect& local_global_domain,
                                     InternalSharedPtr<Partition> key_partition);
 
   [[nodiscard]] Restrictions compute_restrictions() const;
@@ -180,7 +180,7 @@ class Storage {
  private:
   std::uint64_t storage_id_{};
   InternalSharedPtr<Shape> shape_{};
-  Domain domain_{};
+  Rect domain_{};
   std::uint32_t field_size_{};
   std::string_view provenance_{};  // only relevant on the root Storage
 

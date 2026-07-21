@@ -16,7 +16,7 @@ __global__ void matvec_kernel(std::size_t volume,
                               IN_ACC rhs1,
                               IN_ACC rhs2,
                               RED_ACC lhs,
-                              legate::Point<2> lo,
+                              legate::NDPoint<2> lo,
                               std::int64_t stride)
 {
   const auto idx = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;

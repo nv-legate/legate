@@ -18,16 +18,16 @@ namespace legate::detail {
 template <std::int32_t NDIM>
 class Unravel {
  public:
-  LEGATE_HOST_DEVICE explicit Unravel(const Rect<NDIM>& rect);
+  LEGATE_HOST_DEVICE explicit Unravel(const NDRect<NDIM>& rect);
 
   LEGATE_HOST_DEVICE [[nodiscard]] std::uint64_t volume() const;
 
   LEGATE_HOST_DEVICE [[nodiscard]] bool empty() const;
 
-  LEGATE_HOST_DEVICE [[nodiscard]] Point<NDIM> operator()(std::uint64_t index) const;
+  LEGATE_HOST_DEVICE [[nodiscard]] NDPoint<NDIM> operator()(std::uint64_t index) const;
 
  private:
-  Point<NDIM> low_{};
+  NDPoint<NDIM> low_{};
   // strides_[NDIM - 1] stores the total volume
   std::array<std::uint64_t, NDIM> strides_{};
 };

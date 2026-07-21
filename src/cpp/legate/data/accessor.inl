@@ -17,7 +17,7 @@ namespace legate {
 namespace detail {
 
 template <typename ELEM, int DIM>
-LEGATE_HOST_DEVICE AccessorBase<ELEM, DIM>::AccessorBase(ELEM* base, legate::Point<DIM> strides)
+LEGATE_HOST_DEVICE AccessorBase<ELEM, DIM>::AccessorBase(ELEM* base, legate::NDPoint<DIM> strides)
   // `base` already points at the coordinate origin, so `offset()` is a plain dot
   // product of the access point with the strides.
   : base_{base}, strides_{std::move(strides)}
@@ -25,25 +25,25 @@ LEGATE_HOST_DEVICE AccessorBase<ELEM, DIM>::AccessorBase(ELEM* base, legate::Poi
 }
 
 template <typename ELEM, int DIM>
-LEGATE_HOST_DEVICE std::int64_t AccessorBase<ELEM, DIM>::offset(const legate::Point<DIM>& p) const
+LEGATE_HOST_DEVICE std::int64_t AccessorBase<ELEM, DIM>::offset(const legate::NDPoint<DIM>& p) const
 {
   return p.dot(strides_);
 }
 
 template <typename ELEM, int DIM>
-LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Point<DIM>& p) const
+LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::NDPoint<DIM>& p) const
 {
   return base_ + offset(p);
 }
 
 template <typename ELEM, int DIM>
-LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Rect<DIM>& r) const
+LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::NDRect<DIM>& r) const
 {
   return ptr(r.lo);
 }
 
 template <typename ELEM, int DIM>
-LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Rect<DIM>& r,
+LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::NDRect<DIM>& r,
                                                       std::size_t strides[DIM]) const
 {
   for (int i = 0; i < DIM; ++i) {
@@ -53,8 +53,8 @@ LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Rect<DIM>& r
 }
 
 template <typename ELEM, int DIM>
-LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::Rect<DIM>& r,
-                                                      legate::Point<DIM>& strides) const
+LEGATE_HOST_DEVICE ELEM* AccessorBase<ELEM, DIM>::ptr(const legate::NDRect<DIM>& r,
+                                                      legate::NDPoint<DIM>& strides) const
 {
   strides = strides_;
   return ptr(r.lo);
@@ -73,7 +73,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_scalar() const
 
 template <typename ELEM, int DIM>
 LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_row_major(
-  const legate::Rect<DIM>& r) const
+  const legate::NDRect<DIM>& r) const
 {
   std::size_t expected = 1;
   for (int i = DIM - 1; i >= 0; --i) {
@@ -88,7 +88,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_row_major(
 
 template <typename ELEM, int DIM>
 LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_col_major(
-  const legate::Rect<DIM>& r) const
+  const legate::NDRect<DIM>& r) const
 {
   std::size_t expected = 1;
   for (int i = 0; i < DIM; ++i) {
@@ -103,7 +103,7 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_col_major(
 
 template <typename ELEM, int DIM>
 LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_arbitrary(
-  const legate::Rect<DIM>& r) const
+  const legate::NDRect<DIM>& r) const
 {
   // Collect (stride, extent) for the dimensions that actually vary, sort by
   // stride ascending, and check they pack contiguously from stride 1.
@@ -143,25 +143,25 @@ LEGATE_HOST_DEVICE bool AccessorBase<ELEM, DIM>::is_dense_arbitrary(
 }  // namespace detail
 
 template <typename T, int DIM>
-LEGATE_HOST_DEVICE const T& AccessorRO<T, DIM>::operator[](const legate::Point<DIM>& p) const
+LEGATE_HOST_DEVICE const T& AccessorRO<T, DIM>::operator[](const legate::NDPoint<DIM>& p) const
 {
   return *this->ptr(p);
 }
 
 template <typename T, int DIM>
-LEGATE_HOST_DEVICE T& AccessorWO<T, DIM>::operator[](const legate::Point<DIM>& p) const
+LEGATE_HOST_DEVICE T& AccessorWO<T, DIM>::operator[](const legate::NDPoint<DIM>& p) const
 {
   return *this->ptr(p);
 }
 
 template <typename T, int DIM>
-LEGATE_HOST_DEVICE T& AccessorRW<T, DIM>::operator[](const legate::Point<DIM>& p) const
+LEGATE_HOST_DEVICE T& AccessorRW<T, DIM>::operator[](const legate::NDPoint<DIM>& p) const
 {
   return *this->ptr(p);
 }
 
 template <typename REDOP, bool EXCLUSIVE, int DIM>
-LEGATE_HOST_DEVICE void AccessorRD<REDOP, EXCLUSIVE, DIM>::reduce(const legate::Point<DIM>& p,
+LEGATE_HOST_DEVICE void AccessorRD<REDOP, EXCLUSIVE, DIM>::reduce(const legate::NDPoint<DIM>& p,
                                                                   RHS value) const
 {
   REDOP::template apply<EXCLUSIVE>(*this->ptr(p), value);
@@ -188,7 +188,7 @@ LEGATE_HOST_DEVICE void AccessorRD<REDOP, EXCLUSIVE, DIM>::ReductionProxy::reduc
 
 template <typename REDOP, bool EXCLUSIVE, int DIM>
 LEGATE_HOST_DEVICE typename AccessorRD<REDOP, EXCLUSIVE, DIM>::ReductionProxy
-AccessorRD<REDOP, EXCLUSIVE, DIM>::operator[](const legate::Point<DIM>& p) const
+AccessorRD<REDOP, EXCLUSIVE, DIM>::operator[](const legate::NDPoint<DIM>& p) const
 {
   return ReductionProxy{this->ptr(p)};
 }

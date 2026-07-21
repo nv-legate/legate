@@ -46,7 +46,7 @@ namespace legate::detail {
  * For example, given a 2x2 shape with bounds `lo` of `(0, 0)` and `hi` of `(2, 2)`, then
  * for each `point` the linearized indices would be as follows:
  * @code{.unparsed}
- * Point  -> idx
+ * NDPoint  -> idx
  * (0, 0) -> 0
  * (0, 1) -> 1
  * (0, 2) -> 2
@@ -59,7 +59,7 @@ namespace legate::detail {
  * @endcode
  * Similarly, with a `lo` of `(2, 2)` and `hi` of `(4, 4)`:
  * @code{.unparsed}
- * Point  -> idx
+ * NDPoint  -> idx
  * (2, 2) -> 0
  * (2, 3) -> 1
  * (2, 4) -> 2
@@ -73,9 +73,7 @@ namespace legate::detail {
  *
  * @see delinearize
  */
-[[nodiscard]] std::size_t linearize(const DomainPoint& lo,
-                                    const DomainPoint& hi,
-                                    const DomainPoint& point);
+[[nodiscard]] std::size_t linearize(const Point& lo, const Point& hi, const Point& point);
 
 /**
  * @brief Given an N-Dimensional shape and an index corresponding to a point inside that shape,
@@ -104,7 +102,7 @@ namespace legate::detail {
  * For example, given a 2x2 shape with bounds `lo` of `(0, 0)` and `hi` of `(2, 2)`, then
  * for each `idx`, the delinearized points would be as follows:
  * @code{.unparsed}
- * idx -> Point
+ * idx -> NDPoint
  * 0   -> (0, 0)
  * 1   -> (0, 1)
  * 2   -> (0, 2)
@@ -118,9 +116,7 @@ namespace legate::detail {
  *
  * @see linearize
  */
-[[nodiscard]] DomainPoint delinearize(const DomainPoint& lo,
-                                      const DomainPoint& hi,
-                                      std::size_t idx);
+[[nodiscard]] Point delinearize(const Point& lo, const Point& hi, std::size_t idx);
 
 /** @} */
 

@@ -34,8 +34,8 @@ struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> 
     }
     EXPECT_FALSE(shape2.empty());
 
-    auto extents1 = shape1.hi - shape1.lo + legate::Point<3>::ones();
-    auto extents2 = shape2.hi - shape2.lo + legate::Point<3>::ones();
+    auto extents1 = shape1.hi - shape1.lo + legate::NDPoint<3>::ones();
+    auto extents2 = shape2.hi - shape2.lo + legate::NDPoint<3>::ones();
 
     // The launch domain is 1D when array partitions have different color shapes
     EXPECT_EQ(context.get_launch_domain().dim(), 1);
@@ -63,8 +63,8 @@ struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
     }
     EXPECT_FALSE(shape2.empty());
 
-    auto extents1 = shape1.hi - shape1.lo + legate::Point<3>::ones();
-    auto extents2 = shape2.hi - shape2.lo + legate::Point<3>::ones();
+    auto extents1 = shape1.hi - shape1.lo + legate::NDPoint<3>::ones();
+    auto extents2 = shape2.hi - shape2.lo + legate::NDPoint<3>::ones();
 
     // The launch domain is 1D when array partitions have different color shapes
     EXPECT_EQ(context.get_launch_domain().dim(), 1);

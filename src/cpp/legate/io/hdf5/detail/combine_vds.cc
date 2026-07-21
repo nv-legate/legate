@@ -53,14 +53,14 @@ namespace {
  * [0-9]+_[0-9]+_[0-9]+_...
  * ```
  *
- * Where each digit `d_i` is the `i`th entry in `DomainPoint::point_data`. So a 3 dimensional
- * `DomainPoint(1,2,3)` would be encoded as `1_2_3`.
+ * Where each digit `d_i` is the `i`th entry in `Point::point_data`. So a 3 dimensional
+ * `Point(1,2,3)` would be encoded as `1_2_3`.
  *
  * @params sv The string to parse from.
  *
- * @return The DomainPoint.
+ * @return The Point.
  */
-[[nodiscard]] DomainPoint parse_to_domain_point(std::string_view sv)
+[[nodiscard]] Point parse_to_domain_point(std::string_view sv)
 {
   legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords{};
 
@@ -91,7 +91,7 @@ namespace {
       sv.remove_prefix(1);
     }
   }
-  return DomainPoint{std::move(coords)};
+  return Point{std::move(coords)};
 }
 
 /**
@@ -116,7 +116,7 @@ namespace {
  *
  * @return The launch domain of the parallel write task.
  */
-[[nodiscard]] Domain read_bounds(const std::filesystem::path& bounds_txt)
+[[nodiscard]] Rect read_bounds(const std::filesystem::path& bounds_txt)
 {
   std::string lo_line;
   std::string hi_line;
@@ -137,8 +137,8 @@ namespace {
  *
  * @return The domain of the sub-tile if `path` is a valid sub-file, `std::nullopt` otherwise.
  */
-[[nodiscard]] std::optional<Domain> parse_sub_vds_file(const std::filesystem::path& path,
-                                                       const Domain& launch_domain)
+[[nodiscard]] std::optional<Rect> parse_sub_vds_file(const std::filesystem::path& path,
+                                                     const Rect& launch_domain)
 {
   static const auto sub_file_regex =
     std::regex{R"(([\d_]+)_lo_([\d_]+)_hi_([\d_]+))", std::regex::optimize};
@@ -165,8 +165,8 @@ namespace {
     return std::nullopt;
   }
 
-  return Domain{/* lo */ get_domain_point(cm[2]),
-                /* hi */ get_domain_point(cm[3])};
+  return Rect{/* lo */ get_domain_point(cm[2]),
+              /* hi */ get_domain_point(cm[3])};
 }
 
 }  // namespace

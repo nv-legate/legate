@@ -17,8 +17,8 @@ LocalTaskID = NewType("LocalTaskID", int)
 LocalRedopID = NewType("LocalRedopID", int)
 GlobalRedopID = NewType("GlobalRedopID", int)
 
-DomainPoint: TypeAlias = tuple[int, ...]
-Domain = namedtuple("Domain", ("lo", "hi"), defaults=((0,), (0,)))
+Point: TypeAlias = tuple[int, ...]
+Rect = namedtuple("Rect", ("lo", "hi"), defaults=((0,), (0,)))
 
 cdef _DomainPoint domain_point_from_iterable(object iterable):
     cdef _tuple[uint64_t] tup = tuple_from_iterable[uint64_t](iterable)
@@ -47,4 +47,4 @@ cdef Domain_t domain_to_py(const _Domain& domain):
     cdef DomainPoint_t lo = domain_point_to_py(domain.lo())
     cdef DomainPoint_t hi = domain_point_to_py(domain.hi())
 
-    return Domain(lo=lo, hi=hi)
+    return Rect(lo=lo, hi=hi)

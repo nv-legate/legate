@@ -53,7 +53,7 @@ class ReduceAccessorFn {
       const auto reduce_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
 
       for (auto&& point : op_shape.iterate()) {
-        const legate::Point<DIM> pos{point};
+        const legate::NDPoint<DIM> pos{point};
 
         reduce_acc.reduce(pos, LEGION_ACC_INIT_VAL);
         ++legion_acc_it;
@@ -84,14 +84,15 @@ class ReduceAccessorFn {
       legion_acc_it = 0;
     }
 
-    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ones(), op_shape.hi};
+    const auto bounds =
+      legate::NDRect<DIM>{op_shape.lo + legate::NDPoint<DIM>::ones(), op_shape.hi};
     const auto bounds_empty = bounds.empty();
 
     if (!bounds_empty) {
       const auto legion_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
 
       for (auto&& point : bounds.iterate()) {
-        const legate::Point<DIM> pos{point};
+        const legate::NDPoint<DIM> pos{point};
 
         legion_acc.reduce(pos, LEGION_ACC_BOUNDS_INIT_VAL);
         ++legion_acc_it;
@@ -124,7 +125,7 @@ class ReduceAccessorFn {
 
     if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       static constexpr auto EXTENTS = 10000;
-      const auto exceeded_bounds    = legate::Point<DIM>{EXTENTS};
+      const auto exceeded_bounds    = legate::NDPoint<DIM>{EXTENTS};
       const auto reduce_acc         = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
       const auto reduce_acc_bounds =
         store.reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
@@ -132,12 +133,12 @@ class ReduceAccessorFn {
 
       ASSERT_EXIT(
         reduce_acc.reduce(exceeded_bounds, static_cast<T>(10)), ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(reduce_acc.reduce((op_shape.hi + legate::Point<DIM>::ones()), INIT_VALUE),
+      ASSERT_EXIT(reduce_acc.reduce((op_shape.hi + legate::NDPoint<DIM>::ones()), INIT_VALUE),
                   ::testing::ExitedWithCode{1},
                   "");
       ASSERT_EXIT(
         reduce_acc_bounds.reduce(exceeded_bounds, INIT_VALUE), ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(reduce_acc_bounds.reduce((bounds.hi + legate::Point<DIM>::ones()), INIT_VALUE),
+      ASSERT_EXIT(reduce_acc_bounds.reduce((bounds.hi + legate::NDPoint<DIM>::ones()), INIT_VALUE),
                   ::testing::ExitedWithCode{1},
                   "");
     }
@@ -332,7 +333,7 @@ TEST_F(PhysicalStoreReduceAccessorUnit, InvalidDim)
       store
         .reduce_accessor<legate::SumReduction<std::int16_t>, true, INVALID_DIM, VALIDATE_TYPE>()),
     std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
+  auto bounds = legate::NDRect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(
@@ -354,7 +355,7 @@ TEST_F(PhysicalStoreReduceAccessorUnit, InvalidType)
     static_cast<void>(
       store.reduce_accessor<legate::SumReduction<std::int8_t>, true, DIM, VALIDATE_TYPE>()),
     std::invalid_argument);
-  auto bounds = legate::Rect<DIM>{{0, 0}, {0, 0}};
+  auto bounds = legate::NDRect<DIM>{{0, 0}, {0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(

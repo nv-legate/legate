@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/geometry/detail/device_domain_point.h>
+#include <legate/geometry/detail/device_point.h>
 #include <legate/utilities/detail/divmod.h>
 
 #include <cstdint>
@@ -18,9 +18,9 @@ __device__ __forceinline__ void copy_to_send_buffer_dim_specialized_(
   VAL* __restrict__ target,
   const VAL* __restrict__ source,
   std::size_t tid,
-  const DeviceDomainPoint& extents,
+  const DevicePoint& extents,
   const FastDivmodU64& divmod,
-  const DeviceDomainPoint& strides) noexcept
+  const DevicePoint& strides) noexcept
 {
   std::int64_t src_off;
 
@@ -58,9 +58,9 @@ __device__ __forceinline__ void copy_from_recv_buffer_dim_specialized_(
   VAL* __restrict__ target,
   const VAL* __restrict__ source,
   std::size_t tid,
-  const DeviceDomainPoint& extents,
+  const DevicePoint& extents,
   const FastDivmodU64& divmod,
-  const DeviceDomainPoint& strides) noexcept
+  const DevicePoint& strides) noexcept
 {
   std::int64_t tgt_off;
 
@@ -95,9 +95,9 @@ template <typename VAL>
 __device__ void legate_copy_to_send_buffer_(void* target_ptr,
                                             const void* source_ptr,
                                             std::size_t volume,
-                                            const DeviceDomainPoint& target_extents,
+                                            const DevicePoint& target_extents,
                                             const FastDivmodU64& divmod,
-                                            const DeviceDomainPoint& source_strides) noexcept
+                                            const DevicePoint& source_strides) noexcept
 {
   auto* target       = static_cast<VAL*>(target_ptr);
   const auto* source = static_cast<const VAL*>(source_ptr);
@@ -135,9 +135,9 @@ template <typename VAL>
 __device__ void legate_copy_from_recv_buffer_(void* target_ptr,
                                               const void* source_ptr,
                                               std::size_t volume,
-                                              const DeviceDomainPoint& source_extents,
+                                              const DevicePoint& source_extents,
                                               const FastDivmodU64& divmod,
-                                              const DeviceDomainPoint& target_strides) noexcept
+                                              const DevicePoint& target_strides) noexcept
 {
   auto* target       = static_cast<VAL*>(target_ptr);
   const auto* source = static_cast<const VAL*>(source_ptr);
@@ -175,11 +175,11 @@ template <typename VAL>
 __device__ void legate_reorder_elements_(void* target_ptr,
                                          const void* source_ptr,
                                          std::size_t volume,
-                                         const DeviceDomainPoint& target_extents,
-                                         const DeviceDomainPoint& target_lo,
-                                         const DeviceDomainPoint& tile_shape,
-                                         const DeviceDomainPoint& tile_strides,
-                                         const DeviceDomainPoint& color_strides,
+                                         const DevicePoint& target_extents,
+                                         const DevicePoint& target_lo,
+                                         const DevicePoint& tile_shape,
+                                         const DevicePoint& tile_strides,
+                                         const DevicePoint& color_strides,
                                          std::int64_t tile_volume)
 {
   auto* target       = static_cast<VAL*>(target_ptr);
@@ -192,7 +192,7 @@ __device__ void legate_reorder_elements_(void* target_ptr,
   }
 
   auto idx = tid;
-  DeviceDomainPoint point;
+  DevicePoint point;
 
   point.dim = target_extents.dim;
   for (std::int32_t dim = target_extents.dim - 1; dim > 0; --dim) {
@@ -221,9 +221,9 @@ __device__ void legate_reorder_elements_(void* target_ptr,
 extern "C" __global__ void legate_copy_to_send_buffer_8(void* target_ptr,
                                                         const void* source_ptr,
                                                         std::size_t volume,
-                                                        DeviceDomainPoint target_extents,
+                                                        DevicePoint target_extents,
                                                         FastDivmodU64 divmod,
-                                                        DeviceDomainPoint source_strides)
+                                                        DevicePoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint8_t>(
     target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
@@ -232,9 +232,9 @@ extern "C" __global__ void legate_copy_to_send_buffer_8(void* target_ptr,
 extern "C" __global__ void legate_copy_to_send_buffer_16(void* target_ptr,
                                                          const void* source_ptr,
                                                          std::size_t volume,
-                                                         DeviceDomainPoint target_extents,
+                                                         DevicePoint target_extents,
                                                          FastDivmodU64 divmod,
-                                                         DeviceDomainPoint source_strides)
+                                                         DevicePoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint16_t>(
     target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
@@ -243,9 +243,9 @@ extern "C" __global__ void legate_copy_to_send_buffer_16(void* target_ptr,
 extern "C" __global__ void legate_copy_to_send_buffer_32(void* target_ptr,
                                                          const void* source_ptr,
                                                          std::size_t volume,
-                                                         DeviceDomainPoint target_extents,
+                                                         DevicePoint target_extents,
                                                          FastDivmodU64 divmod,
-                                                         DeviceDomainPoint source_strides)
+                                                         DevicePoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint32_t>(
     target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
@@ -254,9 +254,9 @@ extern "C" __global__ void legate_copy_to_send_buffer_32(void* target_ptr,
 extern "C" __global__ void legate_copy_to_send_buffer_64(void* target_ptr,
                                                          const void* source_ptr,
                                                          std::size_t volume,
-                                                         DeviceDomainPoint target_extents,
+                                                         DevicePoint target_extents,
                                                          FastDivmodU64 divmod,
-                                                         DeviceDomainPoint source_strides)
+                                                         DevicePoint source_strides)
 {
   legate_copy_to_send_buffer_<std::uint64_t>(
     target_ptr, source_ptr, volume, target_extents, divmod, source_strides);
@@ -265,9 +265,9 @@ extern "C" __global__ void legate_copy_to_send_buffer_64(void* target_ptr,
 extern "C" __global__ void legate_copy_from_recv_buffer_8(void* target_ptr,
                                                           const void* source_ptr,
                                                           std::size_t volume,
-                                                          DeviceDomainPoint source_extents,
+                                                          DevicePoint source_extents,
                                                           FastDivmodU64 divmod,
-                                                          DeviceDomainPoint target_strides)
+                                                          DevicePoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint8_t>(
     target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
@@ -276,9 +276,9 @@ extern "C" __global__ void legate_copy_from_recv_buffer_8(void* target_ptr,
 extern "C" __global__ void legate_copy_from_recv_buffer_16(void* target_ptr,
                                                            const void* source_ptr,
                                                            std::size_t volume,
-                                                           DeviceDomainPoint source_extents,
+                                                           DevicePoint source_extents,
                                                            FastDivmodU64 divmod,
-                                                           DeviceDomainPoint target_strides)
+                                                           DevicePoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint16_t>(
     target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
@@ -287,9 +287,9 @@ extern "C" __global__ void legate_copy_from_recv_buffer_16(void* target_ptr,
 extern "C" __global__ void legate_copy_from_recv_buffer_32(void* target_ptr,
                                                            const void* source_ptr,
                                                            std::size_t volume,
-                                                           DeviceDomainPoint source_extents,
+                                                           DevicePoint source_extents,
                                                            FastDivmodU64 divmod,
-                                                           DeviceDomainPoint target_strides)
+                                                           DevicePoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint32_t>(
     target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
@@ -298,9 +298,9 @@ extern "C" __global__ void legate_copy_from_recv_buffer_32(void* target_ptr,
 extern "C" __global__ void legate_copy_from_recv_buffer_64(void* target_ptr,
                                                            const void* source_ptr,
                                                            std::size_t volume,
-                                                           DeviceDomainPoint source_extents,
+                                                           DevicePoint source_extents,
                                                            FastDivmodU64 divmod,
-                                                           DeviceDomainPoint target_strides)
+                                                           DevicePoint target_strides)
 {
   legate_copy_from_recv_buffer_<std::uint64_t>(
     target_ptr, source_ptr, volume, source_extents, divmod, target_strides);
@@ -309,11 +309,11 @@ extern "C" __global__ void legate_copy_from_recv_buffer_64(void* target_ptr,
 extern "C" __global__ void legate_reorder_elements_8(void* target_ptr,
                                                      const void* source_ptr,
                                                      std::size_t volume,
-                                                     DeviceDomainPoint target_extents,
-                                                     DeviceDomainPoint target_lo,
-                                                     DeviceDomainPoint tile_shape,
-                                                     DeviceDomainPoint tile_strides,
-                                                     DeviceDomainPoint color_strides,
+                                                     DevicePoint target_extents,
+                                                     DevicePoint target_lo,
+                                                     DevicePoint tile_shape,
+                                                     DevicePoint tile_strides,
+                                                     DevicePoint color_strides,
                                                      std::int64_t tile_volume)
 {
   legate_reorder_elements_<std::uint8_t>(target_ptr,
@@ -330,11 +330,11 @@ extern "C" __global__ void legate_reorder_elements_8(void* target_ptr,
 extern "C" __global__ void legate_reorder_elements_16(void* target_ptr,
                                                       const void* source_ptr,
                                                       std::size_t volume,
-                                                      DeviceDomainPoint target_extents,
-                                                      DeviceDomainPoint target_lo,
-                                                      DeviceDomainPoint tile_shape,
-                                                      DeviceDomainPoint tile_strides,
-                                                      DeviceDomainPoint color_strides,
+                                                      DevicePoint target_extents,
+                                                      DevicePoint target_lo,
+                                                      DevicePoint tile_shape,
+                                                      DevicePoint tile_strides,
+                                                      DevicePoint color_strides,
                                                       std::int64_t tile_volume)
 {
   legate_reorder_elements_<std::uint16_t>(target_ptr,
@@ -351,11 +351,11 @@ extern "C" __global__ void legate_reorder_elements_16(void* target_ptr,
 extern "C" __global__ void legate_reorder_elements_32(void* target_ptr,
                                                       const void* source_ptr,
                                                       std::size_t volume,
-                                                      DeviceDomainPoint target_extents,
-                                                      DeviceDomainPoint target_lo,
-                                                      DeviceDomainPoint tile_shape,
-                                                      DeviceDomainPoint tile_strides,
-                                                      DeviceDomainPoint color_strides,
+                                                      DevicePoint target_extents,
+                                                      DevicePoint target_lo,
+                                                      DevicePoint tile_shape,
+                                                      DevicePoint tile_strides,
+                                                      DevicePoint color_strides,
                                                       std::int64_t tile_volume)
 {
   legate_reorder_elements_<std::uint32_t>(target_ptr,
@@ -372,11 +372,11 @@ extern "C" __global__ void legate_reorder_elements_32(void* target_ptr,
 extern "C" __global__ void legate_reorder_elements_64(void* target_ptr,
                                                       const void* source_ptr,
                                                       std::size_t volume,
-                                                      DeviceDomainPoint target_extents,
-                                                      DeviceDomainPoint target_lo,
-                                                      DeviceDomainPoint tile_shape,
-                                                      DeviceDomainPoint tile_strides,
-                                                      DeviceDomainPoint color_strides,
+                                                      DevicePoint target_extents,
+                                                      DevicePoint target_lo,
+                                                      DevicePoint tile_shape,
+                                                      DevicePoint tile_strides,
+                                                      DevicePoint color_strides,
                                                       std::int64_t tile_volume)
 {
   legate_reorder_elements_<std::uint64_t>(target_ptr,

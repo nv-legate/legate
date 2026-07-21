@@ -8,7 +8,10 @@
 
 #include <legate_defines.h>
 
+#include <legate/geometry/nd_point.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/span.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -28,130 +31,198 @@ namespace legate {
  */
 
 /**
- * @brief A statically-sized, multi-dimensional point.
- *
- * `Point` objects support index expressions; they can be accessed like a statically-sized array.
- * `Point` objects also support the usual component-wise arithmetic operators and a `dot` operator.
- *
- * Coordinates are always stored as `std::int64_t`.
- *
- * @tparam DIM The dimensionality of the point.
+ * @brief A dimension-erased, multi-dimensional point.
  */
-template <int DIM>
-struct Point {
+class LEGATE_EXPORT Point {
+ public:
   /**
-   * @brief The coordinate type.
+   * @brief The maximum number of dimensions a `Point` may have.
    */
-  using value_type = std::int64_t;
+  static constexpr std::int32_t MAX_DIM = LEGATE_MAX_DIM;
 
   /**
-   * @brief The coordinates of the point. Prefer `operator[]` over accessing this directly.
-   */
-  value_type values[DIM];  // NOLINT(*-avoid-c-arrays)
-
-  /**
-   * @brief Constructs an uninitialized point.
+   * @brief Constructs an empty (0-dimensional) point.
    */
   Point() = default;
+  /**
+   * @brief Constructs a 1-dimensional point holding a single coordinate.
+   *
+   * @param index The coordinate value.
+   */
+  Point(std::int64_t index);  // NOLINT(google-explicit-constructor)
+  /**
+   * @brief Constructs a point from a vector of coordinates.
+   *
+   * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
+   */
+  explicit Point(detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords);
+  /**
+   * @brief Constructs a point from a vector of coordinates.
+   *
+   * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
+   */
+  explicit Point(const detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents);
+  /**
+   * @brief Constructs a point from a span of coordinates.
+   *
+   * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
+   */
+  explicit Point(Span<const std::int64_t> coords);
+  /**
+   * @brief Constructs a point from a `legate::NDPoint`.
+   *
+   * @param point The point to convert from.
+   */
+  template <int DIM>
+  Point(const NDPoint<DIM>& point);  // NOLINT(google-explicit-constructor)
 
   /**
-   * @brief Constructs a point whose coordinates are all `val`.
+   * @brief Converts this point to a `legate::NDPoint`.
    *
-   * This constructor is implicit for `DIM == 1` (so that a coordinate may be used wherever a
-   * 1-dimensional point is expected, e.g. `Rect<1>{0, n}`) and explicit otherwise.
-   *
-   * @param val The value to broadcast across all coordinates.
+   * The requested dimensionality must match `dim()`.
    */
-  template <int D = DIM, std::enable_if_t<D == 1, int> = 0>
-  LEGATE_HOST_DEVICE Point(value_type val);  // NOLINT(google-explicit-constructor)
+  template <int DIM>
+  operator NDPoint<DIM>() const;  // NOLINT(google-explicit-constructor)
 
-  template <int D = DIM, std::enable_if_t<(D > 1), int> = 0>
-  LEGATE_HOST_DEVICE explicit Point(value_type val);
+  template <int DIM>
+  Point& operator=(const NDPoint<DIM>& point);
 
   /**
-   * @brief Constructs a point from a list of coordinates.
-   *
-   * @param val0 The first coordinate.
-   * @param val1 The second coordinate.
-   * @param vals The remaining coordinates.
+   * @return The dimensionality of the point.
    */
-  template <typename Arg0,
-            typename Arg1,
-            typename... Args,
-            std::enable_if_t<(sizeof...(Args) + 2 <= DIM), int> = 0>
-  LEGATE_HOST_DEVICE Point(Arg0 val0, Arg1 val1, Args... vals);
+  [[nodiscard]] std::uint32_t dim() const;
 
   /**
-   * @brief Constructs a point from an array of coordinates.
+   * @return The number of coordinates in the point (equal to `dim()`).
    *
-   * @param vals Pointer to at least `DIM` coordinates.
+   * @note Provided so a `Point` can stand in for a container of coordinates in generic code.
    */
-  LEGATE_HOST_DEVICE explicit Point(const value_type* vals);
+  [[nodiscard]] std::size_t size() const;
 
   /**
-   * @brief Converts a 1-dimensional point to its sole coordinate.
-   *
-   * This conversion is available only for `DIM == 1`, so that a 1-dimensional point may be used
-   * wherever a coordinate is expected.
+   * @return `true` if the point is 0-dimensional (has no coordinates), `false` otherwise.
    */
-  template <int D = DIM, std::enable_if_t<D == 1, int> = 0>
-  // NOLINTNEXTLINE(google-explicit-constructor)
-  [[nodiscard]] LEGATE_HOST_DEVICE operator value_type() const;
+  [[nodiscard]] bool empty() const;
 
-  [[nodiscard]] LEGATE_HOST_DEVICE value_type& operator[](int index);
-  [[nodiscard]] LEGATE_HOST_DEVICE const value_type& operator[](int index) const;
+  // ==-- Utility methods (formerly free functions in geometry.h) --==
 
   /**
    * @brief Computes the inner (dot) product of this point with another.
    *
-   * @param rhs The other point.
+   * @param other The other point. Must have the same dimensionality as this point.
    *
    * @return The inner product.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE value_type dot(const Point<DIM>& rhs) const;
+  [[nodiscard]] std::int64_t dot(const Point& other) const;
 
   /**
-   * @brief Creates a point whose coordinates are all zero.
+   * @brief Computes the volume of a shape described by this point.
+   *
+   * @return The product of all coordinates.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE static constexpr Point<DIM> zeroes();
+  [[nodiscard]] std::int64_t volume() const;
 
   /**
-   * @brief Creates a point whose coordinates are all one.
+   * @brief Computes the (C-order) strides for a shape described by this point.
+   *
+   * @return A point whose coordinates are the strides for each dimension.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE static constexpr Point<DIM> ones();
+  [[nodiscard]] Point strides() const;
+
+  [[nodiscard]] bool operator==(const Point& rhs) const;
+  [[nodiscard]] bool operator!=(const Point& rhs) const;
+
+  [[nodiscard]] Point operator+(std::int64_t scalar) const;
+  [[nodiscard]] Point operator+(const Point& rhs) const;
+  Point& operator+=(std::int64_t scalar);
+  Point& operator+=(const Point& rhs);
+
+  [[nodiscard]] Point operator-(std::int64_t scalar) const;
+  [[nodiscard]] Point operator-(const Point& rhs) const;
+  Point& operator-=(std::int64_t scalar);
+  Point& operator-=(const Point& rhs);
+
+  [[nodiscard]] Point operator*(std::int64_t scalar) const;
+  [[nodiscard]] Point operator*(const Point& rhs) const;
+  Point& operator*=(std::int64_t scalar);
+  Point& operator*=(const Point& rhs);
+
+  [[nodiscard]] Point operator/(std::int64_t scalar) const;
+  [[nodiscard]] Point operator/(const Point& rhs) const;
+  Point& operator/=(std::int64_t scalar);
+  Point& operator/=(const Point& rhs);
+
+  [[nodiscard]] Point operator%(std::int64_t scalar) const;
+  [[nodiscard]] Point operator%(const Point& rhs) const;
+  Point& operator%=(std::int64_t scalar);
+  Point& operator%=(const Point& rhs);
+
+  template <typename Index, typename = std::enable_if_t<std::is_integral_v<Index>>>
+  [[nodiscard]] std::int64_t& operator[](Index index);
+  template <typename Index, typename = std::enable_if_t<std::is_integral_v<Index>>>
+  [[nodiscard]] const std::int64_t& operator[](Index index) const;
+
+  /**
+   * @brief Creates a zero-filled point of the given dimensionality.
+   *
+   * @param ndim The dimensionality of the point.
+   *
+   * @return The newly created point.
+   */
+  [[nodiscard]] static Point zeroes(std::int32_t ndim);
+  /**
+   * @brief Creates a zero-filled point of the given dimensionality.
+   *
+   * @param ndim The dimensionality of the point.
+   *
+   * @return The newly created point.
+   */
+  [[nodiscard]] static Point full(std::int32_t ndim, std::int64_t coord);
+
+  /**
+   * @brief Returns a copy of this point with `value` inserted at dimension `pos`.
+   *
+   * The result has one more dimension than this point.
+   *
+   * @param pos The dimension at which to insert (`0 <= pos <= dim()`).
+   * @param value The coordinate value to insert.
+   *
+   * @return The higher-dimensional point.
+   */
+  [[nodiscard]] Point inserted(std::int32_t pos, std::int64_t value) const;
+
+  /**
+   * @brief Returns a copy of this point with dimension `pos` removed.
+   *
+   * The result has one fewer dimension than this point.
+   *
+   * @param pos The dimension to remove (`0 <= pos < dim()`).
+   *
+   * @return The lower-dimensional point.
+   */
+  [[nodiscard]] Point removed(std::int32_t pos) const;
+
+  /**
+   * @brief Returns a copy of this point with its coordinates gathered by `axes`.
+   *
+   * The result has `axes.size()` dimensions, with `result[i] == (*this)[axes[i]]`.
+   *
+   * @param axes The source dimension for each result dimension.
+   *
+   * @return The permuted point.
+   */
+  [[nodiscard]] Point permuted(Span<const std::int32_t> axes) const;
+
+  // ==-- Iteration over coordinates --==
+
+  [[nodiscard]] const std::int64_t* begin() const;
+  [[nodiscard]] const std::int64_t* end() const;
+
+ private:
+  detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coordinates_{};
 };
 
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE bool operator==(const Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE bool operator!=(const Point<DIM>& lhs, const Point<DIM>& rhs);
-
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator+(const Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator+=(Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator-(const Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator-=(Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator*(const Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator*=(Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator/(const Point<DIM>& lhs,
-                                                      typename Point<DIM>::value_type rhs);
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator/=(Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Point<DIM> operator%(const Point<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-LEGATE_HOST_DEVICE Point<DIM>& operator%=(Point<DIM>& lhs, const Point<DIM>& rhs);
-
-template <int DIM>
-std::ostream& operator<<(std::ostream& os, const Point<DIM>& point);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& os, const Point& point);
 
 /** @} */  // end of geometry
 

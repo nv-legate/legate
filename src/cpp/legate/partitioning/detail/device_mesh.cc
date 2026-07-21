@@ -19,23 +19,23 @@
 
 namespace legate::detail {
 
-DeviceMesh::DeviceMesh(DomainPoint shape) : shape_{std::move(shape)}, strides_{shape_.strides()} {}
+DeviceMesh::DeviceMesh(Point shape) : shape_{std::move(shape)}, strides_{shape_.strides()} {}
 
-DeviceMesh::DeviceMesh(DomainPoint shape, DomainPoint strides)
+DeviceMesh::DeviceMesh(Point shape, Point strides)
   : shape_{std::move(shape)}, strides_{std::move(strides)}
 {
 }
 
 std::uint64_t DeviceMesh::num_cells() const { return static_cast<std::uint64_t>(shape_.volume()); }
 
-std::uint64_t DeviceMesh::device_id(const DomainPoint& grid_point) const
+std::uint64_t DeviceMesh::device_id(const Point& grid_point) const
 {
   return static_cast<std::uint64_t>(strides_.dot(grid_point));
 }
 
-DomainPoint DeviceMesh::grid_point(std::uint64_t device_id) const
+Point DeviceMesh::grid_point(std::uint64_t device_id) const
 {
-  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(shape_.dim()));
+  auto result = Point::zeroes(static_cast<std::int32_t>(shape_.dim()));
 
   for (std::uint32_t dim = 0; dim < result.dim(); ++dim) {
     const auto stride = static_cast<std::uint64_t>(strides_[dim]);

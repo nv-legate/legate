@@ -7,7 +7,7 @@
 Domains
 =======
 
-``DomainPoint`` and ``Domain`` allow the user to specify specific points or dense
+``Point`` and ``Rect`` allow the user to specify specific points or dense
 rectangles within N-dimensional spaces. They are often used as task "indices" (to locate a
 specific point task within a wider array of tasks), and to describe the overall launch
 domain of tasks.
@@ -19,5 +19,5 @@ useful.
    :toctree: generated/
    :template: class.rst
 
-   DomainPoint
-   Domain
+   Point
+   Rect

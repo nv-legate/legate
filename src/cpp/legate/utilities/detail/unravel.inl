@@ -12,7 +12,7 @@ namespace legate::detail {
 
 // This helper class converts indices to multi-dimensional points
 template <std::int32_t NDIM>
-LEGATE_HOST_DEVICE Unravel<NDIM>::Unravel(const Rect<NDIM>& rect) : low_{rect.lo}
+LEGATE_HOST_DEVICE Unravel<NDIM>::Unravel(const NDRect<NDIM>& rect) : low_{rect.lo}
 {
   std::uint64_t stride = 1;
   for (std::int32_t dim = NDIM - 1; dim >= 0; --dim) {
@@ -36,7 +36,7 @@ LEGATE_HOST_DEVICE bool Unravel<NDIM>::empty() const
 }
 
 template <std::int32_t NDIM>
-LEGATE_HOST_DEVICE Point<NDIM> Unravel<NDIM>::operator()(std::uint64_t index) const
+LEGATE_HOST_DEVICE NDPoint<NDIM> Unravel<NDIM>::operator()(std::uint64_t index) const
 {
   auto point = low_;
   for (std::int32_t dim = 0; dim < NDIM - 1; dim++) {

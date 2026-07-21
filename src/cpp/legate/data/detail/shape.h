@@ -8,8 +8,8 @@
 
 #include <legate_defines.h>
 
-#include <legate/geometry/domain.h>
-#include <legate/geometry/domain_point.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
@@ -27,14 +27,14 @@ class Shape {
 
  public:
   explicit Shape(std::uint32_t dim);
-  explicit Shape(DomainPoint extents);
+  explicit Shape(Point extents);
   explicit Shape(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents);
 
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] std::uint32_t ndim() const;
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] Span<const std::uint64_t> extents() const;
-  [[nodiscard]] Domain domain() const;
+  [[nodiscard]] Rect domain() const;
 
   /**
    * @brief Binds this (previously unbound) shape to a concrete set of extents.
@@ -46,7 +46,7 @@ class Shape {
    *
    * @param extents The now-known extents of the shape.
    */
-  void bind_extents(DomainPoint extents);
+  void bind_extents(Point extents);
 
   [[nodiscard]] std::string to_string() const;
 
@@ -58,7 +58,7 @@ class Shape {
 
   State state_{State::UNBOUND};
   std::uint32_t dim_{};
-  DomainPoint extents_{};
+  Point extents_{};
 };
 
 }  // namespace legate::detail

@@ -81,7 +81,7 @@ class LEGATE_EXPORT SymbolicExpr {
    */
   [[nodiscard]] bool is_constant() const;
 
-  [[nodiscard]] std::int64_t compute_coordinate(const DomainPoint& point) const;
+  [[nodiscard]] std::int64_t compute_coordinate(const Point& point) const;
 
   [[nodiscard]] bool operator==(const SymbolicExpr& other) const;
   [[nodiscard]] bool operator<(const SymbolicExpr& other) const;

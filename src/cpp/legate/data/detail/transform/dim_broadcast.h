@@ -38,7 +38,7 @@ class DimBroadcast final : public StoreTransform {
    * @return A domain where dimension `dim_` has size `dim_size_` and the other dimensions have the
    * same size as the input.
    */
-  [[nodiscard]] Domain transform(const Domain& input) const override;
+  [[nodiscard]] Rect transform(const Rect& input) const override;
 
   /**
    * @brief Convert `Restrictions`.
@@ -59,7 +59,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return Unmodified `color`
    */
-  [[nodiscard]] DomainPoint convert_color(DomainPoint color) const override;
+  [[nodiscard]] Point convert_color(Point color) const override;
   /**
    * @brief Convert a color shape.
    *
@@ -67,7 +67,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return Unmodified `color_shape`
    */
-  [[nodiscard]] DomainPoint convert_color_shape(DomainPoint color_shape) const override;
+  [[nodiscard]] Point convert_color_shape(Point color_shape) const override;
   /**
    * @brief Convert a point.
    *
@@ -75,7 +75,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return Unmodified `point`
    */
-  [[nodiscard]] DomainPoint convert_point(DomainPoint point) const override;
+  [[nodiscard]] Point convert_point(Point point) const override;
   /**
    * @brief Convert extents.
    *
@@ -83,7 +83,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `extents` with the `dim_`-th extent updated to `dim_size_`.
    */
-  [[nodiscard]] DomainPoint convert_extents(DomainPoint extents) const override;
+  [[nodiscard]] Point convert_extents(Point extents) const override;
   /**
    * @brief Convert strides.
    *
@@ -92,7 +92,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `strides` with the `dim_`-th stride updated to 0.
    */
-  [[nodiscard]] DomainPoint convert_strides(DomainPoint strides) const override;
+  [[nodiscard]] Point convert_strides(Point strides) const override;
   /**
    * @brief Invert a symbolic point.
    *
@@ -116,7 +116,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `color` with the `dim_`-th coordinate updated to 0.
    */
-  [[nodiscard]] DomainPoint invert_color(DomainPoint color) const override;
+  [[nodiscard]] Point invert_color(Point color) const override;
   /**
    * @brief Invert a color shape.
    *
@@ -124,7 +124,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `color_shape` with the `dim_`-th size updated to 0.
    */
-  [[nodiscard]] DomainPoint invert_color_shape(DomainPoint color_shape) const override;
+  [[nodiscard]] Point invert_color_shape(Point color_shape) const override;
   /**
    * @brief Invert a point.
    *
@@ -132,7 +132,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `point` with the `dim_`-th coordinate updated to 0.
    */
-  [[nodiscard]] DomainPoint invert_point(DomainPoint point) const override;
+  [[nodiscard]] Point invert_point(Point point) const override;
   /**
    * @brief Invert extents.
    *
@@ -140,7 +140,7 @@ class DimBroadcast final : public StoreTransform {
    *
    * @return `extents` with the `dim_`-th extent updated to 1.
    */
-  [[nodiscard]] DomainPoint invert_extents(DomainPoint extents) const override;
+  [[nodiscard]] Point invert_extents(Point extents) const override;
 
   /**
    * @brief Serialize this `DimBroadcast` into the passed `buffer`.

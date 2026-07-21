@@ -287,7 +287,7 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
  *
  * @throw std::invalid_argument If the dimension of the Legate store is negative.
  */
-[[nodiscard]] std::unique_ptr<std::int64_t[]> make_shape(const Domain& domain)
+[[nodiscard]] std::unique_ptr<std::int64_t[]> make_shape(const Rect& domain)
 {
   const auto dim = domain.dim();
 

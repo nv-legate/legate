@@ -26,10 +26,10 @@ namespace legate::detail {
  *
  * @return The domain.
  */
-[[nodiscard]] Domain to_domain(Span<const std::uint64_t> shape);
+[[nodiscard]] Rect to_domain(Span<const std::uint64_t> shape);
 
 /**
- * @brief Converts a shape expressed as a `DomainPoint` to a domain `[0, shape - 1]`.
+ * @brief Converts a shape expressed as a `Point` to a domain `[0, shape - 1]`.
  *
  * @note If the shape is empty (0-dimensional), a 1D {0, 0} domain is returned.
  *
@@ -37,7 +37,7 @@ namespace legate::detail {
  *
  * @return The domain.
  */
-[[nodiscard]] Domain to_domain(const DomainPoint& shape);
+[[nodiscard]] Rect to_domain(const Point& shape);
 
 /**
  * @brief Converts a shape to a domain.
@@ -48,13 +48,13 @@ namespace legate::detail {
  *
  * @return The domain.
  */
-[[nodiscard]] Domain to_maybe_empty_domain(Span<const std::uint64_t> shape);
+[[nodiscard]] Rect to_maybe_empty_domain(Span<const std::uint64_t> shape);
 
-[[nodiscard]] LEGATE_PYTHON_EXPORT DomainPoint to_domain_point(Span<const std::uint64_t> shape);
+[[nodiscard]] LEGATE_PYTHON_EXPORT Point to_domain_point(Span<const std::uint64_t> shape);
 
-[[nodiscard]] DomainPoint to_domain_point(Span<const std::int64_t> shape);
+[[nodiscard]] Point to_domain_point(Span<const std::int64_t> shape);
 
-[[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Domain& domain);
+[[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Rect& domain);
 
 // These are forward declared in tuple.h to avoid including this header
 // NOLINTBEGIN(readability-redundant-declaration)

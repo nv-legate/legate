@@ -60,7 +60,8 @@ class ReadAccessorFn {
       span_acc_it   = 0;
     }
 
-    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ones(), op_shape.hi};
+    const auto bounds =
+      legate::NDRect<DIM>{op_shape.lo + legate::NDPoint<DIM>::ones(), op_shape.hi};
     const auto bounds_empty = bounds.empty();
 
     if (!bounds_empty) {
@@ -97,13 +98,14 @@ class ReadAccessorFn {
       const auto legion_read_acc        = store.read_accessor<T, DIM>();
       const auto legion_read_acc_bounds = store.read_accessor<T, DIM>(bounds);
       static constexpr auto EXTENTS     = 10000;
-      auto exceeded_bounds              = legate::Point<DIM>{EXTENTS};
+      auto exceeded_bounds              = legate::NDPoint<DIM>{EXTENTS};
 
       ASSERT_EXIT(legion_read_acc[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(
-        legion_read_acc[(op_shape.hi + legate::Point<DIM>{100})], ::testing::ExitedWithCode{1}, "");
+      ASSERT_EXIT(legion_read_acc[(op_shape.hi + legate::NDPoint<DIM>{100})],
+                  ::testing::ExitedWithCode{1},
+                  "");
       ASSERT_EXIT(legion_read_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(legion_read_acc_bounds[(bounds.hi + legate::Point<DIM>::ones())],
+      ASSERT_EXIT(legion_read_acc_bounds[(bounds.hi + legate::NDPoint<DIM>::ones())],
                   ::testing::ExitedWithCode{1},
                   "");
     }
@@ -173,7 +175,7 @@ void test_read_accessor_future_store(legate::PhysicalStore& store)
   if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
     // access store with exceeded bounds
     static constexpr auto EXTENTS = 1000;
-    auto exceeded_bounds          = legate::Point<DIM>{EXTENTS};
+    auto exceeded_bounds          = legate::NDPoint<DIM>{EXTENTS};
 
     ASSERT_EXIT(read_acc[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
   }
@@ -312,7 +314,7 @@ TEST_F(PhysicalStoreReadAccessorUnit, InvalidDim)
 
   ASSERT_THROW(static_cast<void>(store.read_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
+  auto bounds = legate::NDRect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(store.read_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
@@ -330,7 +332,7 @@ TEST_F(PhysicalStoreReadAccessorUnit, InvalidType)
 
   ASSERT_THROW(static_cast<void>(store.read_accessor<std::int32_t, DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<DIM>{{0, 0}, {0, 0}};
+  auto bounds = legate::NDRect<DIM>{{0, 0}, {0, 0}};
 
   ASSERT_THROW(static_cast<void>(store.read_accessor<std::uint32_t, DIM, VALIDATE_TYPE>(bounds)),
                std::invalid_argument);

@@ -42,7 +42,7 @@ void check_alignment(std::size_t alignment)
 }
 
 InternalSharedPtr<InlineStorage> create_buffer_storage(std::uint32_t field_size,
-                                                       const Domain& bounds,
+                                                       const Rect& bounds,
                                                        Memory::Kind kind)
 {
   return make_internal_shared<InlineStorage>(bounds, field_size, mapping::detail::to_target(kind));
@@ -125,8 +125,8 @@ TaskLocalBuffer::TaskLocalBuffer(SharedPtr<detail::TaskLocalBuffer> impl) : impl
 
 TaskLocalBuffer::TaskLocalBuffer(InternalSharedPtr<detail::InlineStorage> storage,
                                  const Type& type,
-                                 // Domain is a POD type, no point in moving it
-                                 const Domain& bounds)  // NOLINT(modernize-pass-by-value)
+                                 // Rect is a POD type, no point in moving it
+                                 const Rect& bounds)  // NOLINT(modernize-pass-by-value)
   : TaskLocalBuffer{
       legate::make_shared<detail::TaskLocalBuffer>(std::move(storage), type.impl(), bounds)}
 {
@@ -144,7 +144,7 @@ Type TaskLocalBuffer::type() const { return Type{impl()->type()}; }
 
 std::int32_t TaskLocalBuffer::dim() const { return static_cast<std::int32_t>(impl()->dim()); }
 
-const Domain& TaskLocalBuffer::domain() const { return impl()->domain(); }
+const Rect& TaskLocalBuffer::domain() const { return impl()->domain(); }
 
 mapping::StoreTarget TaskLocalBuffer::memory_kind() const { return impl()->memory_kind(); }
 

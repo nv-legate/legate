@@ -25,8 +25,8 @@ class TaskBase;
 class TaskContext {
  public:
   TaskContext(VariantCode variant_code,
-              Domain launch_domain,
-              DomainPoint task_index,
+              Rect launch_domain,
+              Point task_index,
               const TaskBase* task,
               SmallVector<InternalSharedPtr<PhysicalStore>> inputs,
               SmallVector<InternalSharedPtr<PhysicalStore>> outputs,
@@ -42,8 +42,8 @@ class TaskContext {
   [[nodiscard]] LocalTaskID task_id() const noexcept;
   [[nodiscard]] std::string_view library_name() const noexcept;
   [[nodiscard]] bool is_single_task() const noexcept;
-  [[nodiscard]] const DomainPoint& get_task_index() const noexcept;
-  [[nodiscard]] const Domain& get_launch_domain() const noexcept;
+  [[nodiscard]] const Point& get_task_index() const noexcept;
+  [[nodiscard]] const Rect& get_launch_domain() const noexcept;
   [[nodiscard]] std::string_view get_provenance() const noexcept;
   [[nodiscard]] const mapping::detail::Machine& machine() const noexcept;
 
@@ -65,8 +65,8 @@ class TaskContext {
 
  private:
   const VariantCode variant_kind_;
-  const Domain launch_domain_{};
-  const DomainPoint task_index_{};
+  const Rect launch_domain_{};
+  const Point task_index_{};
   const TaskBase* op_task_{};
   SmallVector<InternalSharedPtr<PhysicalStore>> inputs_{};
   SmallVector<InternalSharedPtr<PhysicalStore>> outputs_{};

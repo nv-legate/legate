@@ -211,7 +211,7 @@ class CheckPointScalarFn {
   template <std::int32_t DIM>
   void operator()(const std::vector<legate::coord_t>& bounds) const
   {
-    const auto point = legate::Point<DIM>{bounds.data()};
+    const auto point = legate::NDPoint<DIM>{bounds.data()};
     const legate::Scalar scalar{point};
     auto fixed_type = legate::fixed_array_type(legate::int64(), DIM);
 
@@ -238,9 +238,9 @@ class CheckRectScalarFn {
   void operator()(const std::vector<legate::coord_t>& lo,
                   const std::vector<legate::coord_t>& hi) const
   {
-    auto point_lo = legate::Point<DIM>{lo.data()};
-    auto point_hi = legate::Point<DIM>{hi.data()};
-    auto rect     = legate::Rect<DIM>{point_lo, point_hi};
+    auto point_lo = legate::NDPoint<DIM>{lo.data()};
+    auto point_hi = legate::NDPoint<DIM>{hi.data()};
+    auto rect     = legate::NDRect<DIM>{point_lo, point_hi};
     const legate::Scalar scalar{rect};
     auto struct_type = legate::struct_type(/* align */ true,
                                            legate::fixed_array_type(legate::int64(), DIM),

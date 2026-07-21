@@ -49,9 +49,9 @@ struct PhysicalStoreLayout {
   // from here following `addr(p) = base + field_size * dot(p, strides)`.
   void* base{};
   // Per-dimension element strides (not bytes) over the store's (transformed) dimensions.
-  DomainPoint strides{};
+  Point strides{};
   // The store's (transformed) domain.
-  Domain domain{};
+  Rect domain{};
 };
 
 class PhysicalStore {
@@ -94,11 +94,11 @@ class PhysicalStore {
   [[nodiscard]] const InternalSharedPtr<Type>& type() const;
 
   /**
-   * @brief Returns the store's domain as a Rect<DIM>
+   * @brief Returns the store's domain as a NDRect<DIM>
    *
-   * @return Store's domain as a Rect<DIM>
+   * @return Store's domain as a NDRect<DIM>
    */
-  [[nodiscard]] const Domain& domain() const;
+  [[nodiscard]] const Rect& domain() const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
   [[nodiscard]] mapping::StoreTarget target() const;
   [[nodiscard]] bool is_accessible(mapping::TaskTarget task_target) const;
@@ -119,7 +119,7 @@ class PhysicalStore {
    * @return The freshly allocated inline storage.
    */
   [[nodiscard]] InternalSharedPtr<InlineStorage> create_output_buffer_storage(
-    const Domain& bounds) const;
+    const Rect& bounds) const;
 
   /**
    * @brief Binds an inline storage (produced as a buffer by the task) to this unbound store.
@@ -130,7 +130,7 @@ class PhysicalStore {
    * @param storage The inline storage to bind.
    * @param domain The domain the store should span over @p storage.
    */
-  void bind_data(InternalSharedPtr<InlineStorage> storage, const Domain& domain);
+  void bind_data(InternalSharedPtr<InlineStorage> storage, const Rect& domain);
 
   /**
    * @brief Binds empty data to this unbound store (the store becomes a bound, zero-volume store).
@@ -157,7 +157,7 @@ class PhysicalStore {
    *
    * The strides are in element units (not bytes) and have `dim()` entries (at least one).
    */
-  [[nodiscard]] const DomainPoint& strides() const;
+  [[nodiscard]] const Point& strides() const;
 
  private:
   [[nodiscard]] const InternalSharedPtr<InlineStorage>& storage_() const;
@@ -179,10 +179,10 @@ class PhysicalStore {
   // layout (see `PhysicalStoreLayout`). `base_` is the address of the store's coordinate origin
   // and `strides_` are element strides over the store's dimensions.
   void* base_{};
-  DomainPoint strides_{};
+  Point strides_{};
 
   // The store's (transformed) domain over its own coordinate space.
-  Domain domain_{};
+  Rect domain_{};
 
   // Unbound-store state. `unbound_` is true for an unbound store that has not been bound yet;
   // `unbound_target_` is the memory a produced buffer should be allocated on, and

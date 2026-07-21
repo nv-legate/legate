@@ -17,7 +17,7 @@
 
 namespace legate::detail {
 
-Domain Shift::transform(const Domain& input) const
+Rect Shift::transform(const Rect& input) const
 {
   auto lo = input.lo();
   auto hi = input.hi();
@@ -27,13 +27,13 @@ Domain Shift::transform(const Domain& input) const
   return {std::move(lo), std::move(hi)};
 }
 
-DomainPoint Shift::convert_point(DomainPoint point) const
+Point Shift::convert_point(Point point) const
 {
   point[dim_] += offset_;
   return point;
 }
 
-DomainPoint Shift::invert_point(DomainPoint point) const
+Point Shift::invert_point(Point point) const
 {
   point[dim_] -= offset_;
   return point;

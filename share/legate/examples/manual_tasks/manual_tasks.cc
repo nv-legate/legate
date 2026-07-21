@@ -133,7 +133,7 @@ void run_manual_task_example()
     auto task =
       runtime->create_task(library,
                            InitTask::TASK_CONFIG.task_id(),
-                           legate::Domain{legate::Point<2>{0, 0}, legate::Point<2>{1, 0}});
+                           legate::Rect{legate::NDPoint<2>{0, 0}, legate::NDPoint<2>{1, 0}});
     task.add_output(row_partition);
     runtime->submit(std::move(task));
   }

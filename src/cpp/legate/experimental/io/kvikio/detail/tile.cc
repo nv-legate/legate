@@ -29,14 +29,14 @@ class TileReadWriteFn {
   void operator()(legate::TaskContext context, bool is_read_op, legate::PhysicalStore* store) const;
 
  private:
-  [[nodiscard]] static DomainPoint get_tile_coord_(const DomainPoint& task_index,
-                                                   Span<const std::uint64_t> tile_start);
+  [[nodiscard]] static Point get_tile_coord_(const Point& task_index,
+                                             Span<const std::uint64_t> tile_start);
   [[nodiscard]] static std::filesystem::path get_file_path_(std::string_view dirpath,
-                                                            const DomainPoint& tile_coord);
+                                                            const Point& tile_coord);
 };
 
-DomainPoint TileReadWriteFn::get_tile_coord_(const DomainPoint& task_index,
-                                             Span<const std::uint64_t> tile_start)
+Point TileReadWriteFn::get_tile_coord_(const Point& task_index,
+                                       Span<const std::uint64_t> tile_start)
 {
   auto ret = task_index;
 
@@ -47,7 +47,7 @@ DomainPoint TileReadWriteFn::get_tile_coord_(const DomainPoint& task_index,
 }
 
 std::filesystem::path TileReadWriteFn::get_file_path_(std::string_view dirpath,
-                                                      const DomainPoint& tile_coord)
+                                                      const Point& tile_coord)
 {
   // dirpath / coord0.coord1.coord2.coord3
   return fmt::format("{}{}{}",

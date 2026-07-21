@@ -33,15 +33,15 @@ Span<const std::uint64_t> Shape::extents() const
   return {reinterpret_cast<const std::uint64_t*>(extents_.begin()), extents_.size()};
 }
 
-Domain Shape::domain() const
+Rect Shape::domain() const
 {
   const auto dim = static_cast<std::int32_t>(dim_);
 
   check_binding_();
-  return {DomainPoint::zeroes(dim), extents_ - DomainPoint::full(dim, /* coord */ 1)};
+  return {Point::zeroes(dim), extents_ - Point::full(dim, /* coord */ 1)};
 }
 
-void Shape::bind_extents(DomainPoint extents)
+void Shape::bind_extents(Point extents)
 {
   LEGATE_ASSERT(dim_ == extents.size());
   state_   = State::BOUND;

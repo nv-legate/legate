@@ -223,7 +223,7 @@ InternalSharedPtr<AutoTask> Runtime::create_task(const Library& library, LocalTa
 
 InternalSharedPtr<ManualTask> Runtime::create_task(const Library& library,
                                                    LocalTaskID task_id,
-                                                   const Domain& launch_domain)
+                                                   const Rect& launch_domain)
 {
   if (launch_domain.empty()) {
     throw TracedException<std::invalid_argument>{"Launch domain must not be empty"};

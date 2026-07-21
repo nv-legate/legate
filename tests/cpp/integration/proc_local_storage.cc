@@ -21,12 +21,12 @@ constexpr std::uint64_t EXTENT = 42;
 
 class Handle {
  public:
-  explicit Handle(const legate::DomainPoint& point) : point_{point} {}
+  explicit Handle(const legate::Point& point) : point_{point} {}
 
-  [[nodiscard]] const legate::DomainPoint& point() const { return point_; }
+  [[nodiscard]] const legate::Point& point() const { return point_; }
 
  private:
-  legate::DomainPoint point_{};
+  legate::Point point_{};
 };
 
 class PrimitiveTester : public legate::LegateTask<PrimitiveTester> {

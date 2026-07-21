@@ -39,7 +39,7 @@ struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
   {
     auto output = context.output(0);
     auto size   = context.get_task_index()[0] + 1;
-    auto buffer = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size},
+    auto buffer = output.create_output_buffer<std::int64_t, 1>(legate::NDPoint<1>{size},
                                                                /*bind_buffer=*/true /*bind*/);
     for (std::int64_t idx = 0; idx < size; ++idx) {
       buffer[idx] = size;
@@ -59,7 +59,7 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
       auto shape = input.shape<1>();
       EXPECT_TRUE(shape.empty() || shape.volume() == TILE_SIZE);
     }
-    (void)output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{0}, /*bind_buffer=*/true);
+    (void)output.create_output_buffer<std::int64_t, 1>(legate::NDPoint<1>{0}, /*bind_buffer=*/true);
   }
 };
 
@@ -77,7 +77,7 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
       ASSERT_EQ(shape.volume(), expected);
       ++expected;
     }
-    (void)output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{0}, /*bind_buffer=*/true);
+    (void)output.create_output_buffer<std::int64_t, 1>(legate::NDPoint<1>{0}, /*bind_buffer=*/true);
   }
 };
 

@@ -13,7 +13,7 @@
 
 namespace legate::detail {
 
-const DomainPoint& LogicalStorePartition::color_shape() const { return partition_->color_shape(); }
+const Point& LogicalStorePartition::color_shape() const { return partition_->color_shape(); }
 
 void LogicalStorePartition::fetch() const { store()->reshuffle(partition_); }
 

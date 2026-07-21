@@ -24,8 +24,8 @@ class CopyRequest {
               InternalSharedPtr<InlineStorage> target,
               InternalSharedPtr<Partition> source_partition,
               InternalSharedPtr<Partition> target_partition,
-              const Domain& source_domain,
-              const Domain& target_domain,
+              const Rect& source_domain,
+              const Rect& target_domain,
               std::uint32_t field_size);
   void perform(VariantCode variant_code) const;
 
@@ -44,8 +44,8 @@ class CopyRequest {
   InternalSharedPtr<InlineStorage> target_{};
   InternalSharedPtr<Partition> source_partition_{};
   InternalSharedPtr<Partition> target_partition_{};
-  Domain source_domain_{};
-  Domain target_domain_{};
+  Rect source_domain_{};
+  Rect target_domain_{};
   std::uint32_t field_size_{};
 };
 

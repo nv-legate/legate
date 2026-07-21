@@ -22,7 +22,7 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
     ):
         pass
 
-    cdef cppclass _DomainPoint "legate::DomainPoint":
+    cdef cppclass _DomainPoint "legate::Point":
         _DomainPoint() except+
         _DomainPoint(int64_t) except+
         int32_t dim() except+
@@ -32,7 +32,7 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
         _DomainPoint operator+(const _DomainPoint&) except+
         _DomainPoint operator+(int64_t) except+
 
-    cdef cppclass _Domain "legate::Domain":
+    cdef cppclass _Domain "legate::Rect":
         _Domain() except+
         _Domain(const _DomainPoint&, const _DomainPoint&) except+
         int32_t dim() except+
@@ -55,12 +55,12 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate":
 
 # Need to _t these because in the .pyx we also need to define
 #
-# DomainPoint = tuple[int, ...]
-# Domain = tuple[DomainPoint, DomainPoint]
+# Point = tuple[int, ...]
+# Rect = tuple[Point, Point]
 #
-# So that people can do "from legate.core import DomainPoint" etc. If we call
-# these typdefs "DomainPoint" and "Domain", then Cython complains that the
-# above "cannot assign to non-lvalue DomainPoint".
+# So that people can do "from legate.core import Point" etc. If we call
+# these typdefs "Point" and "Rect", then Cython complains that the
+# above "cannot assign to non-lvalue Point".
 ctypedef tuple[int, ...] DomainPoint_t
 ctypedef object Domain_t  # namedtuple
 

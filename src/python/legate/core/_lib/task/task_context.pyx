@@ -139,7 +139,7 @@ cdef class TaskContext(Unconstructable):
         single task.
 
         :returns: The point of the task.
-        :rtype: DomainPoint
+        :rtype: Point
         """
         return domain_point_to_py(self._handle.get_task_index())
 
@@ -150,7 +150,7 @@ cdef class TaskContext(Unconstructable):
         empty domain.
 
         :returns: The launch domain of the task.
-        :rtype: Domain
+        :rtype: Rect
         """
         return domain_to_py(self._handle.get_launch_domain())
 

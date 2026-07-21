@@ -8,8 +8,8 @@
 
 #include <legate_defines.h>
 
-#include <legate/geometry/point.h>
-#include <legate/geometry/rect.h>
+#include <legate/geometry/nd_point.h>
+#include <legate/geometry/nd_rect.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstddef>
@@ -31,18 +31,18 @@ class AccessorBase {
   // `(0, ..., 0)`); `strides` are in elements. The base pointer is already
   // translated to the origin at store-creation time, so `offset()` is a plain
   // dot product with no per-call subtraction of `lo`.
-  LEGATE_HOST_DEVICE AccessorBase(ELEM* base, legate::Point<DIM> strides);
+  LEGATE_HOST_DEVICE AccessorBase(ELEM* base, legate::NDPoint<DIM> strides);
 
   // Element offset (in elements) of `p` relative to the coordinate origin.
-  LEGATE_HOST_DEVICE std::int64_t offset(const legate::Point<DIM>& p) const;
+  LEGATE_HOST_DEVICE std::int64_t offset(const legate::NDPoint<DIM>& p) const;
 
-  LEGATE_HOST_DEVICE ELEM* ptr(const legate::Point<DIM>& p) const;
+  LEGATE_HOST_DEVICE ELEM* ptr(const legate::NDPoint<DIM>& p) const;
 
-  LEGATE_HOST_DEVICE ELEM* ptr(const legate::Rect<DIM>& r) const;
+  LEGATE_HOST_DEVICE ELEM* ptr(const legate::NDRect<DIM>& r) const;
 
-  LEGATE_HOST_DEVICE ELEM* ptr(const legate::Rect<DIM>& r, std::size_t strides[DIM]) const;
+  LEGATE_HOST_DEVICE ELEM* ptr(const legate::NDRect<DIM>& r, std::size_t strides[DIM]) const;
 
-  LEGATE_HOST_DEVICE ELEM* ptr(const legate::Rect<DIM>& r, legate::Point<DIM>& strides) const;
+  LEGATE_HOST_DEVICE ELEM* ptr(const legate::NDRect<DIM>& r, legate::NDPoint<DIM>& strides) const;
 
   // True when every stride is zero, i.e. the store is a broadcast scalar.
   [[nodiscard]] LEGATE_HOST_DEVICE bool is_scalar() const;
@@ -50,15 +50,15 @@ class AccessorBase {
   // Dense-layout predicates, computed from the strides (mirroring the semantics
   // of Realm's AffineAccessor::is_dense_*). A dimension of extent 1 imposes no
   // constraint on its stride.
-  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_row_major(const legate::Rect<DIM>& r) const;
+  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_row_major(const legate::NDRect<DIM>& r) const;
 
-  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_col_major(const legate::Rect<DIM>& r) const;
+  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_col_major(const legate::NDRect<DIM>& r) const;
 
-  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_arbitrary(const legate::Rect<DIM>& r) const;
+  [[nodiscard]] LEGATE_HOST_DEVICE bool is_dense_arbitrary(const legate::NDRect<DIM>& r) const;
 
  protected:
   ELEM* base_{nullptr};
-  legate::Point<DIM> strides_{};
+  legate::NDPoint<DIM> strides_{};
 };
 
 }  // namespace detail
@@ -70,7 +70,7 @@ class AccessorRO : public detail::AccessorBase<const T, DIM> {
   using detail::AccessorBase<const T, DIM>::AccessorBase;
   using detail::AccessorBase<const T, DIM>::ptr;
 
-  LEGATE_HOST_DEVICE const T& operator[](const legate::Point<DIM>& p) const;
+  LEGATE_HOST_DEVICE const T& operator[](const legate::NDPoint<DIM>& p) const;
 };
 
 // --- Write-only -----------------------------------------------------------
@@ -80,7 +80,7 @@ class AccessorWO : public detail::AccessorBase<T, DIM> {
   using detail::AccessorBase<T, DIM>::AccessorBase;
   using detail::AccessorBase<T, DIM>::ptr;
 
-  LEGATE_HOST_DEVICE T& operator[](const legate::Point<DIM>& p) const;
+  LEGATE_HOST_DEVICE T& operator[](const legate::NDPoint<DIM>& p) const;
 };
 
 // --- Read-write -----------------------------------------------------------
@@ -90,7 +90,7 @@ class AccessorRW : public detail::AccessorBase<T, DIM> {
   using detail::AccessorBase<T, DIM>::AccessorBase;
   using detail::AccessorBase<T, DIM>::ptr;
 
-  LEGATE_HOST_DEVICE T& operator[](const legate::Point<DIM>& p) const;
+  LEGATE_HOST_DEVICE T& operator[](const legate::NDPoint<DIM>& p) const;
 };
 
 // --- Reduction ------------------------------------------------------------
@@ -104,7 +104,7 @@ class AccessorRD : public detail::AccessorBase<typename REDOP::RHS, DIM> {
   using Base::Base;
   using Base::ptr;
 
-  LEGATE_HOST_DEVICE void reduce(const legate::Point<DIM>& p, RHS value) const;
+  LEGATE_HOST_DEVICE void reduce(const legate::NDPoint<DIM>& p, RHS value) const;
 
   // Proxy so that `acc[p] <<= value` performs the reduction.
   class ReductionProxy {
@@ -119,7 +119,7 @@ class AccessorRD : public detail::AccessorBase<typename REDOP::RHS, DIM> {
     RHS* target_;
   };
 
-  LEGATE_HOST_DEVICE ReductionProxy operator[](const legate::Point<DIM>& p) const;
+  LEGATE_HOST_DEVICE ReductionProxy operator[](const legate::NDPoint<DIM>& p) const;
 };
 
 }  // namespace legate

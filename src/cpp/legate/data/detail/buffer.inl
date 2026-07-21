@@ -14,7 +14,7 @@ inline const InternalSharedPtr<Type>& TaskLocalBuffer::type() const { return typ
 
 inline std::uint32_t TaskLocalBuffer::dim() const { return domain().dim(); }
 
-inline const Domain& TaskLocalBuffer::domain() const { return domain_; }
+inline const Rect& TaskLocalBuffer::domain() const { return domain_; }
 
 inline const InternalSharedPtr<InlineStorage>& TaskLocalBuffer::get_storage() const
 {

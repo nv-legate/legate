@@ -9,8 +9,12 @@
 namespace {
 
 template <typename LHS, typename RHS>
-__global__ void add_kernel(
-  std::size_t volume, legate::Point<3> extents, legate::Point<3> lo, LHS lhs, RHS rhs1, RHS rhs2)
+__global__ void add_kernel(std::size_t volume,
+                           legate::NDPoint<3> extents,
+                           legate::NDPoint<3> lo,
+                           LHS lhs,
+                           RHS rhs1,
+                           RHS rhs2)
 {
   const auto tid = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
@@ -20,7 +24,7 @@ __global__ void add_kernel(
 
   auto idx = tid;
 
-  legate::Point<3> p;
+  legate::NDPoint<3> p;
   p[0] = idx / (extents[1] * extents[2]);
   idx %= extents[1] * extents[2];
   p[1] = idx / extents[2];
@@ -56,7 +60,7 @@ void AddTask::gpu_variant(legate::TaskContext context)
   auto stream       = context.get_task_stream();
 
   const auto num_blocks = (volume + 127) / 128;
-  const auto extents    = x_shape.hi - x_shape.lo + legate::Point<3>::ones();
+  const auto extents    = x_shape.hi - x_shape.lo + legate::NDPoint<3>::ones();
 
   add_kernel<<<num_blocks, 128, 0, stream>>>(volume, extents, x_shape.lo, out_acc, x_acc, y_acc);
 }

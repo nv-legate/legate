@@ -39,7 +39,7 @@ class UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
   store1.bind_empty_data();
   store2.bind_empty_data();
   static_cast<void>(store3.create_output_buffer<std::uint64_t, LEGATE_MAX_DIM>(
-    legate::Point<LEGATE_MAX_DIM>{1}, /*bind_buffer=*/true));
+    legate::NDPoint<LEGATE_MAX_DIM>{1}, /*bind_buffer=*/true));
 }
 
 class Config {

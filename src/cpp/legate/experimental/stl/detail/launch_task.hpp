@@ -657,7 +657,7 @@ class IterationCPU<Function<Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss...>> 
     constexpr std::int32_t DIM = dim_of_v<meta::front<Is...>>;
 
     if constexpr (DIM == ActualDim) {
-      const Legion::Rect<DIM> shape = inputs[0].shape<DIM>();
+      const Legion::NDRect<DIM> shape = inputs[0].shape<DIM>();
 
       if (!shape.empty()) {
         impl(std::index_sequence_for<Is...>{},
@@ -728,7 +728,7 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
     constexpr std::int32_t Dim = dim_of_v<meta::front<Is...>>;
 
     if constexpr (Dim == ActualDim) {
-      const Legion::Rect<Dim> shape = inputs[0].shape<Dim>();
+      const Legion::NDRect<Dim> shape = inputs[0].shape<Dim>();
 
       if (!shape.empty()) {
         impl(std::index_sequence_for<Is...>{},
@@ -790,7 +790,7 @@ struct IterationOperation  //
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Op, std::int32_t Dim, bool Exclusive = false>
-[[nodiscard]] inline auto as_mdspan_reduction(PhysicalStore& store, Rect<Dim> working_set)
+[[nodiscard]] inline auto as_mdspan_reduction(PhysicalStore& store, NDRect<Dim> working_set)
   -> mdspan_reduction_t<Op, Dim, Exclusive>
 {
   using Mapping = ::cuda::std::layout_right::mapping<::cuda::std::dextents<coord_t, Dim>>;
@@ -840,7 +840,7 @@ class ReductionCPU<Reduction<Red, Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss
                    const std::vector<Scalar>& scalars)
   {
     constexpr std::int32_t DIM = stl::dim_of_v<Red>;
-    Rect<DIM> working_set      = reduction.shape<DIM>();
+    NDRect<DIM> working_set    = reduction.shape<DIM>();
     ((working_set = working_set.intersection(inputs[InputIs].shape<DIM>())), ...);
 
     cpu_detail::cpu_reduce(
@@ -863,7 +863,7 @@ class ReductionCPU<Reduction<Red, Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss
     constexpr std::int32_t DIM = dim_of_v<Red>;
 
     if constexpr (DIM == ActualDim) {
-      const Legion::Rect<DIM> shape = reductions.at(0).shape<DIM>();
+      const Legion::NDRect<DIM> shape = reductions.at(0).shape<DIM>();
 
       if (!shape.empty()) {
         impl(std::index_sequence_for<Is...>{},
@@ -924,7 +924,7 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
     const std::size_t num_blocks = (volume + THREAD_BLOCK_SIZE - 1) / THREAD_BLOCK_SIZE;
 
     constexpr std::int32_t Dim = dim_of_v<Red>;
-    Rect<Dim> working_set      = reduction.shape<Dim>();
+    NDRect<Dim> working_set    = reduction.shape<Dim>();
     ((working_set = working_set.intersection(inputs[InputIs].shape<Dim>())), ...);
 
     gpu_detail::gpu_reduce<<<num_blocks, THREAD_BLOCK_SIZE, 0, stream>>>(
@@ -948,7 +948,7 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
     constexpr std::int32_t DIM = dim_of_v<Red>;
 
     if constexpr (DIM == ActualDim) {
-      const Legion::Rect<DIM> shape = reductions.at(0).shape<DIM>();
+      const Legion::NDRect<DIM> shape = reductions.at(0).shape<DIM>();
 
       if (!shape.empty()) {
         impl(std::index_sequence_for<Is...>{},

@@ -68,9 +68,9 @@ class NoPartition final : public Partition {
    *
    * @throws std::invalid_argument
    */
-  [[nodiscard]] const DomainPoint& color_shape() const override;
+  [[nodiscard]] const Point& color_shape() const override;
 
-  [[nodiscard]] bool is_equi_size(const Domain& domain) const override;
+  [[nodiscard]] bool is_equi_size(const Rect& domain) const override;
 
   /**
    * @copydoc Partition::launch_domain()
@@ -79,9 +79,9 @@ class NoPartition final : public Partition {
    *
    * @throws std::invalid_argument
    */
-  [[nodiscard]] Domain launch_domain() const override;
+  [[nodiscard]] Rect launch_domain() const override;
 
-  [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
+  [[nodiscard]] Point compute_color(std::uint64_t device_id) const override;
 
   /**
    * @copydoc Partition::compute_device_ids()
@@ -89,12 +89,11 @@ class NoPartition final : public Partition {
    * A `NoPartition` places the whole (single) region on every device, so this returns every device
    * id in the machine.
    */
-  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(
-    const DomainPoint& color) const override;
+  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(const Point& color) const override;
 
-  [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
+  [[nodiscard]] Rect shard(const Rect& domain, const Point& color) const override;
 
-  [[nodiscard]] bool subsumes(const Domain& domain,
+  [[nodiscard]] bool subsumes(const Rect& domain,
                               const InternalSharedPtr<Partition>& other) const override;
 
   /**

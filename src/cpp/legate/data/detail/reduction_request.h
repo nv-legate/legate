@@ -32,7 +32,7 @@ class ReductionRequest {
                    InternalSharedPtr<InlineStorage> target,
                    InternalSharedPtr<Partition> source_partition,
                    InternalSharedPtr<Partition> target_partition,
-                   const Domain& sub_domain,
+                   const Rect& sub_domain,
                    InternalSharedPtr<Type> type,
                    ReductionOpKind op_kind);
   void perform(VariantCode variant_code) const;
@@ -57,7 +57,7 @@ class ReductionRequest {
   // through the store transform stack. Drives the dispatch in `perform()`.
   InternalSharedPtr<Partition> source_partition_{};
   InternalSharedPtr<Partition> target_partition_{};
-  Domain sub_domain_{};
+  Rect sub_domain_{};
   InternalSharedPtr<Type> type_{};
   ReductionOpKind op_kind_{};
 };

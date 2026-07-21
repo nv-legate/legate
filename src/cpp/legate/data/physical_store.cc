@@ -35,11 +35,11 @@ class CreateBuffer {
   template <Type::Code CODE, std::int32_t DIM>
   [[nodiscard]] TaskLocalBuffer operator()(const PhysicalStore& store,
                                            const Type& ty,
-                                           const DomainPoint& extents,
+                                           const Point& extents,
                                            bool bind_buffer) const
   {
     const auto buf =
-      store.create_output_buffer<type_of_t<CODE>>(static_cast<Point<DIM>>(extents), bind_buffer);
+      store.create_output_buffer<type_of_t<CODE>>(static_cast<NDPoint<DIM>>(extents), bind_buffer);
 
     return TaskLocalBuffer{buf, ty};
   }
@@ -49,23 +49,22 @@ class CreateBuffer {
 
 namespace {
 
-// Domain spanning `[0, extents)` in every dimension.
-[[nodiscard]] Domain extents_to_domain(const DomainPoint& extents)
+// Rect spanning `[0, extents)` in every dimension.
+[[nodiscard]] Rect extents_to_domain(const Point& extents)
 {
-  auto lo = DomainPoint::zeroes(static_cast<std::int32_t>(extents.dim()));
-  auto hi = DomainPoint::zeroes(static_cast<std::int32_t>(extents.dim()));
+  auto lo = Point::zeroes(static_cast<std::int32_t>(extents.dim()));
+  auto hi = Point::zeroes(static_cast<std::int32_t>(extents.dim()));
 
   for (std::uint32_t i = 0; i < extents.dim(); ++i) {
     lo[i] = 0;
     hi[i] = extents[i] - 1;
   }
-  return Domain{std::move(lo), std::move(hi)};
+  return Rect{std::move(lo), std::move(hi)};
 }
 
 }  // namespace
 
-TaskLocalBuffer PhysicalStore::create_output_buffer(const DomainPoint& extents,
-                                                    bool bind_buffer) const
+TaskLocalBuffer PhysicalStore::create_output_buffer(const Point& extents, bool bind_buffer) const
 {
   return double_dispatch(static_cast<std::int32_t>(extents.dim()),
                          type().code(),
@@ -77,7 +76,7 @@ TaskLocalBuffer PhysicalStore::create_output_buffer(const DomainPoint& extents,
 }
 
 void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
-                              const DomainPoint& extents,
+                              const Point& extents,
                               bool check_type) const
 {
   if (check_type && (buffer.type() != type())) {
@@ -89,7 +88,7 @@ void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
   bind_inline_storage_(buffer.impl()->get_storage(), extents_to_domain(extents));
 }
 
-void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>&, const Point<1>&) const
+void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>&, const NDPoint<1>&) const
 {
   if (!is_unbound_store()) {
     throw detail::TracedException<std::invalid_argument>{
@@ -112,13 +111,13 @@ void PhysicalStore::bind_empty_data() const
 }
 
 InternalSharedPtr<detail::InlineStorage> PhysicalStore::create_output_buffer_storage_(
-  const Domain& bounds) const
+  const Rect& bounds) const
 {
   return impl()->create_output_buffer_storage(bounds);
 }
 
 void PhysicalStore::bind_inline_storage_(const InternalSharedPtr<detail::InlineStorage>& storage,
-                                         const Domain& extents) const
+                                         const Rect& extents) const
 {
   if (!is_unbound_store()) {
     throw detail::TracedException<std::invalid_argument>{
@@ -131,7 +130,7 @@ std::int32_t PhysicalStore::dim() const { return impl()->dim(); }
 
 Type PhysicalStore::type() const { return Type{impl()->type()}; }
 
-Domain PhysicalStore::domain() const { return impl()->domain(); }
+Rect PhysicalStore::domain() const { return impl()->domain(); }
 
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
@@ -177,6 +176,6 @@ void PhysicalStore::check_reduction_access_() const { impl()->check_reduction_ac
 
 void* PhysicalStore::base_() const { return impl()->base(); }
 
-const DomainPoint& PhysicalStore::strides_() const { return impl()->strides(); }
+const Point& PhysicalStore::strides_() const { return impl()->strides(); }
 
 }  // namespace legate

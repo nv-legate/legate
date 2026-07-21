@@ -84,7 +84,8 @@ class WriteAccessorFn {
       }
     }
 
-    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ones(), op_shape.hi};
+    const auto bounds =
+      legate::NDRect<DIM>{op_shape.lo + legate::NDPoint<DIM>::ones(), op_shape.hi};
     const auto bounds_empty = bounds.empty();
 
     if (!bounds_empty) {
@@ -127,15 +128,15 @@ class WriteAccessorFn {
 
     if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       static constexpr auto EXTENTS = 10000;
-      const auto exceeded_bounds    = legate::Point<DIM>{EXTENTS};
+      const auto exceeded_bounds    = legate::NDPoint<DIM>{EXTENTS};
       const auto write_acc          = store.write_accessor<T, DIM>();
       const auto write_acc_bounds   = store.write_accessor<T, DIM>(bounds);
 
       ASSERT_EXIT(write_acc[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(
-        write_acc[(op_shape.hi + legate::Point<DIM>::ones())], ::testing::ExitedWithCode{1}, "");
+        write_acc[(op_shape.hi + legate::NDPoint<DIM>::ones())], ::testing::ExitedWithCode{1}, "");
       ASSERT_EXIT(write_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode{1}, "");
-      ASSERT_EXIT(write_acc_bounds[(bounds.hi + legate::Point<DIM>::ones())],
+      ASSERT_EXIT(write_acc_bounds[(bounds.hi + legate::NDPoint<DIM>::ones())],
                   ::testing::ExitedWithCode{1},
                   "");
     }
@@ -329,7 +330,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, InvalidDim)
 
   ASSERT_THROW(static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
+  auto bounds = legate::NDRect<INVALID_DIM>{{0, 0, 0}, {0, 0, 0}};
 
   ASSERT_THROW(
     static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
@@ -347,7 +348,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, InvalidType)
 
   ASSERT_THROW(static_cast<void>(store.write_accessor<std::uint64_t, DIM, VALIDATE_TYPE>()),
                std::invalid_argument);
-  auto bounds = legate::Rect<DIM>{{0, 0}, {0, 0}};
+  auto bounds = legate::NDRect<DIM>{{0, 0}, {0, 0}};
 
   ASSERT_THROW(static_cast<void>(store.write_accessor<std::int64_t, DIM, VALIDATE_TYPE>(bounds)),
                std::invalid_argument);

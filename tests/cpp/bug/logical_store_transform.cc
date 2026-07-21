@@ -27,7 +27,7 @@ class InitTask : public legate::LegateTask<InitTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0);
-    auto buffer = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{EXT},
+    auto buffer = output.create_output_buffer<std::int64_t, 1>(legate::NDPoint<1>{EXT},
                                                                /*bind_buffer=*/true);
     for (std::int64_t idx = 0; idx < static_cast<std::int64_t>(EXT); ++idx) {
       buffer[idx] = VAL;

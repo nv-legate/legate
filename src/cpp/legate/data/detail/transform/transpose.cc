@@ -41,11 +41,11 @@ Transpose::Transpose(SmallVector<std::int32_t, LEGATE_MAX_DIM>&& axes) : axes_{s
   });
 }
 
-Domain Transpose::transform(const Domain& domain) const
+Rect Transpose::transform(const Rect& domain) const
 {
   const auto ndim = domain.dim();
-  auto lo         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
-  auto hi         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
+  auto lo         = Point::zeroes(static_cast<std::int32_t>(ndim));
+  auto hi         = Point::zeroes(static_cast<std::int32_t>(ndim));
   auto&& in_lo    = domain.lo();
   auto&& in_hi    = domain.hi();
 
@@ -72,21 +72,18 @@ Restrictions Transpose::convert(Restrictions restrictions, bool /*forbid_fake_di
       });
 }
 
-DomainPoint Transpose::convert_color(DomainPoint color) const { return color.permuted(axes_); }
+Point Transpose::convert_color(Point color) const { return color.permuted(axes_); }
 
-DomainPoint Transpose::convert_color_shape(DomainPoint color_shape) const
+Point Transpose::convert_color_shape(Point color_shape) const
 {
   return color_shape.permuted(axes_);
 }
 
-DomainPoint Transpose::convert_point(DomainPoint point) const { return point.permuted(axes_); }
+Point Transpose::convert_point(Point point) const { return point.permuted(axes_); }
 
-DomainPoint Transpose::convert_extents(DomainPoint extents) const
-{
-  return extents.permuted(axes_);
-}
+Point Transpose::convert_extents(Point extents) const { return extents.permuted(axes_); }
 
-DomainPoint Transpose::convert_strides(DomainPoint strides) const
+Point Transpose::convert_strides(Point strides) const
 {
   // No in-place available
   return strides.permuted(axes_);
@@ -112,19 +109,16 @@ Restrictions Transpose::invert(Restrictions restrictions) const
       });
 }
 
-DomainPoint Transpose::invert_color(DomainPoint color) const { return color.permuted(inverse_); }
+Point Transpose::invert_color(Point color) const { return color.permuted(inverse_); }
 
-DomainPoint Transpose::invert_color_shape(DomainPoint color_shape) const
+Point Transpose::invert_color_shape(Point color_shape) const
 {
   return color_shape.permuted(inverse_);
 }
 
-DomainPoint Transpose::invert_point(DomainPoint point) const { return point.permuted(inverse_); }
+Point Transpose::invert_point(Point point) const { return point.permuted(inverse_); }
 
-DomainPoint Transpose::invert_extents(DomainPoint extents) const
-{
-  return extents.permuted(inverse_);
-}
+Point Transpose::invert_extents(Point extents) const { return extents.permuted(inverse_); }
 
 void Transpose::pack(BufferBuilder& buffer) const
 {

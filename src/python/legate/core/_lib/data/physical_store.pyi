@@ -9,7 +9,7 @@ from typing_extensions import CapsuleType
 
 from ..mapping.mapping import StoreTarget
 from ..type.types import Type
-from ..utilities.typedefs import Domain
+from ..utilities.typedefs import Rect
 from ..utilities.unconstructable import Unconstructable
 from .buffer import TaskLocalBuffer
 from .inline_allocation import InlineAllocation
@@ -20,7 +20,7 @@ class PhysicalStore(Unconstructable):
     @property
     def type(self) -> Type: ...
     @property
-    def domain(self) -> Domain: ...
+    def domain(self) -> Rect: ...
     @property
     def target(self) -> StoreTarget: ...
     def create_output_buffer(

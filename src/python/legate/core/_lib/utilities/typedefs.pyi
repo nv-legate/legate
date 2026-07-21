@@ -15,8 +15,8 @@ class VariantCode(IntEnum):
     GPU = cast(int, ...)
     OMP = cast(int, ...)
 
-DomainPoint: TypeAlias = tuple[int, ...]
+Point: TypeAlias = tuple[int, ...]
 
-class Domain(NamedTuple):
-    lo: DomainPoint = (0,)
-    hi: DomainPoint = (0,)
+class Rect(NamedTuple):
+    lo: Point = (0,)
+    hi: Point = (0,)

@@ -35,7 +35,7 @@ class BufferFn {
       }
       default: {
         auto buffer = legate::create_buffer<T, DIM>(
-          legate::Point<DIM>{static_cast<legate::coord_t>(bytes)}, kind, alignment);
+          legate::NDPoint<DIM>{static_cast<legate::coord_t>(bytes)}, kind, alignment);
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
         EXPECT_EQ(buffer.memory_kind(),
                   kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM
@@ -167,7 +167,7 @@ TEST_P(BufferTaskTest, CreateBuffer)
 TEST_F(BufferUnit, Size)
 {
   ASSERT_NO_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
-    legate::Point<1>{-1}, legate::Memory::SYSTEM_MEM, alignof(std::max_align_t))));
+    legate::NDPoint<1>{-1}, legate::Memory::SYSTEM_MEM, alignof(std::max_align_t))));
   ASSERT_NO_THROW(
     static_cast<void>(legate::create_buffer<std::uint64_t>(0, legate::Memory::SYSTEM_MEM)));
 }

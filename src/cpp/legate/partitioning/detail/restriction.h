@@ -144,18 +144,18 @@ class Restrictions {
   prune_dimensions(Span<const std::uint64_t> shape) const;
 
   /**
-   * @brief Prune the dimensions of a Domain that are restricted by this object.
+   * @brief Prune the dimensions of a Rect that are restricted by this object.
    *
    * The i-th dimension of the input domain will not appear in the output if dim_restrictions_[i] is
    * FORBID.
    *
    * @return The domain with FORBIDden dimensions pruned out.
    */
-  [[nodiscard]] Domain prune_dimensions(const Domain& domain) const;
+  [[nodiscard]] Rect prune_dimensions(const Rect& domain) const;
 
-  [[nodiscard]] Domain embed(const Domain& domain) const;
+  [[nodiscard]] Rect embed(const Rect& domain) const;
 
-  [[nodiscard]] DomainPoint embed_to_color_shape(const Domain& domain) const;
+  [[nodiscard]] Point embed_to_color_shape(const Rect& domain) const;
 
   [[nodiscard]] std::size_t count_restricted() const;
 

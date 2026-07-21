@@ -37,7 +37,7 @@ class InlineStorage {
    * @param field_size The size of the field in bytes.
    * @param target The target memory kind to allocate.
    */
-  InlineStorage(const Domain& domain, std::uint32_t field_size, mapping::StoreTarget target);
+  InlineStorage(const Rect& domain, std::uint32_t field_size, mapping::StoreTarget target);
 
   /**
    * @brief Construct an `InlineStorage` from an existing external allocation.
@@ -48,7 +48,7 @@ class InlineStorage {
    * @param field_size The size of the field in bytes.
    * @param alloc The external allocation to use for the manually managed memory.
    */
-  InlineStorage(Domain domain, std::uint32_t field_size, const legate::ExternalAllocation& alloc);
+  InlineStorage(Rect domain, std::uint32_t field_size, const legate::ExternalAllocation& alloc);
 
   InlineStorage(InlineStorage&&) noexcept                 = default;
   InlineStorage& operator=(InlineStorage&&) noexcept      = default;
@@ -59,7 +59,7 @@ class InlineStorage {
   /**
    * @brief Returns the domain that the inline storage spans.
    */
-  [[nodiscard]] const Domain& domain() const;
+  [[nodiscard]] const Rect& domain() const;
 
   /**
    * @brief Re-interpret the same allocation as spanning a different domain of equal volume.
@@ -72,7 +72,7 @@ class InlineStorage {
    *
    * @param domain The new domain. Must have the same volume as the current one.
    */
-  void rebase(const Domain& domain);
+  void rebase(const Rect& domain);
 
   /**
    * @brief Returns the memory kind of the inline storage.
@@ -100,12 +100,12 @@ class InlineStorage {
    *
    * @return A pair of the base pointer and the element strides.
    */
-  [[nodiscard]] std::pair<void*, DomainPoint> base_and_element_strides() const;
+  [[nodiscard]] std::pair<void*, Point> base_and_element_strides() const;
 
  private:
   [[nodiscard]] const legate::ExternalAllocation& alloc_() const;
 
-  Domain domain_{};
+  Rect domain_{};
   std::uint32_t field_size_{};
   legate::ExternalAllocation allocation_{};
 };

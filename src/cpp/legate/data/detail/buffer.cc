@@ -18,8 +18,8 @@ namespace legate::detail {
 
 TaskLocalBuffer::TaskLocalBuffer(InternalSharedPtr<InlineStorage> storage,
                                  InternalSharedPtr<Type> type,
-                                 // Domain is a POD type, no point in moving it
-                                 const Domain& bounds)  // NOLINT(modernize-pass-by-value)
+                                 // Rect is a POD type, no point in moving it
+                                 const Rect& bounds)  // NOLINT(modernize-pass-by-value)
   : storage_{std::move(storage)}, type_{std::move(type)}, domain_{bounds}
 {
 }

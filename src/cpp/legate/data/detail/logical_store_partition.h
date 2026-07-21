@@ -23,7 +23,7 @@ class LogicalStorePartition {
 
   [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
-  [[nodiscard]] const DomainPoint& color_shape() const;
+  [[nodiscard]] const Point& color_shape() const;
 
   void fetch() const;
 

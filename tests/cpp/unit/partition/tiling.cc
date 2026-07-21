@@ -91,7 +91,7 @@ TEST_F(TilingTest, IsConvertible) { ASSERT_TRUE(tiling->is_convertible()); }
 TEST_F(TilingTest, LaunchDomain)
 {
   ASSERT_TRUE(tiling->has_color_shape());
-  auto domain = legate::Domain{legate::Rect<2>{{0, 0}, {1, 1}}};
+  auto domain = legate::Rect{legate::NDRect<2>{{0, 0}, {1, 1}}};
   ASSERT_EQ(tiling->launch_domain(), domain);
 }
 

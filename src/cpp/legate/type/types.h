@@ -491,7 +491,7 @@ LEGATE_EXPORT std::ostream& operator<<(std::ostream&, const Type&);
 /**
  * @brief Returns the number of dimensions of a given point type
  *
- * @param type Point type
+ * @param type NDPoint type
  *
  * @return Number of dimensions
  *
@@ -523,7 +523,7 @@ LEGATE_EXPORT std::ostream& operator<<(std::ostream&, const Type&);
 /**
  * @brief Returns the number of dimensions of a given rect type
  *
- * @param type Rect type
+ * @param type NDRect type
  *
  * @return Number of dimensions
  *

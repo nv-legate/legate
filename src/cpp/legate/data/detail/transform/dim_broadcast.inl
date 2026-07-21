@@ -15,14 +15,11 @@ inline DimBroadcast::DimBroadcast(std::int32_t dim, std::uint64_t dim_size)
 {
 }
 
-inline DomainPoint DimBroadcast::convert_color(DomainPoint color) const { return color; }
+inline Point DimBroadcast::convert_color(Point color) const { return color; }
 
-inline DomainPoint DimBroadcast::convert_color_shape(DomainPoint color_shape) const
-{
-  return color_shape;
-}
+inline Point DimBroadcast::convert_color_shape(Point color_shape) const { return color_shape; }
 
-inline DomainPoint DimBroadcast::convert_point(DomainPoint point) const { return point; }
+inline Point DimBroadcast::convert_point(Point point) const { return point; }
 
 inline Restrictions DimBroadcast::invert(Restrictions restrictions) const { return restrictions; }
 

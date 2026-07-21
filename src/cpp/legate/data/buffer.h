@@ -51,7 +51,7 @@ class TaskLocalBuffer;
  * @return The freshly allocated inline storage.
  */
 [[nodiscard]] LEGATE_EXPORT InternalSharedPtr<InlineStorage> create_buffer_storage(
-  std::uint32_t field_size, const Domain& bounds, Memory::Kind kind);
+  std::uint32_t field_size, const Rect& bounds, Memory::Kind kind);
 
 /**
  * @brief Reads the base pointer and element strides of an inline storage's affine layout.
@@ -88,7 +88,7 @@ inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 /**
  * @brief A typed buffer class for intra-task temporary allocations
  *
- * Values in a buffer can be accessed by index expressions with \ref Point objects, or via a raw
+ * Values in a buffer can be accessed by index expressions with \ref NDPoint objects, or via a raw
  * pointer to the underlying allocation, which can be queried with the `Buffer::ptr()` method.
  *
  * A \ref Buffer is backed by a `legate::detail::InlineStorage`, a manually-managed affine
@@ -116,7 +116,7 @@ class Buffer {
    * @param storage The inline storage backing the buffer.
    * @param bounds The extents (as a rectangle whose lower bound is the origin) of the buffer.
    */
-  Buffer(InternalSharedPtr<detail::InlineStorage> storage, const Rect<DIM>& bounds);
+  Buffer(InternalSharedPtr<detail::InlineStorage> storage, const NDRect<DIM>& bounds);
 
   /**
    * @brief Returns a reference to the element at `p`.
@@ -125,7 +125,7 @@ class Buffer {
    *
    * @return A reference to the element.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE VAL& operator[](const Point<DIM>& p) const { return *ptr(p); }
+  [[nodiscard]] LEGATE_HOST_DEVICE VAL& operator[](const NDPoint<DIM>& p) const { return *ptr(p); }
 
   /**
    * @brief Returns a pointer to the element at `p`.
@@ -134,7 +134,7 @@ class Buffer {
    *
    * @return A pointer to the element.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE VAL* ptr(const Point<DIM>& p) const
+  [[nodiscard]] LEGATE_HOST_DEVICE VAL* ptr(const NDPoint<DIM>& p) const
   {
     return base_ + offset_(p);
   }
@@ -147,7 +147,7 @@ class Buffer {
    *
    * @return A pointer to the element at `r.lo`.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE VAL* ptr(const Rect<DIM>& r, std::size_t strides[DIM]) const
+  [[nodiscard]] LEGATE_HOST_DEVICE VAL* ptr(const NDRect<DIM>& r, std::size_t strides[DIM]) const
   {
     for (std::int32_t i = 0; i < DIM; ++i) {
       strides[i] = strides_[i];
@@ -158,7 +158,7 @@ class Buffer {
   /**
    * @return The extents of the buffer.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE Rect<DIM> get_bounds() const { return bounds_; }
+  [[nodiscard]] LEGATE_HOST_DEVICE NDRect<DIM> get_bounds() const { return bounds_; }
 
   /**
    * @brief Eagerly releases this buffer's ownership of the backing storage.
@@ -183,7 +183,7 @@ class Buffer {
   [[nodiscard]] Memory::Kind memory_kind() const { return detail::get_memory_kind(get_storage()); }
 
  private:
-  [[nodiscard]] LEGATE_HOST_DEVICE std::int64_t offset_(const Point<DIM>& p) const
+  [[nodiscard]] LEGATE_HOST_DEVICE std::int64_t offset_(const NDPoint<DIM>& p) const
   {
     std::int64_t off = 0;
 
@@ -196,7 +196,7 @@ class Buffer {
   InternalSharedPtr<detail::InlineStorage> storage_{};
   VAL* base_{nullptr};          // address of coordinate (0, ..., 0)
   std::size_t strides_[DIM]{};  // element strides
-  Rect<DIM> bounds_{};
+  NDRect<DIM> bounds_{};
 };
 
 /**
@@ -230,7 +230,7 @@ class LEGATE_EXPORT TaskLocalBuffer {
    */
   TaskLocalBuffer(InternalSharedPtr<detail::InlineStorage> storage,
                   const Type& type,
-                  const Domain& bounds);
+                  const Rect& bounds);
 
   /**
    * @brief Construct a `TaskLocalBuffer`.
@@ -286,7 +286,7 @@ class LEGATE_EXPORT TaskLocalBuffer {
   /**
    * @return The shape of the buffer.
    */
-  [[nodiscard]] const Domain& domain() const;
+  [[nodiscard]] const Rect& domain() const;
 
   /**
    * @return The memory kind of the buffer.
@@ -334,7 +334,7 @@ class LEGATE_EXPORT TaskLocalBuffer {
  * @return A \ref Buffer object
  */
 template <typename VAL, std::int32_t DIM>
-[[nodiscard]] Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
+[[nodiscard]] Buffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
                                              Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
                                              std::size_t alignment = DEFAULT_ALIGNMENT);
 
@@ -348,7 +348,7 @@ template <typename VAL, std::int32_t DIM>
  * @return A \ref Buffer object.
  */
 template <typename VAL, std::int32_t DIM>
-[[nodiscard]] Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
+[[nodiscard]] Buffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
                                              Memory mem,
                                              std::size_t alignment = DEFAULT_ALIGNMENT);
 

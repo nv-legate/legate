@@ -10,7 +10,7 @@
 
 namespace legate::detail {
 
-inline Opaque::Opaque(DomainPoint color_shape) : color_shape_{std::move(color_shape)} {}
+inline Opaque::Opaque(Point color_shape) : color_shape_{std::move(color_shape)} {}
 
 inline bool Opaque::is_convertible() const { return false; }
 
@@ -18,9 +18,9 @@ inline bool Opaque::is_invertible() const { return false; }
 
 inline bool Opaque::has_color_shape() const { return !color_shape_.empty(); }
 
-inline const DomainPoint& Opaque::color_shape() const { return color_shape_; }
+inline const Point& Opaque::color_shape() const { return color_shape_; }
 
-inline bool Opaque::is_equi_size(const Domain&) const { return false; }
+inline bool Opaque::is_equi_size(const Rect&) const { return false; }
 
 inline bool Opaque::filled() const { return filled_; }
 

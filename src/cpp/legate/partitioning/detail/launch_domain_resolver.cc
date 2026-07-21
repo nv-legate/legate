@@ -14,7 +14,7 @@
 
 namespace legate::detail {
 
-void LaunchDomainResolver::record_launch_domain(const Domain& launch_domain)
+void LaunchDomainResolver::record_launch_domain(const Rect& launch_domain)
 {
   const auto new_volume = launch_domain.volume();
 
@@ -50,7 +50,7 @@ void LaunchDomainResolver::set_must_be_sequential(bool must_be_sequential)
   must_be_sequential_ = must_be_sequential;
 }
 
-Domain LaunchDomainResolver::resolve_launch_domain() const
+Rect LaunchDomainResolver::resolve_launch_domain() const
 {
   if (must_be_sequential_ || !launch_domain_.has_value()) {
     return {};

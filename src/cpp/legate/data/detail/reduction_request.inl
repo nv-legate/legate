@@ -14,7 +14,7 @@ inline ReductionRequest::ReductionRequest(InternalSharedPtr<InlineStorage> sourc
                                           InternalSharedPtr<InlineStorage> target,
                                           InternalSharedPtr<Partition> source_partition,
                                           InternalSharedPtr<Partition> target_partition,
-                                          const Domain& sub_domain,
+                                          const Rect& sub_domain,
                                           InternalSharedPtr<Type> type,
                                           ReductionOpKind op_kind)
   : source_{std::move(source)},

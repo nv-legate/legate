@@ -39,8 +39,8 @@ struct hasher<std::tuple<T, U...>> {
 // NOLINTBEGIN(cert-dcl58-cpp, bugprone-std-namespace-modification)
 
 template <>
-struct std::hash<legate::Domain> {
-  [[nodiscard]] std::size_t operator()(const legate::Domain& domain) const noexcept
+struct std::hash<legate::Rect> {
+  [[nodiscard]] std::size_t operator()(const legate::Rect& domain) const noexcept
   {
     std::size_t result = 0;
     auto&& lo          = domain.lo();
@@ -55,8 +55,8 @@ struct std::hash<legate::Domain> {
 };
 
 template <>
-struct std::hash<legate::DomainPoint> {
-  [[nodiscard]] std::size_t operator()(const legate::DomainPoint& domain_point) const noexcept
+struct std::hash<legate::Point> {
+  [[nodiscard]] std::size_t operator()(const legate::Point& domain_point) const noexcept
   {
     std::size_t result = 0;
 

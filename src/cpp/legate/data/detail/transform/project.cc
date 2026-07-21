@@ -20,12 +20,12 @@
 
 namespace legate::detail {
 
-Domain Project::transform(const Domain& input) const
+Rect Project::transform(const Rect& input) const
 {
   LEGATE_ASSERT(input.dim() > 0);
   const auto out_ndim = input.dim() - 1;
-  auto lo             = DomainPoint::zeroes(static_cast<std::int32_t>(out_ndim));
-  auto hi             = DomainPoint::zeroes(static_cast<std::int32_t>(out_ndim));
+  auto lo             = Point::zeroes(static_cast<std::int32_t>(out_ndim));
+  auto hi             = Point::zeroes(static_cast<std::int32_t>(out_ndim));
   auto&& in_lo        = input.lo();
   auto&& in_hi        = input.hi();
 
@@ -53,18 +53,15 @@ Restrictions Project::convert(Restrictions restrictions, bool /*forbid_fake_dim*
       });
 }
 
-DomainPoint Project::convert_color(DomainPoint color) const { return color.removed(dim_); }
+Point Project::convert_color(Point color) const { return color.removed(dim_); }
 
-DomainPoint Project::convert_color_shape(DomainPoint color_shape) const
-{
-  return color_shape.removed(dim_);
-}
+Point Project::convert_color_shape(Point color_shape) const { return color_shape.removed(dim_); }
 
-DomainPoint Project::convert_point(DomainPoint point) const { return point.removed(dim_); }
+Point Project::convert_point(Point point) const { return point.removed(dim_); }
 
-DomainPoint Project::convert_extents(DomainPoint extents) const { return extents.removed(dim_); }
+Point Project::convert_extents(Point extents) const { return extents.removed(dim_); }
 
-DomainPoint Project::convert_strides(DomainPoint strides) const
+Point Project::convert_strides(Point strides) const
 {
   // The projected dimension is fixed to a single coordinate; its stride is dropped from the
   // store (the fixed coordinate's contribution is folded into the base pointer instead).
@@ -91,22 +88,16 @@ Restrictions Project::invert(Restrictions restrictions) const
       });
 }
 
-DomainPoint Project::invert_color(DomainPoint color) const
-{
-  return color.inserted(dim_, /*value=*/0);
-}
+Point Project::invert_color(Point color) const { return color.inserted(dim_, /*value=*/0); }
 
-DomainPoint Project::invert_color_shape(DomainPoint color_shape) const
+Point Project::invert_color_shape(Point color_shape) const
 {
   return color_shape.inserted(dim_, /*value=*/1);
 }
 
-DomainPoint Project::invert_point(DomainPoint point) const { return point.inserted(dim_, coord_); }
+Point Project::invert_point(Point point) const { return point.inserted(dim_, coord_); }
 
-DomainPoint Project::invert_extents(DomainPoint extents) const
-{
-  return extents.inserted(dim_, /*value=*/1);
-}
+Point Project::invert_extents(Point extents) const { return extents.inserted(dim_, /*value=*/1); }
 
 void Project::pack(BufferBuilder& buffer) const
 {

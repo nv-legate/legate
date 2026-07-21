@@ -20,23 +20,23 @@ inline Restrictions Shift::convert(Restrictions restrictions, bool /*forbid_fake
   return restrictions;
 }
 
-inline DomainPoint Shift::convert_color(DomainPoint color) const { return color; }
+inline Point Shift::convert_color(Point color) const { return color; }
 
-inline DomainPoint Shift::convert_color_shape(DomainPoint color_shape) const { return color_shape; }
+inline Point Shift::convert_color_shape(Point color_shape) const { return color_shape; }
 
-inline DomainPoint Shift::convert_extents(DomainPoint extents) const { return extents; }
+inline Point Shift::convert_extents(Point extents) const { return extents; }
 
 // A shift only offsets coordinates; it does not change the storage layout, so the strides are
 // unchanged (the offset is folded into the base pointer via `invert_point`).
-inline DomainPoint Shift::convert_strides(DomainPoint strides) const { return strides; }
+inline Point Shift::convert_strides(Point strides) const { return strides; }
 
 inline Restrictions Shift::invert(Restrictions restrictions) const { return restrictions; }
 
-inline DomainPoint Shift::invert_color(DomainPoint color) const { return color; }
+inline Point Shift::invert_color(Point color) const { return color; }
 
-inline DomainPoint Shift::invert_color_shape(DomainPoint color_shape) const { return color_shape; }
+inline Point Shift::invert_color_shape(Point color_shape) const { return color_shape; }
 
-inline DomainPoint Shift::invert_extents(DomainPoint extents) const { return extents; }
+inline Point Shift::invert_extents(Point extents) const { return extents; }
 
 inline std::int32_t Shift::target_ndim(std::int32_t source_ndim) const { return source_ndim; }
 

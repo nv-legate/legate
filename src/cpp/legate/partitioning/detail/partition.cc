@@ -10,7 +10,7 @@
 
 namespace legate::detail {
 
-Domain Partition::shard(const Domain&, const DomainPoint&) const
+Rect Partition::shard(const Rect&, const Point&) const
 {
   LEGATE_ABORT("Sharding not implemented for this partition type");
   return {};

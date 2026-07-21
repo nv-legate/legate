@@ -44,7 +44,7 @@ class ProduceViaBindDataTask : public legate::LegateTask<ProduceViaBindDataTask>
 };
 
 // Produces data through the type-erased `TaskLocalBuffer` path
-// (`create_output_buffer(DomainPoint, /*bind_buffer=*/true)`), converting it back to a typed
+// (`create_output_buffer(Point, /*bind_buffer=*/true)`), converting it back to a typed
 // `Buffer` to write into it.
 class ProduceViaTaskLocalBufferTask : public legate::LegateTask<ProduceViaTaskLocalBufferTask> {
  public:

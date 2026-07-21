@@ -45,7 +45,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
                  std::string_view provenance)
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{std::move(shape)},
-    domain_{unbound() ? Domain{} : shape_->domain()},
+    domain_{unbound() ? Rect{} : shape_->domain()},
     field_size_{field_size},
     provenance_{std::move(provenance)}
 {
@@ -107,11 +107,11 @@ bool Storage::is_mapped() const
   return false;
 }
 
-std::tuple<InternalSharedPtr<InlineStorage>, Domain, bool>
+std::tuple<InternalSharedPtr<InlineStorage>, Rect, bool>
 Storage::map(  // NOLINT(readability-make-member-function-const)
-  const Domain& domain,
+  const Rect& domain,
   const InternalSharedPtr<Partition>& partition,
-  const DomainPoint& color,
+  const Point& color,
   legate::mapping::StoreTarget target,
   bool is_read,
   bool is_transformed,
@@ -252,11 +252,11 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   return {data, sub_domain, false};
 }
 
-std::pair<InternalSharedPtr<InlineStorage>, Domain>
+std::pair<InternalSharedPtr<InlineStorage>, Rect>
 Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
-  const Domain& domain,
+  const Rect& domain,
   const InternalSharedPtr<Partition>& partition,
-  const DomainPoint& color,
+  const Point& color,
   legate::mapping::StoreTarget target,
   bool is_parallel,
   const InternalSharedPtr<Type>& type,
@@ -339,7 +339,7 @@ void Storage::set_inline_storage(InternalSharedPtr<InlineStorage> storage_data)
   storage_data_ = std::move(storage_data);
 }
 
-void Storage::bind(InternalSharedPtr<InlineStorage> storage_data, const Domain& domain)
+void Storage::bind(InternalSharedPtr<InlineStorage> storage_data, const Rect& domain)
 {
   LEGATE_CHECK(unbound());
 
@@ -359,8 +359,8 @@ void Storage::finalize_unbound()
   set_key_partition(create_no_partition());
 }
 
-void Storage::finalize_unbound_partitioned(DomainPoint global_extents,
-                                           const Domain& local_global_domain,
+void Storage::finalize_unbound_partitioned(Point global_extents,
+                                           const Rect& local_global_domain,
                                            InternalSharedPtr<Partition> key_partition)
 {
   LEGATE_CHECK(unbound());

@@ -79,7 +79,7 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
     transform_{make_internal_shared<TransformStack>()},
     // An unbound store's extents are unknown until a buffer is bound to it; keep the domain empty
     // until then rather than forcing (and throwing on) the unbound extents.
-    domain_{shape()->unbound() ? Domain{} : to_maybe_empty_domain(shape()->extents())}
+    domain_{shape()->unbound() ? Rect{} : to_maybe_empty_domain(shape()->extents())}
 {
   assert_fixed_storage_size(this->type());
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -91,7 +91,7 @@ LogicalStore::LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
                            InternalSharedPtr<Storage> storage,
                            InternalSharedPtr<Type> type,
                            InternalSharedPtr<TransformStack> transform,
-                           Domain domain)
+                           Rect domain)
   : store_id_{Runtime::get_runtime().get_unique_store_id()},
     type_{std::move(type)},
     shape_{make_internal_shared<Shape>(std::move(extents))},
@@ -162,12 +162,12 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
 
   // New domain over Storage simply restricts to the single dimension in the projection.
   const auto projected_domain = [&] {
-    DomainPoint lo = domain_.lo();
-    DomainPoint hi = domain_.hi();
+    Point lo = domain_.lo();
+    Point hi = domain_.hi();
 
     lo[d] = index;
     hi[d] = index;
-    return Domain{lo, hi};
+    return Rect{lo, hi};
   }();
 
   return make_internal_shared<LogicalStore>(
@@ -251,12 +251,12 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   const auto sstart     = static_cast<std::int64_t>(start);
   const auto extent_dim = static_cast<std::int64_t>(exts[dim]);
   const auto subdomain  = [&] {
-    DomainPoint lo = domain_.lo();
-    DomainPoint hi = domain_.hi();
+    Point lo = domain_.lo();
+    Point hi = domain_.hi();
 
     lo[dim] += sstart;
     hi[dim] = std::min(lo[dim] + extent_dim - 1, hi[dim]);
-    return Domain{lo, hi};
+    return Rect{lo, hi};
   }();
 
   return make_internal_shared<LogicalStore>(
@@ -343,13 +343,13 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 
 namespace {
 
-DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoint& task_index)
+Point compute_color(const SymbolicPoint& store_projection, const Point& task_index)
 {
   if (store_projection.empty() || task_index.dim() == 0) {
     return task_index;
   }
 
-  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(store_projection.size()));
+  auto result = Point::zeroes(static_cast<std::int32_t>(store_projection.size()));
 
   for (auto&& [dim, expr] : enumerate(store_projection)) {
     result[dim] = expr.compute_coordinate(task_index);
@@ -365,7 +365,7 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
 [[nodiscard]] PhysicalStoreLayout compute_store_layout(const InlineStorage& storage,
                                                        const TransformStack& transform,
                                                        std::uint32_t field_size,
-                                                       const Domain& storage_subdomain)
+                                                       const Rect& storage_subdomain)
 {
   // Storage-space layout: base at the storage's coordinate origin, element strides over the
   // storage's dimensions.
@@ -394,8 +394,8 @@ DomainPoint compute_color(const SymbolicPoint& store_projection, const DomainPoi
 std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
   const InternalSharedPtr<Partition>& partition,
   const SymbolicPoint& store_projection,
-  const Domain&,
-  const DomainPoint& task_index,
+  const Rect&,
+  const Point& task_index,
   bool is_read,
   const legate::mapping::detail::Machine& machine,
   DataMovementRequests* requests)
@@ -417,8 +417,8 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
 InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
   const InternalSharedPtr<Partition>& partition,
   const SymbolicPoint& store_projection,
-  const Domain& launch_domain,
-  const DomainPoint& task_index,
+  const Rect& launch_domain,
+  const Point& task_index,
   ReductionOpKind op_kind,
   bool store_has_identity,
   const legate::mapping::detail::Machine& machine,
@@ -454,7 +454,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
     static_cast<std::int32_t>(dim()), type(), target, self);
 }
 
-void LogicalStore::bind_buffer(InternalSharedPtr<InlineStorage> storage, const Domain& domain)
+void LogicalStore::bind_buffer(InternalSharedPtr<InlineStorage> storage, const Rect& domain)
 {
   get_storage()->bind(std::move(storage), domain);
   domain_ = domain;
@@ -468,7 +468,7 @@ void LogicalStore::finalize_unbound()
 
 void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partition>& partition,
                                                 const SymbolicPoint& store_projection,
-                                                const DomainPoint& task_index)
+                                                const Point& task_index)
 {
   auto* const opaque = dynamic_cast<Opaque*>(partition.get());
 
@@ -507,17 +507,17 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
                                     runtime.get_cpu_comm());
 
   // Parse each rank's color and local extents.
-  auto colors  = SmallVector<DomainPoint>(tags::size_tag, node_count, DomainPoint{});
-  auto extents = SmallVector<DomainPoint>(tags::size_tag, node_count, DomainPoint{});
+  auto colors  = SmallVector<Point>(tags::size_tag, node_count, Point{});
+  auto extents = SmallVector<Point>(tags::size_tag, node_count, Point{});
 
   for (std::uint32_t d = 0; d < node_count; ++d) {
     const auto* const rec = &recv[d * REC];
 
-    colors[d] = DomainPoint::zeroes(static_cast<std::int32_t>(rec[0]));
+    colors[d] = Point::zeroes(static_cast<std::int32_t>(rec[0]));
     for (std::uint32_t i = 0; i < colors[d].dim(); ++i) {
       colors[d][i] = rec[1 + static_cast<std::size_t>(i)];
     }
-    extents[d] = DomainPoint::zeroes(static_cast<std::int32_t>(rec[1 + MAXD]));
+    extents[d] = Point::zeroes(static_cast<std::int32_t>(rec[1 + MAXD]));
     for (std::uint32_t i = 0; i < extents[d].dim(); ++i) {
       extents[d][i] = rec[2 + MAXD + static_cast<std::size_t>(i)];
     }
@@ -552,7 +552,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
 
   // Per-color prefix-sum offsets and the stitched global extents.
   auto offset_tables  = std::vector<std::vector<std::int64_t>>(color_dim);
-  auto global_extents = DomainPoint::zeroes(store_dim);
+  auto global_extents = Point::zeroes(store_dim);
 
   for (std::uint32_t d = 0; d < color_dim; ++d) {
     offset_tables[d].assign(color_shape[d], 0);
@@ -570,11 +570,11 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   }
 
   // Each rank's piece placed at its global offset.
-  auto domains = SmallVector<Domain>(tags::size_tag, node_count, Domain{});
+  auto domains = SmallVector<Rect>(tags::size_tag, node_count, Rect{});
 
   for (std::uint32_t r = 0; r < node_count; ++r) {
-    auto lo = DomainPoint::zeroes(static_cast<std::int32_t>(store_dim));
-    auto hi = DomainPoint::zeroes(static_cast<std::int32_t>(store_dim));
+    auto lo = Point::zeroes(static_cast<std::int32_t>(store_dim));
+    auto hi = Point::zeroes(static_cast<std::int32_t>(store_dim));
 
     for (std::uint32_t d = 0; d < store_dim; ++d) {
       const auto offset = (d < color_dim) ? offset_tables[d][colors[r][d]] : std::int64_t{0};
@@ -582,7 +582,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
       lo[d] = offset;
       hi[d] = offset + extents[r][d] - 1;
     }
-    domains[r] = Domain{std::move(lo), std::move(hi)};
+    domains[r] = Rect{std::move(lo), std::move(hi)};
   }
 
   const auto my_global_domain = domains[my_node];

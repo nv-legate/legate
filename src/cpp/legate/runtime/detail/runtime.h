@@ -105,7 +105,7 @@ class Runtime {
                                                         LocalTaskID task_id);
   [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library& library,
                                                           LocalTaskID task_id,
-                                                          const Domain& launch_domain);
+                                                          const Rect& launch_domain);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
 

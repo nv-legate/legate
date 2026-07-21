@@ -22,24 +22,24 @@ class Promote final : public StoreTransform {
  public:
   Promote(std::int32_t extra_dim, std::int64_t dim_size);
 
-  [[nodiscard]] Domain transform(const Domain& input) const override;
+  [[nodiscard]] Rect transform(const Rect& input) const override;
 
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
 
-  [[nodiscard]] DomainPoint convert_color(DomainPoint color) const override;
-  [[nodiscard]] DomainPoint convert_color_shape(DomainPoint color_shape) const override;
-  [[nodiscard]] DomainPoint convert_point(DomainPoint point) const override;
-  [[nodiscard]] DomainPoint convert_extents(DomainPoint extents) const override;
-  [[nodiscard]] DomainPoint convert_strides(DomainPoint strides) const override;
+  [[nodiscard]] Point convert_color(Point color) const override;
+  [[nodiscard]] Point convert_color_shape(Point color_shape) const override;
+  [[nodiscard]] Point convert_point(Point point) const override;
+  [[nodiscard]] Point convert_extents(Point extents) const override;
+  [[nodiscard]] Point convert_strides(Point strides) const override;
 
   [[nodiscard]] SymbolicPoint invert(SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
 
-  [[nodiscard]] DomainPoint invert_color(DomainPoint color) const override;
-  [[nodiscard]] DomainPoint invert_color_shape(DomainPoint color_shape) const override;
-  [[nodiscard]] DomainPoint invert_point(DomainPoint point) const override;
-  [[nodiscard]] DomainPoint invert_extents(DomainPoint extents) const override;
+  [[nodiscard]] Point invert_color(Point color) const override;
+  [[nodiscard]] Point invert_color_shape(Point color_shape) const override;
+  [[nodiscard]] Point invert_point(Point point) const override;
+  [[nodiscard]] Point invert_extents(Point extents) const override;
 
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;

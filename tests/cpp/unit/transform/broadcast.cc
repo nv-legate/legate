@@ -26,9 +26,9 @@ TEST_F(TransformBroadcastUnit, BroadcastTransformDomain)
 {
   auto transform = legate::make_internal_shared<legate::detail::DimBroadcast>(1, EXT);
   auto domain    = transform->transform(
-    legate::Domain{legate::Rect<3>{legate::Point<3>{1, 2, 3}, legate::Point<3>{5, 7, 8}}});
+    legate::Rect{legate::NDRect<3>{legate::NDPoint<3>{1, 2, 3}, legate::NDPoint<3>{5, 7, 8}}});
   auto expected =
-    legate::Domain{legate::Rect<3>{legate::Point<3>{1, 0, 3}, legate::Point<3>{5, EXT - 1, 8}}};
+    legate::Rect{legate::NDRect<3>{legate::NDPoint<3>{1, 0, 3}, legate::NDPoint<3>{5, EXT - 1, 8}}};
 
   ASSERT_EQ(domain, expected);
 }

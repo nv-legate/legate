@@ -33,8 +33,7 @@ class DummyTask : public legate::LegateTask<DummyTask> {
     auto output = context.output(0);
 
     if (output.is_unbound_store()) {
-      static_cast<void>(
-        output.create_output_buffer(legate::DomainPoint{EXT}, /*bind_buffer=*/true));
+      static_cast<void>(output.create_output_buffer(legate::Point{EXT}, /*bind_buffer=*/true));
     }
   }
 };

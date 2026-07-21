@@ -168,7 +168,7 @@ class ManualTask final : public LogicalTask {
   ManualTask(const Library& library,
              const VariantInfo& variant_info,
              LocalTaskID task_id,
-             const Domain& launch_domain,
+             const Rect& launch_domain,
              std::uint64_t unique_id,
              std::int32_t priority,
              mapping::detail::Machine machine);
@@ -195,7 +195,7 @@ class ManualTask final : public LogicalTask {
    *
    * @return The launch domain for the task.
    */
-  [[nodiscard]] const Domain& launch_domain() const;
+  [[nodiscard]] const Rect& launch_domain() const;
 
   void launch() override;
 

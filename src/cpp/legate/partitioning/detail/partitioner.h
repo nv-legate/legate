@@ -22,8 +22,8 @@ class Partitioner {
   [[nodiscard]] static Strategy partition_stores(Operation* op);
 
   [[nodiscard]] static SymbolicPoint infer_store_projection(
-    const Domain& launch_domain,
-    const DomainPoint& color_shape,
+    const Rect& launch_domain,
+    const Point& color_shape,
     const InternalSharedPtr<TransformStack>& transform);
 };
 

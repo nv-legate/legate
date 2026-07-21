@@ -60,7 +60,7 @@ class Tiling final : public Partition {
    * @param color_shape The number of colors in each dimension.
    * @param offsets The number of entries to skip per dimension.
    */
-  Tiling(DomainPoint tile_shape, DomainPoint color_shape, DomainPoint offsets);
+  Tiling(Point tile_shape, Point color_shape, Point offsets);
 
   /**
    * @brief Construct a Tiling partition with explicit strides.
@@ -73,7 +73,7 @@ class Tiling final : public Partition {
    * @param offsets     Origin offsets for the first tile.
    * @param strides     Spacing between tiles.
    */
-  Tiling(DomainPoint tile_shape, DomainPoint color_shape, DomainPoint offsets, DomainPoint strides);
+  Tiling(Point tile_shape, Point color_shape, Point offsets, Point strides);
 
   /**
    * @brief Construct a Tiling partition with an explicit device mesh.
@@ -90,10 +90,10 @@ class Tiling final : public Partition {
    * @param device_mesh   The device mesh the tiles are mapped onto.
    * @param color_to_mesh Mapping from color dimensions to mesh dimensions (`-1` for unmapped).
    */
-  Tiling(DomainPoint tile_shape,
-         DomainPoint color_shape,
-         DomainPoint offsets,
-         DomainPoint strides,
+  Tiling(Point tile_shape,
+         Point color_shape,
+         Point offsets,
+         Point strides,
          DeviceMesh device_mesh,
          SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh);
 
@@ -129,14 +129,14 @@ class Tiling final : public Partition {
   /**
    * @copydoc Partition::color_shape()
    */
-  [[nodiscard]] const DomainPoint& color_shape() const override;
+  [[nodiscard]] const Point& color_shape() const override;
 
-  [[nodiscard]] bool is_equi_size(const Domain& domain) const override;
+  [[nodiscard]] bool is_equi_size(const Rect& domain) const override;
 
   /**
    * @copydoc Partition::launch_domain()
    */
-  [[nodiscard]] Domain launch_domain() const override;
+  [[nodiscard]] Rect launch_domain() const override;
 
   /**
    * @copydoc Partition::to_string()
@@ -148,7 +148,7 @@ class Tiling final : public Partition {
    *
    * @return A point describing the tile size per dimension.
    */
-  [[nodiscard]] const DomainPoint& tile_shape() const;
+  [[nodiscard]] const Point& tile_shape() const;
 
   /**
    * @copydoc Partition::convert()
@@ -164,7 +164,7 @@ class Tiling final : public Partition {
     const InternalSharedPtr<Partition>& self,
     const InternalSharedPtr<TransformStack>& transform) const override;
 
-  [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
+  [[nodiscard]] Point compute_color(std::uint64_t device_id) const override;
 
   /**
    * @brief Compute the device ids a given tile color is mapped to.
@@ -176,17 +176,16 @@ class Tiling final : public Partition {
    *
    * @return The device ids holding the tile.
    */
-  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(
-    const DomainPoint& color) const override;
+  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(const Point& color) const override;
 
   /**
    * @brief Return the device mesh the tiles are mapped onto.
    */
   [[nodiscard]] const DeviceMesh& device_mesh() const;
 
-  [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
+  [[nodiscard]] Rect shard(const Rect& domain, const Point& color) const override;
 
-  [[nodiscard]] bool subsumes(const Domain& domain,
+  [[nodiscard]] bool subsumes(const Rect& domain,
                               const InternalSharedPtr<Partition>& other) const override;
 
   /**
@@ -194,14 +193,14 @@ class Tiling final : public Partition {
    *
    * @return A point of per-dimension offsets.
    */
-  [[nodiscard]] const DomainPoint& offsets() const;
+  [[nodiscard]] const Point& offsets() const;
 
   /**
    * @brief Return the stride (spacing) between tiles.
    *
    * @return A point of per-dimension strides.
    */
-  [[nodiscard]] const DomainPoint& strides() const;
+  [[nodiscard]] const Point& strides() const;
 
   /**
    * @brief Compute a hash value for this tiling configuration.
@@ -215,29 +214,29 @@ class Tiling final : public Partition {
  private:
   void init_device_mesh_from_color_shape_();
 
-  DomainPoint tile_shape_{};
-  DomainPoint color_shape_{};
-  DomainPoint offsets_{};
-  DomainPoint strides_{};
+  Point tile_shape_{};
+  Point color_shape_{};
+  Point offsets_{};
+  Point strides_{};
   DeviceMesh device_mesh_{};
   // color_to_mesh_[c] is the mesh dimension selected by color dimension c, or -1 if unmapped.
   SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh_{};
 };
 
-[[nodiscard]] InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
-                                                         DomainPoint color_shape,
-                                                         DomainPoint offsets = {});
+[[nodiscard]] InternalSharedPtr<Partition> create_tiling(Point tile_shape,
+                                                         Point color_shape,
+                                                         Point offsets = {});
 
-[[nodiscard]] InternalSharedPtr<Partition> create_tiling(DomainPoint tile_shape,
-                                                         DomainPoint color_shape,
-                                                         DomainPoint offsets,
-                                                         DomainPoint strides);
+[[nodiscard]] InternalSharedPtr<Partition> create_tiling(Point tile_shape,
+                                                         Point color_shape,
+                                                         Point offsets,
+                                                         Point strides);
 
 [[nodiscard]] InternalSharedPtr<Partition> create_tiling(
-  DomainPoint tile_shape,
-  DomainPoint color_shape,
-  DomainPoint offsets,
-  DomainPoint strides,
+  Point tile_shape,
+  Point color_shape,
+  Point offsets,
+  Point strides,
   DeviceMesh device_mesh,
   SmallVector<std::int32_t, LEGATE_MAX_DIM> color_to_mesh);
 

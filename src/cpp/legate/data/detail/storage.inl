@@ -17,7 +17,7 @@ inline bool Storage::unbound() const { return shape()->unbound(); }
 
 inline const InternalSharedPtr<Shape>& Storage::shape() const { return shape_; }
 
-inline const Domain& Storage::domain() const { return domain_; }
+inline const Rect& Storage::domain() const { return domain_; }
 
 inline Span<const std::uint64_t> Storage::extents() const { return shape()->extents(); }
 

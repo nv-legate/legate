@@ -16,15 +16,15 @@
 
 namespace legate::detail {
 
-Domain to_domain(Span<const std::uint64_t> shape)
+Rect to_domain(Span<const std::uint64_t> shape)
 {
   if (shape.empty()) {
     return {0, 0};
   }
 
   const auto ndim = static_cast<std::int32_t>(shape.size());
-  auto lo         = DomainPoint::zeroes(ndim);
-  auto hi         = DomainPoint::zeroes(ndim);
+  auto lo         = Point::zeroes(ndim);
+  auto hi         = Point::zeroes(ndim);
 
   for (std::int32_t idx = 0; idx < ndim; ++idx) {
     hi[idx] = static_cast<std::int64_t>(shape[idx]) - 1;
@@ -32,15 +32,15 @@ Domain to_domain(Span<const std::uint64_t> shape)
   return {std::move(lo), std::move(hi)};
 }
 
-Domain to_domain(const DomainPoint& shape)
+Rect to_domain(const Point& shape)
 {
   if (shape.empty()) {
     return {0, 0};
   }
-  return {DomainPoint::zeroes(static_cast<std::int32_t>(shape.size())), shape - 1};
+  return {Point::zeroes(static_cast<std::int32_t>(shape.size())), shape - 1};
 }
 
-Domain to_maybe_empty_domain(Span<const std::uint64_t> shape)
+Rect to_maybe_empty_domain(Span<const std::uint64_t> shape)
 {
   // When empty domains are serialized, they come out as (0-ed out), 0D Domains
   // (e.g. when deserialized). However, to_domain() will produce a {0, 0} domain,
@@ -52,10 +52,10 @@ Domain to_maybe_empty_domain(Span<const std::uint64_t> shape)
   return to_domain(shape);
 }
 
-DomainPoint to_domain_point(Span<const std::uint64_t> shape)
+Point to_domain_point(Span<const std::uint64_t> shape)
 {
   const auto ndim = static_cast<std::int32_t>(shape.size());
-  auto point      = DomainPoint::zeroes(ndim);
+  auto point      = Point::zeroes(ndim);
 
   for (std::int32_t idx = 0; idx < ndim; ++idx) {
     point[idx] = static_cast<std::int64_t>(shape[idx]);
@@ -63,9 +63,9 @@ DomainPoint to_domain_point(Span<const std::uint64_t> shape)
   return point;
 }
 
-DomainPoint to_domain_point(Span<const std::int64_t> shape) { return DomainPoint{shape}; }
+Point to_domain_point(Span<const std::int64_t> shape) { return Point{shape}; }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Domain& domain)
+SmallVector<std::uint64_t, LEGATE_MAX_DIM> from_domain(const Rect& domain)
 {
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> result;
   auto&& lo = domain.lo();

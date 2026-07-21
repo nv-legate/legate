@@ -87,7 +87,7 @@ ManualTask Runtime::create_task(Library library,
   return create_task(library, task_id, Span<const std::uint64_t>{launch_shape});
 }
 
-ManualTask Runtime::create_task(Library library, LocalTaskID task_id, const Domain& launch_domain)
+ManualTask Runtime::create_task(Library library, LocalTaskID task_id, const Rect& launch_domain)
 {
   return ManualTask{impl_->create_task(*library.impl(), task_id, launch_domain)};
 }

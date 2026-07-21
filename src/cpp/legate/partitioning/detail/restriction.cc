@@ -183,7 +183,7 @@ Restrictions::prune_dimensions(Span<const std::uint64_t> shape) const
   return {std::move(temp_shape), std::move(temp_dims), volume};
 }
 
-Domain Restrictions::prune_dimensions(const Domain& domain) const
+Rect Restrictions::prune_dimensions(const Rect& domain) const
 {
   auto new_lo = SmallVector<std::int64_t, LEGATE_MAX_DIM>{};
   auto new_hi = SmallVector<std::int64_t, LEGATE_MAX_DIM>{};
@@ -198,14 +198,14 @@ Domain Restrictions::prune_dimensions(const Domain& domain) const
     new_hi.push_back(hi[dim]);
   }
 
-  return {DomainPoint{std::move(new_lo)}, DomainPoint{std::move(new_hi)}};
+  return {Point{std::move(new_lo)}, Point{std::move(new_hi)}};
 }
 
-Domain Restrictions::embed(const Domain& domain) const
+Rect Restrictions::embed(const Rect& domain) const
 {
   const auto ndim = static_cast<std::int32_t>(dimension_restrictions_().size());
-  auto new_lo     = DomainPoint::zeroes(ndim);
-  auto new_hi     = DomainPoint::zeroes(ndim);
+  auto new_lo     = Point::zeroes(ndim);
+  auto new_hi     = Point::zeroes(ndim);
   auto&& lo       = domain.lo();
   auto&& hi       = domain.hi();
   auto idx        = std::int32_t{0};
@@ -224,9 +224,9 @@ Domain Restrictions::embed(const Domain& domain) const
   return {std::move(new_lo), std::move(new_hi)};
 }
 
-DomainPoint Restrictions::embed_to_color_shape(const Domain& domain) const
+Point Restrictions::embed_to_color_shape(const Rect& domain) const
 {
-  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(dimension_restrictions_().size()));
+  auto result = Point::zeroes(static_cast<std::int32_t>(dimension_restrictions_().size()));
   // `idx` walks the (pruned) launch domain, which has an axis only for each non-restricted store
   // dimension; restricted (FORBID) dimensions are not partitioned and get a single color. We fill
   // one entry per store dimension in order, so each dimension's color extent lands in its own slot.

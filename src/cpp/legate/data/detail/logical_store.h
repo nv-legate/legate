@@ -61,7 +61,7 @@ class LogicalStore {
                InternalSharedPtr<Storage> storage,
                InternalSharedPtr<Type> type,
                InternalSharedPtr<TransformStack> transform,
-               Domain domain);
+               Rect domain);
 
   LogicalStore(LogicalStore&& other) noexcept            = default;
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
@@ -120,16 +120,16 @@ class LogicalStore {
   [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, bool> map(
     const InternalSharedPtr<Partition>& partition,
     const SymbolicPoint& store_projection,
-    const Domain& launch_domain,
-    const DomainPoint& task_index,
+    const Rect& launch_domain,
+    const Point& task_index,
     bool is_read,
     const legate::mapping::detail::Machine& machine,
     DataMovementRequests* requests);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> map_reduction(
     const InternalSharedPtr<Partition>& partition,
     const SymbolicPoint& store_projection,
-    const Domain& launch_domain,
-    const DomainPoint& task_index,
+    const Rect& launch_domain,
+    const Point& task_index,
     ReductionOpKind op_kind,
     bool store_has_identity,
     const legate::mapping::detail::Machine& machine,
@@ -160,7 +160,7 @@ class LogicalStore {
    * @param storage The inline storage produced by the task.
    * @param domain The domain the store should span over @p storage.
    */
-  void bind_buffer(InternalSharedPtr<InlineStorage> storage, const Domain& domain);
+  void bind_buffer(InternalSharedPtr<InlineStorage> storage, const Rect& domain);
 
   void finalize_unbound();
 
@@ -179,7 +179,7 @@ class LogicalStore {
    */
   void finalize_unbound_partitioned(const InternalSharedPtr<Partition>& partition,
                                     const SymbolicPoint& store_projection,
-                                    const DomainPoint& task_index);
+                                    const Point& task_index);
 
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
@@ -241,7 +241,7 @@ class LogicalStore {
   InternalSharedPtr<Storage> storage_{};
   InternalSharedPtr<TransformStack> transform_{};
 
-  Domain domain_{};
+  Rect domain_{};
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};

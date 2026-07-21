@@ -35,12 +35,12 @@ InlineAllocation PhysicalStore::get_inline_allocation() const
 }
 
 InternalSharedPtr<InlineStorage> PhysicalStore::create_output_buffer_storage(
-  const Domain& bounds) const
+  const Rect& bounds) const
 {
   return make_internal_shared<InlineStorage>(bounds, type_->size(), target());
 }
 
-void PhysicalStore::bind_data(InternalSharedPtr<InlineStorage> storage, const Domain& domain)
+void PhysicalStore::bind_data(InternalSharedPtr<InlineStorage> storage, const Rect& domain)
 {
   LEGATE_CHECK(unbound_);
   // Update the originating logical store in place so downstream operations observe the produced
@@ -63,15 +63,15 @@ void PhysicalStore::bind_empty_data()
   LEGATE_CHECK(unbound_);
 
   const auto ndim = dim_ == 0 ? std::int32_t{1} : dim_;
-  auto lo         = DomainPoint::zeroes(ndim);
-  auto hi         = DomainPoint::zeroes(ndim);
+  auto lo         = Point::zeroes(ndim);
+  auto hi         = Point::zeroes(ndim);
 
   for (std::int32_t i = 0; i < ndim; ++i) {
     lo[i] = 0;
     hi[i] = -1;  // hi < lo => zero-volume (empty) domain
   }
 
-  const Domain empty{std::move(lo), std::move(hi)};
+  const Rect empty{std::move(lo), std::move(hi)};
 
   bind_data(create_output_buffer_storage(empty), empty);
 }

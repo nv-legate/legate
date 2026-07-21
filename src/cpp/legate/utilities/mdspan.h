@@ -125,16 +125,16 @@ void for_each_in_extent(const ::cuda::std::extents<IndexType, Extents...>& exten
  * - `fn(1, 0)`
  * - `fn(1, 1)`
  *
- * @param point The `Point` to iterate over.
+ * @param point The `NDPoint` to iterate over.
  * @param fn The function to execute.
  */
 template <std::int32_t DIM, typename F>
-void for_each_in_extent(const Point<DIM>& point, F&& fn);
+void for_each_in_extent(const NDPoint<DIM>& point, F&& fn);
 
 /**
  * @brief Execute a function `fn` for each `i, j, k, ...`-th index in rect `rect`.
  *
- * This routine is similar to the `Point` overload, except that the extents are given by the
+ * This routine is similar to the `NDPoint` overload, except that the extents are given by the
  * difference between `rect[i].lo` and `rect[i].hi`. The indices are then converted to 0-based
  * indices before being passed to `fn`. So given a 2D rect: `[<1, 1>, <2, 2>]`, then this
  * routine would generate the following calls:
@@ -149,11 +149,11 @@ void for_each_in_extent(const Point<DIM>& point, F&& fn);
  * - `fn(2, 1)`
  * - `fn(2, 2)`
  *
- * @param rect The `Rect` to iterate over.
+ * @param rect The `NDRect` to iterate over.
  * @param fn The function to execute.
  */
 template <std::int32_t DIM, typename F>
-void for_each_in_extent(const Rect<DIM>& rect, F&& fn);
+void for_each_in_extent(const NDRect<DIM>& rect, F&& fn);
 
 /** @} */
 

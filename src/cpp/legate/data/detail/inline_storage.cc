@@ -109,7 +109,7 @@ namespace {
 
 }  // namespace
 
-InlineStorage::InlineStorage(const Domain& domain,
+InlineStorage::InlineStorage(const Rect& domain,
                              std::uint32_t field_size,
                              mapping::StoreTarget target)
   : domain_{domain},
@@ -119,7 +119,7 @@ InlineStorage::InlineStorage(const Domain& domain,
 {
 }
 
-InlineStorage::InlineStorage(Domain domain,
+InlineStorage::InlineStorage(Rect domain,
                              std::uint32_t field_size,
                              const legate::ExternalAllocation& alloc)
   : domain_{std::move(domain)}, field_size_{field_size}, allocation_{alloc.impl()}
@@ -137,7 +137,7 @@ InlineStorage::~InlineStorage()
 
 mapping::StoreTarget InlineStorage::target() const { return alloc_().target(); }
 
-void InlineStorage::rebase(const Domain& domain)
+void InlineStorage::rebase(const Rect& domain)
 {
   LEGATE_ASSERT(domain.volume() == domain_.volume());
   domain_ = domain;
@@ -147,7 +147,7 @@ void* InlineStorage::data() { return alloc_().ptr(); }
 
 const void* InlineStorage::data() const { return alloc_().ptr(); }
 
-std::pair<void*, DomainPoint> InlineStorage::base_and_element_strides() const
+std::pair<void*, Point> InlineStorage::base_and_element_strides() const
 {
   auto element_strides = domain_.strides();
   auto* const base =

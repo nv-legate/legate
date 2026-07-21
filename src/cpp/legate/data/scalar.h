@@ -168,18 +168,18 @@ class LEGATE_EXPORT Scalar {
   /**
    * @brief Creates a point `Scalar`
    *
-   * @param point A \ref Point from which the `Scalar` should be constructed
+   * @param point A \ref NDPoint from which the `Scalar` should be constructed
    */
   template <std::int32_t DIM>
-  explicit Scalar(const Point<DIM>& point);
+  explicit Scalar(const NDPoint<DIM>& point);
 
   /**
-   * @brief Creates a \ref Rect `Scalar`
+   * @brief Creates a \ref NDRect `Scalar`
    *
-   * @param rect A \ref Rect from which the `Scalar` should be constructed
+   * @param rect A \ref NDRect from which the `Scalar` should be constructed
    */
   template <std::int32_t DIM>
-  explicit Scalar(const Rect<DIM>& rect);
+  explicit Scalar(const NDRect<DIM>& rect);
 
   /**
    * @brief Returns the data type of the `Scalar`

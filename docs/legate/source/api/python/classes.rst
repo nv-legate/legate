@@ -19,7 +19,7 @@ Classes
    variant_options
    resource_config
    task_context
-   domain
+   rect
    task_config
    task_local_buffer
    inline_allocation

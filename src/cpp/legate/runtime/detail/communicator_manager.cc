@@ -17,7 +17,7 @@ namespace legate::detail {
 
 Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget& target,
                                                       const mapping::ProcessorRange& range,
-                                                      const Domain& launch_domain,
+                                                      const Rect& launch_domain,
                                                       Legion::ProjectionID proj_id)
 {
   if (launch_domain.dim() == 1) {
@@ -78,7 +78,7 @@ Legion::FutureMap CommunicatorFactory::find_or_create_(const mapping::TaskTarget
 }
 
 Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap&,
-                                                  const Domain&,
+                                                  const Rect&,
                                                   Legion::ProjectionID)
 {
   return {};

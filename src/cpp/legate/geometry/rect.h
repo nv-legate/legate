@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/geometry/nd_rect.h>
 #include <legate/geometry/point.h>
 #include <legate/utilities/detail/doxygen.h>
 
@@ -15,7 +16,6 @@
 #include <cstdint>
 #include <iosfwd>
 #include <iterator>
-#include <type_traits>
 
 /**
  * @file
@@ -30,61 +30,46 @@ namespace legate {
  */
 
 /**
- * @brief A statically-sized, multi-dimensional rectangle.
- *
- * Each rectangle consists of two `legate::Point` objects, one for the lower bound (`lo`) and one
- * for the upper bound (`hi`). The bounds are inclusive.
- *
- * Coordinates are always stored as `std::int64_t`.
- *
- * @tparam DIM The dimensionality of the rectangle.
+ * @brief A dimension-erased, multi-dimensional rectangle.
  */
-template <int DIM>
-struct Rect {
-  static_assert(DIM > 0, "Rect dimensionality must be positive");
-
+class LEGATE_EXPORT Rect {
+ public:
   /**
-   * @brief The coordinate type.
+   * @brief The maximum number of dimensions a `Rect` may have.
    */
-  using value_type = std::int64_t;
+  static constexpr std::int32_t MAX_DIM = LEGATE_MAX_DIM;
 
   /**
    * @brief A standard-conforming forward iterator over the points of a `Rect`.
    *
-   * Dereferencing the iterator yields a reference to the current `legate::Point`.
+   * Dereferencing the iterator yields a reference to the current `Point`.
    */
   class iterator {  // NOLINT(readability-identifier-naming)
    public:
     using iterator_category = std::forward_iterator_tag;
-    using value_type        = Point<DIM>;
+    using value_type        = Point;
     using difference_type   = std::ptrdiff_t;
-    using pointer           = const Point<DIM>*;
-    using reference         = const Point<DIM>&;
+    using pointer           = const Point*;
+    using reference         = const Point&;
 
-    iterator() = default;
+    iterator(Point lo, Point hi, bool fortran_order, bool valid = true);
 
-    LEGATE_HOST_DEVICE iterator(const Point<DIM>& lo,
-                                const Point<DIM>& hi,
-                                bool fortran_order,
-                                bool valid);
+    [[nodiscard]] reference operator*() const;
+    [[nodiscard]] pointer operator->() const;
+    iterator& operator++();
+    iterator operator++(int);
+    [[nodiscard]] bool operator==(const iterator& other) const;
+    [[nodiscard]] bool operator!=(const iterator& other) const;
 
-    [[nodiscard]] LEGATE_HOST_DEVICE reference operator*() const;
-    [[nodiscard]] LEGATE_HOST_DEVICE pointer operator->() const;
-
-    LEGATE_HOST_DEVICE iterator& operator++();
-
-    LEGATE_HOST_DEVICE iterator operator++(int);
-
-    [[nodiscard]] LEGATE_HOST_DEVICE bool operator==(const iterator& other) const;
-
-    [[nodiscard]] LEGATE_HOST_DEVICE bool operator!=(const iterator& other) const;
+    [[nodiscard]] const Point& lo() const;
+    [[nodiscard]] const Point& hi() const;
 
    private:
-    LEGATE_HOST_DEVICE void step_();
+    void step_();
 
-    Point<DIM> point_{};
-    Point<DIM> lo_{};
-    Point<DIM> hi_{};
+    Point lo_{};
+    Point hi_{};
+    Point point_{};
     bool fortran_order_{false};
     bool valid_{false};
   };
@@ -94,124 +79,143 @@ struct Rect {
    */
   class Iterable {
    public:
-    LEGATE_HOST_DEVICE Iterable(const Point<DIM>& lo, const Point<DIM>& hi, bool fortran_order);
+    Iterable(Point lo, Point hi, bool fortran_order);
 
-    [[nodiscard]] LEGATE_HOST_DEVICE iterator begin() const;
-
-    [[nodiscard]] LEGATE_HOST_DEVICE iterator end() const;
+    [[nodiscard]] iterator begin() const;
+    [[nodiscard]] iterator end() const;
 
    private:
-    Point<DIM> lo_{};
-    Point<DIM> hi_{};
+    Point lo_{};
+    Point hi_{};
     bool fortran_order_{false};
   };
 
   /**
-   * @brief The (inclusive) lower bound of the rectangle.
+   * @brief The empty (0-dimensional) domain.
    */
-  Point<DIM> lo;
-  /**
-   * @brief The (inclusive) upper bound of the rectangle.
-   */
-  Point<DIM> hi;
+  static const Rect NO_DOMAIN;
 
   /**
-   * @brief Constructs an uninitialized rectangle.
+   * @brief Constructs an empty (0-dimensional) domain.
    */
   Rect() = default;
 
   /**
-   * @brief Constructs a rectangle from a lower and an upper bound.
+   * @brief Constructs a domain from a lower and an upper bound.
    *
-   * @param lo_ The lower bound.
-   * @param hi_ The upper bound.
+   * @param lo The lower bound.
+   * @param hi The upper bound. Must have the same dimensionality as `lo`.
    */
-  LEGATE_HOST_DEVICE Rect(const Point<DIM>& lo_, const Point<DIM>& hi_);
+  Rect(Point lo, Point hi);
 
   /**
-   * @return `true` if the rectangle contains no points, `false` otherwise.
+   * @brief Constructs a domain from a `legate::NDRect`
+   *
+   * @param rect The rectangle to convert from.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE bool empty() const;
+  template <int DIM>
+  Rect(const NDRect<DIM>& rect);  // NOLINT(google-explicit-constructor)
 
   /**
-   * @return The number of points in the rectangle.
+   * @brief Converts this domain to a `legate::NDRect`
+   *
+   * The requested dimensionality must match `dim()`.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE std::size_t volume() const;
+  template <int DIM>
+  operator NDRect<DIM>() const;  // NOLINT(google-explicit-constructor)
 
   /**
-   * @brief Checks whether the rectangle contains a point.
+   * @brief Returns the bounds of this domain as a `legate::NDRect`
    *
-   * @param point The point to test.
-   *
-   * @return `true` if `point` is within the bounds, `false` otherwise.
+   * The requested dimensionality must match `dim()`.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE bool contains(const Point<DIM>& point) const;
+  template <int DIM>
+  [[nodiscard]] NDRect<DIM> bounds() const;
+
+  [[nodiscard]] bool operator==(const Rect& rhs) const;
+  [[nodiscard]] bool operator!=(const Rect& rhs) const;
+
+  [[nodiscard]] Rect operator+(const Point& point) const;
+  Rect& operator+=(const Point& point);
+  [[nodiscard]] Rect operator-(const Point& point) const;
+  Rect& operator-=(const Point& point);
 
   /**
-   * @brief Checks whether the rectangle contains all points of another rectangle.
+   * @brief Checks whether the domain contains a point.
    *
-   * @param other The other rectangle.
+   * @param point The point to test. Must have the same dimensionality as this domain.
    *
-   * @return `true` if every point of `other` is within this rectangle, `false` otherwise.
+   * @return `true` if the point is within the bounds, `false` otherwise.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE bool contains(const Rect<DIM>& other) const;
+  [[nodiscard]] bool contains(const Point& point) const;
 
   /**
-   * @brief Checks whether this rectangle overlaps another.
-   *
-   * @param other The other rectangle.
-   *
-   * @return `true` if the two rectangles share at least one point, `false` otherwise.
+   * @return The dimensionality of the domain.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE bool overlaps(const Rect<DIM>& other) const;
+  [[nodiscard]] std::uint32_t dim() const;
 
   /**
-   * @brief Computes the intersection of this rectangle with another.
+   * @return `true` if the domain contains no points, `false` otherwise.
+   */
+  [[nodiscard]] bool empty() const;
+
+  /**
+   * @return The number of points in the domain.
+   */
+  [[nodiscard]] std::size_t volume() const;
+
+  /**
+   * @return A reference to the lower bound of the domain.
+   */
+  [[nodiscard]] const Point& lo() const;
+
+  /**
+   * @return A reference to the upper bound of the domain.
+   */
+  [[nodiscard]] const Point& hi() const;
+
+  /**
+   * @brief Intersects this domain with another.
    *
-   * @param other The other rectangle.
+   * @param other The other domain. Must have the same dimensionality as this domain.
    *
    * @return The intersection.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE Rect<DIM> intersection(const Rect<DIM>& other) const;
+  [[nodiscard]] Rect intersection(const Rect& other) const;
 
   /**
-   * @brief Computes the bounding box of the union of this rectangle with another.
-   *
-   * @param other The other rectangle.
-   *
-   * @return The bounding box of the union (which may itself contain points in neither rectangle).
+   * @return A point whose coordinates are the extents (`hi - lo + 1`) of each dimension.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE Rect<DIM> union_bbox(const Rect<DIM>& other) const;
+  [[nodiscard]] Point extents() const;
+
+  /**
+   * @return A point whose coordinates are the C-order strides of each dimension.
+   */
+  [[nodiscard]] Point strides() const;
+
+  /**
+   * @return A point whose coordinates are the extents (`hi - lo + 1`) of each dimension.
+   */
+  [[nodiscard]] Point to_shape() const;
 
   // ==-- Iteration over points --==
 
   /**
-   * @brief Returns a view over the points of the rectangle.
+   * @brief Returns a view over the points of the domain.
    *
    * @param fortran_order If `true`, iterate in Fortran (column-major) order; otherwise iterate in
    * C (row-major) order (the default).
    *
-   * @return An iterable view, e.g. `for (auto&& point : rect.iterate()) { ... }`.
+   * @return An iterable view, e.g. `for (auto&& point : domain.iterate()) { ... }`.
    */
-  [[nodiscard]] LEGATE_HOST_DEVICE Iterable iterate(bool fortran_order = false) const;
+  [[nodiscard]] Iterable iterate(bool fortran_order = false) const;
+
+ private:
+  Point lo_{};
+  Point hi_{};
 };
 
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE bool operator==(const Rect<DIM>& lhs, const Rect<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE bool operator!=(const Rect<DIM>& lhs, const Rect<DIM>& rhs);
-
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Rect<DIM> operator+(const Rect<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-LEGATE_HOST_DEVICE Rect<DIM>& operator+=(Rect<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-[[nodiscard]] LEGATE_HOST_DEVICE Rect<DIM> operator-(const Rect<DIM>& lhs, const Point<DIM>& rhs);
-template <int DIM>
-LEGATE_HOST_DEVICE Rect<DIM>& operator-=(Rect<DIM>& lhs, const Point<DIM>& rhs);
-
-template <int DIM>
-std::ostream& operator<<(std::ostream& os, const Rect<DIM>& rect);
+LEGATE_EXPORT std::ostream& operator<<(std::ostream& os, const Rect& domain);
 
 /** @} */  // end of geometry
 

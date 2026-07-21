@@ -67,7 +67,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0);
-    std::vector<std::pair<legate::AccessorRO<std::int64_t, 1>, legate::Rect<1>>> inputs;
+    std::vector<std::pair<legate::AccessorRO<std::int64_t, 1>, legate::NDRect<1>>> inputs;
     for (auto& input_arr : context.inputs()) {
       auto shape = input_arr.shape<1>();
       auto acc   = input_arr.read_accessor<std::int64_t, 1>(shape);
@@ -85,7 +85,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
     const std::size_t size = dedup_set.size();
     std::int64_t pos       = 0;
     auto result =
-      output.create_output_buffer<std::int64_t, 1>(legate::Point<1>{size}, /*bind_buffer=*/true);
+      output.create_output_buffer<std::int64_t, 1>(legate::NDPoint<1>{size}, /*bind_buffer=*/true);
     for (auto e : dedup_set) {
       result[pos++] = e;
     }

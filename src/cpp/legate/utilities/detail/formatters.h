@@ -14,8 +14,8 @@
 
 namespace legate {
 
-class DomainPoint;
-class Domain;
+class Point;
+class Rect;
 
 enum class LocalTaskID : std::int64_t;
 enum class VariantCode : unsigned int /* A.K.A. Legion::VariantID */;
@@ -203,10 +203,10 @@ struct formatter<legate::detail::LogicalStore> : formatter<std::string> {
 };
 
 template <>
-struct formatter<legate::DomainPoint> : ostream_formatter {};
+struct formatter<legate::Point> : ostream_formatter {};
 
 template <>
-struct formatter<legate::Domain> : ostream_formatter {};
+struct formatter<legate::Rect> : ostream_formatter {};
 
 template <>
 struct formatter<legate::StreamingMode> : formatter<std::string_view> {

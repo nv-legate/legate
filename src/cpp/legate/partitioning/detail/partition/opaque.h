@@ -27,11 +27,11 @@ class TransformStack;
  *
  * `Opaque` partitions represent the partitioning of unbound stores. Unlike `Tiling`, the pieces
  * need not be regularly shaped: each color of the partition maps to an arbitrary rank-local
- * `Domain` placed at an explicit global offset. Concretely, an `Opaque` is a mapping from colors
- * to global sub-`Domain`s (one per producing rank), together with the color space shape.
+ * `Rect` placed at an explicit global offset. Concretely, an `Opaque` is a mapping from colors
+ * to global sub-`Rect`s (one per producing rank), together with the color space shape.
  *
  * The nature of an unbound store is such that the shape (and therefore the concrete per-color
- * `Domain`s) is only known once the task producing the store finishes executing. An `Opaque` is
+ * `Rect`s) is only known once the task producing the store finishes executing. An `Opaque` is
  * therefore created as a *placeholder* carrying just the color-space shape (so the launch domain
  * can be resolved during partitioning), and later completed via `fill()` from the all-gathered
  * per-rank domains (see the unbound-store post-processing in the task launch path).
@@ -46,7 +46,7 @@ class Opaque final : public Partition {
    *
    * @param color_shape The number of colors (pieces) in each dimension of the color space.
    */
-  explicit Opaque(DomainPoint color_shape);
+  explicit Opaque(Point color_shape);
 
   bool operator==(const Opaque& other) const;
 
@@ -84,7 +84,7 @@ class Opaque final : public Partition {
   /**
    * @copydoc Partition::color_shape()
    */
-  [[nodiscard]] const DomainPoint& color_shape() const override;
+  [[nodiscard]] const Point& color_shape() const override;
 
   /**
    * @copydoc Partition::is_equi_size()
@@ -92,23 +92,22 @@ class Opaque final : public Partition {
    * Always `false`: an opaque partition is assumed to have irregular pieces, so copies out of it
    * always take the general shuffle path rather than the equal-size all-gather fast path.
    */
-  [[nodiscard]] bool is_equi_size(const Domain& domain) const override;
+  [[nodiscard]] bool is_equi_size(const Rect& domain) const override;
 
   /**
    * @copydoc Partition::launch_domain()
    */
-  [[nodiscard]] Domain launch_domain() const override;
+  [[nodiscard]] Rect launch_domain() const override;
 
   /**
    * @copydoc Partition::compute_color()
    */
-  [[nodiscard]] DomainPoint compute_color(std::uint64_t device_id) const override;
+  [[nodiscard]] Point compute_color(std::uint64_t device_id) const override;
 
   /**
    * @copydoc Partition::compute_device_ids()
    */
-  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(
-    const DomainPoint& color) const override;
+  [[nodiscard]] std::vector<std::uint64_t> compute_device_ids(const Point& color) const override;
 
   /**
    * @copydoc Partition::shard()
@@ -116,14 +115,14 @@ class Opaque final : public Partition {
    * Returns the global sub-domain of the piece with the given color. The domain argument is
    * ignored; opaque partitions store absolute global sub-domains.
    */
-  [[nodiscard]] Domain shard(const Domain& domain, const DomainPoint& color) const override;
+  [[nodiscard]] Rect shard(const Rect& domain, const Point& color) const override;
 
   /**
    * @copydoc Partition::subsumes()
    *
    * An opaque partition only subsumes itself (an identical opaque distribution).
    */
-  [[nodiscard]] bool subsumes(const Domain& domain,
+  [[nodiscard]] bool subsumes(const Rect& domain,
                               const InternalSharedPtr<Partition>& other) const override;
 
   /**
@@ -149,9 +148,9 @@ class Opaque final : public Partition {
    * @brief Complete the placeholder with the concrete per-rank pieces.
    *
    * @param colors  `colors[d]` is the color of the piece produced by device (rank) `d`.
-   * @param domains `domains[d]` is that piece's global sub-`Domain`.
+   * @param domains `domains[d]` is that piece's global sub-`Rect`.
    */
-  void fill(SmallVector<DomainPoint> colors, SmallVector<Domain> domains);
+  void fill(SmallVector<Point> colors, SmallVector<Rect> domains);
 
   /**
    * @brief Whether `fill()` has been called (the per-color domains are known).
@@ -159,16 +158,16 @@ class Opaque final : public Partition {
   [[nodiscard]] bool filled() const;
 
  private:
-  [[nodiscard]] std::optional<std::uint64_t> device_of_(const DomainPoint& color) const;
+  [[nodiscard]] std::optional<std::uint64_t> device_of_(const Point& color) const;
 
-  DomainPoint color_shape_{};
+  Point color_shape_{};
   // Indexed by device (rank) id.
-  SmallVector<DomainPoint> colors_{};
-  SmallVector<Domain> domains_{};
+  SmallVector<Point> colors_{};
+  SmallVector<Rect> domains_{};
   bool filled_{};
 };
 
-[[nodiscard]] InternalSharedPtr<Opaque> create_opaque(DomainPoint color_shape);
+[[nodiscard]] InternalSharedPtr<Opaque> create_opaque(Point color_shape);
 
 }  // namespace legate::detail
 

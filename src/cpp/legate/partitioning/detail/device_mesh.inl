@@ -10,9 +10,9 @@
 
 namespace legate::detail {
 
-inline const DomainPoint& DeviceMesh::shape() const { return shape_; }
+inline const Point& DeviceMesh::shape() const { return shape_; }
 
-inline const DomainPoint& DeviceMesh::strides() const { return strides_; }
+inline const Point& DeviceMesh::strides() const { return strides_; }
 
 inline std::uint32_t DeviceMesh::dim() const { return shape_.dim(); }
 

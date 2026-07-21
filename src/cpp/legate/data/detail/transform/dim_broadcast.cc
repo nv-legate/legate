@@ -19,11 +19,11 @@
 
 namespace legate::detail {
 
-Domain DimBroadcast::transform(const Domain& input) const
+Rect DimBroadcast::transform(const Rect& input) const
 {
   const auto ndim = input.dim();
-  auto lo         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
-  auto hi         = DomainPoint::zeroes(static_cast<std::int32_t>(ndim));
+  auto lo         = Point::zeroes(static_cast<std::int32_t>(ndim));
+  auto hi         = Point::zeroes(static_cast<std::int32_t>(ndim));
   auto&& in_lo    = input.lo();
   auto&& in_hi    = input.hi();
 
@@ -50,14 +50,14 @@ Restrictions DimBroadcast::convert(Restrictions restrictions, bool forbid_fake_d
       [&](auto&& min_exts) { return min_exts; });
 }
 
-DomainPoint DimBroadcast::convert_extents(DomainPoint extents) const
+Point DimBroadcast::convert_extents(Point extents) const
 {
   LEGATE_ASSERT(extents[dim_] == 1);
   extents[dim_] = static_cast<std::int64_t>(dim_size_);
   return extents;
 }
 
-DomainPoint DimBroadcast::convert_strides(DomainPoint strides) const
+Point DimBroadcast::convert_strides(Point strides) const
 {
   // Broadcasting reads the same (unit-extent) backing element for every index along `dim_`, so
   // its stride must be 0.
@@ -71,25 +71,25 @@ SymbolicPoint DimBroadcast::invert(SymbolicPoint point) const
   return point;
 }
 
-DomainPoint DimBroadcast::invert_color(DomainPoint color) const
+Point DimBroadcast::invert_color(Point color) const
 {
   color[dim_] = 0;
   return color;
 }
 
-DomainPoint DimBroadcast::invert_color_shape(DomainPoint color_shape) const
+Point DimBroadcast::invert_color_shape(Point color_shape) const
 {
   color_shape[dim_] = 1;
   return color_shape;
 }
 
-DomainPoint DimBroadcast::invert_point(DomainPoint point) const
+Point DimBroadcast::invert_point(Point point) const
 {
   point[dim_] = 0;
   return point;
 }
 
-DomainPoint DimBroadcast::invert_extents(DomainPoint extents) const
+Point DimBroadcast::invert_extents(Point extents) const
 {
   extents[dim_] = 1;
   return extents;

@@ -18,7 +18,7 @@ TEST_F(ToDomain, Empty)
 {
   const auto shape    = legate::tuple<std::uint64_t>{};
   const auto domain   = legate::detail::to_domain(shape);
-  const auto expected = legate::Domain{0, 0};
+  const auto expected = legate::Rect{0, 0};
 
   ASSERT_EQ(expected, domain);
 }
@@ -27,7 +27,7 @@ TEST_F(ToDomain, 1D)
 {
   const auto shape    = legate::tuple<std::uint64_t>{1};
   const auto domain   = legate::detail::to_domain(shape);
-  const auto expected = legate::Domain{0, 0};
+  const auto expected = legate::Rect{0, 0};
 
   ASSERT_EQ(expected, domain);
 }

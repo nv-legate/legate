@@ -10,7 +10,7 @@
 
 namespace legate::detail {
 
-inline const Domain& InlineStorage::domain() const { return domain_; }
+inline const Rect& InlineStorage::domain() const { return domain_; }
 
 inline const legate::ExternalAllocation& InlineStorage::alloc_() const { return allocation_; }
 

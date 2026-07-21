@@ -31,7 +31,7 @@ namespace {
 
 class FlatDomainPoint {
  public:
-  const legate::DomainPoint& dp;
+  const legate::Point& dp;
 };
 
 }  // namespace
@@ -213,8 +213,8 @@ class TypeDispatcher : public legate::detail::InnerTypeDispatchFn<DIM> {
  * @return The sub-file name for the current leaf-task to write.
  */
 [[nodiscard]] std::filesystem::path make_filepath(const std::filesystem::path& vds_dir,
-                                                  const DomainPoint& index_point,
-                                                  const Domain& store_shape)
+                                                  const Point& index_point,
+                                                  const Rect& store_shape)
 {
   LEGATE_ASSERT(std::filesystem::is_directory(vds_dir));
   return vds_dir / fmt::format("{}_lo_{}_hi_{}.h5",
@@ -234,16 +234,16 @@ void task_body(const legate::TaskContext& context, bool is_device)
   const auto store        = context.input(0);
   const auto base_dir     = std::filesystem::path{context.scalar(0).value<std::string_view>()};
   const auto dataset_name = context.scalar(1).value<std::string>();
-  const auto&& [domain, index_point] = [&context, &store]() -> std::pair<Domain, DomainPoint> {
+  const auto&& [domain, index_point] = [&context, &store]() -> std::pair<Rect, Point> {
     if (!context.is_single_task()) {
       return {context.get_launch_domain(), context.get_task_index()};
     }
 
     // If this was a single task, the launch domain and task index would not be valid, so here we
     // create fake ones with the expected number of dimensions.
-    auto dummy_task_index = DomainPoint::zeroes(static_cast<std::int32_t>(store.dim()));
+    auto dummy_task_index = Point::zeroes(static_cast<std::int32_t>(store.dim()));
 
-    return {Domain{dummy_task_index, dummy_task_index}, dummy_task_index};
+    return {Rect{dummy_task_index, dummy_task_index}, dummy_task_index};
   }();
   const auto index_filepath = make_filepath(base_dir, index_point, store.domain());
 
