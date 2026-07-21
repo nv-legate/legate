@@ -327,7 +327,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 
   auto partition = [&] {
     if (color_shape.has_value()) {
-      return create_tiling(std::move(tile_shape), std::move(*color_shape));
+      return create_tiling(to_domain_point(tile_shape), to_domain_point(*color_shape));
     }
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> tmp_color_shape;
 
@@ -337,7 +337,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
                    tile_shape.begin(),
                    std::back_inserter(tmp_color_shape),
                    [](std::uint64_t c, std::uint64_t t) { return (c + t - 1) / t; });
-    return create_tiling(std::move(tile_shape), std::move(tmp_color_shape));
+    return create_tiling(to_domain_point(tile_shape), to_domain_point(tmp_color_shape));
   }();
 
   return create_partition_(self, std::move(partition), /* complete */ true);
@@ -527,7 +527,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
 
     std::int64_t running = 0;
 
-    for (std::uint64_t k = 0; k < color_shape[d]; ++k) {
+    for (std::int64_t k = 0; k < color_shape[d]; ++k) {
       offset_tables[d][k] = running;
       running += std::max<std::int64_t>(ext_tables[d][k], 0);
     }
@@ -665,7 +665,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 
   auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
 
-  return create_tiling(std::move(tile_shape), std::move(launch_shape));
+  return create_tiling(to_domain_point(tile_shape), to_domain_point(launch_shape));
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
@@ -694,7 +694,7 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
 void LogicalStore::set_key_partition(InternalSharedPtr<Partition> partition)
 {
   LEGATE_ASSERT(!transformed());
-  num_pieces_ = array_volume(partition->color_shape());
+  num_pieces_ = static_cast<std::uint32_t>(partition->color_shape().volume());
   get_storage()->set_key_partition(partition);
   key_partition_ = std::move(partition);
 }

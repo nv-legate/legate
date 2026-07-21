@@ -56,32 +56,24 @@ Restrictions Promote::convert(Restrictions restrictions, bool forbid_fake_dim) c
       });
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint Promote::convert_color(DomainPoint color) const
 {
-  color.insert(color.begin() + extra_dim_, 0);
-  return color;
+  return color.inserted(extra_dim_, /*value=*/0);
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
+DomainPoint Promote::convert_color_shape(DomainPoint color_shape) const
 {
-  color_shape.insert(color_shape.begin() + extra_dim_, 1);
-  return color_shape;
+  return color_shape.inserted(extra_dim_, /*value=*/1);
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Promote::convert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint Promote::convert_point(DomainPoint point) const
 {
-  point.insert(point.begin() + extra_dim_, 0);
-  return point;
+  return point.inserted(extra_dim_, /*value=*/0);
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
+DomainPoint Promote::convert_extents(DomainPoint extents) const
 {
-  extents.insert(extents.begin() + extra_dim_, dim_size_);
-  return extents;
+  return extents.inserted(extra_dim_, dim_size_);
 }
 
 SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::convert_strides(
@@ -113,32 +105,18 @@ Restrictions Promote::invert(Restrictions restrictions) const
       });
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::invert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint Promote::invert_color(DomainPoint color) const { return color.removed(extra_dim_); }
+
+DomainPoint Promote::invert_color_shape(DomainPoint color_shape) const
 {
-  color.erase(color.begin() + extra_dim_);
-  return color;
+  return color_shape.removed(extra_dim_);
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::invert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
-{
-  color_shape.erase(color_shape.begin() + extra_dim_);
-  return color_shape;
-}
+DomainPoint Promote::invert_point(DomainPoint point) const { return point.removed(extra_dim_); }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Promote::invert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint Promote::invert_extents(DomainPoint extents) const
 {
-  point.erase(point.begin() + extra_dim_);
-  return point;
-}
-
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Promote::invert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
-{
-  extents.erase(extents.begin() + extra_dim_);
-  return extents;
+  return extents.removed(extra_dim_);
 }
 
 void Promote::pack(BufferBuilder& buffer) const

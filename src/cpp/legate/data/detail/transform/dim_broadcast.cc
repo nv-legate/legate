@@ -50,11 +50,10 @@ Restrictions DimBroadcast::convert(Restrictions restrictions, bool forbid_fake_d
       [&](auto&& min_exts) { return min_exts; });
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::convert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
+DomainPoint DimBroadcast::convert_extents(DomainPoint extents) const
 {
   LEGATE_ASSERT(extents[dim_] == 1);
-  extents.at(dim_) = dim_size_;
+  extents[dim_] = static_cast<std::int64_t>(dim_size_);
   return extents;
 }
 
@@ -73,31 +72,27 @@ SymbolicPoint DimBroadcast::invert(SymbolicPoint point) const
   return point;
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::invert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
+DomainPoint DimBroadcast::invert_color(DomainPoint color) const
 {
-  color.at(dim_) = 0;
+  color[dim_] = 0;
   return color;
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::invert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
+DomainPoint DimBroadcast::invert_color_shape(DomainPoint color_shape) const
 {
-  color_shape.at(dim_) = 1;
+  color_shape[dim_] = 1;
   return color_shape;
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> DimBroadcast::invert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint DimBroadcast::invert_point(DomainPoint point) const
 {
-  point.at(dim_) = 0;
+  point[dim_] = 0;
   return point;
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::invert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
+DomainPoint DimBroadcast::invert_extents(DomainPoint extents) const
 {
-  extents.at(dim_) = 1;
+  extents[dim_] = 1;
   return extents;
 }
 

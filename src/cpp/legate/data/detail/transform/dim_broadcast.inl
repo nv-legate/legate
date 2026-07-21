@@ -15,23 +15,14 @@ inline DimBroadcast::DimBroadcast(std::int32_t dim, std::uint64_t dim_size)
 {
 }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::convert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
-{
-  return color;
-}
+inline DomainPoint DimBroadcast::convert_color(DomainPoint color) const { return color; }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> DimBroadcast::convert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
+inline DomainPoint DimBroadcast::convert_color_shape(DomainPoint color_shape) const
 {
   return color_shape;
 }
 
-inline SmallVector<std::int64_t, LEGATE_MAX_DIM> DimBroadcast::convert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
-{
-  return point;
-}
+inline DomainPoint DimBroadcast::convert_point(DomainPoint point) const { return point; }
 
 inline Restrictions DimBroadcast::invert(Restrictions restrictions) const { return restrictions; }
 

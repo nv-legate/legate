@@ -51,6 +51,10 @@ inline std::uint32_t DomainPoint::dim() const
   return static_cast<std::int32_t>(coordinates_.size());
 }
 
+inline std::size_t DomainPoint::size() const { return coordinates_.size(); }
+
+inline bool DomainPoint::empty() const { return coordinates_.empty(); }
+
 template <typename Index, typename>
 std::int64_t& DomainPoint::operator[](Index index)
 {

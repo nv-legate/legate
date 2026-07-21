@@ -53,22 +53,7 @@ std::pair<void*, SmallVector<std::uint64_t, LEGATE_MAX_DIM>> PhysicalStore::get_
   // dimensions. For a transformed store, invert the transform stack so that coordinate offsets
   // introduced by projections, shifts, etc. are folded into the point. Otherwise the store and
   // storage coordinates coincide (this also covers 0-D stores, which are never transformed).
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> storage_point;
-
-  if (transformed()) {
-    SmallVector<std::int64_t, LEGATE_MAX_DIM> store_point;
-
-    store_point.reserve(dim());
-    for (std::int32_t i = 0; i < dim(); ++i) {
-      store_point.push_back(store_lo[i]);
-    }
-    storage_point = transform_->invert_point(std::move(store_point));
-  } else {
-    storage_point.reserve(num_storage_dims);
-    for (std::size_t j = 0; j < num_storage_dims; ++j) {
-      storage_point.push_back(store_lo[static_cast<std::int32_t>(j)]);
-    }
-  }
+  const auto storage_point = transformed() ? transform_->invert_point(store_lo) : store_lo;
 
   // origin = base + sum_j storage_point[j] * storage_strides[j]  (in bytes)
   std::int64_t offset = 0;

@@ -46,7 +46,7 @@ class Opaque final : public Partition {
    *
    * @param color_shape The number of colors (pieces) in each dimension of the color space.
    */
-  explicit Opaque(SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape);
+  explicit Opaque(DomainPoint color_shape);
 
   bool operator==(const Opaque& other) const;
 
@@ -84,7 +84,7 @@ class Opaque final : public Partition {
   /**
    * @copydoc Partition::color_shape()
    */
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
+  [[nodiscard]] const DomainPoint& color_shape() const override;
 
   /**
    * @copydoc Partition::is_equi_size()
@@ -161,15 +161,14 @@ class Opaque final : public Partition {
  private:
   [[nodiscard]] std::optional<std::uint64_t> device_of_(const DomainPoint& color) const;
 
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape_{};
+  DomainPoint color_shape_{};
   // Indexed by device (rank) id.
   SmallVector<DomainPoint> colors_{};
   SmallVector<Domain> domains_{};
   bool filled_{};
 };
 
-[[nodiscard]] InternalSharedPtr<Opaque> create_opaque(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape);
+[[nodiscard]] InternalSharedPtr<Opaque> create_opaque(DomainPoint color_shape);
 
 }  // namespace legate::detail
 

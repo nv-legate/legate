@@ -224,24 +224,22 @@ Domain Restrictions::embed(const Domain& domain) const
   return {std::move(new_lo), std::move(new_hi)};
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> Restrictions::embed_to_color_shape(
-  const Domain& domain) const
+DomainPoint Restrictions::embed_to_color_shape(const Domain& domain) const
 {
-  auto result = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
+  auto result = DomainPoint::zeroes(static_cast<std::int32_t>(dimension_restrictions_().size()));
   // `idx` walks the (pruned) launch domain, which has an axis only for each non-restricted store
-  // dimension; restricted (FORBID) dimensions are not partitioned and get a single color. We append
+  // dimension; restricted (FORBID) dimensions are not partitioned and get a single color. We fill
   // one entry per store dimension in order, so each dimension's color extent lands in its own slot.
   auto idx  = std::int32_t{0};
   auto&& lo = domain.lo();
   auto&& hi = domain.hi();
 
-  result.reserve(dimension_restrictions_().size());
-  for (auto&& restriction : dimension_restrictions_()) {
+  for (auto&& [dim, restriction] : enumerate(dimension_restrictions_())) {
     if (restriction == Restriction::FORBID) {
-      result.push_back(1);
+      result[dim] = 1;
       continue;
     }
-    result.push_back(static_cast<std::uint64_t>(hi[idx] - lo[idx] + 1));
+    result[dim] = hi[idx] - lo[idx] + 1;
     ++idx;
   }
 

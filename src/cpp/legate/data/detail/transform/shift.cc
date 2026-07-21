@@ -27,15 +27,13 @@ Domain Shift::transform(const Domain& input) const
   return {std::move(lo), std::move(hi)};
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Shift::convert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint Shift::convert_point(DomainPoint point) const
 {
   point[dim_] += offset_;
   return point;
 }
 
-SmallVector<std::int64_t, LEGATE_MAX_DIM> Shift::invert_point(
-  SmallVector<std::int64_t, LEGATE_MAX_DIM> point) const
+DomainPoint Shift::invert_point(DomainPoint point) const
 {
   point[dim_] -= offset_;
   return point;

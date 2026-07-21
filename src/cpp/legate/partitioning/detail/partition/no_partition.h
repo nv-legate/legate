@@ -68,7 +68,7 @@ class NoPartition final : public Partition {
    *
    * @throws std::invalid_argument
    */
-  [[nodiscard]] Span<const std::uint64_t> color_shape() const override;
+  [[nodiscard]] const DomainPoint& color_shape() const override;
 
   [[nodiscard]] bool is_equi_size(const Domain& domain) const override;
 

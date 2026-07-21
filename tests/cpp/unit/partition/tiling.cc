@@ -12,6 +12,7 @@
 #include <legate/data/detail/transform/promote.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/utilities/detail/small_vector.h>
+#include <legate/utilities/detail/tuple.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,7 +37,10 @@ class TilingTest : public DefaultFixture {
     auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
     auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
     auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
-    return legate::make_internal_shared<legate::detail::Tiling>(tile_shape, color_shape, offsets);
+    return legate::make_internal_shared<legate::detail::Tiling>(
+      legate::detail::to_domain_point(tile_shape),
+      legate::detail::to_domain_point(color_shape),
+      legate::detail::to_domain_point(offsets));
   }
 
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_overlapped_tiling()
@@ -46,7 +50,10 @@ class TilingTest : public DefaultFixture {
     auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
     auto strides     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3};
     return legate::make_internal_shared<legate::detail::Tiling>(
-      tile_shape, color_shape, offsets, strides);
+      legate::detail::to_domain_point(tile_shape),
+      legate::detail::to_domain_point(color_shape),
+      legate::detail::to_domain_point(offsets),
+      legate::detail::to_domain_point(strides));
   }
 
   legate::InternalSharedPtr<legate::detail::Tiling> tiling;
@@ -56,18 +63,18 @@ class TilingTest : public DefaultFixture {
 
 TEST_F(TilingTest, Shape)
 {
-  auto expected_tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
-  auto expected_color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-  auto expected_offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
-  auto expected_strides     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
-  EXPECT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->tile_shape()}),
-            expected_tile_shape);
-  EXPECT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->color_shape()}),
-            expected_color_shape);
-  EXPECT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling->offsets()}),
-            expected_offsets);
-  EXPECT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->strides()}),
-            expected_strides);
+  auto expected_tile_shape = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4});
+  auto expected_color_shape = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2});
+  auto expected_offsets = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1});
+  auto expected_strides = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4});
+  EXPECT_EQ(tiling->tile_shape(), expected_tile_shape);
+  EXPECT_EQ(tiling->color_shape(), expected_color_shape);
+  EXPECT_EQ(tiling->offsets(), expected_offsets);
+  EXPECT_EQ(tiling->strides(), expected_strides);
 }
 
 TEST_F(TilingTest, Compare)
@@ -128,16 +135,16 @@ TEST_F(TilingTest, Scale)
   auto partition    = tiling->scale(scale_factor);
   auto scaled       = dynamic_cast<legate::detail::Tiling*>(partition.get());
 
-  auto expected_tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{8, 8};
-  auto expected_color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-  auto expected_offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{2, 2};
+  auto expected_tile_shape = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{8, 8});
+  auto expected_color_shape = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2});
+  auto expected_offsets = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{2, 2});
 
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{scaled->tile_shape()}),
-            expected_tile_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{scaled->color_shape()}),
-            expected_color_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{scaled->offsets()}),
-            expected_offsets);
+  ASSERT_EQ(scaled->tile_shape(), expected_tile_shape);
+  ASSERT_EQ(scaled->color_shape(), expected_color_shape);
+  ASSERT_EQ(scaled->offsets(), expected_offsets);
 }
 
 TEST_F(TilingTest, Bloat)
@@ -147,16 +154,16 @@ TEST_F(TilingTest, Bloat)
   auto partition    = tiling->bloat(low_offsets, high_offsets);
   auto bloated      = dynamic_cast<legate::detail::Tiling*>(partition.get());
 
-  auto expected_tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{6, 6};
-  auto expected_color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-  auto expected_offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{0, 0};
+  auto expected_tile_shape = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{6, 6});
+  auto expected_color_shape = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2});
+  auto expected_offsets = legate::detail::to_domain_point(
+    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{0, 0});
 
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{bloated->tile_shape()}),
-            expected_tile_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{bloated->color_shape()}),
-            expected_color_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{bloated->offsets()}),
-            expected_offsets);
+  ASSERT_EQ(bloated->tile_shape(), expected_tile_shape);
+  ASSERT_EQ(bloated->color_shape(), expected_color_shape);
+  ASSERT_EQ(bloated->offsets(), expected_offsets);
 }
 
 TEST_F(TilingTest, Convert)
@@ -176,23 +183,15 @@ TEST_F(TilingTest, Convert)
   auto partition2 = tiling->convert(tiling, transform2);
   auto tiling2    = dynamic_cast<legate::detail::Tiling*>(partition2.get());
 
-  auto expected_tile_shape = transform2->convert_extents(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->tile_shape()});
-  auto expected_color_shape = transform2->convert_color_shape(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->color_shape()});
-  auto expected_offsets = transform2->convert_point(
-    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling->offsets()});
-  auto expected_strides = transform2->convert_extents(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling->strides()});
+  auto expected_tile_shape  = transform2->convert_extents(tiling->tile_shape());
+  auto expected_color_shape = transform2->convert_color_shape(tiling->color_shape());
+  auto expected_offsets     = transform2->convert_point(tiling->offsets());
+  auto expected_strides     = transform2->convert_extents(tiling->strides());
 
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->tile_shape()}),
-            expected_tile_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->color_shape()}),
-            expected_color_shape);
-  ASSERT_EQ((legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{tiling2->offsets()}),
-            expected_offsets);
-  ASSERT_EQ((legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{tiling2->strides()}),
-            expected_strides);
+  ASSERT_EQ(tiling2->tile_shape(), expected_tile_shape);
+  ASSERT_EQ(tiling2->color_shape(), expected_color_shape);
+  ASSERT_EQ(tiling2->offsets(), expected_offsets);
+  ASSERT_EQ(tiling2->strides(), expected_strides);
 }
 
 TEST_F(TilingTest, ToString)

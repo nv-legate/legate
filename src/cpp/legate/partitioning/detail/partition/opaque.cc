@@ -9,6 +9,7 @@
 #include <legate/data/detail/transform/transform_stack.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -32,8 +33,7 @@ namespace legate::detail {
 
 bool Opaque::operator==(const Opaque& other) const
 {
-  return filled_ == other.filled_ &&
-         std::equal(color_shape_.begin(), color_shape_.end(), other.color_shape_.begin()) &&
+  return filled_ == other.filled_ && color_shape_ == other.color_shape_ &&
          std::equal(colors_.begin(), colors_.end(), other.colors_.begin()) &&
          std::equal(domains_.begin(), domains_.end(), other.domains_.begin());
 }
@@ -98,7 +98,8 @@ bool Opaque::subsumes(const Domain&, const InternalSharedPtr<Partition>& other) 
 
 std::string Opaque::to_string() const
 {
-  // Domain/DomainPoint provide operator<< but no fmt formatter, so stream the pieces directly.
+  // Stream the per-piece color->domain pairs directly; interleaving the `->` separator with the
+  // running device index reads more clearly as a loop than as a single fmt call.
   std::stringstream ss;
 
   ss << fmt::format("Opaque(colors: {}, pieces: [", color_shape_);
@@ -141,7 +142,7 @@ void Opaque::fill(SmallVector<DomainPoint> colors, SmallVector<Domain> domains)
 
 // ==========================================================================================
 
-InternalSharedPtr<Opaque> create_opaque(SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape)
+InternalSharedPtr<Opaque> create_opaque(DomainPoint color_shape)
 {
   return make_internal_shared<Opaque>(std::move(color_shape));
 }

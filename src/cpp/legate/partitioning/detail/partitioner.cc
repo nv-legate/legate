@@ -202,7 +202,7 @@ SymbolicPoint create_symbolic_point(std::uint32_t ndim)
 
 SymbolicPoint Partitioner::infer_store_projection(
   const Domain& launch_domain,
-  Span<const std::uint64_t> color_shape,
+  const DomainPoint& color_shape,
   const InternalSharedPtr<TransformStack>& transform)
 {
   const auto ndim = color_shape.size();

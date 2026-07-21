@@ -13,6 +13,7 @@
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/span.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <iosfwd>
 #include <type_traits>
@@ -85,6 +86,18 @@ class LEGATE_EXPORT DomainPoint {
    */
   [[nodiscard]] std::uint32_t dim() const;
 
+  /**
+   * @return The number of coordinates in the point (equal to `dim()`).
+   *
+   * @note Provided so a `DomainPoint` can stand in for a container of coordinates in generic code.
+   */
+  [[nodiscard]] std::size_t size() const;
+
+  /**
+   * @return `true` if the point is 0-dimensional (has no coordinates), `false` otherwise.
+   */
+  [[nodiscard]] bool empty() const;
+
   // ==-- Utility methods (formerly free functions in geometry.h) --==
 
   /**
@@ -151,6 +164,40 @@ class LEGATE_EXPORT DomainPoint {
    * @return The newly created point.
    */
   [[nodiscard]] static DomainPoint zeroes(std::int32_t ndim);
+
+  /**
+   * @brief Returns a copy of this point with `value` inserted at dimension `pos`.
+   *
+   * The result has one more dimension than this point.
+   *
+   * @param pos The dimension at which to insert (`0 <= pos <= dim()`).
+   * @param value The coordinate value to insert.
+   *
+   * @return The higher-dimensional point.
+   */
+  [[nodiscard]] DomainPoint inserted(std::int32_t pos, std::int64_t value) const;
+
+  /**
+   * @brief Returns a copy of this point with dimension `pos` removed.
+   *
+   * The result has one fewer dimension than this point.
+   *
+   * @param pos The dimension to remove (`0 <= pos < dim()`).
+   *
+   * @return The lower-dimensional point.
+   */
+  [[nodiscard]] DomainPoint removed(std::int32_t pos) const;
+
+  /**
+   * @brief Returns a copy of this point with its coordinates gathered by `axes`.
+   *
+   * The result has `axes.size()` dimensions, with `result[i] == (*this)[axes[i]]`.
+   *
+   * @param axes The source dimension for each result dimension.
+   *
+   * @return The permuted point.
+   */
+  [[nodiscard]] DomainPoint permuted(Span<const std::int32_t> axes) const;
 
   // ==-- Iteration over coordinates --==
 

@@ -32,6 +32,14 @@ Domain to_domain(Span<const std::uint64_t> shape)
   return {std::move(lo), std::move(hi)};
 }
 
+Domain to_domain(const DomainPoint& shape)
+{
+  if (shape.empty()) {
+    return {0, 0};
+  }
+  return {DomainPoint::zeroes(static_cast<std::int32_t>(shape.size())), shape - 1};
+}
+
 Domain to_maybe_empty_domain(Span<const std::uint64_t> shape)
 {
   // When empty domains are serialized, they come out as (0-ed out), 0D Domains

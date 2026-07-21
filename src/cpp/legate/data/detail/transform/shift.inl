@@ -20,23 +20,11 @@ inline Restrictions Shift::convert(Restrictions restrictions, bool /*forbid_fake
   return restrictions;
 }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
-{
-  return color;
-}
+inline DomainPoint Shift::convert_color(DomainPoint color) const { return color; }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
-{
-  return color_shape;
-}
+inline DomainPoint Shift::convert_color_shape(DomainPoint color_shape) const { return color_shape; }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
-{
-  return extents;
-}
+inline DomainPoint Shift::convert_extents(DomainPoint extents) const { return extents; }
 
 // A shift only offsets coordinates; it does not change the storage layout, so the strides are
 // unchanged (the offset is folded into the base pointer via `invert_point`).
@@ -48,23 +36,11 @@ inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::convert_strides(
 
 inline Restrictions Shift::invert(Restrictions restrictions) const { return restrictions; }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::invert_color(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color) const
-{
-  return color;
-}
+inline DomainPoint Shift::invert_color(DomainPoint color) const { return color; }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::invert_color_shape(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> color_shape) const
-{
-  return color_shape;
-}
+inline DomainPoint Shift::invert_color_shape(DomainPoint color_shape) const { return color_shape; }
 
-inline SmallVector<std::uint64_t, LEGATE_MAX_DIM> Shift::invert_extents(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents) const
-{
-  return extents;
-}
+inline DomainPoint Shift::invert_extents(DomainPoint extents) const { return extents; }
 
 inline std::int32_t Shift::target_ndim(std::int32_t source_ndim) const { return source_ndim; }
 

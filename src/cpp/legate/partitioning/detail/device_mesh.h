@@ -43,7 +43,7 @@ class DeviceMesh {
    *
    * @param shape The extents of the device grid.
    */
-  explicit DeviceMesh(SmallVector<std::uint64_t, LEGATE_MAX_DIM> shape);
+  explicit DeviceMesh(DomainPoint shape);
 
   /**
    * @brief Construct a mesh from an explicit shape and strides.
@@ -51,16 +51,12 @@ class DeviceMesh {
    * @param shape   The extents of the device grid.
    * @param strides The per-dimension strides used to linearize a grid coordinate into a device id.
    */
-  DeviceMesh(SmallVector<std::uint64_t, LEGATE_MAX_DIM> shape,
-             SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides);
+  DeviceMesh(DomainPoint shape, DomainPoint strides);
 
-  [[nodiscard]] Span<const std::uint64_t> shape() const;
-  [[nodiscard]] Span<const std::uint64_t> strides() const;
+  [[nodiscard]] const DomainPoint& shape() const;
+  [[nodiscard]] const DomainPoint& strides() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool empty() const;
-
-  [[nodiscard]] const DomainPoint& shape_dp() const;
-  [[nodiscard]] const DomainPoint& strides_dp() const;
 
   /**
    * @brief The number of grid cells in the mesh (the product of its shape).
@@ -107,10 +103,8 @@ class DeviceMesh {
   [[nodiscard]] std::string to_string() const;
 
  private:
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> shape_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> strides_{};
-  DomainPoint shape_dp_{};
-  DomainPoint strides_dp_{};
+  DomainPoint shape_{};
+  DomainPoint strides_{};
 };
 
 }  // namespace legate::detail
