@@ -16,17 +16,23 @@
 
 namespace legate {
 
-DomainPoint::DomainPoint(detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords)
-  : coordinates_{std::move(coords)}
+DomainPoint::DomainPoint(const detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents)
+  : coordinates_{[&] {
+      auto coords = detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{};
+
+      coords.reserve(extents.size());
+      for (auto extent : extents) {
+        coords.push_back(static_cast<std::int64_t>(extent));
+      }
+      return coords;
+    }()}
 {
 }
 
-DomainPoint::DomainPoint(Span<const std::int64_t> coords) : coordinates_{coords} {}
-
-/*static*/ DomainPoint DomainPoint::zeroes(std::int32_t ndim)
+/*static*/ DomainPoint DomainPoint::full(std::int32_t ndim, std::int64_t coord)
 {
   return DomainPoint{detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{
-    detail::tags::size_tag, static_cast<std::size_t>(ndim), std::int64_t{0}}};
+    detail::tags::size_tag, static_cast<std::size_t>(ndim), coord}};
 }
 
 std::int64_t DomainPoint::dot(const DomainPoint& other) const

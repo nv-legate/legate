@@ -554,7 +554,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
 
   // Per-color prefix-sum offsets and the stitched global extents.
   auto offset_tables  = std::vector<std::vector<std::int64_t>>(color_dim);
-  auto global_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>(tags::size_tag, store_dim, 0);
+  auto global_extents = DomainPoint::zeroes(store_dim);
 
   for (std::uint32_t d = 0; d < color_dim; ++d) {
     offset_tables[d].assign(color_shape[d], 0);

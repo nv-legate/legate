@@ -12,10 +12,17 @@ namespace legate::detail {
 
 inline Shape::Shape(std::uint32_t dim) : dim_{dim} {}
 
+inline Shape::Shape(DomainPoint extents)
+  : state_{State::BOUND}, dim_{extents.dim()}, extents_{std::move(extents)}
+{
+}
+
 inline bool Shape::unbound() const { return state_ == State::UNBOUND; }
 
 inline std::uint32_t Shape::ndim() const { return dim_; }
 
-inline bool Shape::operator!=(Shape& other) { return !operator==(other); }
+inline std::size_t Shape::volume() const { return static_cast<std::size_t>(extents_.volume()); }
+
+inline bool Shape::operator!=(const Shape& other) const { return !operator==(other); }
 
 }  // namespace legate::detail

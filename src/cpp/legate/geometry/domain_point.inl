@@ -15,6 +15,13 @@ namespace legate {
 
 inline DomainPoint::DomainPoint(std::int64_t index) { coordinates_.push_back(index); }
 
+inline DomainPoint::DomainPoint(detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords)
+  : coordinates_{std::move(coords)}
+{
+}
+
+inline DomainPoint::DomainPoint(Span<const std::int64_t> coords) : coordinates_{coords} {}
+
 template <int DIM>
 DomainPoint::DomainPoint(const Point<DIM>& point)
 {
@@ -66,6 +73,8 @@ const std::int64_t& DomainPoint::operator[](Index index) const
 {
   return coordinates_.at(static_cast<std::size_t>(index));
 }
+
+/*static*/ inline DomainPoint DomainPoint::zeroes(std::int32_t ndim) { return full(ndim, 0); }
 
 inline const std::int64_t* DomainPoint::begin() const { return coordinates_.data(); }
 

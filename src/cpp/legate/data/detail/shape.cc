@@ -19,29 +19,29 @@
 
 namespace legate::detail {
 
-Shape::Shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& extents)
-  : state_{State::BOUND},
-    dim_{static_cast<std::uint32_t>(extents.size())},
-    extents_{std::move(extents)}
+Shape::Shape(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents)
+  : state_{State::BOUND}, extents_(extents)
 {
 }
 
-Span<const std::uint64_t> Shape::extents()
+Span<const std::uint64_t> Shape::extents() const
 {
-  ensure_binding_();
-  return extents_;
+  check_binding_();
+  // `extents_` stores the extents as (non-negative) signed coordinates; expose them as the
+  // unsigned extents the rest of the runtime expects. Reading signed storage through its unsigned
+  // counterpart is well-defined, and the round-trip is lossless for valid extents.
+  return {reinterpret_cast<const std::uint64_t*>(extents_.begin()), extents_.size()};
 }
 
-std::size_t Shape::volume() { return array_volume(extents()); }
-
-void Shape::copy_extents_from(const Shape& other)
+Domain Shape::domain() const
 {
-  LEGATE_CHECK(State::BOUND == state_);
-  LEGATE_ASSERT(dim_ == other.dim_);
-  extents_ = other.extents_;
+  const auto dim = static_cast<std::int32_t>(dim_);
+
+  check_binding_();
+  return {DomainPoint::zeroes(dim), extents_ - DomainPoint::full(dim, /* coord */ 1)};
 }
 
-void Shape::bind_extents(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents)
+void Shape::bind_extents(DomainPoint extents)
 {
   LEGATE_ASSERT(dim_ == extents.size());
   state_   = State::BOUND;
@@ -61,7 +61,7 @@ std::string Shape::to_string() const
   return "";
 }
 
-bool Shape::operator==(Shape& other)
+bool Shape::operator==(const Shape& other) const
 {
   if (this == &other) {
     return true;
@@ -74,7 +74,7 @@ bool Shape::operator==(Shape& other)
     extents().begin(), extents().end(), other.extents().begin(), other.extents().end());
 }
 
-void Shape::ensure_binding_()
+void Shape::check_binding_() const
 {
   if (State::UNBOUND == state_) {
     throw TracedException<std::invalid_argument>{

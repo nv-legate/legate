@@ -21,7 +21,6 @@
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/parallel_policy.h>
-#include <legate/utilities/detail/array_algorithms.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/small_vector.h>
@@ -47,9 +46,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
                  std::string_view provenance)
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{std::move(shape)},
-    // An unbound store has no known extents yet (reading them would throw); its domain stays empty
-    // until a task binds a buffer to it (see Storage::bind).
-    domain_{unbound() ? Domain{} : to_domain(shape_->extents())},
+    domain_{unbound() ? Domain{} : shape_->domain()},
     field_size_{field_size},
     provenance_{std::move(provenance)}
 {
@@ -359,22 +356,13 @@ void Storage::bind(InternalSharedPtr<InlineStorage> storage_data, const Domain& 
 
 void Storage::finalize_unbound()
 {
-  auto lo      = domain_.lo();
-  auto hi      = domain_.hi();
-  auto extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{};
-
-  extents.reserve(static_cast<std::size_t>(domain_.dim()));
-  for (std::uint32_t i = 0; i < domain_.dim(); ++i) {
-    extents.push_back(static_cast<std::uint64_t>(hi[i] - lo[i] + 1));
-  }
-  shape_->bind_extents(std::move(extents));
+  shape_->bind_extents(domain_.extents());
   set_key_partition(create_no_partition());
 }
 
-void Storage::finalize_unbound_partitioned(
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> global_extents,
-  const Domain& local_global_domain,
-  InternalSharedPtr<Partition> key_partition)
+void Storage::finalize_unbound_partitioned(DomainPoint global_extents,
+                                           const Domain& local_global_domain,
+                                           InternalSharedPtr<Partition> key_partition)
 {
   LEGATE_CHECK(unbound());
 

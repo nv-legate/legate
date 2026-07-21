@@ -165,7 +165,7 @@ class Storage {
    * @param local_global_domain This rank's piece expressed in global coordinates.
    * @param key_partition       The completed Opaque partition describing all ranks' pieces.
    */
-  void finalize_unbound_partitioned(SmallVector<std::uint64_t, LEGATE_MAX_DIM> global_extents,
+  void finalize_unbound_partitioned(DomainPoint global_extents,
                                     const Domain& local_global_domain,
                                     InternalSharedPtr<Partition> key_partition);
 

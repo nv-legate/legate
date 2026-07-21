@@ -57,6 +57,12 @@ class LEGATE_EXPORT DomainPoint {
    */
   explicit DomainPoint(detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords);
   /**
+   * @brief Constructs a point from a vector of coordinates.
+   *
+   * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
+   */
+  explicit DomainPoint(const detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents);
+  /**
    * @brief Constructs a point from a span of coordinates.
    *
    * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
@@ -164,6 +170,14 @@ class LEGATE_EXPORT DomainPoint {
    * @return The newly created point.
    */
   [[nodiscard]] static DomainPoint zeroes(std::int32_t ndim);
+  /**
+   * @brief Creates a zero-filled point of the given dimensionality.
+   *
+   * @param ndim The dimensionality of the point.
+   *
+   * @return The newly created point.
+   */
+  [[nodiscard]] static DomainPoint full(std::int32_t ndim, std::int64_t coord);
 
   /**
    * @brief Returns a copy of this point with `value` inserted at dimension `pos`.

@@ -196,6 +196,12 @@ Rect<DIM> PhysicalStore::shape() const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   check_shape_dimension_(DIM);
+  // A 0-D store holds a single element and may be viewed as a DIM-D store (DIM == 1, per
+  // check_shape_dimension_): its shape is then the single point at the origin. This lets the
+  // common `store.shape<std::max(1, store.dim())>()` idiom work on genuine 0-D stores.
+  if (dim() == 0) {
+    return Rect<DIM>{Point<DIM>::zeroes(), Point<DIM>::zeroes()};
+  }
   return domain().bounds<DIM>();
 }
 
@@ -231,13 +237,18 @@ ACC PhysicalStore::create_accessor_(const Rect<DIM>& bounds, bool validate_type)
   static_cast<void>(bounds);
   static_cast<void>(validate_type);
 
+  // A 0-D store viewed as a DIM-D store (DIM == 1, per check_accessor_dimension_) holds its single
+  // element at the origin, so any stride addresses it; use a DIM-entry zero point since strides_()
+  // has no entries to convert. Otherwise the store's own element strides apply.
+  const DomainPoint elem_strides = dim() == 0 ? DomainPoint::zeroes(DIM) : strides_();
+
   if (const auto field_size = type().size(); field_size != sizeof(T)) {
     Point<DIM> strides =
-      strides_() * static_cast<typename Point<DIM>::value_type>(field_size / sizeof(T));
+      elem_strides * static_cast<typename Point<DIM>::value_type>(field_size / sizeof(T));
 
     return ACC{static_cast<T*>(base_()), std::move(strides)};
   }
-  return ACC{static_cast<T*>(base_()), strides_()};
+  return ACC{static_cast<T*>(base_()), elem_strides};
 }
 
 inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }

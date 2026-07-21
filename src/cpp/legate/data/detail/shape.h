@@ -8,7 +8,8 @@
 
 #include <legate_defines.h>
 
-#include <legate/utilities/detail/formatters.h>
+#include <legate/geometry/domain.h>
+#include <legate/geometry/domain_point.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
@@ -26,14 +27,14 @@ class Shape {
 
  public:
   explicit Shape(std::uint32_t dim);
-  explicit Shape(SmallVector<std::uint64_t, LEGATE_MAX_DIM>&& extents);
+  explicit Shape(DomainPoint extents);
+  explicit Shape(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents);
 
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] std::uint32_t ndim() const;
-  [[nodiscard]] std::size_t volume();
-  [[nodiscard]] Span<const std::uint64_t> extents();
-
-  void copy_extents_from(const Shape& other);
+  [[nodiscard]] std::size_t volume() const;
+  [[nodiscard]] Span<const std::uint64_t> extents() const;
+  [[nodiscard]] Domain domain() const;
 
   /**
    * @brief Binds this (previously unbound) shape to a concrete set of extents.
@@ -45,19 +46,19 @@ class Shape {
    *
    * @param extents The now-known extents of the shape.
    */
-  void bind_extents(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents);
+  void bind_extents(DomainPoint extents);
 
   [[nodiscard]] std::string to_string() const;
 
-  bool operator==(Shape& other);
-  bool operator!=(Shape& other);
+  bool operator==(const Shape& other) const;
+  bool operator!=(const Shape& other) const;
 
  private:
-  void ensure_binding_();
+  void check_binding_() const;
 
   State state_{State::UNBOUND};
   std::uint32_t dim_{};
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents_{};
+  DomainPoint extents_{};
 };
 
 }  // namespace legate::detail
