@@ -114,7 +114,6 @@ class LEGATE_EXPORT TaskInfo {
    * @param library The library to retrieve the default variant options from.
    * @param vid The variant type to register.
    * @param body The variant function pointer.
-   * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
    * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
    * none were found.
    * @param registration_options Variant options specified at task registration time.
@@ -123,26 +122,6 @@ class LEGATE_EXPORT TaskInfo {
                     const Library& library,
                     VariantCode vid,
                     VariantImpl body,
-                    const VariantOptions* decl_options,
-                    const std::map<VariantCode, VariantOptions>& registration_options = {});
-
-  // These are "private" insofar that the access key is private
-  /**
-   * @brief Register a new variant to the task description.
-   *
-   * @param library The library to retrieve the default variant options from.
-   * @param vid The variant type to register.
-   * @param body The variant function pointer.
-   * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
-   * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
-   * none were found.
-   * @param registration_options Variant options specified at task registration time.
-   */
-  template <typename T>
-  void add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
-                    const Library& library,
-                    VariantCode vid,
-                    LegionVariantImpl<T> body,
                     const VariantOptions* decl_options,
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
 

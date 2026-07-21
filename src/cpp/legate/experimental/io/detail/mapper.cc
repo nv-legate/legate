@@ -31,10 +31,4 @@ std::optional<std::size_t> Mapper::allocation_pool_size(const mapping::Task&, ma
   return {};
 }
 
-legate::Scalar Mapper::tunable_value(TunableID)
-{
-  LEGATE_CHECK(false);
-  return legate::Scalar{0};
-}
-
 }  // namespace legate::experimental::io::detail

@@ -412,14 +412,6 @@ class LEGATE_EXPORT Mapper {
    */
   [[nodiscard]] virtual std::optional<std::size_t> allocation_pool_size(
     const Task& task, StoreTarget memory_kind) = 0;
-  /**
-   * @brief Returns a tunable value
-   *
-   * @param tunable_id a tunable value id
-   *
-   * @return A tunable value in a `Scalar` object
-   */
-  [[nodiscard]] virtual Scalar tunable_value(TunableID tunable_id) = 0;
 };
 
 /** @} */

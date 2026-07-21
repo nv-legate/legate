@@ -10,10 +10,7 @@
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/type_traits.h>
 
-#include <legion.h>
-
-#include <optional>
-#include <string_view>
+#include <map>
 #include <type_traits>
 
 namespace legate {
@@ -24,28 +21,6 @@ class Library;
 }  // namespace legate
 
 namespace legate::detail {
-
-template <typename T>
-class LegionTask;
-
-LEGATE_EXPORT void task_wrapper(VariantImpl,
-                                VariantCode,
-                                std::optional<std::string_view>,
-                                const void*,
-                                std::size_t,
-                                const void*,
-                                std::size_t,
-                                Legion::Processor);
-
-template <VariantImpl variant_fn, VariantCode variant_kind>
-inline void task_wrapper_dyn_name(const void* args,
-                                  std::size_t arglen,
-                                  const void* userdata,
-                                  std::size_t userlen,
-                                  Legion::Processor p)
-{
-  task_wrapper(variant_fn, variant_kind, {}, args, arglen, userdata, userlen, std::move(p));
-}
 
 #define LEGATE_SELECTOR_SPECIALIZATION(NAME, name)                                           \
   template <typename T, typename = void>                                                     \
@@ -77,8 +52,7 @@ inline void task_wrapper_dyn_name(const void* args,
     static constexpr auto id       = VariantCode::NAME;                                      \
     static constexpr auto* options = get_default_options_();                                 \
                                                                                              \
-    static_assert(std::is_convertible_v<decltype(variant), VariantImpl> ||                   \
-                    std::is_same_v<typename T::BASE, LegionTask<T>>,                         \
+    static_assert(std::is_convertible_v<decltype(variant), VariantImpl>,                     \
                   "Malformed " #NAME                                                         \
                   " variant function. Variant function must have the following signature: "  \
                   "static void " #name "_variant(legate::TaskContext)");                     \

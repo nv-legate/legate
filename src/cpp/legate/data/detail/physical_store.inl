@@ -7,21 +7,20 @@
 #pragma once
 
 #include <legate/data/detail/physical_store.h>
-#include <legate/utilities/detail/legion_utilities.h>
 
 #include <utility>
 
 namespace legate::detail {
 
 inline PhysicalStore::PhysicalStore(InternalSharedPtr<Type> type,
-                                    Legion::PrivilegeMode priv,
+                                    StorePermission permission,
                                     InternalSharedPtr<InlineStorage> storage,
                                     PhysicalStoreLayout layout)
   : type_{std::move(type)},
     dim_{static_cast<std::int32_t>(layout.domain.dim())},
-    readable_{has_privilege(priv, LEGION_READ_PRIV)},
-    writable_{has_privilege(priv, LEGION_WRITE_PRIV)},
-    reducible_{has_privilege(priv, LEGION_REDUCE_PRIV)},
+    readable_{permission == StorePermission::READ_WRITE},
+    writable_{permission == StorePermission::READ_WRITE},
+    reducible_{permission == StorePermission::REDUCE},
     inline_storage_{std::move(storage)},
     base_{layout.base},
     strides_{std::move(layout.strides)},

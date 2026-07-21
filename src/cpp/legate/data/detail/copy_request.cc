@@ -17,6 +17,7 @@
 #include <legate/geometry/domain.h>
 #include <legate/geometry/domain_point.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/array_algorithms.h>

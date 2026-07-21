@@ -16,12 +16,6 @@ inline std::vector<mapping::StoreMapping> DefaultMapper::store_mappings(
   return {};
 }
 
-inline Scalar DefaultMapper::tunable_value(TunableID /*tunable_id*/)
-{
-  LEGATE_ABORT("Should not be called!");
-  return Scalar{0};
-}
-
 inline std::optional<std::size_t> DefaultMapper::allocation_pool_size(const Task& /*task*/,
                                                                       StoreTarget /*memory_kind*/)
 {

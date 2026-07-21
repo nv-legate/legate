@@ -8,11 +8,8 @@
 
 #include <legate/task/detail/task_signature.h>
 #include <legate/task/variant_options.h>
-#include <legate/utilities/detail/type_traits.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
-
-#include <legion/api/types.h>
 
 #include <string>
 
@@ -25,14 +22,12 @@ class VariantInfo {
  public:
   VariantInfo() = default;
 
-  static_assert(!is_pure_move_constructible_v<Legion::CodeDescriptor>,
-                "Use by value and std::move for Legion::CodeDescriptor");
   /**
    * @brief Construct a VariantInfo
    *
    * @param body_ The task function pointer.
-   * @param code_desc_ The Legion code descriptor object that will be registered with Legion.
    * @param options_ The variant options set by the user.
+   * @param signature_ The task signature, or `std::nullopt` if the variant has none.
    */
   VariantInfo(VariantImpl body_,
               VariantOptions options_,

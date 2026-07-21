@@ -25,6 +25,7 @@
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
 #include <legate/partitioning/detail/partition/opaque.h>
+#include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
@@ -34,13 +35,10 @@
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/formatters.h>
-#include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
 #include <legate/utilities/detail/type_traits.h>
-
-#include <legion/api/values.h>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -412,7 +410,7 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
   auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
 
   return {make_internal_shared<PhysicalStore>(
-            type(), LEGION_READ_WRITE, std::move(allocation), std::move(layout)),
+            type(), StorePermission::READ_WRITE, std::move(allocation), std::move(layout)),
           subsumed};
 }
 
@@ -443,7 +441,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
   auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
-    type(), LEGION_REDUCE, std::move(allocation), std::move(layout));
+    type(), StorePermission::REDUCE, std::move(allocation), std::move(layout));
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
@@ -651,7 +649,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
-    type(), LEGION_READ_WRITE, std::move(allocation), std::move(layout));
+    type(), StorePermission::READ_WRITE, std::move(allocation), std::move(layout));
 }
 
 // Just because all the member functions used are const, doesn't mean this function

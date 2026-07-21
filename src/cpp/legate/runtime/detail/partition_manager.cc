@@ -7,15 +7,16 @@
 #include <legate/runtime/detail/partition_manager.h>
 
 #include <legate/mapping/detail/machine.h>
-#include <legate/partitioning/detail/partition.h>
-#include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/parallel_policy.h>
-#include <legate/utilities/detail/enumerate.h>
-#include <legate/utilities/detail/zip.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <functional>
+#include <iterator>
+#include <numeric>
+#include <utility>
 
 namespace legate::detail {
 
@@ -277,80 +278,6 @@ bool PartitionManager::use_complete_tiling(Span<const std::uint64_t> extents,
                                                               std::divides<>{});
   const auto num_pieces = static_cast<std::uint64_t>(Runtime::get_runtime().get_machine().count());
   return num_tiles <= MAX_TILES_HEURISTIC || num_tiles <= MAX_PIECES_HEURISTIC * num_pieces;
-}
-
-namespace {
-
-template <typename Cache, typename Partition, typename... Rest>
-[[nodiscard]] Legion::IndexPartition find_index_partition_impl(
-  const Cache& cache,
-  const Legion::IndexSpace& index_space,
-  const Partition& partition,
-  Rest&&... rest)
-{
-  const auto finder = cache.find({index_space, partition, std::forward<Rest>(rest)...});
-
-  if (finder != cache.end()) {
-    return finder->second;
-  }
-  return Legion::IndexPartition::NO_PART;
-}
-
-}  // namespace
-
-Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
-                                                              const Tiling& tiling) const
-{
-  return find_index_partition_impl(tiling_cache_, index_space, tiling);
-}
-
-Legion::IndexPartition PartitionManager::find_intersection_partition(
-  const Legion::IndexSpace& target, const Legion::IndexPartition& to_intersect) const
-{
-  return find_index_partition_impl(intersection_cache_, target, to_intersect);
-}
-
-Legion::IndexPartition PartitionManager::find_image_partition(
-  const Legion::IndexSpace& index_space,
-  const Legion::LogicalPartition& func_partition,
-  Legion::FieldID field_id,
-  ImageComputationHint hint) const
-{
-  return find_index_partition_impl(image_cache_, index_space, func_partition, field_id, hint);
-}
-
-void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
-                                              const Tiling& tiling,
-                                              const Legion::IndexPartition& index_partition)
-{
-  tiling_cache_[{index_space, tiling}] = index_partition;
-}
-
-void PartitionManager::record_intersection_partition(const Legion::IndexSpace& target,
-                                                     const Legion::IndexPartition& to_intersect,
-                                                     const Legion::IndexPartition& result)
-{
-  intersection_cache_[{target, to_intersect}] = result;
-}
-
-void PartitionManager::record_image_partition(const Legion::IndexSpace& index_space,
-                                              const Legion::LogicalPartition& func_partition,
-                                              Legion::FieldID field_id,
-                                              ImageComputationHint hint,
-                                              const Legion::IndexPartition& index_partition)
-{
-  image_cache_[{index_space, func_partition, field_id, hint}] = index_partition;
-}
-
-void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& index_space,
-                                                  const Legion::LogicalPartition& func_partition,
-                                                  Legion::FieldID field_id,
-                                                  ImageComputationHint hint)
-{
-  auto finder = image_cache_.find({index_space, func_partition, field_id, hint});
-
-  LEGATE_ASSERT(finder != image_cache_.end());
-  image_cache_.erase(finder);
 }
 
 }  // namespace legate::detail

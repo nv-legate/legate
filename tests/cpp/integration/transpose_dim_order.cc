@@ -86,11 +86,6 @@ class LibraryMapper : public legate::mapping::Mapper {
     return {};
   }
 
-  legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
-  {
-    return legate::Scalar{};
-  }
-
   std::optional<std::size_t> allocation_pool_size(const legate::mapping::Task&,
                                                   legate::mapping::StoreTarget) override
   {

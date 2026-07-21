@@ -41,16 +41,6 @@ class TaskContext;
 using VariantImpl = void (*)(TaskContext);
 
 /**
- * @brief Function signature for direct-to-legion task variants. Users should usually prefer
- * VariantImpl instead.
- */
-template <typename T = void>
-using LegionVariantImpl = T (*)(const Legion::Task*,
-                                const std::vector<Legion::PhysicalRegion>&,
-                                Legion::Context,
-                                Legion::Runtime*);
-
-/**
  * @brief Signature for a callable to be executed right before the runtime shuts down.
  */
 using ShutdownCallback = std::function<void(void)>;
@@ -60,18 +50,13 @@ using ShutdownCallback = std::function<void(void)>;
  *
  * @note The values don't start at 0. This is to match Legion, where `0` is the 'None' variant.
  */
-enum class VariantCode : Legion::VariantID {  // NOLINT(performance-enum-size)
-  CPU = 1,                                    ///< A CPU variant.
-  GPU,                                        ///< A GPU variant.
-  OMP                                         ///< An OpenMP variant.
+enum class VariantCode : std::uint32_t {  // NOLINT(performance-enum-size)
+  CPU = 1,                                ///< A CPU variant.
+  GPU,                                    ///< A GPU variant.
+  OMP                                     ///< An OpenMP variant.
 };
 
-using LegateVariantCode [[deprecated("since 24.11: use legate::VariantCode instead")]] =
-  VariantCode;
-
-// Re-export Legion types
-using Legion::Logger;
-using Legion::TunableID;
+using Realm::Logger;
 
 /**
  * @brief Integer type representing a `Library`-local task ID.

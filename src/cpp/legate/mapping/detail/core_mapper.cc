@@ -31,7 +31,6 @@ class CoreMapper final : public Mapper {  // NOLINT(misc-use-internal-linkage)
   [[nodiscard]] std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override;
-  [[nodiscard]] legate::Scalar tunable_value(legate::TunableID tunable_id) override;
   [[nodiscard]] std::optional<std::size_t> allocation_pool_size(
     const legate::mapping::Task& task, legate::mapping::StoreTarget memory_kind) override;
 };
@@ -40,13 +39,6 @@ std::vector<legate::mapping::StoreMapping> CoreMapper::store_mappings(
   const legate::mapping::Task&, const std::vector<StoreTarget>& /*options*/)
 {
   return {};
-}
-
-Scalar CoreMapper::tunable_value(TunableID /*tunable_id*/)
-{
-  // Illegal tunable variable
-  LEGATE_ABORT("Tunable values are no longer supported");
-  return Scalar{0};
 }
 
 namespace {

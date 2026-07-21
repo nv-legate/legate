@@ -74,15 +74,6 @@ TEST_F(CoreMapperTest, CreateCoreMapper)
   ASSERT_NE(mapper, nullptr);
 }
 
-TEST_F(CoreMapperDeathTest, RecordingMapperDelegation)
-{
-  auto mapper = legate::mapping::detail::create_core_mapper();
-
-  ASSERT_DEATH(
-    { static_cast<void>(mapper->tunable_value(legate::TunableID{0})); },
-    "Tunable values are no longer supported");
-}
-
 // Test that actually triggers FIND_BOUNDING_BOX by using image constraint
 TEST_F(CoreMapperImageConstraintTest, FindBoundingBoxAllocationPoolSize)
 {

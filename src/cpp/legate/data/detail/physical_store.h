@@ -26,6 +26,18 @@ namespace legate::detail {
 class LogicalStore;
 
 /**
+ * @brief The kind of access a mapped `PhysicalStore` grants through its accessors.
+ *
+ * A mapped store is either read-write (readable and writable) or reduction-only (reducible). This
+ * mirrors the access modes the runtime maps stores with, and replaces the use of Legion privilege
+ * modes for deciding which accessors a store permits.
+ */
+enum class StorePermission : std::uint8_t {
+  READ_WRITE,  ///< The store may be read and written.
+  REDUCE,      ///< The store may be reduced into.
+};
+
+/**
  * @brief The affine layout of a (possibly transformed) physical store.
  *
  * Computed once by the logic that creates a `PhysicalStore` (see `LogicalStore::map` and friends),
@@ -45,7 +57,7 @@ struct PhysicalStoreLayout {
 class PhysicalStore {
  public:
   PhysicalStore(InternalSharedPtr<Type> type,
-                Legion::PrivilegeMode priv,
+                StorePermission permission,
                 InternalSharedPtr<InlineStorage> storage,
                 PhysicalStoreLayout layout);
 

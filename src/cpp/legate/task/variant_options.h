@@ -252,13 +252,6 @@ class LEGATE_EXPORT VariantOptions {
   template <typename It>
   VariantOptions& with_communicators(WithCommunicatorsAccessKey, It begin, It end) noexcept;
 
-  /**
-   * @brief Populate a Legion::TaskVariantRegistrar using the options contained.
-   *
-   * @param registrar The registrar to fill out.
-   */
-  void populate_registrar(Legion::TaskVariantRegistrar& registrar) const;
-
   [[nodiscard]] constexpr bool operator==(const VariantOptions& other) const;
   [[nodiscard]] constexpr bool operator!=(const VariantOptions& other) const;
 

@@ -22,7 +22,6 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/formatters.h>
-#include <legate/utilities/detail/legion_utilities.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>

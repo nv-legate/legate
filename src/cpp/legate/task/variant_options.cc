@@ -8,15 +8,6 @@
 
 namespace legate {
 
-void VariantOptions::populate_registrar(Legion::TaskVariantRegistrar& registrar) const
-{
-  registrar.set_leaf(true);
-  registrar.set_inner(false);
-  registrar.set_idempotent(false);
-  registrar.set_concurrent(concurrent);
-  registrar.set_concurrent_barrier(concurrent);
-}
-
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options)
 {
   os << "(";

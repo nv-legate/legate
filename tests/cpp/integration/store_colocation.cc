@@ -68,11 +68,6 @@ class UnboundColocationMapper : public legate::mapping::Mapper {
   {
     return std::nullopt;
   }
-
-  legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
-  {
-    return legate::Scalar{};
-  }
 };
 
 // can_colocate_with() behavior for bound vs unbound stores and bound vs bound stores
@@ -89,11 +84,6 @@ class BoundColocationMapper : public legate::mapping::Mapper {
   {
     return std::nullopt;
   }
-
-  legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
-  {
-    return legate::Scalar{};
-  }
 };
 
 // can_colocate_with() behavior for reduction stores and normal vs reduction stores
@@ -109,11 +99,6 @@ class ReductionColocationMapper : public legate::mapping::Mapper {
                                                   legate::mapping::StoreTarget /*memory*/) override
   {
     return std::nullopt;
-  }
-
-  legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
-  {
-    return legate::Scalar{};
   }
 };
 

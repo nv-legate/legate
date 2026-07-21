@@ -22,7 +22,6 @@ class Mapper final : public legate::mapping::Mapper {
     const mapping::Task& task, const std::vector<mapping::StoreTarget>& options) override;
   [[nodiscard]] std::optional<std::size_t> allocation_pool_size(
     const mapping::Task& task, mapping::StoreTarget memory_kind) override;
-  [[nodiscard]] legate::Scalar tunable_value(TunableID) override;
 };
 
 }  // namespace legate::experimental::io::detail

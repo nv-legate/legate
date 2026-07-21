@@ -292,13 +292,6 @@ TEST_P(FormatDLPackDeviceType, Basic)
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
-TEST_P(FormatLegionPrivilegeMode, Basic)
-{
-  const auto& [format_obj, expect_result] = GetParam();
-
-  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
-}
-
 TEST_P(FormatStreamingMode, Basic)
 {
   const auto& [format_obj, expect_result] = GetParam();
@@ -326,18 +319,6 @@ TEST_F(FormatterUnit, InvalidStreamingMode)
 
   // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
   auto mode = static_cast<legate::StreamingMode>(99);  // Invalid streaming mode
-
-  ASSERT_EQ(fmt::format("{}", mode), "(unknown)");
-}
-
-TEST_F(FormatterUnit, InvalidLegionPrivilegeMode)
-{
-  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
-    GTEST_SKIP() << "Skipping test due to exceed enum range of legion_privilege_mode_t";
-  }
-
-  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange,readability-magic-numbers)
-  auto mode = static_cast<legion_privilege_mode_t>(9999);  // Invalid privilege mode
 
   ASSERT_EQ(fmt::format("{}", mode), "(unknown)");
 }

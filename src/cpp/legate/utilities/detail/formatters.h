@@ -12,12 +12,6 @@
 #include <string>
 #include <type_traits>
 
-// Legion::PrivilegeMode is a typedef on legion_privilege_mode_t
-// NOTE(amberhassaan): including <legion.h> or <legion_types.h> leads to tidy
-// complaining that some class declarations in the included header are unused and
-// the names collide with legate::detail, such as Task and Operation
-enum legion_privilege_mode_t : std::uint32_t;  // NOLINT(readability-identifier-naming)
-
 namespace legate {
 
 class DomainPoint;
@@ -206,11 +200,6 @@ template <>
 struct formatter<legate::detail::LogicalStore> : formatter<std::string> {
   format_context::iterator format(const legate::detail::LogicalStore& store,
                                   format_context& ctx) const;
-};
-
-template <>
-struct formatter<legion_privilege_mode_t> : formatter<std::string_view> {
-  format_context::iterator format(legion_privilege_mode_t mode, format_context& ctx) const;
 };
 
 template <>
