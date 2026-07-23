@@ -7,8 +7,8 @@ from libc.stdint cimport int32_t
 
 from .inline_allocation cimport _InlineAllocation, InlineAllocation
 
+from ..geometry.rect cimport _Rect
 from ..type.types cimport _Type
-from ..utilities.typedefs cimport _Domain
 from ..utilities.unconstructable cimport Unconstructable
 
 cdef extern from "legate/data/buffer.h" namespace "legate" nogil:
@@ -17,7 +17,7 @@ cdef extern from "legate/data/buffer.h" namespace "legate" nogil:
 
         _Type type() except+
         int32_t dim() except+
-        const _Domain& domain() except+
+        const _Rect& domain() except+
 
         _InlineAllocation get_inline_allocation() except+
 

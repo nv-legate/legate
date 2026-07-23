@@ -36,11 +36,6 @@ namespace legate {
 class LEGATE_EXPORT Point {
  public:
   /**
-   * @brief The maximum number of dimensions a `Point` may have.
-   */
-  static constexpr std::int32_t MAX_DIM = LEGATE_MAX_DIM;
-
-  /**
    * @brief Constructs an empty (0-dimensional) point.
    */
   Point() = default;
@@ -68,6 +63,9 @@ class LEGATE_EXPORT Point {
    * @param coords The coordinates. The dimensionality of the point is `coords.size()`.
    */
   explicit Point(Span<const std::int64_t> coords);
+
+  explicit Point(std::initializer_list<std::int64_t> coords);
+
   /**
    * @brief Constructs a point from a `legate::NDPoint`.
    *
@@ -162,6 +160,11 @@ class LEGATE_EXPORT Point {
   template <typename Index, typename = std::enable_if_t<std::is_integral_v<Index>>>
   [[nodiscard]] const std::int64_t& operator[](Index index) const;
 
+  template <typename Index, typename = std::enable_if_t<std::is_integral_v<Index>>>
+  [[nodiscard]] std::int64_t& at(Index index);
+  template <typename Index, typename = std::enable_if_t<std::is_integral_v<Index>>>
+  [[nodiscard]] const std::int64_t& at(Index index) const;
+
   /**
    * @brief Creates a zero-filled point of the given dimensionality.
    *
@@ -171,7 +174,7 @@ class LEGATE_EXPORT Point {
    */
   [[nodiscard]] static Point zeroes(std::int32_t ndim);
   /**
-   * @brief Creates a zero-filled point of the given dimensionality.
+   * @brief Creates a point of the given dimensionality filled by `coord`.
    *
    * @param ndim The dimensionality of the point.
    *
@@ -217,6 +220,9 @@ class LEGATE_EXPORT Point {
 
   [[nodiscard]] const std::int64_t* begin() const;
   [[nodiscard]] const std::int64_t* end() const;
+
+  [[nodiscard]] const std::int64_t& front() const;
+  [[nodiscard]] const std::int64_t& back() const;
 
  private:
   detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coordinates_{};

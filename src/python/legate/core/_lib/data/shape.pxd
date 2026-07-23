@@ -9,7 +9,6 @@ from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
 from ..utilities.tuple cimport _tuple
-from ..utilities.typedefs cimport _Domain, _DomainPoint
 
 
 cdef extern from "legate/data/shape.h" namespace "legate" nogil:

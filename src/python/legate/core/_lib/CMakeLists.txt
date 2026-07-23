@@ -7,6 +7,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "_lib")
 
 add_subdirectory(data)
 add_subdirectory(experimental)
+add_subdirectory(geometry)
 add_subdirectory(mapping)
 add_subdirectory(operation)
 add_subdirectory(partitioning)

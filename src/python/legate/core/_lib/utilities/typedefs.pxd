@@ -1,9 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2023-2026 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-from libc.stddef cimport size_t
-from libc.stdint cimport int32_t, int64_t
-from libcpp cimport bool
+from libc.stdint cimport int64_t
 
 from ..task.task_context cimport _TaskContext
 
@@ -22,24 +20,6 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
     ):
         pass
 
-    cdef cppclass _DomainPoint "legate::Point":
-        _DomainPoint() except+
-        _DomainPoint(int64_t) except+
-        int32_t dim() except+
-        int64_t& operator[](int32_t) except+
-        bool operator==(const _DomainPoint&) except+
-        _DomainPoint operator-(const _DomainPoint&) except+
-        _DomainPoint operator+(const _DomainPoint&) except+
-        _DomainPoint operator+(int64_t) except+
-
-    cdef cppclass _Domain "legate::Rect":
-        _Domain() except+
-        _Domain(const _DomainPoint&, const _DomainPoint&) except+
-        int32_t dim() except+
-        _DomainPoint lo() except+
-        _DomainPoint hi() except+
-        bool operator==(const _Domain&) except+
-
     cdef cppclass _Processor "legate::Processor":
         pass
 
@@ -51,20 +31,3 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
 # note missing nogil!
 cdef extern from "legate/utilities/typedefs.h" namespace "legate":
     ctypedef void (*VariantImpl)(_TaskContext) except+
-
-
-# Need to _t these because in the .pyx we also need to define
-#
-# Point = tuple[int, ...]
-# Rect = tuple[Point, Point]
-#
-# So that people can do "from legate.core import Point" etc. If we call
-# these typdefs "Point" and "Rect", then Cython complains that the
-# above "cannot assign to non-lvalue Point".
-ctypedef tuple[int, ...] DomainPoint_t
-ctypedef object Domain_t  # namedtuple
-
-cdef _DomainPoint domain_point_from_iterable(object iterable)
-cdef DomainPoint_t domain_point_to_py(const _DomainPoint& point)
-cdef _Domain domain_from_iterables(object low, object high)
-cdef Domain_t domain_to_py(const _Domain& domain)

@@ -121,7 +121,7 @@ INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
   FormatShape,
   ::testing::Values(std::make_tuple(legate::detail::Shape{2}, "Shape(unbound 2D)"),
-                    std::make_tuple(legate::detail::Shape{{1, 2}}, "Shape [1, 2]")));
+                    std::make_tuple(legate::detail::Shape{legate::Point{1, 2}}, "Shape [1, 2]")));
 
 INSTANTIATE_TEST_SUITE_P(FormatterUnit,
                          FormatVariantCode,

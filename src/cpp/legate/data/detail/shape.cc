@@ -24,13 +24,13 @@ Shape::Shape(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents)
 {
 }
 
-Span<const std::uint64_t> Shape::extents() const
+const Point& Shape::extents() const
 {
   check_binding_();
   // `extents_` stores the extents as (non-negative) signed coordinates; expose them as the
   // unsigned extents the rest of the runtime expects. Reading signed storage through its unsigned
   // counterpart is well-defined, and the round-trip is lossless for valid extents.
-  return {reinterpret_cast<const std::uint64_t*>(extents_.begin()), extents_.size()};
+  return extents_;
 }
 
 Rect Shape::domain() const

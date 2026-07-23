@@ -366,7 +366,7 @@ void Storage::finalize_unbound_partitioned(Point global_extents,
   LEGATE_CHECK(unbound());
 
   shape_->bind_extents(std::move(global_extents));
-  domain_ = to_domain(shape_->extents());
+  domain_ = Rect::from_extents(shape_->extents());
   // Re-base this rank's local (zero-based) piece so its domain is the global sub-domain. The copy
   // engine assumes a storage's data at global coordinate `domain.lo()` maps to element 0, which is
   // exactly what re-basing produces here.

@@ -47,23 +47,6 @@ class CreateBuffer {
 
 }  // namespace
 
-namespace {
-
-// Rect spanning `[0, extents)` in every dimension.
-[[nodiscard]] Rect extents_to_domain(const Point& extents)
-{
-  auto lo = Point::zeroes(static_cast<std::int32_t>(extents.dim()));
-  auto hi = Point::zeroes(static_cast<std::int32_t>(extents.dim()));
-
-  for (std::uint32_t i = 0; i < extents.dim(); ++i) {
-    lo[i] = 0;
-    hi[i] = extents[i] - 1;
-  }
-  return Rect{std::move(lo), std::move(hi)};
-}
-
-}  // namespace
-
 TaskLocalBuffer PhysicalStore::create_output_buffer(const Point& extents, bool bind_buffer) const
 {
   return double_dispatch(static_cast<std::int32_t>(extents.dim()),
@@ -85,7 +68,7 @@ void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
                   buffer.type(),
                   type())};
   }
-  bind_inline_storage_(buffer.impl()->get_storage(), extents_to_domain(extents));
+  bind_inline_storage_(buffer.impl()->get_storage(), Rect::from_extents(extents));
 }
 
 void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>&, const NDPoint<1>&) const

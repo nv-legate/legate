@@ -34,26 +34,14 @@ class TilingTest : public DefaultFixture {
  public:
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_tiling()
   {
-    auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
-    auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-    auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
     return legate::make_internal_shared<legate::detail::Tiling>(
-      legate::detail::to_domain_point(tile_shape),
-      legate::detail::to_domain_point(color_shape),
-      legate::detail::to_domain_point(offsets));
+      legate::Point{4, 4}, legate::Point{2, 2}, legate::Point{1, 1});
   }
 
   [[nodiscard]] legate::InternalSharedPtr<legate::detail::Tiling> create_overlapped_tiling()
   {
-    auto tile_shape  = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4};
-    auto color_shape = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2};
-    auto offsets     = legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1};
-    auto strides     = legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{3, 3};
     return legate::make_internal_shared<legate::detail::Tiling>(
-      legate::detail::to_domain_point(tile_shape),
-      legate::detail::to_domain_point(color_shape),
-      legate::detail::to_domain_point(offsets),
-      legate::detail::to_domain_point(strides));
+      legate::Point{4, 4}, legate::Point{2, 2}, legate::Point{1, 1}, legate::Point{3, 3});
   }
 
   legate::InternalSharedPtr<legate::detail::Tiling> tiling;
@@ -63,14 +51,10 @@ class TilingTest : public DefaultFixture {
 
 TEST_F(TilingTest, Shape)
 {
-  auto expected_tile_shape = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4});
-  auto expected_color_shape = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2});
-  auto expected_offsets = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{1, 1});
-  auto expected_strides = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{4, 4});
+  auto expected_tile_shape  = legate::Point{4, 4};
+  auto expected_color_shape = legate::Point{2, 2};
+  auto expected_offsets     = legate::Point{1, 1};
+  auto expected_strides     = legate::Point{4, 4};
   EXPECT_EQ(tiling->tile_shape(), expected_tile_shape);
   EXPECT_EQ(tiling->color_shape(), expected_color_shape);
   EXPECT_EQ(tiling->offsets(), expected_offsets);
@@ -135,12 +119,9 @@ TEST_F(TilingTest, Scale)
   auto partition    = tiling->scale(scale_factor);
   auto scaled       = dynamic_cast<legate::detail::Tiling*>(partition.get());
 
-  auto expected_tile_shape = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{8, 8});
-  auto expected_color_shape = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2});
-  auto expected_offsets = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{2, 2});
+  auto expected_tile_shape  = legate::Point{8, 8};
+  auto expected_color_shape = legate::Point{2, 2};
+  auto expected_offsets     = legate::Point{2, 2};
 
   ASSERT_EQ(scaled->tile_shape(), expected_tile_shape);
   ASSERT_EQ(scaled->color_shape(), expected_color_shape);
@@ -154,12 +135,9 @@ TEST_F(TilingTest, Bloat)
   auto partition    = tiling->bloat(low_offsets, high_offsets);
   auto bloated      = dynamic_cast<legate::detail::Tiling*>(partition.get());
 
-  auto expected_tile_shape = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{6, 6});
-  auto expected_color_shape = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{2, 2});
-  auto expected_offsets = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM>{0, 0});
+  auto expected_tile_shape  = legate::Point{6, 6};
+  auto expected_color_shape = legate::Point{2, 2};
+  auto expected_offsets     = legate::Point{0, 0};
 
   ASSERT_EQ(bloated->tile_shape(), expected_tile_shape);
   ASSERT_EQ(bloated->color_shape(), expected_color_shape);

@@ -41,17 +41,12 @@ Span<const std::uint32_t> PartitionManager::get_factors(const mapping::detail::M
 
 namespace {
 
-[[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_1d(
-  std::uint64_t max_pieces, Span<const std::size_t> shape)
+[[nodiscard]] Point compute_shape_1d(std::uint64_t max_pieces, const Point& shape)
 {
-  SmallVector<std::size_t, LEGATE_MAX_DIM> result;
-
-  result.push_back(std::min(shape.front(), static_cast<std::size_t>(max_pieces)));
-  return result;
+  return Point::full(1, std::min(shape.front(), static_cast<std::int64_t>(max_pieces)));
 }
 
-[[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_2d(
-  std::uint64_t max_pieces, Span<const std::size_t> shape)
+[[nodiscard]] Point compute_shape_2d(std::uint64_t max_pieces, const Point& shape)
 {
   // Two dimensional so we can use square root to try and generate as square a pieces
   // as possible since most often we will be doing matrix operations with these
@@ -69,50 +64,45 @@ namespace {
   // try rounding n both up and down
   constexpr auto EPSILON = 1e-12;
 
-  auto n1 = std::max<std::uint64_t>(1, static_cast<std::uint64_t>(std::floor(n + EPSILON)));
+  auto n1 = std::max<std::int64_t>(1, std::floor(n + EPSILON));
   while (max_pieces % n1 != 0) {
     --n1;
   }
-  auto n2 = std::max<std::uint64_t>(1, static_cast<std::uint64_t>(std::floor(n - EPSILON)));
+  auto n2 = std::max<std::int64_t>(1, std::floor(n - EPSILON));
   while (max_pieces % n2 != 0) {
     ++n2;
   }
 
   // pick whichever of n1 and n2 gives blocks closest to square
   // i.e. gives the shortest long side
-  const auto side1 = std::max(nx / n1, ny / (max_pieces / n1));
-  const auto side2 = std::max(nx / n2, ny / (max_pieces / n2));
-  const auto px    = static_cast<std::size_t>(side1 <= side2 ? n1 : n2);
-  const auto py    = static_cast<std::size_t>(max_pieces / px);
-  auto result      = SmallVector<std::size_t, LEGATE_MAX_DIM>{};
+  const auto mp    = static_cast<std::int64_t>(max_pieces);
+  const auto side1 = std::max(nx / n1, ny / (mp / n1));
+  const auto side2 = std::max(nx / n2, ny / (mp / n2));
+  const auto px    = side1 <= side2 ? n1 : n2;
+  const auto py    = mp / px;
 
   // we need to trim launch space if it is larger than the original shape in one of the
   // dimensions (can happen in testing)
-  result.reserve(2);
   if (swap) {
     // If we swapped, then ny holds previous nx, and nx holds previous ny
     LEGATE_ASSERT(ny == shape.front());
     LEGATE_ASSERT(nx == shape.back());
-    result.push_back(std::min(py, ny));
-    result.push_back(std::min(px, nx));
-  } else {
-    result.push_back(std::min(px, nx));
-    result.push_back(std::min(py, ny));
+    return Point({std::min(py, ny), std::min(px, nx)});
   }
-  return result;
+
+  return Point{std::min(px, nx), std::min(py, ny)};
 }
 
-[[nodiscard]] SmallVector<std::size_t, LEGATE_MAX_DIM> compute_shape_nd(
-  Span<const std::uint32_t> factors,
-  std::size_t ndim,
-  std::uint64_t max_pieces,
-  Span<const std::size_t> shape)
+[[nodiscard]] Point compute_shape_nd(Span<const std::uint32_t> factors,
+                                     std::size_t ndim,
+                                     std::uint64_t max_pieces,
+                                     const Point& shape)
 {
   // For higher dimensions we care less about "square"-ness and more about evenly dividing
   // things, compute the prime factors for our number of pieces and then round-robin them
   // onto the shape, with the goal being to keep the last dimension >= 32 for good memory
   // performance on the GPU
-  SmallVector<std::size_t, LEGATE_MAX_DIM> result{tags::size_tag, ndim, 1};
+  auto result             = Point::full(static_cast<std::int32_t>(ndim), 1);
   std::size_t factor_prod = 1;
 
   for (auto&& factor : factors) {
@@ -165,11 +155,10 @@ namespace {
 
 }  // namespace
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shape(
-  const mapping::detail::Machine& machine,
-  const ParallelPolicy& parallel_policy,
-  const Restrictions& restrictions,
-  Span<const std::uint64_t> shape)
+Point PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
+                                             const ParallelPolicy& parallel_policy,
+                                             const Restrictions& restrictions,
+                                             const Point& shape)
 {
   const auto curr_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
   LEGATE_ASSERT(curr_num_pieces > 0);
@@ -181,11 +170,10 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
 
   // Calculate the total volume of the shape and don't partition it if it's smaller than the
   // threshold
-  const auto total_volume =
-    std::reduce(shape.begin(), shape.end(), std::uint64_t{1}, std::multiplies<>{});
+  const auto total_volume     = shape.volume();
   const auto min_shard_volume = parallel_policy.partitioning_threshold(machine.preferred_target());
 
-  if (total_volume < min_shard_volume) {
+  if (total_volume < static_cast<std::int64_t>(min_shard_volume)) {
     return {};
   }
 
@@ -208,8 +196,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   // Apparently captured structured bindings are only since C++20. Why on earth did the
   // committee not allow this in C++17????
   LEGATE_CPP_VERSION_TODO(20, "Use captured structured bindings instead");
-  auto temp_result = [&](SmallVector<std::size_t, LEGATE_MAX_DIM>* shape_2,
-                         std::uint64_t volume_2) {
+  auto temp_result = [&](Point* shape_2, std::uint64_t volume_2) {
     switch (ndim) {
       case 1: return compute_shape_1d(max_pieces, *shape_2);
       case 2: {
@@ -227,7 +214,7 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   // Project back onto the original number of dimensions
   LEGATE_CHECK(temp_result.size() == ndim);
 
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> result{tags::size_tag, shape.size(), 1};
+  auto result = Point::full(shape.dim(), 1);
 
   for (std::uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
@@ -247,37 +234,17 @@ SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_launch_shap
   return result;
 }
 
-SmallVector<std::uint64_t, LEGATE_MAX_DIM> PartitionManager::compute_tile_shape(
-  Span<const std::uint64_t> extents, Span<const std::uint64_t> launch_shape)
+Point PartitionManager::compute_tile_shape(const Point& extents, const Point& launch_shape)
 {
-  LEGATE_CHECK(extents.size() == launch_shape.size());
-  SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape;
+  LEGATE_CHECK(extents.dim() == launch_shape.dim());
 
-  tile_shape.reserve(extents.size());
-  std::transform(extents.begin(),
-                 extents.end(),
-                 launch_shape.begin(),
-                 std::back_inserter(tile_shape),
-                 [](std::uint64_t ext, std::uint64_t shape) { return (ext + shape - 1) / shape; });
+  auto tile_shape = extents;
+
+  tile_shape += launch_shape;
+  tile_shape -= 1;
+  tile_shape /= launch_shape;
+
   return tile_shape;
-}
-
-bool PartitionManager::use_complete_tiling(Span<const std::uint64_t> extents,
-                                           Span<const std::uint64_t> tile_shape)
-{
-  // If it would generate a very large number of elements then
-  // we'll apply a heuristic for now and not actually tile it
-  // TODO(wonchanl): A better heuristic for this in the future
-  constexpr auto MAX_TILES_HEURISTIC  = 1024;
-  constexpr auto MAX_PIECES_HEURISTIC = 16;
-  const auto num_tiles                = std::transform_reduce(extents.begin(),
-                                                              extents.end(),
-                                                              tile_shape.begin(),
-                                                              std::size_t{1},
-                                                              std::multiplies<>{},
-                                                              std::divides<>{});
-  const auto num_pieces = static_cast<std::uint64_t>(Runtime::get_runtime().get_machine().count());
-  return num_tiles <= MAX_TILES_HEURISTIC || num_tiles <= MAX_PIECES_HEURISTIC * num_pieces;
 }
 
 }  // namespace legate::detail

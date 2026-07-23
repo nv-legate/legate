@@ -179,6 +179,11 @@ Rect Rect::intersection(const Rect& other) const
   return Rect{std::move(new_lo), std::move(new_hi)};
 }
 
+/*static*/ Rect Rect::from_extents(const Point& extents)
+{
+  return {Point::zeroes(extents.dim()), extents - std::int64_t{1}};
+}
+
 std::ostream& operator<<(std::ostream& os, const Rect& domain)
 {
   os << '[' << domain.lo() << ".." << domain.hi() << ']';

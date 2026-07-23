@@ -60,7 +60,7 @@ namespace {
  *
  * @return The Point.
  */
-[[nodiscard]] Point parse_to_domain_point(std::string_view sv)
+[[nodiscard]] Point parse_to_point(std::string_view sv)
 {
   legate::detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords{};
 
@@ -127,7 +127,7 @@ namespace {
     LEGATE_CHECK(std::getline(f, lo_line).good());
     LEGATE_CHECK(std::getline(f, hi_line).good());
   }
-  return {parse_to_domain_point(lo_line), parse_to_domain_point(hi_line)};
+  return {parse_to_point(lo_line), parse_to_point(hi_line)};
 }
 
 /**
@@ -157,7 +157,7 @@ namespace {
                                      static_cast<std::size_t>(std::distance(sm.first, sm.second))};
 
     LEGATE_CPP_VERSION_TODO(20, "Use string_view begin-end ctor above");
-    return parse_to_domain_point(sv);
+    return parse_to_point(sv);
   };
 
   if (const auto index_point = get_domain_point(cm[1]); !launch_domain.contains(index_point)) {
@@ -208,7 +208,7 @@ namespace {
   // [0-9_]+_lo_[0-9_]+_hi_[0-9_]+
   // ```
   //
-  // Each [0-9_]+ is a domain point encoded according to parse_to_domain_point() above. The
+  // Each [0-9_]+ is a domain point encoded according to parse_to_point() above. The
   // first domain point is the leaf-task index point, the second is the lo domain point of the
   // local array, and the third is the hi domain point of the local array.
   //

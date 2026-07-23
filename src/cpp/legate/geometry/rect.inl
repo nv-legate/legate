@@ -60,7 +60,11 @@ inline std::uint32_t Rect::dim() const { return lo_.dim(); }
 
 inline const Point& Rect::lo() const { return lo_; }
 
+inline Point& Rect::lo() { return lo_; }
+
 inline const Point& Rect::hi() const { return hi_; }
+
+inline Point& Rect::hi() { return hi_; }
 
 inline Rect::Iterable Rect::iterate(bool fortran_order) const
 {

@@ -299,7 +299,6 @@ set(
   noinit/shared_ptr.cc
   noinit/small_vector.cc
   noinit/string_utils.cc
-  noinit/to_domain.cc
   noinit/tuple.cc
   noinit/unravel.cc
   noinit/variant_options.cc

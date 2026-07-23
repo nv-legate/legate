@@ -42,8 +42,8 @@ from ..mapping.mapping cimport _DimOrdering, DimOrdering
 from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..tuning.scope cimport Scope
 from ..type.types cimport Type
+from ..geometry.rect cimport _Rect, _rect_from_iterables
 from ..utilities.tuple cimport _tuple
-from ..utilities.typedefs cimport _Domain, domain_from_iterables
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport (
     is_iterable,
@@ -454,7 +454,7 @@ cdef class Runtime(Unconstructable):
         cdef _ManualTask handle
         cdef int v
         cdef _tuple[uint64_t] _launch_shape
-        cdef _Domain _launch_domain
+        cdef _Rect _launch_domain
 
         if lower_bounds is None:
             _launch_shape = uint64_tuple_from_iterable(launch_shape)
@@ -466,7 +466,7 @@ cdef class Runtime(Unconstructable):
                     _launch_shape,
                 )
         else:
-            _launch_domain = domain_from_iterables(
+            _launch_domain = _rect_from_iterables(
                 lower_bounds, tuple([v - 1 for v in launch_shape]),
             )
 

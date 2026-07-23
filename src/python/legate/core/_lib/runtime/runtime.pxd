@@ -29,8 +29,9 @@ from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
 from ..task.variant_options cimport _VariantOptions, VariantOptions
 from ..type.types cimport Type, _Type
+from ..geometry.rect cimport _Rect
 from ..utilities.tuple cimport _tuple
-from ..utilities.typedefs cimport _Domain, _LocalTaskID, VariantCode
+from ..utilities.typedefs cimport _LocalTaskID, VariantCode
 from ..utilities.unconstructable cimport Unconstructable
 from .detail.config cimport _Config, Config, RealmConfig
 from .library cimport Library, _Library
@@ -54,7 +55,7 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         _ManualTask create_task(
             _Library, _LocalTaskID, const _tuple[uint64_t]&
         ) except+
-        _ManualTask create_task(_Library, _LocalTaskID, const _Domain&) except+
+        _ManualTask create_task(_Library, _LocalTaskID, const _Rect&) except+
         void issue_fill(_LogicalStore&, _LogicalStore) except+
         void issue_fill(_LogicalStore&, _Scalar) except+
         void submit(_AutoTask) except +handle_legate_exception

@@ -155,7 +155,7 @@ bool Tiling::is_equi_size(const Rect& domain) const
   return true;
 }
 
-Rect Tiling::launch_domain() const { return to_domain(color_shape_); }
+Rect Tiling::launch_domain() const { return Rect::from_extents(color_shape_); }
 
 std::string Tiling::to_string() const
 {
@@ -219,9 +219,9 @@ Point Tiling::compute_color(std::uint64_t device_id) const
 
 std::vector<std::uint64_t> Tiling::compute_device_ids(const Point& color) const
 {
-  auto submesh = to_domain(device_mesh().shape());
-  auto lo      = submesh.lo();
-  auto hi      = submesh.hi();
+  auto submesh = Rect::from_extents(device_mesh().shape());
+  auto& lo     = submesh.lo();
+  auto& hi     = submesh.hi();
 
   for (const auto& [color_dim, mesh_dim] : enumerate(color_to_mesh_)) {
     if (mesh_dim < 0) {
@@ -230,7 +230,6 @@ std::vector<std::uint64_t> Tiling::compute_device_ids(const Point& color) const
     lo[mesh_dim] = color[color_dim];
     hi[mesh_dim] = color[color_dim];
   }
-  submesh = Rect{std::move(lo), std::move(hi)};
 
   // Enumerate every combination of the replication axes, emitting one device id per combination.
   std::vector<std::uint64_t> result{};

@@ -91,7 +91,7 @@ class Storage {
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
   [[nodiscard]] const Rect& domain() const;
-  [[nodiscard]] Span<const std::uint64_t> extents() const;
+  [[nodiscard]] const Point& extents() const;
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;

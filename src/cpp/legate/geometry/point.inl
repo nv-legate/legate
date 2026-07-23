@@ -22,6 +22,8 @@ inline Point::Point(detail::SmallVector<std::int64_t, LEGATE_MAX_DIM> coords)
 
 inline Point::Point(Span<const std::int64_t> coords) : coordinates_{coords} {}
 
+inline Point::Point(std::initializer_list<std::int64_t> coords) : coordinates_{std::move(coords)} {}
+
 template <int DIM>
 Point::Point(const NDPoint<DIM>& point)
 {
@@ -62,11 +64,23 @@ inline bool Point::empty() const { return coordinates_.empty(); }
 template <typename Index, typename>
 std::int64_t& Point::operator[](Index index)
 {
-  return coordinates_.at(static_cast<std::size_t>(index));
+  return coordinates_[static_cast<std::size_t>(index)];
 }
 
 template <typename Index, typename>
 const std::int64_t& Point::operator[](Index index) const
+{
+  return coordinates_[static_cast<std::size_t>(index)];
+}
+
+template <typename Index, typename>
+std::int64_t& Point::at(Index index)
+{
+  return coordinates_.at(static_cast<std::size_t>(index));
+}
+
+template <typename Index, typename>
+const std::int64_t& Point::at(Index index) const
 {
   return coordinates_.at(static_cast<std::size_t>(index));
 }
@@ -76,5 +90,9 @@ const std::int64_t& Point::operator[](Index index) const
 inline const std::int64_t* Point::begin() const { return coordinates_.data(); }
 
 inline const std::int64_t* Point::end() const { return coordinates_.data() + coordinates_.size(); }
+
+inline const std::int64_t& Point::front() const { return coordinates_.front(); }
+
+inline const std::int64_t& Point::back() const { return coordinates_.back(); }
 
 }  // namespace legate

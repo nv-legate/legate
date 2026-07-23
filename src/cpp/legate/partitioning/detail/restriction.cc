@@ -69,13 +69,11 @@ void Restrictions::apply_minimum_extents(Span<const std::uint64_t> new_minimum_e
 namespace {
 
 [[nodiscard]] constexpr bool smallest_extent_smaller_than_min_extent(
-  const std::uint64_t& extent, const std::uint64_t& num_colors, const std::uint64_t& min_extent)
+  const std::int64_t& extent, const std::int64_t& num_colors, const std::uint64_t& min_extent)
 {
   const auto tile_extent = (extent + num_colors - 1) / num_colors;
   // This value can be negative when there are more than one empty tiles in the partition
-  const std::int64_t smallest_extent =
-    // NOLINTNEXTLINE(bugprone-narrowing-conversions)
-    static_cast<std::int64_t>(extent) - ((num_colors - 1) * tile_extent);
+  const auto smallest_extent = extent - ((num_colors - 1) * tile_extent);
 
   return static_cast<std::uint64_t>(std::max<>(smallest_extent, std::int64_t{0})) < min_extent;
 }
@@ -111,8 +109,7 @@ bool Restrictions::are_satisfied_by(const Partition& partition,
   return array_all_of(satisfies_restriction, dimension_restrictions_(), partition.color_shape());
 }
 
-bool Restrictions::minimum_extents_satisfied_by(Span<const std::uint64_t> shape,
-                                                Span<const std::uint64_t> color_shape) const
+bool Restrictions::minimum_extents_satisfied_by(const Point& shape, const Point& color_shape) const
 {
   if (!needs_minimum_extent_check_) {
     return true;
@@ -158,13 +155,11 @@ void Restrictions::join_inplace(const Restrictions& other)
   }
 }
 
-[[nodiscard]] std::tuple<SmallVector<std::size_t, LEGATE_MAX_DIM>,
-                         SmallVector<std::uint32_t, LEGATE_MAX_DIM>,
-                         std::uint64_t>
-Restrictions::prune_dimensions(Span<const std::uint64_t> shape) const
+[[nodiscard]] std::tuple<Point, SmallVector<std::uint32_t, LEGATE_MAX_DIM>, std::uint64_t>
+Restrictions::prune_dimensions(const Point& shape) const
 {
   // Prune out any dimensions that are 1
-  SmallVector<std::size_t, LEGATE_MAX_DIM> temp_shape{};
+  SmallVector<std::int64_t, LEGATE_MAX_DIM> temp_shape{};
   SmallVector<std::uint32_t, LEGATE_MAX_DIM> temp_dims{};
   std::uint64_t volume = 1;
 
@@ -180,7 +175,7 @@ Restrictions::prune_dimensions(Span<const std::uint64_t> shape) const
     temp_dims.push_back(dim);
     volume *= extent;
   }
-  return {std::move(temp_shape), std::move(temp_dims), volume};
+  return {Point{std::move(temp_shape)}, std::move(temp_dims), volume};
 }
 
 Rect Restrictions::prune_dimensions(const Rect& domain) const

@@ -7,9 +7,9 @@ from typing import Any
 
 from typing_extensions import CapsuleType
 
+from ..geometry import Rect
 from ..mapping.mapping import StoreTarget
 from ..type.types import Type
-from ..utilities.typedefs import Rect
 from ..utilities.unconstructable import Unconstructable
 from .buffer import TaskLocalBuffer
 from .inline_allocation import InlineAllocation

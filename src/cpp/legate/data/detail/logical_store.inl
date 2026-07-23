@@ -19,7 +19,7 @@ inline bool LogicalStore::unbound() const { return get_storage()->unbound(); }
 
 inline const InternalSharedPtr<Shape>& LogicalStore::shape() const { return shape_; }
 
-inline Span<const std::uint64_t> LogicalStore::extents() const { return shape()->extents(); }
+inline const Point& LogicalStore::extents() const { return shape()->extents(); }
 
 inline std::size_t LogicalStore::volume() const { return shape()->volume(); }
 

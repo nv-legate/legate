@@ -57,7 +57,7 @@ class LogicalStore {
    *
    * @return The constructed LogicalStore.
    */
-  LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
+  LogicalStore(Point extents,
                InternalSharedPtr<Storage> storage,
                InternalSharedPtr<Type> type,
                InternalSharedPtr<TransformStack> transform,
@@ -68,7 +68,7 @@ class LogicalStore {
 
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
-  [[nodiscard]] Span<const std::uint64_t> extents() const;
+  [[nodiscard]] const Point& extents() const;
   [[nodiscard]] std::size_t volume() const;
   // Size of the backing storage
   [[nodiscard]] std::size_t storage_size() const;

@@ -77,7 +77,15 @@ ManualTask Runtime::create_task(Library library,
                                 LocalTaskID task_id,
                                 Span<const std::uint64_t> launch_shape)
 {
-  return create_task(library, task_id, detail::to_domain(launch_shape));
+  const auto ndim = static_cast<std::int32_t>(launch_shape.size());
+  auto lo         = Point::zeroes(ndim);
+  auto hi         = Point::zeroes(ndim);
+
+  for (std::int32_t idx = 0; idx < ndim; ++idx) {
+    hi[idx] = static_cast<std::int64_t>(launch_shape[idx]) - 1;
+  }
+
+  return create_task(library, task_id, Rect{std::move(lo), std::move(hi)});
 }
 
 ManualTask Runtime::create_task(Library library,

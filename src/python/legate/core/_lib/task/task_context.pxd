@@ -9,11 +9,11 @@ from libcpp.vector cimport vector as std_vector
 
 from ..data.physical_store cimport PhysicalStore, _PhysicalStore
 from ..data.scalar cimport Scalar, _Scalar
+from ..geometry.point cimport _Point
+from ..geometry.rect cimport _Rect
 from ..utilities.typedefs cimport (
     VariantCode,
-    _LocalTaskID,
-    _Domain,
-    _DomainPoint
+    _LocalTaskID
 )
 from ..utilities.unconstructable cimport Unconstructable
 from ..mapping.machine cimport _Machine
@@ -38,8 +38,8 @@ cdef extern from "legate/task/task_context.h" namespace "legate" nogil:
         size_t num_scalars() except+
         bool can_raise_exception() except+
         bool is_single_task() except+
-        const _DomainPoint& get_task_index() except+
-        const _Domain& get_launch_domain() except+
+        const _Point& get_task_index() except+
+        const _Rect& get_launch_domain() except+
         TaskTarget target() except+
         _Machine machine() except+
         std_string_view get_provenance() except+

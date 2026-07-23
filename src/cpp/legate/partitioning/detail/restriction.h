@@ -97,8 +97,8 @@ class Restrictions {
   [[nodiscard]] bool are_satisfied_by(const Partition& partition,
                                       const InternalSharedPtr<Shape>& shape) const;
 
-  [[nodiscard]] bool minimum_extents_satisfied_by(Span<const std::uint64_t> shape,
-                                                  Span<const std::uint64_t> color_shape) const;
+  [[nodiscard]] bool minimum_extents_satisfied_by(const Point& shape,
+                                                  const Point& color_shape) const;
 
   /**
    * @brief Join another restrction object. This can be seen as an OR operation.
@@ -138,10 +138,8 @@ class Restrictions {
    *
    * @return Tuple of pruned shape, dimensions and total volume.
    */
-  [[nodiscard]] std::tuple<SmallVector<std::size_t, LEGATE_MAX_DIM>,
-                           SmallVector<std::uint32_t, LEGATE_MAX_DIM>,
-                           std::uint64_t>
-  prune_dimensions(Span<const std::uint64_t> shape) const;
+  [[nodiscard]] std::tuple<Point, SmallVector<std::uint32_t, LEGATE_MAX_DIM>, std::uint64_t>
+  prune_dimensions(const Point& shape) const;
 
   /**
    * @brief Prune the dimensions of a Rect that are restricted by this object.

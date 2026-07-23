@@ -16,6 +16,7 @@ from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
 from ._lib.data.physical_store import PhysicalStore
 from ._lib.data.scalar import Scalar
 from ._lib.data.shape import Shape
+from ._lib.geometry import Point, Rect
 from ._lib.legate_defines import LEGATE_MAX_DIM
 from ._lib.mapping.machine import (
     EmptyMachineError,
@@ -57,8 +58,6 @@ from ._lib.utilities.typedefs import (
     GlobalRedopID,
     LocalRedopID,
     LocalTaskID,
-    Point,
-    Rect,
     VariantCode,
 )
 from .data_interface import LegateDataInterface, as_logical_store

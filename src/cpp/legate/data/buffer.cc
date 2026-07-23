@@ -27,6 +27,18 @@
 
 namespace legate::detail {
 
+Rect to_rect(Span<const std::uint64_t> shape)
+{
+  const auto ndim = static_cast<std::int32_t>(shape.size());
+  auto lo         = Point::zeroes(ndim);
+  auto hi         = Point::zeroes(ndim);
+
+  for (std::int32_t idx = 0; idx < ndim; ++idx) {
+    hi[idx] = static_cast<std::int64_t>(shape[idx]) - 1;
+  }
+  return {std::move(lo), std::move(hi)};
+}
+
 void check_alignment(std::size_t alignment)
 {
   if (alignment == 0) {
@@ -103,8 +115,7 @@ namespace {
   const auto target = mem_kind.value_or(mapping::detail::to_target(
     find_memory_kind_for_executing_processor(/* host_accessible */ false)));
 
-  return make_internal_shared<detail::InlineStorage>(
-    detail::to_domain(bounds), type.size(), target);
+  return make_internal_shared<detail::InlineStorage>(detail::to_rect(bounds), type.size(), target);
 }
 
 }  // namespace
@@ -136,7 +147,7 @@ TaskLocalBuffer::TaskLocalBuffer(const Type& type,
                                  Span<const std::uint64_t> bounds,
                                  std::optional<mapping::StoreTarget> mem_kind)
   : TaskLocalBuffer{
-      make_task_local_inline_storage(type, bounds, mem_kind), type, detail::to_domain(bounds)}
+      make_task_local_inline_storage(type, bounds, mem_kind), type, detail::to_rect(bounds)}
 {
 }
 

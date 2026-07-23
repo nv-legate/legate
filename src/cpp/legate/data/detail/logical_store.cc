@@ -79,7 +79,7 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
     transform_{make_internal_shared<TransformStack>()},
     // An unbound store's extents are unknown until a buffer is bound to it; keep the domain empty
     // until then rather than forcing (and throwing on) the unbound extents.
-    domain_{shape()->unbound() ? Rect{} : to_maybe_empty_domain(shape()->extents())}
+    domain_{shape()->unbound() ? Rect{} : shape()->domain()}
 {
   assert_fixed_storage_size(this->type());
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -87,7 +87,7 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
   }
 }
 
-LogicalStore::LogicalStore(SmallVector<std::uint64_t, LEGATE_MAX_DIM> extents,
+LogicalStore::LogicalStore(Point extents,
                            InternalSharedPtr<Storage> storage,
                            InternalSharedPtr<Type> type,
                            InternalSharedPtr<TransformStack> transform,
@@ -130,11 +130,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, st
       fmt::format("Invalid promotion on dimension {} for a {}-D store", extra_dim, dim())};
   }
 
-  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{extents()};
-
-  new_extents.insert(new_extents.begin() + extra_dim, dim_size);
-
-  auto transform = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
+  auto new_extents = extents().inserted(extra_dim, dim_size);
+  auto transform   = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
 
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), storage_, type(), std::move(transform), domain_);
@@ -154,11 +151,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
       fmt::format("Projection index {} is out of bounds [0, {})", index, old_extents[d])};
   }
 
-  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{old_extents};
-
-  new_extents.erase(new_extents.begin() + d);
-
-  auto transform = stack(transform_, std::make_unique<Project>(d, index));
+  auto new_extents = old_extents.removed(d);
+  auto transform   = stack(transform_, std::make_unique<Project>(d, index));
 
   // New domain over Storage simply restricts to the single dimension in the projection.
   const auto projected_domain = [&] {
@@ -189,7 +183,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::broadcast(std::int32_t bcast_dim,
   }
 
   auto transform   = stack(transform_, std::make_unique<DimBroadcast>(bcast_dim, dim_size));
-  auto new_extents = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{extents()};
+  auto new_extents = extents();
 
   new_extents[bcast_dim] = dim_size;
   return make_internal_shared<LogicalStore>(
@@ -206,7 +200,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
       fmt::format("Invalid slicing of dimension {} for a {}-D store", dim, this->dim())};
   }
 
-  constexpr auto sanitize_slice = [](const Slice& san_slice, std::int64_t extent) {
+  constexpr auto sanitize_slice = [](const Slice& san_slice,
+                                     std::int64_t extent) -> std::pair<std::int64_t, std::int64_t> {
     std::int64_t start = san_slice.start.value_or(0);
     std::int64_t stop  = san_slice.stop.value_or(extent);
 
@@ -217,12 +212,11 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
       stop += extent;
     }
 
-    return std::make_pair<std::size_t, std::size_t>(std::max(std::int64_t{0}, start),
-                                                    std::max(std::int64_t{0}, stop));
+    return {std::max<>(std::int64_t{0}, start), std::max<>(std::int64_t{0}, stop)};
   };
 
-  auto exts          = SmallVector<std::uint64_t, LEGATE_MAX_DIM>{extents()};
-  auto [start, stop] = sanitize_slice(slice, static_cast<std::int64_t>(exts[dim]));
+  auto exts            = extents();
+  auto&& [start, stop] = sanitize_slice(slice, static_cast<std::int64_t>(exts[dim]));
 
   if (start < stop && (start >= exts[dim] || stop > exts[dim])) {
     throw TracedException<std::invalid_argument>{
@@ -282,7 +276,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(
     }
   }
 
-  auto new_extents = array_map<SmallVector<std::uint64_t, LEGATE_MAX_DIM>>(extents(), axes);
+  auto new_extents = extents().permuted(axes);
   auto transform   = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), storage_, type(), std::move(transform), domain_);
@@ -325,7 +319,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 
   auto partition = [&] {
     if (color_shape.has_value()) {
-      return create_tiling(to_domain_point(tile_shape), to_domain_point(*color_shape));
+      return create_tiling(Point{tile_shape}, Point{*color_shape});
     }
     SmallVector<std::uint64_t, LEGATE_MAX_DIM> tmp_color_shape;
 
@@ -335,7 +329,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
                    tile_shape.begin(),
                    std::back_inserter(tmp_color_shape),
                    [](std::uint64_t c, std::uint64_t t) { return (c + t - 1) / t; });
-    return create_tiling(to_domain_point(tile_shape), to_domain_point(tmp_color_shape));
+    return create_tiling(Point{tile_shape}, Point{tmp_color_shape});
   }();
 
   return create_partition_(self, std::move(partition), /* complete */ true);
@@ -590,7 +584,7 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
   opaque->fill(std::move(colors), std::move(domains));
   get_storage()->finalize_unbound_partitioned(
     std::move(global_extents), my_global_domain, partition);
-  domain_ = to_domain(shape()->extents());
+  domain_ = Rect::from_extents(shape()->extents());
 }
 
 void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partition)
@@ -700,7 +694,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 
   auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
 
-  return create_tiling(to_domain_point(tile_shape), to_domain_point(launch_shape));
+  return create_tiling(std::move(tile_shape), std::move(launch_shape));
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,

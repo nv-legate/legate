@@ -4,9 +4,9 @@
 
 from libcpp.vector cimport vector as std_vector
 
+from ..geometry.rect cimport _Rect
 from ..mapping.mapping cimport StoreTarget
 from ..type.types cimport Type
-from ..utilities.typedefs cimport _Domain
 from ..utilities.unconstructable cimport Unconstructable
 from .physical_store cimport PhysicalStore
 
@@ -32,4 +32,4 @@ cdef class InlineAllocation(Unconstructable):
     )
 
     @staticmethod
-    cdef tuple _compute_shape(const _Domain& domain)
+    cdef tuple _compute_shape(const _Rect& domain)

@@ -37,15 +37,11 @@ class PartitionManager {
 
   [[nodiscard]] Span<const std::uint32_t> get_factors(const mapping::detail::Machine& machine);
 
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> compute_launch_shape(
-    const mapping::detail::Machine& machine,
-    const ParallelPolicy& parallel_policy,
-    const Restrictions& restrictions,
-    Span<const std::uint64_t> shape);
-  [[nodiscard]] SmallVector<std::uint64_t, LEGATE_MAX_DIM> compute_tile_shape(
-    Span<const std::uint64_t> extents, Span<const std::uint64_t> launch_shape);
-  [[nodiscard]] bool use_complete_tiling(Span<const std::uint64_t> extents,
-                                         Span<const std::uint64_t> tile_shape);
+  [[nodiscard]] Point compute_launch_shape(const mapping::detail::Machine& machine,
+                                           const ParallelPolicy& parallel_policy,
+                                           const Restrictions& restrictions,
+                                           const Point& shape);
+  [[nodiscard]] Point compute_tile_shape(const Point& extents, const Point& launch_shape);
 
  private:
   std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> all_factors_{};

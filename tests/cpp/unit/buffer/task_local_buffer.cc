@@ -46,6 +46,18 @@ class BasicBufferTask : public legate::LegateTask<BasicBufferTask> {
   static void common_variant_(legate::TaskContext context, legate::mapping::StoreTarget mem_kind);
 };
 
+legate::Rect to_rect(legate::Span<const std::uint64_t> shape)
+{
+  const auto ndim = static_cast<std::int32_t>(shape.size());
+  auto lo         = legate::Point::zeroes(ndim);
+  auto hi         = legate::Point::zeroes(ndim);
+
+  for (std::int32_t idx = 0; idx < ndim; ++idx) {
+    hi[idx] = static_cast<std::int64_t>(shape[idx]) - 1;
+  }
+  return {std::move(lo), std::move(hi)};
+}
+
 /* static */ void BasicBufferTask::common_variant_(legate::TaskContext context,
                                                    legate::mapping::StoreTarget mem_kind)
 {
@@ -56,7 +68,7 @@ class BasicBufferTask : public legate::LegateTask<BasicBufferTask> {
 
   ASSERT_EQ(buf.type(), ty);
   ASSERT_EQ(buf.dim(), bounds.size());
-  ASSERT_EQ(buf.domain(), legate::detail::to_domain(bounds));
+  ASSERT_EQ(buf.domain(), to_rect(bounds));
   ASSERT_EQ(buf.memory_kind(), mem_kind);
 }
 

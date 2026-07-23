@@ -4,8 +4,9 @@
 
 from ..data.physical_store import PhysicalStore
 from ..data.scalar import Scalar
+from ..geometry import Point, Rect
 from ..mapping.machine import Machine
-from ..utilities.typedefs import Point, Rect, VariantCode
+from ..utilities.typedefs import VariantCode
 from ..utilities.unconstructable import Unconstructable
 
 class TaskContext(Unconstructable):

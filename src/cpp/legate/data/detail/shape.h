@@ -33,7 +33,7 @@ class Shape {
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] std::uint32_t ndim() const;
   [[nodiscard]] std::size_t volume() const;
-  [[nodiscard]] Span<const std::uint64_t> extents() const;
+  [[nodiscard]] const Point& extents() const;
   [[nodiscard]] Rect domain() const;
 
   /**

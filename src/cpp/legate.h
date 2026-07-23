@@ -22,6 +22,10 @@
 #include <legate/data/logical_store.h>
 #include <legate/data/physical_store.h>
 #include <legate/data/scalar.h>
+#include <legate/geometry/nd_point.h>
+#include <legate/geometry/nd_rect.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/mapping/mapping.h>
 #include <legate/mapping/proxy_instance_mapping_policy.h>
 #include <legate/mapping/proxy_store_mapping.h>

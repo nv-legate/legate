@@ -6,13 +6,9 @@ from libc.stdint cimport uintptr_t
 
 from ..data.physical_store cimport PhysicalStore
 from ..data.scalar cimport Scalar
-from ..utilities.typedefs cimport (
-    VariantCode,
-    DomainPoint_t,
-    Domain_t,
-    domain_point_to_py,
-    domain_to_py
-)
+from ..geometry.point cimport Point
+from ..geometry.rect cimport Rect
+from ..utilities.typedefs cimport VariantCode
 from ..utilities.unconstructable cimport Unconstructable
 from ..mapping.machine cimport Machine
 
@@ -133,7 +129,7 @@ cdef class TaskContext(Unconstructable):
         return self._handle.is_single_task()
 
     @property
-    def task_index(self) -> DomainPoint_t:
+    def task_index(self) -> Point:
         r"""
         Returns the point of the task. A 0D point will be returned for a
         single task.
@@ -141,10 +137,10 @@ cdef class TaskContext(Unconstructable):
         :returns: The point of the task.
         :rtype: Point
         """
-        return domain_point_to_py(self._handle.get_task_index())
+        return Point.from_handle(self._handle.get_task_index())
 
     @property
-    def launch_domain(self) -> Domain_t:
+    def launch_domain(self) -> Rect:
         r"""
         Returns the task group's launch domain. A single task returns an
         empty domain.
@@ -152,7 +148,7 @@ cdef class TaskContext(Unconstructable):
         :returns: The launch domain of the task.
         :rtype: Rect
         """
-        return domain_to_py(self._handle.get_launch_domain())
+        return Rect.from_handle(self._handle.get_launch_domain())
 
     @property
     def machine(self) -> Machine:

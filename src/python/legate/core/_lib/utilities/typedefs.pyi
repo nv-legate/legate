@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import IntEnum
-from typing import NamedTuple, NewType, TypeAlias, cast
+from typing import NewType, cast
 
 LocalTaskID = NewType("LocalTaskID", int)
 
@@ -14,9 +14,3 @@ class VariantCode(IntEnum):
     CPU = cast(int, ...)
     GPU = cast(int, ...)
     OMP = cast(int, ...)
-
-Point: TypeAlias = tuple[int, ...]
-
-class Rect(NamedTuple):
-    lo: Point = (0,)
-    hi: Point = (0,)

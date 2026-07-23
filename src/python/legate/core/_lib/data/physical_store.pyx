@@ -5,13 +5,9 @@
 from libcpp.utility cimport move as std_move
 from libc.stdint cimport int32_t
 
+from ..geometry.point cimport _Point, _point_from_iterable
+from ..geometry.rect cimport Rect
 from ..type.types cimport Type
-from ..utilities.typedefs cimport (
-    _DomainPoint,
-    domain_point_from_iterable,
-    domain_to_py,
-    Domain_t
-)
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.detail.dlpack.to_dlpack cimport to_dlpack
 from ..utilities.detail.dlpack.dlpack cimport DLDeviceType
@@ -50,14 +46,14 @@ cdef class PhysicalStore(Unconstructable):
         return Type.from_handle(self._handle.type())
 
     @property
-    def domain(self) -> Domain_t:
+    def domain(self) -> Rect:
         r"""
         Get the `Rect` of the store.
 
         :returns: The domain of the store.
         :rtype: Rect
         """
-        return domain_to_py(self._handle.domain())
+        return Rect.from_handle(self._handle.domain())
 
     @property
     def target(self) -> StoreTarget:
@@ -103,7 +99,7 @@ cdef class PhysicalStore(Unconstructable):
         TaskLocalBuffer
             The created buffer.
         """
-        cdef _DomainPoint dp = domain_point_from_iterable(shape)
+        cdef _Point dp = _point_from_iterable(shape)
         cdef _TaskLocalBuffer buf
 
         with nogil:
@@ -130,14 +126,12 @@ cdef class PhysicalStore(Unconstructable):
         extent : Sequence[int], optional
             Extent of the buffer.
         """
-        cdef _DomainPoint cpp_extent
+        cdef _Point cpp_extent
 
         if extent is None:
-            cpp_extent = (
-                buffer._handle.domain().hi() - buffer._handle.domain().lo() + 1
-            )
+            cpp_extent = buffer._handle.domain().extents()
         else:
-            cpp_extent = domain_point_from_iterable(extent)
+            cpp_extent = _point_from_iterable(extent)
 
         try:
             with nogil:

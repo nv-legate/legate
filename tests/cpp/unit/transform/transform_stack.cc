@@ -28,9 +28,8 @@ using TransformStackUnitDeathTest = TransformStackUnit;
 TEST_F(TransformStackUnit, ConvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::TransformStack>();
-  auto expected =
-    legate::detail::to_domain_point(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1});
-  auto color = transform->convert_color(expected);
+  auto expected  = legate::Point({1});
+  auto color     = transform->convert_color(expected);
 
   ASSERT_EQ(color, expected);
 }
@@ -46,13 +45,10 @@ TEST_F(TransformStackUnit, ConvertColorNonIdentity)
     legate::make_internal_shared<legate::detail::TransformStack>(std::move(child), parent);
 
   // Input: {1, 2}, after Promote at dim 2: {1, 2, 0}
-  auto input = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2});
+  auto input  = legate::Point({1, 2});
   auto result = transform->convert_color(input);
 
-  ASSERT_EQ(result,
-            legate::detail::to_domain_point(
-              legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 0}));
+  ASSERT_EQ(result, legate::Point({1, 2, 0}));
 }
 
 TEST_F(TransformStackUnit, ConvertColorNestedNonIdentity)
@@ -70,21 +66,17 @@ TEST_F(TransformStackUnit, ConvertColorNestedNonIdentity)
     legate::make_internal_shared<legate::detail::TransformStack>(std::move(child), parent);
 
   // Input: {1}, after parent Promote at dim 1: {1, 0}, after child Promote at dim 2: {1, 0, 0}
-  auto input =
-    legate::detail::to_domain_point(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1});
+  auto input  = legate::Point({1});
   auto result = transform->convert_color(input);
 
-  ASSERT_EQ(result,
-            legate::detail::to_domain_point(
-              legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 0, 0}));
+  ASSERT_EQ(result, legate::Point({1, 0, 0}));
 }
 
 TEST_F(TransformStackUnit, InvertColor)
 {
   auto transform = legate::make_internal_shared<legate::detail::TransformStack>();
-  auto expected  = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 3});
-  auto color = transform->invert_color(expected);
+  auto expected  = legate::Point({1, 2, 3});
+  auto color     = transform->invert_color(expected);
 
   ASSERT_EQ(color, expected);
 }
@@ -100,13 +92,10 @@ TEST_F(TransformStackUnit, InvertColorNonIdentity)
     legate::make_internal_shared<legate::detail::TransformStack>(std::move(child), parent);
 
   // Input: {1, 2, 0}, after Promote invert (remove dim 2): {1, 2}
-  auto input = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2, 0});
+  auto input  = legate::Point({1, 2, 0});
   auto result = transform->invert_color(input);
 
-  ASSERT_EQ(result,
-            legate::detail::to_domain_point(
-              legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 2}));
+  ASSERT_EQ(result, legate::Point({1, 2}));
 }
 
 TEST_F(TransformStackUnit, InvertColorNestedNonIdentity)
@@ -124,13 +113,10 @@ TEST_F(TransformStackUnit, InvertColorNestedNonIdentity)
     legate::make_internal_shared<legate::detail::TransformStack>(std::move(child), parent);
 
   // Input: {1, 0, 0}, invert child (remove dim 2): {1, 0}, invert parent (remove dim 1): {1}
-  auto input = legate::detail::to_domain_point(
-    legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1, 0, 0});
+  auto input  = legate::Point({1, 0, 0});
   auto result = transform->invert_color(input);
 
-  ASSERT_EQ(
-    result,
-    legate::detail::to_domain_point(legate::detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{1}));
+  ASSERT_EQ(result, legate::Point({1}));
 }
 
 TEST_F(TransformStackUnit, Pop)

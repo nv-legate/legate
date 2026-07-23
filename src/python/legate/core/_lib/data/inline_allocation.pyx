@@ -11,8 +11,9 @@ from libcpp.utility cimport move as std_move
 from libc.stdint cimport int32_t, uintptr_t
 from cpython cimport Py_buffer, PyObject_GetBuffer
 
+from ..geometry.point cimport _Point
+from ..geometry.rect cimport _Rect
 from ..type.types cimport Type
-from ..utilities.typedefs cimport _Domain, _DomainPoint
 from ..mapping.mapping cimport StoreTarget
 from ..runtime.runtime cimport get_legate_runtime
 
@@ -100,9 +101,9 @@ cdef class InlineAllocation(Unconstructable):
         return result
 
     @staticmethod
-    cdef tuple _compute_shape(const _Domain& domain):
-        cdef _DomainPoint lo = domain.lo()
-        cdef _DomainPoint hi = domain.hi()
+    cdef tuple _compute_shape(const _Rect& domain):
+        cdef _Point lo = domain.lo()
+        cdef _Point hi = domain.hi()
         cdef int32_t ndim = domain.dim()
         cdef int32_t i = 0
         cdef tuple ret = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))

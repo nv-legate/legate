@@ -35,11 +35,6 @@ namespace legate {
 class LEGATE_EXPORT Rect {
  public:
   /**
-   * @brief The maximum number of dimensions a `Rect` may have.
-   */
-  static constexpr std::int32_t MAX_DIM = LEGATE_MAX_DIM;
-
-  /**
    * @brief A standard-conforming forward iterator over the points of a `Rect`.
    *
    * Dereferencing the iterator yields a reference to the current `Point`.
@@ -89,11 +84,6 @@ class LEGATE_EXPORT Rect {
     Point hi_{};
     bool fortran_order_{false};
   };
-
-  /**
-   * @brief The empty (0-dimensional) domain.
-   */
-  static const Rect NO_DOMAIN;
 
   /**
    * @brief Constructs an empty (0-dimensional) domain.
@@ -169,10 +159,13 @@ class LEGATE_EXPORT Rect {
    */
   [[nodiscard]] const Point& lo() const;
 
+  [[nodiscard]] Point& lo();
   /**
    * @return A reference to the upper bound of the domain.
    */
   [[nodiscard]] const Point& hi() const;
+
+  [[nodiscard]] Point& hi();
 
   /**
    * @brief Intersects this domain with another.
@@ -209,6 +202,8 @@ class LEGATE_EXPORT Rect {
    * @return An iterable view, e.g. `for (auto&& point : domain.iterate()) { ... }`.
    */
   [[nodiscard]] Iterable iterate(bool fortran_order = false) const;
+
+  [[nodiscard]] static Rect from_extents(const Point& extents);
 
  private:
   Point lo_{};

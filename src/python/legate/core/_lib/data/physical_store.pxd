@@ -5,9 +5,10 @@
 from libcpp cimport bool
 from libc.stdint cimport int32_t
 
+from ..geometry.point cimport _Point
+from ..geometry.rect cimport _Rect
 from ..mapping.mapping cimport StoreTarget
 from ..type.types cimport _Type
-from ..utilities.typedefs cimport _Domain, _DomainPoint
 from ..utilities.unconstructable cimport Unconstructable
 from .inline_allocation cimport InlineAllocation, _InlineAllocation
 from .buffer cimport _TaskLocalBuffer, TaskLocalBuffer
@@ -17,14 +18,14 @@ cdef extern from "legate/data/physical_store.h" namespace "legate" nogil:
     cdef cppclass _PhysicalStore "legate::PhysicalStore":
         int32_t dim() except+
         _Type type() except+
-        _Domain domain() except+
+        _Rect domain() except+
         _InlineAllocation get_inline_allocation() except+
         StoreTarget target() except+
         _TaskLocalBuffer create_output_buffer(
-            const _DomainPoint& extents, bool bind_buffer
+            const _Point& extents, bool bind_buffer
         ) except+
         void bind_data(
-            const _TaskLocalBuffer& buffer, const _DomainPoint& extents
+            const _TaskLocalBuffer& buffer, const _Point& extents
         ) except+
 
 

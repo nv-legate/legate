@@ -49,7 +49,7 @@ InternalSharedPtr<Partition> Opaque::bloat(Span<const std::uint64_t> /*low_offse
   throw TracedException<std::runtime_error>{"Bloating is not supported for opaque partitions"};
 }
 
-Rect Opaque::launch_domain() const { return to_domain(color_shape_); }
+Rect Opaque::launch_domain() const { return Rect::from_extents(color_shape_); }
 
 std::optional<std::uint64_t> Opaque::device_of_(const Point& color) const
 {
