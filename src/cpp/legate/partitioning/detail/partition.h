@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>

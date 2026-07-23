@@ -8,6 +8,8 @@
 
 #include <legate/data/detail/transform/store_transform.h>
 #include <legate/data/detail/transform/transform.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>

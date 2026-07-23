@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/geometry/rect.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/utilities/detail/hash.h>
 #include <legate/utilities/hash.h>

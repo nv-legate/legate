@@ -20,30 +20,11 @@ Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
   }
 
   const auto& runtime = detail::Runtime::get_runtime();
-  const auto kind     = runtime.get_executing_processor().kind();
 
-  switch (kind) {
-    case Processor::Kind::LOC_PROC: return Memory::Kind::SYSTEM_MEM;
-    case Processor::Kind::TOC_PROC:
-      return host_accessible ? Memory::Kind::Z_COPY_MEM : Memory::Kind::GPU_FB_MEM;
-    case Processor::Kind::OMP_PROC:
-      return runtime.local_machine().has_socket_memory() ? Memory::Kind::SOCKET_MEM
-                                                         : Memory::Kind::SYSTEM_MEM;
-    case Processor::Kind::PY_PROC: return Memory::Kind::SYSTEM_MEM;
-    case Processor::Kind::NO_KIND: [[fallthrough]];
-    case Processor::Kind::UTIL_PROC: [[fallthrough]];
-    case Processor::Kind::IO_PROC: [[fallthrough]];
-    case Processor::Kind::PROC_GROUP: [[fallthrough]];
-    case Processor::Kind::PROC_SET: break;
+  if (runtime.config().need_cuda()) {
+    return host_accessible ? Memory::Kind::Z_COPY_MEM : Memory::Kind::GPU_FB_MEM;
   }
-  LEGATE_ABORT("Unknown processor kind ", kind);
-}
-
-Memory find_memory_from_kind(Memory::Kind kind)
-{
-  auto&& runtime = detail::Runtime::get_runtime();
-
-  return runtime.local_machine().get_memory(runtime.get_executing_processor(), kind);
+  return Memory::Kind::SYSTEM_MEM;
 }
 
 }  // namespace legate

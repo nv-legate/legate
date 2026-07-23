@@ -151,7 +151,6 @@ set(
   integration/auto_task_error.cc
   integration/bloat_constraints.cc
   integration/broadcast_constraints.cc
-  integration/core_mapper.cc
   integration/fill.cc
   integration/find_memory_kind.cc
   integration/image_constraints.cc
@@ -169,7 +168,6 @@ set(
   integration/parallel_policy.cc
   integration/partitioner.cc
   integration/projection.cc
-  integration/proc_local_storage.cc
   integration/provenance.cc
   integration/redundant.cc
   integration/register_variants.cc
@@ -216,9 +214,7 @@ set(
   unit/machine/node_range.cc
   unit/machine/processor_range.cc
   unit/machine/machine.cc
-  unit/machine/global_machine.cc
   unit/machine/local_machine.cc
-  unit/machine/local_machine_selector.cc
   unit/partition/nopartition.cc
   unit/partition/tiling.cc
   unit/physical_store/inline_allocation.cc
@@ -300,7 +296,6 @@ set(
   noinit/small_vector.cc
   noinit/string_utils.cc
   noinit/tuple.cc
-  noinit/unravel.cc
   noinit/variant_options.cc
   noinit/zip_equal.cc
   noinit/zip_shortest.cc

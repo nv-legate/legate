@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/partitioning/detail/device_mesh.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/utilities/detail/small_vector.h>

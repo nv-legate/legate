@@ -319,10 +319,7 @@ target_sources(
     legate/mapping/mapping.cc
     legate/mapping/proxy_store_mapping.cc
     legate/mapping/proxy_instance_mapping_policy.cc
-    legate/mapping/detail/core_mapper.cc
     legate/mapping/detail/machine.cc
-    legate/mapping/detail/local_machine_selector.cc
-    legate/mapping/detail/global_machine.cc
     legate/mapping/detail/mapping.cc
     legate/mapping/detail/proxy_store_mapping.cc
     legate/operation/projection.cc
@@ -410,7 +407,6 @@ target_sources(
     legate/utilities/detail/zip.cc
     legate/utilities/detail/linearize.cc
     legate/utilities/detail/error.cc
-    legate/utilities/detail/proc_local_storage.cc
     legate/utilities/detail/array_algorithms.cc
     legate/utilities/detail/string_utils.cc
     legate/utilities/detail/shared_library.cc
@@ -941,8 +937,6 @@ install(
     legate/utilities/scope_guard.inl
     legate/utilities/compiler.h
     legate/utilities/macros.h
-    legate/utilities/proc_local_storage.h
-    legate/utilities/proc_local_storage.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities
 )
 

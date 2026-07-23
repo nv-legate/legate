@@ -8,10 +8,6 @@
 
 #include <legate_defines.h>
 
-#include <legate/geometry/nd_point.h>
-#include <legate/geometry/nd_rect.h>
-#include <legate/geometry/point.h>
-#include <legate/geometry/rect.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <legion.h>
@@ -129,46 +125,8 @@ using coord_t = std::int64_t;
 
 /** @} */  // end of iterator
 
-// Machine
-
-/**
- * @addtogroup machine
- * @{
- */
-
-/**
- * @brief Logical processor handle
- *
- * Legate libraries rarely use processor handles directly and there are no Legate APIs that
- * take a processor handle. However, the libraries may want to query the processor that runs
- * the current task to perform some processor- or processor kind-specific operations. In that
- * case, `legate::Runtime::get_runtime().get_executing_processor()` can be used. Other useful
- * memobers of `legate::Processor` are the `kind` method, which returns the processor kind, and
- * `legate::Processor::Kind`, an enum for all processor types.
- *
- * See
- * [Realm::Processor](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/processor.h#L35-L141)
- * for a complete definition. The list of processor types can be found
- * [here](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/realm_c.h#L45-L54).
- *
- */
-using Legion::Processor;
-
-/**
- * @brief Logical memory handle
- *
- * In Legate, libraries will never have to use memory handles directly. However, some Legate
- * APIs (e.g., \ref create_buffer()) take a memory kind as an argument; `legate::Memory::Kind`
- * is an enum for all memory types.
- *
- * See
- * [Realm::Memory](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/memory.h#L30-L65)
- * for a complete definition. The list of memory types can be found
- * [here](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/realm_c.h#L63-L78).
- */
-using Legion::Memory;
-
-/** @} */  // end of machine
+using Realm::Memory;
+using Realm::Processor;
 
 namespace detail {
 

@@ -9,6 +9,7 @@
 #include <legate/data/external_allocation.h>
 #include <legate/data/logical_store.h>
 #include <legate/data/shape.h>
+#include <legate/geometry/rect.h>
 #include <legate/mapping/machine.h>
 #include <legate/operation/task.h>
 #include <legate/runtime/library.h>
@@ -373,13 +374,6 @@ class LEGATE_EXPORT Runtime {
    * @return Machine object
    */
   [[nodiscard]] mapping::Machine get_machine() const;
-
-  /**
-   * @brief Returns the current Processor on which the caller is executing.
-   *
-   * @return The current Processor.
-   */
-  [[nodiscard]] Processor get_executing_processor() const;
 
   /**
    * @brief Returns a singleton runtime object

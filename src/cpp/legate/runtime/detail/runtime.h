@@ -188,8 +188,6 @@ class Runtime {
   [[nodiscard]] std::uint32_t node_id() const;
   [[nodiscard]] bool single_process() const;
 
-  [[nodiscard]] Processor get_executing_processor() const;
-
   [[nodiscard]] static Runtime& get_runtime();
   static void start();
   [[nodiscard]] bool initialized() const;

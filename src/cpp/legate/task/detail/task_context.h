@@ -9,6 +9,8 @@
 #include <legate/comm/communicator.h>
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/data/scalar.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>

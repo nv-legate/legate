@@ -334,38 +334,6 @@ class LEGATE_EXPORT InstanceMappingPolicy {
   [[nodiscard]] bool operator!=(const InstanceMappingPolicy&) const;
 };
 
-/**
- * @brief An abstract class that defines machine query APIs
- */
-class LEGATE_EXPORT MachineQueryInterface {
- public:
-  virtual ~MachineQueryInterface() = default;
-  /**
-   * @brief Returns local CPUs
-   *
-   * @return A vector of processors
-   */
-  [[nodiscard]] virtual const std::vector<Processor>& cpus() const = 0;
-  /**
-   * @brief Returns local GPUs
-   *
-   * @return A vector of processors
-   */
-  [[nodiscard]] virtual const std::vector<Processor>& gpus() const = 0;
-  /**
-   * @brief Returns local OpenMP processors
-   *
-   * @return A vector of processors
-   */
-  [[nodiscard]] virtual const std::vector<Processor>& omps() const = 0;
-  /**
-   * @brief Returns the total number of nodes
-   *
-   * @return Total number of nodes
-   */
-  [[nodiscard]] virtual std::uint32_t total_nodes() const = 0;
-};
-
 struct Task {};
 
 struct Store {};

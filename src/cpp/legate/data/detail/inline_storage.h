@@ -7,6 +7,8 @@
 #pragma once
 
 #include <legate/data/external_allocation.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/mapping/mapping.h>
 #include <legate/utilities/typedefs.h>
 

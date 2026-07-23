@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <legate/geometry/nd_point.h>
+#include <legate/geometry/nd_rect.h>
+#include <legate/geometry/point.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>

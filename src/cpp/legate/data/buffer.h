@@ -9,6 +9,7 @@
 #include <legate_defines.h>
 
 #include <legate/data/inline_allocation.h>
+#include <legate/geometry/rect.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>

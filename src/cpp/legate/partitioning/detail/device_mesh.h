@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/geometry/point.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>

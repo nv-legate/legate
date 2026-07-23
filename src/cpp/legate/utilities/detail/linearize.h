@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/geometry/point.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstddef>

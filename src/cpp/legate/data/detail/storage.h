@@ -7,6 +7,8 @@
 #pragma once
 
 #include <legate/data/detail/inline_storage.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/partitioning/detail/restriction.h>
 #include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>

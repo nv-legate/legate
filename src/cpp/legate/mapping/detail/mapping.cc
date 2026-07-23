@@ -27,37 +27,6 @@ TaskTarget to_target(VariantCode code)
   LEGATE_ABORT("Unhandled VariantCode ", legate::detail::to_underlying(code));
 }
 
-TaskTarget to_target(Processor::Kind kind)
-{
-  switch (kind) {
-    case Processor::Kind::TOC_PROC: return TaskTarget::GPU;
-    case Processor::Kind::OMP_PROC: return TaskTarget::OMP;
-    case Processor::Kind::LOC_PROC:
-      [[fallthrough]];
-      // Note, returning TaskTarget::CPU for Processor::Kind::PY_PROC isn't technically
-      // correct. This is "safe" to do because the only caller that might pass PY_PROC is the
-      // inline task launch.
-    case Processor::Kind::PY_PROC: return TaskTarget::CPU;
-    case Processor::Kind::NO_KIND: [[fallthrough]];
-    case Processor::Kind::UTIL_PROC: [[fallthrough]];
-    case Processor::Kind::IO_PROC: [[fallthrough]];
-    case Processor::Kind::PROC_GROUP: [[fallthrough]];
-    case Processor::Kind::PROC_SET: break;
-  }
-  LEGATE_ABORT("Unhandled Processor::Kind ", legate::detail::to_underlying(kind));
-}
-
-TaskTarget get_matching_task_target(StoreTarget target)
-{
-  switch (target) {
-    case StoreTarget::ZCMEM: [[fallthrough]];
-    case StoreTarget::FBMEM: return TaskTarget::GPU;
-    case StoreTarget::SOCKETMEM: return TaskTarget::OMP;
-    case StoreTarget::SYSMEM: return TaskTarget::CPU;
-  }
-  LEGATE_ABORT("Unhandled StoreTarget: ", target);
-}
-
 StoreTarget to_target(Memory::Kind kind)
 {
   switch (kind) {
@@ -80,26 +49,6 @@ StoreTarget to_target(Memory::Kind kind)
   LEGATE_ABORT("Unhandled Memory::Kind ", legate::detail::to_underlying(kind));
 }
 
-Processor::Kind to_kind(TaskTarget target)
-{
-  switch (target) {
-    case TaskTarget::GPU: return Processor::Kind::TOC_PROC;
-    case TaskTarget::OMP: return Processor::Kind::OMP_PROC;
-    case TaskTarget::CPU: return Processor::Kind::LOC_PROC;
-  }
-  LEGATE_ABORT("Unhandled TaskTarget ", legate::detail::to_underlying(target));
-}
-
-Processor::Kind to_kind(VariantCode code)
-{
-  switch (code) {
-    case VariantCode::CPU: return Processor::Kind::LOC_PROC;
-    case VariantCode::GPU: return Processor::Kind::TOC_PROC;
-    case VariantCode::OMP: return Processor::Kind::OMP_PROC;
-  }
-  LEGATE_ABORT("Unhandled variant code ", legate::detail::to_underlying(code));
-}
-
 Memory::Kind to_kind(StoreTarget target)
 {
   switch (target) {
@@ -120,7 +69,5 @@ VariantCode to_variant_code(TaskTarget target)
   }
   LEGATE_ABORT("Unhandled TaskTarget ", legate::detail::to_underlying(target));
 }
-
-VariantCode to_variant_code(Processor::Kind kind) { return to_variant_code(to_target(kind)); }
 
 }  // namespace legate::mapping::detail

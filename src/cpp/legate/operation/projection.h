@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/geometry/point.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/tuple.h>
 #include <legate/utilities/typedefs.h>

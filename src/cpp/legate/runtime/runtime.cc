@@ -188,8 +188,6 @@ void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 
 mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
 
-Processor Runtime::get_executing_processor() const { return impl()->get_executing_processor(); }
-
 void* Runtime::get_cuda_stream() const { return impl()->get_cuda_stream(); }
 
 CUdevice Runtime::get_current_cuda_device() const { return impl()->get_current_cuda_device(); }

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/operation/projection.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/utilities/hash.h>

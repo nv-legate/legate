@@ -15,7 +15,6 @@
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/experimental/io/detail/task.h>
-#include <legate/mapping/detail/core_mapper.h>
 #include <legate/mapping/detail/default_mapper.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/mapping.h>
@@ -887,8 +886,7 @@ std::int32_t Runtime::finish()
   lib_config.max_dyn_tasks     = lib_config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
   lib_config.max_reduction_ops = 0;
 
-  auto&& core_lib = runtime.create_library(
-    CORE_LIBRARY_NAME, lib_config, mapping::detail::create_core_mapper(), {});
+  auto&& core_lib = runtime.create_library(CORE_LIBRARY_NAME, lib_config, nullptr, {});
   // Order is deliberate. core_library_() must be set here, because the core mapper and mapper
   // manager expect to call get_runtime()->core_library().
   runtime.core_library_ = core_lib;
@@ -995,13 +993,6 @@ cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
   }
 
   return cu_mod_manager_.value();
-}
-
-Processor Runtime::get_executing_processor() const
-{
-  auto& procs = local_machine().has_gpus() ? local_machine().gpus() : local_machine().cpus();
-
-  return procs[node_id() % procs.size()];
 }
 
 bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }
