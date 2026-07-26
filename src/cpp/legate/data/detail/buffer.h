@@ -6,39 +6,31 @@
 
 #pragma once
 
-#include <legate/data/detail/inline_storage.h>
-#include <legate/data/inline_allocation.h>
+#include <legate/data/detail/raw_allocation.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
+#include <utility>
 
 namespace legate::detail {
 
 /**
- * @brief A task-local temporary buffer.
- *
- * A `TaskLocalBuffer` is, as the name implies, "local" to a task. Its lifetime is bound to
- * that of the task. When the task ends, the buffer is destroyed. It is most commonly used as
- * temporary scratch-space within tasks for that reason.
- *
- * The buffer is allocated immediately at the point when `TaskLocalBuffer` is created, so it is
- * safe to use it immediately, even if it used asynchronously (for example, in GPU kernel
- * launches) after the fact.
+ * @brief A memory allocation with a shape and a type
  */
-class TaskLocalBuffer {
+class Buffer {
  public:
   /**
-   * @brief Construct a `TaskLocalBuffer`.
+   * @brief Construct a `Buffer`.
    *
-   * @param storage The inline storage backing this buffer.
-   * @param type The type to interpret `storage` as.
-   * @param bounds The extents of the buffer.
+   * @param allocation The raw allocation backing this buffer.
+   * @param type The type to interpret `allocation` as.
+   * @param domain The extents of the buffer.
    */
-  TaskLocalBuffer(InternalSharedPtr<InlineStorage> storage,
-                  InternalSharedPtr<Type> type,
-                  const Rect& bounds);
+  Buffer(InternalSharedPtr<RawAllocation> allocation, InternalSharedPtr<Type> type, Rect domain);
 
   /**
    * @return The type of the buffer.
@@ -58,25 +50,57 @@ class TaskLocalBuffer {
   /**
    * @return The memory kind of the buffer.
    */
-  [[nodiscard]] mapping::StoreTarget memory_kind() const;
+  [[nodiscard]] mapping::StoreTarget target() const;
 
   /**
-   * @return The inline storage backing this buffer.
+   * @return The raw allocation backing this buffer.
    */
-  [[nodiscard]] const InternalSharedPtr<InlineStorage>& get_storage() const;
+  [[nodiscard]] const InternalSharedPtr<RawAllocation>& allocation() const;
 
   /**
-   * @brief Get the `InlineAllocation` for the buffer.
-   *
-   * This routine constructs a fresh `InlineAllocation` for each call. This process may not be
-   * cheap, so the user is encouraged to call this sparingly.
-   *
-   * @return The inline allocation object.
+   * @brief Returns a raw pointer to the memory allocation managed by the buffer.
    */
-  [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  [[nodiscard]] void* data();
+
+  /**
+   * @brief Returns a const raw pointer to the memory allocation managed by the buffer.
+   */
+  [[nodiscard]] const void* data() const;
+
+  /**
+   * @brief Returns the base pointer and per-dimension element strides of the buffer's affine
+   * layout.
+   *
+   * The base pointer is the address of the element at the buffer's coordinate origin (i.e. the
+   * point `(0, ..., 0)`), following the affine convention `addr(p) = base + field_size * sum(p[i]
+   * * strides[i])`. The strides are given in elements (not bytes) and have as many entries as the
+   * buffer domain's dimension (at least one).
+   *
+   * @return A pair of the base pointer and the element strides.
+   */
+  [[nodiscard]] std::pair<void*, Point> base_and_element_strides() const;
+
+  void reshape(Rect new_domain);
+
+  /**
+   * @brief Creates a `Buffer` by allocating fresh memory on the given target.
+   *
+   * Unlike the constructors, which view an already-existing `RawAllocation`, this factory allocates
+   * the backing memory itself. The lifetime of the allocated memory is tied to the lifetime of the
+   * returned buffer (and any other holder of the underlying allocation).
+   *
+   * @param type The type to interpret the allocation as.
+   * @param domain The extents of the buffer.
+   * @param target The target memory kind to allocate on.
+   *
+   * @return The freshly allocated buffer.
+   */
+  [[nodiscard]] static InternalSharedPtr<Buffer> allocate(InternalSharedPtr<Type> type,
+                                                          Rect domain,
+                                                          mapping::StoreTarget target);
 
  private:
-  InternalSharedPtr<InlineStorage> storage_{};
+  InternalSharedPtr<RawAllocation> allocation_{};
   InternalSharedPtr<Type> type_{};
   Rect domain_{};
 };

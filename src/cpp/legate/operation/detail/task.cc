@@ -116,14 +116,6 @@ std::string TaskBase::to_string(bool show_provenance) const
   return result;
 }
 
-bool TaskBase::needs_flush() const
-{
-  constexpr auto needs_flush = [](auto&& store_arg) { return store_arg.needs_flush(); };
-  return can_throw_exception() || std::any_of(inputs_.begin(), inputs_.end(), needs_flush) ||
-         std::any_of(outputs_.begin(), outputs_.end(), needs_flush) ||
-         std::any_of(reductions_.begin(), reductions_.end(), needs_flush);
-}
-
 ////////////////////////////////////////////////////
 // legate::LogicalTask
 ////////////////////////////////////////////////////

@@ -7,8 +7,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "data")
 
 set(
   cython_sources
-  external_allocation.pyx
-  inline_allocation.pyx
+  raw_allocation.pyx
   logical_store.pyx
   physical_store.pyx
   scalar.pyx

@@ -48,11 +48,7 @@ inline std::uint64_t LogicalStore::id() const { return store_id_; }
 
 inline const InternalSharedPtr<Storage>& LogicalStore::get_storage() const { return storage_; }
 
-// We can't rely on the mapped_ here, as this store might just be an alias to some other store the
-// user created a physical store with. The storage_ holds the ground truth
-inline bool LogicalStore::is_mapped() const { return get_storage()->is_mapped(); }
-
-inline bool LogicalStore::needs_flush() const { return is_mapped(); }
+inline void LogicalStore::finalize_unbound() { get_storage()->finalize_unbound(); }
 
 inline const std::optional<InternalSharedPtr<Partition>>& LogicalStore::get_current_key_partition()
   const

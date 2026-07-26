@@ -54,7 +54,6 @@ class TaskBase : public Operation {
   void throws_exception(bool can_throw_exception);
 
   [[nodiscard]] std::string to_string(bool show_provenance) const override;
-  [[nodiscard]] bool needs_flush() const override;
   [[nodiscard]] bool supports_replicated_write() const override;
   [[nodiscard]] bool can_throw_exception() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const;

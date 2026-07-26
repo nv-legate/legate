@@ -7,9 +7,9 @@
 
 #include <legate.h>
 
-// This example validates the InlineStorage-backed `legate::Buffer` / `TaskLocalBuffer` classes, the
-// `PhysicalStore::create_output_buffer` / `bind_data` implementations, and - crucially - multi-rank
-// unbound stores. Each producer task is given an *unbound* output store (created with
+// This example validates the InlineStorage-backed `legate::NDBuffer` / `legate::Buffer` classes,
+// the `PhysicalStore::create_output_buffer` / `bind_data` implementations, and - crucially -
+// multi-rank unbound stores. Each producer task is given an *unbound* output store (created with
 // `create_store(type, dim)`, i.e. without a shape) and materializes its piece into a buffer that it
 // binds back to the store. In a multi-rank run each rank produces its own piece; the pieces are
 // stitched together (concatenated along the first dimension) to form the global store. To make the
@@ -43,9 +43,9 @@ class ProduceViaBindDataTask : public legate::LegateTask<ProduceViaBindDataTask>
   static void cpu_variant(legate::TaskContext context);
 };
 
-// Produces data through the type-erased `TaskLocalBuffer` path
+// Produces data through the type-erased `Buffer` path
 // (`create_output_buffer(Point, /*bind_buffer=*/true)`), converting it back to a typed
-// `Buffer` to write into it.
+// `NDBuffer` to write into it.
 class ProduceViaTaskLocalBufferTask : public legate::LegateTask<ProduceViaTaskLocalBufferTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)

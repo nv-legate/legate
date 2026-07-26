@@ -12,16 +12,14 @@
 
 namespace legate::detail {
 
-inline PhysicalStore::PhysicalStore(InternalSharedPtr<Type> type,
-                                    StorePermission permission,
-                                    InternalSharedPtr<InlineStorage> storage,
+inline PhysicalStore::PhysicalStore(StorePermission permission,
+                                    InternalSharedPtr<Buffer> buffer,
                                     PhysicalStoreLayout layout)
-  : type_{std::move(type)},
-    dim_{static_cast<std::int32_t>(layout.domain.dim())},
+  : dim_{static_cast<std::int32_t>(layout.domain.dim())},
     readable_{permission == StorePermission::READ_WRITE},
     writable_{permission == StorePermission::READ_WRITE},
     reducible_{permission == StorePermission::REDUCE},
-    inline_storage_{std::move(storage)},
+    buffer_{std::move(buffer)},
     base_{layout.base},
     strides_{std::move(layout.strides)},
     domain_{std::move(layout.domain)}
@@ -45,7 +43,12 @@ inline bool PhysicalStore::valid() const { return true; }
 
 inline std::int32_t PhysicalStore::dim() const { return dim_; }
 
-inline const InternalSharedPtr<Type>& PhysicalStore::type() const { return type_; }
+inline const InternalSharedPtr<Type>& PhysicalStore::type() const
+{
+  // A bound store's type lives in its backing buffer; `type_` is only the fallback for an unbound
+  // store that has not been bound to a buffer yet.
+  return buffer_ ? buffer_->type() : type_;
+}
 
 inline const Rect& PhysicalStore::domain() const { return domain_; }
 
@@ -55,7 +58,7 @@ inline const Point& PhysicalStore::strides() const { return strides_; }
 
 inline mapping::StoreTarget PhysicalStore::target() const
 {
-  return unbound_ ? unbound_target_ : storage_()->target();
+  return unbound_ ? unbound_target_ : buffer_->target();
 }
 
 inline bool PhysicalStore::is_readable() const { return readable_; }
@@ -65,10 +68,5 @@ inline bool PhysicalStore::is_writable() const { return writable_; }
 inline bool PhysicalStore::is_reducible() const { return reducible_; }
 
 inline bool PhysicalStore::is_unbound_store() const { return unbound_; }
-
-inline const InternalSharedPtr<InlineStorage>& PhysicalStore::storage_() const
-{
-  return inline_storage_;
-}
 
 }  // namespace legate::detail

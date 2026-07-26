@@ -5,7 +5,7 @@
 from libcpp cimport bool
 from libcpp.optional cimport optional as std_optional
 
-from ....data.external_allocation cimport _ExternalAllocation
+from ....data.raw_allocation cimport _RawAllocation
 from ....data.logical_store cimport _LogicalStore
 
 from .dlpack cimport _DLManagedTensorVersioned, _DLManagedTensor
@@ -33,13 +33,13 @@ cdef extern from "legate/utilities/detail/dlpack/from_dlpack.h" \
         _DLManagedTensor **dlm_tensor
     ) except+
 
-    _ExternalAllocation _make_external_alloc_from_dlpack \
+    _RawAllocation _make_external_alloc_from_dlpack \
         "legate::detail::make_external_alloc_from_dlpack" (
             _DLManagedTensorVersioned **dlm_tensor,
             std_optional[bool] read_only
         ) except+
 
-    _ExternalAllocation _make_external_alloc_from_dlpack \
+    _RawAllocation _make_external_alloc_from_dlpack \
         "legate::detail::make_external_alloc_from_dlpack" (
             _DLManagedTensor **dlm_tensor,
             std_optional[bool] read_only

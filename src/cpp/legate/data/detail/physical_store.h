@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include <legate/data/detail/inline_storage.h>
-#include <legate/data/inline_allocation.h>
+#include <legate/data/detail/buffer.h>
+#include <legate/geometry/point.h>
+#include <legate/geometry/rect.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
@@ -41,7 +42,7 @@ enum class StorePermission : std::uint8_t {
  * @brief The affine layout of a (possibly transformed) physical store.
  *
  * Computed once by the logic that creates a `PhysicalStore` (see `LogicalStore::map` and friends),
- * by folding the originating store's transform stack into the backing `InlineStorage`'s layout. A
+ * by folding the originating store's transform stack into the backing `Buffer`'s layout. A
  * `PhysicalStore` keeps this directly and no longer carries a transform stack.
  */
 struct PhysicalStoreLayout {
@@ -56,17 +57,29 @@ struct PhysicalStoreLayout {
 
 class PhysicalStore {
  public:
-  PhysicalStore(InternalSharedPtr<Type> type,
-                StorePermission permission,
-                InternalSharedPtr<InlineStorage> storage,
+  /**
+   * @brief Constructs a bound physical store on top of a backing `Buffer`.
+   *
+   * The store shares ownership of @p buffer with the storage it was mapped from, so the buffer
+   * (and its raw allocation) stays alive for as long as this physical store is alive. The buffer
+   * is the single home for the metadata (raw allocation, element type, and storage domain) shared
+   * between the storage and this physical store; @p layout carries the store-space affine view
+   * derived from it (and the originating store's transform).
+   *
+   * @param permission The access the store grants (read-write or reduction-only).
+   * @param buffer The buffer backing this store.
+   * @param layout The store's (transformed) affine layout.
+   */
+  PhysicalStore(StorePermission permission,
+                InternalSharedPtr<Buffer> buffer,
                 PhysicalStoreLayout layout);
 
   /**
    * @brief Constructs a physical store for an unbound output store.
    *
-   * The store has no backing `InlineStorage` yet: the task body is expected to produce the data
+   * The store has no backing allocation yet: the task body is expected to produce the data
    * by calling `create_output_buffer(..., bind_buffer=true)` or `bind_data(...)`, which allocates
-   * an `InlineStorage` on @p target and binds it back into @p originating_store.
+   * a `RawAllocation` on @p target and binds it back into @p originating_store.
    *
    * @param dim The (declared) dimensionality of the unbound store.
    * @param type The element type of the store.
@@ -99,7 +112,13 @@ class PhysicalStore {
    * @return Store's domain as a NDRect<DIM>
    */
   [[nodiscard]] const Rect& domain() const;
-  [[nodiscard]] InlineAllocation get_inline_allocation() const;
+
+  /**
+   * @return The buffer backing this store, or null for an unbound store that has not been bound to
+   * a buffer yet. The buffer's raw allocation (its base pointer, size, and memory kind) is reached
+   * indirectly through `Buffer::get_raw_allocation()`.
+   */
+  [[nodiscard]] const InternalSharedPtr<Buffer>& get_buffer() const;
   [[nodiscard]] mapping::StoreTarget target() const;
   [[nodiscard]] bool is_accessible(mapping::TaskTarget task_target) const;
 
@@ -108,29 +127,10 @@ class PhysicalStore {
   [[nodiscard]] bool is_reducible() const;
   [[nodiscard]] bool is_unbound_store() const;
 
-  /**
-   * @brief Allocates an `InlineStorage` for an output buffer of this (unbound) store.
-   *
-   * The storage spans @p bounds, holds elements of this store's type, and is allocated on the
-   * store's mapped target memory. Used by `create_output_buffer`.
-   *
-   * @param bounds The domain the buffer should span.
-   *
-   * @return The freshly allocated inline storage.
-   */
-  [[nodiscard]] InternalSharedPtr<InlineStorage> create_output_buffer_storage(
-    const Rect& bounds) const;
+  [[nodiscard]] InternalSharedPtr<Buffer> create_output_buffer(const Point& extents,
+                                                               bool bind_buffer);
 
-  /**
-   * @brief Binds an inline storage (produced as a buffer by the task) to this unbound store.
-   *
-   * The originating `LogicalStore` is updated in place so downstream operations observe the
-   * produced data, and this physical store is updated to reflect the now-bound data.
-   *
-   * @param storage The inline storage to bind.
-   * @param domain The domain the store should span over @p storage.
-   */
-  void bind_data(InternalSharedPtr<InlineStorage> storage, const Rect& domain);
+  void bind_data(InternalSharedPtr<Buffer> buffer, const Point& extents);
 
   /**
    * @brief Binds empty data to this unbound store (the store becomes a bound, zero-volume store).
@@ -160,8 +160,8 @@ class PhysicalStore {
   [[nodiscard]] const Point& strides() const;
 
  private:
-  [[nodiscard]] const InternalSharedPtr<InlineStorage>& storage_() const;
-
+  // The element type of an unbound store, needed before a backing buffer exists. Once the store is
+  // bound (or was constructed bound), the type is read from `buffer_` instead (see `type()`).
   InternalSharedPtr<Type> type_{};
 
   std::int32_t dim_{-1};
@@ -170,14 +170,16 @@ class PhysicalStore {
   bool writable_{};
   bool reducible_{};
 
-  // The inline storage that holds the manually-managed memory of the store. Null for an unbound
-  // store that has not been bound to a buffer yet.
-  InternalSharedPtr<InlineStorage> inline_storage_{};
+  // The buffer that holds the manually-managed memory of the store, bundling the raw allocation,
+  // element type, and storage domain that the store shares with its originating storage. Null for
+  // an unbound store that has not been bound to a buffer yet. The store shares ownership of the
+  // buffer, so the memory stays alive for as long as this physical store is alive.
+  InternalSharedPtr<Buffer> buffer_{};
 
   // The store's affine layout in its own (transformed) coordinate space, computed at
-  // store-creation time by folding the originating store's transform into `inline_storage_`'s
-  // layout (see `PhysicalStoreLayout`). `base_` is the address of the store's coordinate origin
-  // and `strides_` are element strides over the store's dimensions.
+  // store-creation time by folding the originating store's transform into the buffer's layout (see
+  // `PhysicalStoreLayout`). `base_` is the address of the store's coordinate origin and `strides_`
+  // are element strides over the store's dimensions.
   void* base_{};
   Point strides_{};
 

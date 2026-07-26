@@ -12,10 +12,9 @@
 
 namespace legate::detail {
 
-inline RemapRequest::RemapRequest(InternalSharedPtr<InlineStorage> source,
-                                  InternalSharedPtr<InlineStorage> target,
-                                  std::uint32_t field_size)
-  : source_{std::move(source)}, target_{std::move(target)}, field_size_{field_size}
+inline RemapRequest::RemapRequest(InternalSharedPtr<Buffer> source,
+                                  InternalSharedPtr<Buffer> target)
+  : source_{std::move(source)}, target_{std::move(target)}
 {
 }
 

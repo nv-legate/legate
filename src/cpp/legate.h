@@ -17,10 +17,9 @@
 #include <legate_defines.h>
 //
 #include <legate/data/accessor.h>
-#include <legate/data/allocator.h>
-#include <legate/data/external_allocation.h>
 #include <legate/data/logical_store.h>
 #include <legate/data/physical_store.h>
+#include <legate/data/raw_allocation.h>
 #include <legate/data/scalar.h>
 #include <legate/geometry/nd_point.h>
 #include <legate/geometry/nd_rect.h>

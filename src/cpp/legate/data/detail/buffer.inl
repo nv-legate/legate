@@ -10,15 +10,14 @@
 
 namespace legate::detail {
 
-inline const InternalSharedPtr<Type>& TaskLocalBuffer::type() const { return type_; }
+inline const InternalSharedPtr<Type>& Buffer::type() const { return type_; }
 
-inline std::uint32_t TaskLocalBuffer::dim() const { return domain().dim(); }
+inline std::uint32_t Buffer::dim() const { return domain().dim(); }
 
-inline const Rect& TaskLocalBuffer::domain() const { return domain_; }
+inline const Rect& Buffer::domain() const { return domain_; }
 
-inline const InternalSharedPtr<InlineStorage>& TaskLocalBuffer::get_storage() const
-{
-  return storage_;
-}
+inline const InternalSharedPtr<RawAllocation>& Buffer::allocation() const { return allocation_; }
+
+inline void Buffer::reshape(Rect new_domain) { domain_ = new_domain; }
 
 }  // namespace legate::detail

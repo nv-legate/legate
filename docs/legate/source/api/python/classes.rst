@@ -21,8 +21,8 @@ Classes
    task_context
    rect
    task_config
-   task_local_buffer
-   inline_allocation
+   buffer
+   raw_allocation
    symbolic_expr
    auto_task
    manual_task

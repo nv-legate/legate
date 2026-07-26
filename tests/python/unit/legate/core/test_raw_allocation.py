@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from legate import install_info
-from legate.core import ExternalAllocation, TaskTarget, get_legate_runtime
+from legate.core import RawAllocation, TaskTarget, get_legate_runtime
 
 try:
     import cupy  # type: ignore[import-not-found]
@@ -39,7 +39,7 @@ class _UnversionedDLPack:
 class TestFromDLPack:
     def test_numpy_1d(self) -> None:
         buf = np.arange(10, dtype=np.float64)
-        alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+        alloc = RawAllocation.from_dlpack(buf, read_only=True)
         assert alloc.size == buf.nbytes
         assert alloc.read_only is True
 
@@ -48,28 +48,28 @@ class TestFromDLPack:
     )
     def test_numpy_dtypes(self, dtype: np.dtype) -> None:
         buf = np.ones(10, dtype=dtype)
-        alloc = ExternalAllocation.from_dlpack(buf)
+        alloc = RawAllocation.from_dlpack(buf)
         assert alloc.size == buf.nbytes
 
     @pytest.mark.parametrize("shape", ((10,), (4, 4), (2, 3, 4)))
     def test_numpy_shapes(self, shape: tuple[int, ...]) -> None:
         buf = np.ones(shape, dtype=np.float64)
-        alloc = ExternalAllocation.from_dlpack(buf)
+        alloc = RawAllocation.from_dlpack(buf)
         assert alloc.size == buf.nbytes
 
     def test_read_only_true(self) -> None:
         buf = np.zeros(10, dtype=np.float64)
-        alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+        alloc = RawAllocation.from_dlpack(buf, read_only=True)
         assert alloc.read_only is True
 
     def test_read_only_false(self) -> None:
         buf = np.zeros(10, dtype=np.float64)
-        alloc = ExternalAllocation.from_dlpack(buf, read_only=False)
+        alloc = RawAllocation.from_dlpack(buf, read_only=False)
         assert alloc.read_only is False
 
     def test_rejects_non_dlpack(self) -> None:
         with pytest.raises(AttributeError, match="__dlpack__"):
-            ExternalAllocation.from_dlpack([1, 2, 3])
+            RawAllocation.from_dlpack([1, 2, 3])
 
     def test_rejects_no_dlpack_method(self) -> None:
         class FakeDLPackDevice:
@@ -77,7 +77,7 @@ class TestFromDLPack:
                 return (1, 0)
 
         with pytest.raises(AttributeError, match="__dlpack__"):
-            ExternalAllocation.from_dlpack(FakeDLPackDevice())
+            RawAllocation.from_dlpack(FakeDLPackDevice())
 
     @pytest.mark.skipif(
         cupy is None
@@ -86,14 +86,14 @@ class TestFromDLPack:
     )
     def test_cupy_gpu(self) -> None:
         buf = cupy.zeros(10, dtype=cupy.float64)
-        alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+        alloc = RawAllocation.from_dlpack(buf, read_only=True)
         assert alloc.size == buf.nbytes
         assert alloc.read_only is True
 
     def test_source_ref_held(self) -> None:
         buf = np.zeros(10, dtype=np.float64)
         refcount_before = sys.getrefcount(buf)
-        alloc = ExternalAllocation.from_dlpack(buf)
+        alloc = RawAllocation.from_dlpack(buf)
         refcount_after = sys.getrefcount(buf)
         assert refcount_after > refcount_before
         del alloc
@@ -106,7 +106,7 @@ class TestFromDLPack:
             "Conversion of non-contiguous strided tensors is not yet supported"
         )
         with pytest.raises(ValueError, match=msg):
-            ExternalAllocation.from_dlpack(strided)
+            RawAllocation.from_dlpack(strided)
 
     def test_accepts_non_monotonic_strides(self) -> None:
         arr = np.arange(2 * 3 * 4, dtype=np.float64).reshape(
@@ -115,18 +115,18 @@ class TestFromDLPack:
         permuted = arr.transpose(0, 2, 1)  # strides in bytes : (96, 8, 32)
         assert not permuted.flags["C_CONTIGUOUS"]
         assert not permuted.flags["F_CONTIGUOUS"]
-        alloc = ExternalAllocation.from_dlpack(permuted)
+        alloc = RawAllocation.from_dlpack(permuted)
         assert alloc.size == permuted.nbytes
 
     def test_accepts_fortran_contiguous(self) -> None:
         arr = np.arange(12, dtype=np.float64).reshape(3, 4).copy(order="F")
         assert arr.flags["F_CONTIGUOUS"]
-        alloc = ExternalAllocation.from_dlpack(arr)
+        alloc = RawAllocation.from_dlpack(arr)
         assert alloc.size == arr.nbytes
 
     def test_accepts_unversioned_capsule(self) -> None:
         buf = np.arange(10, dtype=np.float64)
-        alloc = ExternalAllocation.from_dlpack(
+        alloc = RawAllocation.from_dlpack(
             _UnversionedDLPack(buf), read_only=True
         )
         assert alloc.size == buf.nbytes
@@ -136,7 +136,7 @@ class TestFromDLPack:
 class TestFromSysmem:
     def test_basic(self) -> None:
         buf = np.arange(10, dtype=np.float64)
-        alloc = ExternalAllocation.from_sysmem(
+        alloc = RawAllocation.from_sysmem(
             buf.ctypes.data, buf.nbytes, read_only=True
         )
         assert alloc.size == buf.nbytes
@@ -144,12 +144,12 @@ class TestFromSysmem:
 
     def test_null_pointer(self) -> None:
         with pytest.raises(ValueError, match="null"):
-            ExternalAllocation.from_sysmem(0, 100, read_only=True)
+            RawAllocation.from_sysmem(0, 100, read_only=True)
 
     def test_source_ref(self) -> None:
         buf = np.zeros(10, dtype=np.float64)
         refcount_before = sys.getrefcount(buf)
-        alloc = ExternalAllocation.from_sysmem(
+        alloc = RawAllocation.from_sysmem(
             buf.ctypes.data, buf.nbytes, read_only=True, source=buf
         )
         refcount_after = sys.getrefcount(buf)
@@ -163,7 +163,7 @@ class TestFromSysmem:
 class TestFromZcmem:
     def test_basic(self) -> None:
         buf = np.arange(10, dtype=np.float64)
-        alloc = ExternalAllocation.from_zcmem(
+        alloc = RawAllocation.from_zcmem(
             buf.ctypes.data, buf.nbytes, read_only=True, source=buf
         )
         assert alloc.size == buf.nbytes
@@ -179,7 +179,7 @@ class TestFromFbmem:
     def test_basic(self) -> None:
         buf = cupy.zeros(10, dtype=cupy.float64)
         ptr = buf.data.ptr
-        alloc = ExternalAllocation.from_fbmem(
+        alloc = RawAllocation.from_fbmem(
             device_id=0, ptr=ptr, size=buf.nbytes, read_only=True
         )
         assert alloc.size == buf.nbytes
@@ -187,6 +187,6 @@ class TestFromFbmem:
 
     def test_null_pointer(self) -> None:
         with pytest.raises(ValueError, match="null"):
-            ExternalAllocation.from_fbmem(
+            RawAllocation.from_fbmem(
                 device_id=0, ptr=0, size=100, read_only=True
             )

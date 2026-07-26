@@ -159,8 +159,7 @@ class TestManualTask:
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            in_arr_np,
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            in_arr_np, np.asarray(out_store.get_physical_store())
         )
 
     @pytest.mark.parametrize(
@@ -212,8 +211,7 @@ class TestManualTask:
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            arr_np,
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            arr_np, np.asarray(out_store.get_physical_store())
         )
 
     @pytest.mark.parametrize(
@@ -338,8 +336,7 @@ class TestManualTask:
         manual_task.add_reduction(out_store, ty.ReductionOpKind.ADD)
         manual_task.execute()
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
-            np.sum(in_arr),
+            np.asarray(out_store.get_physical_store()), np.sum(in_arr)
         )
 
     def test_add_reduction_partition(self) -> None:

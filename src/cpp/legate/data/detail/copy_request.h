@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/data/detail/inline_storage.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/type/detail/types.h>
 #include <legate/type/types.h>
@@ -20,13 +20,13 @@ namespace legate::detail {
 class CopyRequest {
  public:
   CopyRequest(std::uint64_t storage_id,
-              InternalSharedPtr<InlineStorage> source,
-              InternalSharedPtr<InlineStorage> target,
+              InternalSharedPtr<Buffer> source,
+              InternalSharedPtr<Buffer> target,
               InternalSharedPtr<Partition> source_partition,
               InternalSharedPtr<Partition> target_partition,
               const Rect& source_domain,
               const Rect& target_domain,
-              std::uint32_t field_size);
+              InternalSharedPtr<Type> type);
   void perform(VariantCode variant_code) const;
 
   CopyRequest(const CopyRequest&)            = default;
@@ -40,13 +40,13 @@ class CopyRequest {
   void shuffle_(VariantCode variant_code) const;
 
   std::uint64_t storage_id_{};
-  InternalSharedPtr<InlineStorage> source_{};
-  InternalSharedPtr<InlineStorage> target_{};
+  InternalSharedPtr<Buffer> source_{};
+  InternalSharedPtr<Buffer> target_{};
   InternalSharedPtr<Partition> source_partition_{};
   InternalSharedPtr<Partition> target_partition_{};
   Rect source_domain_{};
   Rect target_domain_{};
-  std::uint32_t field_size_{};
+  InternalSharedPtr<Type> type_{};
 };
 
 }  // namespace legate::detail

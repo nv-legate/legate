@@ -11,11 +11,11 @@
 #include <legate/data/detail/buffer.h>
 #include <legate/data/detail/copy_request.h>
 #include <legate/data/detail/data_movement_requests.h>
-#include <legate/data/detail/external_allocation.h>
+#include <legate/data/detail/raw_allocation.h>
 #include <legate/data/detail/reduction_request.h>
 #include <legate/data/detail/remap_request.h>
+#include <legate/data/detail/scalar.h>
 #include <legate/data/detail/shape.h>
-#include <legate/data/external_allocation.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partition/no_partition.h>
@@ -41,12 +41,12 @@
 namespace legate::detail {
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
-                 std::uint32_t field_size,
+                 InternalSharedPtr<Type> type,
                  std::string_view provenance)
   : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{std::move(shape)},
     domain_{unbound() ? Rect{} : shape_->domain()},
-    field_size_{field_size},
+    type_{std::move(type)},
     provenance_{std::move(provenance)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -55,15 +55,15 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::string_view provenance)
-  : Storage{shape, static_cast<std::uint32_t>(scalar.size()), provenance}
+  : Storage{std::move(shape), scalar.type(), provenance}
 {
   const auto target = Runtime::get_runtime().get_machine().preferred_scalar_store_target();
-  storage_data_     = make_internal_shared<InlineStorage>(domain_, field_size_, target);
 
+  buffer_ = Buffer::allocate(type_, domain_, target);
   set_key_partition(create_no_partition());
 
   if (target == mapping::StoreTarget::SYSMEM) {
-    std::memcpy(storage_data_->data(), scalar.data(), scalar.size());
+    std::memcpy(buffer_->data(), scalar.data(), scalar.size());
     return;
   }
 
@@ -72,17 +72,16 @@ Storage::Storage(InternalSharedPtr<Shape> shape, const Scalar& scalar, std::stri
   auto&& api = cuda::detail::get_cuda_driver_api();
 
   api->mem_cpy_async(
-    storage_data_->data(), scalar.data(), scalar.size(), Runtime::get_runtime().get_cuda_stream());
+    buffer_->data(), scalar.data(), scalar.size(), Runtime::get_runtime().get_cuda_stream());
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
-                 std::uint32_t field_size,
-                 InternalSharedPtr<ExternalAllocation> allocation,
+                 InternalSharedPtr<Type> type,
+                 InternalSharedPtr<Buffer> buffer,
                  std::string_view provenance)
-  : Storage{shape, field_size, provenance}
+  : Storage{std::move(shape), std::move(type), provenance}
 {
-  storage_data_ = make_internal_shared<InlineStorage>(
-    domain_, field_size, legate::ExternalAllocation{std::move(allocation)});
+  buffer_ = std::move(buffer);
 
   set_key_partition(create_no_partition());
 }
@@ -97,17 +96,7 @@ bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
 
 bool Storage::equal(const Storage& other) const { return this == &other; }
 
-bool Storage::is_mapped() const
-{
-  if (unbound()) {
-    return false;
-  }
-
-  // TODO(wonchanl): Need a v2 implementation
-  return false;
-}
-
-std::tuple<InternalSharedPtr<InlineStorage>, Rect, bool>
+std::tuple<InternalSharedPtr<Buffer>, Rect, bool>
 Storage::map(  // NOLINT(readability-make-member-function-const)
   const Rect& domain,
   const InternalSharedPtr<Partition>& partition,
@@ -129,25 +118,24 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // redundant copy that is populated from the canonical storage by a remap copy-in. The copy is
   // shared across the input and output mappings of the same store (via `working_copies_`), so a
   // single remap copy-in populates it. `needs_remap` is false before the first materialization.
-  const bool needs_remap = storage_data_ && storage_data_->target() != target;
-  InternalSharedPtr<InlineStorage> active_copy;  // memoizes resolve_active within this call
+  const bool needs_remap = buffer_ && buffer_->target() != target;
+  InternalSharedPtr<Buffer> active_copy;  // memoizes resolve_active within this call
 
-  const auto resolve_active = [&]() -> const InternalSharedPtr<InlineStorage>& {
-    if (active_copy) {
-      return active_copy;
-    }
+  const auto resolve_active = [&]() -> const InternalSharedPtr<Buffer>& {
     if (!needs_remap) {
-      active_copy = storage_data_;
+      return buffer_;
+    }
+    if (active_copy) {
       return active_copy;
     }
     if (auto cached = requests->find_working_copy(id()); cached.has_value()) {
       active_copy = *std::move(cached);
       return active_copy;
     }
-    active_copy = make_internal_shared<InlineStorage>(storage_data_->domain(), field_size_, target);
+    active_copy = Buffer::allocate(type_, buffer_->domain(), target);
     requests->record_working_copy(id(), active_copy);
 
-    auto copy_in = RemapRequest{storage_data_, active_copy, field_size_};
+    auto copy_in = RemapRequest{buffer_, active_copy};
 
     // A device-to-host copy must be awaited before the (CPU) task reads the redundant copy.
     if (copy_in.requires_host_sync()) {
@@ -161,7 +149,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // storage after the task via a remap copy-out (ordered after any repartitioning copy-out).
   const auto register_remap_copy_out = [&] {
     if (needs_remap) {
-      requests->register_remap_copy_out(RemapRequest{resolve_active(), storage_data_, field_size_});
+      requests->register_remap_copy_out(RemapRequest{resolve_active(), buffer_});
     }
   };
 
@@ -172,7 +160,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // initial replicated storage even when the entire storage gets written with a disjoint partition
   // by a downstream writer. There should be a way for users to reset the distribution in this case.
   if (key_partition_.has_value() && (*key_partition_)->subsumes(domain, partition)) {
-    LEGATE_ASSERT(storage_data_);
+    LEGATE_ASSERT(buffer_);
 
     auto&& active = resolve_active();
 
@@ -191,22 +179,22 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // needed for transformed stores (e.g. slices) that are views into a larger storage; a
   // non-transformed write covers the whole store and simply replaces it. When the active storage is
   // a redundant copy, a remap copy-out then merges it back into the canonical storage.
-  const auto register_copy_out = [&](const InternalSharedPtr<InlineStorage>& data) {
-    LEGATE_ASSERT(storage_data_);
+  const auto register_copy_out = [&](const InternalSharedPtr<Buffer>& data) {
+    LEGATE_ASSERT(buffer_);
     LEGATE_ASSERT(key_partition_.has_value());
     requests->register_copy_out(CopyRequest{
-      id(), data, resolve_active(), partition, *key_partition_, domain, domain_, field_size_});
+      id(), data, resolve_active(), partition, *key_partition_, domain, domain_, type_});
     register_remap_copy_out();
   };
 
   // Finalizes a write into `data`: a transformed store (e.g. a slice) is a view into a larger
   // storage whose written sub-region is merged back via a copy-out, whereas a non-transformed
   // write covers the whole store and so its buffer becomes the new canonical storage.
-  const auto finalize_write = [&](const InternalSharedPtr<InlineStorage>& data) {
+  const auto finalize_write = [&](const InternalSharedPtr<Buffer>& data) {
     if (is_transformed) {
       register_copy_out(data);
     } else {
-      storage_data_ = data;
+      buffer_ = data;
     }
   };
 
@@ -225,17 +213,17 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   }
 
   // Otherwise, we need to allocate a new storage
-  auto data = make_internal_shared<InlineStorage>(sub_domain, field_size_, target);
+  auto data = Buffer::allocate(type_, sub_domain, target);
 
   requests->record_mapped_alloc(id(), data);
 
-  if (!storage_data_) {
+  if (!buffer_) {
     // First materialization of the active storage: it lives on the memory of the task that first
     // writes it (by default the rank's GPU, since tasks run on the GPU when one is available). A
     // store first written on the GPU therefore keeps its active storage on the GPU; a task that
     // later runs on a different memory operates on a temporary redundant copy (see above) rather
     // than permanently migrating the active storage.
-    storage_data_ = data;
+    buffer_ = data;
 
     return {data, sub_domain, false};
   }
@@ -244,7 +232,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
 
   if (is_read) {
     requests->register_copy_in(CopyRequest{
-      id(), resolve_active(), data, *key_partition_, partition, domain_, domain, field_size_});
+      id(), resolve_active(), data, *key_partition_, partition, domain_, domain, type_});
   } else {
     finalize_write(data);
   }
@@ -252,7 +240,7 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   return {data, sub_domain, false};
 }
 
-std::pair<InternalSharedPtr<InlineStorage>, Rect>
+std::pair<InternalSharedPtr<Buffer>, Rect>
 Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   const Rect& domain,
   const InternalSharedPtr<Partition>& partition,
@@ -275,7 +263,7 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // that `map` does), silently dropping the reduction. When a remap is needed we fall through to
   // the "fresh buffer on `target` + ReductionRequest" path, which copies the result back into the
   // canonical storage.
-  const bool needs_remap = storage_data_ && storage_data_->target() != target;
+  const bool needs_remap = buffer_ && buffer_->target() != target;
 
   // No subsumption checks for reductions as we need to create a new storage anyway
   //
@@ -284,31 +272,31 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
 
   if (!needs_remap && !is_parallel && key_partition_.has_value() &&
       !(*key_partition_)->has_color_shape()) {
-    return {storage_data_, sub_domain};
+    return {buffer_, sub_domain};
   }
 
   // TODO(wonchanl): We need to raise an uninitialized access exception if these don't hold
-  LEGATE_CHECK(storage_data_);
+  LEGATE_CHECK(buffer_);
   LEGATE_CHECK(key_partition_.has_value());
 
-  InternalSharedPtr<InlineStorage> reduction_buffer{};
+  InternalSharedPtr<Buffer> reduction_buffer{};
 
   // If the store is just initialized with the reduction identity and the key partition subsumes the
   // partition used in reduction, we can use the storage directly as the reduction buffer (unless a
   // cross-memory remap is required; see above).
   if (!needs_remap && store_has_identity && (*key_partition_)->subsumes(domain, partition)) {
-    reduction_buffer = storage_data_;
+    reduction_buffer = buffer_;
 
     // FIXME(wonchanl): We need a proper disjointedness check when the key_partition_ is a Tiling.
     if (!(*key_partition_)->has_color_shape()) {
       requests->register_reduction(ReductionRequest{
-        reduction_buffer, storage_data_, partition, *key_partition_, domain, type, op_kind});
+        reduction_buffer, reduction_buffer, partition, *key_partition_, domain, type, op_kind});
     }
   } else {
     // TODO(wonchanl): For now we create a full-size reduction buffer when the target is replicated.
     // If we have proper tile-wise reduction support, we should pass the `sub_domain` as the storage
     // domain.
-    reduction_buffer = make_internal_shared<InlineStorage>(domain, field_size_, target);
+    reduction_buffer = Buffer::allocate(type, domain, target);
 
     // Initialize the per-task scratch with the reduction identity so that ranks that don't write
     // to a given cell don't perturb the final reduction result.
@@ -316,7 +304,7 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
       reduction_buffer->data(), domain.volume(), target, type->code, op_kind);
 
     requests->register_reduction(ReductionRequest{
-      reduction_buffer, storage_data_, partition, *key_partition_, domain, type, op_kind});
+      reduction_buffer, buffer_, partition, *key_partition_, domain, type, op_kind});
   }
 
   return {std::move(reduction_buffer), sub_domain};
@@ -332,14 +320,14 @@ void Storage::free_early()
   // TODO(wonchanl): Need a v2 implementation
 }
 
-mapping::StoreTarget Storage::target() const { return storage_data_->target(); }
+mapping::StoreTarget Storage::target() const { return buffer_->target(); }
 
-void Storage::set_inline_storage(InternalSharedPtr<InlineStorage> storage_data)
+void Storage::set_backing_buffer(const InternalSharedPtr<Buffer>& storage_data)
 {
-  storage_data_ = std::move(storage_data);
+  buffer_ = storage_data;
 }
 
-void Storage::bind(InternalSharedPtr<InlineStorage> storage_data, const Rect& domain)
+void Storage::bind(const InternalSharedPtr<Buffer>& storage_data, const Rect& domain)
 {
   LEGATE_CHECK(unbound());
 
@@ -349,8 +337,8 @@ void Storage::bind(InternalSharedPtr<InlineStorage> storage_data, const Rect& do
     LEGATE_CHECK(domain.lo()[i] == 0);
   }
 
-  storage_data_ = std::move(storage_data);
-  domain_       = domain;
+  buffer_ = storage_data;
+  domain_ = domain;
 }
 
 void Storage::finalize_unbound()
@@ -360,17 +348,18 @@ void Storage::finalize_unbound()
 }
 
 void Storage::finalize_unbound_partitioned(Point global_extents,
-                                           const Rect& local_global_domain,
+                                           Rect shard_domain,
                                            InternalSharedPtr<Partition> key_partition)
 {
   LEGATE_CHECK(unbound());
 
   shape_->bind_extents(std::move(global_extents));
   domain_ = Rect::from_extents(shape_->extents());
-  // Re-base this rank's local (zero-based) piece so its domain is the global sub-domain. The copy
-  // engine assumes a storage's data at global coordinate `domain.lo()` maps to element 0, which is
-  // exactly what re-basing produces here.
-  storage_data_->rebase(local_global_domain);
+  // Re-base this rank's local (zero-based) piece so the buffer's domain is the global sub-domain.
+  // The copy engine assumes a storage's data at global coordinate `domain.lo()` maps to element 0,
+  // which is exactly what re-basing produces here.
+  LEGATE_ASSERT(shard_domain.volume() == buffer_->domain().volume());
+  buffer_->reshape(shard_domain);
   set_key_partition(std::move(key_partition));
 }
 

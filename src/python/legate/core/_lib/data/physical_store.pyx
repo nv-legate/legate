@@ -2,18 +2,20 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from libcpp.utility cimport move as std_move
-from libc.stdint cimport int32_t
+from libc.stdint cimport int32_t, uintptr_t
 
 from ..geometry.point cimport _Point, _point_from_iterable
 from ..geometry.rect cimport Rect
-from ..type.types cimport Type
+from ..type.types cimport Type, _Type
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.detail.dlpack.to_dlpack cimport to_dlpack
 from ..utilities.detail.dlpack.dlpack cimport DLDeviceType
 from ..runtime.runtime cimport get_legate_runtime
-from .inline_allocation cimport _InlineAllocation, InlineAllocation
-from .buffer cimport _TaskLocalBuffer, TaskLocalBuffer
+from ..mapping.mapping cimport StoreTarget
+from .raw_allocation cimport (
+    compute_array_interface,
+)
+from .buffer cimport _Buffer, Buffer
 
 from typing import Any
 
@@ -65,7 +67,7 @@ cdef class PhysicalStore(Unconstructable):
         """
         return self._handle.target()
 
-    cpdef TaskLocalBuffer create_output_buffer(
+    cpdef Buffer create_output_buffer(
         self,
         object shape,
         bool bind = True
@@ -96,20 +98,20 @@ cdef class PhysicalStore(Unconstructable):
 
         Returns
         -------
-        TaskLocalBuffer
+        Buffer
             The created buffer.
         """
         cdef _Point dp = _point_from_iterable(shape)
-        cdef _TaskLocalBuffer buf
+        cdef _Buffer buf
 
         with nogil:
             buf = self._handle.create_output_buffer(dp, bind)
 
         # Attach a reference to ourselves so we aren't garbage collected before
         # the buffer is
-        return TaskLocalBuffer.from_handle(buf, owner=self)
+        return Buffer.from_handle(buf, owner=self)
 
-    cpdef void bind_data(self, TaskLocalBuffer buffer, object extent = None):
+    cpdef void bind_data(self, Buffer buffer, object extent = None):
         r"""
         Binds a buffer to the store.
 
@@ -121,7 +123,7 @@ cdef class PhysicalStore(Unconstructable):
 
         Parameters
         ----------
-        buffer : TaskLocalBuffer
+        buffer : Buffer
             The buffer to bind.
         extent : Sequence[int], optional
             Extent of the buffer.
@@ -142,36 +144,40 @@ cdef class PhysicalStore(Unconstructable):
             # more appropriate for this
             raise TypeError(str(ve))
 
-    cpdef InlineAllocation get_inline_allocation(self):
+    cpdef Buffer get_buffer(self):
         r"""
-        Get the `InlineAllocation` for this store.
+        Get the `Buffer` backing this store.
+
+        The returned buffer bundles the store's underlying memory together with
+        its type and domain. The store's raw allocation is reachable indirectly
+        through the store's ``get_buffer().allocation``. The store's strided
+        array layout is available separately through the
+        ``__array_interface__`` / ``__cuda_array_interface__`` properties.
 
         Returns
         -------
-        InlineAllocation
-            The inline allocation object holding the raw pointer and strides.
+        Buffer
+            The buffer backing the store.
         """
-        cdef _InlineAllocation handle
+        cdef _Buffer buf
 
         with nogil:
-            handle = self._handle.get_inline_allocation()
+            buf = self._handle.get_buffer()
 
-        cdef tuple strides
-        cdef tuple shape
+        # Attach a reference to ourselves so we aren't garbage collected before
+        # the buffer is
+        return Buffer.from_handle(buf, owner=self)
 
-        if self.ndim == 0:
-            strides = ()
-            shape = ()
-        else:
-            strides = tuple(handle.strides)
-            shape = InlineAllocation._compute_shape(self._handle.domain())
+    cdef dict _array_interface(self):
+        cdef Type ty = self.type
+        cdef _Type handle = self._handle.type()
 
-        return InlineAllocation.create(
-            handle=std_move(handle),
-            ty=self.type,
-            shape=shape,
-            strides=strides,
-            owner=self,
+        return compute_array_interface(
+            ty.to_numpy_dtype().str,
+            handle.size(),
+            self._handle.domain(),
+            <uintptr_t>self._handle.base(),
+            self._handle.strides(),
         )
 
     @property
@@ -179,24 +185,34 @@ cdef class PhysicalStore(Unconstructable):
         r"""
         Retrieve the numpy-compatible array representation of the allocation.
 
-        Equivalent to `get_inline_allocation().__array_interface__`.
-
         :returns: The numpy array interface dict.
         :rtype: dict[str, Any]
+
+        :raises ValueError: If the store is allocated on the GPU.
         """
-        return self.get_inline_allocation().__array_interface__
+        if self.target == StoreTarget.FBMEM:
+            raise ValueError(
+                "Physical store in a framebuffer memory does not support "
+                "the array interface"
+            )
+        return self._array_interface()
 
     @property
     def __cuda_array_interface__(self) -> dict[str, Any]:
         r"""
         Retrieve the cupy-compatible array representation of the allocation.
 
-        Equivalent to `get_inline_allocation().__cuda_array_interface__`.
-
         :returns: The cupy array interface dict.
         :rtype: dict[str, Any]
+
+        :raises ValueError: If the array is in host-only memory.
         """
-        return self.get_inline_allocation().__cuda_array_interface__
+        if self.target not in (StoreTarget.FBMEM, StoreTarget.ZCMEM):
+            raise ValueError(
+                "Physical store in a host-only memory does not support "
+                "the CUDA array interface"
+            )
+        return self._array_interface()
 
     def __dlpack__(
         self,

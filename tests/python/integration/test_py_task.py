@@ -201,7 +201,7 @@ class TestPyTask:
     def test_python_scalar_arg(self) -> None:
         @task(variants=tuple(VariantCode))
         def fill_task(val: int, out: OutputStore) -> None:
-            out_arr = tasks.asarray(out.get_inline_allocation())
+            out_arr = tasks.asarray(out)
             out_arr.fill(val)
 
         val = 5
@@ -233,7 +233,7 @@ class TestPyTask:
     def test_scalar_arg(self) -> None:
         @task(variants=tuple(VariantCode))
         def fill_int_task(out: tasks.OutputStore, val: int) -> None:
-            out_arr = tasks.asarray(out.get_inline_allocation())
+            out_arr = tasks.asarray(out)
             out_arr.fill(val)
 
         val = 12345
@@ -484,8 +484,8 @@ class TestPyTask:
         def array_sum_task(
             store: InputStore, out: ReductionStore[ADD]
         ) -> None:
-            out_arr = tasks.asarray(out.get_inline_allocation())
-            store_arr = tasks.asarray(store.get_inline_allocation())
+            out_arr = tasks.asarray(out)
+            store_arr = tasks.asarray(store)
             out_arr[:] = store_arr.sum()
 
         out_arr, out_store = utils.zero_array_and_store(ty.float64, (10,))

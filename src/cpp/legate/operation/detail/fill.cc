@@ -98,8 +98,7 @@ void Fill::launch(Strategy* /*strategy*/)
   // seemingly the only way to do this. We can't convert the DeferredBuffer to a logical region
   // without enormous effort, not to mention it goes through Legion, which we want to avoid for
   // the fast-path.
-  auto phys_store =
-    lhs_->get_physical_store(mapping::StoreTarget::SYSMEM, /*ignore_future_mutability=*/false);
+  auto phys_store       = lhs_->get_physical_store(mapping::StoreTarget::SYSMEM);
   auto pub_phys_store   = legate::PhysicalStore{phys_store};
   std::size_t fut_size  = 0;
   const auto* const buf = static_cast<const std::byte*>(fill_value.data());
@@ -116,18 +115,6 @@ void Fill::launch(Strategy* /*strategy*/)
 void Fill::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_partition_symbol(lhs_var_, AccessMode::WRITE);
-}
-
-bool Fill::needs_flush() const
-{
-  if (lhs_->needs_flush()) {
-    return true;
-  }
-
-  return std::visit(
-    Overload{[](const InternalSharedPtr<LogicalStore>& store) { return store->needs_flush(); },
-             [](const Scalar&) { return false; }},
-    value_);
 }
 
 }  // namespace legate::detail

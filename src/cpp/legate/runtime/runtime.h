@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <legate/data/external_allocation.h>
 #include <legate/data/logical_store.h>
+#include <legate/data/raw_allocation.h>
 #include <legate/data/shape.h>
 #include <legate/geometry/rect.h>
 #include <legate/mapping/machine.h>
@@ -252,7 +252,7 @@ class LEGATE_EXPORT Runtime {
   /**
    * @brief Creates a store by attaching to an existing allocation.
    *
-   * @see legate::ExternalAllocation For important instructions regarding the mutability and
+   * @see legate::RawAllocation For important instructions regarding the mutability and
    * lifetime management of the attached allocation.
    *
    * @param shape Shape of the store. The call does not block on this shape.
@@ -274,7 +274,7 @@ class LEGATE_EXPORT Runtime {
   /**
    * @brief Creates a store by attaching to an existing allocation.
    *
-   * @see legate::ExternalAllocation For important instructions regarding the mutability and
+   * @see legate::RawAllocation For important instructions regarding the mutability and
    * lifetime management of the attached allocation.
    *
    * @param shape Shape of the store. The call does not block on this shape.
@@ -287,14 +287,14 @@ class LEGATE_EXPORT Runtime {
   [[nodiscard]] LogicalStore create_store(
     const Shape& shape,
     const Type& type,
-    const ExternalAllocation& allocation,
+    const RawAllocation& allocation,
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
   /**
    * @brief Creates a store by attaching to multiple existing allocations.
    *
    * External allocations must be read-only.
    *
-   * @see legate::ExternalAllocation For important instructions regarding the mutability and
+   * @see legate::RawAllocation For important instructions regarding the mutability and
    * lifetime management of the attached allocation.
    *
    * @param shape Shape of the store. The call can BLOCK on this shape for constructing a store
@@ -312,7 +312,7 @@ class LEGATE_EXPORT Runtime {
     const Shape& shape,
     const tuple<std::uint64_t>& tile_shape,
     const Type& type,
-    const std::vector<std::pair<ExternalAllocation, tuple<std::uint64_t>>>& allocations,
+    const std::vector<std::pair<RawAllocation, tuple<std::uint64_t>>>& allocations,
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
   /**

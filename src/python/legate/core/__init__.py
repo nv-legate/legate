@@ -9,11 +9,10 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as _np  # noqa: ICN001
 
-from ._lib.data.buffer import TaskLocalBuffer
-from ._lib.data.external_allocation import ExternalAllocation
-from ._lib.data.inline_allocation import InlineAllocation
+from ._lib.data.buffer import Buffer
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
 from ._lib.data.physical_store import PhysicalStore
+from ._lib.data.raw_allocation import RawAllocation
 from ._lib.data.scalar import Scalar
 from ._lib.data.shape import Shape
 from ._lib.geometry import Point, Rect
@@ -117,14 +116,13 @@ __all__ = (
     "LEGATE_MAX_DIM",
     "Annotation",
     "AutoTask",
+    "Buffer",
     "Constraint",
     "DimOrdering",
     "EmptyMachineError",
-    "ExternalAllocation",
     "FixedArrayType",
     "GlobalRedopID",
     "ImageComputationHint",
-    "InlineAllocation",
     "LegateDataInterface",
     "Library",
     "LocalRedopID",
@@ -137,6 +135,7 @@ __all__ = (
     "Point",
     "ProcessorRange",
     "ProcessorSlice",
+    "RawAllocation",
     "Rect",
     "ReductionOpKind",
     "ResourceConfig",

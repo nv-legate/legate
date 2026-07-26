@@ -7,12 +7,10 @@
 #include <legate/data/physical_store.h>
 
 #include <legate/data/detail/buffer.h>
-#include <legate/data/detail/inline_storage.h>
 #include <legate/data/detail/physical_store.h>
 #include <legate/data/logical_store.h>
 #include <legate/utilities/detail/dlpack/to_dlpack.h>
 #include <legate/utilities/detail/traced_exception.h>
-#include <legate/utilities/dispatch.h>
 
 #include <fmt/format.h>
 
@@ -28,39 +26,12 @@ PhysicalStore::PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl,
 {
 }
 
-namespace {
-
-class CreateBuffer {
- public:
-  template <Type::Code CODE, std::int32_t DIM>
-  [[nodiscard]] TaskLocalBuffer operator()(const PhysicalStore& store,
-                                           const Type& ty,
-                                           const Point& extents,
-                                           bool bind_buffer) const
-  {
-    const auto buf =
-      store.create_output_buffer<type_of_t<CODE>>(static_cast<NDPoint<DIM>>(extents), bind_buffer);
-
-    return TaskLocalBuffer{buf, ty};
-  }
-};
-
-}  // namespace
-
-TaskLocalBuffer PhysicalStore::create_output_buffer(const Point& extents, bool bind_buffer) const
+Buffer PhysicalStore::create_output_buffer(const Point& extents, bool bind_buffer) const
 {
-  return double_dispatch(static_cast<std::int32_t>(extents.dim()),
-                         type().code(),
-                         CreateBuffer{},
-                         *this,
-                         type(),
-                         extents,
-                         bind_buffer);
+  return Buffer{impl()->create_output_buffer(extents, bind_buffer)};
 }
 
-void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
-                              const Point& extents,
-                              bool check_type) const
+void PhysicalStore::bind_data(const Buffer& buffer, const Point& extents, bool check_type) const
 {
   if (check_type && (buffer.type() != type())) {
     throw detail::TracedException<std::invalid_argument>{
@@ -68,46 +39,10 @@ void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
                   buffer.type(),
                   type())};
   }
-  bind_inline_storage_(buffer.impl()->get_storage(), Rect::from_extents(extents));
+  impl()->bind_data(buffer.impl(), extents);
 }
 
-void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>&, const NDPoint<1>&) const
-{
-  if (!is_unbound_store()) {
-    throw detail::TracedException<std::invalid_argument>{
-      "Untyped data can only be bound to unbound stores"};
-  }
-  // Binding a byte buffer to a store of a wider element type requires reinterpreting the buffer's
-  // allocation with the store's field size, which the single-rank POC does not implement yet. Use
-  // the typed bind_data()/create_output_buffer() paths instead.
-  throw detail::TracedException<std::runtime_error>{
-    "bind_untyped_data is not supported in this single-rank POC; use the typed bind_data()"};
-}
-
-void PhysicalStore::bind_empty_data() const
-{
-  if (!is_unbound_store()) {
-    throw detail::TracedException<std::invalid_argument>{
-      "Empty data can only be bound to unbound stores"};
-  }
-  impl()->bind_empty_data();
-}
-
-InternalSharedPtr<detail::InlineStorage> PhysicalStore::create_output_buffer_storage_(
-  const Rect& bounds) const
-{
-  return impl()->create_output_buffer_storage(bounds);
-}
-
-void PhysicalStore::bind_inline_storage_(const InternalSharedPtr<detail::InlineStorage>& storage,
-                                         const Rect& extents) const
-{
-  if (!is_unbound_store()) {
-    throw detail::TracedException<std::invalid_argument>{
-      "Data can only be bound to unbound stores"};
-  }
-  impl()->bind_data(storage, extents);
-}
+void PhysicalStore::bind_empty_data() const { impl()->bind_empty_data(); }
 
 std::int32_t PhysicalStore::dim() const { return impl()->dim(); }
 
@@ -115,10 +50,14 @@ Type PhysicalStore::type() const { return Type{impl()->type()}; }
 
 Rect PhysicalStore::domain() const { return impl()->domain(); }
 
-InlineAllocation PhysicalStore::get_inline_allocation() const
+Buffer PhysicalStore::get_buffer() const
 {
-  return impl()->get_inline_allocation();
+  return Buffer{SharedPtr<detail::Buffer>{impl()->get_buffer()}};
 }
+
+void* PhysicalStore::base() const { return impl()->base(); }
+
+const Point& PhysicalStore::strides() const { return impl()->strides(); }
 
 bool PhysicalStore::is_readable() const { return impl()->is_readable(); }
 
@@ -156,9 +95,5 @@ void PhysicalStore::check_shape_dimension_(std::int32_t dim) const
 void PhysicalStore::check_write_access_() const { impl()->check_write_access(); }
 
 void PhysicalStore::check_reduction_access_() const { impl()->check_reduction_access(); }
-
-void* PhysicalStore::base_() const { return impl()->base(); }
-
-const Point& PhysicalStore::strides_() const { return impl()->strides(); }
 
 }  // namespace legate

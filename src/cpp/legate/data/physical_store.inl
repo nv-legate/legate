@@ -173,16 +173,13 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const NDRect<DIM>&
 }
 
 template <typename T, std::int32_t DIM>
-Buffer<T, DIM> PhysicalStore::create_output_buffer(const NDPoint<DIM>& extents,
-                                                   bool bind_buffer) const
+NDBuffer<T, DIM> PhysicalStore::create_output_buffer(const NDPoint<DIM>& extents,
+                                                     bool bind_buffer) const
 {
-  const auto bounds = NDRect<DIM>{NDPoint<DIM>::zeroes(), extents - NDPoint<DIM>::ones()};
-  auto buffer       = Buffer<T, DIM>{create_output_buffer_storage_(Rect{bounds}), bounds};
-
-  if (bind_buffer) {
-    bind_inline_storage_(buffer.get_storage(), Rect{bounds});
-  }
-  return buffer;
+  // Reuse the type-erased path, which attaches the store's own type to the buffer. `T` is trusted
+  // to match the store's element layout, so wrap the result without re-validating the type.
+  return NDBuffer<T, DIM>{create_output_buffer(Point{extents}, bind_buffer),
+                          typename NDBuffer<T, DIM>::InitTag{}};
 }
 
 template <typename TYPE_CODE>
@@ -213,11 +210,10 @@ VAL PhysicalStore::scalar() const
 }
 
 template <typename T, std::int32_t DIM>
-void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const NDPoint<DIM>& extents) const
+void PhysicalStore::bind_data(NDBuffer<T, DIM>& buffer, const NDPoint<DIM>& extents) const
 {
-  const auto bounds = NDRect<DIM>{NDPoint<DIM>::zeroes(), extents - NDPoint<DIM>::ones()};
-
-  bind_inline_storage_(buffer.get_storage(), Rect{bounds});
+  // The buffer's own domain describes the allocation layout; the store may span a smaller domain.
+  bind_data(buffer.buffer(), Point{extents});
 }
 
 template <typename T>
@@ -238,17 +234,17 @@ ACC PhysicalStore::create_accessor_(const NDRect<DIM>& bounds, bool validate_typ
   static_cast<void>(validate_type);
 
   // A 0-D store viewed as a DIM-D store (DIM == 1, per check_accessor_dimension_) holds its single
-  // element at the origin, so any stride addresses it; use a DIM-entry zero point since strides_()
+  // element at the origin, so any stride addresses it; use a DIM-entry zero point since strides()
   // has no entries to convert. Otherwise the store's own element strides apply.
-  const Point elem_strides = dim() == 0 ? Point::zeroes(DIM) : strides_();
+  const Point elem_strides = dim() == 0 ? Point::zeroes(DIM) : strides();
 
   if (const auto field_size = type().size(); field_size != sizeof(T)) {
     NDPoint<DIM> strides =
       elem_strides * static_cast<typename NDPoint<DIM>::value_type>(field_size / sizeof(T));
 
-    return ACC{static_cast<T*>(base_()), std::move(strides)};
+    return ACC{static_cast<T*>(base()), std::move(strides)};
   }
-  return ACC{static_cast<T*>(base_()), elem_strides};
+  return ACC{static_cast<T*>(base()), elem_strides};
 }
 
 inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }

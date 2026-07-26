@@ -6,7 +6,7 @@
 
 #include <legate/utilities/detail/dlpack/from_dlpack.h>
 
-#include <legate/data/external_allocation.h>
+#include <legate/data/raw_allocation.h>
 #include <legate/data/shape.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/runtime.h>
@@ -194,9 +194,9 @@ namespace {
                 fmt::join(strides, ", "))};
 }
 
-[[nodiscard]] legate::ExternalAllocation make_external_alloc(const DLTensor& tensor,
-                                                             bool read_only,
-                                                             std::function<void(void*)> deleter)
+[[nodiscard]] legate::RawAllocation make_external_alloc(const DLTensor& tensor,
+                                                        bool read_only,
+                                                        std::function<void(void*)> deleter)
 {
   if (tensor.strides && !is_tensor_contiguous(tensor)) {
     throw TracedException<std::invalid_argument>{
@@ -211,17 +211,17 @@ namespace {
   switch (target) {
     case mapping::StoreTarget::SYSMEM: [[fallthrough]];
     case mapping::StoreTarget::SOCKETMEM:
-      return legate::ExternalAllocation::create_sysmem(ptr, size, read_only, std::move(deleter));
+      return legate::RawAllocation::create_sysmem(ptr, size, read_only, std::move(deleter));
     case mapping::StoreTarget::FBMEM:
       if (device.device_id < 0) {
         throw TracedException<std::out_of_range>{fmt::format(
           "DLPack tensor device_id {} is negative; expected a non-negative CUDA device index",
           device.device_id)};
       }
-      return legate::ExternalAllocation::create_fbmem(
+      return legate::RawAllocation::create_fbmem(
         static_cast<std::uint32_t>(device.device_id), ptr, size, read_only, std::move(deleter));
     case mapping::StoreTarget::ZCMEM:
-      return legate::ExternalAllocation::create_zcmem(ptr, size, read_only, std::move(deleter));
+      return legate::RawAllocation::create_zcmem(ptr, size, read_only, std::move(deleter));
   }
   LEGATE_ABORT("Unhandled store target ", target);
 }
@@ -262,8 +262,8 @@ legate::LogicalStore from_dlpack(DLManagedTensorVersioned** dlm_tensor)
   auto uniq = std::unique_ptr<DLManagedTensorVersioned, std::function<void(void*)>>{
     *dlm_tensor, [tptr = *dlm_tensor](void*) {
       // We ignore the input argument here because this deleter function is also used as the
-      // ExternalAllocation deleter. So for this unique_ptr the argument would be the original
-      // DLManagedTensorVersioned, but for ExternalAllocation it would be
+      // RawAllocation deleter. So for this unique_ptr the argument would be the original
+      // DLManagedTensorVersioned, but for RawAllocation it would be
       // dlm_tensor->dl_tensor.data.
       if (tptr->deleter) {
         tptr->deleter(tptr);
@@ -299,8 +299,8 @@ legate::LogicalStore from_dlpack(DLManagedTensor** dlm_tensor)
   auto uniq = std::unique_ptr<DLManagedTensor, std::function<void(void*)>>{
     *dlm_tensor, [tptr = *dlm_tensor](void*) {
       // We ignore the input argument here because this deleter function is also used as the
-      // ExternalAllocation deleter. So for this unique_ptr the argument would be the original
-      // DLManagedTensor, but for ExternalAllocation it would be dlm_tensor->dl_tensor.data.
+      // RawAllocation deleter. So for this unique_ptr the argument would be the original
+      // DLManagedTensor, but for RawAllocation it would be dlm_tensor->dl_tensor.data.
       if (tptr->deleter) {
         tptr->deleter(tptr);
       }
@@ -313,8 +313,8 @@ legate::LogicalStore from_dlpack(DLManagedTensor** dlm_tensor)
   return ret;
 }
 
-legate::ExternalAllocation make_external_alloc_from_dlpack(DLManagedTensorVersioned** dlm_tensor,
-                                                           std::optional<bool> read_only)
+legate::RawAllocation make_external_alloc_from_dlpack(DLManagedTensorVersioned** dlm_tensor,
+                                                      std::optional<bool> read_only)
 {
   if (!dlm_tensor) {
     throw TracedException<std::invalid_argument>{
@@ -328,8 +328,8 @@ legate::ExternalAllocation make_external_alloc_from_dlpack(DLManagedTensorVersio
   auto uniq = std::unique_ptr<DLManagedTensorVersioned, std::function<void(void*)>>{
     *dlm_tensor, [tptr = *dlm_tensor](void*) {
       // We ignore the input argument here because this deleter function is also used as the
-      // ExternalAllocation deleter. So for this unique_ptr the argument would be the original
-      // DLManagedTensorVersioned, but for ExternalAllocation it would be
+      // RawAllocation deleter. So for this unique_ptr the argument would be the original
+      // DLManagedTensorVersioned, but for RawAllocation it would be
       // dlm_tensor->dl_tensor.data.
       if (tptr->deleter) {
         tptr->deleter(tptr);
@@ -353,8 +353,8 @@ legate::ExternalAllocation make_external_alloc_from_dlpack(DLManagedTensorVersio
   return ret;
 }
 
-legate::ExternalAllocation make_external_alloc_from_dlpack(DLManagedTensor** dlm_tensor,
-                                                           std::optional<bool> read_only)
+legate::RawAllocation make_external_alloc_from_dlpack(DLManagedTensor** dlm_tensor,
+                                                      std::optional<bool> read_only)
 {
   if (!dlm_tensor) {
     throw TracedException<std::invalid_argument>{"DLManagedTensor** argument must not be NULL"};
@@ -367,8 +367,8 @@ legate::ExternalAllocation make_external_alloc_from_dlpack(DLManagedTensor** dlm
   auto uniq = std::unique_ptr<DLManagedTensor, std::function<void(void*)>>{
     *dlm_tensor, [tptr = *dlm_tensor](void*) {
       // We ignore the input argument here because this deleter function is also used as the
-      // ExternalAllocation deleter. So for this unique_ptr the argument would be the original
-      // DLManagedTensor, but for ExternalAllocation it would be dlm_tensor->dl_tensor.data.
+      // RawAllocation deleter. So for this unique_ptr the argument would be the original
+      // DLManagedTensor, but for RawAllocation it would be dlm_tensor->dl_tensor.data.
       if (tptr->deleter) {
         tptr->deleter(tptr);
       }

@@ -356,7 +356,7 @@ Point compute_color(const SymbolicPoint& store_projection, const Point& task_ind
 // coordinate-origin base pointer, element strides, and domain) that a `PhysicalStore` keeps. This
 // is where the storage-to-store translation happens, once, at store-creation time, so neither the
 // physical store nor the accessors need to translate again.
-[[nodiscard]] PhysicalStoreLayout compute_store_layout(const InlineStorage& storage,
+[[nodiscard]] PhysicalStoreLayout compute_store_layout(const Buffer& storage,
                                                        const TransformStack& transform,
                                                        std::uint32_t field_size,
                                                        const Rect& storage_subdomain)
@@ -398,13 +398,13 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
 
   auto inverted = partition->invert(partition, transform_);
 
-  auto&& [allocation, subdomain, subsumed] = get_storage()->map(
+  auto&& [buffer, subdomain, subsumed] = get_storage()->map(
     domain_, inverted, color, machine.preferred_store_target(), is_read, transformed(), requests);
 
-  auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
+  auto layout = compute_store_layout(*buffer, *transform_, type()->size(), subdomain);
 
   return {make_internal_shared<PhysicalStore>(
-            type(), StorePermission::READ_WRITE, std::move(allocation), std::move(layout)),
+            StorePermission::READ_WRITE, std::move(buffer), std::move(layout)),
           subsumed};
 }
 
@@ -422,20 +422,20 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
 
   auto inverted = partition->invert(partition, transform_);
 
-  auto&& [allocation, subdomain] = get_storage()->map_reduction(domain_,
-                                                                inverted,
-                                                                color,
-                                                                machine.preferred_store_target(),
-                                                                launch_domain.dim() != 0,
-                                                                type_,
-                                                                op_kind,
-                                                                store_has_identity,
-                                                                requests);
+  auto&& [buffer, subdomain] = get_storage()->map_reduction(domain_,
+                                                            inverted,
+                                                            color,
+                                                            machine.preferred_store_target(),
+                                                            launch_domain.dim() != 0,
+                                                            type_,
+                                                            op_kind,
+                                                            store_has_identity,
+                                                            requests);
 
-  auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
+  auto layout = compute_store_layout(*buffer, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
-    type(), StorePermission::REDUCE, std::move(allocation), std::move(layout));
+    StorePermission::REDUCE, std::move(buffer), std::move(layout));
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
@@ -448,16 +448,10 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
     static_cast<std::int32_t>(dim()), type(), target, self);
 }
 
-void LogicalStore::bind_buffer(InternalSharedPtr<InlineStorage> storage, const Rect& domain)
+void LogicalStore::bind_buffer(const InternalSharedPtr<Buffer>& storage, const Rect& domain)
 {
-  get_storage()->bind(std::move(storage), domain);
+  get_storage()->bind(storage, domain);
   domain_ = domain;
-}
-
-void LogicalStore::finalize_unbound()
-{
-  get_storage()->finalize_unbound();
-  domain_ = get_storage()->domain();
 }
 
 void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partition>& partition,
@@ -579,12 +573,13 @@ void LogicalStore::finalize_unbound_partitioned(const InternalSharedPtr<Partitio
     domains[r] = Rect{std::move(lo), std::move(hi)};
   }
 
-  const auto my_global_domain = domains[my_node];
+  auto my_global_domain = domains[my_node];
 
   opaque->fill(std::move(colors), std::move(domains));
+  set_key_partition(partition);
   get_storage()->finalize_unbound_partitioned(
-    std::move(global_extents), my_global_domain, partition);
-  domain_ = Rect::from_extents(shape()->extents());
+    std::move(global_extents), std::move(my_global_domain), partition);
+  domain_ = get_storage()->domain();
 }
 
 void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partition)
@@ -596,7 +591,7 @@ void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partiti
   const auto color  = new_key_partition->compute_color(Runtime::get_runtime().node_id());
   const auto target = get_storage()->target();
 
-  auto&& [new_inline_storage, mapped_domain, storage_created] =
+  auto&& [mapped_buffer, mapped_domain, storage_created] =
     get_storage()->map(domain_,
                        new_key_partition,
                        color,
@@ -612,12 +607,12 @@ void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partiti
   requests.perform_data_sync();
   requests.perform_copy_ins(variant_code);
 
-  get_storage()->set_inline_storage(new_inline_storage);
+  get_storage()->set_backing_buffer(mapped_buffer);
   set_key_partition(new_key_partition);
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
-  std::optional<legate::mapping::StoreTarget> target, bool)
+  std::optional<legate::mapping::StoreTarget> target)
 {
   auto&& storage = get_storage();
 
@@ -628,22 +623,22 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
 
   DataMovementRequests requests{};
 
-  auto&& [allocation, subdomain, _] = storage->map(domain_,
-                                                   create_no_partition(),
-                                                   {},
-                                                   effective_target,
-                                                   /*is_read=*/true,
-                                                   /*is_transformed=*/false,
-                                                   &requests);
+  auto&& [buffer, subdomain, _] = storage->map(domain_,
+                                               create_no_partition(),
+                                               {},
+                                               effective_target,
+                                               /*is_read=*/true,
+                                               /*is_transformed=*/false,
+                                               &requests);
 
   requests.perform_remap_copy_ins(VariantCode::CPU);
   requests.perform_data_sync();
   requests.perform_copy_ins(VariantCode::CPU);
 
-  auto layout = compute_store_layout(*allocation, *transform_, type()->size(), subdomain);
+  auto layout = compute_store_layout(*buffer, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
-    type(), StorePermission::READ_WRITE, std::move(allocation), std::move(layout));
+    StorePermission::READ_WRITE, std::move(buffer), std::move(layout));
 }
 
 // Just because all the member functions used are const, doesn't mean this function

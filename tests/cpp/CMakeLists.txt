@@ -195,11 +195,10 @@ set(
   unit/registration.cc
   unit/runtime.cc
   unit/scope.cc
-  unit/scoped_allocator.cc
   unit/shape.cc
   unit/timing.cc
   unit/buffer/typed_buffer.cc
-  unit/buffer/task_local_buffer.cc
+  unit/buffer/buffer.cc
   unit/logical_store/broadcast.cc
   unit/logical_store/create_store.cc
   unit/logical_store/equal_storage.cc
@@ -217,7 +216,7 @@ set(
   unit/machine/local_machine.cc
   unit/partition/nopartition.cc
   unit/partition/tiling.cc
-  unit/physical_store/inline_allocation.cc
+  unit/physical_store/raw_allocation.cc
   unit/physical_store/inline_storage_gpu.cc
   unit/physical_store/read_accessor.cc
   unit/physical_store/read_write_accessor.cc

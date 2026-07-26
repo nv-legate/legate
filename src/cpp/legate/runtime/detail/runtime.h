@@ -47,7 +47,7 @@ namespace legate {
 class TaskInfo;
 class VariantInfo;
 struct ResourceConfig;
-class ExternalAllocation;
+class RawAllocation;
 class ParallelPolicy;
 
 }  // namespace legate
@@ -146,7 +146,7 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
-    const InternalSharedPtr<ExternalAllocation>& allocation,
+    const InternalSharedPtr<RawAllocation>& allocation,
     const InternalSharedPtr<mapping::detail::DimOrdering>& ordering) const;
   using IndexAttachResult =
     std::pair<InternalSharedPtr<LogicalStore>, InternalSharedPtr<LogicalStorePartition>>;
@@ -154,7 +154,7 @@ class Runtime {
     const InternalSharedPtr<Shape>& shape,
     const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
     InternalSharedPtr<Type> type,
-    Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> allocations,
+    Span<const std::pair<legate::RawAllocation, tuple<std::uint64_t>>> allocations,
     const InternalSharedPtr<mapping::detail::DimOrdering>& ordering);
 
  private:

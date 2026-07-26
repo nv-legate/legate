@@ -19,8 +19,6 @@ inline Timing::Timing(std::uint64_t unique_id,
 
 inline Operation::Kind Timing::kind() const { return Kind::TIMING; }
 
-inline bool Timing::needs_flush() const { return false; }
-
 inline bool Timing::needs_partitioning() const { return false; }
 
 }  // namespace legate::detail

@@ -9,8 +9,8 @@
 #include <legate/comm/coll.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/cuda_util.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/data/detail/copy_util.h>
-#include <legate/data/detail/inline_storage.h>
 #include <legate/generated/fatbin/reduction_request_fatbin.h>
 #include <legate/partitioning/detail/partition/tiling.h>
 #include <legate/redop/base.h>

@@ -144,13 +144,12 @@ LogicalStore Runtime::create_store(const Shape& shape,
                                    const mapping::DimOrdering& ordering)
 {
   const auto size = shape.volume() * type.size();
-  return create_store(
-    shape, type, ExternalAllocation::create_sysmem(buffer, size, read_only), ordering);
+  return create_store(shape, type, RawAllocation::create_sysmem(buffer, size, read_only), ordering);
 }
 
 LogicalStore Runtime::create_store(const Shape& shape,
                                    const Type& type,
-                                   const ExternalAllocation& allocation,
+                                   const RawAllocation& allocation,
                                    const mapping::DimOrdering& ordering)
 {
   return LogicalStore{
@@ -161,7 +160,7 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
   const Shape& shape,
   const tuple<std::uint64_t>& tile_shape,
   const Type& type,
-  const std::vector<std::pair<ExternalAllocation, tuple<std::uint64_t>>>& allocations,
+  const std::vector<std::pair<RawAllocation, tuple<std::uint64_t>>>& allocations,
   const mapping::DimOrdering& ordering)
 {
   auto [store, partition] =

@@ -12,7 +12,7 @@ from cpython.buffer cimport (
     PyObject_GetBuffer,
 )
 from cpython.ref cimport Py_INCREF, PyObject
-from libc.stdint cimport uint32_t
+from libc.stdint cimport int32_t, int64_t, uint32_t, uintptr_t
 from libcpp cimport bool as cpp_bool
 from libcpp.memory cimport (
     make_unique as std_make_unique,
@@ -22,7 +22,10 @@ from libcpp.optional cimport (
     make_optional as std_make_optional,
     optional as std_optional,
 )
+from ..geometry.point cimport _Point
+from ..geometry.rect cimport _Rect
 from ..mapping.mapping cimport DimOrderingKind, StoreTarget
+from ..runtime.runtime cimport get_legate_runtime
 from ..utilities.detail.dlpack.dlpack cimport (
     _DLManagedTensor,
     _DLManagedTensorVersioned,
@@ -32,6 +35,66 @@ from ..utilities.detail.dlpack.from_dlpack cimport (
     _get_dlpack_tensor_from_object,
     _make_external_alloc_from_dlpack,
 )
+
+import math
+
+
+cdef dict compute_array_interface(
+    str typestr,
+    uint32_t field_size,
+    const _Rect& domain,
+    uintptr_t base,
+    const _Point& elem_strides,
+):
+    cdef int32_t ndim = domain.dim()
+    cdef int32_t i
+    cdef tuple shape
+    cdef tuple strides
+    cdef int64_t offset = 0
+    cdef _Point lo
+    cdef _Point hi
+    # Copy into a non-const local so it can be captured by the generator
+    # expressions below (Cython's closure scope cannot hold a const member).
+    cdef _Point strides_local = elem_strides
+
+    if ndim == 0:
+        shape = ()
+        strides = ()
+    else:
+        lo = domain.lo()
+        hi = domain.hi()
+        shape = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))
+        # The array interface reports byte strides, so scale the element
+        # strides by the field size.
+        strides = tuple(strides_local[i] * field_size for i in range(ndim))
+        # Resolve the data pointer to the domain's lower-bound element.
+        for i in range(ndim):
+            offset += strides_local[i] * lo[i]
+
+    cdef uintptr_t pointer = base + <uintptr_t>(offset * <int64_t>field_size)
+
+    if math.prod(shape) == 0:
+        # For some reason NumPy doesn't like a null pointer even when the array
+        # size is 0, so we use a fake nonzero pointer value. 1 is a good
+        # stand-in, because it will also map to the zero page
+        pointer = 1
+
+    cdef dict ret = {
+        "version": 3,
+        "shape": shape,
+        "typestr": typestr,
+        "data": (pointer, False),
+        "strides": strides,
+    }
+
+    cdef void *cu_stream = get_legate_runtime().get_cuda_stream()
+
+    if cu_stream != NULL:
+        # This entry is used by __cuda_array_interface__, and is ignored by
+        # numpy
+        ret["stream"] = int(<uintptr_t>cu_stream)
+
+    return ret
 
 
 cdef extern from * namespace "legate::detail":
@@ -71,7 +134,7 @@ cdef extern from * namespace "legate::detail":
       Py_buffer* buffer_{};
     };
 
-    legate::ExternalAllocation::Deleter get_python_buffer_deleter(
+    legate::RawAllocation::Deleter get_python_buffer_deleter(
       Py_buffer* buffer)
     {
         return PyBufferDeleter{buffer};
@@ -96,7 +159,7 @@ cdef extern from * namespace "legate::detail":
       PyObject* source_{};
     };
 
-    legate::ExternalAllocation::Deleter get_python_source_ref_deleter(
+    legate::RawAllocation::Deleter get_python_source_ref_deleter(
       PyObject* source)
     {
         return PySourceRefDeleter{source};
@@ -109,7 +172,7 @@ cdef extern from * namespace "legate::detail":
     cdef _Deleter get_python_buffer_deleter(Py_buffer*)
     cdef _Deleter get_python_source_ref_deleter(PyObject*)
 
-cdef _ExternalAllocation create_from_buffer(
+cdef _RawAllocation create_from_buffer(
     object obj, size_t size, bool read_only, DimOrderingKind order_type,
 ):
     cdef std_unique_ptr[Py_buffer] buffer = std_make_unique[Py_buffer]()
@@ -146,7 +209,7 @@ cdef _ExternalAllocation create_from_buffer(
         )
 
     cdef void* p_buf = buffer.get().buf
-    return _ExternalAllocation.create_sysmem(
+    return _RawAllocation.create_sysmem(
         p_buf,
         size,
         read_only,
@@ -156,7 +219,7 @@ cdef _ExternalAllocation create_from_buffer(
     )
 
 
-cdef _ExternalAllocation create_from_pointer(
+cdef _RawAllocation create_from_pointer(
     size_t ptr, size_t size, bool read_only, StoreTarget target,
     uint32_t device_id = 0,
     object source = None,
@@ -173,15 +236,15 @@ cdef _ExternalAllocation create_from_pointer(
         )
 
     if target == StoreTarget.SYSMEM or target == StoreTarget.SOCKETMEM:
-        return _ExternalAllocation.create_sysmem(
+        return _RawAllocation.create_sysmem(
             c_ptr, size, read_only, deleter
         )
     elif target == StoreTarget.FBMEM:
-        return _ExternalAllocation.create_fbmem(
+        return _RawAllocation.create_fbmem(
             device_id, c_ptr, size, read_only, deleter
         )
     elif target == StoreTarget.ZCMEM:
-        return _ExternalAllocation.create_zcmem(
+        return _RawAllocation.create_zcmem(
             c_ptr, size, read_only, deleter
         )
     else:
@@ -190,12 +253,12 @@ cdef _ExternalAllocation create_from_pointer(
         )
 
 
-cdef class ExternalAllocation:
+cdef class RawAllocation:
 
     @staticmethod
-    cdef ExternalAllocation from_handle(_ExternalAllocation handle):
-        cdef ExternalAllocation result = ExternalAllocation.__new__(
-            ExternalAllocation
+    cdef RawAllocation from_handle(_RawAllocation handle):
+        cdef RawAllocation result = RawAllocation.__new__(
+            RawAllocation
         )
         result._handle = handle
         return result
@@ -203,7 +266,7 @@ cdef class ExternalAllocation:
     @staticmethod
     def from_sysmem(
         size_t ptr, size_t size, bool read_only = True, object source = None,
-    ) -> ExternalAllocation:
+    ) -> RawAllocation:
         r"""
         Wrap a CPU (system) memory pointer.
 
@@ -218,7 +281,7 @@ cdef class ExternalAllocation:
         source : object, optional
             Python object owning the memory; prevents GC.
         """
-        return ExternalAllocation.from_handle(
+        return RawAllocation.from_handle(
             create_from_pointer(
                 ptr, size, read_only, StoreTarget.SYSMEM, 0, source
             )
@@ -231,7 +294,7 @@ cdef class ExternalAllocation:
         size_t size,
         bool read_only = True,
         object source = None,
-    ) -> ExternalAllocation:
+    ) -> RawAllocation:
         r"""
         Wrap a GPU framebuffer memory pointer.
 
@@ -248,7 +311,7 @@ cdef class ExternalAllocation:
         source : object, optional
             Python object owning the memory; prevents GC.
         """
-        return ExternalAllocation.from_handle(
+        return RawAllocation.from_handle(
             create_from_pointer(
                 ptr, size, read_only, StoreTarget.FBMEM, device_id, source
             )
@@ -257,7 +320,7 @@ cdef class ExternalAllocation:
     @staticmethod
     def from_zcmem(
         size_t ptr, size_t size, bool read_only = True, object source = None,
-    ) -> ExternalAllocation:
+    ) -> RawAllocation:
         r"""
         Wrap a pinned (zero-copy) memory pointer.
 
@@ -272,7 +335,7 @@ cdef class ExternalAllocation:
         source : object, optional
             Python object owning the memory; prevents GC.
         """
-        return ExternalAllocation.from_handle(
+        return RawAllocation.from_handle(
             create_from_pointer(
                 ptr, size, read_only, StoreTarget.ZCMEM, 0, source
             )
@@ -286,7 +349,7 @@ cdef class ExternalAllocation:
         object device = None,
         object copy = None,
         object read_only = None,
-    ) -> ExternalAllocation:
+    ) -> RawAllocation:
         r"""
         Wrap a DLPack-compatible object.
 
@@ -306,7 +369,7 @@ cdef class ExternalAllocation:
         )
         cdef _DLManagedTensorVersioned * ver_ptr
         cdef _DLManagedTensor * unver_ptr
-        cdef _ExternalAllocation handle
+        cdef _RawAllocation handle
         cdef std_optional[cpp_bool] ro_opt
         if read_only is not None:
             ro_opt = std_make_optional[cpp_bool](<cpp_bool>read_only)
@@ -319,7 +382,7 @@ cdef class ExternalAllocation:
                 unver_ptr = <_DLManagedTensor *>dl_tensor.tensor
                 handle = _make_external_alloc_from_dlpack(&unver_ptr, ro_opt)
 
-        return ExternalAllocation.from_handle(handle)
+        return RawAllocation.from_handle(handle)
 
     @property
     def read_only(self) -> bool:
@@ -328,3 +391,28 @@ cdef class ExternalAllocation:
     @property
     def size(self) -> int:
         return self._handle.size()
+
+    @property
+    def ptr(self) -> int:
+        r"""
+        Access the raw pointer to the start of the allocation.
+
+        :returns: The raw pointer to the allocation.
+        :rtype: int
+        """
+        return <uintptr_t>self._handle.ptr()
+
+    @property
+    def target(self) -> StoreTarget:
+        r"""
+        Return the kind of memory this allocation resides in.
+
+        :returns: The memory kind.
+        :rtype: StoreTarget
+        """
+        cdef StoreTarget ret
+
+        with nogil:
+            ret = self._handle.target()
+
+        return ret

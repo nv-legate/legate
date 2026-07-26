@@ -42,7 +42,7 @@ TEST_F(InlineStorageGpuUnit, GetPhysicalStoreFBMEM)
 
   const auto phys = store.get_physical_store(legate::mapping::StoreTarget::FBMEM);
 
-  ASSERT_NE(phys.get_inline_allocation().ptr, nullptr);
+  ASSERT_NE(phys.get_buffer().allocation().ptr(), nullptr);
 }
 
 TEST_F(InlineStorageGpuUnit, GetPhysicalStoreZCMEM)
@@ -56,7 +56,7 @@ TEST_F(InlineStorageGpuUnit, GetPhysicalStoreZCMEM)
 
   const auto phys = store.get_physical_store(legate::mapping::StoreTarget::ZCMEM);
 
-  ASSERT_NE(phys.get_inline_allocation().ptr, nullptr);
+  ASSERT_NE(phys.get_buffer().allocation().ptr(), nullptr);
 }
 
 }  // namespace test_inline_storage_gpu

@@ -52,7 +52,7 @@ def create_hdf5_file_task(
     is_scalar: bool,
 ) -> None:
     """Task to create an HDF5 file with a dataset (CPU-only)."""
-    data = np.asarray(data_store.get_inline_allocation())
+    data = np.asarray(data_store)
 
     if is_scalar:
         data = data.reshape(())
@@ -66,7 +66,7 @@ def create_hdf5_with_group_task(
     data_store: InputStore, filename: str, group_name: str, dataset_name: str
 ) -> None:
     """Task to create an HDF5 file with a group and dataset (CPU-only)."""
-    data = np.asarray(data_store.get_inline_allocation())
+    data = np.asarray(data_store)
     with h5py.File(filename, "w") as f:
         group = f.create_group(group_name)
         group.create_dataset(dataset_name, data=data)
@@ -77,7 +77,7 @@ def create_hdf5_virtual_dataset_task(
     data_store: InputStore, source_filename: str, virtual_filename: str
 ) -> None:
     """Task to create HDF5 files with a virtual dataset (CPU-only)."""
-    data = np.asarray(data_store.get_inline_allocation())
+    data = np.asarray(data_store)
     with h5py.File(source_filename, "w") as f:
         f.create_dataset("dataset", data=data)
     # Create virtual dataset

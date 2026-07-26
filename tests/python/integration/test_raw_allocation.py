@@ -12,7 +12,7 @@ import pytest
 
 from legate.core import (
     DimOrdering,
-    ExternalAllocation,
+    RawAllocation,
     TaskTarget,
     get_legate_runtime,
     types as ty,
@@ -33,7 +33,7 @@ def test_sysmem_single_tile() -> None:
     runtime = get_legate_runtime()
 
     buf = np.arange(10, dtype=np.float64)
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
 
@@ -54,7 +54,7 @@ def test_from_dlpack_single_tile() -> None:
     runtime = get_legate_runtime()
 
     buf = np.arange(10, dtype=np.float64)
-    alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+    alloc = RawAllocation.from_dlpack(buf, read_only=True)
 
     store, _ = runtime.create_store_from_tiles(
         dtype=ty.float64,
@@ -76,10 +76,10 @@ def test_sysmem_multi_tile() -> None:
     buf1 = np.full(10, val1, dtype=np.int64)
     buf2 = np.full(10, val2, dtype=np.int64)
 
-    alloc1 = ExternalAllocation.from_sysmem(
+    alloc1 = RawAllocation.from_sysmem(
         buf1.ctypes.data, buf1.nbytes, read_only=True, source=buf1
     )
-    alloc2 = ExternalAllocation.from_sysmem(
+    alloc2 = RawAllocation.from_sysmem(
         buf2.ctypes.data, buf2.nbytes, read_only=True, source=buf2
     )
 
@@ -104,8 +104,8 @@ def test_from_dlpack_multi_tile() -> None:
     tile_a = np.arange(10, dtype=np.float64)
     tile_b = np.arange(10, 20, dtype=np.float64)
 
-    alloc_a = ExternalAllocation.from_dlpack(tile_a, read_only=True)
-    alloc_b = ExternalAllocation.from_dlpack(tile_b, read_only=True)
+    alloc_a = RawAllocation.from_dlpack(tile_a, read_only=True)
+    alloc_b = RawAllocation.from_dlpack(tile_b, read_only=True)
 
     store, _ = runtime.create_store_from_tiles(
         dtype=ty.float64,
@@ -124,7 +124,7 @@ def test_create_store_from_tiles_with_explicit_ordering() -> None:
     runtime = get_legate_runtime()
 
     buf = np.arange(10, dtype=np.float64)
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
 
@@ -145,7 +145,7 @@ def test_create_store_from_tiles_rejects_bad_ordering() -> None:
     runtime = get_legate_runtime()
 
     buf = np.arange(10, dtype=np.float64)
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
 
@@ -172,10 +172,10 @@ def test_sum_over_tiles() -> None:
     buf1 = np.full(10, val1, dtype=np.float64)
     buf2 = np.full(10, val2, dtype=np.float64)
 
-    alloc1 = ExternalAllocation.from_sysmem(
+    alloc1 = RawAllocation.from_sysmem(
         buf1.ctypes.data, buf1.nbytes, read_only=True, source=buf1
     )
-    alloc2 = ExternalAllocation.from_sysmem(
+    alloc2 = RawAllocation.from_sysmem(
         buf2.ctypes.data, buf2.nbytes, read_only=True, source=buf2
     )
 
@@ -204,7 +204,7 @@ def test_detach_lifecycle() -> None:
     buf = np.arange(10, dtype=np.float64)
     buf_copy = buf.copy()
 
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
 
@@ -230,7 +230,7 @@ def test_source_outlives_alloc_wrapper() -> None:
     buf_copy = buf.copy()
     weak_buf = weakref.ref(buf)
 
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
     store, _ = runtime.create_store_from_tiles(
@@ -257,7 +257,7 @@ def test_not_read_only_rejected() -> None:
     runtime = get_legate_runtime()
     buf = np.zeros(10, dtype=np.int64)
 
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=False, source=buf
     )
 
@@ -275,10 +275,10 @@ def test_alloc_usable_after_throw() -> None:
     buf1 = np.zeros(10, dtype=np.int64)
     buf2 = np.zeros(10, dtype=np.int64)
 
-    alloc1 = ExternalAllocation.from_sysmem(
+    alloc1 = RawAllocation.from_sysmem(
         buf1.ctypes.data, buf1.nbytes, read_only=True, source=buf1
     )
-    alloc2 = ExternalAllocation.from_sysmem(
+    alloc2 = RawAllocation.from_sysmem(
         buf2.ctypes.data, buf2.nbytes, read_only=False, source=buf2
     )
 
@@ -300,7 +300,7 @@ def test_buffer_too_small() -> None:
     runtime = get_legate_runtime()
     buf = np.zeros(9, dtype=np.int64)
 
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
 
@@ -317,7 +317,7 @@ def test_duplicate_color() -> None:
     runtime = get_legate_runtime()
     buf = np.zeros(10, dtype=np.int64)
 
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
 
@@ -353,7 +353,7 @@ def test_from_dlpack_cupy_single_tile() -> None:
     runtime = get_legate_runtime()
 
     buf = cupy.arange(10, dtype=cupy.float64)
-    alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+    alloc = RawAllocation.from_dlpack(buf, read_only=True)
 
     store, _ = runtime.create_store_from_tiles(
         dtype=ty.float64,
@@ -381,7 +381,7 @@ def test_from_dlpack_torch_gpu() -> None:
     runtime = get_legate_runtime()
 
     buf = torch.arange(10, dtype=torch.float64, device="cuda:0")
-    alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+    alloc = RawAllocation.from_dlpack(buf, read_only=True)
 
     store, _ = runtime.create_store_from_tiles(
         dtype=ty.float64,
@@ -411,8 +411,8 @@ def test_from_dlpack_torch_multi_tile() -> None:
     tile_a = torch.arange(10, dtype=torch.float64, device="cuda:0")
     tile_b = torch.arange(10, 20, dtype=torch.float64, device="cuda:0")
 
-    alloc_a = ExternalAllocation.from_dlpack(tile_a, read_only=True)
-    alloc_b = ExternalAllocation.from_dlpack(tile_b, read_only=True)
+    alloc_a = RawAllocation.from_dlpack(tile_a, read_only=True)
+    alloc_b = RawAllocation.from_dlpack(tile_b, read_only=True)
 
     store, _ = runtime.create_store_from_tiles(
         dtype=ty.float64,
@@ -445,7 +445,7 @@ def test_multi_gpu_one_tile_per_gpu() -> None:
     for gpu_id in range(n_gpus):
         with cupy.cuda.Device(gpu_id):
             buf = cupy.full(10, float(gpu_id + 1), dtype=cupy.float64)
-            alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+            alloc = RawAllocation.from_dlpack(buf, read_only=True)
             allocs.append((alloc, (gpu_id,)))
 
     store, _ = runtime.create_store_from_tiles(
@@ -481,7 +481,7 @@ def test_multi_gpu_sum() -> None:
     for gpu_id in range(n_gpus):
         with cupy.cuda.Device(gpu_id):
             buf = cupy.full(10, float(gpu_id + 1), dtype=cupy.float64)
-            alloc = ExternalAllocation.from_dlpack(buf, read_only=True)
+            alloc = RawAllocation.from_dlpack(buf, read_only=True)
             allocs.append((alloc, (gpu_id,)))
 
     store, _ = runtime.create_store_from_tiles(
@@ -509,7 +509,7 @@ def test_multi_rank_one_tile_per_rank() -> None:
     val = float(node_id)
     buf = np.full(10, val, dtype=np.float64)
 
-    alloc = ExternalAllocation.from_sysmem(
+    alloc = RawAllocation.from_sysmem(
         buf.ctypes.data, buf.nbytes, read_only=True, source=buf
     )
 

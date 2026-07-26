@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <legate/data/detail/buffer.h>
 #include <legate/data/detail/copy_request.h>
-#include <legate/data/detail/inline_storage.h>
 #include <legate/data/detail/reduction_request.h>
 #include <legate/data/detail/remap_request.h>
 #include <legate/utilities/internal_shared_ptr.h>
@@ -60,14 +60,14 @@ class DataMovementRequests {
    *
    * @return The cached allocation, or `std::nullopt` if none has been recorded yet.
    */
-  [[nodiscard]] std::optional<InternalSharedPtr<InlineStorage>> find_mapped_alloc(
+  [[nodiscard]] std::optional<InternalSharedPtr<Buffer>> find_mapped_alloc(
     std::uint64_t storage_id) const;
-  void record_mapped_alloc(std::uint64_t storage_id, InternalSharedPtr<InlineStorage> alloc);
+  void record_mapped_alloc(std::uint64_t storage_id, InternalSharedPtr<Buffer> alloc);
 
   /**
    * @brief Looks up the redundant "working copy" of a storage created for the current task launch.
    *
-   * When a task runs on a different memory than a storage's active (canonical) `InlineStorage`, the
+   * When a task runs on a different memory than a storage's active (canonical) `Buffer`, the
    * task operates on a redundant copy on its own memory instead. This copy is shared across the
    * input and output mappings of the same store so that a single remap copy-in populates it and a
    * single remap copy-out merges it back.
@@ -76,9 +76,9 @@ class DataMovementRequests {
    *
    * @return The cached working copy, or `std::nullopt` if none has been recorded yet.
    */
-  [[nodiscard]] std::optional<InternalSharedPtr<InlineStorage>> find_working_copy(
+  [[nodiscard]] std::optional<InternalSharedPtr<Buffer>> find_working_copy(
     std::uint64_t storage_id) const;
-  void record_working_copy(std::uint64_t storage_id, InternalSharedPtr<InlineStorage> alloc);
+  void record_working_copy(std::uint64_t storage_id, InternalSharedPtr<Buffer> alloc);
 
   bool empty() const;
 
@@ -89,8 +89,8 @@ class DataMovementRequests {
   std::vector<CopyRequest> copy_outs_{};
   std::vector<RemapRequest> remap_copy_outs_{};
   std::vector<ReductionRequest> reductions_{};
-  std::unordered_map<std::uint64_t, InternalSharedPtr<InlineStorage>> mapped_allocs_{};
-  std::unordered_map<std::uint64_t, InternalSharedPtr<InlineStorage>> working_copies_{};
+  std::unordered_map<std::uint64_t, InternalSharedPtr<Buffer>> mapped_allocs_{};
+  std::unordered_map<std::uint64_t, InternalSharedPtr<Buffer>> working_copies_{};
 };
 
 }  // namespace legate::detail

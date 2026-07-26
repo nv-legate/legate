@@ -32,7 +32,7 @@ class TestStoreOps:
         store = runtime.create_store(dtype, shape)
         scalar = Scalar(val, dtype) if create else val
         runtime.issue_fill(store, scalar)
-        arr = np.asarray(store.get_physical_store().get_inline_allocation())
+        arr = np.asarray(store.get_physical_store())
         assert (arr == scalar).all()
         assert (arr == val).all()
 

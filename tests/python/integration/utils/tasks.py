@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 from legate.core import (
-    InlineAllocation,
     PhysicalStore,
     Scalar,
     VariantCode,
@@ -59,7 +58,7 @@ def asarray(alloc: ArrayConvertible) -> NDArray[Any]:
     return arr
 
 
-def numpy_or_cupy(alloc: InlineAllocation) -> ModuleType:
+def numpy_or_cupy(alloc: ArrayConvertible) -> ModuleType:
     try:
         np.asarray(alloc)
     except ValueError as exc:
@@ -75,16 +74,16 @@ def basic_task() -> None:
 
 @task(variants=tuple(VariantCode))
 def zeros_task(out: OutputStore) -> None:
-    lib = numpy_or_cupy(out.get_inline_allocation())
-    out_arr = lib.asarray(out.get_inline_allocation())
+    lib = numpy_or_cupy(out)
+    out_arr = lib.asarray(out)
     out_arr[:] = lib.zeros(out_arr.shape)
 
 
 def _copy_store_task(
     in_store: PhysicalStore, out_store: PhysicalStore
 ) -> None:
-    in_arr_np = asarray(in_store.get_inline_allocation())
-    out_arr_np = asarray(out_store.get_inline_allocation())
+    in_arr_np = asarray(in_store)
+    out_arr_np = asarray(out_store)
     out_arr_np[:] = in_arr_np[:]
 
 
@@ -104,8 +103,8 @@ def copy_store_task_no_constraints(
 
 @task(variants=tuple(VariantCode))
 def partition_to_store_task(partition: InputStore, out: OutputStore) -> None:
-    arr = asarray(partition.get_inline_allocation())
-    out_arr = asarray(out.get_inline_allocation())
+    arr = asarray(partition)
+    out_arr = asarray(out)
     out_arr[:] = out_arr + arr
 
 
@@ -113,7 +112,7 @@ def partition_to_store_task(partition: InputStore, out: OutputStore) -> None:
 def copy_store_with_empty_task(
     partition: InputStore, out: OutputStore
 ) -> None:
-    arr = asarray(partition.get_inline_allocation())
+    arr = asarray(partition)
     out_empty = (
         out.domain.hi[0] < out.domain.lo[0]
         or out.domain.hi[1] < out.domain.lo[1]
@@ -121,7 +120,7 @@ def copy_store_with_empty_task(
     if out_empty:
         return
 
-    out_arr = asarray(out.get_inline_allocation())
+    out_arr = asarray(out)
     if arr.shape != out_arr.shape:
         out_arr[:] = out_arr[:] + arr[: out_arr.shape[0], : out_arr.shape[1]]
     else:
@@ -134,9 +133,9 @@ def copy_store_with_empty_task(
 def mixed_sum_task(
     arg1: InputStore, arg2: InputStore, out: OutputStore
 ) -> None:
-    arr1_np = asarray(arg1.get_inline_allocation())
-    arr2_np = asarray(arg2.get_inline_allocation())
-    out_arr_np = asarray(out.get_inline_allocation())
+    arr1_np = asarray(arg1)
+    arr2_np = asarray(arg2)
+    out_arr_np = asarray(out)
     out_arr_np[:] = arr1_np + arr2_np
 
 
@@ -157,7 +156,7 @@ def fill_task(out: OutputStore, val: Scalar) -> None:
 def copy_np_array_task(
     out: OutputStore, np_arr: np.ndarray[Any, np.dtype[Any]]
 ) -> None:
-    out_arr = asarray(out.get_inline_allocation())
+    out_arr = asarray(out)
     try:
         out_arr[:] = np_arr[:]
     except ValueError as exc:
@@ -167,8 +166,8 @@ def copy_np_array_task(
 
 @task(variants=tuple(VariantCode))
 def array_sum_task(store: InputStore, out: ReductionStore[ADD]) -> None:
-    out_arr = asarray(out.get_inline_allocation())
-    store_arr = asarray(store.get_inline_allocation())
+    out_arr = asarray(out)
+    store_arr = asarray(store)
     out_arr[:] = store_arr.sum()
 
 
@@ -176,9 +175,9 @@ def array_sum_task(store: InputStore, out: ReductionStore[ADD]) -> None:
 def repeat_task(
     store: InputStore, out: OutputStore, repeats: tuple[int, ...]
 ) -> None:
-    lib = numpy_or_cupy(store.get_inline_allocation())
-    store_arr = lib.asarray(store.get_inline_allocation())
-    out_arr = lib.asarray(out.get_inline_allocation())
+    lib = numpy_or_cupy(store)
+    store_arr = lib.asarray(store)
+    out_arr = lib.asarray(out)
     for i in range(store_arr.ndim):
         store_arr = lib.repeat(store_arr, repeats[i], axis=i)
     out_arr[:] = store_arr
@@ -196,14 +195,14 @@ def basic_min_extents_task(
 
 
 def basic_image_task(func_store: InputStore, range_store: InputStore) -> None:
-    lib = numpy_or_cupy(func_store.get_inline_allocation())
+    lib = numpy_or_cupy(func_store)
 
-    buf = lib.asarray(func_store.get_inline_allocation())
+    buf = lib.asarray(func_store)
     try:
         func_arr = lib.frombuffer(buf, dtype=np.int64)
     except TypeError:
         func_arr = lib.frombuffer(buf.tobytes(), dtype="int64")
-    range_arr = lib.asarray(range_store.get_inline_allocation())
+    range_arr = lib.asarray(range_store)
     coords = tuple(
         func_arr[off :: range_store.ndim] for off in range(range_store.ndim)
     )
@@ -236,7 +235,7 @@ def basic_bloat_task(
 
 @task(variants=tuple(VariantCode))
 def fill_dlpack_task(store: OutputStore, val: int) -> None:
-    lib = numpy_or_cupy(store.get_inline_allocation())
+    lib = numpy_or_cupy(store)
     arr = lib.from_dlpack(store)
     arr.fill(val)
 
@@ -249,10 +248,10 @@ def sum_two_inputs_task(
     input1: InputStore, input2: InputStore, output: OutputStore
 ) -> None:
     """Task that takes two inputs and outputs their sum."""
-    lib = numpy_or_cupy(input1.get_inline_allocation())
+    lib = numpy_or_cupy(input1)
 
-    input1_arr = lib.asarray(input1.get_inline_allocation())
-    input2_arr = lib.asarray(input2.get_inline_allocation())
-    output_arr = lib.asarray(output.get_inline_allocation())
+    input1_arr = lib.asarray(input1)
+    input2_arr = lib.asarray(input2)
+    output_arr = lib.asarray(output)
 
     output_arr[:] = input1_arr + input2_arr

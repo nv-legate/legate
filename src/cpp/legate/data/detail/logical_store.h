@@ -160,7 +160,7 @@ class LogicalStore {
    * @param storage The inline storage produced by the task.
    * @param domain The domain the store should span over @p storage.
    */
-  void bind_buffer(InternalSharedPtr<InlineStorage> storage, const Rect& domain);
+  void bind_buffer(const InternalSharedPtr<Buffer>& storage, const Rect& domain);
 
   void finalize_unbound();
 
@@ -182,7 +182,7 @@ class LogicalStore {
                                     const Point& task_index);
 
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
-    std::optional<legate::mapping::StoreTarget> target, bool ignore_future_mutability);
+    std::optional<legate::mapping::StoreTarget> target);
 
   /**
    * @brief Gets the currently mapped `PhysicalStore` for this `LogicalStore`
@@ -196,9 +196,7 @@ class LogicalStore {
    */
   [[nodiscard]] const std::optional<InternalSharedPtr<PhysicalStore>>& get_cached_physical_store()
     const;
-  [[nodiscard]] bool is_mapped() const;
 
-  [[nodiscard]] bool needs_flush() const;
   void detach();
 
   [[nodiscard]] Restrictions compute_restrictions(bool is_output) const;

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/data/detail/inline_storage.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/geometry/point.h>
 #include <legate/geometry/rect.h>
 #include <legate/partitioning/detail/restriction.h>
@@ -41,7 +41,6 @@ class Type;
 class Shape;
 class Partition;
 class TransformStack;
-class ExternalAllocation;
 
 class Storage {
  public:
@@ -54,10 +53,12 @@ class Storage {
    * the storage is an inline storage.
    *
    * @param shape The shape of the storage.
-   * @param field_size The size of the field.
+   * @param type The type of the storage.
    * @param provenance The provenance of the storage.
    */
-  Storage(InternalSharedPtr<Shape> shape, std::uint32_t field_size, std::string_view provenance);
+  Storage(InternalSharedPtr<Shape> shape,
+          InternalSharedPtr<Type> type,
+          std::string_view provenance);
   /**
    * @brief Construct a Storage object initialized eagerly from an existing scalar.
    *
@@ -78,12 +79,12 @@ class Storage {
    *
    * @param shape The shape of the storage.
    * @param type The type of the storage.
-   * @param allocation The external allocation that holds the pointer backing the storage.
+   * @param buffer The buffer viewing the external allocation that backs the storage.
    * @param provenance The provenance of the storage.
    */
   Storage(InternalSharedPtr<Shape> shape,
-          std::uint32_t field_size,
-          InternalSharedPtr<ExternalAllocation> allocation,
+          InternalSharedPtr<Type> type,
+          InternalSharedPtr<Buffer> buffer,
           std::string_view provenance);
 
   Storage(Storage&&) noexcept            = default;
@@ -109,11 +110,8 @@ class Storage {
    */
   [[nodiscard]] bool equal(const Storage& other) const;
   [[nodiscard]] std::string_view provenance() const;
-  [[nodiscard]] bool is_mapped() const;
 
-  void set_bound(bool bound);
-
-  [[nodiscard]] std::tuple<InternalSharedPtr<InlineStorage>, Rect, bool> map(
+  [[nodiscard]] std::tuple<InternalSharedPtr<Buffer>, Rect, bool> map(
     const Rect& domain,
     const InternalSharedPtr<Partition>& partition,
     const Point& color,
@@ -121,7 +119,7 @@ class Storage {
     bool is_read,
     bool is_transformed,
     DataMovementRequests* requests);
-  [[nodiscard]] std::pair<InternalSharedPtr<InlineStorage>, Rect> map_reduction(
+  [[nodiscard]] std::pair<InternalSharedPtr<Buffer>, Rect> map_reduction(
     const Rect& domain,
     const InternalSharedPtr<Partition>& partition,
     const Point& color,
@@ -137,23 +135,28 @@ class Storage {
 
   [[nodiscard]] mapping::StoreTarget target() const;
 
-  void set_inline_storage(InternalSharedPtr<InlineStorage> storage_data);
+  /**
+   * @brief Replaces the storage's canonical backing with the given buffer.
+   *
+   * @param storage_data The buffer that becomes the canonical backing.
+   */
+  void set_backing_buffer(const InternalSharedPtr<Buffer>& storage_data);
 
   /**
-   * @brief Binds a previously unbound storage to a concrete inline storage and (zero-based) domain.
+   * @brief Binds a previously unbound storage to a concrete buffer and (zero-based) domain.
    *
    * Valid only when this storage is unbound. In single-rank execution the whole store is produced
    * at once, so this immediately finishes the binding: the shape becomes READY with extents derived
-   * from @p domain, its domain is set, its backing `InlineStorage` is @p storage_data, and it is
+   * from @p domain, its domain is set, its backing `Buffer` is @p storage_data, and it is
    * given a trivial (no-)partition. In multi-rank execution the rank only produced its own piece,
    * so this records the local piece but leaves the storage "pending" (still unbound); the global
    * shape and the (Opaque) key partition are set later by `finalize_unbound_partitioned` once every
    * rank has bound a buffer.
    *
-   * @param storage_data The inline storage produced by the task.
+   * @param storage_data The buffer produced by the task.
    * @param domain The zero-based domain (extents) of the produced piece.
    */
-  void bind(InternalSharedPtr<InlineStorage> storage_data, const Rect& domain);
+  void bind(const InternalSharedPtr<Buffer>& storage_data, const Rect& domain);
 
   void finalize_unbound();
 
@@ -164,11 +167,11 @@ class Storage {
    * whole-store domain, and installs the given (Opaque) key partition.
    *
    * @param global_extents      The stitched-together global extents of the store.
-   * @param local_global_domain This rank's piece expressed in global coordinates.
+   * @param shard_domain This rank's shard expressed in global coordinates.
    * @param key_partition       The completed Opaque partition describing all ranks' pieces.
    */
   void finalize_unbound_partitioned(Point global_extents,
-                                    const Rect& local_global_domain,
+                                    Rect shard_domain,
                                     InternalSharedPtr<Partition> key_partition);
 
   [[nodiscard]] Restrictions compute_restrictions() const;
@@ -183,10 +186,15 @@ class Storage {
   std::uint64_t storage_id_{};
   InternalSharedPtr<Shape> shape_{};
   Rect domain_{};
-  std::uint32_t field_size_{};
+  InternalSharedPtr<Type> type_{};
   std::string_view provenance_{};  // only relevant on the root Storage
 
-  InternalSharedPtr<InlineStorage> storage_data_{};
+  // The buffer directly backing this storage. Its domain coincides with `domain_` for a single-rank
+  // store, but for a multi-rank unbound store it is this rank's local (global-coordinate) piece,
+  // which is a sub-domain of `domain_`. Null until the storage is materialized (an unbound store
+  // has no backing until a buffer is bound; a lazily-created bound store has none until first
+  // written).
+  InternalSharedPtr<Buffer> buffer_{};
 
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
 };

@@ -73,18 +73,6 @@ class Operation {
   [[nodiscard]] virtual Kind kind() const = 0;
   [[nodiscard]] virtual std::string to_string(bool show_provenance) const;
 
-  /**
-   * @brief Whether the operation should immediately flush the scheduling window (regardless of
-   * size) when it is submitted.
-   *
-   * @return `true` if the scheduling window should be flushed, `false` otherwise.
-   *
-   * A potential reason for needing an immediate flush is that at least one argument to the
-   * operation is unbound. In this case, the operation should be scheduled as soon as possible
-   * to allow downstream tasks to block on its completion to learn the true size of the store.
-   */
-  [[nodiscard]] virtual bool needs_flush() const = 0;
-
   [[nodiscard]] virtual bool supports_replicated_write() const;
   /**
    * When an operation supports streaming it is treated specially inside a Scope that is Streaming.

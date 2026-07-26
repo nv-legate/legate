@@ -183,9 +183,7 @@ class TestAutoTask:
         auto_task.add_scalar_arg(Scalar(val, dtype))
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
-        out_arr_np = np.asarray(
-            out_store.get_physical_store().get_inline_allocation()
-        )
+        out_arr_np = np.asarray(out_store.get_physical_store())
         if val is None or isinstance(val, bytes):
             # if val is None, numpy complains that there is no operator-() for
             # NoneType for allclose. If val is bytes, then numpy complains that
@@ -210,8 +208,7 @@ class TestAutoTask:
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            arr_np,
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            arr_np, np.asarray(out_store.get_physical_store())
         )
 
     def test_mixed_input(self) -> None:
@@ -236,7 +233,7 @@ class TestAutoTask:
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
             arg1_np + arg2_np + out_np,
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store()),
         )
 
     @pytest.mark.parametrize(
@@ -258,7 +255,7 @@ class TestAutoTask:
             # TODO(yimoj) [issue 465]
             # this shouldn't be done, but it's allowed and works
             # so keeping it here instead of TestAutoTaskErrors for now
-            in_store.get_physical_store().get_inline_allocation()
+            in_store.get_physical_store()
 
         out_store = runtime.create_store(ty.int32, shape)
 
@@ -267,8 +264,8 @@ class TestAutoTask:
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            np.asarray(in_store.get_physical_store().get_inline_allocation()),
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(in_store.get_physical_store()),
+            np.asarray(out_store.get_physical_store()),
         )
 
     @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
@@ -382,8 +379,7 @@ class TestAutoTaskConstraints:
         runtime.issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
-            np.sum(in_arr),
+            np.asarray(out_store.get_physical_store()), np.sum(in_arr)
         )
 
     @pytest.mark.parametrize("shape", SHAPES, ids=str)

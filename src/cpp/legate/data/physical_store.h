@@ -10,8 +10,8 @@
 
 #include <legate/data/accessor.h>
 #include <legate/data/buffer.h>
-#include <legate/data/inline_allocation.h>
 #include <legate/data/logical_store.h>
+#include <legate/data/raw_allocation.h>
 #include <legate/geometry/nd_point.h>
 #include <legate/geometry/nd_rect.h>
 #include <legate/geometry/point.h>
@@ -515,101 +515,74 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] VAL scalar() const;
 
   /**
-   * @brief Creates a \ref Buffer of specified extents for the unbound store.
+   * @brief Creates an \ref NDBuffer of specified extents for the unbound store.
    *
-   * The returned \ref Buffer is always consistent with the mapping policy for the store. Can be
+   * The returned \ref NDBuffer is always consistent with the mapping policy for the store. Can be
    * invoked multiple times unless `bind_buffer` is true.
    *
-   * @param extents Extents of the \ref Buffer
+   * @param extents Extents of the \ref NDBuffer
    *
-   * @param bind_buffer If the value is `true`, the created \ref Buffer will be bound to the
+   * @param bind_buffer If the value is `true`, the created \ref NDBuffer will be bound to the
    * store upon return
+   *
+   * @return An \ref NDBuffer in which to write the output to.
+   */
+  template <typename T, std::int32_t DIM>
+  [[nodiscard]] NDBuffer<T, DIM> create_output_buffer(const NDPoint<DIM>& extents,
+                                                      bool bind_buffer = false) const;
+
+  /**
+   * @brief Creates a \ref Buffer of specified extents for the unbound store.
+   *
+   * The returned \ref Buffer is always consistent with the mapping policy for the
+   * store. Can be invoked multiple times unless `bind_buffer` is true.
+   *
+   * @param extents Extents of the \ref Buffer
+   * @param bind_buffer If the value is `true`, the created \ref Buffer will be bound to the
+   * store upon return.
    *
    * @return A \ref Buffer in which to write the output to.
    */
-  template <typename T, std::int32_t DIM>
-  [[nodiscard]] Buffer<T, DIM> create_output_buffer(const NDPoint<DIM>& extents,
-                                                    bool bind_buffer = false) const;
+  [[nodiscard]] Buffer create_output_buffer(const Point& extents, bool bind_buffer = false) const;
 
   /**
-   * @brief Creates a `TaskLocalBuffer` of specified extents for the unbound store.
+   * @brief Binds an \ref NDBuffer to the store.
    *
-   * The returned `TaskLocalBuffer` is always consistent with the mapping policy for the
-   * store. Can be invoked multiple times unless `bind_buffer` is true.
+   * Valid only when the store is unbound and has not yet been bound to another \ref
+   * NDBuffer. The \ref NDBuffer must be consistent with the mapping policy for the store.
+   * Recommend that the \ref NDBuffer be created by a `create_output_buffer()` call.
    *
-   * @param extents Extents of the `TaskLocalBuffer`
-   * @param bind_buffer If the value is `true`, the created `TaskLocalBuffer` will be bound to the
-   * store upon return.
+   * @param buffer \ref NDBuffer to bind to the store
    *
-   * @return A `TaskLocalBuffer` in which to write the output to.
+   * @param extents Extents of the \ref NDBuffer. Passing extents smaller than the actual extents
+   * of the \ref NDBuffer is legal; the runtime uses the passed extents as the extents of this
+   * store.
    */
-  [[nodiscard]] TaskLocalBuffer create_output_buffer(const Point& extents,
-                                                     bool bind_buffer = false) const;
+  template <typename T, std::int32_t DIM>
+  void bind_data(NDBuffer<T, DIM>& buffer, const NDPoint<DIM>& extents) const;
 
   /**
    * @brief Binds a \ref Buffer to the store.
    *
-   * Valid only when the store is unbound and has not yet been bound to another \ref
-   * Buffer. The \ref Buffer must be consistent with the mapping policy for the store.
-   * Recommend that the \ref Buffer be created by a `create_output_buffer()` call.
-   *
-   * @param buffer \ref Buffer to bind to the store
-   *
-   * @param extents Extents of the \ref Buffer. Passing extents smaller than the actual extents
-   * of the \ref Buffer is legal; the runtime uses the passed extents as the extents of this
-   * store.
-   */
-  template <typename T, std::int32_t DIM>
-  void bind_data(Buffer<T, DIM>& buffer, const NDPoint<DIM>& extents) const;
-
-  /**
-   * @brief Binds a `TaskLocalBuffer` to the store.
-   *
    * Valid only when the store is unbound and has not yet been bound to another
-   * `TaskLocalBuffer`. The `TaskLocalBuffer` must be consistent with the mapping policy for
-   * the store.  Recommend that the `TaskLocalBuffer` be created by a `create_output_buffer()`
+   * \ref Buffer. The \ref Buffer must be consistent with the mapping policy for
+   * the store.  Recommend that the \ref Buffer be created by a `create_output_buffer()`
    * call.
    *
-   * Passing `extents` that are smaller than the actual extents of the `TaskLocalBuffer` is
+   * Passing `extents` that are smaller than the actual extents of the \ref Buffer is
    * legal; the runtime uses the passed extents as the extents of this store.
    *
    * If `check_type` is `true`, then `buffer` must have the same type as the `PhysicalStore`.
    *
-   * @param buffer `TaskLocalBuffer` to bind to the store.
-   * @param extents Extents of the `TaskLocalBuffer`.
+   * @param buffer \ref Buffer to bind to the store.
+   * @param extents Extents of the \ref Buffer.
    * @param check_type Whether to check the type of the buffer against the type of this store
    * for validity.
    *
    * @throw std::invalid_argument If the type of `buffer` is not compatible with the type of
    * the store (only thrown if `check_type` is `true`).
    */
-  void bind_data(const TaskLocalBuffer& buffer,
-                 const Point& extents,
-                 bool check_type = false) const;
-
-  /**
-   * @brief Binds a 1D \ref Buffer of byte-size elements to the store in an untyped manner.
-   *
-   * Values in the \ref Buffer are reinterpreted based on the store's actual type. The \ref
-   * Buffer must have enough bytes to be aligned on the store's element boundary. For example,
-   * a 1D \ref Buffer of size 4 wouldn't be valid if the store had the int64 type, whereas it
-   * would be if the store's element type is int32.
-   *
-   * Like the typed counterpart (i.e., `bind_data()`), the operation is legal only when the store is
-   * unbound and has not yet been bound to another buffer. The memory in which the buffer is created
-   * must be the same as the mapping decision of this store.
-   *
-   * Can be used only with 1D unbound stores.
-   *
-   * @param buffer \ref Buffer to bind to the store
-   *
-   * @param extents Extents of the buffer. Passing extents smaller than the actual extents of the
-   * buffer is legal; the runtime uses the passed extents as the extents of this store. The size of
-   * the buffer must be at least as big as `extents * type().size()`.
-   *
-   * @snippet unit/physical_store/create_unbound_store.cc Bind an untyped buffer to an unbound store
-   */
-  void bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const NDPoint<1>& extents) const;
+  void bind_data(const Buffer& buffer, const Point& extents, bool check_type = false) const;
 
   /**
    * @brief Makes the unbound store empty.
@@ -655,11 +628,33 @@ class LEGATE_EXPORT PhysicalStore {
   [[nodiscard]] Rect domain() const;
 
   /**
-   * @brief Returns a raw pointer and strides to the allocation
+   * @brief Returns the \ref Buffer backing this `PhysicalStore`
    *
-   * @return An `InlineAllocation` object holding a raw pointer and strides
+   * @return The \ref Buffer backing the store.
+   *
+   * @throw std::invalid_argument If the store has not been bound to a buffer yet.
    */
-  [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  [[nodiscard]] Buffer get_buffer() const;
+
+  /**
+   * @brief Returns the address of the store's coordinate origin (the point `(0, ..., 0)`)
+   *
+   * Elements are addressed absolutely from here following `addr(p) = base() + type().size() *
+   * dot(p, strides())`. Any store transformation was folded into this pointer when the store was
+   * created.
+   *
+   * @return The base pointer of the store's affine layout
+   */
+  [[nodiscard]] void* base() const;
+
+  /**
+   * @brief Returns the per-dimension element strides of the store's affine layout
+   *
+   * The strides are in element units (not bytes) and have `dim()` entries.
+   *
+   * @return The element strides of the store's affine layout
+   */
+  [[nodiscard]] const Point& strides() const;
 
   /**
    * @brief Returns the kind of memory where this `PhysicalStore` resides
@@ -799,41 +794,6 @@ class LEGATE_EXPORT PhysicalStore {
    */
   template <typename ACC, typename T, std::int32_t DIM>
   [[nodiscard]] ACC create_reduction_accessor_(const NDRect<DIM>& bounds, bool validate_type) const;
-
-  /**
-   * @brief Returns the store's coordinate-origin base pointer and per-dimension element strides
-   * used to construct an accessor over the underlying storage.
-   *
-   * The base pointer is the address of the store's coordinate origin (the point `(0, ..., 0)`) and
-   * the strides are in element units over the store's dimensions. Any store transformation was
-   * folded in when the store was created, so no further translation is needed here.
-   *
-   * @return The base pointer and element strides.
-   */
-  [[nodiscard]] void* base_() const;
-
-  [[nodiscard]] const Point& strides_() const;
-
-  /**
-   * @brief Allocates an inline storage for an output buffer of this (unbound) store spanning
-   * `bounds`, on the store's mapped target memory.
-   *
-   * Kept out-of-line (and in the library) so the templated `create_output_buffer` does not need to
-   * touch `detail::InlineStorage` directly.
-   */
-  [[nodiscard]] InternalSharedPtr<detail::InlineStorage> create_output_buffer_storage_(
-    const Rect& bounds) const;
-
-  /**
-   * @brief Binds an inline storage (produced by the task as a buffer) to this unbound store.
-   *
-   * @param storage The inline storage to bind.
-   * @param extents The domain the store should span over `storage`.
-   *
-   * @throw std::invalid_argument If this store is not an unbound store.
-   */
-  void bind_inline_storage_(const InternalSharedPtr<detail::InlineStorage>& storage,
-                            const Rect& extents) const;
 
   SharedPtr<detail::PhysicalStore> impl_{};
   // This member exists purely to solve the temporary store problem. It is illegal for Physical

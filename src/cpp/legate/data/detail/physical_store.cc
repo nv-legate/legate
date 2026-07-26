@@ -6,74 +6,71 @@
 
 #include <legate/data/detail/physical_store.h>
 
+#include <legate/data/detail/buffer.h>
 #include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/raw_allocation.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 namespace legate::detail {
 
-InlineAllocation PhysicalStore::get_inline_allocation() const
+const InternalSharedPtr<Buffer>& PhysicalStore::get_buffer() const
 {
-  const auto field_size = type_->size();
-  auto* const ptr = static_cast<std::int8_t*>(base()) + (strides().dot(domain().lo()) * field_size);
-
-  std::vector<std::size_t> byte_strides;
-
-  byte_strides.reserve(strides().size());
-  for (auto&& stride : strides()) {
-    byte_strides.push_back(static_cast<std::size_t>(stride * field_size));
+  if (is_unbound_store()) {
+    throw detail::TracedException<std::invalid_argument>{
+      "The buffer of an unbound store cannot be retrieved"};
   }
-  return {static_cast<void*>(ptr), std::move(byte_strides), target()};
+  return buffer_;
 }
 
-InternalSharedPtr<InlineStorage> PhysicalStore::create_output_buffer_storage(
-  const Rect& bounds) const
+InternalSharedPtr<Buffer> PhysicalStore::create_output_buffer(const Point& extents,
+                                                              bool bind_buffer)
 {
-  return make_internal_shared<InlineStorage>(bounds, type_->size(), target());
+  auto buffer = Buffer::allocate(type(), Rect::from_extents(extents), target());
+
+  if (bind_buffer) {
+    bind_data(buffer, extents);
+  }
+
+  return buffer;
 }
 
-void PhysicalStore::bind_data(InternalSharedPtr<InlineStorage> storage, const Rect& domain)
+void PhysicalStore::bind_data(InternalSharedPtr<Buffer> buffer, const Point& extents)
 {
-  LEGATE_CHECK(unbound_);
-  // Update the originating logical store in place so downstream operations observe the produced
-  // data. This is the single-rank realization of the unbound-store "return" path.
-  originating_store_->bind_buffer(storage, domain);
+  if (!is_unbound_store()) {
+    throw detail::TracedException<std::invalid_argument>{"The store already has a bound buffer"};
+  }
+
+  auto store_domain = Rect::from_extents(extents);
+
+  originating_store_->bind_buffer(buffer, store_domain);
+
   // Unbound stores always have an identity transform (every transform op throws on an unbound
-  // store), so the store's affine layout is exactly the freshly bound storage's layout.
-  auto&& [base, strides] = storage->base_and_element_strides();
+  // store), so the store's affine layout is exactly the freshly bound buffer's layout.
+  auto&& [base, strides] = buffer->base_and_element_strides();
 
-  base_           = base;
-  strides_        = std::move(strides);
-  inline_storage_ = std::move(storage);
-  domain_         = domain;
-  unbound_        = false;
-  readable_       = true;
+  base_     = base;
+  strides_  = std::move(strides);
+  buffer_   = std::move(buffer);
+  domain_   = std::move(store_domain);
+  unbound_  = false;
+  readable_ = true;
 }
 
 void PhysicalStore::bind_empty_data()
 {
-  LEGATE_CHECK(unbound_);
+  auto empty_extents = Point::zeroes(dim());
+  auto buffer        = Buffer::allocate(type(), Rect::from_extents(empty_extents), target());
 
-  const auto ndim = dim_ == 0 ? std::int32_t{1} : dim_;
-  auto lo         = Point::zeroes(ndim);
-  auto hi         = Point::zeroes(ndim);
-
-  for (std::int32_t i = 0; i < ndim; ++i) {
-    lo[i] = 0;
-    hi[i] = -1;  // hi < lo => zero-volume (empty) domain
-  }
-
-  const Rect empty{std::move(lo), std::move(hi)};
-
-  bind_data(create_output_buffer_storage(empty), empty);
+  bind_data(std::move(buffer), empty_extents);
 }
 
 bool PhysicalStore::is_accessible(mapping::TaskTarget task_target) const

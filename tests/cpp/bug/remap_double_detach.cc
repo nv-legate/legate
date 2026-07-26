@@ -33,7 +33,7 @@ TEST_F(RemapDoubleDetach, Bug1)
     legate::Shape{buffer.size()}, legate::int64(), buffer.data(), /*read_only=*/false);
   // NOTE: We must manually detach from the attached memory before we exit the scope, which destroys
   // l_store, since we didn't provide a destruction callback. See the documentation of
-  // legate::ExternalAllocation for more details.
+  // legate::RawAllocation for more details.
   LEGATE_SCOPE_GUARD(l_store.detach());
 
   {

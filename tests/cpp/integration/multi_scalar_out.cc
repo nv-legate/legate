@@ -155,9 +155,9 @@ class CheckFn {
 
     EXPECT_EQ((store.read_accessor<T, DIM>()[shape.lo]), scalar.value<T>());
 
-    auto alloc = store.get_inline_allocation();
-
-    EXPECT_EQ(*static_cast<const T*>(alloc.ptr), scalar.value<T>());
+    // `base()` is the address of the store's coordinate origin, which coincides with the store's
+    // (zero-based) single element here.
+    EXPECT_EQ(*static_cast<const T*>(store.base()), scalar.value<T>());
   }
 };
 

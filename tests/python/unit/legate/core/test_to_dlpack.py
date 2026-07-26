@@ -29,6 +29,15 @@ def is_capsule_type(obj: Any) -> bool:
     return t.__module__ == "builtins" and t.__name__ == "PyCapsule"
 
 
+class _ArrayInterfaceOnly:
+    r"""Exposes only ``__array_interface__`` (and no ``__dlpack__``) so that
+    ``np.asarray()`` is forced to go through the array-interface path.
+    """
+
+    def __init__(self, obj: Any) -> None:
+        self.__array_interface__ = obj.__array_interface__
+
+
 def to_store_target(target: TaskTarget) -> StoreTarget:
     match target:
         case TaskTarget.CPU:
@@ -85,9 +94,9 @@ class TestToDLPack:
         store.fill(VALUE)
 
         phys = store.get_physical_store()
-        # Go through InlineAllocation so we ensure that asarray() isn't using
-        # __dlpack__()
-        alloc = phys.get_inline_allocation()
+        # Go through an array-interface-only view so that asarray() is not
+        # using __dlpack__()
+        alloc = _ArrayInterfaceOnly(phys)
         assert not hasattr(alloc, "__dlpack__")
         assert (np.asarray(alloc) == VALUE).all()
         x = np.from_dlpack(phys)
@@ -123,9 +132,9 @@ class TestToDLPack:
         assert (x == NEW_VALUE).all()
 
         phys = store.get_physical_store()
-        # Go through InlineAllocation so we ensure that asarray() isn't using
-        # __dlpack__()
-        alloc = phys.get_inline_allocation()
+        # Go through an array-interface-only view so that asarray() is not
+        # using __dlpack__()
+        alloc = _ArrayInterfaceOnly(phys)
         assert not hasattr(alloc, "__dlpack__")
         assert (np.asarray(alloc) == VALUE).all()
 
@@ -156,9 +165,9 @@ class TestToDLPack:
         assert (x == NEW_VALUE).all()
 
         phys = store.get_physical_store()
-        # Go through InlineAllocation so we ensure that asarray() isn't using
-        # __dlpack__()
-        alloc = phys.get_inline_allocation()
+        # Go through an array-interface-only view so that asarray() is not
+        # using __dlpack__()
+        alloc = _ArrayInterfaceOnly(phys)
         assert not hasattr(alloc, "__dlpack__")
         assert (np.asarray(alloc) == NEW_VALUE).all()
 

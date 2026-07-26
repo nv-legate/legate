@@ -16,12 +16,12 @@
 
 /**
  * @file
- * @brief Class definition for legate::ExternalAllocation
+ * @brief Class definition for legate::RawAllocation
  */
 
 namespace legate::detail {
 
-class ExternalAllocation;
+class RawAllocation;
 
 }  // namespace legate::detail
 
@@ -35,12 +35,12 @@ namespace legate {
 /**
  * @brief Descriptor for external allocations
  *
- * An `ExternalAllocation` is a handle to a memory allocation outside Legate's memory management.
- * `ExternalAllocation` objects are used when users want to create Legate stores from existing
+ * A `RawAllocation` is a handle to a memory allocation outside Legate's memory management.
+ * `RawAllocation` objects are used when users want to create Legate stores from existing
  * allocations external to Legate. (See two overloads of `Runtime::create_store()` that
- * take `ExternalAllocation`s.)
+ * take `RawAllocation`s.)
  *
- * `ExternalAllocation`s can be tagged either read-only or mutable.
+ * `RawAllocation`s can be tagged either read-only or mutable.
  *
  * - If the allocation is read-only, the calling code must not mutate the contents of the allocation
  *   until it is detached. Doing so will result in undefined behavior. Legate will not make any
@@ -66,14 +66,12 @@ namespace legate {
  * are not allowed to be created on null pointers. Each deleter is responsible for deallocating
  * only the allocation it is associated with and no other allocations.
  */
-class LEGATE_EXPORT ExternalAllocation {
+class LEGATE_EXPORT RawAllocation {
  public:
   /**
    * @brief Signature for user-supplied deletion function.
    */
   using Deleter = std::function<void(void*)>;
-
-  explicit ExternalAllocation(InternalSharedPtr<detail::ExternalAllocation>&& impl);
 
   /**
    * @brief Indicates if the allocation is read-only
@@ -117,11 +115,10 @@ class LEGATE_EXPORT ExternalAllocation {
    *
    * @throw std::invalid_argument If the `ptr` is null
    */
-  [[nodiscard]] static ExternalAllocation create_sysmem(
-    void* ptr,
-    std::size_t size,
-    bool read_only                 = true,
-    std::optional<Deleter> deleter = std::nullopt);
+  [[nodiscard]] static RawAllocation create_sysmem(void* ptr,
+                                                   std::size_t size,
+                                                   bool read_only                 = true,
+                                                   std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates a read-only external allocation for a system memory
@@ -136,8 +133,9 @@ class LEGATE_EXPORT ExternalAllocation {
    *
    * @throw std::invalid_argument If the `ptr` is null
    */
-  [[nodiscard]] static ExternalAllocation create_sysmem(
-    const void* ptr, std::size_t size, std::optional<Deleter> deleter = std::nullopt);
+  [[nodiscard]] static RawAllocation create_sysmem(const void* ptr,
+                                                   std::size_t size,
+                                                   std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates an external allocation for a zero-copy memory
@@ -154,11 +152,10 @@ class LEGATE_EXPORT ExternalAllocation {
    * @throw std::invalid_argument If the `ptr` is null
    * @throw std::runtime_error If Legate is not configured with CUDA support enabled
    */
-  [[nodiscard]] static ExternalAllocation create_zcmem(
-    void* ptr,
-    std::size_t size,
-    bool read_only                 = true,
-    std::optional<Deleter> deleter = std::nullopt);
+  [[nodiscard]] static RawAllocation create_zcmem(void* ptr,
+                                                  std::size_t size,
+                                                  bool read_only                 = true,
+                                                  std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates a read-only external allocation for a zero-copy memory
@@ -174,8 +171,9 @@ class LEGATE_EXPORT ExternalAllocation {
    * @throw std::invalid_argument If the `ptr` is null
    * @throw std::runtime_error If Legate is not configured with CUDA support enabled
    */
-  [[nodiscard]] static ExternalAllocation create_zcmem(
-    const void* ptr, std::size_t size, std::optional<Deleter> deleter = std::nullopt);
+  [[nodiscard]] static RawAllocation create_zcmem(const void* ptr,
+                                                  std::size_t size,
+                                                  std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates an external allocation for a framebuffer memory
@@ -194,12 +192,11 @@ class LEGATE_EXPORT ExternalAllocation {
    * @throw std::runtime_error If Legate is not configured with CUDA support enabled
    * @throw std::out_of_range If the local device ID is invalid
    */
-  [[nodiscard]] static ExternalAllocation create_fbmem(
-    std::uint32_t local_device_id,
-    void* ptr,
-    std::size_t size,
-    bool read_only                 = true,
-    std::optional<Deleter> deleter = std::nullopt);
+  [[nodiscard]] static RawAllocation create_fbmem(std::uint32_t local_device_id,
+                                                  void* ptr,
+                                                  std::size_t size,
+                                                  bool read_only                 = true,
+                                                  std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates a read-only external allocation for a framebuffer memory
@@ -217,27 +214,28 @@ class LEGATE_EXPORT ExternalAllocation {
    * @throw std::runtime_error If Legate is not configured with CUDA support enabled
    * @throw std::out_of_range If the local device ID is invalid
    */
-  [[nodiscard]] static ExternalAllocation create_fbmem(
-    std::uint32_t local_device_id,
-    const void* ptr,
-    std::size_t size,
-    std::optional<Deleter> deleter = std::nullopt);
+  [[nodiscard]] static RawAllocation create_fbmem(std::uint32_t local_device_id,
+                                                  const void* ptr,
+                                                  std::size_t size,
+                                                  std::optional<Deleter> deleter = std::nullopt);
 
-  [[nodiscard]] const SharedPtr<detail::ExternalAllocation>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::RawAllocation>& impl() const;
 
-  ExternalAllocation()                                               = default;
-  ExternalAllocation(const ExternalAllocation& other)                = default;
-  ExternalAllocation& operator=(const ExternalAllocation& other)     = default;
-  ExternalAllocation(ExternalAllocation&& other) noexcept            = default;
-  ExternalAllocation& operator=(ExternalAllocation&& other) noexcept = default;
-  ~ExternalAllocation() noexcept;
+  RawAllocation()                                          = default;
+  RawAllocation(const RawAllocation& other)                = default;
+  RawAllocation& operator=(const RawAllocation& other)     = default;
+  RawAllocation(RawAllocation&& other) noexcept            = default;
+  RawAllocation& operator=(RawAllocation&& other) noexcept = default;
+  ~RawAllocation() noexcept;
+
+  explicit RawAllocation(InternalSharedPtr<detail::RawAllocation>&& impl);
 
  private:
-  SharedPtr<detail::ExternalAllocation> impl_{};
+  SharedPtr<detail::RawAllocation> impl_{};
 };
 
 /** @} */
 
 }  // namespace legate
 
-#include <legate/data/external_allocation.inl>
+#include <legate/data/raw_allocation.inl>

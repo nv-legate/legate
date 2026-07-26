@@ -32,7 +32,7 @@ class TestLogicalStoreOperation:
             ((1, 2, 4), -2, (2,)),
             # TODO(yimoj) [issue 503]
             # Delinearize allows sizes [0,0] but SIGFPE when
-            # InlineAllocation is accessed.
+            # the store's array interface is accessed.
             # Fatal Python error: Floating point exception
             pytest.param(
                 (1, 0, 1),
@@ -290,9 +290,7 @@ class TestLogicalStoreOperationErrors:
         # DomainTransform&): Assertion `n <= LEGION_MAX_DIM' failed.
 
         # when max dim issue is fixed this assert should pass
-        assert (
-            store.get_physical_store().get_inline_allocation().shape == shape
-        )
+        assert np.asarray(store.get_physical_store()).shape == shape
 
     def test_delinearize_invalid_shape(self) -> None:
         runtime = get_legate_runtime()

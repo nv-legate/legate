@@ -234,7 +234,7 @@ TEST_F(InlineStorageUnit, Broadcast)
   }
 }
 
-TEST_F(InlineStorageUnit, ExternalAllocation)
+TEST_F(InlineStorageUnit, RawAllocation)
 {
   constexpr std::size_t SIZE = 7;
   const std::int64_t VAL     = 100;
@@ -244,7 +244,7 @@ TEST_F(InlineStorageUnit, ExternalAllocation)
     mem[i] = VAL + static_cast<std::int64_t>(i);
   }
 
-  const legate::ExternalAllocation ext_alloc = legate::ExternalAllocation::create_sysmem(
+  const legate::RawAllocation ext_alloc = legate::RawAllocation::create_sysmem(
     mem,
     SIZE * sizeof(std::int64_t),
     /*read_only=*/false,
@@ -273,11 +273,11 @@ TEST_F(InlineStorageUnit, RemapSysmemToSocketmem)
 
   const auto phys_sys = store.get_physical_store(legate::mapping::StoreTarget::SYSMEM);
 
-  ASSERT_NE(phys_sys.get_inline_allocation().ptr, nullptr);
+  ASSERT_NE(phys_sys.get_buffer().allocation().ptr(), nullptr);
 
   const auto phys_sock = store.get_physical_store(legate::mapping::StoreTarget::SOCKETMEM);
 
-  ASSERT_NE(phys_sock.get_inline_allocation().ptr, nullptr);
+  ASSERT_NE(phys_sock.get_buffer().allocation().ptr(), nullptr);
 
   const auto mdspan = phys_sock.span_read_accessor<std::int32_t, DIM>();
 
@@ -288,7 +288,7 @@ TEST_F(InlineStorageUnit, RemapSysmemToSocketmem)
   }
 }
 
-TEST_F(InlineStorageUnit, GetInlineAllocationTransformed)
+TEST_F(InlineStorageUnit, GetRawAllocationTransformed)
 {
   constexpr auto DIM   = 2;
   constexpr auto VALUE = std::int32_t{55};
@@ -300,10 +300,8 @@ TEST_F(InlineStorageUnit, GetInlineAllocationTransformed)
   auto promoted   = store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   const auto phys = promoted.get_physical_store();
 
-  const auto alloc = phys.get_inline_allocation();
-
-  ASSERT_NE(alloc.ptr, nullptr);
-  ASSERT_EQ(alloc.strides.size(), static_cast<std::size_t>(promoted.dim()));
+  ASSERT_NE(phys.get_buffer().allocation().ptr(), nullptr);
+  ASSERT_EQ(phys.strides().size(), static_cast<std::size_t>(promoted.dim()));
 }
 
 TEST_F(InlineStorageUnit, TransformedReadAccessor)

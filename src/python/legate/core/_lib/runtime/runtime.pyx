@@ -24,9 +24,9 @@ from contextlib import contextmanager
 from functools import wraps
 from typing import Any, Iterator
 
-from ..data.external_allocation cimport (
-    ExternalAllocation,
-    _ExternalAllocation,
+from ..data.raw_allocation cimport (
+    RawAllocation,
+    _RawAllocation,
     create_from_buffer,
 )
 from ..data.logical_store cimport (
@@ -704,7 +704,7 @@ cdef class Runtime(Unconstructable):
         undefined behavior in the presence of partial aliasing.
         """
         cdef _Shape cpp_shape = Shape.from_shape_like(shape)
-        cdef _ExternalAllocation alloc
+        cdef _RawAllocation alloc
 
         # Handle ordering parameter
         cdef _DimOrdering cpp_ordering
@@ -762,7 +762,7 @@ cdef class Runtime(Unconstructable):
         tile_shape : tuple[int, ...] | Collection[int]
             Shape of each tile.
 
-        allocations : list[tuple[ExternalAllocation, tuple[int, ...]]]
+        allocations : list[tuple[RawAllocation, tuple[int, ...]]]
             ``(allocation, color)`` pairs for tiles owned by this node.
             The runtime assembles them across nodes into the global store.
 
@@ -778,7 +778,7 @@ cdef class Runtime(Unconstructable):
         ------
         TypeError
             If ``ordering`` is not a ``DimOrdering`` or any item in
-            ``allocations`` is not an ``ExternalAllocation``
+            ``allocations`` is not an ``RawAllocation``
         ValueError
             If any of the external allocations is not read-only, or if
             ``shape``, ``tile_shape``, or a color is not a sequence of
@@ -796,21 +796,21 @@ cdef class Runtime(Unconstructable):
         else:
             cpp_ordering = (<DimOrdering>ordering)._handle
 
-        cdef std_vector[std_pair[_ExternalAllocation, _tuple[uint64_t]]] c_allocs
+        cdef std_vector[std_pair[_RawAllocation, _tuple[uint64_t]]] c_allocs
         cdef _tuple[uint64_t] cpp_color
-        cdef ExternalAllocation ea
+        cdef RawAllocation ea
 
         c_allocs.reserve(len(allocations))
         for item in allocations:
             alloc_obj, color = item
-            if not isinstance(alloc_obj, ExternalAllocation):
+            if not isinstance(alloc_obj, RawAllocation):
                 raise TypeError(
-                    "Each allocation must be an ExternalAllocation instance"
+                    "Each allocation must be an RawAllocation instance"
                 )
-            ea = <ExternalAllocation>alloc_obj
+            ea = <RawAllocation>alloc_obj
             cpp_color = uint64_tuple_from_iterable(color)
             c_allocs.push_back(
-                std_pair[_ExternalAllocation, _tuple[uint64_t]](
+                std_pair[_RawAllocation, _tuple[uint64_t]](
                     ea._handle, std_move(cpp_color)
                 )
             )

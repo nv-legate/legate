@@ -27,19 +27,15 @@ class BufferFn {
     switch (DIM) {
       case 1: {
         auto buffer = legate::create_buffer<T>(bytes, kind, alignment);
-        // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
-        EXPECT_EQ(buffer.memory_kind(),
-                  kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM
-                                                     : static_cast<legate::Memory::Kind>(kind));
+        // Both NO_MEMKIND (on a cpu) and SYSTEM_MEM map to the system memory target
+        EXPECT_EQ(buffer.buffer().target(), legate::mapping::StoreTarget::SYSMEM);
         break;
       }
       default: {
         auto buffer = legate::create_buffer<T, DIM>(
           legate::NDPoint<DIM>{static_cast<legate::coord_t>(bytes)}, kind, alignment);
-        // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
-        EXPECT_EQ(buffer.memory_kind(),
-                  kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM
-                                                     : static_cast<legate::Memory::Kind>(kind));
+        // Both NO_MEMKIND (on a cpu) and SYSTEM_MEM map to the system memory target
+        EXPECT_EQ(buffer.buffer().target(), legate::mapping::StoreTarget::SYSMEM);
         break;
       }
     }

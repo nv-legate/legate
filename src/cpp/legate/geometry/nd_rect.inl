@@ -230,6 +230,12 @@ LEGATE_HOST_DEVICE typename NDRect<DIM>::Iterable NDRect<DIM>::iterate(bool fort
 }
 
 template <int DIM>
+/*static*/ NDRect<DIM> NDRect<DIM>::from_extents(const NDPoint<DIM>& extents)
+{
+  return {NDPoint<DIM>::zeroes(), extents - NDPoint<DIM>::ones()};
+}
+
+template <int DIM>
 LEGATE_HOST_DEVICE bool operator==(const NDRect<DIM>& lhs, const NDRect<DIM>& rhs)
 {
   return lhs.lo == rhs.lo && lhs.hi == rhs.hi;

@@ -264,7 +264,7 @@ TEST_F(Attach, Negative)
     EXPECT_THROW(
       (void)runtime->create_store(SHAPE_1D(),
                                   legate::int64(),
-                                  legate::ExternalAllocation::create_sysmem(
+                                  legate::RawAllocation::create_sysmem(
                                     test.data(), test.size() * sizeof(decltype(test)::value_type))),
       std::invalid_argument);
   }

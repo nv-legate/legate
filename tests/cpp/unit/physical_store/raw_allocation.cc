@@ -11,7 +11,7 @@
 
 #include <utilities/utilities.h>
 
-namespace physical_store_inline_allocation_test {
+namespace physical_store_raw_allocation_test {
 
 namespace {
 
@@ -28,10 +28,10 @@ class FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
 {
   auto store = context.output(0);
 
-  ASSERT_NE(store.get_inline_allocation().ptr, nullptr);
-  ASSERT_EQ(store.get_inline_allocation().strides.size(), store.dim());
-  ASSERT_EQ(store.get_inline_allocation().strides.at(0), 0);
-  ASSERT_EQ(store.get_inline_allocation().target, legate::mapping::StoreTarget::SYSMEM);
+  ASSERT_NE(store.get_buffer().allocation().ptr(), nullptr);
+  ASSERT_EQ(store.strides().size(), store.dim());
+  ASSERT_EQ(store.strides()[0], 0);
+  ASSERT_EQ(store.target(), legate::mapping::StoreTarget::SYSMEM);
   ASSERT_EQ(store.scalar<std::uint32_t>(), 1);
 }
 
@@ -46,16 +46,15 @@ class GPUTask : public legate::LegateTask<GPUTask> {
 /*static*/ void GPUTask::gpu_variant(legate::TaskContext context)
 {
   const auto store = context.input(0);
-  const auto alloc = store.get_inline_allocation();
 
   ASSERT_THAT(
-    alloc.target,
+    store.target(),
     ::testing::AnyOf(legate::mapping::StoreTarget::FBMEM, legate::mapping::StoreTarget::ZCMEM));
 }
 
 class Config {
  public:
-  static constexpr std::string_view LIBRARY_NAME = "test_physical_store_inline_allocation";
+  static constexpr std::string_view LIBRARY_NAME = "test_physical_store_raw_allocation";
 
   static void registration_callback(legate::Library library)
   {
@@ -64,11 +63,11 @@ class Config {
   }
 };
 
-class PhysicalStoreInlineAllocationUnit : public RegisterOnceFixture<Config> {};
+class PhysicalStoreRawAllocationUnit : public RegisterOnceFixture<Config> {};
 
 }  // namespace
 
-TEST_F(PhysicalStoreInlineAllocationUnit, FutureStoreByTask)
+TEST_F(PhysicalStoreRawAllocationUnit, FutureStoreByTask)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
@@ -79,7 +78,7 @@ TEST_F(PhysicalStoreInlineAllocationUnit, FutureStoreByTask)
   runtime->submit(std::move(task));
 }
 
-TEST_F(PhysicalStoreInlineAllocationUnit, GPUTask)
+TEST_F(PhysicalStoreRawAllocationUnit, GPUTask)
 {
   const auto machine = legate::get_machine().only(legate::mapping::TaskTarget::GPU);
 
@@ -98,45 +97,43 @@ TEST_F(PhysicalStoreInlineAllocationUnit, GPUTask)
   runtime->submit(std::move(task));
 }
 
-TEST_F(PhysicalStoreInlineAllocationUnit, ReadOnlyFutureStore)
+TEST_F(PhysicalStoreRawAllocationUnit, ReadOnlyFutureStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto logical_store = runtime->create_store(legate::Scalar{1});
   auto store         = logical_store.get_physical_store();
-  auto inline_alloc  = store.get_inline_allocation();
 
-  ASSERT_NE(inline_alloc.ptr, nullptr);
-  ASSERT_EQ(inline_alloc.strides.size(), store.dim());
-  ASSERT_EQ(inline_alloc.strides.at(0), 0);
-  ASSERT_EQ(inline_alloc.target, legate::mapping::StoreTarget::SYSMEM);
+  ASSERT_NE(store.get_buffer().allocation().ptr(), nullptr);
+  ASSERT_EQ(store.strides().size(), store.dim());
+  ASSERT_EQ(store.strides()[0], 0);
+  ASSERT_EQ(store.target(), legate::mapping::StoreTarget::SYSMEM);
 }
 
-TEST_F(PhysicalStoreInlineAllocationUnit, TransformedFutureStore)
+TEST_F(PhysicalStoreRawAllocationUnit, TransformedFutureStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto logical_store = runtime->create_store(legate::Scalar{1});
   auto promoted      = logical_store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   auto store         = promoted.get_physical_store();
-  auto inline_alloc  = store.get_inline_allocation();
 
-  ASSERT_NE(inline_alloc.ptr, nullptr);
-  ASSERT_EQ(inline_alloc.strides.size(), store.dim());
-  ASSERT_EQ(inline_alloc.strides.at(0), 0);
-  ASSERT_EQ(inline_alloc.target, legate::mapping::StoreTarget::SYSMEM);
+  ASSERT_NE(store.get_buffer().allocation().ptr(), nullptr);
+  ASSERT_EQ(store.strides().size(), store.dim());
+  ASSERT_EQ(store.strides()[0], 0);
+  ASSERT_EQ(store.target(), legate::mapping::StoreTarget::SYSMEM);
 }
 
-TEST_F(PhysicalStoreInlineAllocationUnit, BoundStore)
+TEST_F(PhysicalStoreRawAllocationUnit, BoundStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto logical_store = runtime->create_store({2, 3}, legate::uint32());
   auto store         = logical_store.get_physical_store();
-  auto inline_alloc  = store.get_inline_allocation();
 
-  ASSERT_NE(inline_alloc.ptr, nullptr);
-  ASSERT_EQ(inline_alloc.strides.size(), store.dim());
-  ASSERT_EQ(inline_alloc.strides.at(0), sizeof(std::uint32_t) * 3);
-  ASSERT_EQ(inline_alloc.strides.at(1), sizeof(std::uint32_t));
-  ASSERT_EQ(inline_alloc.target, legate::mapping::StoreTarget::SYSMEM);
+  // `strides()` reports element strides (not bytes); the (2, 3) row-major store has strides (3, 1).
+  ASSERT_NE(store.get_buffer().allocation().ptr(), nullptr);
+  ASSERT_EQ(store.strides().size(), store.dim());
+  ASSERT_EQ(store.strides()[0], 3);
+  ASSERT_EQ(store.strides()[1], 1);
+  ASSERT_EQ(store.target(), legate::mapping::StoreTarget::SYSMEM);
 }
 
-}  // namespace physical_store_inline_allocation_test
+}  // namespace physical_store_raw_allocation_test

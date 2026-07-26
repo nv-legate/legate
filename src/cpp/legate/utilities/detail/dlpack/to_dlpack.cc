@@ -34,6 +34,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 namespace legate::detail {
 
@@ -397,27 +398,41 @@ constexpr bool operator>(const DLPackVersion& lhs, const DLPackVersion& rhs)
 [[nodiscard]] std::pair<DLTensor, std::optional<std::function<void(void*)>>> make_tensor(
   const legate::PhysicalStore& store, const std::optional<DLDevice>& device, bool must_copy)
 {
-  const auto alloc = store.get_inline_allocation();
-  const auto ty    = store.type();
-  auto ret         = DLTensor{};  // NOLINT(bugprone-invalid-enum-default-initialization)
+  const auto ty         = store.type();
+  const auto field_size = ty.size();
+  const auto target     = store.target();
+  const auto& strides   = store.strides();
 
-  ret.device      = make_device(alloc.target, device);
+  // Build the affine array view numpy / DLPack expect directly from the store's layout: the data
+  // pointer addresses the store's lower-bound element and the strides are given in bytes.
+  std::vector<std::size_t> byte_strides;
+
+  byte_strides.reserve(strides.size());
+  for (auto&& stride : strides) {
+    byte_strides.push_back(static_cast<std::size_t>(stride * field_size));
+  }
+  void* const data_ptr =
+    static_cast<std::int8_t*>(store.base()) + (strides.dot(store.domain().lo()) * field_size);
+
+  auto ret = DLTensor{};  // NOLINT(bugprone-invalid-enum-default-initialization)
+
+  ret.device      = make_device(target, device);
   ret.ndim        = store.dim();
   ret.dtype       = make_dtype(ty);
   ret.shape       = make_shape(store.domain()).release();
-  ret.strides     = copy_strides(alloc.strides, ty).release();
+  ret.strides     = copy_strides(byte_strides, ty).release();
   ret.byte_offset = 0;
 
   if (must_copy) {
     const auto num_bytes       = dl_tensor_size(ret);
-    const auto* const as_bytes = static_cast<std::byte*>(alloc.ptr);
-    auto copied                = copy_data({as_bytes, as_bytes + num_bytes}, alloc.target);
+    const auto* const as_bytes = static_cast<std::byte*>(data_ptr);
+    auto copied                = copy_data({as_bytes, as_bytes + num_bytes}, target);
 
     ret.data = copied.release();
     return {std::move(ret), copied.get_deleter()};
   }
 
-  ret.data = alloc.ptr;
+  ret.data = data_ptr;
   return {std::move(ret), std::nullopt};
 }
 

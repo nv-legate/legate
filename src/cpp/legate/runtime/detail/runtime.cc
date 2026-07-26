@@ -10,10 +10,11 @@
 #include <legate/comm/detail/coll.h>
 #include <legate/comm/detail/comm.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
-#include <legate/data/detail/external_allocation.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/detail/logical_store_partition.h>
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/raw_allocation.h>
 #include <legate/experimental/io/detail/task.h>
 #include <legate/mapping/detail/default_mapper.h>
 #include <legate/mapping/detail/machine.h>
@@ -337,7 +338,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
 {
   check_dimensionality_(dim);
   auto storage = make_internal_shared<detail::Storage>(
-    make_internal_shared<Shape>(dim), type->size(), get_provenance().as_string_view());
+    make_internal_shared<Shape>(dim), type, get_provenance().as_string_view());
   return make_internal_shared<LogicalStore>(std::move(storage), std::move(type));
 }  // namespace
 
@@ -353,7 +354,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> s
   }
   check_dimensionality_(shape->ndim());
   auto storage = make_internal_shared<detail::Storage>(
-    std::move(shape), type->size(), get_provenance().as_string_view());
+    std::move(shape), type, get_provenance().as_string_view());
   return make_internal_shared<LogicalStore>(std::move(storage), std::move(type));
 }
 
@@ -377,7 +378,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
 InternalSharedPtr<LogicalStore> Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,
-  const InternalSharedPtr<ExternalAllocation>& allocation,
+  const InternalSharedPtr<RawAllocation>& allocation,
   const InternalSharedPtr<mapping::detail::DimOrdering>& /*ordering*/) const
 {
   validate_store_shape(shape, type);
@@ -392,7 +393,10 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
 
   // Create an allocated Storage directly from the external allocation.
   auto storage = make_internal_shared<detail::Storage>(
-    shape, type->size(), allocation, get_provenance().as_string_view());
+    shape,
+    type,
+    make_internal_shared<detail::Buffer>(allocation, type, shape->domain()),
+    get_provenance().as_string_view());
 
   return make_internal_shared<detail::LogicalStore>(std::move(storage), std::move(type));
 }
@@ -401,7 +405,7 @@ Runtime::IndexAttachResult Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& tile_shape,
   InternalSharedPtr<Type> type,
-  Span<const std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>> /*allocations*/,
+  Span<const std::pair<legate::RawAllocation, tuple<std::uint64_t>>> /*allocations*/,
   const InternalSharedPtr<mapping::detail::DimOrdering>& /*ordering*/)
 {
   if (config().enable_inline_task_launch()) {

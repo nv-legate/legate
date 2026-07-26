@@ -25,8 +25,6 @@ class TaskStoreArg {
    */
   TaskStoreArg(InternalSharedPtr<LogicalStore> _store, const Variable* _variable = nullptr);
 
-  [[nodiscard]] bool needs_flush() const;
-
   InternalSharedPtr<LogicalStore> store{};
   const Variable* variable{};
 };

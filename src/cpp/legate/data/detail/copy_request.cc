@@ -10,8 +10,8 @@
 #include <legate/comm/coll_comm.h>
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/cuda_util.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/data/detail/copy_util.h>
-#include <legate/data/detail/inline_storage.h>
 #include <legate/generated/fatbin/copy_request_fatbin.h>
 #include <legate/geometry/detail/device_point.h>
 #include <legate/geometry/point.h>
@@ -99,7 +99,7 @@ constexpr decltype(auto) field_size_dispatch(std::uint32_t field_size, Functor f
 }
 
 template <typename VAL>
-void cpu_reorder_elements(InlineStorage& target, const InlineStorage& source, const Tiling* tiling)
+void cpu_reorder_elements(Buffer& target, const Buffer& source, const Tiling* tiling)
 {
   auto* target_ptr       = static_cast<VAL*>(target.data());
   const auto* source_ptr = static_cast<const VAL*>(source.data());
@@ -128,15 +128,15 @@ void cpu_reorder_elements(InlineStorage& target, const InlineStorage& source, co
 
 struct ReorderElementsCPU {
   template <typename VAL>
-  void operator()(InlineStorage& target, const InlineStorage& source, const Tiling* tiling)
+  void operator()(Buffer& target, const Buffer& source, const Tiling* tiling)
   {
     cpu_reorder_elements<VAL>(target, source, tiling);
   }
 };
 
 void reorder_elements_cpu(std::uint32_t field_size,
-                          InlineStorage& target,
-                          const InlineStorage& source,
+                          Buffer& target,
+                          const Buffer& source,
                           const Tiling* tiling)
 {
   field_size_dispatch(field_size, ReorderElementsCPU{}, target, source, tiling);
@@ -144,8 +144,8 @@ void reorder_elements_cpu(std::uint32_t field_size,
 
 struct CopyToSendBufferCPU {
   template <typename VAL>
-  void operator()(InlineStorage& target,
-                  const InlineStorage& source,
+  void operator()(Buffer& target,
+                  const Buffer& source,
                   const Rect& source_domain,
                   const Point& source_strides,
                   const SmallVector<Rect>& target_subdomains,
@@ -175,8 +175,8 @@ struct CopyToSendBufferCPU {
 };
 
 void copy_to_send_buffer_cpu(std::uint32_t field_size,
-                             InlineStorage& target,
-                             const InlineStorage& source,
+                             Buffer& target,
+                             const Buffer& source,
                              const Rect& source_domain,
                              const Point& source_strides,
                              const SmallVector<Rect>& target_subdomains,
@@ -198,10 +198,10 @@ void copy_to_send_buffer_cpu(std::uint32_t field_size,
 
 struct CopyFromRecvBufferCPU {
   template <typename VAL>
-  void operator()(InlineStorage& target,
+  void operator()(Buffer& target,
                   const Rect& target_domain,
                   const Point& target_strides,
-                  const InlineStorage& source,
+                  const Buffer& source,
                   const SmallVector<Rect>& source_subdomains,
                   const SmallVector<Point>& all_source_strides,
                   const SmallVector<int>& counts,
@@ -229,10 +229,10 @@ struct CopyFromRecvBufferCPU {
 };
 
 void copy_from_recv_buffer_cpu(std::uint32_t field_size,
-                               InlineStorage& target,
+                               Buffer& target,
                                const Rect& target_domain,
                                const Point& target_strides,
-                               const InlineStorage& source,
+                               const Buffer& source,
                                const SmallVector<Rect>& source_subdomains,
                                const SmallVector<Point>& all_source_strides,
                                const SmallVector<int>& counts,
@@ -275,8 +275,8 @@ struct CopyToSendBufferKernelName<std::uint64_t> {
 
 struct CopyToSendBufferGPU {
   template <typename VAL>
-  void operator()(SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
-                  const InlineStorage& source,
+  void operator()(SmallVector<std::pair<InternalSharedPtr<Buffer>, bool>>& targets,
+                  const Buffer& source,
                   const Rect& source_domain,
                   const Point& source_strides,
                   const SmallVector<Rect>& target_subdomains,
@@ -342,15 +342,14 @@ struct CopyToSendBufferGPU {
   }
 };
 
-void copy_to_send_buffer_gpu(
-  std::uint32_t field_size,
-  SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& targets,
-  const InlineStorage& source,
-  const Rect& source_domain,
-  const Point& source_strides,
-  const SmallVector<Rect>& target_subdomains,
-  const SmallVector<int>& counts,
-  CUstream stream)
+void copy_to_send_buffer_gpu(std::uint32_t field_size,
+                             SmallVector<std::pair<InternalSharedPtr<Buffer>, bool>>& targets,
+                             const Buffer& source,
+                             const Rect& source_domain,
+                             const Point& source_strides,
+                             const SmallVector<Rect>& target_subdomains,
+                             const SmallVector<int>& counts,
+                             CUstream stream)
 {
   field_size_dispatch(field_size,
                       CopyToSendBufferGPU{},
@@ -388,10 +387,10 @@ struct CopyFromRecvBufferKernelName<std::uint64_t> {
 
 struct CopyFromRecvBufferGPU {
   template <typename VAL>
-  void operator()(InlineStorage& target,
+  void operator()(Buffer& target,
                   const Rect& target_domain,
                   const Point& target_strides,
-                  const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
+                  const SmallVector<std::pair<InternalSharedPtr<Buffer>, bool>>& sources,
                   const SmallVector<Rect>& source_subdomains,
                   const SmallVector<int>& counts,
                   CUstream stream)
@@ -458,10 +457,10 @@ struct CopyFromRecvBufferGPU {
 
 void copy_from_recv_buffer_gpu(
   std::uint32_t field_size,
-  InlineStorage& target,
+  Buffer& target,
   const Rect& target_domain,
   const Point& target_strides,
-  const SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>>& sources,
+  const SmallVector<std::pair<InternalSharedPtr<Buffer>, bool>>& sources,
   const SmallVector<Rect>& source_subdomains,
   const SmallVector<int>& counts,
   CUstream stream)
@@ -502,10 +501,7 @@ struct ReorderElementsKernelName<std::uint64_t> {
 
 struct ReorderElementsGPU {
   template <typename VAL>
-  void operator()(InlineStorage& target,
-                  const InlineStorage& source,
-                  const Tiling* tiling,
-                  CUstream stream)
+  void operator()(Buffer& target, const Buffer& source, const Tiling* tiling, CUstream stream)
   {
     auto volume = target.domain().volume();
 
@@ -546,8 +542,8 @@ struct ReorderElementsGPU {
 };
 
 void reorder_elements_gpu(std::uint32_t field_size,
-                          InlineStorage& target,
-                          const InlineStorage& source,
+                          Buffer& target,
+                          const Buffer& source,
                           const Tiling* tiling,
                           CUstream stream)
 {
@@ -639,6 +635,8 @@ void CopyRequest::perform(VariantCode variant_code) const
 
 void CopyRequest::all_gather_(VariantCode variant_code) const
 {
+  const auto field_size = type_->size();
+
   // TODO(wonchanl): Add an option to toggle this behavior
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     std::stringstream ss{};
@@ -654,19 +652,19 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
   // TODO(wonchanl): The code below doesn't handle the case where there are smaller tiles
 
   // All-gathers the source into `dest` using the collective backing the given variant.
-  const auto all_gather_fn = [this, variant_code](InlineStorage& dest) {
+  const auto all_gather_fn = [this, variant_code, field_size](Buffer& dest) {
     if (variant_code == VariantCode::CPU) {
       collAllgather(source_->data(),
                     dest.data(),
                     static_cast<int>(source_->domain().volume()),
-                    to_coll_data_type_(field_size_),
+                    to_coll_data_type_(field_size),
                     Runtime::get_runtime().get_cpu_comm());
     } else {
       LEGATE_CHECK(variant_code == VariantCode::GPU);
       LEGATE_CHECK_NCCL(ncclAllGather(source_->data(),
                                       dest.data(),
                                       source_->domain().volume(),
-                                      to_nccl_data_type(field_size_),
+                                      to_nccl_data_type(field_size),
                                       Runtime::get_runtime().get_gpu_comm(),
                                       Runtime::get_runtime().get_cuda_stream()));
     }
@@ -718,25 +716,27 @@ void CopyRequest::all_gather_(VariantCode variant_code) const
     return;
   }
 
-  InlineStorage tmp{Rect{NDRect<1>{0, gathered_volume - 1}}, field_size_, target_->target()};
+  auto tmp = Buffer::allocate(type_, Rect{NDRect<1>{0, gathered_volume - 1}}, target_->target());
 
-  all_gather_fn(tmp);
+  all_gather_fn(*tmp);
 
   // If we're here, the target partition is NoPartition, so the source partition cannot be
   // NoPartition as well.
   const auto* tiling = static_cast<Tiling*>(source_partition_.get());
 
   if (variant_code == VariantCode::CPU) {
-    reorder_elements_cpu(field_size_, *target_, tmp, tiling);
+    reorder_elements_cpu(field_size, *target_, *tmp, tiling);
   } else {
     LEGATE_CHECK(variant_code == VariantCode::GPU);
     reorder_elements_gpu(
-      field_size_, *target_, tmp, tiling, Runtime::get_runtime().get_cuda_stream());
+      field_size, *target_, *tmp, tiling, Runtime::get_runtime().get_cuda_stream());
   }
 }
 
 void CopyRequest::shuffle_(VariantCode variant_code) const
 {
+  const auto field_size = type_->size();
+
   // The source partition always has a color shape (a NoPartition source would have been resolved by
   // the subsumption check). Both partitions are handled polymorphically, so this works for any of
   // Tiling/Opaque as source and Tiling/Opaque/NoPartition as target.
@@ -801,13 +801,13 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     // broadcast to several peers (e.g. gathering an Opaque partition into a replicated target) the
     // same elements are packed once per destination, so the send buffer is sized by the total
     // element count rather than the (single-piece) source domain.
-    InlineStorage send_buffer{
-      Rect{NDRect<1>{0, std::max(send_total, 1) - 1}}, field_size_, source_->target()};
-    InlineStorage recv_buffer{
-      Rect{NDRect<1>{0, std::max(recv_total, 1) - 1}}, field_size_, target_->target()};
+    auto send_buffer =
+      Buffer::allocate(type_, Rect{NDRect<1>{0, std::max(send_total, 1) - 1}}, source_->target());
+    auto recv_buffer =
+      Buffer::allocate(type_, Rect{NDRect<1>{0, std::max(recv_total, 1) - 1}}, target_->target());
 
-    copy_to_send_buffer_cpu(field_size_,
-                            send_buffer,
+    copy_to_send_buffer_cpu(field_size,
+                            *send_buffer,
                             *source_,
                             source_domain,
                             source_strides,
@@ -816,20 +816,20 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
                             send_counts,
                             send_offsets);
 
-    collAlltoallv(send_buffer.data(),
+    collAlltoallv(send_buffer->data(),
                   send_counts.data(),
                   send_offsets.data(),
-                  recv_buffer.data(),
+                  recv_buffer->data(),
                   recv_counts.data(),
                   recv_offsets.data(),
-                  to_coll_data_type_(field_size_),
+                  to_coll_data_type_(field_size),
                   Runtime::get_runtime().get_cpu_comm());
 
-    copy_from_recv_buffer_cpu(field_size_,
+    copy_from_recv_buffer_cpu(field_size,
                               *target_,
                               target_domain,
                               target_strides,
-                              recv_buffer,
+                              *recv_buffer,
                               recv_subdomains,
                               recv_strides,
                               recv_counts,
@@ -841,9 +841,9 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
   LEGATE_ASSERT(variant_code == VariantCode::GPU);
 
   // For GPU shuffle, we allocate a separate buffer for each intersection
-  SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>> send_buffers(
+  SmallVector<std::pair<InternalSharedPtr<Buffer>, bool>> send_buffers(
     tags::size_tag, device_count, {nullptr, false});
-  SmallVector<std::pair<InternalSharedPtr<InlineStorage>, bool>> recv_buffers(
+  SmallVector<std::pair<InternalSharedPtr<Buffer>, bool>> recv_buffers(
     tags::size_tag, device_count, {nullptr, false});
 
   for (auto&& [idx, send_subdomain] : enumerate(send_subdomains)) {
@@ -854,8 +854,8 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     if (source_strides == send_subdomain.strides()) {
       send_buffers[idx] = std::make_pair<>(source_, false);
     } else {
-      send_buffers[idx] = std::make_pair<>(
-        make_internal_shared<InlineStorage>(send_subdomain, field_size_, source_->target()), true);
+      send_buffers[idx] =
+        std::make_pair<>(Buffer::allocate(type_, send_subdomain, source_->target()), true);
     }
   }
 
@@ -867,16 +867,16 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
     if (target_strides == recv_subdomain.strides()) {
       recv_buffers[idx] = std::make_pair<>(target_, false);
     } else {
-      recv_buffers[idx] = std::make_pair<>(
-        make_internal_shared<InlineStorage>(recv_subdomain, field_size_, target_->target()), true);
+      recv_buffers[idx] =
+        std::make_pair<>(Buffer::allocate(type_, recv_subdomain, target_->target()), true);
     }
   }
 
   const auto stream         = Runtime::get_runtime().get_cuda_stream();
   const auto comm           = Runtime::get_runtime().get_gpu_comm();
-  const auto nccl_data_type = to_nccl_data_type(field_size_);
+  const auto nccl_data_type = to_nccl_data_type(field_size);
 
-  copy_to_send_buffer_gpu(field_size_,
+  copy_to_send_buffer_gpu(field_size,
                           send_buffers,
                           *source_,
                           source_domain,
@@ -898,7 +898,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
     if (!needs_copy) {
       send_buffer_ptr +=
-        (send_subdomain.lo() - source_->domain().lo()).dot(source_strides) * field_size_;
+        (send_subdomain.lo() - source_->domain().lo()).dot(source_strides) * field_size;
     }
     LEGATE_CHECK_NCCL(
       ncclSend(send_buffer_ptr, send_counts[idx], nccl_data_type, idx, comm, stream));
@@ -915,7 +915,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
     if (!needs_copy) {
       recv_buffer_ptr +=
-        (recv_subdomain.lo() - target_->domain().lo()).dot(target_strides) * field_size_;
+        (recv_subdomain.lo() - target_->domain().lo()).dot(target_strides) * field_size;
     }
     LEGATE_CHECK_NCCL(
       ncclRecv(recv_buffer_ptr, recv_counts[idx], nccl_data_type, idx, comm, stream));
@@ -923,7 +923,7 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
   LEGATE_CHECK_NCCL(ncclGroupEnd());
 
-  copy_from_recv_buffer_gpu(field_size_,
+  copy_from_recv_buffer_gpu(field_size,
                             *target_,
                             target_domain,
                             target_strides,

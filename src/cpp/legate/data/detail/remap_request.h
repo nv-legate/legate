@@ -6,17 +6,15 @@
 
 #pragma once
 
-#include <legate/data/detail/inline_storage.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
-
-#include <cstdint>
 
 namespace legate::detail {
 
 /**
  * @brief A data-movement request that copies the whole contents of a storage between two
- * `InlineStorage` allocations that may live on different memories (e.g. the GPU framebuffer and
+ * `Buffer` allocations that may live on different memories (e.g. the GPU framebuffer and
  * system memory).
  *
  * Unlike `CopyRequest`, a remap request does not repartition data across ranks; it is a straight,
@@ -32,11 +30,8 @@ class RemapRequest {
    *
    * @param source The storage to copy from.
    * @param target The storage to copy into. Must span the same domain as @p source.
-   * @param field_size The size of a single element in bytes.
    */
-  RemapRequest(InternalSharedPtr<InlineStorage> source,
-               InternalSharedPtr<InlineStorage> target,
-               std::uint32_t field_size);
+  RemapRequest(InternalSharedPtr<Buffer> source, InternalSharedPtr<Buffer> target);
 
   void perform(VariantCode variant_code) const;
 
@@ -58,9 +53,8 @@ class RemapRequest {
   RemapRequest& operator=(RemapRequest&&) noexcept = default;
 
  private:
-  InternalSharedPtr<InlineStorage> source_{};
-  InternalSharedPtr<InlineStorage> target_{};
-  std::uint32_t field_size_{};
+  InternalSharedPtr<Buffer> source_{};
+  InternalSharedPtr<Buffer> target_{};
 };
 
 }  // namespace legate::detail

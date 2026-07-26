@@ -64,12 +64,12 @@ legate::Rect to_rect(legate::Span<const std::uint64_t> shape)
   const auto code   = context.scalar(0).value<legate::Type::Code>();
   const auto bounds = context.scalar(1).values<std::uint64_t>();
   const auto ty     = legate::primitive_type(code);
-  const auto buf    = legate::TaskLocalBuffer{ty, bounds, mem_kind};
+  const auto buf    = legate::Buffer::allocate(ty, to_rect(bounds), mem_kind);
 
   ASSERT_EQ(buf.type(), ty);
   ASSERT_EQ(buf.dim(), bounds.size());
   ASSERT_EQ(buf.domain(), to_rect(bounds));
-  ASSERT_EQ(buf.memory_kind(), mem_kind);
+  ASSERT_EQ(buf.target(), mem_kind);
 }
 
 /* static */ void BasicBufferTask::cpu_variant(legate::TaskContext context)
@@ -99,15 +99,11 @@ class CheckTypeSizeMismatchTask : public legate::LegateTask<CheckTypeSizeMismatc
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
-    // Size mismatch: Buffer<std::int32_t> (size=4) vs int64 type (size=8)
+    // Size mismatch: viewing an NDBuffer<std::int32_t> (size=4) as int64 (size=8)
     auto buf = legate::create_buffer<std::int32_t>(/*size=*/9, legate::Memory::SYSTEM_MEM);
-    ASSERT_THAT(
-      [&] {
-        static_cast<void>(
-          legate::TaskLocalBuffer{buf, legate::primitive_type(legate::Type::Code::INT64)});
-      },
-      ::testing::ThrowsMessage<std::invalid_argument>(
-        ::testing::HasSubstr("incompatible type sizes")));
+    ASSERT_THAT([&] { static_cast<void>(legate::NDBuffer<std::int64_t>{buf.buffer()}); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("incompatible type sizes")));
   }
 };
 
@@ -122,10 +118,9 @@ class CheckTypeAlignmentMismatchTask : public legate::LegateTask<CheckTypeAlignm
     // Alignment mismatch: directly call check_type with matching size but mismatched alignment
     // Use int32 type (size=4, align=4) but pass align_of=8 to trigger alignment check branch
     const auto ty = legate::primitive_type(legate::Type::Code::INT32);
-    ASSERT_THAT(
-      [&] { legate::untyped_buffer_detail::check_type(ty, ty.size(), ty.alignment() * 2); },
-      ::testing::ThrowsMessage<std::invalid_argument>(
-        ::testing::HasSubstr("incompatible type alignment")));
+    ASSERT_THAT([&] { legate::detail::check_type(ty, ty.size(), ty.alignment() * 2); },
+                ::testing::ThrowsMessage<std::invalid_argument>(
+                  ::testing::HasSubstr("incompatible type alignment")));
   }
 };
 
@@ -137,12 +132,11 @@ class CheckTypeSuccessTask : public legate::LegateTask<CheckTypeSuccessTask> {
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
-    // Successful case: Buffer<std::int32_t> with int32 type (should not throw)
+    // Successful case: erasing an NDBuffer<std::int32_t> and re-typing it as int32 (no throw)
     auto buf = legate::create_buffer<std::int32_t>(/*size=*/8, legate::Memory::SYSTEM_MEM);
-    const legate::TaskLocalBuffer task_local_buf{buf,
-                                                 legate::primitive_type(legate::Type::Code::INT32)};
+    const legate::Buffer& erased_buf = buf.buffer();
 
-    auto converted_buf = static_cast<legate::Buffer<std::int32_t>>(task_local_buf);
+    auto converted_buf = legate::NDBuffer<std::int32_t>{erased_buf};
     ASSERT_EQ(converted_buf.ptr(0), buf.ptr(0));
 
     auto buf_no_memkind =
@@ -161,14 +155,15 @@ class CopyConstructorTask : public legate::LegateTask<CopyConstructorTask> {
   {
     const auto ty     = legate::primitive_type(legate::Type::Code::INT32);
     const auto bounds = std::vector<std::uint64_t>{10};
-    const auto orig   = legate::TaskLocalBuffer{ty, bounds, legate::mapping::StoreTarget::SYSMEM};
+    const auto orig =
+      legate::Buffer::allocate(ty, to_rect(bounds), legate::mapping::StoreTarget::SYSMEM);
     // NOLINTNEXTLINE(performance-unnecessary-copy-initialization) - testing copy ctor
     const auto copy = orig;
 
     ASSERT_EQ(copy.type(), orig.type());
     ASSERT_EQ(copy.dim(), orig.dim());
     ASSERT_EQ(copy.domain(), orig.domain());
-    ASSERT_EQ(copy.memory_kind(), orig.memory_kind());
+    ASSERT_EQ(copy.target(), orig.target());
   }
 };
 
@@ -182,12 +177,12 @@ class MoveConstructorTask : public legate::LegateTask<MoveConstructorTask> {
   {
     const auto ty     = legate::primitive_type(legate::Type::Code::INT64);
     const auto bounds = std::vector<std::uint64_t>{20};
-    auto orig         = legate::TaskLocalBuffer{ty, bounds, legate::mapping::StoreTarget::SYSMEM};
-    const auto moved  = std::move(orig);  // Move constructor
+    auto orig = legate::Buffer::allocate(ty, to_rect(bounds), legate::mapping::StoreTarget::SYSMEM);
+    const auto moved = std::move(orig);  // Move constructor
 
     ASSERT_EQ(moved.type(), ty);
     ASSERT_EQ(moved.dim(), 1);
-    ASSERT_EQ(moved.memory_kind(), legate::mapping::StoreTarget::SYSMEM);
+    ASSERT_EQ(moved.target(), legate::mapping::StoreTarget::SYSMEM);
   }
 };
 
@@ -199,16 +194,15 @@ class DefaultMemKindTask : public legate::LegateTask<DefaultMemKindTask> {
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
-    // Test TaskLocalBuffer without mem_kind - triggers find_memory_kind_for_executing_processor
-    const auto ty     = legate::primitive_type(legate::Type::Code::INT32);
-    const auto bounds = std::vector<std::uint64_t>{10};
-    // Note: not passing mem_kind, so it defaults to std::nullopt
-    const auto buf = legate::TaskLocalBuffer{ty, bounds};
+    // Create a buffer without a mem_kind - triggers find_memory_kind_for_executing_processor
+    const auto ty = legate::primitive_type(legate::Type::Code::INT32);
+    // Note: not passing a mem_kind, so it defaults to NO_MEMKIND
+    const auto buf = legate::create_buffer<std::int32_t>(/*size=*/10).buffer();
 
     ASSERT_EQ(buf.type(), ty);
     ASSERT_EQ(buf.dim(), 1);
     // Memory kind is determined by the executing processor (CPU task -> SYSMEM)
-    ASSERT_EQ(buf.memory_kind(), legate::mapping::StoreTarget::SYSMEM);
+    ASSERT_EQ(buf.target(), legate::mapping::StoreTarget::SYSMEM);
   }
 };
 

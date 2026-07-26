@@ -8,7 +8,7 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/data/detail/logical_store.h>
-#include <legate/data/external_allocation.h>
+#include <legate/data/raw_allocation.h>
 #include <legate/mapping/mapping.h>
 
 #include <fmt/format.h>
@@ -80,7 +80,7 @@ class Config {
 class IndexAttach : public RegisterOnceFixture<Config> {};
 
 template <typename T>
-void test_access_by_task(legate::ExternalAllocation& ext, T value)
+void test_access_by_task(legate::RawAllocation& ext, T value)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
@@ -100,11 +100,10 @@ template <typename T>
 void test_sysmem(void* ptr,
                  T value,
                  std::size_t bytes,
-                 bool read_only                                             = true,
-                 std::optional<legate::ExternalAllocation::Deleter> deleter = std::nullopt)
+                 bool read_only                                        = true,
+                 std::optional<legate::RawAllocation::Deleter> deleter = std::nullopt)
 {
-  auto ext_alloc =
-    legate::ExternalAllocation::create_sysmem(ptr, bytes, read_only, std::move(deleter));
+  auto ext_alloc = legate::RawAllocation::create_sysmem(ptr, bytes, read_only, std::move(deleter));
 
   ASSERT_EQ(ext_alloc.size(), bytes);
   ASSERT_EQ(ext_alloc.read_only(), read_only);
@@ -156,10 +155,10 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
   d_alloc = api->mem_alloc_async(BYTES, /*stream=*/nullptr);
   api->mem_cpy_async(d_alloc, h_alloc.data(), BYTES, /*stream=*/nullptr);
 
-  legate::ExternalAllocation ext_alloc;
+  legate::RawAllocation ext_alloc;
   switch (store_target) {
     case legate::mapping::StoreTarget::FBMEM: {
-      ext_alloc = legate::ExternalAllocation::create_fbmem(
+      ext_alloc = legate::RawAllocation::create_fbmem(
         /*local_device_id=*/0,
         d_alloc,
         BYTES,
@@ -168,7 +167,7 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
       break;
     }
     case legate::mapping::StoreTarget::ZCMEM: {
-      ext_alloc = legate::ExternalAllocation::create_zcmem(
+      ext_alloc = legate::RawAllocation::create_zcmem(
         d_alloc, BYTES, /*read_only=*/false, std::move(deleter));
       break;
     }
@@ -218,8 +217,8 @@ TEST_F(IndexAttach, CPU)
   std::vector<std::int64_t> alloc1(TILE_SIZE, VAL1), alloc2(TILE_SIZE, VAL2);
   auto runtime = legate::Runtime::get_runtime();
 
-  auto ext_alloc1 = legate::ExternalAllocation::create_sysmem(alloc1.data(), BYTES);
-  auto ext_alloc2 = legate::ExternalAllocation::create_sysmem(alloc2.data(), BYTES);
+  auto ext_alloc1 = legate::RawAllocation::create_sysmem(alloc1.data(), BYTES);
+  auto ext_alloc2 = legate::RawAllocation::create_sysmem(alloc2.data(), BYTES);
 
   auto [store, _] = runtime->create_store(
     legate::Shape{TILE_SIZE * 2 * runtime->node_count()},
@@ -268,9 +267,9 @@ TEST_F(IndexAttach, GPU)
       LEGATE_ABORT(e.what());
     }
   };
-  auto alloc1 = legate::ExternalAllocation::create_fbmem(
+  auto alloc1 = legate::RawAllocation::create_fbmem(
     /*local_device_id=*/0, d_alloc1, BYTES, /*read_only=*/true, deleter);
-  auto alloc2 = legate::ExternalAllocation::create_fbmem(
+  auto alloc2 = legate::RawAllocation::create_fbmem(
     /*local_device_id=*/0, d_alloc2, BYTES, /*read_only=*/true, std::move(deleter));
 
   ASSERT_TRUE(alloc1.read_only());
@@ -300,8 +299,8 @@ TEST_F(IndexAttach, NegativeAttachSmallerStore)
 {
   auto runtime = legate::Runtime::get_runtime();
   std::vector<std::int64_t> buf(TILE_SIZE - 1, 0);
-  auto alloc = legate::ExternalAllocation::create_sysmem(
-    buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
+  auto alloc = legate::RawAllocation::create_sysmem(buf.data(),
+                                                    buf.size() * sizeof(decltype(buf)::value_type));
 
   // Trying to attach a buffer smaller than what the sub-store requires
   ASSERT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
@@ -315,8 +314,8 @@ TEST_F(IndexAttach, NegativeAttachNonexistStore)
 {
   auto runtime = legate::Runtime::get_runtime();
   std::vector<std::int64_t> buf(TILE_SIZE, 0);
-  auto alloc = legate::ExternalAllocation::create_sysmem(
-    buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
+  auto alloc = legate::RawAllocation::create_sysmem(buf.data(),
+                                                    buf.size() * sizeof(decltype(buf)::value_type));
 
   // Trying to attach a buffer to a non-existent sub-store
   ASSERT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
@@ -330,8 +329,8 @@ TEST_F(IndexAttach, NegativeDuplicateAttach)
 {
   auto runtime = legate::Runtime::get_runtime();
   std::vector<std::int64_t> buf(TILE_SIZE, 0);
-  auto alloc = legate::ExternalAllocation::create_sysmem(
-    buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
+  auto alloc = legate::RawAllocation::create_sysmem(buf.data(),
+                                                    buf.size() * sizeof(decltype(buf)::value_type));
 
   // Trying to attach multiple buffers to the same sub-store
   ASSERT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
@@ -348,7 +347,7 @@ TEST_F(IndexAttach, NegativeAttachVariableStore)
 
   // Trying to attach buffer with variable size to store
   constexpr const char value[] = "hello world";
-  auto ext_alloc               = legate::ExternalAllocation::create_sysmem(value, sizeof(value));
+  auto ext_alloc               = legate::RawAllocation::create_sysmem(value, sizeof(value));
 
   ASSERT_THROW(
     (void)runtime->create_store(legate::Shape{sizeof(value)}, legate::string_type(), ext_alloc),
@@ -400,43 +399,42 @@ TEST_F(IndexAttach, InvalidCreation)
 {
   void* ptr = nullptr;
 
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_sysmem(ptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_sysmem(ptr, 10)),
                std::invalid_argument);
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(ptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_zcmem(ptr, 10)),
                std::invalid_argument);
   if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) > 0) {
-    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+    ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_fbmem(0, ptr, 10)),
                  std::invalid_argument);
   } else {
-    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+    ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_fbmem(0, ptr, 10)),
                  std::out_of_range);
   }
 #else
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(ptr, 10)),
-               std::runtime_error);
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_zcmem(ptr, 10)), std::runtime_error);
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_fbmem(0, ptr, 10)),
                std::runtime_error);
 #endif
 
   const void* cptr = nullptr;
 
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_sysmem(cptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_sysmem(cptr, 10)),
                std::invalid_argument);
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(cptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_zcmem(cptr, 10)),
                std::invalid_argument);
   if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) > 0) {
-    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, cptr, 10)),
+    ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_fbmem(0, cptr, 10)),
                  std::invalid_argument);
   } else {
-    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, cptr, 10)),
+    ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_fbmem(0, cptr, 10)),
                  std::out_of_range);
   }
 #else
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(cptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_zcmem(cptr, 10)),
                std::runtime_error);
-  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, cptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::RawAllocation::create_fbmem(0, cptr, 10)),
                std::runtime_error);
 #endif
 }

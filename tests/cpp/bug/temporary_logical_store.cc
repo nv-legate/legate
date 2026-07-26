@@ -24,16 +24,16 @@ TEST_F(TemporaryLogicalStoreUnit, Store)
   const auto shape    = legate::Shape{1, 2, 3};
   const auto ty       = legate::int32();
 
-  const auto phys_store   = runtime->create_store(shape, ty).get_physical_store();
-  const auto inline_alloc = phys_store.get_inline_allocation();
+  const auto phys_store = runtime->create_store(shape, ty).get_physical_store();
+  const auto raw_alloc  = phys_store.get_buffer().allocation();
 
-  const auto phys_store_2   = runtime->create_store(shape, ty).get_physical_store();
-  const auto inline_alloc_2 = phys_store_2.get_inline_allocation();
+  const auto phys_store_2 = runtime->create_store(shape, ty).get_physical_store();
+  const auto raw_alloc_2  = phys_store_2.get_buffer().allocation();
 
   static_cast<void>(phys_store);
-  static_cast<void>(inline_alloc);
+  static_cast<void>(raw_alloc);
   static_cast<void>(phys_store_2);
-  static_cast<void>(inline_alloc_2);
+  static_cast<void>(raw_alloc_2);
   // For this bug to be tested, we should get here without Legion aborting the program:
   //
   //  LEGION ERROR: Attempted an inline mapping of region (3,3,3) that conflicts with previous

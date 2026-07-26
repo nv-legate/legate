@@ -31,7 +31,7 @@ void DataMovementRequests::register_remap_copy_out(RemapRequest&& copy_out)
   remap_copy_outs_.emplace_back(std::move(copy_out));
 }
 
-std::optional<InternalSharedPtr<InlineStorage>> DataMovementRequests::find_mapped_alloc(
+std::optional<InternalSharedPtr<Buffer>> DataMovementRequests::find_mapped_alloc(
   std::uint64_t storage_id) const
 {
   const auto it = mapped_allocs_.find(storage_id);
@@ -43,12 +43,12 @@ std::optional<InternalSharedPtr<InlineStorage>> DataMovementRequests::find_mappe
 }
 
 void DataMovementRequests::record_mapped_alloc(std::uint64_t storage_id,
-                                               InternalSharedPtr<InlineStorage> alloc)
+                                               InternalSharedPtr<Buffer> alloc)
 {
   mapped_allocs_[storage_id] = std::move(alloc);
 }
 
-std::optional<InternalSharedPtr<InlineStorage>> DataMovementRequests::find_working_copy(
+std::optional<InternalSharedPtr<Buffer>> DataMovementRequests::find_working_copy(
   std::uint64_t storage_id) const
 {
   const auto it = working_copies_.find(storage_id);
@@ -60,7 +60,7 @@ std::optional<InternalSharedPtr<InlineStorage>> DataMovementRequests::find_worki
 }
 
 void DataMovementRequests::record_working_copy(std::uint64_t storage_id,
-                                               InternalSharedPtr<InlineStorage> alloc)
+                                               InternalSharedPtr<Buffer> alloc)
 {
   working_copies_[storage_id] = std::move(alloc);
 }

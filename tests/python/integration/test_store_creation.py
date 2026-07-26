@@ -34,9 +34,7 @@ class TestStoreCreation:
         scalar = Scalar(arr_np, dtype)
         store = runtime.create_store_from_scalar(scalar)
         assert store.ndim == 1
-        arr_store = np.asarray(
-            store.get_physical_store().get_inline_allocation()
-        )
+        arr_store = np.asarray(store.get_physical_store())
         if isinstance(val, bytes):
             assert (arr_np == arr_store).all()
         else:
@@ -47,7 +45,7 @@ class TestStoreCreation:
         shape = (1, 2, 3)
         runtime = get_legate_runtime()
         store = runtime.create_store(dtype=dtype, shape=shape)
-        arr = np.asarray(store.get_physical_store().get_inline_allocation())
+        arr = np.asarray(store.get_physical_store())
 
         val: bool | bytes | int
         match dtype.code:
@@ -73,9 +71,7 @@ class TestStoreCreation:
         runtime = get_legate_runtime()
         store = runtime.create_store(dtype=ty.int32, shape=shape)
         assert store.shape == shape
-        arr_store = np.asarray(
-            store.get_physical_store().get_inline_allocation()
-        )
+        arr_store = np.asarray(store.get_physical_store())
         arr_np = np.empty(shape=shape)
         assert arr_np.shape == arr_store.shape
 

@@ -3,34 +3,39 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from libcpp cimport bool
+from libcpp.pair cimport pair as std_pair
 from libc.stdint cimport int32_t
 
-from .inline_allocation cimport _InlineAllocation, InlineAllocation
-
+from ..geometry.point cimport _Point
 from ..geometry.rect cimport _Rect
+from ..mapping.mapping cimport StoreTarget
 from ..type.types cimport _Type
 from ..utilities.unconstructable cimport Unconstructable
+from .raw_allocation cimport _RawAllocation
 
 cdef extern from "legate/data/buffer.h" namespace "legate" nogil:
-    cdef cppclass _TaskLocalBuffer "legate::TaskLocalBuffer":
-        _TaskLocalBuffer() except+
+    cdef cppclass _Buffer "legate::Buffer":
+        _Buffer() except+
 
         _Type type() except+
         int32_t dim() except+
         const _Rect& domain() except+
+        StoreTarget target() except+
+        _RawAllocation allocation() except+
+        void reshape(_Rect) except+
+        std_pair[void*, _Point] base_and_element_strides() except+
 
-        _InlineAllocation get_inline_allocation() except+
+        @staticmethod
+        _Buffer allocate(const _Type&, _Rect, StoreTarget) except+
 
 
-cdef class TaskLocalBuffer(Unconstructable):
-    cdef _TaskLocalBuffer _handle
-    cdef InlineAllocation _alloc
+cdef class Buffer(Unconstructable):
+    cdef _Buffer _handle
     cdef object _owner
 
     @staticmethod
-    cdef TaskLocalBuffer from_handle(
-        const _TaskLocalBuffer &handle, object owner=*
+    cdef Buffer from_handle(
+        const _Buffer &handle, object owner=*
     )
 
-    cdef InlineAllocation _init_inline_allocation(self)
-    cdef InlineAllocation _get_inline_allocation(self)
+    cdef dict _array_interface(self)

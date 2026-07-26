@@ -15,6 +15,4 @@ inline TaskStoreArg::TaskStoreArg(InternalSharedPtr<LogicalStore> _store, const 
 {
 }
 
-inline bool TaskStoreArg::needs_flush() const { return store->needs_flush(); }
-
 }  // namespace legate::detail

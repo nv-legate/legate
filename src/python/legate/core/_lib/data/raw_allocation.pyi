@@ -2,11 +2,13 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-class ExternalAllocation:
+from ..mapping.mapping import StoreTarget
+
+class RawAllocation:
     @staticmethod
     def from_sysmem(
         ptr: int, size: int, read_only: bool = True, source: object = None
-    ) -> ExternalAllocation: ...
+    ) -> RawAllocation: ...
     @staticmethod
     def from_fbmem(
         device_id: int,
@@ -14,11 +16,11 @@ class ExternalAllocation:
         size: int,
         read_only: bool = True,
         source: object = None,
-    ) -> ExternalAllocation: ...
+    ) -> RawAllocation: ...
     @staticmethod
     def from_zcmem(
         ptr: int, size: int, read_only: bool = True, source: object = None
-    ) -> ExternalAllocation: ...
+    ) -> RawAllocation: ...
     @staticmethod
     def from_dlpack(
         x: object,
@@ -27,8 +29,12 @@ class ExternalAllocation:
         device: tuple[int, int] | None = None,
         copy: bool | None = None,
         read_only: bool | None = None,
-    ) -> ExternalAllocation: ...
+    ) -> RawAllocation: ...
     @property
     def read_only(self) -> bool: ...
     @property
     def size(self) -> int: ...
+    @property
+    def ptr(self) -> int: ...
+    @property
+    def target(self) -> StoreTarget: ...

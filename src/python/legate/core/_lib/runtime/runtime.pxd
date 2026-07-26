@@ -13,7 +13,7 @@ from libcpp.vector cimport vector as std_vector
 from libcpp cimport bool
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
-from ..data.external_allocation cimport _ExternalAllocation
+from ..data.raw_allocation cimport _RawAllocation
 from ..data.logical_store cimport (
     LogicalStore,
     LogicalStorePartition,
@@ -70,14 +70,14 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         _LogicalStore create_store(
             const _Shape&,
             const _Type&,
-            const _ExternalAllocation&,
+            const _RawAllocation&,
             const _DimOrdering&
         ) except+
         std_pair[_LogicalStore, _LogicalStorePartition] create_store(
             const _Shape&,
             const _tuple[uint64_t]&,
             const _Type&,
-            const std_vector[std_pair[_ExternalAllocation, _tuple[uint64_t]]]&,
+            const std_vector[std_pair[_RawAllocation, _tuple[uint64_t]]]&,
             const _DimOrdering&
         ) except+
         void issue_mapping_fence() except+

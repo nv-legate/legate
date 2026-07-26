@@ -10,8 +10,8 @@
 
 namespace legate::detail {
 
-inline ReductionRequest::ReductionRequest(InternalSharedPtr<InlineStorage> source,
-                                          InternalSharedPtr<InlineStorage> target,
+inline ReductionRequest::ReductionRequest(InternalSharedPtr<Buffer> source,
+                                          InternalSharedPtr<Buffer> target,
                                           InternalSharedPtr<Partition> source_partition,
                                           InternalSharedPtr<Partition> target_partition,
                                           const Rect& sub_domain,

@@ -6,40 +6,60 @@
 
 #include <legate/data/detail/buffer.h>
 
-#include <legate/data/detail/inline_storage.h>
-#include <legate/data/inline_allocation.h>
+#include <legate/data/detail/raw_allocation.h>
+#include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
+#include <fmt/format.h>
+
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <stdexcept>
 #include <utility>
-#include <vector>
 
 namespace legate::detail {
 
-TaskLocalBuffer::TaskLocalBuffer(InternalSharedPtr<InlineStorage> storage,
-                                 InternalSharedPtr<Type> type,
-                                 // Rect is a POD type, no point in moving it
-                                 const Rect& bounds)  // NOLINT(modernize-pass-by-value)
-  : storage_{std::move(storage)}, type_{std::move(type)}, domain_{bounds}
+Buffer::Buffer(InternalSharedPtr<RawAllocation> allocation,
+               InternalSharedPtr<Type> type,
+               Rect domain)
+  : allocation_{std::move(allocation)}, type_{std::move(type)}, domain_{std::move(domain)}
 {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    if (allocation_->size() < domain_.volume() * type_->size()) {
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Raw allocation is not big enough for the domain (allocation size: {}, domain: "
+                    "{}, element size: {})",
+                    allocation_->size(),
+                    domain_.volume(),
+                    type_->size())};
+    }
+  }
 }
 
-mapping::StoreTarget TaskLocalBuffer::memory_kind() const { return storage_->target(); }
+mapping::StoreTarget Buffer::target() const { return allocation()->target(); }
 
-InlineAllocation TaskLocalBuffer::get_inline_allocation() const
+void* Buffer::data() { return allocation()->ptr(); }
+
+const void* Buffer::data() const { return allocation()->ptr(); }
+
+std::pair<void*, Point> Buffer::base_and_element_strides() const
 {
-  // `InlineAllocation` reports byte strides, so scale the storage's element strides by the field
-  // size here (the storage keeps strides in element units).
-  auto&& [base, elem_strides] = storage_->base_and_element_strides();
-  const auto field_size       = type_->size();
+  auto element_strides = domain_.strides();
+  auto* const base     = static_cast<std::int8_t*>(allocation()->ptr()) -
+                         (domain_.lo().dot(element_strides) * type_->size());
 
-  std::vector<std::size_t> byte_strides;
+  return {static_cast<void*>(base), std::move(element_strides)};
+}
 
-  byte_strides.reserve(elem_strides.dim());
-  for (std::uint32_t i = 0; i < elem_strides.dim(); ++i) {
-    byte_strides.push_back(static_cast<std::size_t>(elem_strides[i]) * field_size);
-  }
-  return {base, std::move(byte_strides), memory_kind()};
+/*static*/ InternalSharedPtr<Buffer> Buffer::allocate(InternalSharedPtr<Type> type,
+                                                      Rect domain,
+                                                      mapping::StoreTarget target)
+{
+  auto allocation =
+    RawAllocation::create(target, std::max<>(domain.volume(), std::size_t{1}) * type->size());
+
+  return make_internal_shared<Buffer>(std::move(allocation), std::move(type), std::move(domain));
 }
 
 }  // namespace legate::detail

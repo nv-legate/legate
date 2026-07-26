@@ -100,12 +100,12 @@ void ProduceViaTaskLocalBufferTask::cpu_variant(legate::TaskContext context)
   auto output       = context.output(0);
   const auto offset = static_cast<std::int64_t>(launch_rank(context) * num);
 
-  // The type-erased create_output_buffer path returns a TaskLocalBuffer, binding it to the store.
-  auto tl_buffer = output.create_output_buffer(legate::Point{static_cast<legate::coord_t>(num)},
-                                               /*bind_buffer=*/true);
+  // The type-erased create_output_buffer path returns a Buffer, binding it to the store.
+  auto erased_buffer = output.create_output_buffer(legate::Point{static_cast<legate::coord_t>(num)},
+                                                   /*bind_buffer=*/true);
 
   // Recover a typed view to write into it.
-  auto buffer = static_cast<legate::Buffer<std::int64_t, DIM>>(tl_buffer);
+  auto buffer = static_cast<legate::NDBuffer<std::int64_t, DIM>>(erased_buffer);
 
   for (std::uint64_t i = 0; i < num; ++i) {
     buffer[legate::NDPoint<DIM>{static_cast<legate::coord_t>(i)}] =

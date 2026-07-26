@@ -6,8 +6,8 @@ from collections.abc import Callable, Collection
 from typing import Any
 
 from ...utils import AnyCallable, ShutdownCallback
-from ..data.external_allocation import ExternalAllocation
 from ..data.logical_store import LogicalStore, LogicalStorePartition
+from ..data.raw_allocation import RawAllocation
 from ..data.scalar import Scalar
 from ..data.shape import Shape
 from ..mapping.machine import Machine
@@ -71,7 +71,7 @@ class Runtime(Unconstructable):
         dtype: Type,
         shape: Shape | Collection[int],
         tile_shape: tuple[int, ...] | Collection[int],
-        allocations: list[tuple[ExternalAllocation, tuple[int, ...]]],
+        allocations: list[tuple[RawAllocation, tuple[int, ...]]],
         ordering: DimOrdering | None = None,
     ) -> tuple[LogicalStore, LogicalStorePartition]: ...
     def issue_mapping_fence(self) -> None: ...

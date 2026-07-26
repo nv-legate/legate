@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/data/detail/inline_storage.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/mapping/mapping.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/type/detail/types.h>
@@ -28,8 +28,8 @@ void fill_with_reduction_identity(void* dst,
 // cases.
 class ReductionRequest {
  public:
-  ReductionRequest(InternalSharedPtr<InlineStorage> source,
-                   InternalSharedPtr<InlineStorage> target,
+  ReductionRequest(InternalSharedPtr<Buffer> source,
+                   InternalSharedPtr<Buffer> target,
                    InternalSharedPtr<Partition> source_partition,
                    InternalSharedPtr<Partition> target_partition,
                    const Rect& sub_domain,
@@ -51,8 +51,8 @@ class ReductionRequest {
   // already holds the fully-reduced values for the tile it owns.
   void reduce_to_tiled_target_(VariantCode variant_code) const;
 
-  InternalSharedPtr<InlineStorage> source_{};
-  InternalSharedPtr<InlineStorage> target_{};
+  InternalSharedPtr<Buffer> source_{};
+  InternalSharedPtr<Buffer> target_{};
   // Partition on the target (lhs) storage produced by inverting the task-launch partition
   // through the store transform stack. Drives the dispatch in `perform()`.
   InternalSharedPtr<Partition> source_partition_{};

@@ -17,12 +17,7 @@ import numpy.typing as npt
 
 import pytest
 
-from legate.core import (
-    InlineAllocation,
-    LogicalStore,
-    get_legate_runtime,
-    types as ty,
-)
+from legate.core import LogicalStore, get_legate_runtime, types as ty
 from legate.core.task import (
     ADD,
     AND,
@@ -46,7 +41,7 @@ def check_cupy(exc: Exception) -> None:
         raise RuntimeError(msg) from exc
 
 
-def asarray(alloc: InlineAllocation) -> NDArray[Any]:
+def asarray(alloc: Any) -> NDArray[Any]:
     try:
         return np.asarray(alloc)
     except ValueError as exc:
@@ -90,8 +85,8 @@ class TestRedopTaskStore:
         def array_sum_task(
             store: InputStore, out: ReductionStore[ADD]
         ) -> None:
-            store_arr = asarray(store.get_inline_allocation())
-            out_arr = asarray(out.get_inline_allocation())
+            store_arr = asarray(store)
+            out_arr = asarray(out)
             out_arr[:] = out_arr + store_arr.sum()
 
         in_arr, in_store = self.create_input_args_()
@@ -102,8 +97,7 @@ class TestRedopTaskStore:
         get_legate_runtime().issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
-            np.add.reduce(in_arr),
+            np.asarray(out_store.get_physical_store()), np.add.reduce(in_arr)
         )
 
     @pytest.mark.parametrize(
@@ -114,8 +108,8 @@ class TestRedopTaskStore:
         def array_and_task(
             store: InputStore, out: ReductionStore[AND]
         ) -> None:
-            store_arr = asarray(store.get_inline_allocation())
-            out_arr = asarray(out.get_inline_allocation())
+            store_arr = asarray(store)
+            out_arr = asarray(out)
             out_arr[:] = out_arr & np.bitwise_and.reduce(store_arr)
 
         runtime = get_legate_runtime()
@@ -133,7 +127,7 @@ class TestRedopTaskStore:
         runtime.issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store()),
             np.bitwise_and.reduce(in_arr),
         )
 
@@ -142,8 +136,8 @@ class TestRedopTaskStore:
         def array_max_task(
             store: InputStore, out: ReductionStore[MAX]
         ) -> None:
-            store_arr = asarray(store.get_inline_allocation())
-            out_arr = asarray(out.get_inline_allocation())
+            store_arr = asarray(store)
+            out_arr = asarray(out)
             out_arr[:] = np.maximum(out_arr.max(), store_arr.max())
 
         in_arr, in_store = self.create_input_args_()
@@ -154,7 +148,7 @@ class TestRedopTaskStore:
         get_legate_runtime().issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store()),
             np.maximum.reduce(in_arr),
         )
 
@@ -163,8 +157,8 @@ class TestRedopTaskStore:
         def array_min_task(
             store: InputStore, out: ReductionStore[MIN]
         ) -> None:
-            store_arr = asarray(store.get_inline_allocation())
-            out_arr = asarray(out.get_inline_allocation())
+            store_arr = asarray(store)
+            out_arr = asarray(out)
             out_arr[:] = np.minimum(out_arr.min(), store_arr.min())
 
         in_arr, in_store = self.create_input_args_()
@@ -175,7 +169,7 @@ class TestRedopTaskStore:
         get_legate_runtime().issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store()),
             np.minimum.reduce(in_arr),
         )
 
@@ -184,8 +178,8 @@ class TestRedopTaskStore:
         def array_mul_task(
             store: InputStore, out: ReductionStore[MUL]
         ) -> None:
-            store_arr = asarray(store.get_inline_allocation())
-            out_arr = asarray(out.get_inline_allocation())
+            store_arr = asarray(store)
+            out_arr = asarray(out)
             out_arr[:] = out_arr * np.multiply.reduce(store_arr)
 
         in_arr, in_store = self.create_input_args_()
@@ -196,15 +190,15 @@ class TestRedopTaskStore:
         get_legate_runtime().issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store()),
             np.multiply.reduce(in_arr),
         )
 
     def test_or(self) -> None:
         @task
         def array_or_task(store: InputStore, out: ReductionStore[OR]) -> None:
-            store_arr = asarray(store.get_inline_allocation())
-            out_arr = asarray(out.get_inline_allocation())
+            store_arr = asarray(store)
+            out_arr = asarray(out)
             out_arr[:] = out_arr | np.bitwise_or.reduce(store_arr)
 
         in_arr, in_store = self.create_input_args_()
@@ -215,7 +209,7 @@ class TestRedopTaskStore:
         get_legate_runtime().issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store()),
             np.bitwise_or.reduce(in_arr),
         )
 
@@ -224,8 +218,8 @@ class TestRedopTaskStore:
         def array_xor_task(
             store: InputStore, out: ReductionStore[XOR]
         ) -> None:
-            store_arr = asarray(store.get_inline_allocation())
-            out_arr = asarray(out.get_inline_allocation())
+            store_arr = asarray(store)
+            out_arr = asarray(out)
             out_arr[:] = out_arr ^ np.bitwise_xor.reduce(store_arr)
 
         in_arr, in_store = self.create_input_args_()
@@ -236,7 +230,7 @@ class TestRedopTaskStore:
         get_legate_runtime().issue_execution_fence(block=True)
 
         np.testing.assert_allclose(
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store()),
             np.bitwise_xor.reduce(in_arr),
         )
 

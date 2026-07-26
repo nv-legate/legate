@@ -285,9 +285,8 @@ target_sources(
     legate/cuda/detail/cuda_driver_api.cc
     legate/cuda/detail/cuda_util.cc
     legate/cuda/detail/module_manager.cc
-    legate/data/allocator.cc
     legate/data/buffer.cc
-    legate/data/external_allocation.cc
+    legate/data/raw_allocation.cc
     legate/data/logical_store.cc
     legate/data/scalar.cc
     legate/data/shape.cc
@@ -296,7 +295,7 @@ target_sources(
     legate/data/detail/copy_request.cc
     legate/data/detail/copy_util.cc
     legate/data/detail/data_movement_requests.cc
-    legate/data/detail/external_allocation.cc
+    legate/data/detail/raw_allocation.cc
     legate/data/detail/logical_store.cc
     legate/data/detail/logical_store_partition.cc
     legate/data/detail/storage.cc
@@ -312,7 +311,6 @@ target_sources(
     legate/data/detail/transform/transpose.cc
     legate/data/detail/user_storage_tracker.cc
     legate/data/detail/buffer.cc
-    legate/data/detail/inline_storage.cc
     legate/data/detail/reduction_request.cc
     legate/data/detail/remap_request.cc
     legate/mapping/machine.cc
@@ -775,13 +773,10 @@ install(
   FILES
     legate/data/accessor.h
     legate/data/accessor.inl
-    legate/data/allocator.h
-    legate/data/allocator.inl
     legate/data/buffer.h
     legate/data/buffer.inl
-    legate/data/external_allocation.h
-    legate/data/external_allocation.inl
-    legate/data/inline_allocation.h
+    legate/data/raw_allocation.h
+    legate/data/raw_allocation.inl
     legate/data/logical_store.h
     legate/data/physical_store.h
     legate/data/physical_store.inl

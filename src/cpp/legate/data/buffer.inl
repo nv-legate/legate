@@ -18,62 +18,103 @@ namespace legate {
 
 namespace detail {
 
+LEGATE_EXPORT void check_type(const legate::Type& ty, std::size_t size_of, std::size_t align_of);
+
 LEGATE_EXPORT void check_alignment(std::size_t alignment);
 
-}  // namespace detail
+void throw_out_of_bounds(const Rect& domain, const Rect& to_access);
 
-template <typename VAL, std::int32_t DIM>
-Buffer<VAL, DIM>::Buffer(InternalSharedPtr<detail::InlineStorage> storage,
-                         const NDRect<DIM>& bounds)
-  : storage_{std::move(storage)}, bounds_{bounds}
+// Synthesizes the element `Type` for a `create_buffer<VAL>()` allocation: a primitive type when
+// `VAL` maps to one, otherwise an opaque binary type of the right size.
+template <typename VAL>
+[[nodiscard]] inline legate::Type type_of()
 {
-  void* base                                    = nullptr;
-  std::uint64_t element_strides[LEGATE_MAX_DIM] = {};
+  constexpr auto CODE = type_code_of_v<VAL>;
 
-  detail::inline_storage_layout(storage_, &base, element_strides);
-  base_ = static_cast<VAL*>(base);
-  for (std::int32_t i = 0; i < DIM; ++i) {
-    strides_[i] = static_cast<std::size_t>(element_strides[i]);
+  if constexpr (CODE == legate::Type::Code::FIXED_ARRAY || CODE == legate::Type::Code::STRUCT) {
+    return legate::binary_type(sizeof(VAL));
+  } else {
+    return legate::primitive_type(CODE);
   }
 }
 
-namespace untyped_buffer_detail {
-
-LEGATE_EXPORT void check_type(const Type& ty, std::size_t size_of, std::size_t align_of);
-
-}  // namespace untyped_buffer_detail
-
-template <typename T, std::int32_t DIM>
-TaskLocalBuffer::TaskLocalBuffer(const Buffer<T, DIM>& buf, const Type& type)
-  : TaskLocalBuffer{buf.get_storage(), type, Rect{buf.get_bounds()}}
-{
-  untyped_buffer_detail::check_type(type, sizeof(T), alignof(T));
-}
-
-template <typename T, std::int32_t DIM>
-TaskLocalBuffer::TaskLocalBuffer(const Buffer<T, DIM>& buf)
-  : TaskLocalBuffer{buf, primitive_type(type_code_of_v<T>)}
-{
-  static_assert(type_code_of_v<T> != Type::Code::FIXED_ARRAY);
-  static_assert(type_code_of_v<T> != Type::Code::STRUCT);
-  static_assert(type_code_of_v<T> != Type::Code::STRING);
-  static_assert(type_code_of_v<T> != Type::Code::NIL);
-}
-
-template <typename T, std::int32_t DIM>
-TaskLocalBuffer::operator Buffer<T, DIM>() const
-{
-  return Buffer<T, DIM>{storage_(), domain().bounds<DIM>()};
-}
-
-inline const SharedPtr<detail::TaskLocalBuffer>& TaskLocalBuffer::impl() const { return impl_; }
+}  // namespace detail
 
 // ==========================================================================================
 
 template <typename VAL, std::int32_t DIM>
-Buffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
-                               Memory::Kind kind,
-                               std::size_t alignment)
+LEGATE_HOST_DEVICE VAL& NDBuffer<VAL, DIM>::operator[](const NDPoint<DIM>& p) const
+{
+  return *ptr(p);
+}
+
+template <typename VAL, std::int32_t DIM>
+LEGATE_HOST_DEVICE VAL* NDBuffer<VAL, DIM>::ptr(const NDPoint<DIM>& p) const
+{
+  return base_ + p.dot(strides_);
+}
+
+template <typename VAL, std::int32_t DIM>
+LEGATE_HOST_DEVICE VAL* NDBuffer<VAL, DIM>::ptr(const NDRect<DIM>& r,
+                                                std::size_t strides[DIM]) const
+{
+  if (!domain_.contains(r)) {
+    detail::throw_out_of_bounds(Rect{domain_}, Rect{r});
+  }
+  for (std::int32_t i = 0; i < DIM; ++i) {
+    strides[i] = static_cast<std::size_t>(strides_[i]);
+  }
+  return ptr(r.lo);
+}
+
+template <typename VAL, std::int32_t DIM>
+LEGATE_HOST_DEVICE NDRect<DIM> NDBuffer<VAL, DIM>::domain() const
+{
+  return domain_;
+}
+
+template <typename VAL, std::int32_t DIM>
+const Buffer& NDBuffer<VAL, DIM>::buffer() const
+{
+  return buffer_;
+}
+
+template <typename VAL, std::int32_t DIM>
+void NDBuffer<VAL, DIM>::destroy()
+{
+  buffer_ = Buffer{};
+  base_   = nullptr;
+}
+
+template <typename VAL, std::int32_t DIM>
+NDBuffer<VAL, DIM>::NDBuffer(Buffer buffer) : buffer_{std::move(buffer)}
+{
+  detail::check_type(buffer_.type(), sizeof(VAL), alignof(VAL));
+  init_();
+}
+
+template <typename VAL, std::int32_t DIM>
+void NDBuffer<VAL, DIM>::init_()
+{
+  auto&& [base, strides] = buffer().base_and_element_strides();
+
+  base_    = static_cast<VAL*>(base);
+  strides_ = static_cast<NDPoint<DIM>>(strides);
+  domain_  = static_cast<NDRect<DIM>>(buffer().domain());
+}
+
+template <typename VAL, std::int32_t DIM>
+NDBuffer<VAL, DIM>::NDBuffer(Buffer buffer, InitTag) : buffer_{std::move(buffer)}
+{
+  init_();
+}
+
+// ==========================================================================================
+
+template <typename VAL, std::int32_t DIM>
+NDBuffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
+                                 Memory::Kind kind,
+                                 std::size_t alignment)
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   detail::check_alignment(alignment);
@@ -83,26 +124,29 @@ Buffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
   }
 
   const auto bounds = NDRect<DIM>{NDPoint<DIM>::zeroes(), extents - NDPoint<DIM>::ones()};
+  auto buffer       = Buffer::allocate(detail::type_of<VAL>(), Rect{bounds}, kind);
 
-  return Buffer<VAL, DIM>{detail::create_buffer_storage(sizeof(VAL), Rect{bounds}, kind), bounds};
+  return NDBuffer<VAL, DIM>{std::move(buffer), typename NDBuffer<VAL, DIM>::InitTag{}};
 }
 
 template <typename VAL, std::int32_t DIM>
-Buffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents, Memory mem, std::size_t alignment)
+NDBuffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents, Memory mem, std::size_t alignment)
 {
   return create_buffer<VAL, DIM>(extents, mem.kind(), alignment);
 }
 
 template <typename VAL>
-Buffer<VAL> create_buffer(std::size_t size, Memory::Kind kind, std::size_t alignment)
+NDBuffer<VAL> create_buffer(std::size_t size, Memory::Kind kind, std::size_t alignment)
 {
   return create_buffer<VAL, 1>(NDPoint<1>{static_cast<std::int64_t>(size)}, kind, alignment);
 }
 
 template <typename VAL>
-Buffer<VAL> create_buffer(std::size_t size, Memory mem, std::size_t alignment)
+NDBuffer<VAL> create_buffer(std::size_t size, Memory mem, std::size_t alignment)
 {
   return create_buffer<VAL, 1>(NDPoint<1>{static_cast<std::int64_t>(size)}, mem, alignment);
 }
+
+inline const SharedPtr<detail::Buffer>& Buffer::impl() const { return impl_; }
 
 }  // namespace legate

@@ -112,13 +112,13 @@ TYPED_TEST(ToDLPackUnitTyped, Basic)
   check_tensor_basic(tensor, store);
 
   {
-    auto* const data = static_cast<TypeParam*>(tensor.data);
-    auto span        = legate::Span<TypeParam>{data, data + shape.volume()};
-    const auto alloc = phys.get_inline_allocation();
+    auto* const data      = static_cast<TypeParam*>(tensor.data);
+    auto span             = legate::Span<TypeParam>{data, data + shape.volume()};
+    auto* const alloc_ptr = phys.base();
 
-    // We did not copy, so the pointer from the inline allocation should be the same as the one
+    // We did not copy, so the pointer from the store should be the same as the one
     // we get from the dlpack export.
-    ASSERT_EQ(alloc.ptr, span.data());
+    ASSERT_EQ(alloc_ptr, span.data());
     ASSERT_THAT(span, ::testing::Each(FILL_VALUE));
     std::fill(span.begin(), span.end(), SET_VALUE);
   }
@@ -156,14 +156,14 @@ TYPED_TEST(ToDLPackUnitTyped, MustCopy)
   check_tensor_basic(tensor, store);
 
   {
-    const auto SET_VALUE = TypeParam{3};
-    auto* const data     = static_cast<TypeParam*>(tensor.data);
-    auto span            = legate::Span<TypeParam>{data, data + shape.volume()};
-    const auto alloc     = phys.get_inline_allocation();
+    const auto SET_VALUE  = TypeParam{3};
+    auto* const data      = static_cast<TypeParam*>(tensor.data);
+    auto span             = legate::Span<TypeParam>{data, data + shape.volume()};
+    auto* const alloc_ptr = phys.base();
 
-    // We did copy, so the pointer from the inline allocation should NOT be the same as the one
+    // We did copy, so the pointer from the store should NOT be the same as the one
     // we get from the dlpack export.
-    ASSERT_NE(alloc.ptr, span.data());
+    ASSERT_NE(alloc_ptr, span.data());
     ASSERT_THAT(span, ::testing::Each(FILL_VALUE));
     std::fill(span.begin(), span.end(), SET_VALUE);
   }
@@ -207,12 +207,12 @@ TYPED_TEST(ToDLPackUnitTyped, CopyZCMEM)
   check_tensor_basic(tensor, store);
 
   {
-    auto* const data = static_cast<TypeParam*>(tensor.data);
-    const auto alloc = phys.get_inline_allocation();
+    auto* const data      = static_cast<TypeParam*>(tensor.data);
+    auto* const alloc_ptr = phys.base();
 
-    // We did copy, so the pointer from the inline allocation should NOT be the same as the one
+    // We did copy, so the pointer from the store should NOT be the same as the one
     // we get from the dlpack export.
-    ASSERT_NE(alloc.ptr, data);
+    ASSERT_NE(alloc_ptr, data);
   }
 
   check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCUDAHost);
@@ -244,12 +244,12 @@ TYPED_TEST(ToDLPackUnitTyped, CopyFBMEM)
   check_tensor_basic(tensor, store);
 
   {
-    auto* const data = static_cast<TypeParam*>(tensor.data);
-    const auto alloc = phys.get_inline_allocation();
+    auto* const data      = static_cast<TypeParam*>(tensor.data);
+    auto* const alloc_ptr = phys.base();
 
-    // We did copy, so the pointer from the inline allocation should NOT be the same as the one
+    // We did copy, so the pointer from the store should NOT be the same as the one
     // we get from the dlpack export.
-    ASSERT_NE(alloc.ptr, data);
+    ASSERT_NE(alloc_ptr, data);
   }
 
   check_device(tensor.device, /*expected_device_type*/ DLDeviceType::kDLCUDA);
@@ -277,13 +277,13 @@ TYPED_TEST(ToDLPackUnitTyped, NeverCopy)
   check_tensor_basic(tensor, store);
 
   {
-    auto* const data = static_cast<TypeParam*>(tensor.data);
-    auto span        = legate::Span<TypeParam>{data, data + shape.volume()};
-    const auto alloc = phys.get_inline_allocation();
+    auto* const data      = static_cast<TypeParam*>(tensor.data);
+    auto span             = legate::Span<TypeParam>{data, data + shape.volume()};
+    auto* const alloc_ptr = phys.base();
 
-    // We did NOT copy, so the pointer from the inline allocation should be the same as the one
+    // We did NOT copy, so the pointer from the store should be the same as the one
     // we get from the dlpack export.
-    ASSERT_EQ(alloc.ptr, span.data());
+    ASSERT_EQ(alloc_ptr, span.data());
     ASSERT_THAT(span, ::testing::Each(FILL_VALUE));
     std::fill(span.begin(), span.end(), SET_VALUE);
   }

@@ -130,8 +130,7 @@ std::optional<PhysicalStore> LogicalStore::get_cached_physical_store() const
 
 PhysicalStore LogicalStore::get_physical_store(std::optional<mapping::StoreTarget> target) const
 {
-  return PhysicalStore{impl()->get_physical_store(target, /* ignore_future_mutability */ false),
-                       *this};
+  return PhysicalStore{impl()->get_physical_store(target), *this};
 }
 
 bool LogicalStore::equal_storage(const LogicalStore& other) const

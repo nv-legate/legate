@@ -19,9 +19,9 @@ Each Store object is a logical handle to the data and is not immediately
 associated with a physical allocation. To access the data, a client must
 `map` the store to a physical instance. A client can map a store by passing
 it to a task, in which case the task body can see the allocation, or calling
-``get_inline_allocation``, which gives the client a linear handle to the
+``get_raw_allocation``, which gives the client a handle to the
 physical allocation (see section TODO for details about
-inline allocations).
+raw allocations).
 
 Normally, a store gets a fixed shape upon creation. However, there is a special
 type of stores called `unbound` stores whose shapes are unknown at creation

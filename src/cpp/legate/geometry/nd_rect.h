@@ -194,6 +194,8 @@ struct NDRect {
    * @return An iterable view, e.g. `for (auto&& point : rect.iterate()) { ... }`.
    */
   [[nodiscard]] LEGATE_HOST_DEVICE Iterable iterate(bool fortran_order = false) const;
+
+  [[nodiscard]] static NDRect<DIM> from_extents(const NDPoint<DIM>& extents);
 };
 
 template <int DIM>
