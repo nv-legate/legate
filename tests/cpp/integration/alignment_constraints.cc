@@ -206,7 +206,6 @@ void test_alignment_transformed()
   launch_tester(store1.promote(/*extra_dim=*/1, /*dim_size=*/5),
                 store2.slice(/*dim=*/1, legate::Slice{3, 8}));
   launch_tester(store1.promote(/*extra_dim=*/0, /*dim_size=*/10).transpose({1, 0}), store2);
-  launch_tester(store1.delinearize(/*dim=*/0, {10, 10}), store4);
   launch_tester(store4.transpose({1, 0}).promote(/*extra_dim=*/0, /*dim_size=*/1),
                 store4.promote(/*extra_dim=*/0, /*dim_size=*/1));
 }

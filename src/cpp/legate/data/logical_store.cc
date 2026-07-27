@@ -112,12 +112,6 @@ LogicalStore LogicalStore::transpose(std::vector<std::int32_t>&& axes) const
     impl()->transpose(detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{std::move(axes)})};
 }
 
-LogicalStore LogicalStore::delinearize(std::int32_t dim, std::vector<std::uint64_t> sizes) const
-{
-  return LogicalStore{
-    impl()->delinearize(dim, detail::SmallVector<std::uint64_t, LEGATE_MAX_DIM>{std::move(sizes)})};
-}
-
 std::optional<PhysicalStore> LogicalStore::get_cached_physical_store() const
 {
   auto mapped = impl()->get_cached_physical_store();

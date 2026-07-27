@@ -108,10 +108,6 @@ class Test_store_valid_transform:
         assert transposed.shape == (3, 4)
         assert transposed.transformed
 
-        delinearized = store.delinearize(0, (2, 2))
-        assert delinearized.shape == (2, 2, 3)
-        assert delinearized.transformed
-
 
 class Test_store_invalid_transform:
     def test_bound(self) -> None:
@@ -154,12 +150,6 @@ class Test_store_invalid_transform:
         msg = re.escape("Expected an iterable but got <class 'int'>")
         with pytest.raises(ValueError, match=msg):
             store.transpose(1)  # type: ignore[arg-type]
-
-        with pytest.raises(ValueError):  # noqa: PT011
-            store.delinearize(2, (2, 3))
-
-        with pytest.raises(ValueError):  # noqa: PT011
-            store.delinearize(0, (2, 3))
 
     def test_unbound(self) -> None:
         runtime = get_legate_runtime()

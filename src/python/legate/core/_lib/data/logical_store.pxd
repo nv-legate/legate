@@ -35,7 +35,6 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore broadcast(int32_t, size_t) except+
         _LogicalStore slice(int32_t, _Slice) except+
         _LogicalStore transpose(std_vector[int32_t]) except+
-        _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
         std_optional[_LogicalStorePartition] get_partition() except+
         _LogicalStorePartition partition_by_tiling(
             std_vector[uint64_t] tile_shape,
@@ -66,7 +65,6 @@ cdef class LogicalStore(Unconstructable):
     cpdef LogicalStore broadcast(self, int32_t dim, size_t dim_size)
     cpdef LogicalStore slice(self, int32_t dim, slice sl)
     cpdef LogicalStore transpose(self, object axes)
-    cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)
     cpdef void fill(self, object value)
     cpdef LogicalStorePartition partition_by_tiling(
         self,

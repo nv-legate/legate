@@ -377,46 +377,6 @@ class LEGATE_EXPORT LogicalStore {
   [[nodiscard]] LogicalStore transpose(std::vector<std::int32_t>&& axes) const;
 
   /**
-   * @brief Delinearizes a dimension into multiple dimensions.
-   *
-   * Each dimension @f$i@f$ of the store, where @f$i >@f$ `dim`, will be mapped to dimension
-   * @f$i+N@f$ of the resulting store, where @f$N@f$ is the length of `sizes`. A delinearization
-   * that does not preserve the size of the store is invalid.
-   *
-   * For example, consider a 2D store `A`
-   *
-   * @code{.unparsed}
-   * [[1, 2, 3, 4],
-   *  [5, 6, 7, 8]]
-   * @endcode
-   *
-   * A delinearizing call `A.delinearize(1, {2, 2}))` yields:
-   *
-   * @code{.unparsed}
-   * [[[1, 2],
-   *   [3, 4]],
-   *
-   *  [[5, 6],
-   *   [7, 8]]]
-   * @endcode
-   *
-   * Unlike other transformations, delinearization is not an affine transformation. Due to this
-   * nature, delinearized stores can raise `legate::NonInvertibleTransformation` in places where
-   * they cannot be used.
-   *
-   * The call can block if the store is unbound
-   *
-   * @param dim Dimension to delinearize
-   * @param sizes Extents for the resulting dimensions
-   *
-   * @return A new store with the chosen dimension delinearized
-   *
-   * @throw std::invalid_argument If `dim` is invalid for the store or `sizes` does not preserve
-   * the extent of the chosen dimension
-   */
-  [[nodiscard]] LogicalStore delinearize(std::int32_t dim, std::vector<std::uint64_t> sizes) const;
-
-  /**
    * @brief Gets the current partition for the store
    *
    * A partition describes how the store's data is distributed across multiple processors

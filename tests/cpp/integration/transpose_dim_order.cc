@@ -57,7 +57,6 @@ enum class TestCase : std::uint8_t {
   TRANSPOSE_3D,
   PROMOTE_TRANSPOSE,
   PROJECT_TRANSPOSE,
-  DELINEARIZE_TRANSPOSE,
   EMPTY_NO_TRANSFORM,
   EMPTY_PROMOTE_TRANSPOSE,
 };
@@ -155,20 +154,6 @@ class TaskProjectTranspose
   }
 };
 
-class TaskDelinearizeTranspose
-  : public TestTaskBase<TaskDelinearizeTranspose, TestCase::DELINEARIZE_TRANSPOSE> {
- public:
-  static void check(const legate::PhysicalStore& store, const bool fortran_order)
-  {
-    auto store_acc = store.read_accessor<std::int64_t, 3>();
-    if (fortran_order) {
-      EXPECT_EQ(&(store_acc[{1, 0, 0}]) - &(store_acc[{0, 0, 0}]), 1);
-    } else {
-      EXPECT_EQ(&(store_acc[{0, 0, 1}]) - &(store_acc[{0, 0, 0}]), 1);
-    }
-  }
-};
-
 class TaskEmptyNoTransform
   : public TestTaskBase<TaskEmptyNoTransform, TestCase::EMPTY_NO_TRANSFORM> {
  public:
@@ -203,7 +188,6 @@ class TransposeDimOrder : public DefaultFixture, public ::testing::WithParamInte
       TaskTranspose3D::register_variants(library);
       TaskPromoteTranspose::register_variants(library);
       TaskProjectTranspose::register_variants(library);
-      TaskDelinearizeTranspose::register_variants(library);
       TaskEmptyNoTransform::register_variants(library);
       TaskEmptyPromoteTranspose::register_variants(library);
     }
@@ -252,18 +236,6 @@ TEST_P(TransposeDimOrder, ProjectTranspose)
   const bool fortran_order = GetParam();
   store                    = store.project(/*dim=*/1, /*index=*/0).transpose({1, 0});
   launch_task_with_store<TaskProjectTranspose>(store, fortran_order);
-}
-
-TEST_P(TransposeDimOrder, DelinearizeTranspose)
-{
-  auto store               = make_store<2>();
-  const bool fortran_order = GetParam();
-  // factorize Y_LEN into two factors
-  constexpr std::size_t FACTOR_A = 4;
-  constexpr std::size_t FACTOR_B = Y_LEN / FACTOR_A;
-  ASSERT_EQ(Y_LEN, FACTOR_A * FACTOR_B);
-  store = store.delinearize(/*dim=*/1, {FACTOR_A, FACTOR_B}).transpose({2, 1, 0});
-  launch_task_with_store<TaskDelinearizeTranspose>(store, fortran_order);
 }
 
 TEST_P(TransposeDimOrder, EmptyNoTransform)

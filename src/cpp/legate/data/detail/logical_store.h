@@ -103,8 +103,6 @@ class LogicalStore {
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> transpose(
     SmallVector<std::int32_t, LEGATE_MAX_DIM> axes);
-  [[nodiscard]] InternalSharedPtr<LogicalStore> delinearize(
-    std::int32_t dim, const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& sizes);
 
  private:
   friend InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(

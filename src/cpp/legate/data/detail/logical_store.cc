@@ -282,14 +282,6 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(
     std::move(new_extents), storage_, type(), std::move(transform), domain_);
 }
 
-InternalSharedPtr<LogicalStore> LogicalStore::delinearize(
-  std::int32_t, const SmallVector<std::uint64_t, LEGATE_MAX_DIM>&)
-{
-  // TODO(wonchanl): V2 needs to subsume reshaping
-  LEGATE_ABORT("No support for delinearization");
-  return nullptr;
-}
-
 InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   const InternalSharedPtr<LogicalStore>& self,
   SmallVector<std::uint64_t, LEGATE_MAX_DIM> tile_shape,

@@ -70,7 +70,6 @@ transformed store are visible via the original one and vice versa.
    LogicalStore.broadcast
    LogicalStore.slice
    LogicalStore.transpose
-   LogicalStore.delinearize
 
 
 Partition management

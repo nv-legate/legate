@@ -24,37 +24,6 @@ from .utils import utils
 
 class TestLogicalStoreOperation:
     @pytest.mark.parametrize(
-        ("arr_shape", "dim", "shape"),
-        [
-            ((1, 0, 4), 1, (0,)),
-            ((1024,), 0, (256, 4)),
-            ((1, 2, 4), 2, (1, 4)),
-            ((1, 2, 4), -2, (2,)),
-            # TODO(yimoj) [issue 503]
-            # Delinearize allows sizes [0,0] but SIGFPE when
-            # the store's array interface is accessed.
-            # Fatal Python error: Floating point exception
-            pytest.param(
-                (1, 0, 1),
-                1,
-                (0, 0),
-                marks=pytest.mark.xfail(reason="SIGFPE", run=False),
-            ),
-        ],
-        ids=str,
-    )
-    def test_delinearize(
-        self, arr_shape: tuple[int, ...], dim: int, shape: tuple[int, ...]
-    ) -> None:
-        arr, store = utils.create_np_array_and_store(ty.int16, arr_shape)
-        new_shape = arr_shape[:dim] + shape + arr_shape[dim + 1 :]
-        reshaped = arr.reshape(new_shape)
-        delinearized = store.delinearize(dim, shape)
-        assert delinearized.equal_storage(store)
-        delin_arr = np.asarray(delinearized.get_physical_store())
-        np.testing.assert_allclose(delin_arr, reshaped)
-
-    @pytest.mark.parametrize(
         ("arr_shape", "dim", "index"),
         [
             ((2, 2), 1, 0),
@@ -268,37 +237,6 @@ class TestLogicalStoreOperationErrors:
         store = runtime.create_store(ty.float64, (1, 2))
         with pytest.raises(ValueError, match="Invalid promotion on dimension"):
             store.promote(4, 0)
-
-    def test_delinearize_invalid_dim(self) -> None:
-        runtime = get_legate_runtime()
-        store = runtime.create_store(ty.float64, (1, 2, 3))
-        with pytest.raises(ValueError, match="Invalid delinearization on dim"):
-            store.delinearize(3, (1, 2))
-
-    @pytest.mark.xfail(reason="LEGATE_MAX_DIM is not respected")
-    def test_delinearize_exceed_max_dim(self) -> None:
-        shape = (1, 2, 4, 5)
-        runtime = get_legate_runtime()
-        store = runtime.create_store(ty.int16, shape)
-        with pytest.raises(IndexError, match="maximum number of dimensions"):
-            store = store.delinearize(2, (1, 4))
-
-        # we won't reach this line at this point, but keeping it here as it
-        # crashes application when inline allocation is accessed since
-        # max dim is exceeded:
-        # Legion::DomainTransform::DomainTransform(const Legion::
-        # DomainTransform&): Assertion `n <= LEGION_MAX_DIM' failed.
-
-        # when max dim issue is fixed this assert should pass
-        assert np.asarray(store.get_physical_store()).shape == shape
-
-    def test_delinearize_invalid_shape(self) -> None:
-        runtime = get_legate_runtime()
-        store = runtime.create_store(ty.int16, (1,))
-        with pytest.raises(
-            ValueError, match=r"size.*cannot be delinearized into"
-        ):
-            store.delinearize(0, (1, 2))
 
     def test_project_invalid_dim(self) -> None:
         runtime = get_legate_runtime()
