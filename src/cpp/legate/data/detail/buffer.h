@@ -10,7 +10,9 @@
 #include <legate/geometry/point.h>
 #include <legate/geometry/rect.h>
 #include <legate/type/detail/types.h>
+#include <legate/utilities/detail/small_vector.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
@@ -29,8 +31,14 @@ class Buffer {
    * @param allocation The raw allocation backing this buffer.
    * @param type The type to interpret `allocation` as.
    * @param domain The extents of the buffer.
+   * @param dim_order The dimensions of `domain`, listed from the most rapidly changing one to the
+   * least rapidly changing one (i.e. `dim_order[0]` is the unit-stride dimension). An empty
+   * `dim_order` means C ordering. See `mapping::detail::DimOrdering::dimension_order()`.
    */
-  Buffer(InternalSharedPtr<RawAllocation> allocation, InternalSharedPtr<Type> type, Rect domain);
+  Buffer(InternalSharedPtr<RawAllocation> allocation,
+         InternalSharedPtr<Type> type,
+         Rect domain,
+         SmallVector<std::int32_t, LEGATE_MAX_DIM> dim_order = {});
 
   /**
    * @return The type of the buffer.
@@ -80,6 +88,22 @@ class Buffer {
    */
   [[nodiscard]] std::pair<void*, Point> base_and_element_strides() const;
 
+  /**
+   * @brief Returns the per-dimension element strides of the buffer's dense layout.
+   *
+   * The strides follow the buffer's dimension ordering, so they are not necessarily C-order
+   * strides of the domain.
+   *
+   * @return The element strides.
+   */
+  [[nodiscard]] Point element_strides() const;
+
+  /**
+   * @return The buffer's dimension ordering, from the most rapidly changing dimension to the
+   * least rapidly changing one. Empty for a 0-D buffer.
+   */
+  [[nodiscard]] Span<const std::int32_t> dim_order() const;
+
   void reshape(Rect new_domain);
 
   /**
@@ -88,6 +112,8 @@ class Buffer {
    * Unlike the constructors, which view an already-existing `RawAllocation`, this factory allocates
    * the backing memory itself. The lifetime of the allocated memory is tied to the lifetime of the
    * returned buffer (and any other holder of the underlying allocation).
+   *
+   * Freshly allocated buffers always have C ordering.
    *
    * @param type The type to interpret the allocation as.
    * @param domain The extents of the buffer.
@@ -103,6 +129,9 @@ class Buffer {
   InternalSharedPtr<RawAllocation> allocation_{};
   InternalSharedPtr<Type> type_{};
   Rect domain_{};
+  // Dimensions from the most rapidly changing to the least rapidly changing. Always has `dim()`
+  // entries once constructed; the constructor fills in C ordering when none is given.
+  SmallVector<std::int32_t, LEGATE_MAX_DIM> dim_order_{};
 };
 
 }  // namespace legate::detail

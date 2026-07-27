@@ -304,7 +304,7 @@ void ReductionRequest::reduce_to_tiled_target_(VariantCode variant_code) const
   }
 
   const auto source_domain  = source_->domain();
-  const auto source_strides = source_domain.strides();
+  const auto source_strides = source_->element_strides();
   const auto source_extents = source_domain.extents();
   const auto target_extents = target_domain.extents();
 

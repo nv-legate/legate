@@ -163,8 +163,8 @@ void test_read_accessor_by_task(legate::LogicalStore& logical_store, legate::Sca
 void test_read_accessor_future_store(legate::PhysicalStore& store)
 {
   ASSERT_TRUE(store.is_readable());
-  ASSERT_FALSE(store.is_writable());
-  ASSERT_FALSE(store.is_reducible());
+  ASSERT_TRUE(store.is_writable());
+  ASSERT_TRUE(store.is_reducible());
   static constexpr auto DIM = 1;
 
   ASSERT_EQ(store.shape<DIM>().volume(), DIM);

@@ -108,12 +108,9 @@ void Fill::launch(Strategy* /*strategy*/)
                   Span<const std::byte>{buf, fill_value.size()},
                   &pub_phys_store);
 
-  // A fill through a transformed store (e.g. a slice) writes a view into a larger storage and
-  // must not claim the whole storage's key partition; only an untransformed fill covers the
-  // storage outright. This mirrors the guard in `map_stores()` for task writes.
-  if (!lhs_->transformed()) {
-    lhs_->set_key_partition(machine(), parallel_policy(), create_no_partition());
-  }
+  // FIXME(wonchanl): Since we don't do parallel fills, we can simply set NoPartition as the key
+  // partition, but this definitely needs to be fixed.
+  lhs_->set_key_partition(machine(), parallel_policy(), create_no_partition());
 }
 
 void Fill::add_to_solver(ConstraintSolver& solver)

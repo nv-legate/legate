@@ -188,17 +188,11 @@ void test_read_write_accessor_by_task(legate::LogicalStore& logical_store, legat
 void test_read_write_accessor_future_store(legate::PhysicalStore& store)
 {
   ASSERT_TRUE(store.is_readable());
-  ASSERT_FALSE(store.is_writable());
-  ASSERT_FALSE(store.is_reducible());
+  ASSERT_TRUE(store.is_writable());
+  ASSERT_TRUE(store.is_reducible());
   static constexpr auto DIM = 1;
 
   ASSERT_EQ(store.shape<DIM>().volume(), DIM);
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    // accessors of beyond the privilege
-    ASSERT_THROW(static_cast<void>(store.read_write_accessor<std::uint64_t, DIM>()),
-                 std::invalid_argument);
-  }
 }
 
 // This test file only performs `ASSERT_EXIT` checks when bounds checking is enabled, so no

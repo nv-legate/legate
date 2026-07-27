@@ -42,6 +42,24 @@ class DimOrdering {
 
   [[nodiscard]] bool operator==(const DimOrdering& other) const;
 
+  /**
+   * @brief Resolves this ordering into an explicit dimension permutation for a given
+   * dimensionality.
+   *
+   * The dimensions are listed from the most rapidly changing one to the least rapidly changing
+   * one, i.e. `result[0]` is the leading (unit-stride) dimension. C ordering therefore yields
+   * `{ndim - 1, ..., 0}` and Fortran ordering yields `{0, ..., ndim - 1}`.
+   *
+   * @param ndim The dimensionality to resolve the ordering for.
+   *
+   * @return The dimension permutation.
+   *
+   * @throw std::invalid_argument If the ordering is `CUSTOM` and its dimensions are not a
+   * permutation of `[0, ndim)`.
+   */
+  [[nodiscard]] legate::detail::SmallVector<std::int32_t, LEGATE_MAX_DIM> dimension_order(
+    std::uint32_t ndim) const;
+
   Kind kind{};
   std::vector<std::int32_t> dims{};
 };

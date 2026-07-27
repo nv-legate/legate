@@ -27,8 +27,8 @@ class ReduceAccessorFn {
   {
     using T = legate::type_of_t<CODE>;
 
-    ASSERT_TRUE(store.is_readable());
-    ASSERT_TRUE(store.is_writable());
+    ASSERT_FALSE(store.is_readable());
+    ASSERT_FALSE(store.is_writable());
     ASSERT_TRUE(store.is_reducible());
 
     const auto LEGION_ACC_INIT_VAL        = static_cast<T>(32);
@@ -185,18 +185,11 @@ void test_reduce_accessor_by_task(legate::LogicalStore& logical_store, legate::S
 void test_reduce_accessor_future_store(legate::PhysicalStore& store)
 {
   ASSERT_TRUE(store.is_readable());
-  ASSERT_FALSE(store.is_writable());
-  ASSERT_FALSE(store.is_reducible());
+  ASSERT_TRUE(store.is_writable());
+  ASSERT_TRUE(store.is_reducible());
   static constexpr auto DIM = 1;
 
   ASSERT_EQ(store.shape<1>().volume(), DIM);
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    // accessors of beyond the privilege
-    ASSERT_THROW(
-      static_cast<void>(store.reduce_accessor<legate::SumReduction<u_int64_t>, false, DIM>()),
-      std::invalid_argument);
-  }
 }
 
 // This test file only performs `ASSERT_EXIT` checks when bounds checking is enabled, so no

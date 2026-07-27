@@ -219,6 +219,12 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   requests->record_mapped_alloc(id(), data);
 
   if (!buffer_) {
+    // FIXME(wonchanl): We can't blindly sets the buffer to this Storage if the buffer is a partial
+    // materialization, which can happen if a slice of a store gets mapped before the original store
+    // is mapped. (Technically, this assertion is overzealous as some store transformations preserve
+    // volume, but since there's no easy way to check that here, we just use a more strong
+    // condition).
+    LEGATE_CHECK(!is_transformed);
     // First materialization of the active storage: it lives on the memory of the task that first
     // writes it (by default the rank's GPU, since tasks run on the GPU when one is available). A
     // store first written on the GPU therefore keeps its active storage on the GPU; a task that

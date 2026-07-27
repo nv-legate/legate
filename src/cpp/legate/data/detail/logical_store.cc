@@ -710,17 +710,15 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
                                      const ParallelPolicy& parallel_policy,
                                      InternalSharedPtr<Partition> partition)
 {
-  LEGATE_ASSERT(!transformed());
   num_pieces_ = machine.count() * parallel_policy.overdecompose_factor();
-  get_storage()->set_key_partition(partition);
+  get_storage()->set_key_partition(partition->invert(partition, transform_));
   key_partition_ = std::move(partition);
 }
 
 void LogicalStore::set_key_partition(InternalSharedPtr<Partition> partition)
 {
-  LEGATE_ASSERT(!transformed());
   num_pieces_ = static_cast<std::uint32_t>(partition->color_shape().volume());
-  get_storage()->set_key_partition(partition);
+  get_storage()->set_key_partition(partition->invert(partition, transform_));
   key_partition_ = std::move(partition);
 }
 

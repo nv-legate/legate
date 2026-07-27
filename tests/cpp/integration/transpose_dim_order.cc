@@ -29,13 +29,19 @@ legate::LogicalStore make_store()
 
   auto runtime = legate::Runtime::get_runtime();
 
-  if constexpr (NDIM == 2) {
-    const auto shape = legate::Shape{X_LEN, Y_LEN};
-    return runtime->create_store(shape, legate::int64());
-  } else {
-    const auto shape = legate::Shape{X_LEN, Y_LEN, Z_LEN};
-    return runtime->create_store(shape, legate::int64());
-  }
+  auto store = [&] {
+    if constexpr (NDIM == 2) {
+      const auto shape = legate::Shape{X_LEN, Y_LEN};
+      return runtime->create_store(shape, legate::int64());
+    } else {
+      const auto shape = legate::Shape{X_LEN, Y_LEN, Z_LEN};
+      return runtime->create_store(shape, legate::int64());
+    }
+  }();
+
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
+
+  return store;
 }
 
 template <typename TaskClass>
@@ -240,16 +246,18 @@ TEST_P(TransposeDimOrder, ProjectTranspose)
 
 TEST_P(TransposeDimOrder, EmptyNoTransform)
 {
-  auto runtime             = legate::Runtime::get_runtime();
-  auto store               = runtime->create_store(legate::Shape{}, legate::int64());
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{}, legate::int64());
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
   const bool fortran_order = GetParam();
   launch_task_with_store<TaskEmptyNoTransform>(store, fortran_order);
 }
 
 TEST_P(TransposeDimOrder, EmptyPromoteTranspose)
 {
-  auto runtime             = legate::Runtime::get_runtime();
-  auto store               = runtime->create_store(legate::Shape{}, legate::int64());
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{}, legate::int64());
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
   const bool fortran_order = GetParam();
   store = store.promote(/*extra_dim=*/0, X_LEN).promote(/*extra_dim=*/1, Y_LEN).transpose({1, 0});
   launch_task_with_store<TaskEmptyPromoteTranspose>(store, fortran_order);

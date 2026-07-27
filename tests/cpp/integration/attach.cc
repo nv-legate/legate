@@ -10,7 +10,10 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cstdint>
 #include <utilities/utilities.h>
+#include <vector>
 
 namespace attach {
 
@@ -232,6 +235,79 @@ TEST_P(Positive, Test)
   const auto& [layout, unordered, read_only, use_tasks, use_inline] = GetParam();
   const auto& [dim, fortran]                                        = layout;
   test_body(dim, fortran, unordered, read_only, use_tasks, use_inline);
+}
+
+TEST_F(Attach, CustomOrdering)
+{
+  // A 3-D store whose middle dimension is the unit-stride one, i.e. neither C nor Fortran order.
+  constexpr std::uint64_t EXTENTS[] = {2, 3, 4};
+  const legate::tuple<std::uint64_t> shape{EXTENTS[0], EXTENTS[1], EXTENTS[2]};
+  auto runtime = legate::Runtime::get_runtime();
+  std::vector<std::int64_t> buffer(shape.volume());
+
+  // Dimensions are listed from the most rapidly changing one to the least, so the element strides
+  // are dim 1 -> 1, dim 0 -> extents[1], dim 2 -> extents[0] * extents[1].
+  const auto strides = std::array<std::uint64_t, 3>{EXTENTS[1], 1, EXTENTS[0] * EXTENTS[1]};
+  // Gives every element a distinct value that is a function of its coordinate alone, so reading it
+  // back through a differently-ordered layout cannot accidentally match.
+  const auto value_at = [](const legate::NDPoint<3>& p) {
+    return (p[0] << 8) | (p[1] << 4) | p[2];
+  };
+
+  for (std::uint64_t i = 0; i < EXTENTS[0]; ++i) {
+    for (std::uint64_t j = 0; j < EXTENTS[1]; ++j) {
+      for (std::uint64_t k = 0; k < EXTENTS[2]; ++k) {
+        buffer[(i * strides[0]) + (j * strides[1]) + (k * strides[2])] =
+          value_at(legate::NDPoint<3>{static_cast<std::int64_t>(i),
+                                      static_cast<std::int64_t>(j),
+                                      static_cast<std::int64_t>(k)});
+      }
+    }
+  }
+
+  auto l_store = runtime->create_store(shape,
+                                       legate::int64(),
+                                       buffer.data(),
+                                       /*read_only=*/true,
+                                       legate::mapping::DimOrdering::custom_order({1, 0, 2}));
+  {
+    auto p_store = l_store.get_physical_store();
+    auto p_shape = p_store.shape<3>();
+    auto acc     = p_store.read_accessor<std::int64_t, 3, true>(p_shape);
+
+    for (auto&& point : p_shape.iterate()) {
+      EXPECT_EQ(acc[point], value_at(point));
+    }
+  }
+  l_store.detach();
+}
+
+TEST_F(Attach, NegativeCustomOrdering)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  std::vector<std::int64_t> buffer(SHAPE_2D().volume());
+
+  // Ordering with the wrong number of dimensions
+  EXPECT_THROW((void)runtime->create_store(SHAPE_2D(),
+                                           legate::int64(),
+                                           buffer.data(),
+                                           /*read_only=*/true,
+                                           legate::mapping::DimOrdering::custom_order({0})),
+               std::invalid_argument);
+
+  // Ordering that is not a permutation of [0, ndim)
+  EXPECT_THROW((void)runtime->create_store(SHAPE_2D(),
+                                           legate::int64(),
+                                           buffer.data(),
+                                           /*read_only=*/true,
+                                           legate::mapping::DimOrdering::custom_order({0, 0})),
+               std::invalid_argument);
+  EXPECT_THROW((void)runtime->create_store(SHAPE_2D(),
+                                           legate::int64(),
+                                           buffer.data(),
+                                           /*read_only=*/true,
+                                           legate::mapping::DimOrdering::custom_order({0, 2})),
+               std::invalid_argument);
 }
 
 TEST_F(Attach, Negative)

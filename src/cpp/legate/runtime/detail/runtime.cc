@@ -379,7 +379,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,
   const InternalSharedPtr<RawAllocation>& allocation,
-  const InternalSharedPtr<mapping::detail::DimOrdering>& /*ordering*/) const
+  const InternalSharedPtr<mapping::detail::DimOrdering>& ordering) const
 {
   validate_store_shape(shape, type);
   LEGATE_CHECK(allocation->ptr());
@@ -395,7 +395,8 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   auto storage = make_internal_shared<detail::Storage>(
     shape,
     type,
-    make_internal_shared<detail::Buffer>(allocation, type, shape->domain()),
+    make_internal_shared<detail::Buffer>(
+      allocation, type, shape->domain(), ordering->dimension_order(shape->ndim())),
     get_provenance().as_string_view());
 
   return make_internal_shared<detail::LogicalStore>(std::move(storage), std::move(type));

@@ -104,7 +104,10 @@ void cpu_reorder_elements(Buffer& target, const Buffer& source, const Tiling* ti
   auto* target_ptr       = static_cast<VAL*>(target.data());
   const auto* source_ptr = static_cast<const VAL*>(source.data());
 
-  const auto target_strides = target.domain().strides();
+  // The target may be an external allocation with a non-C dimension ordering, so take its actual
+  // strides rather than deriving C-order ones from its domain. The source is always a buffer we
+  // allocated (tile-major, hence C order within a tile).
+  const auto target_strides = target.element_strides();
 
   const auto& tile_shape  = tiling->tile_shape();
   const auto tile_strides = tile_shape.strides();
@@ -515,6 +518,10 @@ struct ReorderElementsGPU {
     CUkernel kern      = mod_manager.load_kernel_from_fatbin(copy_request_fatbin,
                                                              ReorderElementsKernelName<VAL>::value);
 
+    // Unlike its CPU counterpart, the kernel writes the target densely in C order (`target[tid]`),
+    // so it cannot handle an external allocation with a non-C dimension ordering.
+    LEGATE_CHECK(target.element_strides() == target.domain().strides());
+
     auto target_extents      = target.domain().extents();
     auto target_lo           = target.domain().lo();
     const auto& tile_shape   = tiling->tile_shape();
@@ -753,8 +760,11 @@ void CopyRequest::shuffle_(VariantCode variant_code) const
 
   const auto& source_domain = source_->domain();
   const auto& target_domain = target_->domain();
-  const auto source_strides = source_domain.strides();
-  const auto target_strides = target_domain.strides();
+  // Either buffer may be an external allocation with a non-C dimension ordering, so take its
+  // actual strides. A buffer whose strides differ from the packed (C-order) strides of a subdomain
+  // does not qualify for the in-place send/recv shortcut below and gets packed instead.
+  const auto source_strides = source_->element_strides();
+  const auto target_strides = target_->element_strides();
 
   // TODO(wonchanl): Add an option to toggle this behavior
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {

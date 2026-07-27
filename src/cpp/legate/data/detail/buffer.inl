@@ -18,6 +18,17 @@ inline const Rect& Buffer::domain() const { return domain_; }
 
 inline const InternalSharedPtr<RawAllocation>& Buffer::allocation() const { return allocation_; }
 
-inline void Buffer::reshape(Rect new_domain) { domain_ = new_domain; }
+inline Span<const std::int32_t> Buffer::dim_order() const
+{
+  return Span<const std::int32_t>{dim_order_.data(), dim_order_.size()};
+}
+
+inline void Buffer::reshape(Rect new_domain)
+{
+  // Reshaping only re-bases/resizes the domain; the dimension ordering (and hence which dimension
+  // is the unit-stride one) is unchanged, so it must keep the same dimensionality.
+  LEGATE_ASSERT(new_domain.dim() == domain_.dim());
+  domain_ = new_domain;
+}
 
 }  // namespace legate::detail
