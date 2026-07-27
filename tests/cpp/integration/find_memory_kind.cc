@@ -39,7 +39,7 @@ struct Checker : public legate::LegateTask<Checker> {
 
 class Config {
  public:
-  static constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
+  static constexpr std::string_view LIBRARY_NAME = "test_find_memory_kind";
 
   static void registration_callback(legate::Library library)
   {

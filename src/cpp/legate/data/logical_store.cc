@@ -112,16 +112,6 @@ LogicalStore LogicalStore::transpose(std::vector<std::int32_t>&& axes) const
     impl()->transpose(detail::SmallVector<std::int32_t, LEGATE_MAX_DIM>{std::move(axes)})};
 }
 
-std::optional<PhysicalStore> LogicalStore::get_cached_physical_store() const
-{
-  auto mapped = impl()->get_cached_physical_store();
-
-  if (mapped.has_value()) {
-    return PhysicalStore{*mapped, *this};
-  }
-  return std::nullopt;
-}
-
 PhysicalStore LogicalStore::get_physical_store(std::optional<mapping::StoreTarget> target) const
 {
   return PhysicalStore{impl()->get_physical_store(target), *this};

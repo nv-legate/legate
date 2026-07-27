@@ -100,16 +100,20 @@ void Fill::launch(Strategy* /*strategy*/)
   // the fast-path.
   auto phys_store       = lhs_->get_physical_store(mapping::StoreTarget::SYSMEM);
   auto pub_phys_store   = legate::PhysicalStore{phys_store};
-  std::size_t fut_size  = 0;
   const auto* const buf = static_cast<const std::byte*>(fill_value.data());
 
   double_dispatch(std::max(1, static_cast<std::int32_t>(phys_store->dim())),
                   phys_store->type()->code,
                   InlineFill{},
-                  Span<const std::byte>{buf, fut_size},
+                  Span<const std::byte>{buf, fill_value.size()},
                   &pub_phys_store);
 
-  lhs_->set_key_partition(machine(), parallel_policy(), create_no_partition());
+  // A fill through a transformed store (e.g. a slice) writes a view into a larger storage and
+  // must not claim the whole storage's key partition; only an untransformed fill covers the
+  // storage outright. This mirrors the guard in `map_stores()` for task writes.
+  if (!lhs_->transformed()) {
+    lhs_->set_key_partition(machine(), parallel_policy(), create_no_partition());
+  }
 }
 
 void Fill::add_to_solver(ConstraintSolver& solver)

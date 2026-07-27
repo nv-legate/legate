@@ -32,7 +32,6 @@ class FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
   ASSERT_EQ(store.strides().size(), store.dim());
   ASSERT_EQ(store.strides()[0], 0);
   ASSERT_EQ(store.target(), legate::mapping::StoreTarget::SYSMEM);
-  ASSERT_EQ(store.scalar<std::uint32_t>(), 1);
 }
 
 class GPUTask : public legate::LegateTask<GPUTask> {
@@ -112,7 +111,7 @@ TEST_F(PhysicalStoreRawAllocationUnit, ReadOnlyFutureStore)
 TEST_F(PhysicalStoreRawAllocationUnit, TransformedFutureStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store(legate::Scalar{1});
+  auto logical_store = runtime->create_store(legate::Scalar{1}, legate::Shape{1});
   auto promoted      = logical_store.promote(/*extra_dim=*/0, /*dim_size=*/1);
   auto store         = promoted.get_physical_store();
 

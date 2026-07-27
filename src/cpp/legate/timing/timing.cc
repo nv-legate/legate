@@ -26,7 +26,7 @@ class Time::Impl {
     if (!value_) {
       value_ =
         legate::PhysicalStore{store_->get_physical_store(legate::mapping::StoreTarget::SYSMEM)}
-          .scalar<std::int64_t>();
+          .read_accessor<std::int64_t, 1>()[0];
       store_.reset();
     }
     return *value_;

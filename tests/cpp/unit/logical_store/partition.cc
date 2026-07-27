@@ -39,25 +39,6 @@ class ColorShapeDimensionSizeTest
   : public LogicalStorePartitionUnit,
     public ::testing::WithParamInterface<std::vector<std::uint64_t>> {};
 
-class ChildStoreTest : public LogicalStorePartitionUnit,
-                       public ::testing::WithParamInterface<
-                         std::tuple<legate::Shape,
-                                    std::vector<std::uint64_t>,
-                                    std::tuple<legate::tuple<std::uint64_t>, legate::Shape>>> {};
-
-class ForcedColorChildStoreTest
-  : public LogicalStorePartitionUnit,
-    public ::testing::WithParamInterface<
-      std::tuple<legate::Shape,
-                 std::vector<std::uint64_t>,
-                 std::vector<std::uint64_t>,
-                 std::tuple<legate::tuple<std::uint64_t>, legate::Shape>>> {};
-
-class NegativeColorTest
-  : public LogicalStorePartitionUnit,
-    public ::testing::WithParamInterface<std::tuple<legate::Shape, legate::tuple<std::uint64_t>>> {
-};
-
 INSTANTIATE_TEST_SUITE_P(
   LogicalStorePartitionUnit,
   PartitionTest,
@@ -106,37 +87,6 @@ INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
                                            std::vector<std::uint64_t>({1, 0}),
                                            std::vector<std::uint64_t>({0, 0})));
 
-INSTANTIATE_TEST_SUITE_P(
-  LogicalStorePartitionUnit,
-  ChildStoreTest,
-  ::testing::Combine(
-    ::testing::Values(legate::Shape{9, 8}),
-    ::testing::Values(std::vector<std::uint64_t>({2, 4})),
-    ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>{{0, 0}}, legate::Shape{2, 4}),
-                      std::make_tuple(legate::tuple<std::uint64_t>{{2, 1}}, legate::Shape{2, 4}),
-                      std::make_tuple(legate::tuple<std::uint64_t>{{4, 1}}, legate::Shape{1, 4}))));
-
-INSTANTIATE_TEST_SUITE_P(
-  LogicalStorePartitionUnit,
-  ForcedColorChildStoreTest,
-  ::testing::Combine(
-    ::testing::Values(legate::Shape{6, 9}),
-    ::testing::Values(std::vector<std::uint64_t>({2, 4})),
-    ::testing::Values(std::vector<std::uint64_t>({2, 5})),
-    ::testing::Values(std::make_tuple(legate::tuple<std::uint64_t>{{0, 0}}, legate::Shape{2, 4}),
-                      std::make_tuple(legate::tuple<std::uint64_t>{{1, 2}}, legate::Shape{2, 1}),
-                      std::make_tuple(legate::tuple<std::uint64_t>{{0, 4}}, legate::Shape{2, 0}),
-                      std::make_tuple(legate::tuple<std::uint64_t>{{1, 3}}, legate::Shape{2, 0}))));
-
-INSTANTIATE_TEST_SUITE_P(LogicalStorePartitionUnit,
-                         NegativeColorTest,
-                         ::testing::Combine(::testing::Values(legate::Shape{4, 8}),
-                                            ::testing::Values(legate::tuple<std::uint64_t>{1},
-                                                              legate::tuple<std::uint64_t>{{4, 2}},
-                                                              legate::tuple<std::uint64_t>{{5, 2}},
-                                                              legate::tuple<std::uint64_t>{
-                                                                {5, 0}})));
-
 }  // namespace
 
 TEST_P(PartitionTest, BoundStore)
@@ -165,8 +115,8 @@ TEST_F(LogicalStorePartitionUnit, ScalarStore)
 {
   auto runtime                         = legate::Runtime::get_runtime();
   constexpr std::uint64_t SCALAR_VALUE = 10;
-  auto store                           = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  auto partition                       = store.partition_by_tiling({1});
+  auto store     = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
+  auto partition = store.partition_by_tiling({1});
 
   ASSERT_EQ(partition.color_shape().data(), std::vector<std::uint64_t>{1});
 }
@@ -185,7 +135,7 @@ TEST_P(NegativePartitionSizeTest, BoundStore)
 TEST_P(NegativePartitionSizeTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
+  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}}, legate::Shape{1});
 
   // shape size mismatch
   ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling(GetParam())); },
@@ -207,7 +157,7 @@ TEST_P(NegativePartitionVolumeTest, BoundStore)
 TEST_F(LogicalStorePartitionUnit, ScalarStoreVolumeZero)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
+  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}}, legate::Shape{1});
 
   // Scalar store is 1D, so tile_shape must be 1-tuple with volume = 0
   ASSERT_THAT([&]() { static_cast<void>(store.partition_by_tiling({0})); },
@@ -231,7 +181,7 @@ TEST_P(ColorShapeDimensionSizeTest, BoundStore)
 TEST_P(ColorShapeDimensionSizeTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
+  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}}, legate::Shape{1});
   std::vector<std::uint64_t> tile_shape{1};
   const auto& color_shape = GetParam();
 

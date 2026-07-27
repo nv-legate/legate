@@ -383,6 +383,7 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
   const Rect&,
   const Point& task_index,
   bool is_read,
+  bool read_only,
   const legate::mapping::detail::Machine& machine,
   DataMovementRequests* requests)
 {
@@ -396,7 +397,10 @@ std::pair<InternalSharedPtr<PhysicalStore>, bool> LogicalStore::map(
   auto layout = compute_store_layout(*buffer, *transform_, type()->size(), subdomain);
 
   return {make_internal_shared<PhysicalStore>(
-            StorePermission::READ_WRITE, std::move(buffer), std::move(layout)),
+            read_only ? StorePermission::READ_ONLY : StorePermission::READ_WRITE,
+            type(),
+            std::move(buffer),
+            std::move(layout)),
           subsumed};
 }
 
@@ -427,7 +431,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::map_reduction(
   auto layout = compute_store_layout(*buffer, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
-    StorePermission::REDUCE, std::move(buffer), std::move(layout));
+    StorePermission::REDUCE, type(), std::move(buffer), std::move(layout));
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::map_unbound(
@@ -606,6 +610,11 @@ void LogicalStore::reshuffle(const InternalSharedPtr<Partition>& new_key_partiti
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   std::optional<legate::mapping::StoreTarget> target)
 {
+  if (unbound()) {
+    throw TracedException<std::invalid_argument>{
+      "Cannot get a physical store of an unbound store before it is bound"};
+  }
+
   auto&& storage = get_storage();
 
   const auto effective_target =
@@ -630,7 +639,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
   auto layout = compute_store_layout(*buffer, *transform_, type()->size(), subdomain);
 
   return make_internal_shared<PhysicalStore>(
-    StorePermission::READ_WRITE, std::move(buffer), std::move(layout));
+    StorePermission::READ_WRITE, type(), std::move(buffer), std::move(layout));
 }
 
 // Just because all the member functions used are const, doesn't mean this function
@@ -715,11 +724,7 @@ void LogicalStore::set_key_partition(InternalSharedPtr<Partition> partition)
   key_partition_ = std::move(partition);
 }
 
-void LogicalStore::reset_key_partition()
-{
-  key_partition_.reset();
-  get_storage()->reset_key_partition();
-}
+void LogicalStore::reset_key_partition() { key_partition_.reset(); }
 
 InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
   const InternalSharedPtr<LogicalStore>& self,

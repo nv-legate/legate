@@ -170,8 +170,6 @@ void test_read_accessor_future_store(legate::PhysicalStore& store)
   ASSERT_EQ(store.shape<DIM>().volume(), DIM);
   auto read_acc = store.read_accessor<float, DIM>();
 
-  ASSERT_EQ(read_acc[0], store.scalar<float>());
-
   if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
     // access store with exceeded bounds
     static constexpr auto EXTENTS = 1000;
@@ -278,7 +276,7 @@ TEST_F(PhysicalStoreReadAccessorUnit, FutureStoreWithTask)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto scalar        = legate::Scalar{FLOAT_VALUE};
-  auto logical_store = runtime->create_store(legate::Scalar{FLOAT_VALUE});
+  auto logical_store = runtime->create_store(legate::Scalar{FLOAT_VALUE}, legate::Shape{1});
 
   test_read_accessor_by_task(logical_store, scalar);
 }
@@ -295,7 +293,7 @@ TEST_F(PhysicalStoreReadAccessorUnit, FutureStore)
 TEST_F(PhysicalStoreReadAccessorUnit, TransformedFutureStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store(legate::Scalar{FLOAT_VALUE});
+  auto logical_store = runtime->create_store(legate::Scalar{FLOAT_VALUE}, legate::Shape{1});
 
   logical_store       = logical_store.transpose({0});
   auto physical_store = logical_store.get_physical_store();

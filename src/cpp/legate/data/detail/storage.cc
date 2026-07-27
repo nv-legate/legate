@@ -159,19 +159,20 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): Since NoPartition will always return true, the current policy will keep the
   // initial replicated storage even when the entire storage gets written with a disjoint partition
   // by a downstream writer. There should be a way for users to reset the distribution in this case.
-  if (key_partition_.has_value() && (*key_partition_)->subsumes(domain, partition)) {
-    LEGATE_ASSERT(buffer_);
+  if (buffer_) {
+    LEGATE_ASSERT(key_partition_);
+    if (key_partition_->subsumes(domain, partition)) {
+      auto&& active = resolve_active();
 
-    auto&& active = resolve_active();
+      if (!is_read) {
+        register_remap_copy_out();
+      }
 
-    if (!is_read) {
-      register_remap_copy_out();
+      LEGATE_ASSERT(sub_domain.dim() == 0 || sub_domain.volume() == 0 ||
+                    active->domain().intersection(sub_domain) == sub_domain);
+
+      return {active, sub_domain, true};
     }
-
-    LEGATE_ASSERT(sub_domain.dim() == 0 || sub_domain.volume() == 0 ||
-                  active->domain().intersection(sub_domain) == sub_domain);
-
-    return {active, sub_domain, true};
   }
 
   // Registers a copy-out that merges the sub-region written into `data` back into the active
@@ -181,9 +182,9 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
   // a redundant copy, a remap copy-out then merges it back into the canonical storage.
   const auto register_copy_out = [&](const InternalSharedPtr<Buffer>& data) {
     LEGATE_ASSERT(buffer_);
-    LEGATE_ASSERT(key_partition_.has_value());
-    requests->register_copy_out(CopyRequest{
-      id(), data, resolve_active(), partition, *key_partition_, domain, domain_, type_});
+    LEGATE_ASSERT(key_partition_);
+    requests->register_copy_out(
+      CopyRequest{id(), data, resolve_active(), partition, key_partition_, domain, domain_, type_});
     register_remap_copy_out();
   };
 
@@ -228,11 +229,11 @@ Storage::map(  // NOLINT(readability-make-member-function-const)
     return {data, sub_domain, false};
   }
 
-  LEGATE_ASSERT(key_partition_.has_value());
+  LEGATE_ASSERT(key_partition_);
 
   if (is_read) {
-    requests->register_copy_in(CopyRequest{
-      id(), resolve_active(), data, *key_partition_, partition, domain_, domain, type_});
+    requests->register_copy_in(
+      CopyRequest{id(), resolve_active(), data, key_partition_, partition, domain_, domain, type_});
   } else {
     finalize_write(data);
   }
@@ -270,27 +271,26 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
   // TODO(wonchanl): Put back the optimization that converts reductions to read-write accesses when
   // the partition is disjoint
 
-  if (!needs_remap && !is_parallel && key_partition_.has_value() &&
-      !(*key_partition_)->has_color_shape()) {
-    return {buffer_, sub_domain};
-  }
-
   // TODO(wonchanl): We need to raise an uninitialized access exception if these don't hold
   LEGATE_CHECK(buffer_);
-  LEGATE_CHECK(key_partition_.has_value());
+  LEGATE_ASSERT(key_partition_);
+
+  if (!needs_remap && !is_parallel && !key_partition_->has_color_shape()) {
+    return {buffer_, sub_domain};
+  }
 
   InternalSharedPtr<Buffer> reduction_buffer{};
 
   // If the store is just initialized with the reduction identity and the key partition subsumes the
   // partition used in reduction, we can use the storage directly as the reduction buffer (unless a
   // cross-memory remap is required; see above).
-  if (!needs_remap && store_has_identity && (*key_partition_)->subsumes(domain, partition)) {
+  if (!needs_remap && store_has_identity && key_partition_->subsumes(domain, partition)) {
     reduction_buffer = buffer_;
 
     // FIXME(wonchanl): We need a proper disjointedness check when the key_partition_ is a Tiling.
-    if (!(*key_partition_)->has_color_shape()) {
+    if (!key_partition_->has_color_shape()) {
       requests->register_reduction(ReductionRequest{
-        reduction_buffer, reduction_buffer, partition, *key_partition_, domain, type, op_kind});
+        reduction_buffer, reduction_buffer, partition, key_partition_, domain, type, op_kind});
     }
   } else {
     // TODO(wonchanl): For now we create a full-size reduction buffer when the target is replicated.
@@ -304,7 +304,7 @@ Storage::map_reduction(  // NOLINT(readability-make-member-function-const)
       reduction_buffer->data(), domain.volume(), target, type->code, op_kind);
 
     requests->register_reduction(ReductionRequest{
-      reduction_buffer, buffer_, partition, *key_partition_, domain, type, op_kind});
+      reduction_buffer, buffer_, partition, key_partition_, domain, type, op_kind});
   }
 
   return {std::move(reduction_buffer), sub_domain};
@@ -368,7 +368,7 @@ Restrictions Storage::compute_restrictions() const { return Restrictions{dim()};
 std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
   const Restrictions& restrictions) const
 {
-  if (key_partition_.has_value() && restrictions.are_satisfied_by(**key_partition_, shape())) {
+  if (key_partition_ && restrictions.are_satisfied_by(*key_partition_, shape())) {
     return key_partition_;
   }
   return std::nullopt;
@@ -378,8 +378,6 @@ void Storage::set_key_partition(InternalSharedPtr<Partition> key_partition)
 {
   key_partition_ = std::move(key_partition);
 }
-
-void Storage::reset_key_partition() noexcept { key_partition_.reset(); }
 
 std::string Storage::to_string() const { return fmt::format("Storage(id: {})", id()); }
 

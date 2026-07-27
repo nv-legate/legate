@@ -15,7 +15,7 @@ namespace legate {
 
 Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
 {
-  if (!Legion::Runtime::has_runtime()) {
+  if (!detail::has_started()) {
     throw detail::TracedException<std::runtime_error>{"Runtime has not started"};
   }
 

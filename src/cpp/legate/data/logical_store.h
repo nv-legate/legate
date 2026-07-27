@@ -461,20 +461,6 @@ class LEGATE_EXPORT LogicalStore {
     std::optional<Span<const std::uint64_t>> color_shape = std::nullopt) const;
 
   /**
-   * @brief Gets the currently mapped `PhysicalStore` for this `LogicalStore`
-   *
-   * Returns the physical store if this logical store has already been mapped to physical
-   * memory via a previous call to `get_physical_store()`. This method does not trigger
-   * any new mapping operations and does not block.
-   *
-   * This is useful for checking if a store has an existing physical allocation without
-   * forcing a new inline mapping operation.
-   *
-   * @return The currently mapped `PhysicalStore` if one exists, or std::nullopt otherwise
-   */
-  [[nodiscard]] std::optional<PhysicalStore> get_cached_physical_store() const;
-
-  /**
    * @brief Creates a `PhysicalStore` for this `LogicalStore`
    *
    * This call blocks the client's control flow and fetches the data for the whole store to the

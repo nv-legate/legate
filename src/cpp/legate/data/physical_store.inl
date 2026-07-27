@@ -202,13 +202,6 @@ NDRect<DIM> PhysicalStore::shape() const
   return domain().bounds<DIM>();
 }
 
-template <typename VAL>
-VAL PhysicalStore::scalar() const
-{
-  LEGATE_ABORT("Not supported");
-  return {};
-}
-
 template <typename T, std::int32_t DIM>
 void PhysicalStore::bind_data(NDBuffer<T, DIM>& buffer, const NDPoint<DIM>& extents) const
 {

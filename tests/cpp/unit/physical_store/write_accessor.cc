@@ -294,7 +294,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, FutureStoreWithTask)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto scalar        = legate::Scalar{UINT64_VALUE};
-  auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
+  auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE}, legate::Shape{1});
 
   test_write_accessor_by_task(logical_store, scalar);
 }
@@ -311,7 +311,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, FutureStore)
 TEST_F(PhysicalStoreWriteAccessorUnit, TransformedFutureStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
+  auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE}, legate::Shape{1});
 
   logical_store       = logical_store.transpose({0});
   auto physical_store = logical_store.get_physical_store();

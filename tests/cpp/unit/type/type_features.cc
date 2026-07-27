@@ -22,10 +22,6 @@ class UidFixedArrayTypeTest
   : public TypeFeaturesUnit,
     public ::testing::WithParamInterface<std::tuple<legate::Type, std::uint32_t>> {};
 
-class ReductionOperatorTest
-  : public TypeFeaturesUnit,
-    public ::testing::WithParamInterface<std::tuple<legate::Type, legate::ReductionOpKind>> {};
-
 INSTANTIATE_TEST_SUITE_P(
   TypeFeaturesUnit,
   UidFixedArrayTypeTest,
@@ -61,24 +57,6 @@ INSTANTIATE_TEST_SUITE_P(TypeFeaturesUnit,
                                            legate::float64(),
                                            legate::complex64(),
                                            legate::complex128()));
-
-INSTANTIATE_TEST_SUITE_P(
-  TypeFeaturesUnit,
-  ReductionOperatorTest,
-  ::testing::Combine(
-    ::testing::Values(
-      legate::string_type(),
-      legate::fixed_array_type(legate::int64(), 10),
-      legate::struct_type(true, legate::int64(), legate::bool_(), legate::float64()),
-      legate::struct_type(false, legate::int64(), legate::bool_(), legate::float64()),
-      legate::binary_type(10)),
-    ::testing::Values(legate::ReductionOpKind::ADD,
-                      legate::ReductionOpKind::MUL,
-                      legate::ReductionOpKind::MAX,
-                      legate::ReductionOpKind::MIN,
-                      legate::ReductionOpKind::OR,
-                      legate::ReductionOpKind::AND,
-                      legate::ReductionOpKind::XOR)));
 
 }  // namespace
 

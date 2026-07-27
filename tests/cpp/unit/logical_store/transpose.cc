@@ -90,7 +90,7 @@ TEST_P(TransposeBoundStoreTest, Basic)
 TEST_F(LogicalStoreTransposeUnit, ScalarStore)
 {
   auto runtime   = legate::Runtime::get_runtime();
-  auto store     = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store     = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
   auto transpose = store.transpose({0});
 
   ASSERT_EQ(transpose.extents().data(), std::vector<std::uint64_t>{1});
@@ -113,7 +113,7 @@ TEST_P(NegativeTransposeScalarStoreTest, Basic)
 {
   auto axes    = GetParam();
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
 
   ASSERT_THROW(static_cast<void>(store.transpose(std::move(axes))), std::invalid_argument);
 }

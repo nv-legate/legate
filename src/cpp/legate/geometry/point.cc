@@ -7,11 +7,16 @@
 #include <legate/geometry/point.h>
 
 #include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 
 namespace legate {
@@ -76,7 +81,13 @@ Point Point::strides() const
 Point Point::inserted(std::int32_t pos, std::int64_t value) const
 {
   const auto new_dim = static_cast<std::int32_t>(dim()) + 1;
-  auto result        = Point::zeroes(new_dim);
+
+  if (pos < 0 || pos >= new_dim) {
+    throw detail::TracedException<std::out_of_range>{
+      fmt::format("Index {} out of range [0, {})", pos, new_dim)};
+  }
+
+  auto result = Point::zeroes(new_dim);
 
   for (std::int32_t i = 0, j = 0; i < new_dim; ++i) {
     result[i] = (i == pos) ? value : coordinates_[j++];
@@ -87,7 +98,13 @@ Point Point::inserted(std::int32_t pos, std::int64_t value) const
 Point Point::removed(std::int32_t pos) const
 {
   const auto old_dim = static_cast<std::int32_t>(dim());
-  auto result        = Point::zeroes(old_dim - 1);
+
+  if (pos < 0 || pos >= old_dim) {
+    throw detail::TracedException<std::out_of_range>{
+      fmt::format("Index {} out of range [0, {})", pos, old_dim)};
+  }
+
+  auto result = Point::zeroes(old_dim - 1);
 
   for (std::int32_t i = 0, j = 0; i < old_dim; ++i) {
     if (i != pos) {
@@ -99,6 +116,15 @@ Point Point::removed(std::int32_t pos) const
 
 Point Point::permuted(Span<const std::int32_t> axes) const
 {
+  if (std::any_of(axes.begin(), axes.end(), [](std::int32_t axis) { return axis < 0; })) {
+    throw detail::TracedException<std::out_of_range>{
+      fmt::format("mapping [{}] contains negative elements", fmt::join(axes, ", "))};
+  }
+  if (axes.size() != dim()) {
+    throw detail::TracedException<std::out_of_range>{
+      fmt::format("mapping size {} != container size {}", axes.size(), dim())};
+  }
+
   auto result = Point::zeroes(static_cast<std::int32_t>(axes.size()));
 
   for (std::int32_t i = 0; i < static_cast<std::int32_t>(axes.size()); ++i) {

@@ -74,7 +74,7 @@ TEST_P(PromoteScalarStoreTest, Basic)
 {
   const auto [extra_dim, dim_size, promote_shape] = GetParam();
   auto runtime                                    = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
   auto promote = store.promote(extra_dim, dim_size);
 
   ASSERT_EQ(promote.extents().data(), promote_shape);
@@ -95,7 +95,7 @@ TEST_P(NegativePromoteStoreDimTest, BoundStore)
 TEST_P(NegativePromoteStoreDimTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
 
   ASSERT_THROW(static_cast<void>(store.promote(GetParam(), 2)), std::invalid_argument);
 }

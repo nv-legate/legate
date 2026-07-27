@@ -477,14 +477,6 @@ LEGATE_EXPORT void register_shutdown_callback(T&& callback);
  */
 [[nodiscard]] LEGATE_EXPORT mapping::Machine get_machine();
 
-/**
- * @brief Checks if the code is running in a task
- *
- * @return true If the code is running in a task
- * @return false If the code is not running in a task
- */
-[[nodiscard]] LEGATE_EXPORT bool is_running_in_task();
-
 /** @} */
 
 }  // namespace legate

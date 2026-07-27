@@ -195,8 +195,7 @@ class Storage {
   // has no backing until a buffer is bound; a lazily-created bound store has none until first
   // written).
   InternalSharedPtr<Buffer> buffer_{};
-
-  std::optional<InternalSharedPtr<Partition>> key_partition_{};
+  InternalSharedPtr<Partition> key_partition_{};
 };
 
 }  // namespace legate::detail

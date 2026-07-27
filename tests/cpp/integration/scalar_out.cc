@@ -50,7 +50,7 @@ void test_scalar_out()
 
   const legate::Shape extents{16};
   auto input  = runtime->create_store(extents, legate::int64());
-  auto output = runtime->create_store(legate::Scalar{int64_t{0}});
+  auto output = runtime->create_store(legate::Scalar{int64_t{0}}, legate::Shape{1});
 
   runtime->issue_fill(input, legate::Scalar{int64_t{123}});
 

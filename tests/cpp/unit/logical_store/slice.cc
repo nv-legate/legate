@@ -98,7 +98,7 @@ TEST_P(SliceScalarStoreTest, Basic)
 {
   const auto [dim, slice_range, slice_shape, transformed, overlaps] = GetParam();
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
   auto slice   = store.slice(dim, slice_range);
 
   ASSERT_EQ(slice.extents().data(), slice_shape);
@@ -128,7 +128,7 @@ TEST_P(NegativeSliceBoundStoreSliceTest, Basic)
 TEST_P(NegativeSliceStoreDimTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
 
   ASSERT_THROW(static_cast<void>(store.slice(GetParam(), legate::Slice{})), std::invalid_argument);
 }
@@ -136,7 +136,7 @@ TEST_P(NegativeSliceStoreDimTest, ScalarStore)
 TEST_P(NegativeSliceScalarStoreSliceTest, Basic)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
 
   ASSERT_THROW(static_cast<void>(store.slice(0, GetParam())), std::invalid_argument);
 }

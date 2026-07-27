@@ -157,7 +157,6 @@ set(
   integration/index_attach.cc
   integration/inline_map.cc
   integration/input_output.cc
-  integration/is_running_in_task.cc
   integration/machine_scope.cc
   integration/manual_task.cc
   integration/manual_task_proj.cc
@@ -285,7 +284,6 @@ set(
   noinit/find_memory_kind.cc
   noinit/internal_shared_ptr.cc
   noinit/internal_weak_ptr.cc
-  noinit/is_running_in_task.cc
   noinit/macros.cc
   noinit/pack.cc
   noinit/scope_fail.cc

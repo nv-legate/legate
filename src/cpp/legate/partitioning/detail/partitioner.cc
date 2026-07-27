@@ -221,10 +221,11 @@ SymbolicPoint Partitioner::infer_store_projection(
       "the launch domain"};
   }
 
-  // Check if the color shape has only one dimension of a non-unit extent, in which case
-  // delinearization would simply be projections
+  // Check if the color shape has at most one dimension of a non-unit extent, in which case
+  // delinearization would simply be projections. (With no non-unit dimension at all there is a
+  // single color, so every task index maps to the all-zero color.)
   if (std::count_if(
-        color_shape.begin(), color_shape.end(), [](const auto& ext) { return ext != 1; }) == 1) {
+        color_shape.begin(), color_shape.end(), [](const auto& ext) { return ext != 1; }) <= 1) {
     SymbolicPoint embedding;
 
     embedding.reserve(color_shape.size());

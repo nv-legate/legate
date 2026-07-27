@@ -115,12 +115,20 @@ class LogicalStore {
     std::optional<SmallVector<std::uint64_t, LEGATE_MAX_DIM>> color_shape);
 
  public:
+  /**
+   * @param is_read Whether the access is a read (as opposed to a write). Controls the data
+   * movement the mapping registers.
+   * @param read_only Whether the resulting physical store should only permit reads. A task input
+   * is normally read-only, but a store passed as both an input and an output of the same task is
+   * mapped read-write on both handles, as the task body legitimately writes through either.
+   */
   [[nodiscard]] std::pair<InternalSharedPtr<PhysicalStore>, bool> map(
     const InternalSharedPtr<Partition>& partition,
     const SymbolicPoint& store_projection,
     const Rect& launch_domain,
     const Point& task_index,
     bool is_read,
+    bool read_only,
     const legate::mapping::detail::Machine& machine,
     DataMovementRequests* requests);
   [[nodiscard]] InternalSharedPtr<PhysicalStore> map_reduction(
@@ -182,19 +190,6 @@ class LogicalStore {
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
     std::optional<legate::mapping::StoreTarget> target);
 
-  /**
-   * @brief Gets the currently mapped `PhysicalStore` for this `LogicalStore`
-   *
-   * Returns the physical store if this logical store has already been mapped to physical
-   * memory via a previous call to `get_physical_store()`. This method does not trigger
-   * any new mapping operations and does not block.
-   *
-   * This is useful for checking if a store has an existing physical allocation without
-   * forcing a new inline mapping operation.
-   */
-  [[nodiscard]] const std::optional<InternalSharedPtr<PhysicalStore>>& get_cached_physical_store()
-    const;
-
   void detach();
 
   [[nodiscard]] Restrictions compute_restrictions(bool is_output) const;
@@ -241,7 +236,6 @@ class LogicalStore {
 
   std::uint32_t num_pieces_{};
   std::optional<InternalSharedPtr<Partition>> key_partition_{};
-  std::optional<InternalSharedPtr<PhysicalStore>> mapped_{};
 };
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(

@@ -92,8 +92,8 @@ TEST_P(ProjectScalarStoreTest, ProjectScalarStore)
 {
   const auto [dim, index, project_shape] = GetParam();
   auto runtime                           = legate::Runtime::get_runtime();
-  auto store                             = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  auto project                           = store.project(dim, index);
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
+  auto project = store.project(dim, index);
 
   ASSERT_EQ(project.extents().data(), project_shape);
   ASSERT_TRUE(project.transformed());
@@ -122,7 +122,7 @@ TEST_P(NegativeProjectBoundStoreIndexTest, BoundStore)
 TEST_P(NegativeProjectStoreDimTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
 
   ASSERT_THROW(static_cast<void>(store.project(GetParam(), 0)), std::invalid_argument);
 }
@@ -130,7 +130,7 @@ TEST_P(NegativeProjectStoreDimTest, ScalarStore)
 TEST_P(NegativeProjectScalarStoreIndexTest, ScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE});
+  auto store   = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
 
   ASSERT_THROW(static_cast<void>(store.project(0, GetParam())), std::invalid_argument);
 }

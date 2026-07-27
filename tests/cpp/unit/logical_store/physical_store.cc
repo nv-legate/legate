@@ -59,9 +59,12 @@ TEST_F(LogicalStorePhysicalUnit, ScalarStore)
 {
   auto runtime                        = legate::Runtime::get_runtime();
   constexpr std::int32_t SCALAR_VALUE = 10;
-  auto store                          = runtime->create_store(legate::Scalar{SCALAR_VALUE});
-  auto physical_store                 = store.get_physical_store();
+  // The default shape for a scalar store is 0-D, so ask for a 1-D one explicitly to be able to
+  // inspect its rectangle below.
+  auto store          = runtime->create_store(legate::Scalar{SCALAR_VALUE}, legate::Shape{1});
+  auto physical_store = store.get_physical_store();
 
+  ASSERT_EQ(runtime->create_store(legate::Scalar{SCALAR_VALUE}).dim(), 0);
   ASSERT_FALSE(physical_store.is_unbound_store());
 
   static constexpr std::uint32_t DIM = 1;
@@ -70,19 +73,6 @@ TEST_F(LogicalStorePhysicalUnit, ScalarStore)
   ASSERT_EQ(physical_store.shape<DIM>(), (legate::NDRect<DIM>{0, 0}));
   ASSERT_TRUE(physical_store.valid());
   ASSERT_EQ(physical_store.code(), legate::Type::Code::INT32);
-}
-
-TEST_F(LogicalStorePhysicalUnit, CachedPhysicalStore)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Shape{4, 4}, legate::int64());
-
-  ASSERT_FALSE(store.get_cached_physical_store().has_value());
-
-  std::ignore                = store.get_physical_store();
-  auto cached_physical_store = store.get_cached_physical_store();
-
-  ASSERT_TRUE(cached_physical_store.has_value());
 }
 
 }  // namespace logical_store_physical_test

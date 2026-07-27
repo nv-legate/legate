@@ -98,8 +98,6 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
 
     cdef int32_t finish() except+
 
-    cdef bool _is_running_in_task "legate::is_running_in_task"() except+
-
 
 cdef class Runtime(Unconstructable):
     cdef _Runtime* _handle
@@ -172,4 +170,3 @@ cdef class Runtime(Unconstructable):
 
 cpdef Runtime get_legate_runtime()
 cpdef Machine get_machine()
-cpdef bool is_running_in_task()

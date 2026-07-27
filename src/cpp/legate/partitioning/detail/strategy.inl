@@ -8,7 +8,7 @@ namespace legate::detail {
 
 inline Strategy::Strategy(const Operation* operation) : operation_{operation} {}
 
-inline bool Strategy::parallel() const { return launch_domain_.dim() == 0; }
+inline bool Strategy::parallel() const { return launch_domain_.dim() != 0; }
 
 inline const Rect& Strategy::launch_domain() const { return launch_domain_; }
 

@@ -24,6 +24,8 @@ Shape::Shape(const SmallVector<std::uint64_t, LEGATE_MAX_DIM>& extents)
 {
 }
 
+std::size_t Shape::volume() const { return static_cast<std::size_t>(extents().volume()); }
+
 const Point& Shape::extents() const
 {
   check_binding_();
@@ -37,8 +39,8 @@ Rect Shape::domain() const
 {
   const auto dim = static_cast<std::int32_t>(dim_);
 
-  check_binding_();
-  return {Point::zeroes(dim), extents_ - Point::full(dim, /* coord */ 1)};
+  const auto& exts = extents();
+  return {Point::zeroes(dim), exts - Point::full(dim, /* coord */ 1)};
 }
 
 void Shape::bind_extents(Point extents)

@@ -265,6 +265,4 @@ void destroy()
 
 mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
 
-bool is_running_in_task() { return false; }
-
 }  // namespace legate

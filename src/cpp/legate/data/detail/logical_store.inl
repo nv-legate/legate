@@ -63,10 +63,4 @@ inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<Logic
   return self->slice_(self, dim, std::move(sl));
 }
 
-inline const std::optional<InternalSharedPtr<PhysicalStore>>&
-LogicalStore::get_cached_physical_store() const
-{
-  return mapped_;
-}
-
 }  // namespace legate::detail

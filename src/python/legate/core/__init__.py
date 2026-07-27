@@ -43,7 +43,6 @@ from ._lib.runtime.runtime import (
     Runtime,
     get_legate_runtime,
     get_machine,
-    is_running_in_task,
     track_provenance,
 )
 from ._lib.task.task_config import TaskConfig
@@ -175,7 +174,6 @@ __all__ = (
     "int16",
     "int32",
     "int64",
-    "is_running_in_task",
     "min_extents",
     "null_type",
     "scale",

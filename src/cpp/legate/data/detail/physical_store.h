@@ -29,13 +29,15 @@ class LogicalStore;
 /**
  * @brief The kind of access a mapped `PhysicalStore` grants through its accessors.
  *
- * A mapped store is either read-write (readable and writable) or reduction-only (reducible). This
- * mirrors the access modes the runtime maps stores with, and replaces the use of Legion privilege
- * modes for deciding which accessors a store permits.
+ * This mirrors the access modes the runtime maps stores with, and replaces the use of Legion
+ * privilege modes for deciding which accessors a store permits. A task input is mapped read-only
+ * and may only be read; an output (or read-write argument) and a reduction argument may be read,
+ * written and reduced into.
  */
 enum class StorePermission : std::uint8_t {
-  READ_WRITE,  ///< The store may be read and written.
-  REDUCE,      ///< The store may be reduced into.
+  READ_ONLY,   ///< The store may only be read.
+  READ_WRITE,  ///< The store may be read, written and reduced into.
+  REDUCE,      ///< The store is a reduction argument; it may be read, written and reduced into.
 };
 
 /**
@@ -67,10 +69,14 @@ class PhysicalStore {
    * derived from it (and the originating store's transform).
    *
    * @param permission The access the store grants (read-write or reduction-only).
+   * @param type The element type as seen through the originating store. This is not always the
+   * backing buffer's type: `LogicalStore::reinterpret_as()` produces a store that views the same
+   * buffer through a different (same-size, same-alignment) type.
    * @param buffer The buffer backing this store.
    * @param layout The store's (transformed) affine layout.
    */
   PhysicalStore(StorePermission permission,
+                InternalSharedPtr<Type> type,
                 InternalSharedPtr<Buffer> buffer,
                 PhysicalStoreLayout layout);
 
@@ -160,8 +166,9 @@ class PhysicalStore {
   [[nodiscard]] const Point& strides() const;
 
  private:
-  // The element type of an unbound store, needed before a backing buffer exists. Once the store is
-  // bound (or was constructed bound), the type is read from `buffer_` instead (see `type()`).
+  // The element type as seen through the originating logical store. Usually the same as the
+  // backing buffer's type, but not after a `LogicalStore::reinterpret_as()`, and it is the only
+  // type available for an unbound store that has no buffer yet.
   InternalSharedPtr<Type> type_{};
 
   std::int32_t dim_{-1};

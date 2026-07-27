@@ -83,10 +83,6 @@ class FormatDLPackDeviceType
   : public DefaultFixture,
     public ::testing::WithParamInterface<std::tuple<DLDeviceType, std::string_view>> {};
 
-class FormatLegionPrivilegeMode
-  : public DefaultFixture,
-    public ::testing::WithParamInterface<std::tuple<legion_privilege_mode_t, std::string_view>> {};
-
 class FormatStreamingMode
   : public DefaultFixture,
     public ::testing::WithParamInterface<std::tuple<legate::StreamingMode, std::string_view>> {};
@@ -121,7 +117,7 @@ INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
   FormatShape,
   ::testing::Values(std::make_tuple(legate::detail::Shape{2}, "Shape(unbound 2D)"),
-                    std::make_tuple(legate::detail::Shape{legate::Point{1, 2}}, "Shape [1, 2]")));
+                    std::make_tuple(legate::detail::Shape{legate::Point{1, 2}}, "Shape (1,2)")));
 
 INSTANTIATE_TEST_SUITE_P(FormatterUnit,
                          FormatVariantCode,
@@ -199,20 +195,6 @@ INSTANTIATE_TEST_SUITE_P(FormatterUnit,
                                            std::make_tuple(DLDeviceType::kDLWebGPU, "WebGPU"),
                                            std::make_tuple(DLDeviceType::kDLHexagon, "Hexagon"),
                                            std::make_tuple(DLDeviceType::kDLMAIA, "MAIA")));
-
-INSTANTIATE_TEST_SUITE_P(
-  FormatterUnit,
-  FormatLegionPrivilegeMode,
-  ::testing::Values(std::make_tuple(LEGION_READ_ONLY, "LEGION_READ_ONLY"),
-                    std::make_tuple(LEGION_READ_DISCARD, "LEGION_READ_DISCARD"),
-                    std::make_tuple(LEGION_REDUCE, "LEGION_REDUCE"),
-                    std::make_tuple(LEGION_WRITE_ONLY, "LEGION_WRITE_ONLY"),
-                    std::make_tuple(LEGION_READ_WRITE, "LEGION_READ_WRITE"),
-                    std::make_tuple(LEGION_WRITE_DISCARD, "LEGION_WRITE_DISCARD"),
-                    std::make_tuple(LEGION_WRITE_PRIV, "LEGION_WRITE_PRIV"),
-                    std::make_tuple(LEGION_NO_ACCESS, "LEGION_NO_ACCESS"),
-                    std::make_tuple(LEGION_DISCARD_MASK, "LEGION_DISCARD_MASK"),
-                    std::make_tuple(LEGION_DISCARD_OUTPUT_MASK, "LEGION_DISCARD_OUTPUT_MASK")));
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
@@ -420,10 +402,9 @@ TEST_F(FormatterUnit, BoundLogicalStore)
   const auto bound_store       = runtime->create_store(legate::Scalar{SCALAR_VALUE});
   const auto& bound_store_impl = bound_store.impl();
 
-  ASSERT_THAT(
-    fmt::format("{}", *bound_store_impl),
-    ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[1\], type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
+  ASSERT_THAT(fmt::format("{}", *bound_store_impl),
+              ::testing::MatchesRegex(
+                R"(Store\([0-9]+\) \{shape: \(\), type: int32, storage: Storage\(id: [0-9]+\)\})"));
 }
 
 TEST_F(FormatterUnit, UnboundLogicalStore)
@@ -435,7 +416,7 @@ TEST_F(FormatterUnit, UnboundLogicalStore)
   ASSERT_THAT(
     fmt::format("{}", *unbound_store_impl),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \(unbound\), type: int64, storage: Storage\([0-9]+\) \{kind: Region, level: [0-9]+, region: unbound\}\})"));
+      R"(Store\([0-9]+\) \{shape: \(unbound\), type: int64, storage: Storage\(id: [0-9]+\)\})"));
 }
 
 TEST_F(FormatterUnit, TransformedBoundLogicalStore)
@@ -448,7 +429,7 @@ TEST_F(FormatterUnit, TransformedBoundLogicalStore)
   ASSERT_THAT(
     fmt::format("{}", *promoted_impl),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
+      R"(Store\([0-9]+\) \{shape: \(5\), transform: Promote\(extra_dim: 0, dim_size: 5\), type: int32, storage: Storage\(id: [0-9]+\)\})"));
 }
 
 TYPED_TEST(FormatID, Basic)

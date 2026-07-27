@@ -44,6 +44,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <unordered_set>
 
 namespace legate::detail {
 
@@ -202,6 +203,7 @@ template <bool WRITE>
   const Strategy& strategy,
   const Rect& launch_domain,
   const Point& task_index,
+  const std::unordered_set<const LogicalStore*>& also_written,
   DataMovementRequests* data_requests)
 {
   SmallVector<InternalSharedPtr<PhysicalStore>> result;
@@ -222,14 +224,18 @@ template <bool WRITE>
         continue;
       }
     }
-    auto&& partition                  = strategy[*variable];
-    auto&& [physical_store, subsumed] = store->map(partition,
-                                                   strategy.find_store_projection(*variable),
-                                                   launch_domain,
-                                                   task_index,
-                                                   /*is_read=*/!WRITE,
-                                                   machine,
-                                                   data_requests);
+    auto&& partition = strategy[*variable];
+    auto&& [physical_store, subsumed] =
+      store->map(partition,
+                 strategy.find_store_projection(*variable),
+                 launch_domain,
+                 task_index,
+                 /*is_read=*/!WRITE,
+                 // A store passed as both an input and an output
+                 // is written through either handle.
+                 /*read_only=*/!WRITE && !also_written.count(store.get()),
+                 machine,
+                 data_requests);
     result.emplace_back(physical_store);
     if constexpr (WRITE) {
       static_cast<void>(subsumed);
@@ -286,12 +292,22 @@ template <bool WRITE>
   }
 
   auto&& task_index = *maybe_task_index;
+  // A store that is both an input and an output of the same task must be mapped read-write on
+  // both handles: the task body may write through either.
+  std::unordered_set<const LogicalStore*> written_stores;
+
+  written_stores.reserve(task->outputs().size());
+  for (auto&& arg : task->outputs()) {
+    written_stores.insert(arg.store.get());
+  }
+
   auto inputs       = map_stores<false>(task->inputs(),
                                         task->machine(),
                                         task->parallel_policy(),
                                         strategy,
                                         launch_domain,
                                         task_index,
+                                        written_stores,
                                         data_requests);
   auto outputs      = map_stores<true>(task->outputs(),
                                        task->machine(),
@@ -299,6 +315,7 @@ template <bool WRITE>
                                        strategy,
                                        launch_domain,
                                        task_index,
+                                       written_stores,
                                        data_requests);
   auto&& reductions = map_reduction_stores(task->reductions(),
                                            task->reduction_ops(),

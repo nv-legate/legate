@@ -138,7 +138,7 @@ TEST_F(ShapeUnit, ReadyShapeToString)
 {
   auto shape = legate::Shape{1, 2, 3};
 
-  ASSERT_THAT(shape.to_string(), ::testing::MatchesRegex(R"(Shape \[[0-9]+(, [0-9]+)*\])"));
+  ASSERT_THAT(shape.to_string(), ::testing::MatchesRegex(R"(Shape \([0-9]+(,[0-9]+)*\))"));
 }
 
 TEST_F(ShapeUnit, OperatorEqualUnbound)
@@ -179,7 +179,7 @@ TEST_F(ShapeUnit, OperatorEqualBound)
   auto bound_shape2 = logical_store2.shape();
   auto bound_shape3 = logical_store3.shape();
 
-  ASSERT_THAT(bound_shape1.to_string(), ::testing::MatchesRegex(R"(Shape\(bound [0-9]+D\))"));
+  ASSERT_THAT(bound_shape1.to_string(), ::testing::MatchesRegex(R"(Shape \([0-9]+(,[0-9]+)*\))"));
   ASSERT_TRUE(bound_shape1 == bound_shape2);
   ASSERT_FALSE(bound_shape1 == bound_shape3);
 

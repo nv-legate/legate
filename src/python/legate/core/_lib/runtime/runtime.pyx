@@ -86,7 +86,7 @@ class _LegateOutputStream:
 
     @property
     def _should_write(self) -> bool:
-        return self._node_id == 0 or is_running_in_task()
+        return self._node_id == 0
 
 
 cdef class ShutdownCallbackManager:
@@ -1165,18 +1165,6 @@ def track_provenance(
         return wrapper
 
     return decorator
-
-
-cpdef bool is_running_in_task():
-    r"""
-    Determine whether the current control code is running inside a Legate task.
-
-    Returns
-    -------
-    bool
-        `True` if currently inside a Legate task, `False` otherwise.
-    """
-    return _is_running_in_task()
 
 
 cdef void _cleanup_legate_runtime():

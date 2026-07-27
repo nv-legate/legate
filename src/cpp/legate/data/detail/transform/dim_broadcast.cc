@@ -73,25 +73,25 @@ SymbolicPoint DimBroadcast::invert(SymbolicPoint point) const
 
 Point DimBroadcast::invert_color(Point color) const
 {
-  color[dim_] = 0;
+  color.at(dim_) = 0;
   return color;
 }
 
 Point DimBroadcast::invert_color_shape(Point color_shape) const
 {
-  color_shape[dim_] = 1;
+  color_shape.at(dim_) = 1;
   return color_shape;
 }
 
 Point DimBroadcast::invert_point(Point point) const
 {
-  point[dim_] = 0;
+  point.at(dim_) = 0;
   return point;
 }
 
 Point DimBroadcast::invert_extents(Point extents) const
 {
-  extents[dim_] = 1;
+  extents.at(dim_) = 1;
   return extents;
 }
 

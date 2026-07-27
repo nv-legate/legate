@@ -21,8 +21,6 @@ inline bool Shape::unbound() const { return state_ == State::UNBOUND; }
 
 inline std::uint32_t Shape::ndim() const { return dim_; }
 
-inline std::size_t Shape::volume() const { return static_cast<std::size_t>(extents_.volume()); }
-
 inline bool Shape::operator!=(const Shape& other) const { return !operator==(other); }
 
 }  // namespace legate::detail

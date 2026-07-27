@@ -13,12 +13,14 @@
 namespace legate::detail {
 
 inline PhysicalStore::PhysicalStore(StorePermission permission,
+                                    InternalSharedPtr<Type> type,
                                     InternalSharedPtr<Buffer> buffer,
                                     PhysicalStoreLayout layout)
-  : dim_{static_cast<std::int32_t>(layout.domain.dim())},
-    readable_{permission == StorePermission::READ_WRITE},
-    writable_{permission == StorePermission::READ_WRITE},
-    reducible_{permission == StorePermission::REDUCE},
+  : type_{std::move(type)},
+    dim_{static_cast<std::int32_t>(layout.domain.dim())},
+    readable_{true},
+    writable_{permission != StorePermission::READ_ONLY},
+    reducible_{permission != StorePermission::READ_ONLY},
     buffer_{std::move(buffer)},
     base_{layout.base},
     strides_{std::move(layout.strides)},
@@ -45,9 +47,9 @@ inline std::int32_t PhysicalStore::dim() const { return dim_; }
 
 inline const InternalSharedPtr<Type>& PhysicalStore::type() const
 {
-  // A bound store's type lives in its backing buffer; `type_` is only the fallback for an unbound
-  // store that has not been bound to a buffer yet.
-  return buffer_ ? buffer_->type() : type_;
+  // Always the originating store's type, which may differ from the backing buffer's after a
+  // `LogicalStore::reinterpret_as()`.
+  return type_;
 }
 
 inline const Rect& PhysicalStore::domain() const { return domain_; }

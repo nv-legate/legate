@@ -195,8 +195,9 @@ TEST_P(CreateScalarStoreTest, Basic)
   auto store                = runtime->create_store(scalar);
 
   ASSERT_FALSE(store.unbound());
-  ASSERT_EQ(store.dim(), 1);
-  ASSERT_EQ(store.extents(), legate::tuple<std::uint64_t>{1});
+  // The default shape for a scalar store is 0-D
+  ASSERT_EQ(store.dim(), 0);
+  ASSERT_EQ(store.extents(), legate::tuple<std::uint64_t>{});
   ASSERT_EQ(store.volume(), 1);
   ASSERT_EQ(store.type().code(), type.code());
   ASSERT_FALSE(store.transformed());
@@ -231,10 +232,9 @@ TEST_F(LogicalStoreCreateUnit, BoundStoreToString)
   const auto runtime     = legate::Runtime::get_runtime();
   const auto bound_store = runtime->create_store(legate::Scalar{SCALAR_VALUE});
 
-  ASSERT_THAT(
-    bound_store.to_string(),
-    ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[1\], type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
+  ASSERT_THAT(bound_store.to_string(),
+              ::testing::MatchesRegex(
+                R"(Store\([0-9]+\) \{shape: \(\), type: int32, storage: Storage\(id: [0-9]+\)\})"));
 }
 
 TEST_F(LogicalStoreCreateUnit, TransformedBoundStoreToString)
@@ -246,7 +246,7 @@ TEST_F(LogicalStoreCreateUnit, TransformedBoundStoreToString)
   ASSERT_THAT(
     promoted.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
+      R"(Store\([0-9]+\) \{shape: \(5\), transform: Promote\(extra_dim: 0, dim_size: 5\), type: int32, storage: Storage\(id: [0-9]+\)\})"));
 }
 
 TEST_F(LogicalStoreCreateUnit, UnboundStoreToString)
@@ -257,7 +257,7 @@ TEST_F(LogicalStoreCreateUnit, UnboundStoreToString)
   ASSERT_THAT(
     unbound_store.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \(unbound\), type: int64, storage: Storage\([0-9]+\) \{kind: Region, level: [0-9]+, region: unbound\}\})"));
+      R"(Store\([0-9]+\) \{shape: \(unbound\), type: int64, storage: Storage\(id: [0-9]+\)\})"));
 }
 
 }  // namespace logical_store_create_test
