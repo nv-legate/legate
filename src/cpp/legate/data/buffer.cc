@@ -8,7 +8,6 @@
 
 #include <legate/data/detail/buffer.h>
 #include <legate/data/detail/raw_allocation.h>
-#include <legate/mapping/detail/mapping.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
@@ -102,11 +101,6 @@ void Buffer::reshape(Rect new_domain) { impl_->reshape(std::move(new_domain)); }
 Buffer Buffer::allocate(const Type& type, Rect domain, mapping::StoreTarget target)
 {
   return Buffer{detail::Buffer::allocate(type.impl(), std::move(domain), target)};
-}
-
-Buffer Buffer::allocate(const Type& type, Rect domain, Memory::Kind kind)
-{
-  return Buffer::allocate(type, std::move(domain), mapping::detail::to_target(kind));
 }
 
 Buffer::Buffer(const Buffer&) = default;

@@ -100,7 +100,8 @@ class CheckTypeSizeMismatchTask : public legate::LegateTask<CheckTypeSizeMismatc
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     // Size mismatch: viewing an NDBuffer<std::int32_t> (size=4) as int64 (size=8)
-    auto buf = legate::create_buffer<std::int32_t>(/*size=*/9, legate::Memory::SYSTEM_MEM);
+    auto buf =
+      legate::create_buffer<std::int32_t>(/*size=*/9, legate::mapping::StoreTarget::SYSMEM);
     ASSERT_THAT([&] { static_cast<void>(legate::NDBuffer<std::int64_t>{buf.buffer()}); },
                 ::testing::ThrowsMessage<std::invalid_argument>(
                   ::testing::HasSubstr("incompatible type sizes")));
@@ -133,14 +134,15 @@ class CheckTypeSuccessTask : public legate::LegateTask<CheckTypeSuccessTask> {
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     // Successful case: erasing an NDBuffer<std::int32_t> and re-typing it as int32 (no throw)
-    auto buf = legate::create_buffer<std::int32_t>(/*size=*/8, legate::Memory::SYSTEM_MEM);
+    auto buf =
+      legate::create_buffer<std::int32_t>(/*size=*/8, legate::mapping::StoreTarget::SYSMEM);
     const legate::Buffer& erased_buf = buf.buffer();
 
     auto converted_buf = legate::NDBuffer<std::int32_t>{erased_buf};
     ASSERT_EQ(converted_buf.ptr(0), buf.ptr(0));
 
     auto buf_no_memkind =
-      legate::create_buffer<std::int32_t>(/*size=*/7);  // Uses NO_MEMKIND by default
+      legate::create_buffer<std::int32_t>(/*size=*/7);  // Uses the default (auto) store target
     ASSERT_NE(buf_no_memkind.ptr(0), nullptr);
   }
 };
@@ -194,9 +196,9 @@ class DefaultMemKindTask : public legate::LegateTask<DefaultMemKindTask> {
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
-    // Create a buffer without a mem_kind - triggers find_memory_kind_for_executing_processor
+    // Create a buffer without a mem_kind - triggers find_store_target_for_executing_processor
     const auto ty = legate::primitive_type(legate::Type::Code::INT32);
-    // Note: not passing a mem_kind, so it defaults to NO_MEMKIND
+    // Note: not passing a store target, so the runtime picks one automatically
     const auto buf = legate::create_buffer<std::int32_t>(/*size=*/10).buffer();
 
     ASSERT_EQ(buf.type(), ty);

@@ -27,10 +27,6 @@ namespace legate::mapping::detail {
  */
 [[nodiscard]] TaskTarget to_target(VariantCode code);
 
-[[nodiscard]] StoreTarget to_target(Memory::Kind kind);
-
-[[nodiscard]] Memory::Kind to_kind(StoreTarget target);
-
 [[nodiscard]] VariantCode to_variant_code(TaskTarget target);
 
 class DimOrdering {

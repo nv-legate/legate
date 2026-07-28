@@ -37,8 +37,8 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     const std::size_t num_tasks = context.get_launch_domain().volume();
 
     auto recv_buffer =
-      legate::create_buffer<std::uint64_t>(num_tasks, legate::Memory::Kind::GPU_FB_MEM);
-    auto send_buffer = legate::create_buffer<std::uint64_t>(1, legate::Memory::Kind::GPU_FB_MEM);
+      legate::create_buffer<std::uint64_t>(num_tasks, legate::mapping::StoreTarget::FBMEM);
+    auto send_buffer = legate::create_buffer<std::uint64_t>(1, legate::mapping::StoreTarget::FBMEM);
 
     auto* p_recv = recv_buffer.ptr(0);
     auto* p_send = send_buffer.ptr(0);

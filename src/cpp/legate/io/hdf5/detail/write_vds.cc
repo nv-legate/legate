@@ -8,6 +8,7 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/io/hdf5/detail/hdf5_wrapper.h>
+#include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/formatters.h>
@@ -170,7 +171,7 @@ class HDF5WriteFn {
 
     // ...otherwise we need to copy to a temporary buffer on the host first
     const auto size     = acc.size();
-    auto tmp            = create_buffer<std::byte>(size * type_size, Memory::Z_COPY_MEM);
+    auto tmp            = create_buffer<std::byte>(size * type_size, mapping::StoreTarget::ZCMEM);
     auto* const tmp_ptr = tmp.ptr(0);
     auto stream         = context.get_task_stream();
     auto&& api          = cuda::detail::get_cuda_driver_api();

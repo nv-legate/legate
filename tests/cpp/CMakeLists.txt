@@ -152,7 +152,7 @@ set(
   integration/bloat_constraints.cc
   integration/broadcast_constraints.cc
   integration/fill.cc
-  integration/find_memory_kind.cc
+  integration/find_store_target.cc
   integration/image_constraints.cc
   integration/index_attach.cc
   integration/inline_map.cc
@@ -281,7 +281,7 @@ set(
   noinit/enumerate.cc
   noinit/environment_variable.cc
   noinit/error_description.cc
-  noinit/find_memory_kind.cc
+  noinit/find_store_target.cc
   noinit/internal_shared_ptr.cc
   noinit/internal_weak_ptr.cc
   noinit/macros.cc

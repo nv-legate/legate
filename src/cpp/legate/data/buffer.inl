@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <utility>
 
 namespace legate {
@@ -113,38 +114,26 @@ NDBuffer<VAL, DIM>::NDBuffer(Buffer buffer, InitTag) : buffer_{std::move(buffer)
 
 template <typename VAL, std::int32_t DIM>
 NDBuffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
-                                 Memory::Kind kind,
+                                 std::optional<mapping::StoreTarget> target,
                                  std::size_t alignment)
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
   detail::check_alignment(alignment);
 
-  if (Memory::Kind::NO_MEMKIND == kind) {
-    kind = find_memory_kind_for_executing_processor(/* host_accessible */ false);
-  }
-
+  const auto resolved_target =
+    target.value_or(find_store_target_for_executing_processor(/* host_accessible */ false));
   const auto bounds = NDRect<DIM>{NDPoint<DIM>::zeroes(), extents - NDPoint<DIM>::ones()};
-  auto buffer       = Buffer::allocate(detail::type_of<VAL>(), Rect{bounds}, kind);
+  auto buffer       = Buffer::allocate(detail::type_of<VAL>(), Rect{bounds}, resolved_target);
 
   return NDBuffer<VAL, DIM>{std::move(buffer), typename NDBuffer<VAL, DIM>::InitTag{}};
 }
 
-template <typename VAL, std::int32_t DIM>
-NDBuffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents, Memory mem, std::size_t alignment)
-{
-  return create_buffer<VAL, DIM>(extents, mem.kind(), alignment);
-}
-
 template <typename VAL>
-NDBuffer<VAL> create_buffer(std::size_t size, Memory::Kind kind, std::size_t alignment)
+NDBuffer<VAL> create_buffer(std::size_t size,
+                            std::optional<mapping::StoreTarget> target,
+                            std::size_t alignment)
 {
-  return create_buffer<VAL, 1>(NDPoint<1>{static_cast<std::int64_t>(size)}, kind, alignment);
-}
-
-template <typename VAL>
-NDBuffer<VAL> create_buffer(std::size_t size, Memory mem, std::size_t alignment)
-{
-  return create_buffer<VAL, 1>(NDPoint<1>{static_cast<std::int64_t>(size)}, mem, alignment);
+  return create_buffer<VAL, 1>(NDPoint<1>{static_cast<std::int64_t>(size)}, target, alignment);
 }
 
 inline const SharedPtr<detail::Buffer>& Buffer::impl() const { return impl_; }

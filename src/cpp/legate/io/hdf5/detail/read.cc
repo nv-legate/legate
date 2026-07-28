@@ -8,6 +8,7 @@
 
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/io/hdf5/detail/hdf5_wrapper.h>
+#include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/types.h>  // for Type::Code formatter
 #include <legate/type/type_traits.h>
@@ -172,7 +173,7 @@ class HDF5ReadFn {
 
     // Otherwise, we need to read into a bounce buffer
     const auto size    = acc.size();
-    auto bounce_buffer = create_buffer<std::byte>(size * type_size, Memory::Z_COPY_MEM);
+    auto bounce_buffer = create_buffer<std::byte>(size * type_size, mapping::StoreTarget::ZCMEM);
     auto* const ptr    = bounce_buffer.ptr(0);
     auto stream        = context.get_task_stream();
     // This is a lie (the temp buffer is decided 1D), but HDF5 will treat it as 1-dimensional

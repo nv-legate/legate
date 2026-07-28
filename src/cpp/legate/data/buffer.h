@@ -138,8 +138,6 @@ class LEGATE_EXPORT Buffer {
    */
   [[nodiscard]] static Buffer allocate(const Type& type, Rect domain, mapping::StoreTarget target);
 
-  [[nodiscard]] static Buffer allocate(const Type& type, Rect domain, Memory::Kind kind);
-
   Buffer() = default;
   Buffer(const Buffer&);
   Buffer& operator=(const Buffer&);
@@ -245,7 +243,9 @@ class NDBuffer {
   void init_();
 
   template <typename V, std::int32_t D>
-  friend NDBuffer<V, D> create_buffer(const NDPoint<D>&, Memory::Kind, std::size_t);
+  friend NDBuffer<V, D> create_buffer(const NDPoint<D>&,
+                                      std::optional<mapping::StoreTarget>,
+                                      std::size_t);
   friend class PhysicalStore;
 
   Buffer buffer_{};
@@ -258,36 +258,23 @@ class NDBuffer {
  * @brief Creates an \ref NDBuffer of specific extents
  *
  * @param extents Extents of the buffer
- * @param kind Kind of the target memory (optional). If not given, the runtime will pick
+ * @param target Target of the buffer's memory (optional). If not given, the runtime will pick
  * automatically based on the executing processor
  * @param alignment Alignment for the memory allocation (optional)
  *
  * @return An \ref NDBuffer object
  */
 template <typename VAL, std::int32_t DIM>
-[[nodiscard]] NDBuffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
-                                               Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
-                                               std::size_t alignment = DEFAULT_BUFFER_ALIGNMENT);
-
-/**
- * @brief Creates an \ref NDBuffer of specific extents.
- *
- * @param extents Extents of the buffer.
- * @param mem The target memory of the buffer.
- * @param alignment Alignment for the memory allocation (optional).
- *
- * @return An \ref NDBuffer object.
- */
-template <typename VAL, std::int32_t DIM>
-[[nodiscard]] NDBuffer<VAL, DIM> create_buffer(const NDPoint<DIM>& extents,
-                                               Memory mem,
-                                               std::size_t alignment = DEFAULT_BUFFER_ALIGNMENT);
+[[nodiscard]] NDBuffer<VAL, DIM> create_buffer(
+  const NDPoint<DIM>& extents,
+  std::optional<mapping::StoreTarget> target = std::nullopt,
+  std::size_t alignment                      = DEFAULT_BUFFER_ALIGNMENT);
 
 /**
  * @brief Creates an \ref NDBuffer of a specific size. Always returns a 1D \ref NDBuffer.
  *
  * @param size Size of the \ref NDBuffer
- * @param kind `Memory::Kind` of the target memory (optional). If not given, the runtime will
+ * @param target Target of the buffer's memory (optional). If not given, the runtime will
  * pick automatically based on the executing processor
  * @param alignment Alignment for the memory allocation (optional)
  *
@@ -295,21 +282,7 @@ template <typename VAL, std::int32_t DIM>
  */
 template <typename VAL>
 [[nodiscard]] NDBuffer<VAL> create_buffer(std::size_t size,
-                                          Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
-                                          std::size_t alignment = DEFAULT_BUFFER_ALIGNMENT);
-
-/**
- * @brief Creates an \ref NDBuffer of a specific size. Always returns a 1D \ref NDBuffer.
- *
- * @param size Size of the \ref NDBuffer.
- * @param mem The target memory of the buffer.
- * @param alignment Alignment for the memory allocation (optional).
- *
- * @return A 1D \ref NDBuffer object.
- */
-template <typename VAL>
-[[nodiscard]] NDBuffer<VAL> create_buffer(std::size_t size,
-                                          Memory mem,
+                                          std::optional<mapping::StoreTarget> target = std::nullopt,
                                           std::size_t alignment = DEFAULT_BUFFER_ALIGNMENT);
 
 /** @} */

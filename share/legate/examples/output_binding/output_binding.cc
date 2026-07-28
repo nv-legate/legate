@@ -54,7 +54,7 @@ void ProduceBoundBufferTask::cpu_variant(legate::TaskContext context)
   // create_buffer path (intra-task allocation). We fill it, read it back, and use it below. This
   // is a CPU task, so the buffer is allocated in system memory.
   auto scratch = legate::create_buffer<std::int64_t, DIM>(
-    legate::NDPoint<DIM>{static_cast<std::int64_t>(num)}, legate::Memory::SYSTEM_MEM);
+    legate::NDPoint<DIM>{static_cast<std::int64_t>(num)}, legate::mapping::StoreTarget::SYSMEM);
 
   for (std::uint64_t i = 0; i < num; ++i) {
     scratch[legate::NDPoint<DIM>{static_cast<legate::coord_t>(i)}] = static_cast<std::int64_t>(i);
