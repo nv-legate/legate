@@ -714,7 +714,7 @@ you are on an HPC cluster and want to use the vendor’s MPI library, then you
 will need to compile and install the Legate MPI wrapper locally on your machine.
 See <a class="reference internal" href="faq.html#mpi-wrapper-faq"><span class="std std-ref">FAQ</span></a> for more information on why this is needed.  The
 MPI mismatch may manifest in failures such as</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>failed<span class="w"> </span>to<span class="w"> </span>load<span class="w"> </span>MPI<span class="w"> </span>wrapper:<span class="w"> </span><span class="s1">&#39;some/path/to/liblegate_mpi_wrapper.so&#39;</span><span class="w"> </span>...
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>failed<span class="w"> </span>to<span class="w"> </span>load<span class="w"> </span>MPI<span class="w"> </span>wrapper:<span class="w"> </span><span class="s1">'some/path/to/liblegate_mpi_wrapper.so'</span><span class="w"> </span>...
 </pre></div>
 </div>
 <p>In order to build and install the wrapper you will need to have:</p>
@@ -825,12 +825,12 @@ build, see the list of <a class="reference internal" href="#influential-mpi-wrap
 wrapper which was built during the original source build). To do so, you must set the
 <code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER</span></code> environment variable to the absolute path to the installed shared
 library. Assuming the wrapper was installed to <code class="docutils literal notranslate"><span class="pre">/my/prefix/directory</span></code>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span><span class="s2">&quot;/my/prefix/directory/lib/legate_mpi_wrapper.so&quot;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span><span class="s2">"/my/prefix/directory/lib/legate_mpi_wrapper.so"</span>
 </pre></div>
 </div>
 <p>As with any environment variable, you can either <code class="docutils literal notranslate"><span class="pre">export</span></code> it once (as above), or set it
 before invoking a Legate application:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span><span class="s2">&quot;/path/to/legate_mpi_wrapper.so&quot;</span><span class="w"> </span>./my_legate_app<span class="w"> </span>...
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span><span class="s2">"/path/to/legate_mpi_wrapper.so"</span><span class="w"> </span>./my_legate_app<span class="w"> </span>...
 </pre></div>
 </div>
 </section>

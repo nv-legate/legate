@@ -745,7 +745,7 @@ $<span class="w"> </span><span class="nv">$LEGATE_DIR</span>/<span class="nv">$L
 <p>In order to run the C++ tests, Legate must first be configured to build the tests. This
 must be done during the <code class="docutils literal notranslate"><span class="pre">configure</span></code> call, <strong>as the tests cannot be built standalone</strong>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./configure<span class="w"> </span>--with-tests
-<span class="c1"># Or, if you have an existing configuration to which you&#39;d like to add test</span>
+<span class="c1"># Or, if you have an existing configuration to which you'd like to add test</span>
 <span class="c1"># support:</span>
 $<span class="w"> </span>./reconfigure-<span class="nv">$LEGATE_ARCH</span>.py<span class="w"> </span>--with-tests
 $<span class="w"> </span>make
@@ -794,7 +794,7 @@ would otherwise have to do manually.</p>
 <p>You may further filter the list of tests being run via the <code class="docutils literal notranslate"><span class="pre">--gtest-filter</span></code> flag for
 <code class="docutils literal notranslate"><span class="pre">test.py</span></code>. This flag accepts a standard Python regular expression that will be applied
 to the list of tests before running them:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./test.py<span class="w"> </span>--gtest-filter<span class="o">=</span><span class="s1">&#39;LogicalStore.*ReinterpretAs&#39;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./test.py<span class="w"> </span>--gtest-filter<span class="o">=</span><span class="s1">'LogicalStore.*ReinterpretAs'</span>
 <span class="o">==</span><span class="w"> </span>Test<span class="w"> </span>Suite<span class="w"> </span>Configuration<span class="w"> </span><span class="o">(</span>GTest<span class="o">)</span><span class="w"> </span><span class="o">============================================</span>
 <span class="p">|</span><span class="w">                                                                              </span><span class="p">|</span>
 <span class="p">|</span><span class="w">        </span>Feature<span class="w"> </span>stages<span class="w">  </span>cpus<span class="w">                                                  </span><span class="p">|</span>
@@ -908,7 +908,7 @@ tests/python/unit/legate/core/test_task.py<span class="w"> </span>..............
 </pre></div>
 </div>
 <p>Any Legate-related arguments must be passed via the <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> environment variable:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--cpus 2 --logging legate=debug&#39;</span><span class="w"> </span>pytest<span class="w"> </span>path/to/tests
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">'--cpus 2 --logging legate=debug'</span><span class="w"> </span>pytest<span class="w"> </span>path/to/tests
 ...
 </pre></div>
 </div>

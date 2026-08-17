@@ -735,9 +735,9 @@ name of another directory under <code class="docutils literal notranslate"><span
 </ul>
 <p>If you have multiple configurations of Legate built, you can set these variables (usually
 just <code class="docutils literal notranslate"><span class="pre">${LEGATE_ARCH}</span></code>) to quickly switch between builds:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run the tests using the &quot;foo-bar&quot; build of the library.</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run the tests using the "foo-bar" build of the library.</span>
 $<span class="w"> </span><span class="nv">LEGATE_ARCH</span><span class="o">=</span>foo-bar<span class="w"> </span>./test.py
-<span class="c1"># Now run the tests using the &quot;baz-bop&quot; build of the library, all without needing to</span>
+<span class="c1"># Now run the tests using the "baz-bop" build of the library, all without needing to</span>
 <span class="c1"># recompile.</span>
 $<span class="w"> </span><span class="nv">LEGATE_ARCH</span><span class="o">=</span>baz-bop<span class="w"> </span>./test.py
 </pre></div>
@@ -767,7 +767,7 @@ enabling UCX support. Additionally, we install the library to a custom prefix:</
 <span class="w">    </span>--with-cuda<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--with-hdf5<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--with-zlib<span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--with-ucx-dir<span class="o">=</span><span class="s1">&#39;/path/to/ucx&#39;</span>
+<span class="w">    </span>--with-ucx-dir<span class="o">=</span><span class="s1">'/path/to/ucx'</span>
 $<span class="w"> </span>make<span class="w"> </span>install<span class="w"> </span><span class="nv">PREFIX</span><span class="o">=</span>/path/to/prefix
 </pre></div>
 </div>
@@ -796,7 +796,7 @@ passing the additional <code class="docutils literal notranslate"><span class="p
 <p>When building the Python bindings for local development, it is strongly recommended to
 build and install them into a Python virtual environment rather than the default system
 prefix:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># It does not matter if you run configure &quot;inside&quot; or &quot;outside&quot; the venv</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># It does not matter if you run configure "inside" or "outside" the venv</span>
 $<span class="w"> </span>./configure<span class="w"> </span>--with-python
 ...
 <span class="c1"># Same with make</span>
@@ -1015,7 +1015,7 @@ version numbers than what is available on the system-wide GLIBC:</p>
 </div>
 <p>You can usually work around this issue by putting the conda library directory first in the
 dynamic library resolution path:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CONDA_PREFIX</span><span class="si">}</span><span class="s2">/lib:</span><span class="si">${</span><span class="nv">LD_LIBRARY_PATH</span><span class="si">}</span><span class="s2">&quot;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">CONDA_PREFIX</span><span class="si">}</span><span class="s2">/lib:</span><span class="si">${</span><span class="nv">LD_LIBRARY_PATH</span><span class="si">}</span><span class="s2">"</span>
 </pre></div>
 </div>
 <p>This way you can make sure that the (typically more recent) conda version of any common

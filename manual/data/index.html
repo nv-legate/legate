@@ -748,7 +748,7 @@ materialized.</p>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">();</span>
 
-<span class="c1">// Create a handle to an array of 10 int32&#39;s. The array at this point contains</span>
+<span class="c1">// Create a handle to an array of 10 int32's. The array at this point contains</span>
 <span class="c1">// indeterminate values. It is an error to try and read from it.</span>
 <span class="n">legate</span><span class="o">::</span><span class="n">LogicalStore</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runime</span><span class="o">-&gt;</span><span class="n">create_store</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">Shape</span><span class="p">{</span><span class="mi">10</span><span class="p">},</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">int32</span><span class="p">());</span>
 
@@ -757,9 +757,9 @@ materialized.</p>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">some_library</span><span class="p">,</span><span class="w"> </span><span class="n">SomeTask</span><span class="o">::</span><span class="n">TASK_ID</span><span class="p">);</span>
 
-<span class="c1">// Inform the runtime that we intend to read from the store. The runtime still won&#39;t</span>
+<span class="c1">// Inform the runtime that we intend to read from the store. The runtime still won't</span>
 <span class="c1">// materialize the store at this point (simply creating and filling the task does not</span>
-<span class="c1">// count as &quot;observing&quot; it).</span>
+<span class="c1">// count as "observing" it).</span>
 <span class="n">task</span><span class="p">.</span><span class="n">add_input</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
 <span class="c1">// Submitting the task still does not guarantee that the store has been materialized.</span>
 <span class="n">runtime</span><span class="o">-&gt;</span><span class="n">submit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task</span><span class="p">));</span>

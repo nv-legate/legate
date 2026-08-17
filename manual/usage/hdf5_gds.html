@@ -732,7 +732,7 @@ for the installation instructions of GPUDirect Storage.</p>
 <p>In order to enable GDS for the HDF5 library, use the following configuration flag. Legate will
 try to detect if GDS is available and enable it automatically. But if you want to force enable
 it, you can use the following flag.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">&quot;--io-use-vfd-gds&quot;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">"--io-use-vfd-gds"</span>
 </pre></div>
 </div>
 </section>
@@ -824,7 +824,7 @@ Throughput<span class="w"> </span><span class="o">(</span>MB/sec<span class="o">
 <span class="w">   </span><span class="o">================================================================================</span>
 <span class="w">   </span>Output<span class="w"> </span>directory:<span class="w"> </span>output
 <span class="w">   </span>Sizes:<span class="w"> </span><span class="o">[</span><span class="m">1000000</span><span class="o">]</span>
-<span class="w">   </span>Data<span class="w"> </span>types:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;float32&#39;</span><span class="o">]</span>
+<span class="w">   </span>Data<span class="w"> </span>types:<span class="w"> </span><span class="o">[</span><span class="s1">'float32'</span><span class="o">]</span>
 <span class="w">   </span>Iterations<span class="w"> </span>per<span class="w"> </span>config:<span class="w"> </span><span class="nv">3</span>
 <span class="w">   </span><span class="o">================================================================================</span>
 
@@ -851,7 +851,7 @@ Throughput<span class="w"> </span><span class="o">(</span>MB/sec<span class="o">
 <p>If GDS is not available in the system, the user can still use the
 <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG=&quot;--io-use-vfd-gds&quot;</span></code> with the cuFile compatibility mode.
 In that case the user needs to set the following environment variable:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">CUFILE_ALLOW_COMPAT_MODE</span><span class="o">=</span><span class="s1">&#39;true&#39;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">CUFILE_ALLOW_COMPAT_MODE</span><span class="o">=</span><span class="s1">'true'</span>
 </pre></div>
 </div>
 </section>
@@ -860,20 +860,20 @@ In that case the user needs to set the following environment variable:</p>
 <p>If the HDF5 datasets are larger, then the following tuning helps improve the performance.
 Edit <code class="docutils literal notranslate"><span class="pre">/etc/cufile.json</span></code> and add the following line under properties section
 (for 12.6 CUDA release and above):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;execution&quot;</span> <span class="p">:</span> <span class="p">{</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">"execution"</span> <span class="p">:</span> <span class="p">{</span>
          <span class="o">...</span>
          <span class="o">//</span> <span class="nb">max</span> <span class="n">number</span> <span class="n">of</span> <span class="n">host</span> <span class="n">threads</span> <span class="n">per</span> <span class="n">gpu</span> <span class="n">to</span> <span class="n">spawn</span> <span class="k">for</span> <span class="n">parallel</span> <span class="n">IO</span>
-         <span class="s2">&quot;max_io_threads&quot;</span> <span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+         <span class="s2">"max_io_threads"</span> <span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
          <span class="o">//</span> <span class="n">enable</span> <span class="n">support</span> <span class="k">for</span> <span class="n">parallel</span> <span class="n">IO</span>
-         <span class="s2">&quot;parallel_io&quot;</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+         <span class="s2">"parallel_io"</span> <span class="p">:</span> <span class="n">true</span><span class="p">,</span>
          <span class="o">//</span> <span class="n">maximum</span> <span class="n">parallelism</span> <span class="k">for</span> <span class="n">a</span> <span class="n">single</span> <span class="n">request</span>
-         <span class="s2">&quot;max_request_parallelism&quot;</span> <span class="p">:</span> <span class="mi">8</span>
+         <span class="s2">"max_request_parallelism"</span> <span class="p">:</span> <span class="mi">8</span>
          <span class="o">...</span>
 <span class="p">},</span>
 
-<span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="s2">"properties"</span><span class="p">:</span> <span class="p">{</span>
   <span class="o">...</span>
-      <span class="s2">&quot;per_buffer_cache_size_kb&quot;</span> <span class="p">:</span> <span class="mi">16384</span><span class="p">,</span>
+      <span class="s2">"per_buffer_cache_size_kb"</span> <span class="p">:</span> <span class="mi">16384</span><span class="p">,</span>
       <span class="o">...</span>
 <span class="p">}</span>
 </pre></div>

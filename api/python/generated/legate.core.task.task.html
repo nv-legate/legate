@@ -767,7 +767,7 @@ configuration.</p></li>
 
 <span class="nd">@task</span><span class="p">(</span>
     <span class="n">variants</span><span class="o">=</span><span class="p">(</span><span class="n">VariantCode</span><span class="o">.</span><span class="n">CPU</span><span class="p">,</span> <span class="n">VariantCode</span><span class="o">.</span><span class="n">GPU</span><span class="p">),</span>
-    <span class="n">constraints</span><span class="o">=</span><span class="p">(</span><span class="n">align</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">),</span> <span class="n">broadcast</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)),</span>
+    <span class="n">constraints</span><span class="o">=</span><span class="p">(</span><span class="n">align</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">),</span> <span class="n">broadcast</span><span class="p">(</span><span class="s2">"x"</span><span class="p">)),</span>
     <span class="n">options</span><span class="o">=</span><span class="n">VariantOptions</span><span class="p">(</span><span class="n">may_throw_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_task_with_options</span><span class="p">(</span>
@@ -775,7 +775,7 @@ configuration.</p></li>
     <span class="n">y</span><span class="p">:</span> <span class="n">OutputStore</span><span class="p">,</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Exceptional!&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Exceptional!"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, the <code class="docutils literal notranslate"><span class="pre">&#64;task</span></code> decorator registers the wrapped callable for

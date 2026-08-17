@@ -728,7 +728,7 @@ OpenMPI and one for MPICH.  Most of the time this process works automatically
 and does not require user intervention.  However, in rare cases, the user may
 need to manually specify the MPI wrapper to use.  For example, the following
 error indicates that the wrapper may have to be chosen explicitly</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>LEGATE<span class="w"> </span>ERROR:<span class="w"> </span><span class="c1">#0 std::runtime_error: dlopen(&quot;libmpi.so&quot;) failed: libmpi.so: cannot open shared object file: No such file or directory, please make sure MPI is installed and libmpi.so is in your LD_LIBRARY_PATH.</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>LEGATE<span class="w"> </span>ERROR:<span class="w"> </span><span class="c1">#0 std::runtime_error: dlopen("libmpi.so") failed: libmpi.so: cannot open shared object file: No such file or directory, please make sure MPI is installed and libmpi.so is in your LD_LIBRARY_PATH.</span>
 </pre></div>
 </div>
 <p>The wheel comes bundled with two wrappers:</p>

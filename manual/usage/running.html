@@ -740,7 +740,7 @@ driver:</p>
 <p>Legate does not consume any command-line options. Instead, it is configured by a single
 environment variable, <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code> which accepts a space-separated string of
 arguments:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--cpus=2 --gpus=10 --fbmem=1024&#39;</span><span class="w"> </span>./myprog
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">'--cpus=2 --gpus=10 --fbmem=1024'</span><span class="w"> </span>./myprog
 </pre></div>
 </div>
 <div class="admonition important">
@@ -751,7 +751,7 @@ arguments:</p>
 <code class="docutils literal notranslate"><span class="pre">legate::start()</span></code> multiple times will also have no effect.</p>
 </div>
 <p>The user may query the flags available for configuration by passing the <code class="docutils literal notranslate"><span class="pre">--help</span></code> flag:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--help&#39;</span><span class="w"> </span>./myprog
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">'--help'</span><span class="w"> </span>./myprog
 </pre></div>
 </div>
 <p>This will cause Legate to list the available runtime options and exit the program.</p>
@@ -766,11 +766,11 @@ is equivalent to <code class="docutils literal notranslate"><span class="pre">--
 association clearer.</p>
 <p>The same flag (regardless of type) may also be passed multiple times to <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code>,
 with the last value “winning”. For example:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--foo --foo=f --foo=1&#39;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">'--foo --foo=f --foo=1'</span>
 </pre></div>
 </div>
 <p>is equivalent to:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--foo=1&#39;</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">'--foo=1'</span>
 </pre></div>
 </div>
 </section>
@@ -813,27 +813,27 @@ allow Legate to consume up to 1000 MiB of DRAM and 15000 MiB of each GPU’s
 memory for a total of 60000 MiB of GPU memory.</p>
 <p>The same configuration can also be passed through the environment variable
 <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">&quot;--gpus 4 --sysmem 1000 --fbmem 15000&quot;</span><span class="w"> </span>legate<span class="w"> </span>myprog.py
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">"--gpus 4 --sysmem 1000 --fbmem 15000"</span><span class="w"> </span>legate<span class="w"> </span>myprog.py
 </pre></div>
 </div>
 <p>including when using the standard Python interpreter:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">&quot;--gpus 4 --sysmem 1000 --fbmem 15000&quot;</span><span class="w"> </span>python<span class="w"> </span>myprog.py
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">"--gpus 4 --sysmem 1000 --fbmem 15000"</span><span class="w"> </span>python<span class="w"> </span>myprog.py
 </pre></div>
 </div>
 <p>or when running a compiled C++ Legate program directly:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">&quot;--gpus 4 --sysmem 1000 --fbmem 15000&quot;</span><span class="w"> </span>./myprog
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">"--gpus 4 --sysmem 1000 --fbmem 15000"</span><span class="w"> </span>./myprog
 </pre></div>
 </div>
 <p>To see the full list of arguments accepted in <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code>, you can pass
 <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG=&quot;--help&quot;</span></code>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">&quot;--help&quot;</span><span class="w"> </span>./myprog
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">"--help"</span><span class="w"> </span>./myprog
 </pre></div>
 </div>
 <p>You can also allocate resources when running in interactive mode (by not passing
 any <code class="docutils literal notranslate"><span class="pre">*.py</span></code> files on the command line):</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>legate<span class="w"> </span>--gpus<span class="w"> </span><span class="m">4</span><span class="w"> </span>--sysmem<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--fbmem<span class="w"> </span><span class="m">15000</span>
 Python<span class="w"> </span><span class="m">3</span>.12.4<span class="w"> </span><span class="p">|</span><span class="w"> </span>packaged<span class="w"> </span>by<span class="w"> </span>conda-forge<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="o">(</span>main,<span class="w"> </span>Jun<span class="w"> </span><span class="m">17</span><span class="w"> </span><span class="m">2024</span>,<span class="w"> </span><span class="m">10</span>:23:07<span class="o">)</span><span class="w"> </span><span class="o">[</span>GCC<span class="w"> </span><span class="m">12</span>.3.0<span class="o">]</span><span class="w"> </span>on<span class="w"> </span>linux
-Type<span class="w"> </span><span class="s2">&quot;help&quot;</span>,<span class="w"> </span><span class="s2">&quot;copyright&quot;</span>,<span class="w"> </span><span class="s2">&quot;credits&quot;</span><span class="w"> </span>or<span class="w"> </span><span class="s2">&quot;license&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>information.
+Type<span class="w"> </span><span class="s2">"help"</span>,<span class="w"> </span><span class="s2">"copyright"</span>,<span class="w"> </span><span class="s2">"credits"</span><span class="w"> </span>or<span class="w"> </span><span class="s2">"license"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>more<span class="w"> </span>information.
 &gt;&gt;&gt;
 </pre></div>
 </div>
@@ -871,7 +871,7 @@ the whole run.</p>
 </pre></div>
 </div>
 <p>or use <code class="docutils literal notranslate"><span class="pre">python</span></code> directly:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">&quot;--cpus 4 --gpus 1&quot;</span><span class="w"> </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>-npernode<span class="w"> </span><span class="m">1</span><span class="w"> </span>-x<span class="w"> </span>LEGATE_CONFIG<span class="w"> </span>python<span class="w"> </span>myprog.py
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s2">"--cpus 4 --gpus 1"</span><span class="w"> </span>mpirun<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>-npernode<span class="w"> </span><span class="m">1</span><span class="w"> </span>-x<span class="w"> </span>LEGATE_CONFIG<span class="w"> </span>python<span class="w"> </span>myprog.py
 </pre></div>
 </div>
 <p>Multiple processes (“ranks”) can also be launched on each node, using the
@@ -929,7 +929,7 @@ between them.</p>
 </div>
 <p>Once the compute nodes are allocated, use the <code class="docutils literal notranslate"><span class="pre">legate</span></code> driver script to launch
 applications:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;&lt;path-to-conda&gt;/etc/profile.d/conda.sh&quot;</span><span class="w">  </span><span class="c1"># Needed if conda isn&#39;t already loaded</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">"&lt;path-to-conda&gt;/etc/profile.d/conda.sh"</span><span class="w">  </span><span class="c1"># Needed if conda isn't already loaded</span>
 $<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>legate
 $<span class="w"> </span>legate<span class="w"> </span>--launcher<span class="w"> </span>mpirun<span class="w"> </span>--verbose<span class="w"> </span>prog.py
 </pre></div>

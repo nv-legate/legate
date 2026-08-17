@@ -784,7 +784,7 @@ This macro will turn its arguments into compile-time constant C strings.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define FOO 1</span>
 <span class="c1">#define BAR 2</span>
 
-<span class="n">LEGATE_STRINGIZE_</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="s2">&quot;FOO, BAR&quot;</span> <span class="p">(</span><span class="n">note</span> <span class="n">the</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">LEGATE_STRINGIZE_</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="s2">"FOO, BAR"</span> <span class="p">(</span><span class="n">note</span> <span class="n">the</span> <span class="s2">""</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><div class="admonition seealso">
@@ -811,7 +811,7 @@ This macro will turn its arguments into compile-time constant C strings.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define FOO 1</span>
 <span class="c1">#define BAR 2</span>
 
-<span class="n">LEGATE_STRINGIZE</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="s2">&quot;1, 2&quot;</span> <span class="p">(</span><span class="n">note</span> <span class="n">the</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">LEGATE_STRINGIZE</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="s2">"1, 2"</span> <span class="p">(</span><span class="n">note</span> <span class="n">the</span> <span class="s2">""</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><div class="admonition seealso">
@@ -879,9 +879,9 @@ This macro will turn its arguments into compile-time constant C strings.</p>
 </div>
 <p>Conceptually, <code class="docutils literal notranslate"><a class="reference internal" href="#group__util_1gab87ba1536b8da92f5982f7ff389fbdd2"><span class="std std-ref"><span class="pre">LEGATE_DEFINED()</span></span></a></code> is equivalent to</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#if defined(x) &amp;&amp; (x == 1 || x == *empty*)</span>
-<span class="o">//</span> <span class="s2">&quot;return&quot;</span> <span class="mi">1</span>
+<span class="o">//</span> <span class="s2">"return"</span> <span class="mi">1</span>
 <span class="c1">#else</span>
-<span class="o">//</span> <span class="s2">&quot;return&quot;</span> <span class="mi">0</span>
+<span class="o">//</span> <span class="s2">"return"</span> <span class="mi">0</span>
 <span class="c1">#endif</span>
 </pre></div>
 </div>
@@ -938,7 +938,7 @@ It is impossible to enable or disable the <a class="reference internal" href="#c
 
 <span class="n">LEGATE_SCOPE_GUARD</span><span class="p">(</span><span class="n">std</span><span class="p">::</span><span class="n">free</span><span class="p">(</span><span class="n">mem</span><span class="p">));</span>
 <span class="o">//</span> <span class="n">use</span> <span class="n">mem</span><span class="o">...</span>
-<span class="o">//</span> <span class="n">scope</span> <span class="n">exits</span><span class="p">,</span> <span class="ow">and</span> <span class="n">mem</span> <span class="ow">is</span> <span class="n">free</span><span class="s1">&#39;d.</span>
+<span class="o">//</span> <span class="n">scope</span> <span class="n">exits</span><span class="p">,</span> <span class="ow">and</span> <span class="n">mem</span> <span class="ow">is</span> <span class="n">free</span><span class="s1">'d.</span>
 </pre></div>
 </div>
 <p>Multi-line statements are also supported:</p>
@@ -950,7 +950,7 @@ It is impossible to enable or disable the <a class="reference internal" href="#c
   <span class="p">}</span>
 <span class="p">);</span>
 <span class="o">//</span> <span class="n">use</span> <span class="n">mem</span><span class="o">...</span>
-<span class="o">//</span> <span class="n">scope</span> <span class="n">exits</span><span class="p">,</span> <span class="ow">and</span> <span class="n">mem</span> <span class="ow">is</span> <span class="n">free</span><span class="s1">&#39;d depending on return value of frobnicate()</span>
+<span class="o">//</span> <span class="n">scope</span> <span class="n">exits</span><span class="p">,</span> <span class="ow">and</span> <span class="n">mem</span> <span class="ow">is</span> <span class="n">free</span><span class="s1">'d depending on return value of frobnicate()</span>
 </pre></div>
 </div>
 <p>If the body of the guard should only be executed on failure, use <a class="reference internal" href="#group__util_1gafcd44daa3bc175e2fa2462dc1eb7ef6a"><span class="std std-ref">LEGATE_SCOPE_FAIL</span></a> instead.</p>
@@ -1092,7 +1092,7 @@ This macro behaves identically to <code class="docutils literal notranslate"><a 
 
 <span class="w">  </span><span class="n">Legion</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">retrieve_name</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">Legion</span><span class="o">::</span><span class="n">TaskID</span><span class="o">&gt;</span><span class="p">(</span><span class="n">gid_bar</span><span class="p">),</span>
 <span class="w">                                                </span><span class="n">legion_task_name</span><span class="p">);</span>
-<span class="w">  </span><span class="n">ASSERT_STREQ</span><span class="p">(</span><span class="n">legion_task_name</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;example::(anonymous namespace)::Foo&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">ASSERT_STREQ</span><span class="p">(</span><span class="n">legion_task_name</span><span class="p">,</span><span class="w"> </span><span class="s">"example::(anonymous namespace)::Foo"</span><span class="p">);</span>
 
 <span class="w">  </span><span class="c1">// We can get the same information using the local ID from the Library</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">task_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bar_lib</span><span class="p">.</span><span class="n">get_task_name</span><span class="p">(</span><span class="n">Foo</span><span class="o">::</span><span class="n">TASK_CONFIG</span><span class="p">.</span><span class="n">task_id</span><span class="p">());</span>

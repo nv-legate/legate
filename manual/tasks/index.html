@@ -892,7 +892,7 @@ defines helper routines that perform all of the boilerplate registration code fo
 user. Registration of tasks may be as simple as:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;legate.h&gt;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">find_library</span><span class="p">(</span><span class="s">&quot;my_library&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">find_library</span><span class="p">(</span><span class="s">"my_library"</span><span class="p">);</span>
 <span class="n">MyTask</span><span class="o">::</span><span class="n">register_variants</span><span class="p">(</span><span class="n">lib</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -923,7 +923,7 @@ supply the actual input/output/scalar/etc. arguments at the task launch site:</p
 <span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">();</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">find_library</span><span class="p">(</span><span class="s">&quot;my_library&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">find_library</span><span class="p">(</span><span class="s">"my_library"</span><span class="p">);</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span><span class="w"> </span><span class="n">MyTask</span><span class="o">::</span><span class="n">TASK_CONFIG</span><span class="p">.</span><span class="n">task_id</span><span class="p">());</span>
 
 <span class="w">  </span><span class="n">task</span><span class="p">.</span><span class="n">add_input</span><span class="p">(</span><span class="n">input_store</span><span class="p">);</span>

@@ -722,12 +722,12 @@ example:</p>
 
 <span class="nd">@task</span> <span class="c1"># registers the task</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">foo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Hello World!"</span><span class="p">)</span>
 
 <span class="n">foo</span><span class="p">()</span> <span class="c1"># executes the task</span>
 </pre></div>
 </div>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&quot;Hello World!&quot;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>"Hello World!"
 </pre></div>
 </div>
 <p>There are several key restrictions placed on the signature of the task function, all of
@@ -796,7 +796,7 @@ not propagate outside the task body!</p>
     <span class="o">...</span>
 
 
-<span class="n">foo</span><span class="p">(</span><span class="mf">12.34</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;hello&quot;</span><span class="p">:</span> <span class="s2">&quot;there&quot;</span><span class="p">},</span> <span class="n">MyClass</span><span class="p">())</span>
+<span class="n">foo</span><span class="p">(</span><span class="mf">12.34</span><span class="p">,</span> <span class="p">{</span><span class="s2">"hello"</span><span class="p">:</span> <span class="s2">"there"</span><span class="p">},</span> <span class="n">MyClass</span><span class="p">())</span>
 </pre></div>
 </div>
 </section>
@@ -871,7 +871,7 @@ from <code class="docutils literal notranslate"><span class="pre">Exception</spa
 
 <span class="nd">@task</span><span class="p">(</span><span class="n">throws_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">foo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="n">MyException</span><span class="p">(</span><span class="s2">&quot;exceptional!&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="n">MyException</span><span class="p">(</span><span class="s2">"exceptional!"</span><span class="p">)</span>
 
 
 <span class="k">try</span><span class="p">:</span>
@@ -880,7 +880,7 @@ from <code class="docutils literal notranslate"><span class="pre">Exception</spa
     <span class="nb">print</span><span class="p">(</span><span class="n">exn</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&quot;exceptional!&quot;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>"exceptional!"
 </pre></div>
 </div>
 </section>

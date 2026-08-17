@@ -783,7 +783,7 @@ possible, the initializer for the pointer must be done via reference.</p>
 <span class="c1">// BAD</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Foo</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
-<span class="w">  </span><span class="c1">// Bad, should take a reference to indicate to the caller &quot;this resource must exist&quot;</span>
+<span class="w">  </span><span class="c1">// Bad, should take a reference to indicate to the caller "this resource must exist"</span>
 <span class="w">  </span><span class="c1">// and allow compiler to check this for us.</span>
 <span class="w">  </span><span class="n">Foo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Bar</span><span class="w"> </span><span class="o">*</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">bar_</span><span class="p">{</span><span class="n">b</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
 
@@ -806,7 +806,7 @@ functions as public methods with private “keys”:</p>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">UseResourceKey</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Note, default constructor is explicitly made private. No-one except for classes</span>
-<span class="w">  </span><span class="c1">// or functions made friends may construct this &quot;key&quot; now.</span>
+<span class="w">  </span><span class="c1">// or functions made friends may construct this "key" now.</span>
 <span class="w">  </span><span class="n">UseResourceKey</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
 
 <span class="w">  </span><span class="c1">// OK, allow any function of Foo to call the private function.</span>
@@ -822,7 +822,7 @@ functions as public methods with private “keys”:</p>
 
 <span class="c1">// Function must be public, so that Foo is allowed to call it. But it is for all</span>
 <span class="c1">// intents and purposes private, because no-one except for specific classes or</span>
-<span class="c1">// functions can construct the first &quot;key&quot; argument.</span>
+<span class="c1">// functions can construct the first "key" argument.</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">use_resource</span><span class="p">(</span><span class="n">UseResourceKey</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
 
 <span class="k">private</span><span class="o">:</span>

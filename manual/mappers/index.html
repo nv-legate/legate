@@ -755,7 +755,7 @@ when creating <code class="docutils literal notranslate"><span class="pre">Libra
 <span class="p">};</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">my_lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">().</span><span class="n">create_library</span><span class="p">(</span>
-<span class="w">  </span><span class="s">&quot;my_library&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s">"my_library"</span><span class="p">,</span>
 <span class="w">  </span><span class="n">legate</span><span class="o">::</span><span class="n">ResourceConfig</span><span class="p">{},</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">UserMapper</span><span class="o">&gt;</span><span class="p">()</span>
 <span class="p">);</span>

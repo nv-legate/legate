@@ -857,7 +857,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">acc</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="n">phys_store</span><span class="p">.</span><span class="n">read_accessor</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span><span class="p">();</span>
 
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">interp_value</span><span class="p">;</span>
-<span class="w">  </span><span class="c1">// Need to memcpy here in order to do a &quot;true&quot; bitcast. A reinterpret_cast() may or may not</span>
+<span class="w">  </span><span class="c1">// Need to memcpy here in order to do a "true" bitcast. A reinterpret_cast() may or may not</span>
 <span class="w">  </span><span class="c1">// result in the compilers generating the conversion, since type-punning with</span>
 <span class="w">  </span><span class="c1">// reinterpret_cast is UB.</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">interp_value</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">minus_one</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">minus_one</span><span class="p">));</span>
@@ -1262,7 +1262,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">slice</span><span class="p">(</span><span class="cm">/*dim=*/</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Slice</span><span class="p">{</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">});</span>
 
 <span class="w">  </span><span class="c1">// Slices partition a store into a parent and sub-store which both cover distinct regions,</span>
-<span class="w">  </span><span class="c1">// and hence don&#39;t share storage.</span>
+<span class="w">  </span><span class="c1">// and hence don't share storage.</span>
 <span class="w">  </span><span class="n">ASSERT_FALSE</span><span class="p">(</span><span class="n">store</span><span class="p">.</span><span class="n">equal_storage</span><span class="p">(</span><span class="n">transformed</span><span class="p">));</span>
 </pre></div>
 </div>
@@ -1270,7 +1270,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_store</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">Shape</span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">int64</span><span class="p">());</span>
 <span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">transformed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">transpose</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">});</span>
 
-<span class="w">  </span><span class="c1">// Transposing a store doesn&#39;t modify the storage</span>
+<span class="w">  </span><span class="c1">// Transposing a store doesn't modify the storage</span>
 <span class="w">  </span><span class="n">ASSERT_TRUE</span><span class="p">(</span><span class="n">store</span><span class="p">.</span><span class="n">equal_storage</span><span class="p">(</span><span class="n">transformed</span><span class="p">));</span>
 </pre></div>
 </div>
