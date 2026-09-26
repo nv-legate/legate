@@ -64,7 +64,7 @@ jobs:
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PY_VER }}
 
