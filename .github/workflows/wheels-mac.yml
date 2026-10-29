@@ -106,7 +106,7 @@ jobs:
           echo "PY_VER_NO_DOT=${PY_VER_NO_DOT}" >> "${GITHUB_ENV}"
 
       - name: Build the legate wheel
-        uses: pypa/cibuildwheel@294735312765b09d24a2fbec22660ce817587d55  # v4.1.0
+        uses: pypa/cibuildwheel@b9e566a2b284570af229f6c2a33673410d0389a3  # v4.3.4
         with:
           package-dir: ./scripts/build/python/legate/
           output-dir: wheelhouse
@@ -131,7 +131,7 @@ jobs:
           path: wheelhouse/*.whl
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.PY_VER }}
 
